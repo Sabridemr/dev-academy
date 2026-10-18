@@ -2,7 +2,7 @@
 
 Yazılım mühendisliği, sistem tasarımı ve yapay zekâ konularını **görsel, animasyonlu ve interaktif** derslerle öğreten web + mobil platform.
 
-Her ders aynı akışı izler: kısa kavram açıklaması → statik SVG diyagram → adım adım oynatılan animasyon → interaktif simülatör → gerçek dünya örneği (Amazon, Netflix, Uber…) → 3–5 soruluk quiz → bir sonraki adım.
+Her ders aynı akışı izler: kısa kavram açıklaması → statik SVG diyagram → adım adım oynatılan animasyon → interaktif simülatör → gerçek dünya örneği (Amazon, Netflix, Uber…) → 3–6 soruluk quiz → bir sonraki adım.
 
 | Katman | Klasör | Teknoloji |
 |---|---|---|
@@ -78,7 +78,7 @@ Animasyonlar platformdan bağımsız JSON “sahnelerinden” üretilir (`packag
 content/modules/<modül-id>/<ders-id>/
   lesson.md        frontmatter + Markdown + :::diagram / :::animation / :::interactive / :::code / :::realworld / :::callout / :::quiz / :::next
   scene.json       animasyon sahnesi (birden fazla olabilir: <ad>.scene.json)
-  quiz.json        3–5 soru
+  quiz.json        3–6 soru
   diagram.svg      tema uyumlu (CSS değişkenleri) SVG
 ```
 

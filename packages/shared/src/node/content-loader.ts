@@ -17,7 +17,9 @@
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 import {
+  INTERACTIVE_PARAMS,
   LearningPathManifestSchema,
+  QUIZ_QUESTION_RANGE,
   ModuleManifestSchema,
   QuizSchema,
   type LearningPathManifest,
@@ -211,6 +213,17 @@ export function loadContent(root = findContentRoot()): LoadedContent {
         if (b.type === 'quiz' && (!quiz || b.src !== quizFile)) {
           issues.push({ severity: 'error', file: rel(mdFile), message: `Quiz dosyası bulunamadı ya da geçersiz: ${b.src}` });
         }
+        // Simülatörün okumadığı parametre sessizce yok sayılır; yönerge gerçek kontrollerle uyuşmaz
+        if (b.type === 'interactive') {
+          const allowed: readonly string[] = INTERACTIVE_PARAMS[b.interactive];
+          const unknown = Object.keys(b.params ?? {}).filter((k) => !allowed.includes(k));
+          if (unknown.length) {
+            issues.push({ severity: 'error', file: rel(mdFile), message: `':::interactive{type=${b.interactive}}' bilinmeyen parametre: ${unknown.join(', ')} (geçerli: ${allowed.join(', ')})` });
+          }
+        }
+      }
+      if (quiz && (quiz.questions.length < QUIZ_QUESTION_RANGE.min || quiz.questions.length > QUIZ_QUESTION_RANGE.max)) {
+        issues.push({ severity: 'error', file: rel(join(lessonDir, 'quiz.json')), message: `Quiz ${QUIZ_QUESTION_RANGE.min}–${QUIZ_QUESTION_RANGE.max} soru içermeli (şu an ${quiz.questions.length})` });
       }
 
       lessons.push({ dir: lessonDir, doc, scenes, quiz, quizFile, svgs });
@@ -237,6 +250,17 @@ export function loadContent(root = findContentRoot()): LoadedContent {
           issues.push({ severity: 'warning', file: rel(join(l.dir, 'lesson.md')), message: `Ön koşul bilinmeyen ders: ${p}` });
         }
       }
+    }
+  }
+
+  // Öğrenme yolu öğeleri ("modül" ya da "modül/ders") var olan içeriğe işaret etmeli
+  const moduleLessons = new Map(modules.map((m) => [m.manifest.id, new Set(m.lessons.map((l) => l.doc.meta.id))]));
+  for (const p of paths) {
+    for (const item of p.items) {
+      const [moduleId, lessonId] = item.split('/');
+      const lessonsOfModule = moduleLessons.get(moduleId);
+      if (!lessonsOfModule) issues.push({ severity: 'error', file: 'paths.json', message: `Yol '${p.id}': bilinmeyen modül ${moduleId}` });
+      else if (lessonId && !lessonsOfModule.has(lessonId)) issues.push({ severity: 'error', file: 'paths.json', message: `Yol '${p.id}': ${moduleId} modülünde bilinmeyen ders ${lessonId}` });
     }
   }
 

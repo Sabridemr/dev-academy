@@ -100,6 +100,44 @@ export const InteractiveTypeSchema = z.enum([
 ]);
 export type InteractiveType = z.infer<typeof InteractiveTypeSchema>;
 
+/**
+ * Her interaktif türün ders Markdown'ında kabul ettiği parametreler (`:::interactive{type=... key=value}`).
+ * İçerik doğrulayıcısı bilinmeyen parametreyi hata sayar: simülatörün okumadığı bir parametre sessizce
+ * yok sayılır ve dersteki yönerge gerçek kontrollerle uyuşmaz. Web simülatörlerinin bu anahtarları
+ * gerçekten okuduğu web birim testinde (simulators/params.test.ts) kontrol edilir.
+ */
+export const INTERACTIVE_PARAMS = {
+  'load-balancer': ['algorithm', 'servers', 'sticky'],
+  cache: ['capacity', 'policy', 'writePolicy', 'ttlMs', 'ttlSec'],
+  'rate-limiter': ['algorithm', 'capacity', 'limit', 'rate', 'refillPerSec', 'refillPerSecond', 'windowMs'],
+  'consistent-hashing': ['keys', 'nodes', 'virtualNodes'],
+  'gradient-descent': ['b', 'learningRate', 'optimizer', 'startX', 'surface', 'w'],
+  attention: ['causal', 'heads', 'sentence', 'temperature'],
+  'neural-network-playground': ['activation', 'dataset', 'hiddenLayers', 'learningRate', 'noise'],
+  'capacity-estimator': ['avgReadSizeBytes', 'avgWriteSizeBytes', 'dau', 'hotDataRatio', 'peakMultiplier', 'readsPerUserPerDay', 'replicationFactor', 'retentionYears', 'writesPerUserPerDay'],
+  'er-diagram': ['preset', 'showCardinality', 'tables'],
+  'cap-theorem': ['consistency', 'mode', 'nodes', 'partition', 'replicas'],
+  scaling: ['autoscale', 'failureZone', 'instancesPerZone', 'maxServers', 'mode', 'serverCapacityRps', 'servers', 'trafficRps', 'zones'],
+  'message-queue': ['consumers', 'failureRate', 'idempotent', 'maxRetries', 'partitions', 'producers'],
+  'replication-quorum': ['failedNodes', 'latencyMs', 'nodes', 'readQuorum', 'regions', 'writeQuorum'],
+  'index-query-plan': ['query', 'rows'],
+  'isolation-levels': ['level', 'scenario'],
+  'k-means': ['init', 'k'],
+  'decision-tree': ['criterion', 'dataset', 'maxDepth', 'minSamplesLeaf'],
+  convolution: ['kernel', 'padding', 'stride'],
+  tokenizer: ['text'],
+  'embedding-space': ['dimensions', 'showNeighbors'],
+  pipeline: ['failureStage', 'retries', 'stages'],
+  'kubernetes-hpa': ['cpuRequestMillicores', 'maxReplicas', 'minReplicas', 'stabilizationWindowSec', 'targetCpuPercent'],
+  'request-journey': ['budgetMs', 'cacheHitRate', 'failureStage', 'http3', 'layers', 'path', 'rttMs', 'services', 'showColdStart', 'slowPenaltyMs', 'slowService', 'stages'],
+  'traffic-wave': ['autoscale', 'baselineRps', 'peakMultiplier', 'queueEnabled', 'rampSeconds', 'scaleUpDelaySeconds'],
+  'fan-out': ['avgFollowers', 'celebrities', 'celebrity', 'celebrityFollowers', 'celebrityThreshold', 'mode'],
+  'geo-index': ['drivers', 'resolution', 'ringSize', 'showBoundaryProblem'],
+} as const satisfies Record<InteractiveType, readonly string[]>;
+
+/** Quiz soru sayısı kuralı (içerik yazım kılavuzu): en az 3, en fazla 6 */
+export const QUIZ_QUESTION_RANGE = { min: 3, max: 6 } as const;
+
 export const InteractiveBlockSchema = BaseBlock.extend({
   type: z.literal('interactive'),
   interactive: InteractiveTypeSchema,
