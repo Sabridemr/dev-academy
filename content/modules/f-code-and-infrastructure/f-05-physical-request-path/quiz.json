@@ -11,15 +11,15 @@
         "en": "For a user in Istanbul calling an origin in Frankfurt, what is typically the largest item in an 80 ms total latency?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "Veritabanı sorgusu", "en": "The database query" } },
-        { "id": "b", "text": { "tr": "Load balancer'ın yönlendirme kararı", "en": "The load balancer's routing decision" } },
-        { "id": "c", "text": { "tr": "İstanbul ile Frankfurt arasındaki fiziksel mesafenin fiber üzerindeki gidiş-dönüş süresi", "en": "The round-trip time over fiber for the physical distance between Istanbul and Frankfurt" } },
-        { "id": "d", "text": { "tr": "JSON serileştirme", "en": "JSON serialisation" } }
+        { "id": "a", "text": { "tr": "Edge'de yapılan TLS el sıkışması; üç gidiş-dönüş origin mesafesiyle çarpıldığı için tek başına 50 ms'yi aşar", "en": "The TLS handshake done at the edge; three round trips multiplied by the origin distance exceed 50 ms on their own" } },
+        { "id": "b", "text": { "tr": "İstanbul ile Frankfurt arasındaki fiziksel mesafenin fiber üzerindeki gidiş-dönüş süresi", "en": "The round-trip time over fiber for the physical distance between Istanbul and Frankfurt" } },
+        { "id": "c", "text": { "tr": "ALB'nin üç AZ'deki hedef gruplar arasında sağlıklı pod seçip çapraz AZ'ye yönlendirmesi; her atlama 5–10 ms ekler", "en": "The ALB picking a healthy pod among target groups in three AZs and routing cross-AZ; each hop adds 5–10 ms" } },
+        { "id": "d", "text": { "tr": "Postgres sorgusu; senkron standby'a AZ-b'ye yazma onayı beklendiği için her sorgu 20–30 ms sürer", "en": "The Postgres query; because the synchronous standby in AZ-b must acknowledge, every query takes 20–30 ms" } }
       ],
-      "correct": ["c"],
+      "correct": ["b"],
       "explanation": {
-        "tr": "Işık fiberde yaklaşık 200 km/ms gider; 1.900 km için tek yön 10–15 ms, gidiş-dönüş ~30 ms ve TLS el sıkışması edge'de yapılmasa daha da fazla. İndeksli DB sorgusu (a) 2–5 ms, LB (b) 1 ms'nin altındadır. Bu yüzden edge cache ve kullanıcıya yakın region seçimi koddan daha etkilidir.",
-        "en": "Light travels about 200 km/ms in fiber; for 1,900 km that is 10–15 ms one way, ~30 ms round trip, and more if the TLS handshake were not done at the edge. An indexed DB query (a) is 2–5 ms and the LB (b) under 1 ms. That is why edge caching and choosing a region near users matters more than code."
+        "tr": "Işık fiberde yaklaşık 200 km/ms gider; 1.900 km için gidiş-dönüş ~30 ms'dir ve edge cache dışında hiçbir yazılım bunu azaltamaz. TLS el sıkışması edge'de 10 ms'lik RTT ile yapılır, origin mesafesiyle çarpılmaz; indeksli DB sorgusu senkron standby dâhil 2–5 ms, ALB kararı 1 ms'nin altındadır. Bu yüzden edge cache ve kullanıcıya yakın region seçimi koddan daha etkilidir.",
+        "en": "Light travels about 200 km/ms in fiber; for 1,900 km the round trip is ~30 ms and no software short of an edge cache can reduce it. The TLS handshake happens at the edge with a 10 ms RTT and is not multiplied by the origin distance; an indexed DB query is 2–5 ms even with the synchronous standby, and the ALB decision is under 1 ms. That is why edge caching and choosing a region near users matters more than code."
       },
       "difficulty": "easy",
       "concepts": ["latency-budget", "edge-pop"]
@@ -32,15 +32,15 @@
         "en": "Why is the TLS handshake terminated at the CDN edge PoP rather than at the origin?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "Edge sunucuları daha güçlü CPU'lara sahiptir", "en": "Edge servers have more powerful CPUs" } },
-        { "id": "b", "text": { "tr": "El sıkışma birkaç gidiş-dönüş gerektirir; kullanıcıya 10 ms uzaklıktaki edge'de yapmak, 35 ms uzaklıktaki origin'e göre onlarca ms kazandırır", "en": "The handshake needs several round trips; doing it at an edge 10 ms away saves tens of ms compared with an origin 35 ms away" } },
-        { "id": "c", "text": { "tr": "Origin TLS'i desteklemez", "en": "The origin does not support TLS" } },
-        { "id": "d", "text": { "tr": "Böylece trafik origin'e şifresiz gidebilir ve daha hızlı olur", "en": "So traffic can go unencrypted to the origin and be faster" } }
+        { "id": "a", "text": { "tr": "Edge'de sonlandırınca edge → origin arası trafik özel omurgada düz metin gider; yeniden şifreleme olmadığı için gecikme düşer", "en": "Terminating at the edge lets edge → origin traffic travel in plaintext over the private backbone; with no re-encryption, latency drops" } },
+        { "id": "b", "text": { "tr": "Edge sunucuları TLS hızlandırma donanımı taşır; origin'deki pod'lar asimetrik şifrelemeyi yapamayacak kadar az CPU'ya sahiptir", "en": "Edge servers carry TLS acceleration hardware; the pods at the origin have too little CPU to do asymmetric encryption" } },
+        { "id": "c", "text": { "tr": "El sıkışma birkaç gidiş-dönüş ister; kullanıcıya 10 ms uzaklıktaki edge'de yapmak, 35 ms'deki origin'e göre onlarca ms kazandırır", "en": "The handshake needs several round trips; doing it at an edge 10 ms away saves tens of ms compared with an origin 35 ms away" } },
+        { "id": "d", "text": { "tr": "Sertifika yalnızca tek bir yerde kurulabilir; CDN kullanıldığında ACM sertifikayı edge'e bağlar, origin'de TLS devre dışı kalır", "en": "A certificate can only be installed in one place; with a CDN, ACM binds it to the edge and TLS is disabled at the origin" } }
       ],
-      "correct": ["b"],
+      "correct": ["c"],
       "explanation": {
-        "tr": "TCP + TLS el sıkışması 2–3 gidiş-dönüş alır; her gidiş-dönüş mesafeye bağlıdır. Edge, ayrıca origin'e önceden açılmış sıcak bağlantılar kullanır. Edge–origin arası yine şifrelidir (d yanlış); CPU gücü asıl neden değildir (a).",
-        "en": "The TCP + TLS handshake takes 2–3 round trips, each bound by distance. The edge also reuses pre-opened warm connections to the origin. Edge–origin traffic is still encrypted (d is wrong); CPU power is not the real reason (a)."
+        "tr": "TCP + TLS el sıkışması 2–3 gidiş-dönüş alır; her gidiş-dönüş mesafeye bağlıdır, bu yüzden kullanıcıya en yakın noktada yapılır. Edge, origin'e önceden açılmış sıcak bağlantılar kullanır ve edge–origin arası yeniden şifrelenir, düz metin gitmez. CPU gücü asıl neden değildir; sertifika hem edge'de hem origin'de bulunur, origin TLS'i kapatılmaz.",
+        "en": "The TCP + TLS handshake takes 2–3 round trips, each bound by distance, which is why it is done at the point nearest the user. The edge reuses pre-opened warm connections to the origin, and edge–origin traffic is re-encrypted, never plaintext. CPU power is not the real reason; a certificate lives at both the edge and the origin, and origin TLS is not disabled."
       },
       "difficulty": "medium",
       "concepts": ["tls-termination", "edge-pop", "cdn-cache"]
@@ -56,7 +56,7 @@
         { "id": "a", "text": { "tr": "Çağrı başına RTT yaklaşık 0,3–0,5 ms olur; çapraz AZ'de 1–2 ms olurdu", "en": "Per-call RTT is about 0.3–0.5 ms; cross-AZ it would be 1–2 ms" } },
         { "id": "b", "text": { "tr": "Çapraz AZ veri transfer ücreti ödenmez", "en": "No cross-AZ data transfer fee is paid" } },
         { "id": "c", "text": { "tr": "O AZ düşerse cache primary'si de düşer; replikanın başka AZ'de olması gerekir", "en": "If that AZ fails the cache primary fails too; the replica must be in another AZ" } },
-        { "id": "d", "text": { "tr": "Redis artık RAM yerine diske yazar", "en": "Redis now writes to disk instead of RAM" } }
+        { "id": "d", "text": { "tr": "Redis artık RAM yerine diske yazar ve veri kalıcı hâle gelir", "en": "Redis now writes to disk instead of RAM and the data becomes durable" } }
       ],
       "correct": ["a", "b", "c"],
       "explanation": {

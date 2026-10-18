@@ -66,28 +66,29 @@ const L = {
   },
 };
 
-/** Deterministik veri üretimi: koordinatlar [-1, 1] aralığında */
-function makeDataset(kind: Dataset, seed = 7): Pt[] {
+/** Deterministik veri üretimi: koordinatlar [-1, 1] aralığında; noise oranında etiket ters çevrilir */
+function makeDataset(kind: Dataset, noise = 0, seed = 7): Pt[] {
   const rnd = seededRandom(seed);
   const pts: Pt[] = [];
+  const flip = (label: 0 | 1): 0 | 1 => (noise > 0 && rnd() < noise ? (label === 1 ? 0 : 1) : label);
   for (let i = 0; i < POINTS; i++) {
     if (kind === 'xor') {
       const x = rnd() * 2 - 1;
       const y = rnd() * 2 - 1;
       const pad = (v: number) => (v > 0 ? Math.max(v, 0.05) : Math.min(v, -0.05));
-      pts.push({ x: pad(x), y: pad(y), label: x * y > 0 ? 1 : 0 });
+      pts.push({ x: pad(x), y: pad(y), label: flip(x * y > 0 ? 1 : 0) });
     } else if (kind === 'circle') {
       const inner = i % 2 === 0;
       const r = inner ? rnd() * 0.4 : 0.6 + rnd() * 0.35;
       const a = rnd() * Math.PI * 2;
-      pts.push({ x: r * Math.cos(a), y: r * Math.sin(a), label: inner ? 1 : 0 });
+      pts.push({ x: r * Math.cos(a), y: r * Math.sin(a), label: flip(inner ? 1 : 0) });
     } else {
       const label: 0 | 1 = i % 2 === 0 ? 1 : 0;
       // İki kol: açı 1.5 tur boyunca artar, yarıçap doğrusal büyür
       const k = Math.floor(i / 2) / (POINTS / 2);
       const r = 0.08 + 0.85 * k;
       const a = k * 3 * Math.PI + (label ? 0 : Math.PI);
-      pts.push({ x: r * Math.cos(a) + (rnd() - 0.5) * 0.08, y: r * Math.sin(a) + (rnd() - 0.5) * 0.08, label });
+      pts.push({ x: r * Math.cos(a) + (rnd() - 0.5) * 0.08, y: r * Math.sin(a) + (rnd() - 0.5) * 0.08, label: flip(label) });
     }
   }
   return pts;
@@ -112,6 +113,7 @@ export default function NeuralNetworkPlaygroundSim({ params, onInteract }: Simul
   const lr = Math.pow(10, lrExp);
   const lrRef = useRef(lr);
   lrRef.current = lr;
+  const [noise, setNoise] = useState(() => numParam(params, 'noise', 0, 0, 0.5));
 
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const [playing, setPlaying] = useState(false);
@@ -129,7 +131,7 @@ export default function NeuralNetworkPlaygroundSim({ params, onInteract }: Simul
   const epochRef = useRef(0);
   const busyRef = useRef(false);
 
-  const points = useMemo(() => makeDataset(dataset), [dataset]);
+  const points = useMemo(() => makeDataset(dataset, noise), [dataset, noise]);
 
   // TensorFlow.js'i yalnızca bu bileşen açıldığında yükle (ayrı bundle)
   useEffect(() => {
@@ -309,6 +311,7 @@ export default function NeuralNetworkPlaygroundSim({ params, onInteract }: Simul
           </Field>
           <p className="text-[11px] text-muted">{l.hiddenHint}</p>
           <Range label={t('sim.learningRate')} value={lrExp} min={-3} max={0} step={0.05} format={(v) => Math.pow(10, v).toPrecision(2)} onChange={(v) => { onInteract(); setLrExp(v); }} />
+          <Range label={l.noise} value={noise} min={0} max={0.5} step={0.05} format={(v) => `${Math.round(v * 100)}%`} onChange={(v) => { onInteract(); setNoise(v); }} />
           <div className="grid grid-cols-2 gap-2" aria-live="polite">
             <Stat label={l.epoch} value={epoch} />
             <Stat label={l.loss} value={lastLoss !== undefined ? lastLoss.toFixed(3) : '—'} tone="primary" />

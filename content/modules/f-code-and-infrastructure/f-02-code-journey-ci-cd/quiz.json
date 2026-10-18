@@ -11,15 +11,15 @@
         "en": "Why do we tag the Docker image that goes to production with the commit SHA instead of `latest`?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "SHA etiketli imajlar daha küçüktür", "en": "SHA-tagged images are smaller" } },
-        { "id": "b", "text": { "tr": "İmaj değişmez olur: staging'de test edilen bit bit aynı imaj production'a gider ve hangi kodun çalıştığı her zaman bilinir", "en": "The image becomes immutable: the exact same bits tested in staging go to production and you always know which code is running" } },
-        { "id": "c", "text": { "tr": "`latest` etiketi Docker tarafından yasaklanmıştır", "en": "The `latest` tag is forbidden by Docker" } },
-        { "id": "d", "text": { "tr": "SHA etiketi imajı otomatik olarak imzalar", "en": "A SHA tag automatically signs the image" } }
+        { "id": "a", "text": { "tr": "SHA etiketi cosign imzasını ve SBOM'u imajın içine gömer; `latest` etiketli imajlar tedarik zinciri doğrulamasından geçemez", "en": "A SHA tag embeds the cosign signature and SBOM in the image; `latest`-tagged images cannot pass supply-chain verification" } },
+        { "id": "b", "text": { "tr": "İmaj değişmez olur: staging'de test edilen bit bit aynı imaj production'a gider ve hangi kodun çalıştığı bilinir", "en": "The image becomes immutable: the exact same bits tested in staging go to production and you know which code is running" } },
+        { "id": "c", "text": { "tr": "SHA etiketli imaj production'a özel derlenir; staging ve production farklı imaj kullandığı için ortam ayrımı netleşir", "en": "A SHA-tagged image is built specifically for production; staging and production use different images, so environments stay separate" } },
+        { "id": "d", "text": { "tr": "Registry `latest` etiketini her push'ta üzerine yazdığı için eski katmanlar silinir; SHA etiketi katman cache'ini korur ve build'i hızlandırır", "en": "Because the registry overwrites `latest` on every push, old layers are deleted; a SHA tag preserves the layer cache and speeds up builds" } }
       ],
       "correct": ["b"],
       "explanation": {
-        "tr": "`latest` hareketli bir hedeftir: dün başka, bugün başka bir imajı gösterir. SHA etiketi imajı belirli bir commit'e sabitler; rollback da yalnızca önceki SHA'yı deploy etmektir. Etiket imaj boyutunu değiştirmez (a) ve imzalama ayrı bir adımdır, ör. cosign (d).",
-        "en": "`latest` is a moving target: it points to a different image today than yesterday. A SHA tag pins the image to a specific commit; rollback is just deploying the previous SHA. A tag does not change image size (a) and signing is a separate step, e.g. cosign (d)."
+        "tr": "`latest` hareketli bir hedeftir: dün başka, bugün başka bir imajı gösterir. SHA etiketi imajı belirli bir commit'e sabitler; aynı imaj staging'den production'a taşınır ve rollback önceki SHA'yı deploy etmekten ibarettir. Etiket katman cache'ini ya da imaj boyutunu değiştirmez; imzalama ve SBOM ayrı adımlardır (cosign); production'a özel imaj derlemek ise 'bir kez derle, her yerde çalıştır' ilkesini bozar.",
+        "en": "`latest` is a moving target: it points to a different image today than yesterday. A SHA tag pins the image to a specific commit; the same image moves from staging to production and rollback is just deploying the previous SHA. A tag changes neither the layer cache nor the image size; signing and SBOMs are separate steps (cosign); building a production-only image breaks the 'build once, run anywhere' principle."
       },
       "difficulty": "easy",
       "concepts": ["immutable-artifact", "artifact-registry"]
@@ -32,15 +32,15 @@
         "en": "What is the key difference between blue-green and canary deployment?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "Blue-green trafiğin tamamını tek seferde yeni ortama çevirir; canary küçük bir yüzdeyle başlayıp metriklere göre kademeli artırır", "en": "Blue-green switches all traffic to the new environment at once; canary starts with a small percentage and increases gradually based on metrics" } },
-        { "id": "b", "text": { "tr": "Blue-green yalnızca veritabanları için, canary yalnızca uygulamalar için kullanılır", "en": "Blue-green is only for databases, canary only for applications" } },
-        { "id": "c", "text": { "tr": "Canary ek kapasite gerektirir, blue-green gerektirmez", "en": "Canary needs extra capacity, blue-green does not" } },
-        { "id": "d", "text": { "tr": "Aralarında fark yoktur", "en": "There is no difference" } }
+        { "id": "a", "text": { "tr": "Blue-green'de geri alma dakikalar süren yeniden deploy gerektirir; canary'de LB'yi eski ortama çevirmek saniyeler alır", "en": "In blue-green, rollback needs a redeploy taking minutes; in canary, flipping the LB back to the old environment takes seconds" } },
+        { "id": "b", "text": { "tr": "Blue-green yalnızca stateless servislerde, canary ise şema değişikliklerini de geri alabildiği için stateful sistemlerde kullanılır", "en": "Blue-green is only for stateless services, while canary is used for stateful systems because it can also roll back schema changes" } },
+        { "id": "c", "text": { "tr": "Blue-green trafiğin tamamını tek seferde yeni ortama çevirir; canary küçük bir yüzdeyle başlayıp metriklere göre artırır", "en": "Blue-green switches all traffic to the new environment at once; canary starts with a small percentage and increases based on metrics" } },
+        { "id": "d", "text": { "tr": "Canary yeni sürüm için tam bir ikinci ortam (2× kapasite) ister; blue-green pod'ları dalga dalga değiştirdiği için ek kapasite istemez", "en": "Canary needs a full second environment (2× capacity) for the new version; blue-green replaces pods in waves and needs no extra capacity" } }
       ],
-      "correct": ["a"],
+      "correct": ["c"],
       "explanation": {
-        "tr": "Blue-green iki tam ortam kurar (2× kapasite) ve LB'yi bir kerede çevirir; geri alma saniyeler sürer ama kötü sürüm anında herkese ulaşır. Canary küçük dilimle riski ölçer ve az ek kapasite ister; c seçeneği tam tersidir.",
-        "en": "Blue-green builds two full environments (2× capacity) and flips the LB at once; rollback takes seconds but a bad release reaches everyone instantly. Canary measures risk with a small slice and needs little extra capacity; option c is the reverse."
+        "tr": "Blue-green iki tam ortam kurar (2× kapasite) ve LB'yi bir kerede çevirir; geri alma LB'yi geri çevirmek kadar hızlıdır ama kötü sürüm anında herkese ulaşır. Canary küçük dilimle riski ölçer ve az ek kapasite ister. Kapasite ve geri alma sürelerini tersine çeviren seçenekler yanlıştır; pod'ları dalga dalga değiştirmek rolling'dir ve şema değişikliğini hiçbir strateji geri almaz — expand → migrate → contract gerekir.",
+        "en": "Blue-green builds two full environments (2× capacity) and flips the LB at once; rollback is as fast as flipping it back, but a bad release reaches everyone instantly. Canary measures risk with a small slice and needs little extra capacity. The options that invert the capacity and rollback times are wrong; replacing pods in waves is rolling, and no strategy rolls back a schema change — expand → migrate → contract is required."
       },
       "difficulty": "medium",
       "concepts": ["blue-green-deployment", "canary-release"]
@@ -55,8 +55,8 @@
       "options": [
         { "id": "a", "text": { "tr": "Dallar kısa ömürlüdür (saatler–1-2 gün) ve main'e sık birleşir", "en": "Branches are short-lived (hours to 1–2 days) and merge to main often" } },
         { "id": "b", "text": { "tr": "Yarım kalan özellikler feature flag arkasına gizlenir", "en": "Unfinished features are hidden behind feature flags" } },
-        { "id": "c", "text": { "tr": "Uzun ömürlü develop ve release dalları zorunludur", "en": "Long-lived develop and release branches are mandatory" } },
-        { "id": "d", "text": { "tr": "Herkes main'e doğrudan, inceleme olmadan push eder", "en": "Everyone pushes directly to main without review" } }
+        { "id": "c", "text": { "tr": "Uzun ömürlü develop ve release dalları ile sürüm dondurma zorunludur", "en": "Long-lived develop and release branches with a version freeze are mandatory" } },
+        { "id": "d", "text": { "tr": "Herkes main'e doğrudan, PR ve inceleme olmadan push eder", "en": "Everyone pushes directly to main without a PR or review" } }
       ],
       "correct": ["a", "b"],
       "explanation": {

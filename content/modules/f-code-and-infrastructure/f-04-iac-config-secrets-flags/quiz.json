@@ -11,15 +11,15 @@
         "en": "In the `terraform plan` output you see `-/+` next to an RDS resource. What does it mean?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "Kaynak yerinde güncellenecek, kesinti olmayacak", "en": "The resource will be updated in place with no downtime" } },
-        { "id": "b", "text": { "tr": "Kaynak silinip yeniden yaratılacak; veritabanı için bu veri kaybı demektir", "en": "The resource will be destroyed and recreated; for a database that means data loss" } },
-        { "id": "c", "text": { "tr": "Kaynak yalnızca state'ten çıkarılacak", "en": "The resource will only be removed from state" } },
-        { "id": "d", "text": { "tr": "Plan başarısız oldu", "en": "The plan failed" } }
+        { "id": "a", "text": { "tr": "Kaynak yerinde güncellenecek (`~`); yalnızca kısa bir yeniden başlatma olacak", "en": "The resource will be updated in place (`~`); only a brief restart will occur" } },
+        { "id": "b", "text": { "tr": "Kaynak state'ten çıkarılıp yeniden import edilecek; bulutta değişiklik olmayacak", "en": "The resource will be removed from state and re-imported; nothing changes in the cloud" } },
+        { "id": "c", "text": { "tr": "Kaynak silinip yeniden yaratılacak; veritabanı için bu veri kaybı demektir", "en": "The resource will be destroyed and recreated; for a database that means data loss" } },
+        { "id": "d", "text": { "tr": "Kaynak eklenip (`+`) eskisi korunacak; `-` yalnızca eski kaydın plan'dan düşmesidir", "en": "The resource will be added (`+`) and the old one kept; `-` is only the old entry leaving the plan" } }
       ],
-      "correct": ["b"],
+      "correct": ["c"],
       "explanation": {
-        "tr": "`-/+` 'replace' demektir: önce destroy, sonra create. Yerinde güncelleme `~` ile gösterilir (a). Bu yüzden plan çıktısı insan tarafından incelenir ve kritik kaynaklara `prevent_destroy` konur.",
-        "en": "`-/+` means 'replace': destroy first, then create. An in-place update is shown with `~` (a). That is why plan output is reviewed by a human and critical resources get `prevent_destroy`."
+        "tr": "`-/+` 'replace' demektir: önce destroy, sonra create. Yerinde güncelleme `~` ile, yalnızca ekleme `+` ile gösterilir; state'ten çıkarma ayrı bir işlemdir (`terraform state rm`) ve plan'da bu işaretle görünmez. Bu yüzden plan çıktısı insan tarafından incelenir ve kritik kaynaklara `prevent_destroy` konur.",
+        "en": "`-/+` means 'replace': destroy first, then create. An in-place update is shown with `~`, a pure addition with `+`; removing from state is a separate operation (`terraform state rm`) and never appears with this marker in a plan. That is why plan output is reviewed by a human and critical resources get `prevent_destroy`."
       },
       "difficulty": "medium",
       "concepts": ["terraform-plan-apply"]
@@ -32,15 +32,15 @@
         "en": "Why is Terraform state kept in a remote backend (S3 + DynamoDB lock)?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "Böylece HCL dosyaları Git'e konmak zorunda kalmaz", "en": "So HCL files do not have to be committed to Git" } },
-        { "id": "b", "text": { "tr": "Ekip aynı state'i paylaşsın, aynı anda iki apply çalışıp state'i bozmasın ve state yerel diskte kaybolmasın", "en": "So the team shares one state, two applies cannot run at once and corrupt it, and it is not lost on a local disk" } },
-        { "id": "c", "text": { "tr": "Terraform yerel dosya okuyamaz", "en": "Terraform cannot read local files" } },
-        { "id": "d", "text": { "tr": "State, secret'ları şifrelemek için kullanılır", "en": "State is used to encrypt secrets" } }
+        { "id": "a", "text": { "tr": "Ekip aynı state'i paylaşsın, iki apply aynı anda çalışıp state'i bozmasın ve state yerel diskte kaybolmasın", "en": "So the team shares one state, two applies cannot run at once and corrupt it, and it is not lost on a local disk" } },
+        { "id": "b", "text": { "tr": "State içindeki parolalar S3'te KMS ile şifrelenince HCL dosyalarına düz metin secret yazmak güvenli hâle gelir", "en": "Once passwords in state are KMS-encrypted in S3, writing plaintext secrets in HCL files becomes safe" } },
+        { "id": "c", "text": { "tr": "DynamoDB tablosu kaynak id'lerini indeksler; büyük altyapılarda plan süresi yerel dosyaya göre kat kat kısalır", "en": "The DynamoDB table indexes resource ids; on large infrastructures plan time drops many times compared with a local file" } },
+        { "id": "d", "text": { "tr": "Terraform plan'ı buluta sormadan yalnızca uzak state üzerinden hesaplar; S3 bu yüzden gerçek durumun tek kaynağıdır", "en": "Terraform computes the plan from remote state alone without querying the cloud; S3 is therefore the single source of real state" } }
       ],
-      "correct": ["b"],
+      "correct": ["a"],
       "explanation": {
-        "tr": "State, Terraform'un 'ne yarattım' defteridir; paylaşılmazsa herkes farklı gerçeklik görür. Kilit eşzamanlı apply'ı engeller. HCL yine Git'te durur (a). State, secret'ları şifrelemez; tersine içinde düz metin değerler bulunabileceği için şifreli saklanmalıdır (d).",
-        "en": "State is Terraform's ledger of 'what I created'; without sharing it everyone sees a different reality. The lock prevents concurrent applies. HCL still lives in Git (a). State does not encrypt secrets; on the contrary it may contain plaintext values, so it must be stored encrypted (d)."
+        "tr": "State, Terraform'un 'ne yarattım' defteridir; paylaşılmazsa herkes farklı gerçeklik görür. Kilit eşzamanlı apply'ı engeller. Şifreli backend HCL'ye secret yazmayı meşrulaştırmaz; plan yine bulut API'sini sorgular (drift tespiti bu yüzden mümkündür); DynamoDB yalnızca kilit tutar, plan hızını etkilemez.",
+        "en": "State is Terraform's ledger of 'what I created'; without sharing it everyone sees a different reality. The lock prevents concurrent applies. An encrypted backend does not legitimise secrets in HCL; plan still queries the cloud API (that is why drift detection is possible); DynamoDB only holds the lock and has no effect on plan speed."
       },
       "difficulty": "easy",
       "concepts": ["terraform-state", "infrastructure-as-code"]
@@ -93,15 +93,15 @@
         "en": "Which sentence best explains the difference between a canary deployment and a feature flag?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "Canary yeni imajı küçük bir dilime verir; flag aynı imaj içinde yeni davranışı küçük bir dilime açar ve deploy'suz kapatılabilir", "en": "Canary gives a new image to a small slice; a flag turns on new behaviour inside the same image for a small slice and can be turned off without a deploy" } },
-        { "id": "b", "text": { "tr": "İkisi aynı şeydir, yalnızca farklı araçlar kullanır", "en": "They are the same thing with different tools" } },
-        { "id": "c", "text": { "tr": "Flag yalnızca test ortamında, canary yalnızca production'da kullanılır", "en": "Flags are only used in test, canary only in production" } },
-        { "id": "d", "text": { "tr": "Canary kod değişikliği gerektirmez, flag Terraform gerektirir", "en": "Canary needs no code change, a flag requires Terraform" } }
+        { "id": "a", "text": { "tr": "Canary imaj seviyesinde kademeli açılış sağlar; flag aynı işi deploy'da yapar, kapatmak için eski imajın yeniden dağıtılması gerekir", "en": "Canary gives a gradual rollout at the image level; a flag does the same at deploy time and turning it off requires redeploying the old image" } },
+        { "id": "b", "text": { "tr": "Canary yeni imajı küçük bir dilime verir; flag aynı imaj içinde yeni davranışı küçük bir dilime açar ve deploy'suz kapanır", "en": "Canary gives a new image to a small slice; a flag turns on new behaviour inside the same image for a small slice and can be turned off without a deploy" } },
+        { "id": "c", "text": { "tr": "Canary yalnızca staging'de yeni imajı doğrular; flag production'da aynı özelliği önce çalışanlara sonra kullanıcılara açar", "en": "Canary only validates the new image in staging; a flag opens the same feature in production first to employees and then to users" } },
+        { "id": "d", "text": { "tr": "Flag Terraform ile tanımlanan altyapı düzeyinde bir anahtardır; canary ise uygulama kodundaki `if` dalıyla trafiği böler", "en": "A flag is an infrastructure-level switch defined with Terraform; canary splits traffic with an `if` branch in application code" } }
       ],
-      "correct": ["a"],
+      "correct": ["b"],
       "explanation": {
-        "tr": "Canary, dağıtım (deploy) seviyesinde imaj riskini ölçer; flag, release seviyesinde davranışı kontrol eder ve kill switch olarak saniyeler içinde kapanır. Birlikte kullanılırlar: imaj canary ile çıkar, özellik flag ile açılır.",
-        "en": "Canary measures image risk at the deploy level; a flag controls behaviour at the release level and acts as a kill switch within seconds. They are used together: the image ships via canary, the feature opens via flag."
+        "tr": "Canary, dağıtım (deploy) seviyesinde imaj riskini production trafiğinin küçük bir dilimiyle ölçer; flag, release seviyesinde davranışı kontrol eder ve kill switch olarak saniyeler içinde, deploy'suz kapanır. Flag'i kapatmak için yeni imaj gerekmez; canary staging değil production aracıdır; koddaki `if` dalı flag'in kendisidir, altyapı tanımı değil. Birlikte kullanılırlar: imaj canary ile çıkar, özellik flag ile açılır.",
+        "en": "Canary measures image risk at the deploy level with a small slice of production traffic; a flag controls behaviour at the release level and acts as a kill switch within seconds, without a deploy. Turning a flag off needs no new image; canary is a production tool, not a staging one; the `if` branch in code is the flag itself, not an infrastructure definition. They are used together: the image ships via canary, the feature opens via flag."
       },
       "difficulty": "hard",
       "concepts": ["feature-flag", "kill-switch", "gradual-rollout"]

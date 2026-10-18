@@ -92,8 +92,8 @@ Yatay ölçeklemenin asıl gücü, sunucu sayısını talebe göre **otomatik** 
 
 İki tuzak: **soğuk başlangıç** (yeni sunucu JIT ısınması, cache doldurma, bağlantı havuzu kurma derken ilk dakikalarda yavaştır) ve **bağımlılıkları ezme** (web katmanı 10'dan 50'ye çıkınca veritabanına açılan bağlantı sayısı da 5 kat artar; DB bunu kaldıramazsa ölçekleme kesintiyi büyütür). Bu yüzden ölçekleme sınırı, en zayıf bağımlılığın kapasitesine göre konur.
 
-:::interactive{type="scaling" mode="horizontal" servers=1 maxServers=8 cpuPerServer=100 trafficRps=400 autoscale=false}
-Trafiği kaydırarak tek sunucunun CPU'sunu %100'e çıkarın. Önce "dikey" modda sunucu boyutunu büyütüp gecikmenin nasıl düştüğünü ama tavana dayandığınızı görün; sonra "yatay" moda geçip replika ekleyin. Autoscale'i açarak hedef CPU %60'ta sunucu sayısının trafiğe göre nasıl değiştiğini ve bir replikayı "düşürdüğünüzde" ne olduğunu izleyin.
+:::interactive{type="scaling" mode="horizontal" servers=1 maxServers=8 trafficRps=400 autoscale=false}
+Trafik kaydırıcısını yükseltip tek sunucunun CPU'sunu %100'ün üstüne çıkarın. Soldaki dikey panelde makine boyutunu büyütün: gecikme düşer ama 2XL'de "donanım tavanı" uyarısına dayanırsınız ve maliyet doğrusal artmaz. Sağdaki yatay panelde "+" ile replika ekleyin: aynı trafik daha ucuza ve tek hata noktası olmadan taşınır. "Otomatik ölçekleme" kutusunu işaretleyin: hedef %70 kullanımda replika sayısı trafiğe göre her saniye bir adım değişir; "Trafik dalgası" düğmesiyle yükü dalgalandırıp replika sayısının yükü ne kadar gecikmeyle izlediğini gözlemleyin.
 :::
 
 :::code{lang="ts" title="Basit bir target-tracking autoscaler döngüsü"}

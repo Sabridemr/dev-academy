@@ -11,15 +11,15 @@
         "en": "Since pods are constantly recreated with new IPs, how do you reach a service reliably from inside the cluster?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "Pod IP'sini bir konfigürasyon dosyasına yazarak", "en": "By writing the pod IP into a config file" } },
-        { "id": "b", "text": { "tr": "Service üzerinden: etiket seçicisiyle eşleşen hazır pod'ların önünde sabit bir sanal IP ve DNS adı sağlar", "en": "Through a Service: it provides a stable virtual IP and DNS name in front of the ready pods matching its label selector" } },
-        { "id": "c", "text": { "tr": "Her pod'a ayrı bir Ingress tanımlayarak", "en": "By defining a separate Ingress for every pod" } },
-        { "id": "d", "text": { "tr": "Deployment'ın adını doğrudan HTTP isteğinde kullanarak", "en": "By using the Deployment's name directly in the HTTP request" } }
+        { "id": "a", "text": { "tr": "Deployment üzerinden: Deployment adı küme DNS'inde çözümlenir ve istekler ReplicaSet'in pod'larına dağıtılır", "en": "Through the Deployment: its name resolves in cluster DNS and requests are spread across the ReplicaSet's pods" } },
+        { "id": "b", "text": { "tr": "Pod IP'sini ConfigMap'e yazıp yeniden yaratılan pod'un yeni IP'sini bir init container ile güncelleyerek", "en": "By writing the pod IP into a ConfigMap and updating the recreated pod's new IP with an init container" } },
+        { "id": "c", "text": { "tr": "Ingress üzerinden: her servise bir Ingress kuralı tanımlanır, küme içi çağrılar da Ingress controller'dan geçer", "en": "Through Ingress: an Ingress rule is defined per service and in-cluster calls also go through the Ingress controller" } },
+        { "id": "d", "text": { "tr": "Service üzerinden: etiket seçicisiyle eşleşen hazır pod'ların önünde sabit bir sanal IP ve DNS adı sağlar", "en": "Through a Service: it provides a stable virtual IP and DNS name in front of the ready pods matching its label selector" } }
       ],
-      "correct": ["b"],
+      "correct": ["d"],
       "explanation": {
-        "tr": "Service, pod'ların gelip gitmesinden bağımsız sabit bir adres (ClusterIP + DNS) sunar ve yalnızca readiness'ı geçen pod'ları endpoint olarak tutar. Pod IP'si sabitlenemez (a), Ingress dış L7 girişidir (c), Deployment bir ağ adresi değildir (d).",
-        "en": "A Service offers a stable address (ClusterIP + DNS) independent of pods coming and going, and only keeps pods that pass readiness as endpoints. Pod IPs cannot be pinned (a), Ingress is the external L7 entry (c), and a Deployment is not a network address (d)."
+        "tr": "Service, pod'ların gelip gitmesinden bağımsız sabit bir adres (ClusterIP + DNS) sunar ve yalnızca readiness'ı geçen pod'ları endpoint olarak tutar. Deployment bir ağ adresi değildir, küme DNS'inde çözümlenmez; Ingress dış L7 giriş noktasıdır, servisler arası iletişim ondan geçmez; pod IP'sini ConfigMap'te takip etmek pod her yeniden yaratıldığında yarış ve kesinti üretir.",
+        "en": "A Service offers a stable address (ClusterIP + DNS) independent of pods coming and going, and only keeps pods that pass readiness as endpoints. A Deployment is not a network address and does not resolve in cluster DNS; Ingress is the external L7 entry point, service-to-service traffic does not go through it; tracking pod IPs in a ConfigMap produces races and outages every time a pod is recreated."
       },
       "difficulty": "easy",
       "concepts": ["service", "pod"]
@@ -93,15 +93,15 @@
         "en": "When you update the image in a Deployment, how does Kubernetes make rollback possible?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "Eski pod'ları askıya alıp bellekte tutar", "en": "It suspends the old pods and keeps them in memory" } },
-        { "id": "b", "text": { "tr": "Yeni bir ReplicaSet yaratır, eskisini küçültür ama siler; rollback eski ReplicaSet'i yeniden büyütmektir", "en": "It creates a new ReplicaSet and scales the old one down but keeps it; rollback is scaling the old ReplicaSet back up" } },
-        { "id": "c", "text": { "tr": "İmajı registry'den otomatik olarak geri çeker", "en": "It automatically pulls the image back from the registry" } },
-        { "id": "d", "text": { "tr": "Rollback mümkün değildir; yeniden deploy gerekir", "en": "Rollback is not possible; a redeploy is required" } }
+        { "id": "a", "text": { "tr": "Yeni bir ReplicaSet yaratır, eskisini sıfıra indirir ama silmez; rollback eski ReplicaSet'i yeniden büyütmektir", "en": "It creates a new ReplicaSet and scales the old one to zero but keeps it; rollback is scaling the old ReplicaSet back up" } },
+        { "id": "b", "text": { "tr": "Eski pod'ları silmeden askıya alır (Paused) ve bellekte tutar; rollback askıdaki pod'ları yeniden endpoint listesine ekler", "en": "It pauses the old pods without deleting them and keeps them in memory; rollback adds the paused pods back to the endpoint list" } },
+        { "id": "c", "text": { "tr": "Her rollout öncesi etcd anlık görüntüsü (snapshot) alır; `rollout undo` bu snapshot'ı geri yükleyerek küme durumunu eski hâline döndürür", "en": "It takes an etcd snapshot before every rollout; `rollout undo` restores that snapshot to bring the cluster state back" } },
+        { "id": "d", "text": { "tr": "Önceki imajın digest'ini etcd'de saklar; rollback aynı ReplicaSet'in pod şablonunu eski digest ile yerinde günceller", "en": "It stores the previous image digest in etcd; rollback updates the same ReplicaSet's pod template in place with the old digest" } }
       ],
-      "correct": ["b"],
+      "correct": ["a"],
       "explanation": {
-        "tr": "Deployment her sürüm için ayrı bir ReplicaSet tutar (revisionHistoryLimit kadar). Rolling update yeni ReplicaSet'i büyütüp eskisini sıfıra indirir; `kubectl rollout undo` tersini yapar. Pod'lar askıya alınmaz (a), yeniden derleme veya yeni imaj gerekmez (c, d).",
-        "en": "A Deployment keeps a separate ReplicaSet per revision (up to revisionHistoryLimit). A rolling update scales the new ReplicaSet up and the old one to zero; `kubectl rollout undo` does the reverse. Pods are not suspended (a), and no rebuild or new image is needed (c, d)."
+        "tr": "Deployment her sürüm için ayrı bir ReplicaSet tutar (revisionHistoryLimit kadar). Rolling update yeni ReplicaSet'i büyütüp eskisini sıfıra indirir; `kubectl rollout undo` tersini yapar. Pod'lar askıya alınmaz; aynı ReplicaSet'in şablonu yerinde değiştirilmez (şablon değişikliği zaten yeni bir ReplicaSet demektir); etcd snapshot'ı felaket kurtarma aracıdır, rollout mekanizması değil.",
+        "en": "A Deployment keeps a separate ReplicaSet per revision (up to revisionHistoryLimit). A rolling update scales the new ReplicaSet up and the old one to zero; `kubectl rollout undo` does the reverse. Pods are not paused; the same ReplicaSet's template is not edited in place (a template change means a new ReplicaSet by definition); an etcd snapshot is a disaster-recovery tool, not the rollout mechanism."
       },
       "difficulty": "hard",
       "concepts": ["deployment", "replicaset", "declarative-reconciliation"]

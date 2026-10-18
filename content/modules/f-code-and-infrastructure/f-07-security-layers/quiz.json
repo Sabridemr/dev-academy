@@ -11,15 +11,15 @@
         "en": "Why is anycast effective against a volumetric DDoS attack?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "Saldırganın IP'sini otomatik olarak engeller", "en": "It automatically blocks the attacker's IP" } },
-        { "id": "b", "text": { "tr": "Aynı IP dünyanın birçok PoP'undan yayınlandığı için dağınık botnet trafiği onlarca noktaya bölünür ve hiçbiri tek başına boğulmaz", "en": "Because the same IP is announced from many PoPs worldwide, the dispersed botnet traffic is split across dozens of sites and none is overwhelmed alone" } },
-        { "id": "c", "text": { "tr": "Trafiği şifreler", "en": "It encrypts the traffic" } },
-        { "id": "d", "text": { "tr": "SQL injection imzalarını tanır", "en": "It recognises SQL injection signatures" } }
+        { "id": "a", "text": { "tr": "Her PoP gelen SYN paketlerine SYN cookie ile cevap verip el sıkışmayı tamamlamayan kaynakları otomatik kara listeye alır", "en": "Each PoP answers incoming SYN packets with SYN cookies and automatically blacklists sources that never complete the handshake" } },
+        { "id": "b", "text": { "tr": "Aynı IP birçok PoP'tan yayınlandığı için dağınık botnet trafiği onlarca noktaya bölünür ve hiçbiri tek başına boğulmaz", "en": "Because the same IP is announced from many PoPs, the dispersed botnet traffic is split across dozens of sites and none is overwhelmed alone" } },
+        { "id": "c", "text": { "tr": "BGP duyurusu saldırı anında geri çekilir (blackhole), böylece botnet trafiği hedef IP'ye ulaşamadan ISP'lerde düşer", "en": "The BGP announcement is withdrawn during the attack (blackhole), so botnet traffic is dropped at the ISPs before reaching the target IP" } },
+        { "id": "d", "text": { "tr": "Anycast IP'ler yalnızca scrubbing merkezlerine ait olduğu için botnet origin'in gerçek adresini öğrenemez ve saldırı hedefsiz kalır", "en": "Because anycast IPs belong only to scrubbing centers, the botnet cannot learn the origin's real address and the attack has no target" } }
       ],
       "correct": ["b"],
       "explanation": {
-        "tr": "Anycast bir yönlendirme tekniğidir: BGP her kaynağı en yakın PoP'a götürür, böylece 2 Tb/sn'lik sel PoP başına birkaç Gb/sn'ye iner ve scrubbing ile temizlenir. IP engelleme (a) ve imza tanıma (d) WAF/scrubbing'in işidir; şifreleme (c) TLS'indir.",
-        "en": "Anycast is a routing technique: BGP sends each source to the nearest PoP, so a 2 Tb/s flood drops to a few Gb/s per PoP and is cleaned by scrubbing. IP blocking (a) and signature matching (d) belong to WAF/scrubbing; encryption (c) is TLS."
+        "tr": "Anycast bir yönlendirme tekniğidir: BGP her kaynağı en yakın PoP'a götürür, böylece 2 Tb/sn'lik sel PoP başına birkaç Gb/sn'ye iner ve scrubbing ile temizlenir. SYN cookie ve imza eşleştirme anycast'in değil scrubbing katmanının işidir; BGP duyurusunu geri çekmek (blackhole) saldırganın istediği kesintiyi kendi elinizle yaratmaktır; origin IP'sinin gizlenmesi security group kuralıyla sağlanır ve seli dağıtmaz.",
+        "en": "Anycast is a routing technique: BGP sends each source to the nearest PoP, so a 2 Tb/s flood drops to a few Gb/s per PoP and is cleaned by scrubbing. SYN cookies and signature matching belong to the scrubbing layer, not to anycast; withdrawing the BGP announcement (blackhole) creates the very outage the attacker wants; hiding the origin IP is done with a security group rule and does not spread the flood."
       },
       "difficulty": "easy",
       "concepts": ["ddos-mitigation", "anycast-scrubbing"]
@@ -32,15 +32,15 @@
         "en": "A request arrives with a valid JWT but the user is trying to view someone else's order. What is the correct HTTP response and which check produces it?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "401 — authentication (kimlik doğrulama) başarısız", "en": "401 — authentication failed" } },
-        { "id": "b", "text": { "tr": "403 — authorization (yetkilendirme) başarısız: kimlik doğru ama hak yok", "en": "403 — authorization failed: identity is correct but there is no right" } },
-        { "id": "c", "text": { "tr": "429 — rate limit aşıldı", "en": "429 — rate limit exceeded" } },
-        { "id": "d", "text": { "tr": "500 — sunucu hatası", "en": "500 — server error" } }
+        { "id": "a", "text": { "tr": "401 — authentication başarısız: JWT'nin `aud` alanı bu siparişin sahibiyle eşleşmiyor", "en": "401 — authentication failed: the JWT's `aud` claim does not match this order's owner" } },
+        { "id": "b", "text": { "tr": "429 — rate limit: kullanıcı kendi dışındaki kaynakları tarayarak kotasını aşmıştır", "en": "429 — rate limit: the user exceeded their quota by scanning resources other than their own" } },
+        { "id": "c", "text": { "tr": "403 — authentication başarısız: token geçerli olsa da kimlik bu kaynak için doğrulanamamıştır", "en": "403 — authentication failed: although the token is valid, the identity could not be verified for this resource" } },
+        { "id": "d", "text": { "tr": "403 — authorization (yetkilendirme) başarısız: kimlik doğru ama hak yok", "en": "403 — authorization failed: identity is correct but there is no right" } }
       ],
-      "correct": ["b"],
+      "correct": ["d"],
       "explanation": {
-        "tr": "Kimlik doğrulandı (token geçerli) ama kaynak üzerinde yetki yok: bu authorization hatasıdır, 403. 401 'kim olduğunu bilmiyorum' demektir (a). Bazı API'ler kaynağın varlığını sızdırmamak için bilinçli olarak 404 döner; bu da kabul edilebilir bir tasarımdır.",
-        "en": "Identity was verified (the token is valid) but there is no right on the resource: that is an authorization failure, 403. 401 means 'I do not know who you are' (a). Some APIs deliberately return 404 to avoid leaking the resource's existence; that is also an acceptable design."
+        "tr": "Kimlik doğrulandı (token geçerli) ama kaynak üzerinde yetki yok: bu authorization hatasıdır, 403. 401 'kim olduğunu bilmiyorum' demektir; `aud` token'ın hedef API'sini belirtir, sipariş sahibini değil. 429 kota aşımıdır, yetkiyle ilgisizdir; 403 dönüp buna 'authentication' demek iki kavramı karıştırır. Bazı API'ler kaynağın varlığını sızdırmamak için bilinçli olarak 404 döner; bu da kabul edilebilir bir tasarımdır.",
+        "en": "Identity was verified (the token is valid) but there is no right on the resource: that is an authorization failure, 403. 401 means 'I do not know who you are'; `aud` names the token's target API, not the order's owner. 429 is quota exhaustion, unrelated to rights; returning 403 and calling it 'authentication' confuses the two concepts. Some APIs deliberately return 404 to avoid leaking the resource's existence; that is also an acceptable design."
       },
       "difficulty": "easy",
       "concepts": ["authentication-vs-authorization"]
@@ -93,15 +93,15 @@
         "en": "An attacker managed to run code inside the cart-service pod. Which measure prevents them from reading the orders table and deleting the carts table?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "WAF kuralları", "en": "WAF rules" } },
-        { "id": "b", "text": { "tr": "TLS 1.3", "en": "TLS 1.3" } },
-        { "id": "c", "text": { "tr": "Pod'a IRSA ile bağlı, yalnızca carts tablosunda GetItem/PutItem'a izin veren en az yetkili IAM rolü ve kısa ömürlü kimlik bilgileri", "en": "A least-privilege IAM role bound to the pod via IRSA that allows only GetItem/PutItem on the carts table, with short-lived credentials" } },
-        { "id": "d", "text": { "tr": "Anycast", "en": "Anycast" } }
+        { "id": "a", "text": { "tr": "Pod'a IRSA ile bağlı, yalnızca carts tablosunda GetItem/PutItem'a izin veren en az yetkili IAM rolü", "en": "A least-privilege IAM role bound to the pod via IRSA that allows only GetItem/PutItem on the carts table" } },
+        { "id": "b", "text": { "tr": "Edge'deki WAF kuralları: pod'dan çıkan `Scan` ve `DeleteTable` çağrıları OWASP kural setiyle 403 alır", "en": "WAF rules at the edge: the `Scan` and `DeleteTable` calls leaving the pod get a 403 from the OWASP rule set" } },
+        { "id": "c", "text": { "tr": "Security group ile ağ segmentasyonu: cart-service subnet'inden yalnızca DynamoDB uç noktasına çıkışa izin verilir", "en": "Network segmentation with a security group: only egress to the DynamoDB endpoint is allowed from the cart-service subnet" } },
+        { "id": "d", "text": { "tr": "Pod ile DynamoDB arasında TLS 1.3 ve mTLS: pod'un sertifikası yalnızca carts tablosu için imzalanmıştır", "en": "TLS 1.3 and mTLS between the pod and DynamoDB: the pod's certificate is signed only for the carts table" } }
       ],
-      "correct": ["c"],
+      "correct": ["a"],
       "explanation": {
-        "tr": "Saldırgan artık en dış katmanların (WAF, TLS, anycast) içindedir; onlar bu aşamada yardımcı olmaz. En az yetki ilkesi, ele geçirilen servisin yetkisini işini yapmak için gerekenle sınırlar: Scan orders ve DeleteTable carts çağrıları AccessDenied alır, CloudTrail kaydeder.",
-        "en": "The attacker is now past the outer layers (WAF, TLS, anycast); they do not help at this stage. Least privilege limits the compromised service to exactly what it needs: Scan orders and DeleteTable carts get AccessDenied and CloudTrail records them."
+        "tr": "Saldırgan artık en dış katmanların içindedir; WAF edge'de gelen isteği inceler, pod'un dışarı yaptığı API çağrılarını görmez. TLS/mTLS bağlantıyı şifreler ve kimliği kanıtlar ama hangi tabloya ne yapılabileceğini söylemez; security group yalnızca ağ yolunu açar, DynamoDB'ye ulaşan her çağrıya izin verir. En az yetki ilkesi ele geçirilen servisi işi için gerekenle sınırlar: Scan orders ve DeleteTable carts AccessDenied alır, CloudTrail kaydeder.",
+        "en": "The attacker is now inside the outer layers; the WAF inspects incoming requests at the edge and never sees the API calls the pod makes outward. TLS/mTLS encrypts the connection and proves identity but says nothing about which table may be touched how; a security group only opens the network path and permits every call that reaches DynamoDB. Least privilege limits the compromised service to what its job needs: Scan orders and DeleteTable carts get AccessDenied and CloudTrail records them."
       },
       "difficulty": "hard",
       "concepts": ["iam-least-privilege", "iam-roles", "audit-logging"]

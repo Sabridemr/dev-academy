@@ -90,8 +90,8 @@ Mobil bir sipariş detay ekranı sipariş, kullanıcı ve ürün servislerinden 
 
 Pratikte üçü üst üste bulunur: dışarıda L4 LB → gateway (kendisi Envoy tabanlı bir reverse proxy olabilir) → mesh sidecar'lı servisler. Mesh, gateway'in yaptığı retry/circuit breaker/mTLS işlerini **servisler arası** trafiğe taşır; gateway dış dünyayla ilgilenmeye devam eder.
 
-:::interactive{type="request-journey" stages="tls,auth,rate-limit,routing,aggregation,circuit-breaker" failureStage="aggregation" errorThreshold=0.5 windowSec=10}
-Bir istek gönderip zincirdeki adımları izleyin. Geçersiz token ile 401, limit aşımıyla 429 aldığınızı görün. "Envanter servisini yavaşlat" düğmesiyle hata oranını eşiğin üstüne çıkarın: devre açıldığında isteklerin servise gitmeden fallback ile döndüğünü, half-open denemesinin başarılı olunca devrenin kapandığını izleyin.
+:::interactive{type="request-journey" stages="tls,auth,rate-limit,routing,aggregation,circuit-breaker" failureStage="aggregation"}
+Bir istek gönderip gateway zincirindeki adımları (tls → auth → rate-limit → routing → aggregation → circuit-breaker) ve her adımın şelaledeki gecikme katkısını izleyin. "Hata enjekte et: aggregation" kutusunu işaretleyip tekrar gönderin: istek aggregation adımında 5xx ile durur, sonraki adımlar hiç çalışmaz — gerçek bir gateway'de geçersiz token auth'ta 401, limit aşımı rate-limit'te 429 ile zinciri aynı biçimde keser. Devre kesicinin eşik aşıldığında yaptığı da budur: isteği yavaş servise hiç göndermeden kısa devre yapıp hızlı başarısız olmak. "20 istek" ile ortalama ve p95'i karşılaştırın.
 :::
 
 :::code{lang="ts" title="Gateway filtre zinciri: auth → rate limit → routing → circuit breaker"}

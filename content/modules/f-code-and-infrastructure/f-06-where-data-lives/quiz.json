@@ -11,15 +11,15 @@
         "en": "Which store is best suited for the query \"aggregate the last three years of orders by country and month\"?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "Redis", "en": "Redis" } },
-        { "id": "b", "text": { "tr": "OLTP Postgres (sipariş servisinin veritabanı)", "en": "OLTP Postgres (the order service's database)" } },
+        { "id": "a", "text": { "tr": "OLTP Postgres'teki orders tablosunda indeksli GROUP BY", "en": "An indexed GROUP BY on the orders table in OLTP Postgres" } },
+        { "id": "b", "text": { "tr": "Prometheus'taki orders_created_total sayacının 3 yıllık toplamı", "en": "The 3-year total of the orders_created_total counter in Prometheus" } },
         { "id": "c", "text": { "tr": "Sütunsal bir data warehouse (Redshift, BigQuery, Snowflake)", "en": "A columnar data warehouse (Redshift, BigQuery, Snowflake)" } },
-        { "id": "d", "text": { "tr": "Prometheus", "en": "Prometheus" } }
+        { "id": "d", "text": { "tr": "Redis'te `ülke:ay` anahtarlı hash sayaçları (HINCRBY)", "en": "Hash counters keyed by `country:month` in Redis (HINCRBY)" } }
       ],
       "correct": ["c"],
       "explanation": {
-        "tr": "Milyarlarca satırda birkaç sütunu toplamak sütunsal depoların işidir. OLTP'de bu sorgu tüm tabloyu tarar ve canlı trafiği yavaşlatır (b). Redis yalnızca sıcak anahtarları tutar (a); Prometheus yaklaşık metrik saklar, iş sayıları için kaynak değildir (d).",
-        "en": "Aggregating a few columns over billions of rows is what columnar stores do. In OLTP this query scans the whole table and slows live traffic (b). Redis holds only hot keys (a); Prometheus stores approximate metrics and is not a source for business numbers (d)."
+        "tr": "Milyarlarca satırda birkaç sütunu toplamak sütunsal depoların işidir. OLTP'de indeks bile olsa bu sorgu üç yıllık tabloyu tarar ve canlı trafiği yavaşlatır; Redis yalnızca sıcak anahtarları tutar, geçmişe dönük esnek kırılım veremez; Prometheus yaklaşık metrik saklar (örnekleme, sayaç sıfırlanması, kısa saklama), iş sayıları için kaynak değildir.",
+        "en": "Aggregating a few columns over billions of rows is what columnar stores do. In OLTP, even with an index, this query scans three years of the table and slows live traffic; Redis holds only hot keys and cannot give flexible historical breakdowns; Prometheus stores approximate metrics (sampling, counter resets, short retention) and is not a source for business numbers."
       },
       "difficulty": "easy",
       "concepts": ["oltp-vs-olap", "data-warehouse"]
@@ -32,15 +32,15 @@
         "en": "The application writes to Postgres first and then sends an event to Kafka. What is the main risk of this approach and how is it solved?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "Kafka yavaştır; çözüm Redis kullanmaktır", "en": "Kafka is slow; the solution is to use Redis" } },
-        { "id": "b", "text": { "tr": "Dual write: DB commit olur ama Kafka yazması başarısız olabilir (ya da tersi); çözüm CDC ya da outbox kalıbıdır", "en": "Dual write: the DB commit may succeed while the Kafka write fails (or vice versa); the solution is CDC or the outbox pattern" } },
-        { "id": "c", "text": { "tr": "Postgres olay gönderemez; çözüm MongoDB'ye geçmektir", "en": "Postgres cannot send events; the solution is to switch to MongoDB" } },
-        { "id": "d", "text": { "tr": "Risk yoktur; iki yazma her zaman birlikte başarılı olur", "en": "There is no risk; both writes always succeed together" } }
+        { "id": "a", "text": { "tr": "Dual write: DB commit olur ama Kafka yazması başarısız olabilir (ya da tersi); çözüm CDC ya da outbox kalıbıdır", "en": "Dual write: the DB commit may succeed while the Kafka write fails (or vice versa); the solution is CDC or the outbox pattern" } },
+        { "id": "b", "text": { "tr": "Kafka yazması DB commit'inden yavaştır; çözüm olayı önce Kafka'ya yazıp DB'yi tüketicide asenkron güncellemektir", "en": "The Kafka write is slower than the DB commit; the solution is writing the event to Kafka first and updating the DB asynchronously in a consumer" } },
+        { "id": "c", "text": { "tr": "İki yazma aynı anda olunca Kafka sırası bozulur; çözüm topic'i `order_id` yerine zaman damgasına göre bölümlemektir", "en": "When both writes happen at once Kafka ordering breaks; the solution is partitioning the topic by timestamp instead of `order_id`" } },
+        { "id": "d", "text": { "tr": "Postgres transaction'ı Kafka onayı gelene kadar açık kalır ve kilitler birikir; çözüm Kafka yazmasını try/catch ile sarıp hatayı yutmaktır", "en": "The Postgres transaction stays open until Kafka acknowledges and locks pile up; the solution is wrapping the Kafka write in try/catch and swallowing the error" } }
       ],
-      "correct": ["b"],
+      "correct": ["a"],
       "explanation": {
-        "tr": "İki ayrı sisteme yapılan yazmalar atomik değildir. Outbox kalıbı olayı aynı transaction'da bir tabloya yazar, CDC (Debezium) bunu WAL'dan okuyup Kafka'ya taşır; böylece 'önce DB, sonra olay' garantisi korunur.",
-        "en": "Writes to two separate systems are not atomic. The outbox pattern writes the event to a table in the same transaction and CDC (Debezium) reads it from the WAL into Kafka, preserving the 'DB first, then event' guarantee."
+        "tr": "İki ayrı sisteme yapılan yazmalar atomik değildir; sırayı değiştirmek (önce Kafka) problemi yalnızca ters çevirir, hatayı yutmak ise tutarsızlığı görünmez kılar. Outbox kalıbı olayı aynı transaction'da bir tabloya yazar, CDC (Debezium) bunu WAL'dan okuyup Kafka'ya taşır; böylece 'önce DB, sonra olay' garantisi korunur. Bölümleme anahtarı sıralama içindir, atomiklikle ilgisi yoktur.",
+        "en": "Writes to two separate systems are not atomic; reversing the order (Kafka first) merely flips the problem, and swallowing the error hides the inconsistency. The outbox pattern writes the event to a table in the same transaction and CDC (Debezium) reads it from the WAL into Kafka, preserving the 'DB first, then event' guarantee. The partition key is about ordering and has nothing to do with atomicity."
       },
       "difficulty": "medium",
       "concepts": ["change-data-capture", "event-stream"]
@@ -93,15 +93,15 @@
         "en": "Which store is best for product images and PDF invoices, and why?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "Object storage (S3): sınırsız boyut, çok düşük maliyet, 3 AZ'ye otomatik kopya, yaşam döngüsü ile soğuk katmana taşıma", "en": "Object storage (S3): unlimited size, very low cost, automatic copies across 3 AZs, lifecycle rules to move to cold tiers" } },
-        { "id": "b", "text": { "tr": "Postgres BLOB kolonu: transaction garantisi için", "en": "A Postgres BLOB column: for transactional guarantees" } },
-        { "id": "c", "text": { "tr": "Redis: en hızlı erişim için", "en": "Redis: for the fastest access" } },
-        { "id": "d", "text": { "tr": "Kafka: kalıcı log olduğu için", "en": "Kafka: because it is a durable log" } }
+        { "id": "a", "text": { "tr": "Postgres BLOB kolonu: görsel ile ürün satırı aynı transaction'da yazılır, yedekleme ve replikasyon tek yerden yönetilir", "en": "A Postgres BLOB column: the image and the product row are written in one transaction, backup and replication are managed in one place" } },
+        { "id": "b", "text": { "tr": "Kafka: append-only log olduğu için dosyalar değişmez kalır; 3 AZ'ye replike edilir ve tüketiciler CDN gibi davranır", "en": "Kafka: being an append-only log the files stay immutable; it replicates to 3 AZs and consumers act like a CDN" } },
+        { "id": "c", "text": { "tr": "Redis: görseller RAM'den milisaniyede servis edilir; replika AZ-b'de olduğu için dayanıklılık object storage ile eşdeğerdir", "en": "Redis: images are served from RAM in milliseconds; with the replica in AZ-b, durability is equivalent to object storage" } },
+        { "id": "d", "text": { "tr": "Object storage (S3): sınırsız boyut, düşük maliyet, 3 AZ'ye otomatik kopya, yaşam döngüsüyle soğuk katmana taşıma", "en": "Object storage (S3): unlimited size, low cost, automatic copies across 3 AZs, lifecycle rules to move to cold tiers" } }
       ],
-      "correct": ["a"],
+      "correct": ["d"],
       "explanation": {
-        "tr": "Büyük, nadiren değişen dosyalar için object storage hem en ucuz hem en dayanıklı seçenektir ve CDN ile doğrudan servis edilir. DB'de BLOB tutmak yedekleri ve replikasyonu şişirir (b); RAM pahalıdır ve dosya için uygun değildir (c); Kafka rastgele erişim ve dosya servisi için tasarlanmamıştır (d).",
-        "en": "For large, rarely changing files object storage is both the cheapest and most durable option and is served directly via CDN. BLOBs in the DB bloat backups and replication (b); RAM is expensive and unsuited to files (c); Kafka is not designed for random access or file serving (d)."
+        "tr": "Büyük, nadiren değişen dosyalar için object storage hem en ucuz hem en dayanıklı seçenektir ve CDN ile doğrudan servis edilir. DB'de BLOB tutmak yedekleri ve replikasyonu şişirir, transaction avantajı buna değmez; RAM pahalıdır ve iki replika 11 dokuz dayanıklılığın yanına yaklaşmaz; Kafka'nın saklama süresi vardır ve rastgele erişim ya da dosya servisi için tasarlanmamıştır.",
+        "en": "For large, rarely changing files object storage is both the cheapest and most durable option and is served directly via CDN. BLOBs in the DB bloat backups and replication, and the transactional benefit is not worth it; RAM is expensive and two replicas come nowhere near eleven nines of durability; Kafka has a retention period and is not designed for random access or file serving."
       },
       "difficulty": "easy",
       "concepts": ["object-storage", "data-retention"]
