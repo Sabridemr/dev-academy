@@ -1,0 +1,188 @@
+{
+  "$ref": "#/definitions/quiz",
+  "definitions": {
+    "quiz": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "title": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "tr": {
+                  "type": "string"
+                },
+                "en": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "tr"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "passScore": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 70
+        },
+        "questions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "single",
+                  "multiple",
+                  "truefalse",
+                  "order"
+                ],
+                "default": "single"
+              },
+              "prompt": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "tr": {
+                        "type": "string"
+                      },
+                      "en": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "tr"
+                    ],
+                    "additionalProperties": false
+                  }
+                ]
+              },
+              "options": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "text": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "tr": {
+                              "type": "string"
+                            },
+                            "en": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "tr"
+                          ],
+                          "additionalProperties": false
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "text"
+                  ],
+                  "additionalProperties": false
+                },
+                "minItems": 2
+              },
+              "correct": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "minItems": 1
+              },
+              "explanation": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "tr": {
+                        "type": "string"
+                      },
+                      "en": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "tr"
+                    ],
+                    "additionalProperties": false
+                  }
+                ]
+              },
+              "difficulty": {
+                "type": "string",
+                "enum": [
+                  "easy",
+                  "medium",
+                  "hard"
+                ],
+                "default": "medium"
+              },
+              "concepts": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "default": []
+              }
+            },
+            "required": [
+              "id",
+              "prompt",
+              "options",
+              "correct",
+              "explanation"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1,
+          "maxItems": 20
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "questions"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

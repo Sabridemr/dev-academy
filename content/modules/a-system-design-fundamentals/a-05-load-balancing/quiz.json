@@ -1,0 +1,110 @@
+{
+  "id": "a-05-load-balancing-quiz",
+  "title": { "tr": "Load Balancer Quiz", "en": "Load Balancer Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Bir isteğin URL yoluna (/api/orders) göre farklı servislere yönlendirilmesini hangi tür yük dengeleyici yapabilir?",
+        "en": "Which kind of load balancer can route a request to different services based on its URL path (/api/orders)?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Yalnızca L4 (taşıma katmanı)", "en": "Only L4 (transport layer)" } },
+        { "id": "b", "text": { "tr": "Yalnızca L7 (uygulama katmanı)", "en": "Only L7 (application layer)" } },
+        { "id": "c", "text": { "tr": "Her ikisi de aynı şekilde yapar", "en": "Both do it the same way" } },
+        { "id": "d", "text": { "tr": "Hiçbiri; bu DNS'in işidir", "en": "Neither; that is DNS's job" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "URL yolu HTTP isteğinin içindedir; yalnızca uygulama katmanını (L7) ayrıştıran bir yük dengeleyici bunu görebilir. L4 yalnızca IP ve port bilgisine bakar.",
+        "en": "The URL path lives inside the HTTP request; only a load balancer that parses the application layer (L7) can see it. L4 only looks at IP and port."
+      },
+      "difficulty": "easy",
+      "concepts": ["l4-vs-l7"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "Bazı istekler çok uzun sürüyorsa (dosya yükleme, rapor üretme) hangi algoritma yükü en adil dağıtır?",
+        "en": "If some requests take very long (file uploads, report generation), which algorithm distributes load most fairly?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Round-robin", "en": "Round-robin" } },
+        { "id": "b", "text": { "tr": "IP hash", "en": "IP hash" } },
+        { "id": "c", "text": { "tr": "Least connections", "en": "Least connections" } },
+        { "id": "d", "text": { "tr": "Sticky session", "en": "Sticky session" } }
+      ],
+      "correct": ["c"],
+      "explanation": {
+        "tr": "Least connections o anki gerçek yükü (aktif bağlantı sayısını) ölçer; round-robin istek süresini dikkate almadığı için yavaş sunucunun kuyruğu şişer.",
+        "en": "Least connections measures the actual current load (active connections); round-robin ignores request duration, so a slow server's queue grows."
+      },
+      "difficulty": "medium",
+      "concepts": ["least-connections", "round-robin"]
+    },
+    {
+      "id": "q3",
+      "type": "multiple",
+      "prompt": {
+        "tr": "IP hash algoritmasının zayıf yanları hangileridir? (Birden fazla seçin)",
+        "en": "Which are weaknesses of the IP hash algorithm? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "NAT arkasındaki çok sayıda kullanıcı aynı sunucuya düşer", "en": "Many users behind NAT land on the same server" } },
+        { "id": "b", "text": { "tr": "Sunucu sayısı değişince eşlemelerin çoğu bozulur", "en": "Most mappings break when the server count changes" } },
+        { "id": "c", "text": { "tr": "Aynı istemci her seferinde farklı sunucuya gider", "en": "The same client goes to a different server each time" } },
+        { "id": "d", "text": { "tr": "Uygulaması çok karmaşıktır", "en": "It is very complex to implement" } }
+      ],
+      "correct": ["a", "b"],
+      "explanation": {
+        "tr": "IP hash aynı istemciyi hep aynı sunucuya gönderir (c yanlış) ve uygulaması basittir (d yanlış). Gerçek problemleri NAT yoğunlaşması ve mod N'in sunucu sayısı değişince yeniden dağıtım yapmasıdır — consistent hashing bunu çözer.",
+        "en": "IP hash always sends the same client to the same server (c is false) and is simple to implement (d is false). Its real problems are NAT concentration and mod-N reshuffling when the server count changes — consistent hashing solves that."
+      },
+      "difficulty": "medium",
+      "concepts": ["ip-hash"]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Yük dengeleyicinin health check uç noktası veritabanını da kontrol ederse, veritabanı yavaşladığında tüm sunucular aynı anda havuzdan çıkabilir.",
+        "en": "If the load balancer's health check endpoint also checks the database, all servers may leave the pool at once when the database slows down."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["t"],
+      "explanation": {
+        "tr": "Doğru. Derin health check paylaşılan bir bağımlılığı yansıttığında hata tüm sunucularda aynı anda görünür ve havuz boşalır. Bu yüzden LB için sığ liveness, izleme için derin readiness ayrımı yapılır.",
+        "en": "True. When a deep health check reflects a shared dependency, the failure shows on every server simultaneously and the pool empties. That is why shallow liveness for the LB is separated from deep readiness for monitoring."
+      },
+      "difficulty": "hard",
+      "concepts": ["health-check"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "Sticky session ihtiyacını ortadan kaldırmanın en sağlıklı yolu nedir?",
+        "en": "What is the healthiest way to eliminate the need for sticky sessions?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Tüm kullanıcıları tek sunucuya yönlendirmek", "en": "Route all users to a single server" } },
+        { "id": "b", "text": { "tr": "Oturum durumunu paylaşımlı bir depoya (Redis) taşıyıp servisleri stateless yapmak", "en": "Move session state to a shared store (Redis) and make services stateless" } },
+        { "id": "c", "text": { "tr": "Health check süresini uzatmak", "en": "Increase the health check interval" } },
+        { "id": "d", "text": { "tr": "L4 yerine L7 yük dengeleyici kullanmak", "en": "Use an L7 instead of an L4 load balancer" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Durum sunucudan çıkınca her sunucu her isteği işleyebilir; dağılım bozulmaz ve sunucu düşünce oturum kaybolmaz.",
+        "en": "Once state leaves the server, any server can handle any request; distribution stays balanced and sessions survive server failures."
+      },
+      "difficulty": "easy",
+      "concepts": ["sticky-session"]
+    }
+  ]
+}

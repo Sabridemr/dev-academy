@@ -1,0 +1,30 @@
+{
+  "name": "devacademy",
+  "private": true,
+  "version": "0.1.0",
+  "description": "DevAcademy — yazılım mimarisi ve yapay zekâ konularını animasyonlu, interaktif derslerle öğreten web + mobil platform (monorepo)",
+  "packageManager": "pnpm@10.28.0",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "scripts": {
+    "dev": "turbo run dev --parallel",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "test:e2e": "turbo run test:e2e",
+    "content:validate": "pnpm --filter @devacademy/shared run content:validate",
+    "db:migrate": "pnpm --filter @devacademy/backend run prisma:migrate",
+    "db:seed": "pnpm --filter @devacademy/backend run prisma:seed",
+    "format": "prettier --write \"**/*.{ts,tsx,js,json,md,yml,yaml}\" --ignore-path .gitignore",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,json,md,yml,yaml}\" --ignore-path .gitignore",
+    "clean": "turbo run clean && rm -rf node_modules"
+  },
+  "devDependencies": {
+    "prettier": "^3.5.3",
+    "turbo": "^2.5.0",
+    "typescript": "^5.8.3"
+  }
+}

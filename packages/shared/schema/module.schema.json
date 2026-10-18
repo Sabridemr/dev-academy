@@ -1,0 +1,89 @@
+{
+  "$ref": "#/definitions/module",
+  "definitions": {
+    "module": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "slug": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "code": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 3
+        },
+        "order": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "title": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "tr": {
+                  "type": "string"
+                },
+                "en": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "tr"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "tr": {
+                  "type": "string"
+                },
+                "en": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "tr"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "icon": {
+          "type": "string",
+          "default": "book"
+        },
+        "color": {
+          "type": "string",
+          "default": "#6366f1"
+        }
+      },
+      "required": [
+        "id",
+        "slug",
+        "code",
+        "order",
+        "title",
+        "description"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

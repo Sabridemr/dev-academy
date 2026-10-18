@@ -1,0 +1,13 @@
+{
+  "id": "b-architectures",
+  "slug": "architectures",
+  "code": "B",
+  "order": 2,
+  "title": { "tr": "Mimariler", "en": "Architectures" },
+  "description": {
+    "tr": "Monolitten mikroservise, serverless’tan multi-region dağıtıma mimari evrim.",
+    "en": "Architectural evolution from monolith to microservices, serverless to multi-region."
+  },
+  "icon": "boxes",
+  "color": "#0ea5e9"
+}

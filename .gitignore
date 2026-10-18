@@ -1,0 +1,48 @@
+# Bağımlılıklar
+node_modules/
+.pnpm-store/
+
+# Derleme çıktıları
+dist/
+build/
+.next/
+out/
+.turbo/
+coverage/
+*.tsbuildinfo
+
+# Ortam dosyaları
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Prisma
+backend/prisma/generated/
+
+# Expo / React Native
+.expo/
+.expo-shared/
+mobile/ios/
+mobile/android/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+web-build/
+
+# Test
+playwright-report/
+test-results/
+
+# Editör / OS
+.idea/
+.vscode/*
+!.vscode/extensions.json
+.DS_Store
+Thumbs.db
+*.log
+npm-debug.log*
+pnpm-debug.log*

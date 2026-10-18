@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 420" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Load balancer mimarisi</title>
+  <desc id="desc">Solda üç istemci, ortada L7 yük dengeleyici, sağda üç uygulama sunucusu. Yük dengeleyici istekleri dağıtır ve her sunucuya health check gönderir.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+    <marker id="arrow-hc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-success, #10b981)"/>
+    </marker>
+  </defs>
+
+  <!-- Genel ağ / özel ağ ayrımı -->
+  <rect x="470" y="20" width="410" height="380" rx="16" fill="var(--da-surface, #f8fafc)" stroke="var(--da-border, #cbd5e1)" stroke-dasharray="6 6"/>
+  <text x="675" y="48" text-anchor="middle" font-size="13" fill="var(--da-muted, #64748b)">Özel ağ (private subnet)</text>
+  <text x="130" y="48" text-anchor="middle" font-size="13" fill="var(--da-muted, #64748b)">İnternet</text>
+
+  <!-- İstemciler -->
+  <g fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5">
+    <rect x="60" y="100" width="130" height="56" rx="10"/>
+    <rect x="60" y="182" width="130" height="56" rx="10"/>
+    <rect x="60" y="264" width="130" height="56" rx="10"/>
+  </g>
+  <g font-size="14" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="125" y="133">Tarayıcı</text>
+    <text x="125" y="215">Mobil uygulama</text>
+    <text x="125" y="297">Başka servis</text>
+  </g>
+
+  <!-- İstemci → LB okları -->
+  <g stroke="var(--da-muted, #64748b)" stroke-width="1.8" fill="none" marker-end="url(#arrow)">
+    <path d="M 190 128 C 250 128, 260 196, 310 200"/>
+    <path d="M 190 210 L 310 210"/>
+    <path d="M 190 292 C 250 292, 260 224, 310 220"/>
+  </g>
+  <text x="250" y="188" font-size="11" fill="var(--da-muted, #64748b)" text-anchor="middle">tek VIP: 203.0.113.10</text>
+
+  <!-- Load balancer -->
+  <rect x="312" y="160" width="130" height="100" rx="14" fill="var(--da-primary, #6366f1)" opacity="0.12" stroke="var(--da-primary, #6366f1)" stroke-width="2"/>
+  <text x="377" y="197" text-anchor="middle" font-size="15" font-weight="600" fill="var(--da-primary, #6366f1)">Load Balancer</text>
+  <text x="377" y="218" text-anchor="middle" font-size="12" fill="var(--da-fg, #0f172a)">L7 · TLS sonlandırma</text>
+  <text x="377" y="236" text-anchor="middle" font-size="12" fill="var(--da-fg, #0f172a)">round-robin</text>
+
+  <!-- LB → sunucu okları -->
+  <g stroke="var(--da-primary, #6366f1)" stroke-width="2" fill="none" marker-end="url(#arrow)">
+    <path d="M 442 190 C 520 190, 540 110, 600 110"/>
+    <path d="M 442 210 L 600 210"/>
+    <path d="M 442 230 C 520 230, 540 310, 600 310"/>
+  </g>
+
+  <!-- Health check okları (kesikli yeşil) -->
+  <g stroke="var(--da-success, #10b981)" stroke-width="1.5" fill="none" stroke-dasharray="4 4" marker-end="url(#arrow-hc)">
+    <path d="M 442 175 C 520 160, 560 86, 600 92"/>
+    <path d="M 442 245 C 520 260, 560 334, 600 328"/>
+  </g>
+  <text x="520" y="80" font-size="11" fill="var(--da-success, #10b981)">GET /health her 5 s</text>
+
+  <!-- Sunucular -->
+  <g fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5">
+    <rect x="602" y="80" width="150" height="60" rx="10"/>
+    <rect x="602" y="180" width="150" height="60" rx="10"/>
+    <rect x="602" y="280" width="150" height="60" rx="10"/>
+  </g>
+  <g font-size="14" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="677" y="104">S1 · 10.0.1.11</text>
+    <text x="677" y="204">S2 · 10.0.1.12</text>
+    <text x="677" y="304">S3 · 10.0.1.13</text>
+  </g>
+  <g font-size="11" fill="var(--da-muted, #64748b)" text-anchor="middle">
+    <text x="677" y="124">uygulama sunucusu</text>
+    <text x="677" y="224">uygulama sunucusu</text>
+    <text x="677" y="324">uygulama sunucusu</text>
+  </g>
+
+  <!-- Durum göstergeleri -->
+  <circle cx="740" cy="92" r="5" fill="var(--da-success, #10b981)"/>
+  <circle cx="740" cy="192" r="5" fill="var(--da-success, #10b981)"/>
+  <circle cx="740" cy="292" r="5" fill="var(--da-success, #10b981)"/>
+
+  <!-- Paylaşımlı oturum deposu -->
+  <rect x="790" y="170" width="76" height="80" rx="10" fill="var(--da-accent, #f59e0b)" opacity="0.15" stroke="var(--da-accent, #f59e0b)"/>
+  <text x="828" y="205" text-anchor="middle" font-size="12" fill="var(--da-fg, #0f172a)">Redis</text>
+  <text x="828" y="222" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">oturumlar</text>
+  <g stroke="var(--da-accent, #f59e0b)" stroke-width="1.2" fill="none" stroke-dasharray="3 3">
+    <path d="M 752 110 C 775 110, 780 180, 790 190"/>
+    <path d="M 752 210 L 790 210"/>
+    <path d="M 752 310 C 775 310, 780 240, 790 230"/>
+  </g>
+
+  <!-- Alt not -->
+  <text x="450" y="395" text-anchor="middle" font-size="12" fill="var(--da-muted, #64748b)">Durum (oturum) sunucudan Redis'e taşınınca sticky session gerekmez; her sunucu her isteği işleyebilir.</text>
+</svg>

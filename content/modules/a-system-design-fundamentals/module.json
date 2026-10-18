@@ -1,0 +1,13 @@
+{
+  "id": "a-system-design-fundamentals",
+  "slug": "system-design-fundamentals",
+  "code": "A",
+  "order": 1,
+  "title": { "tr": "Sistem Tasarımı Temelleri", "en": "System Design Fundamentals" },
+  "description": {
+    "tr": "İstemci-sunucu modelinden consistent hashing’e, ölçeklenebilir sistemlerin yapı taşları.",
+    "en": "From the client-server model to consistent hashing: the building blocks of scalable systems."
+  },
+  "icon": "layers",
+  "color": "#6366f1"
+}
