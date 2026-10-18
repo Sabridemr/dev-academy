@@ -2,6 +2,10 @@ import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import Svg, { Circle, Ellipse, G, Line, Path, Rect, Text as SvgText } from 'react-native-svg';
 import Animated, { useAnimatedProps, useSharedValue, withTiming } from 'react-native-reanimated';
 import {
+  annotationBox,
+  badgeBox,
+  nodeTextLayout,
+  truncateToWidth,
   computePackets,
   easeInOutCubic,
   edgeGeometry,
@@ -201,13 +205,14 @@ export const SceneCanvas = memo(function SceneCanvas({ scene, view, elapsedMs, r
         const target = a.target ? scene.nodes.find((n) => n.id === a.target) : undefined;
         const color = a.tone === 'danger' ? colors.danger : a.tone === 'warning' ? colors.warning : a.tone === 'success' ? colors.success : colors.primary;
         const text = tl(a.text);
-        const w = Math.max(80, text.length * 7 + 24);
+        // Kutu tuval sınırları içinde tutulur; metin kutuya sığacak şekilde kısaltılır (web ile aynı kural)
+        const box = annotationBox(scene, a, text);
         return (
           <G key={a.id}>
-            {target ? <Line x1={a.x} y1={a.y} x2={target.x} y2={target.y} stroke={color} strokeDasharray="3 3" strokeWidth={1.2} /> : null}
-            <Rect x={a.x - w / 2} y={a.y - 14} width={w} height={28} rx={8} fill={colors.surface} stroke={color} strokeWidth={1.5} />
-            <SvgText x={a.x} y={a.y + 4} textAnchor="middle" fontSize={12} fill={color} fontWeight="600">
-              {text}
+            {target ? <Line x1={box.x} y1={box.y} x2={target.x} y2={target.y} stroke={color} strokeDasharray="3 3" strokeWidth={1.2} /> : null}
+            <Rect x={box.x - box.w / 2} y={box.y - box.h / 2} width={box.w} height={box.h} rx={8} fill={colors.surface} stroke={color} strokeWidth={1.5} />
+            <SvgText x={box.x} y={box.y + 4} textAnchor="middle" fontSize={12} fill={color} fontWeight="600">
+              {truncateToWidth(text, box.w - 16, 12)}
             </SvgText>
           </G>
         );
@@ -297,7 +302,8 @@ const SceneNodeView = memo(function SceneNodeView({ node, status, visible, highl
   const isRound = node.kind === 'neuron' || node.kind === 'user';
   const accent = node.color ? resolveThemeColor(node.color, colors) : undefined;
   const strokeTarget = highlighted ? colors.primary : accent ?? sc.stroke;
-  const iconSize = Math.min(24, h * 0.42);
+  const layout = nodeTextLayout(node, label, sublabel);
+  const badgeInfo = badge ? badgeBox(node, badge) : null;
   const barWidth = w - 16;
   const barTarget = progress !== undefined ? barWidth * progress : 0;
   const barColor = progress !== undefined ? (progress > 0.85 ? colors.danger : progress > 0.6 ? colors.warning : colors.success) : colors.success;
@@ -341,23 +347,16 @@ const SceneNodeView = memo(function SceneNodeView({ node, status, visible, highl
         <AnimatedRect x={node.x - w / 2} y={node.y - h / 2} width={w} height={h} rx={12} animatedProps={shapeProps} />
       )}
 
-      {node.kind !== 'neuron' ? (
-        <NodeIcon elements={NODE_ICON_PATHS[node.kind] ?? NODE_ICON_PATHS.generic} x={node.x - iconSize / 2} y={isRound ? node.y - iconSize / 2 : node.y - h / 2 + 7} size={iconSize} color={iconColor} />
+      {layout.showIcon ? (
+        <NodeIcon elements={NODE_ICON_PATHS[node.kind] ?? NODE_ICON_PATHS.generic} x={node.x - layout.iconSize / 2} y={layout.iconCentered ? node.y - layout.iconSize / 2 : node.y - h / 2 + 7} size={layout.iconSize} color={iconColor} />
       ) : null}
 
-      <SvgText
-        x={node.x}
-        y={isRound ? node.y + h / 2 + 16 : node.y + (node.kind === 'neuron' ? 4 : h / 2 - (sublabel ? 22 : 10))}
-        textAnchor="middle"
-        fontSize={node.kind === 'neuron' ? 11 : 13}
-        fontWeight="600"
-        fill={colors.fg}
-      >
-        {label}
+      <SvgText x={node.x} y={node.y + layout.labelDy} textAnchor="middle" fontSize={layout.labelFontSize} fontWeight="600" fill={colors.fg}>
+        {layout.label}
       </SvgText>
-      {sublabel ? (
-        <SvgText x={node.x} y={isRound ? node.y + h / 2 + 30 : node.y + h / 2 - 8} textAnchor="middle" fontSize={10.5} fill={colors.muted}>
-          {sublabel}
+      {layout.sublabel ? (
+        <SvgText x={node.x} y={node.y + layout.sublabelDy} textAnchor="middle" fontSize={layout.sublabelFontSize} fill={colors.muted}>
+          {layout.sublabel}
         </SvgText>
       ) : null}
 
@@ -368,11 +367,11 @@ const SceneNodeView = memo(function SceneNodeView({ node, status, visible, highl
         </G>
       ) : null}
 
-      {badge ? (
+      {badgeInfo ? (
         <G>
-          <Circle cx={node.x + w / 2 - 4} cy={node.y - h / 2 + 4} r={13} fill={status === 'down' || status === 'error' ? colors.danger : colors.accent} />
-          <SvgText x={node.x + w / 2 - 4} y={node.y - h / 2 + 8} textAnchor="middle" fontSize={10.5} fontWeight="700" fill="#FFFFFF">
-            {badge.slice(0, 4)}
+          <Rect x={badgeInfo.cx - badgeInfo.w / 2} y={badgeInfo.cy - badgeInfo.h / 2} width={badgeInfo.w} height={badgeInfo.h} rx={badgeInfo.h / 2} fill={status === 'down' || status === 'error' ? colors.danger : colors.accent} stroke={colors.surface} strokeWidth={1.5} />
+          <SvgText x={badgeInfo.cx} y={badgeInfo.cy + 4} textAnchor="middle" fontSize={10.5} fontWeight="700" fill="#FFFFFF">
+            {badgeInfo.text}
           </SvgText>
         </G>
       ) : null}

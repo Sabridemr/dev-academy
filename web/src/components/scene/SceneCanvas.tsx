@@ -3,7 +3,11 @@
 import { memo, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import {
+  annotationBox,
+  badgeBox,
   computePackets,
+  nodeTextLayout,
+  truncateToWidth,
   edgeGeometry,
   easeInOutCubic,
   nodeSize,
@@ -147,13 +151,16 @@ export const SceneCanvas = memo(function SceneCanvas({ scene, view, elapsedMs, r
         const target = a.target ? scene.nodes.find((n) => n.id === a.target) : undefined;
         const color = a.tone === 'danger' ? 'var(--da-danger)' : a.tone === 'warning' ? 'var(--da-warning)' : a.tone === 'success' ? 'var(--da-success)' : 'var(--da-primary)';
         const text = tl(a.text);
-        const w = Math.max(80, text.length * 7 + 24);
+        // Kutu tuval sınırları içinde tutulur; metin kutuya sığacak şekilde kısaltılır
+        const box = annotationBox(scene, a, text);
+        const shown = truncateToWidth(text, box.w - 16, 12);
         return (
           <motion.g key={a.id} initial={reducedMotion ? false : { opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={transition}>
-            {target && <line x1={a.x} y1={a.y} x2={target.x} y2={target.y} stroke={color} strokeDasharray="3 3" strokeWidth={1.2} />}
-            <rect x={a.x - w / 2} y={a.y - 14} width={w} height={28} rx={8} fill="var(--da-surface)" stroke={color} strokeWidth={1.5} />
-            <text x={a.x} y={a.y + 4} textAnchor="middle" fontSize={12} fill={color} fontWeight={600}>
-              {text}
+            {target && <line x1={box.x} y1={box.y} x2={target.x} y2={target.y} stroke={color} strokeDasharray="3 3" strokeWidth={1.2} />}
+            <rect x={box.x - box.w / 2} y={box.y - box.h / 2} width={box.w} height={box.h} rx={8} fill="var(--da-surface)" stroke={color} strokeWidth={1.5} />
+            <title>{text}</title>
+            <text x={box.x} y={box.y + 4} textAnchor="middle" fontSize={12} fill={color} fontWeight={600}>
+              {shown}
             </text>
           </motion.g>
         );
@@ -216,7 +223,9 @@ function SceneNodeView({ node, view, label, sublabel, glowId, transition, select
   const isRound = node.kind === 'neuron' || node.kind === 'user';
   const highlighted = v?.highlighted;
   const accent = node.color ? themeColor(node.color) : undefined;
-  const iconSize = Math.min(24, h * 0.42);
+  const layout = nodeTextLayout(node, label, sublabel ?? '');
+  const badgeRaw = v?.badge ? v.badge : v?.counter !== undefined ? String(v.counter) : '';
+  const badge = badgeRaw ? badgeBox(node, badgeRaw) : null;
 
   return (
     <motion.g
@@ -234,20 +243,16 @@ function SceneNodeView({ node, view, label, sublabel, glowId, transition, select
       )}
       {selected && <rect x={node.x - w / 2 - 6} y={node.y - h / 2 - 6} width={w + 12} height={h + 12} rx={16} fill="none" stroke="var(--da-accent)" strokeDasharray="4 3" />}
 
-      {node.kind !== 'neuron' && (
-        <Icon x={node.x - iconSize / 2} y={isRound ? node.y - iconSize / 2 : node.y - h / 2 + 7} width={iconSize} height={iconSize} color={status === 'down' || status === 'error' ? 'var(--da-danger)' : accent ?? 'var(--da-primary)'} strokeWidth={1.8} />
+      {layout.showIcon && (
+        <Icon x={node.x - layout.iconSize / 2} y={layout.iconCentered ? node.y - layout.iconSize / 2 : node.y - h / 2 + 7} width={layout.iconSize} height={layout.iconSize} color={status === 'down' || status === 'error' ? 'var(--da-danger)' : accent ?? 'var(--da-primary)'} strokeWidth={1.8} />
       )}
-      <text x={node.x} y={isRound ? node.y + h / 2 + 16 : node.y + (node.kind === 'neuron' ? 4 : h / 2 - (sublabel ? 22 : 10))} textAnchor="middle" fontSize={node.kind === 'neuron' ? 11 : 13} fontWeight={600} fill="var(--da-fg)">
-        {label}
+      {(layout.label !== label || layout.sublabel !== (sublabel ?? '')) && <title>{`${label}${sublabel ? ` — ${sublabel}` : ''}`}</title>}
+      <text x={node.x} y={node.y + layout.labelDy} textAnchor="middle" fontSize={layout.labelFontSize} fontWeight={600} fill="var(--da-fg)">
+        {layout.label}
       </text>
-      {sublabel && !isRound && (
-        <text x={node.x} y={node.y + h / 2 - 8} textAnchor="middle" fontSize={10.5} fill="var(--da-muted)">
-          {sublabel}
-        </text>
-      )}
-      {sublabel && isRound && (
-        <text x={node.x} y={node.y + h / 2 + 30} textAnchor="middle" fontSize={10.5} fill="var(--da-muted)">
-          {sublabel}
+      {layout.sublabel && (
+        <text x={node.x} y={node.y + layout.sublabelDy} textAnchor="middle" fontSize={layout.sublabelFontSize} fill="var(--da-muted)">
+          {layout.sublabel}
         </text>
       )}
 
@@ -259,12 +264,12 @@ function SceneNodeView({ node, view, label, sublabel, glowId, transition, select
         </g>
       )}
 
-      {/* Rozet / sayaç */}
-      {(v?.badge || v?.counter !== undefined) && (
+      {/* Rozet / sayaç: kısa metin daire, uzun metin hap */}
+      {badge && (
         <g>
-          <circle cx={node.x + w / 2 - 4} cy={node.y - h / 2 + 4} r={13} fill={status === 'down' || status === 'error' ? 'var(--da-danger)' : 'var(--da-accent)'} />
-          <text x={node.x + w / 2 - 4} y={node.y - h / 2 + 8} textAnchor="middle" fontSize={10.5} fontWeight={700} fill="#fff">
-            {(v?.badge ?? String(v?.counter)).slice(0, 4)}
+          <rect x={badge.cx - badge.w / 2} y={badge.cy - badge.h / 2} width={badge.w} height={badge.h} rx={badge.h / 2} fill={status === 'down' || status === 'error' ? 'var(--da-danger)' : 'var(--da-accent)'} stroke="var(--da-surface)" strokeWidth={1.5} />
+          <text x={badge.cx} y={badge.cy + 4} textAnchor="middle" fontSize={10.5} fontWeight={700} fill="#fff">
+            {badge.text}
           </text>
         </g>
       )}
