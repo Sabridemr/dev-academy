@@ -83,8 +83,8 @@ Milyonlarca parametresi olan bir ağın kayıp yüzeyi yüksek boyutlu, dışbü
 - **Adam** her parametre için adım boyunu gradyanın büyüklüğüne göre ölçekler; çoğu problemde iyi bir varsayılandır.
 - **Batch boyutu** gürültü–hız dengesini kurar; çok büyük batch'ler keskin minimumlara düşüp daha kötü genelleyebilir.
 
-:::interactive{type="gradient-descent" surface="saddle" learningRate=0.05 optimizer="sgd"}
-Eyer noktalı yüzeyde düz SGD ile başlayın: ortada takılıyor mu? Momentum'u açın, sonra Adam'ı seçin; aynı başlangıçtan kaç adımda çukura iniyor? Öğrenme oranını 0.5 yapıp ıraksamayı gözlemleyin.
+:::interactive{type="gradient-descent" surface="valley" learningRate=0.03 optimizer="sgd"}
+Dar vadi yüzeyinde düz SGD ile başlayın: dik eksende zikzak çizip sığ eksende sürünüyor mu, kaç iterasyonda yakınsıyor? Optimizer'ı Momentum'a çevirin: aynı başlangıçtan yaklaşık yarı sürede iner, çünkü sığ eksende hız biriktirir. Adam'ı seçin: ilk birkaç yüz iterasyonda çukura iner ama dipte uzun süre küçük adımlarla titrer — adım boyu gradyanın anlık büyüklüğüne değil geçmişine göre ölçeklenir. (Lineer regresyonun kaybı dışbükeydir, eyer noktası yoktur; eyerler ve yerel minimumlar derin ağların yüzeyinde ortaya çıkar — ama vadideki bu fark orada da aynen geçerlidir.) Öğrenme oranını 0.5'e çıkarıp SGD ve Momentum'un ıraksadığını, Adam'ın ise normalize adımı sayesinde ayakta kaldığını gözlemleyin.
 :::
 
 :::code{lang="ts" title="Saf TypeScript ile mini MLP (2-3-1): forward, backward, SGD"}

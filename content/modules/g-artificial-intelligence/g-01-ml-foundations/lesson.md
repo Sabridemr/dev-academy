@@ -110,7 +110,7 @@ Karmaşıklığı artırmak bias'ı düşürür, variance'ı yükseltir. "Tatlı
 `η` (öğrenme oranı, learning rate) adım boyudur: çok küçükse yakınsama saatler sürer, çok büyükse minimumun etrafında zıplar ya da ıraksar. **Stochastic gradient descent (SGD)** gradyanı tüm veri yerine küçük bir *mini-batch* üzerinden hesaplar; bu hem hızlıdır hem de gürültüsü sığ yerel minimumlardan kaçmaya yardım eder. Adam gibi optimizasyon yöntemleri adım boyunu parametre başına uyarlar.
 
 :::interactive{type="gradient-descent" learningRate=0.1 startX=4 surface="bowl"}
-Öğrenme oranını değiştirip başlangıç noktasını sürükleyin. 0.01'de kaç adımda yakınsıyor? 0.9'da ne oluyor? Yüzeyi "iki çukurlu" yapıp yerel minimuma takılmayı gözlemleyin.
+Öğrenme oranını değiştirin ve ısı haritasına tıklayarak başlangıç noktasını seçin. 0.01'de kaç iterasyonda yakınsıyor? 0.1'de iz neden çukurun iki yanında zıplıyor, 0.2'de ne oluyor? Veri setini "Dar vadi" yapın: 0.1'lik aynı öğrenme oranı bir eksende patlarken diğerinde sürünür — ölçeklenmemiş özelliklerin bedeli. (Lineer regresyonun MSE yüzeyi tek çukurludur; yerel minimum tuzağını sinir ağları dersinde göreceksiniz.)
 :::
 
 :::code{lang="ts" title="Train/val/test ayrımı, doğrusal regresyon ve overfitting kontrolü"}

@@ -39,7 +39,7 @@ Bu üç soru neredeyse her sistem tasarımı mülakat setinde vardır; büyük v
 Ayda 100 M yeni URL ≈ **40 yazma/s**; 100:1 oranla **4 K yönlendirme/s** (tepe 40 K). Kayıt ~500 B → 5 yılda 6 Mia URL × 500 B ≈ **3 TB** — tek bir KV kümesine sığar. Kod uzunluğu: base62 ile 7 karakter = 62⁷ ≈ **3.5 trilyon** kod; 6 Mia için fazlasıyla yeter.
 
 :::interactive{type="capacity-estimator" dau=50000000 readsPerUserPerDay=8 writesPerUserPerDay=0.07 avgWriteSizeBytes=500 avgReadSizeBytes=300 peakMultiplier=10 hotDataRatio=0.2 replicationFactor=3}
-Depolamanın ne kadar küçük kaldığına dikkat edin: bu problemde darboğaz disk değil, yönlendirme gecikmesi ve id üretimidir. Tepe çarpanını 10 yapın (viral bir link) ve cache boyutunun hâlâ birkaç GB'ta kaldığını görün — yönlendirme tablosunun sıcak kısmı tamamen belleğe sığar.
+Depolamanın ne kadar küçük kaldığına dikkat edin: bu problemde darboğaz disk değil, yönlendirme gecikmesi ve id üretimidir. Tepe çarpanını 10'dan 20'ye çıkarın (viral bir link): tepe okuma QPS'si ve gereken uygulama sunucusu sayısı iki katına çıkar ama cache boyutu değişmez ve birkaç GB'ta kalır — yönlendirme tablosunun sıcak kısmı tamamen belleğe sığar.
 :::
 
 ### Tasarım kararları
@@ -138,8 +138,8 @@ Sayaç gateway düğümünde değil Redis'te yaşar; böylece istemci hangi dü�
 Kural bulma → Lua ile atomik sayım → izin ve başlıklar → farklı düğümlere dağılan patlama aynı Redis anahtarında sayılır → 429 + Retry-After → pencere kayar → Redis düşünce fail-open.
 :::
 
-:::interactive{type="rate-limiter" algorithm="sliding-window-counter" limit=10 windowMs=10000 ratePerSec=1}
-Sabit pencere ile başlayıp pencere sınırında art arda 20 istek gönderin: kaçı geçti? Sliding window counter'a geçip aynı şeyi deneyin. Sonra token bucket ile kısa patlamalara izin verirken ortalamayı nasıl koruduğunu karşılaştırın.
+:::interactive{type="rate-limiter" algorithm="fixed-window" limit=10 windowMs=5000 rate=1}
+Sabit pencere ile başlayın: zaman çizelgesindeki pencere çizgisinin hemen öncesinde ve hemen sonrasında "10 istek gönder"e basın — 5 saniyelik limitin iki katı, yani 20 istek geçti mi? Sliding window counter'a geçip aynı şeyi deneyin: önceki pencerenin ağırlıklı sayımı patlamayı yakalar. Sonra token bucket'a geçin (kapasite 10, dolum 1/sn): kısa patlamalara kapasite kadar izin verirken ortalamayı dolum hızında nasıl tuttuğunu karşılaştırın.
 :::
 
 ## Mini vaka 3: Notification servisi

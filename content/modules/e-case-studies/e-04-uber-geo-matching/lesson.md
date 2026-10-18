@@ -179,8 +179,8 @@ def nearby_idle_drivers(redis, lat, lng):
 Arka planda konum akışı (WebSocket → Kafka → geo indeks); yolcu isteği → gateway → eşleştirme → surge → H3 halka sorgusu → ETA sıralaması → WebSocket ile sürücüye teklif → kabul → trip DB → yolcuya yanıt.
 :::
 
-:::interactive{type="geo-index" index="h3" resolution=8 drivers=300 ringSize=1 showBoundaryProblem=true}
-Önce geohash'i seçip yolcuyu bir hücre sınırına yakın koyun: en yakın sürücü aday listesine giriyor mu? Komşu hücreleri açın. Sonra H3'e geçin ve halka boyutunu (k) artırarak aday sayısı ile sorgu maliyetinin nasıl değiştiğini izleyin; quadtree'de yoğun bölgenin nasıl daha küçük hücrelere bölündüğüne bakın.
+:::interactive{type="geo-index" resolution=8 drivers=300 ringSize=1 showBoundaryProblem=true}
+Komşu halkasını 0'a indirin ve haritaya tıklayarak yolcuyu bir hücre sınırına yakın koyun: arama yarıçapı içindeki en yakın sürücü aday listesine giriyor mu? "Kaçırılan (sınır sorunu)" sayacına bakın. Halkayı 1'e, sonra 2'ye çıkarın: kaçırılan sıfırlanır ama kontrol edilen sürücü sayısı artar — aday sayısı ile sorgu maliyeti arasındaki takas budur; H3'ün k-ring sorgusu aynı işi altıgen hücrelerle yapar. Hassasiyeti artırıp hücreleri küçültün: aynı yarıçap için kaç hücre taramak gerekiyor? Quadtree bu dengeyi yoğun bölgede küçük, seyrek bölgede büyük hücre kullanarak kurar; "Sürücüleri hareket ettir" ile canlı indeksin her tikte nasıl değiştiğini izleyin.
 :::
 
 :::realworld{company="Uber"}

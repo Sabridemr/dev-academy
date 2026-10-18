@@ -30,16 +30,16 @@ Pratik sonuçları:
 - Sayılar ve kod garip bölünür ("1234567" → "123" "456" "7"); aritmetik hatalarının bir nedeni budur.
 - Fiyatlandırma, bağlam penceresi ve gecikme hep token cinsinden ölçülür.
 
-:::interactive{type="tokenizer" encoding="bpe" text="Unbelievable! Fiyat 1234567 TL, ürün kodu X9-ÇA."}
-Aynı cümleyi İngilizce ve Türkçe yazıp token sayısını karşılaştırın. Boşluğun bir sonraki kelimeye yapıştığına ("Ġ" ön eki) ve Türkçe karakterlerin birden çok byte tokena bölündüğüne dikkat edin.
+:::interactive{type="tokenizer" text="Unbelievable! Fiyat 1234567 TL, ürün kodu X9-ŞA."}
+Aynı cümleyi İngilizce ve Türkçe yazıp token sayısını karşılaştırın. Boşluğun bir sonraki kelimeye yapıştığına (▁ ön eki; GPT ailesinde "Ġ") ve sayıların parçalara bölündüğüne dikkat edin. Korpusta hiç görülmeyen karakterlerin (buradaki "Ş" gibi) UTF-8 byte tokenlarına düştüğünü "Byte fallback" sayacında görün; birleştirme sayısı kaydırıcısını sıfıra çekip sözlük küçüldükçe token sayısının nasıl patladığını izleyin.
 :::
 
 ## Embedding uzayı
 
 Her token id'si öğrenilmiş bir **gömme vektörüne** (örn. 4096 boyut) karşılık gelir; eğitim bu vektörleri öyle düzenler ki benzer anlamlar yakın düşer ve yönler ilişki taşır (`kral − erkek + kadın ≈ kraliçe`). Aynı fikir cümle/doküman düzeyine taşınınca **embedding modelleri** ortaya çıkar: bir metni tek bir vektöre çevirir, iki metnin benzerliği **kosinüs benzerliği** ile ölçülür. Bu, anlamsal arama, kümeleme, tekilleştirme ve birazdan göreceğimiz RAG'ın temelidir.
 
-:::interactive{type="embedding-space" dimensions=2 preset="animals-vehicles" showNeighbors=true}
-"kedi", "köpek", "kamyon", "bisiklet" noktalarını bulun. Yeni bir kelime ekleyip en yakın komşularını görün; "banka" gibi çok anlamlı bir kelime nereye düşüyor? Boyutu 3'e çıkarıp izdüşümün nasıl değiştiğini izleyin.
+:::interactive{type="embedding-space" dimensions=2 showNeighbors=true}
+"kedi", "köpek", "kamyon", "bisiklet" noktalarını bulun: hayvanlar ve taşıtlar ayrı kümelerde toplanmış. Bir kelimeye tıklayıp kosinüs benzerliğine göre en yakın beş komşusunu görün; "at" (hem hayvan hem taşıma aracı) hangi iki kümenin arasına düşüyor? Vektör aritmetiği kutusunda kral − adam + kadın ≈ ? denklemini ve başka üçlüleri deneyin. Başlangıçta 2B izdüşüm düzdür; "Döndür" ve "Eğ" kaydırıcılarıyla ya da sürükleyerek üçüncü boyutu açın ve üst üste binen noktaların nasıl ayrıştığını izleyin.
 :::
 
 :::diagram{src="diagram.svg" alt="LLM yaşam döngüsü: pretraining, SFT, RLHF ve dağıtım aşamaları; altta BPE tokenization örneği ve agent döngüsü (plan, araç çağrısı, gözlem)|LLM lifecycle: pretraining, SFT, RLHF and deployment stages; below, a BPE tokenization example and the agent loop (plan, tool call, observe)"}

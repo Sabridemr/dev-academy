@@ -41,8 +41,8 @@ Her mimari aynı yapı taşlarından (ağırlıklı toplam + aktivasyon) kurulur
 
 Tipik blok: `Conv → BatchNorm → ReLU → (Pool)`. ResNet'in katkısı **residual bağlantı** (`y = F(x) + x`): gradyan kısa yoldan geriye akar, 100+ katman eğitilebilir hâle gelir. Bu fikir Transformer'a da miras kalmıştır.
 
-:::interactive{type="convolution" kernel="sobel-x" size=3 stride=1 padding="same"}
-Sobel-x filtresini dikey kenarlı bir görüntüde kaydırın, sonra sobel-y'ye geçin. Kernel'i elle düzenleyip "bulanıklaştırma" (tüm hücreler 1/9) ve "keskinleştirme" filtrelerini deneyin; stride=2 ile çıktı boyutunun nasıl yarılandığını izleyin.
+:::interactive{type="convolution" kernel="sobel-x" stride=1 padding="same"}
+Sobel X filtresini dikey kenarlı görüntüde kaydırın ("Çalıştır" ya da "Adım at"), sonra Sobel Y'ye geçin: hangi kenarlar aydınlanıyor? Çekirdeği "Özel" yapıp hücreleri elle düzenleyin — tüm hücreler 1/9 ile bulanıklaştırma — ve hazır "Keskinleştir" seçeneğiyle karşılaştırın. Adımı (stride) 2 yapıp çıktı boyutunun nasıl yarılandığını, dolguyu "valid" yapınca kenar piksellerin nasıl kaybolduğunu izleyin; girdi piksellerine tıklayarak kendi deseninizi çizin.
 :::
 
 ## RNN ve LSTM: sırayı hatırlamak

@@ -54,7 +54,7 @@ Küçük modeller tek makinede, büyük modeller GPU kümelerinde eğitilir. Da�
 Eğitim işi bir **pipeline** olarak tanımlanır (Kubeflow, Airflow, Vertex AI, SageMaker Pipelines): veri çek → doğrula → özellik üret → eğit → değerlendir → kaydet. Her adım konteynerdir, çıktıları artefakttır, parametreler ve metrikler bir **experiment tracker**'a (MLflow, W&B) yazılır. Spot/preemptible GPU'lar maliyeti üçte bire indirir; bedeli checkpoint disiplinidir.
 
 :::interactive{type="pipeline" stages="ingest,validate,features,train,evaluate,register,deploy" failureStage="validate" retries=2}
-Pipeline'ı çalıştırın. "validate" adımında şema hatası enjekte edin: sonraki adımlar neden hiç başlamıyor? Eşzamanlı çalışan aşamaları (features + validate) ve checkpoint'ten devam eden eğitim adımını gözlemleyin.
+Pipeline'ı çalıştırıp yedi adımı izleyin. "Hata enjekte et" kutusunu işaretleyin (aşama: validate) ve yeniden çalıştırın: şema hatası iki yeniden denemeden sonra da geçmez, features'tan deploy'a kadar her şey "atlandı" kalır — bozuk veriyle eğitime hiç başlanmaz. "Yeniden deneme"yi 0'a indirip farkı görün; gerçek pipeline'da bu yeniden denemelerin karşılığı, checkpoint'ten devam eden eğitim adımıdır. Son olarak "Canary hata oranı"nı %2'nin üstüne çıkarın: yeni model üretime çıkar çıkmaz otomatik geri alınır.
 :::
 
 ## Model registry

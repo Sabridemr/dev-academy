@@ -60,8 +60,8 @@ Sayfa p99'da 200 ms'de dönmek zorundaysa öneri bileşenine 100 ms kalır. Aşa
 Tek bir ana sayfa isteği: aday üretimi (ANN), toplu özellik getirme, sıralama, yeniden sıralama ve 70 ms'de yanıt; tıklama olayı gerçek zamanlı özellikleri günceller.
 :::
 
-:::interactive{type="request-journey" scenario="recommendation" budgetMs=100 stages="gateway:5,candidate-gen:15,feature-fetch:10,ranking:30,re-rank:5" showFallback=true}
-Feature store gecikmesini 10 ms'den 60 ms'ye çıkarın: bütçe aşılınca hangi aşama zaman aşımına uğruyor ve fallback (popüler ürünler) ne zaman devreye giriyor? Önbellek isabet oranını %0'a indirip p99'u izleyin.
+:::interactive{type="request-journey" budgetMs=100 stages="gateway:5,candidate-gen:15,feature-fetch:10,ranking:30,re-rank:5" slowService="none" slowPenaltyMs=50}
+İsteği gönderin: beş aşama 100 ms'lik gecikme bütçesinin içinde kalıyor mu? "Yavaş katman" olarak feature-fetch'i seçin (+50 ms → 60 ms) ve tekrar gönderin: bütçe aşılır ve fallback (popüler ürünler) devreye girer — gerçek sistemde zaman aşımına uğrayan aşama budur. Yavaş katmanı ranking'e taşıyıp aynı soruyu sorun; RTT'yi artırıp ağın bütçeden ne kadar yediğine bakın. "20 istek" ile ortalama ve p95'i bütçeyle karşılaştırın: ortalaması bütçede kalan bir sistemin p95'i aşıyorsa kullanıcıların bir kısmı fallback görür.
 :::
 
 :::callout{tone="warning" title="Fallback olmadan model yoktur"}

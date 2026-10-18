@@ -28,8 +28,8 @@ Tablo hâlindeki veride (müşteri kayıtları, işlem logları, sensör ölçü
 
 Hedef sürekli bir sayı (ev fiyatı, teslimat süresi). Model ağırlıklı toplamdır: `ŷ = w·x + b`. Kayıp **ortalama kare hata** (MSE). Küçük veri için kapalı form çözüm vardır (`w = (XᵀX)⁻¹Xᵀy`), büyük veri için gradient descent kullanılır. Özellikler farklı ölçeklerdeyse (metrekare 50–300, oda sayısı 1–5) kayıp yüzeyi uzun bir vadi olur ve gradient descent zikzak çizer; bu yüzden **standardizasyon** (ortalama 0, std 1) neredeyse zorunludur.
 
-:::interactive{type="gradient-descent" learningRate=0.05 surface="valley" showContours=true}
-"Vadi" yüzeyi ölçeklenmemiş iki özelliğin kayıp yüzeyini taklit eder. Öğrenme oranını artırınca neden bir eksende ıraksarken diğerinde sürünüyor? Özellikleri "standardize et" seçeneğiyle yüzeyin çanağa dönüşmesini izleyin.
+:::interactive{type="gradient-descent" learningRate=0.03 surface="valley"}
+"Dar vadi" veri seti ölçeklenmemiş bir özelliğin kayıp yüzeyini taklit eder: x kaydırıldığı için w ve b birbirine bağlıdır ve yüzey uzar. "Çalıştır"a basıp zikzağı izleyin; öğrenme oranını 0.05'e çıkarınca neden dik eksende ıraksarken sığ eksende sürünüyor? Veri setini "Kase (x merkezli)" yapın — özelliği standardize etmenin yaptığı tam olarak budur — ve aynı öğrenme oranının artık dosdoğru çukura indiğini görün.
 :::
 
 ## Lojistik regresyon (logistic regression)
@@ -44,7 +44,7 @@ Veriyi "yaş < 30?", "tutar > 500?" gibi eşik sorularıyla art arda böler. Her
 - Eksileri: derinleştikçe **yüksek varyans** — veri biraz değişince ağaç bambaşka olur, overfitting kolay. Çare: `max_depth`, `min_samples_leaf` ile budama.
 
 :::interactive{type="decision-tree" maxDepth=3 criterion="gini" dataset="moons"}
-Derinliği 1'den 10'a çıkarın: eğitim doğruluğu %100'e yaklaşırken doğrulama doğruluğu nerede tepe yapıyor? `min_samples_leaf` değerini artırıp sınırın nasıl yumuşadığını gözlemleyin.
+Derinliği 1'den 8'e çıkarın: eğitim doğruluğu %100'e yaklaşırken doğrulama doğruluğu nerede tepe yapıyor, sonra neden düşüyor? Derinliği yüksek bırakıp `min_samples_leaf` değerini artırın: küçük yapraklar birleşir, karar sınırı yumuşar ve iki doğruluk birbirine yaklaşır. Aynı deneyi XOR ve Kümeler veri setleriyle tekrarlayın.
 :::
 
 ## Random forest ve gradient boosting
@@ -70,8 +70,8 @@ Atamalar değişmeyince durur. Her yineleme küme içi kare toplamını (inertia
 Kötü bir başlangıçtan iki yinelemede yakınsayan k-means: önce atama, sonra merkezlerin ortalamaya taşınması; p4 ikinci turda küme değiştirir.
 :::
 
-:::interactive{type="k-means" k=3 init="random" dataset="blobs"}
-Önce `init="random"` ile birkaç kez çalıştırıp farklı sonuçlar aldığınızı görün; sonra k-means++ seçin. k'yı 2'den 8'e çıkarıp inertia eğrisindeki dirseği bulun.
+:::interactive{type="k-means" k=3 init="random"}
+Önce "Rastgele noktalar" başlatmasıyla "Çalıştır" ve "Sıfırla"yı birkaç kez tekrarlayın: aynı veride farklı yerel minimumlara, farklı inertia değerlerine vardığınızı görün; sonra k-means++ seçin ve sonuçların kararlılaştığını fark edin. k'yı 2'den 8'e çıkarırken her k için yakınsama sonrası inertia değerini not edin: düşüşün belirgin biçimde yavaşladığı nokta dirsektir (elbow).
 :::
 
 :::callout{tone="warning" title="k-means'in gizli varsayımları"}

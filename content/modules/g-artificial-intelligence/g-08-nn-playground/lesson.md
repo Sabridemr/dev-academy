@@ -67,7 +67,7 @@ Kayıp eğrisinde uzun bir **plato** görürseniz (0.69'da bekleme), ağ henüz 
 4 örnekli XOR'da batch = tüm veri; spiral gibi 200 noktalı kümelerde batch 10–32 gürültülü ama hızlı ilerleme sağlar. Bir **epoch**, tüm verinin bir kez görülmesidir. Doğrulama kaybının yükselmeye başladığı epoch, early stopping noktanızdır.
 
 :::interactive{type="neural-network-playground" dataset="xor" hiddenLayers="4,4" learningRate=0.03}
-Deney sırası: (1) Aktivasyonu "linear" yapın ve XOR'un neden asla öğrenilmediğini görün. (2) tanh'a dönün, gizli katmanları "2" yapın; kaç epoch'ta çözülüyor? (3) Öğrenme oranını 3'e çıkarın ve ıraksamayı izleyin. (4) Spiral'e geçin: "4,4" ile 1000 epoch bekleyin; sonra gürültüyü %30 yapıp "16,16" ile overfitting'i gözlemleyin. Her denemede ağırlık çizgilerinin kalınlığının (|w|) nasıl değiştiğine bakın.
+Deney sırası: (1) Aktivasyonu "linear" yapın ve XOR'un neden asla öğrenilmediğini görün: doğrusal katmanların bileşimi yine doğrusaldır. (2) tanh'a dönün, gizli katmanları "2" yapın; kaç epoch'ta çözülüyor? (3) Öğrenme oranını 1'e (en sağ) çıkarın ve kaybın nasıl zıpladığını izleyin. (4) Spiral'e geçin: "4,4" ile 1000 epoch bekleyin; sonra gürültüyü %30 yapıp "8,8,8" ile eğitin — karar sınırı tek tek gürültülü noktaları sarmaya başlar (overfitting). Her denemede ağırlık çizgilerinin kalınlığının (ağırlığın mutlak değeri) nasıl değiştiğine bakın.
 :::
 
 ## Ağırlıklar epoch'lar boyunca

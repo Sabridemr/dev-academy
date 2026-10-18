@@ -161,8 +161,8 @@ async def on_delivered(recipient_id, msg_id, deps):
 Anahtar paketi → cihazda şifreleme → bağlantı sunucusu → yönlendirici (kalıcı yaz, ✓) → oturum kaydı → çevrimdışı kuyruk + push → alıcı bağlanır, teslim (✓✓), sunucu kopyası silinir → okundu → presence aboneliği.
 :::
 
-:::interactive{type="request-journey" preset="chat-message" layers="sender,connection-server,router,session-registry,offline-store,push,connection-server,recipient" showAcks=true recipientOnline=false}
-Alıcıyı çevrimiçi/çevrimdışı yapıp ✓ ve ✓✓ onaylarının hangi adımda üretildiğini izleyin. Bağlantı sunucusunun gecikmesini artırın: hangi onay gecikir, hangisi gecikmez? Sonra yönlendirici adımında "kalıcı yazmadan önce ilet" seçeneğini açıp çökme anında mesajın nasıl kaybolabildiğine bakın.
+:::interactive{type="request-journey" layers="sender,connection-server,router,session-registry,offline-store,push,connection-server,recipient" failureStage="push"}
+Mesajı gönderin ve gönderici → bağlantı sunucusu → yönlendirici → oturum kaydı → çevrimdışı depo → push → bağlantı sunucusu → alıcı duraklarını izleyin. Tek tik (✓) router durağında, mesaj kalıcı yazıldığı anda üretilir; çift tik (✓✓) ancak son durakta, alıcı mesajı aldığında — şelalede ikisi arasındaki süreye bakın: alıcı çevrimdışıysa bu aralık dakikalar ya da günler olabilir. "Hata enjekte et: push" kutusunu işaretleyip tekrar gönderin: push servisi düşse bile mesaj offline-store'a zaten yazılmıştır; kaybolan tek şey bildirimdir, alıcı bağlanınca mesaj teslim edilir. Yönlendirici kalıcı yazmadan önce iletseydi, aynı çökme mesajı kaybederdi.
 :::
 
 :::realworld{company="WhatsApp"}

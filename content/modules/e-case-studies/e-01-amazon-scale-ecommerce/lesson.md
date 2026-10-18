@@ -163,8 +163,8 @@ Trafik dalgası → autoscaler yeni pod'lar açar → checkout kuyruğa alınır
 Önce autoscaling'i kapatıp dalgayı gönderin: hata oranı ne oluyor? Sonra autoscaling'i açın ama ölçekleme gecikmesini 3 dakikaya çıkarın. Son olarak kuyruğu etkinleştirin ve gecikme ile hata oranının nasıl takas edildiğini gözlemleyin.
 :::
 
-:::interactive{type="request-journey" preset="ecommerce-checkout" layers="browser,cdn,lb,gateway,service,cache,db" showLatency=true}
-Her katmanın gecikmesini değiştirin ve toplam p99'un hangi katmana en duyarlı olduğunu bulun; cache isabet oranını %0'a çekince DB'ye düşen yükü izleyin.
+:::interactive{type="request-journey" layers="browser,cdn,lb,gateway,service,cache,db" cacheHitRate=70}
+İsteği gönderip şelalede toplam gecikmeye en çok hangi katmanın katkı yaptığını bulun; RTT kaydırıcısını değiştirip kullanıcı uzaklığının etkisini görün. "20 istek" düğmesiyle cache hit oranını %70'ten %0'a çekin: isteklerin tamamı veritabanına iner, ortalama ve p95 nasıl değişiyor? "CDN hit" ile statik içeriğin arka katmanlara hiç uğramadığını karşılaştırın.
 :::
 
 :::realworld{company="Amazon"}

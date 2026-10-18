@@ -168,8 +168,8 @@ Aşağıdaki sahne iki isteği birbirine bağlar: yazarın "Tweetle" tıklaması
 Yazar → LB → gateway → tweet servisi → tweet DB → Kafka → fan-out işçisi → sosyal graf → Redis timeline'lar; takipçi → timeline servisi → cache + ünlü birleştirme → tweet cache → 200.
 :::
 
-:::interactive{type="fan-out" mode="hybrid" users=2000 avgFollowers=150 celebrityFollowers=1500 celebrityThreshold=1000 celebrities=2}
-Önce "write" modunu seçip bir ünlüye tweet attırın: kaç cache yazması oluştu, kaç saniye sürdü? "read" moduna geçip bir timeline açın: kaç sorgu gerekti? Son olarak "hybrid" ile eşiği değiştirin ve yazma/okuma maliyetinin dengelendiği noktayı bulun.
+:::interactive{type="fan-out" mode="hybrid" avgFollowers=150 celebrityFollowers=1500 celebrityThreshold=1000 celebrities=2}
+Önce "Fan-out on write" stratejisini seçin, "Ünlü hesap" kutusunu işaretleyip "Gönderi paylaş"a basın: kaç timeline cache yazması oluştu, yayılma kaç saniye sürdü? "Fan-out on read" stratejisine geçip "Akışı oku"ya basın: okuma başına kaç sorgu gerekti? Son olarak "Hibrit" ile ünlü eşiğini değiştirin ve karşılaştırma tablosunda yazma çoğaltması ile okuma gecikmesinin dengelendiği noktayı bulun.
 :::
 
 :::realworld{company="Twitter"}
