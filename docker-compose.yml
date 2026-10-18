@@ -70,11 +70,13 @@ services:
       mc anonymous set download local/devacademy-media
       "
 
-  api:
-    profiles: ['app']
+  # Bekleyen migration'ları uygular (tek seferlik); API bunu bekler
+  migrate:
+    profiles: ['app', 'seed']
     build:
       context: .
       dockerfile: backend/Dockerfile
+      target: tools
     environment: &api-env
       NODE_ENV: production
       PORT: 4000
@@ -92,11 +94,21 @@ services:
       CONTENT_DIR: ../content
       SEED_ADMIN_EMAIL: admin@devacademy.local
       SEED_ADMIN_PASSWORD: Admin123!
-    ports:
-      - '4000:4000'
     depends_on:
       postgres:
         condition: service_healthy
+
+  api:
+    profiles: ['app']
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    environment: *api-env
+    ports:
+      - '4000:4000'
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
       redis:
         condition: service_healthy
 
@@ -106,10 +118,13 @@ services:
     build:
       context: .
       dockerfile: backend/Dockerfile
+      target: tools
     environment: *api-env
-    command: ['sh', '-c', 'npx prisma migrate deploy && npx tsx prisma/seed.ts']
+    command: ['sh', '-c', 'pnpm exec tsx prisma/seed.ts']
     depends_on:
-      postgres:
+      migrate:
+        condition: service_completed_successfully
+      redis:
         condition: service_healthy
 
   web:

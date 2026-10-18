@@ -1,5 +1,10 @@
 # DevAcademy API — çok aşamalı imaj. Monorepo kökünden derlenir:
-#   docker build -f backend/Dockerfile -t devacademy-api .
+#   docker build -f backend/Dockerfile -t devacademy-api .                  # API (ince, root olmayan)
+#   docker build -f backend/Dockerfile --target tools -t devacademy-tools . # migration + seed araçları
+#
+# Runtime imajı yalnızca üretim bağımlılıklarını ve derlenmiş kodu içerir. Migration'lar API açılışında
+# değil, ayrı bir adımda (tools imajı: `prisma migrate deploy`) uygulanır; böylece birden fazla replika
+# aynı anda migration çalıştırmaya çalışmaz.
 FROM node:22-alpine AS base
 RUN corepack enable && apk add --no-cache openssl libc6-compat
 WORKDIR /repo
@@ -18,13 +23,25 @@ RUN pnpm --filter @devacademy/shared build \
  && pnpm --filter @devacademy/backend exec prisma generate \
  && pnpm --filter @devacademy/backend build
 
-FROM base AS runtime
-ENV NODE_ENV=production
-WORKDIR /repo
-COPY --from=build /repo /repo
+# Migration ve seed için araç imajı (prisma CLI ve tsx geliştirme bağımlılıklarıdır)
+FROM build AS tools
 COPY content /repo/content
 WORKDIR /repo/backend
+CMD ["sh", "-c", "pnpm exec prisma migrate deploy"]
+
+# Yalnızca üretim bağımlılıklarıyla bağımsız backend paketi; Prisma istemcisi bu pakete üretilir
+FROM build AS deploy
+RUN pnpm --filter @devacademy/backend deploy --prod --legacy /out \
+ && cd /out && /repo/node_modules/.bin/prisma generate --schema prisma/schema.prisma \
+ && rm -rf /out/src /out/test
+
+FROM node:22-alpine AS runtime
+RUN apk add --no-cache openssl libc6-compat
+ENV NODE_ENV=production
+WORKDIR /app
+COPY --from=deploy --chown=node:node /out /app
+COPY --from=build --chown=node:node /repo/backend/dist /app/dist
+USER node
 EXPOSE 4000
 HEALTHCHECK --interval=15s --timeout=3s --retries=5 CMD wget -qO- http://localhost:4000/health || exit 1
-# Açılışta bekleyen migration'ları uygular, sonra API'yi başlatır
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/main.js"]
+CMD ["node", "dist/main.js"]
