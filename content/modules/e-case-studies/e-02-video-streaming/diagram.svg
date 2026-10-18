@@ -1,0 +1,156 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 520" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Video streaming mimarisi: ingest ve oynatma boru hatları</title>
+  <desc id="desc">Üst yarıda ingest yolu: yükleyici presigned URL ile object storage'a multipart upload yapar, olay transcoding kuyruğuna düşer, ffmpeg işçileri bitrate merdivenini üretip çıktı deposuna yazar, metadata READY olur. Alt yarıda oynatma yolu: oynatıcı playback API'den manifest alır, segmentleri CDN edge, origin shield ve object storage hiyerarşisinden çeker ve adaptive bitrate ile kaliteyi ayarlar.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+    <marker id="arrow-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-accent, #f59e0b)"/>
+    </marker>
+    <marker id="arrow-p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-primary, #6366f1)"/>
+    </marker>
+  </defs>
+
+  <!-- Bölge kutuları -->
+  <rect x="16" y="16" width="928" height="232" rx="14" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)" stroke-dasharray="6 5"/>
+  <text x="32" y="40" font-size="12" font-weight="600" fill="var(--da-accent, #f59e0b)">INGEST — asenkron, dakikalar, CPU ağırlıklı</text>
+  <rect x="16" y="270" width="928" height="232" rx="14" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)" stroke-dasharray="6 5"/>
+  <text x="32" y="294" font-size="12" font-weight="600" fill="var(--da-primary, #6366f1)">OYNATMA — senkron, milisaniyeler, bant genişliği ağırlıklı</text>
+
+  <!-- INGEST düğümleri -->
+  <g fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.4">
+    <rect x="40" y="110" width="110" height="54" rx="10"/>
+  </g>
+  <text x="95" y="132" text-anchor="middle" font-size="12.5" fill="var(--da-fg, #0f172a)">Yükleyici</text>
+  <text x="95" y="149" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">multipart · resumable</text>
+
+  <rect x="190" y="60" width="130" height="48" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)" stroke-width="1.4"/>
+  <text x="255" y="80" text-anchor="middle" font-size="12" fill="var(--da-fg, #0f172a)">Upload servisi</text>
+  <text x="255" y="96" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">presigned URL</text>
+
+  <rect x="190" y="150" width="130" height="54" rx="10" fill="var(--da-accent, #f59e0b)" opacity="0.12" stroke="var(--da-accent, #f59e0b)" stroke-width="1.6"/>
+  <text x="255" y="172" text-anchor="middle" font-size="12" fill="var(--da-fg, #0f172a)">Ham depo (S3)</text>
+  <text x="255" y="189" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">soğuk katman · 1 PB/gün</text>
+
+  <rect x="370" y="150" width="120" height="54" rx="10" fill="var(--da-accent, #f59e0b)" opacity="0.12" stroke="var(--da-accent, #f59e0b)" stroke-width="1.6"/>
+  <text x="430" y="172" text-anchor="middle" font-size="12" fill="var(--da-fg, #0f172a)">Kuyruk</text>
+  <text x="430" y="189" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">transcode-jobs · DLQ</text>
+
+  <g fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.3">
+    <rect x="540" y="112" width="100" height="36" rx="8"/>
+    <rect x="540" y="156" width="100" height="36" rx="8"/>
+    <rect x="540" y="200" width="100" height="36" rx="8"/>
+  </g>
+  <g font-size="11" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="590" y="134">ffmpeg işçi ×N</text>
+    <text x="590" y="178">segment paralel</text>
+    <text x="590" y="222">6 kademe × 2 codec</text>
+  </g>
+  <text x="590" y="100" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">spot/preemptible, durumsuz</text>
+
+  <rect x="690" y="150" width="120" height="54" rx="10" fill="var(--da-accent, #f59e0b)" opacity="0.12" stroke="var(--da-accent, #f59e0b)" stroke-width="1.6"/>
+  <text x="750" y="172" text-anchor="middle" font-size="12" fill="var(--da-fg, #0f172a)">Çıktı deposu</text>
+  <text x="750" y="189" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">/v1/720p/seg_0042.ts</text>
+
+  <rect x="690" y="60" width="120" height="48" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)" stroke-width="1.4"/>
+  <text x="750" y="80" text-anchor="middle" font-size="12" fill="var(--da-fg, #0f172a)">Metadata DB</text>
+  <text x="750" y="96" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">status: READY</text>
+
+  <rect x="850" y="150" width="80" height="54" rx="10" fill="var(--da-success, #10b981)" opacity="0.12" stroke="var(--da-success, #10b981)" stroke-width="1.6"/>
+  <text x="890" y="172" text-anchor="middle" font-size="12" fill="var(--da-fg, #0f172a)">CDN</text>
+  <text x="890" y="189" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">ön yükleme</text>
+
+  <!-- INGEST okları -->
+  <g stroke="var(--da-muted, #64748b)" stroke-width="1.5" fill="none" marker-end="url(#arrow)">
+    <path d="M 150 125 C 165 125, 170 84, 190 84"/>
+    <path d="M 150 148 C 165 148, 170 177, 190 177"/>
+    <path d="M 320 84 L 690 84"/>
+  </g>
+  <text x="160" y="72" font-size="9.5" fill="var(--da-muted, #64748b)">1. URL al</text>
+  <text x="150" y="198" font-size="9.5" fill="var(--da-muted, #64748b)">2. PUT parçalar</text>
+  <text x="430" y="78" text-anchor="middle" font-size="9.5" fill="var(--da-muted, #64748b)">UPLOADING → PROCESSING</text>
+  <g stroke="var(--da-accent, #f59e0b)" stroke-width="1.5" fill="none" marker-end="url(#arrow-a)">
+    <path d="M 320 177 L 370 177"/>
+    <path d="M 490 170 C 510 150, 520 130, 540 130"/>
+    <path d="M 490 177 L 540 174"/>
+    <path d="M 490 184 C 510 200, 520 218, 540 218"/>
+    <path d="M 640 130 C 660 130, 670 170, 690 172"/>
+    <path d="M 640 174 L 690 177"/>
+    <path d="M 640 218 C 660 218, 670 184, 690 182"/>
+    <path d="M 810 177 L 850 177"/>
+    <path d="M 640 125 C 660 108, 670 100, 690 96" stroke-dasharray="3 3"/>
+  </g>
+  <text x="345" y="168" text-anchor="middle" font-size="9" fill="var(--da-accent, #f59e0b)">olay</text>
+  <text x="830" y="168" text-anchor="middle" font-size="9" fill="var(--da-accent, #f59e0b)">fill</text>
+
+  <!-- OYNATMA düğümleri -->
+  <g fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.4">
+    <rect x="40" y="380" width="110" height="60" rx="10"/>
+  </g>
+  <text x="95" y="402" text-anchor="middle" font-size="12.5" fill="var(--da-fg, #0f172a)">Oynatıcı</text>
+  <text x="95" y="418" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">ABR · tampon</text>
+  <text x="95" y="431" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">HLS / DASH</text>
+
+  <rect x="190" y="318" width="130" height="48" rx="10" fill="var(--da-primary, #6366f1)" opacity="0.12" stroke="var(--da-primary, #6366f1)" stroke-width="1.6"/>
+  <text x="255" y="338" text-anchor="middle" font-size="12" fill="var(--da-fg, #0f172a)">Playback API</text>
+  <text x="255" y="354" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">manifest URL · DRM · resume</text>
+
+  <rect x="370" y="318" width="110" height="48" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)" stroke-width="1.4"/>
+  <text x="425" y="338" text-anchor="middle" font-size="12" fill="var(--da-fg, #0f172a)">Metadata DB</text>
+  <text x="425" y="354" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">+ Redis cache</text>
+
+  <rect x="190" y="400" width="130" height="60" rx="10" fill="var(--da-success, #10b981)" opacity="0.12" stroke="var(--da-success, #10b981)" stroke-width="1.6"/>
+  <text x="255" y="422" text-anchor="middle" font-size="12" fill="var(--da-fg, #0f172a)">CDN Edge</text>
+  <text x="255" y="438" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">ISP içi PoP</text>
+  <text x="255" y="451" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">isabet ~%95</text>
+
+  <rect x="400" y="400" width="130" height="60" rx="10" fill="var(--da-success, #10b981)" opacity="0.12" stroke="var(--da-success, #10b981)" stroke-width="1.6"/>
+  <text x="465" y="422" text-anchor="middle" font-size="12" fill="var(--da-fg, #0f172a)">Origin Shield</text>
+  <text x="465" y="438" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">bölgesel ara katman</text>
+  <text x="465" y="451" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">request coalescing</text>
+
+  <rect x="610" y="400" width="130" height="60" rx="10" fill="var(--da-accent, #f59e0b)" opacity="0.12" stroke="var(--da-accent, #f59e0b)" stroke-width="1.6"/>
+  <text x="675" y="422" text-anchor="middle" font-size="12" fill="var(--da-fg, #0f172a)">Çıktı deposu</text>
+  <text x="675" y="438" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">origin · immutable</text>
+  <text x="675" y="451" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">&lt;%5 trafik</text>
+
+  <!-- OYNATMA okları -->
+  <g stroke="var(--da-primary, #6366f1)" stroke-width="1.5" fill="none" marker-end="url(#arrow-p)">
+    <path d="M 150 395 C 165 395, 170 342, 190 342"/>
+    <path d="M 320 342 L 370 342"/>
+  </g>
+  <text x="160" y="380" font-size="9.5" fill="var(--da-primary, #6366f1)">1. GET /play</text>
+  <g stroke="var(--da-success, #10b981)" stroke-width="1.8" fill="none" marker-end="url(#arrow)">
+    <path d="M 150 430 L 190 430"/>
+  </g>
+  <text x="170" y="474" text-anchor="middle" font-size="9.5" fill="var(--da-success, #10b981)">2. segmentler</text>
+  <g stroke="var(--da-muted, #64748b)" stroke-width="1.4" fill="none" stroke-dasharray="4 3" marker-end="url(#arrow)">
+    <path d="M 320 430 L 400 430"/>
+    <path d="M 530 430 L 610 430"/>
+  </g>
+  <text x="360" y="422" text-anchor="middle" font-size="9" fill="var(--da-muted, #64748b)">miss</text>
+  <text x="570" y="422" text-anchor="middle" font-size="9" fill="var(--da-muted, #64748b)">miss</text>
+
+  <!-- Bitrate merdiveni kutusu -->
+  <rect x="780" y="318" width="150" height="142" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)" stroke-width="1.3"/>
+  <text x="855" y="338" text-anchor="middle" font-size="11.5" font-weight="600" fill="var(--da-fg, #0f172a)">Bitrate merdiveni</text>
+  <g font-size="10" fill="var(--da-muted, #64748b)">
+    <text x="792" y="358">2160p · 16 Mbps</text>
+    <text x="792" y="374">1080p · 5 Mbps</text>
+    <text x="792" y="390">720p · 2.8 Mbps</text>
+    <text x="792" y="406">480p · 1.4 Mbps</text>
+    <text x="792" y="422">360p · 0.8 Mbps</text>
+    <text x="792" y="438">240p · 0.4 Mbps</text>
+  </g>
+  <g fill="var(--da-primary, #6366f1)" opacity="0.8">
+    <rect x="900" y="350" width="22" height="7" rx="2"/>
+    <rect x="900" y="366" width="18" height="7" rx="2"/>
+    <rect x="900" y="382" width="14" height="7" rx="2"/>
+    <rect x="900" y="398" width="10" height="7" rx="2"/>
+    <rect x="900" y="414" width="7" height="7" rx="2"/>
+    <rect x="900" y="430" width="4" height="7" rx="2"/>
+  </g>
+  <text x="855" y="454" text-anchor="middle" font-size="9.5" fill="var(--da-muted, #64748b)">istemci her segmentte seçer</text>
+</svg>

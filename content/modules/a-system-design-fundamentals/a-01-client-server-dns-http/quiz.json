@@ -1,0 +1,110 @@
+{
+  "id": "a-01-client-server-dns-http-quiz",
+  "title": { "tr": "İstemci-Sunucu, DNS ve HTTP Quiz", "en": "Client-Server, DNS and HTTP Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "order",
+      "prompt": {
+        "tr": "Tarayıcı ilk kez bir HTTPS adresine bağlanırken aşağıdaki adımları doğru sıraya koyun.",
+        "en": "Put the following steps in the correct order for a browser connecting to an HTTPS address for the first time."
+      },
+      "options": [
+        { "id": "tls", "text": { "tr": "TLS el sıkışması (ClientHello / ServerHello)", "en": "TLS handshake (ClientHello / ServerHello)" } },
+        { "id": "dns", "text": { "tr": "DNS çözümleme (isim → IP)", "en": "DNS resolution (name → IP)" } },
+        { "id": "http", "text": { "tr": "HTTP GET isteği", "en": "HTTP GET request" } },
+        { "id": "tcp", "text": { "tr": "TCP üçlü el sıkışma (SYN, SYN-ACK, ACK)", "en": "TCP three-way handshake (SYN, SYN-ACK, ACK)" } }
+      ],
+      "correct": ["dns", "tcp", "tls", "http"],
+      "explanation": {
+        "tr": "Önce adres bulunur (DNS), sonra güvenilir kanal açılır (TCP), kanal şifrelenir (TLS) ve en son uygulama konuşur (HTTP). TLS, TCP'nin üzerinde çalıştığı için TCP'den önce gelemez; HTTP de şifreli kanaldan önce gönderilemez.",
+        "en": "First the address is found (DNS), then a reliable channel is opened (TCP), the channel is encrypted (TLS) and finally the application speaks (HTTP). TLS runs on top of TCP so it cannot come before it; HTTP cannot be sent before the encrypted channel exists."
+      },
+      "difficulty": "easy",
+      "concepts": ["dns-resolution", "tcp-handshake", "tls-handshake", "http-request-response"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "DNS sorguları neden varsayılan olarak TCP yerine UDP kullanır?",
+        "en": "Why do DNS queries use UDP rather than TCP by default?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "UDP şifreli olduğu için", "en": "Because UDP is encrypted" } },
+        { "id": "b", "text": { "tr": "Tek paketlik soru-cevap için bağlantı kurma maliyeti (el sıkışma) gereksiz olduğundan", "en": "Because the connection setup cost (handshake) is wasted on a single-packet question and answer" } },
+        { "id": "c", "text": { "tr": "TCP yalnızca web trafiği için ayrıldığından", "en": "Because TCP is reserved for web traffic only" } },
+        { "id": "d", "text": { "tr": "UDP paket kaybını otomatik düzelttiği için", "en": "Because UDP automatically repairs packet loss" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "DNS küçük bir soru ve küçük bir cevaptır; TCP el sıkışması için bir RTT harcamak cevabın kendisinden pahalıya gelir. UDP şifreli değildir (a yanlış), TCP her tür trafikte kullanılır (c yanlış) ve UDP kayıp paketi düzeltmez — resolver sorguyu tekrar gönderir (d yanlış).",
+        "en": "DNS is a small question and a small answer; spending one RTT on a TCP handshake costs more than the answer itself. UDP is not encrypted (a is wrong), TCP is used for all kinds of traffic (c is wrong) and UDP does not repair lost packets — the resolver simply retries (d is wrong)."
+      },
+      "difficulty": "medium",
+      "concepts": ["dns-resolution", "tcp-vs-udp"]
+    },
+    {
+      "id": "q3",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Hangi HTTP metodları idempotent'tir, yani aynı isteği birden fazla kez göndermek tek seferle aynı sonucu verir? (Birden fazla seçin)",
+        "en": "Which HTTP methods are idempotent, i.e. sending the same request several times has the same effect as sending it once? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": "GET" },
+        { "id": "b", "text": "POST" },
+        { "id": "c", "text": "PUT" },
+        { "id": "d", "text": "DELETE" }
+      ],
+      "correct": ["a", "c", "d"],
+      "explanation": {
+        "tr": "GET okur, PUT kaynağı aynı değere ayarlar, DELETE ikinci seferde zaten silinmiş olanı siler — üçü de tekrarlandığında sonuç değişmez. POST ise 'yeni bir şey oluştur / işlem başlat' anlamı taşır; iki kez gönderilen bir POST /odeme çift tahsilat yapabilir. Bu yüzden ödeme API'leri idempotency key ister.",
+        "en": "GET reads, PUT sets the resource to the same value, DELETE on the second try deletes what is already gone — repeating any of the three changes nothing. POST means 'create something new / start an action'; a POST /payment sent twice may charge twice. That is why payment APIs ask for an idempotency key."
+      },
+      "difficulty": "medium",
+      "concepts": ["http-request-response"]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "HTTP/2, tek bir TCP bağlantısında birden fazla isteği paralel taşısa da, TCP seviyesindeki bir paket kaybı o bağlantıdaki tüm stream'leri bekletir.",
+        "en": "Although HTTP/2 carries multiple requests in parallel over a single TCP connection, a packet loss at the TCP level stalls all streams on that connection."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["t"],
+      "explanation": {
+        "tr": "Doğru. HTTP/2 uygulama katmanındaki head-of-line blocking'i çözer ama TCP tek bir sıralı byte akışıdır: kayıp paket yeniden gelene kadar arkasındaki tüm veri, hangi stream'e ait olursa olsun, teslim edilmez. HTTP/3'ün QUIC'e (UDP) geçmesinin ana nedeni budur: stream'ler bağımsız kurtarılır.",
+        "en": "True. HTTP/2 fixes head-of-line blocking at the application layer, but TCP is a single ordered byte stream: until the lost packet is retransmitted, everything behind it is held back regardless of which stream it belongs to. That is the main reason HTTP/3 moved to QUIC (UDP): streams recover independently."
+      },
+      "difficulty": "hard",
+      "concepts": ["http-versions", "tcp-vs-udp"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "Bir bildirim akışında yalnızca sunucudan istemciye veri gidecek; istemci neredeyse hiç konuşmayacak. En uygun ve en basit seçenek hangisidir?",
+        "en": "In a notification feed only the server sends data to the client; the client almost never speaks. Which is the most suitable and simplest option?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Her saniye GET ile polling", "en": "Polling with GET every second" } },
+        { "id": "b", "text": { "tr": "Server-Sent Events (SSE)", "en": "Server-Sent Events (SSE)" } },
+        { "id": "c", "text": { "tr": "WebSocket", "en": "WebSocket" } },
+        { "id": "d", "text": { "tr": "Her bildirim için yeni bir TCP bağlantısı", "en": "A new TCP connection per notification" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "SSE tek yönlü (sunucu → istemci) bir HTTP akışıdır, otomatik yeniden bağlanır ve proxy/CDN'lerle uyumludur; tek yönlü senaryo için WebSocket'in çift yönlü karmaşıklığına gerek yoktur. Polling israf eder, her bildirim için yeni TCP bağlantısı ise el sıkışma maliyetini her seferinde öder.",
+        "en": "SSE is a one-way (server → client) HTTP stream that reconnects automatically and works well with proxies/CDNs; a one-way scenario does not need WebSocket's full-duplex complexity. Polling is wasteful, and a new TCP connection per notification pays the handshake cost every time."
+      },
+      "difficulty": "medium",
+      "concepts": ["websocket", "client-server"]
+    }
+  ]
+}

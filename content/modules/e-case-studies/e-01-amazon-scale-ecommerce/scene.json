@@ -1,0 +1,196 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "e-01-amazon-checkout-journey",
+  "title": { "tr": "Checkout İsteğinin Yolculuğu", "en": "The Journey of a Checkout Request" },
+  "summary": {
+    "tr": "\"Satın al\" tıklamasının tarayıcıdan CDN, yük dengeleyici, API gateway, sipariş servisi, envanter, ödeme ve veritabanına gidip 201 yanıtıyla geri dönmesi.",
+    "en": "A \"Buy now\" click travelling from the browser through the CDN, load balancer, API gateway, order service, inventory, payment and database, and returning with a 201 response."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda tarayıcı, ortada CDN, yük dengeleyici ve API gateway, sağda sipariş servisi ile ona bağlı Redis, envanter servisi, ödeme servisi, dış ödeme sağlayıcısı, sipariş veritabanı ve Kafka kuyruğu bulunur. İstek katman katman sağa ilerler; envanter rezerve edilir, ödeme yetkilendirilir, sipariş ve outbox kaydı aynı transaction'da yazılır, olay Kafka'ya düşer ve 201 yanıtı aynı yoldan geri döner.",
+      "en": "A browser on the left; CDN, load balancer and API gateway in the middle; on the right the order service with its Redis cart cache, inventory service, payment service, external payment provider, orders database and Kafka queue. The request moves right layer by layer; inventory is reserved, payment is authorized, the order and an outbox row are written in one transaction, the event lands in Kafka and a 201 response returns along the same path."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "browser", "kind": "browser", "label": { "tr": "Tarayıcı", "en": "Browser" }, "sublabel": { "tr": "Satın al", "en": "Buy now" }, "x": 80, "y": 300 },
+    { "id": "cdn", "kind": "cdn", "label": "CDN + WAF", "sublabel": { "tr": "statik varlıklar", "en": "static assets" }, "x": 230, "y": 110, "w": 130, "h": 70 },
+    { "id": "lb", "kind": "lb", "label": "Load Balancer", "sublabel": { "tr": "L7 · TLS", "en": "L7 · TLS" }, "x": 230, "y": 300, "w": 130, "h": 70 },
+    { "id": "gateway", "kind": "gateway", "label": "API Gateway", "sublabel": { "tr": "auth · rate limit", "en": "auth · rate limit" }, "x": 390, "y": 300, "w": 130, "h": 70 },
+    { "id": "order", "kind": "service", "label": { "tr": "Sipariş servisi", "en": "Order service" }, "sublabel": "saga", "x": 555, "y": 300, "w": 140, "h": 76 },
+    { "id": "cache", "kind": "cache", "label": "Redis", "sublabel": { "tr": "sepet", "en": "cart" }, "x": 555, "y": 500, "w": 120, "h": 64 },
+    { "id": "inventory", "kind": "service", "label": { "tr": "Envanter servisi", "en": "Inventory service" }, "sublabel": { "tr": "rezervasyon", "en": "reservation" }, "x": 730, "y": 120, "w": 140, "h": 70 },
+    { "id": "payment", "kind": "service", "label": { "tr": "Ödeme servisi", "en": "Payment service" }, "sublabel": "authorize", "x": 730, "y": 300, "w": 140, "h": 70 },
+    { "id": "psp", "kind": "generic", "label": "PSP", "sublabel": { "tr": "Stripe / Adyen", "en": "Stripe / Adyen" }, "x": 910, "y": 300, "w": 110, "h": 64 },
+    { "id": "db", "kind": "db", "label": { "tr": "Sipariş DB", "en": "Orders DB" }, "sublabel": { "tr": "shard: user_id", "en": "shard: user_id" }, "x": 730, "y": 480, "w": 130, "h": 70 },
+    { "id": "queue", "kind": "queue", "label": "Kafka", "sublabel": { "tr": "order-events", "en": "order-events" }, "x": 910, "y": 480, "w": 120, "h": 64 }
+  ],
+  "edges": [
+    { "id": "b-cdn", "from": "browser", "to": "cdn", "kind": "request", "label": { "tr": "GET statik", "en": "GET static" }, "curvature": -0.1 },
+    { "id": "b-lb", "from": "browser", "to": "lb", "kind": "request", "label": "POST /checkout" },
+    { "id": "lb-gw", "from": "lb", "to": "gateway", "kind": "request" },
+    { "id": "gw-order", "from": "gateway", "to": "order", "kind": "request" },
+    { "id": "order-cache", "from": "order", "to": "cache", "kind": "data", "style": "dashed" },
+    { "id": "order-inv", "from": "order", "to": "inventory", "kind": "request", "curvature": -0.1 },
+    { "id": "order-pay", "from": "order", "to": "payment", "kind": "request" },
+    { "id": "pay-psp", "from": "payment", "to": "psp", "kind": "request", "style": "dashed" },
+    { "id": "order-db", "from": "order", "to": "db", "kind": "data", "curvature": 0.1 },
+    { "id": "db-queue", "from": "db", "to": "queue", "kind": "event", "style": "dotted", "label": "outbox relay" }
+  ],
+  "steps": [
+    {
+      "id": "click",
+      "title": { "tr": "1 · Tıklama", "en": "1 · The click" },
+      "narration": {
+        "tr": "Kullanıcı \"Satın al\"a basar. Sayfanın JS/CSS/görselleri zaten CDN'de (HIT); yalnızca POST /checkout isteği origin'e gider. İstek gövdesinde bir Idempotency-Key başlığı taşınır.",
+        "en": "The user presses \"Buy now\". The page's JS/CSS/images are already on the CDN (HIT); only the POST /checkout request goes to origin. The body carries an Idempotency-Key header."
+      },
+      "durationMs": 3500,
+      "inherit": false,
+      "highlight": { "nodes": ["browser", "cdn", "lb"], "edges": ["b-cdn", "b-lb"] },
+      "nodeStates": { "browser": { "status": "active" }, "cdn": { "status": "success", "badge": "HIT" } },
+      "packets": [
+        { "edge": "b-cdn", "shape": "dot", "durationMs": 600 },
+        { "edge": "b-cdn", "shape": "dot", "direction": "backward", "startAt": 600, "durationMs": 600, "color": "success" },
+        { "edge": "b-lb", "shape": "envelope", "label": "POST", "startAt": 1300, "durationMs": 1200 }
+      ],
+      "annotations": [
+        { "id": "idem", "x": 80, "y": 400, "text": { "tr": "Idempotency-Key: 7f3a…", "en": "Idempotency-Key: 7f3a…" }, "target": "browser" }
+      ]
+    },
+    {
+      "id": "edge-layer",
+      "title": { "tr": "2 · LB ve gateway", "en": "2 · LB and gateway" },
+      "narration": {
+        "tr": "L7 yük dengeleyici TLS'i sonlandırır ve /checkout yolunu gateway havuzuna yollar. Gateway JWT'yi doğrular, kullanıcı başına rate limit uygular ve isteği sipariş servisine yönlendirir.",
+        "en": "The L7 load balancer terminates TLS and routes the /checkout path to the gateway pool. The gateway validates the JWT, applies a per-user rate limit and forwards the request to the order service."
+      },
+      "durationMs": 3500,
+      "highlight": { "nodes": ["lb", "gateway"], "edges": ["lb-gw", "gw-order"] },
+      "nodeStates": { "lb": { "status": "active" }, "gateway": { "status": "active", "badge": "JWT ✓" } },
+      "packets": [
+        { "edge": "lb-gw", "shape": "envelope", "durationMs": 900 },
+        { "edge": "gw-order", "shape": "envelope", "startAt": 1500, "durationMs": 900 }
+      ],
+      "annotations": [
+        { "id": "rl", "x": 390, "y": 410, "text": { "tr": "rate limit: 10 checkout/dk/kullanıcı", "en": "rate limit: 10 checkouts/min/user" }, "target": "gateway" }
+      ]
+    },
+    {
+      "id": "order-start",
+      "title": { "tr": "3 · Sipariş servisi ve sepet", "en": "3 · Order service and cart" },
+      "narration": {
+        "tr": "Sipariş servisi önce idempotency anahtarını kontrol eder: aynı anahtar daha önce işlendiyse eski sonucu döndürür. Sonra sepeti Redis'ten okur ve siparişi CREATED durumunda açar.",
+        "en": "The order service first checks the idempotency key: if it was processed before, it returns the previous result. Then it reads the cart from Redis and opens the order in CREATED state."
+      },
+      "durationMs": 3500,
+      "highlight": { "nodes": ["order", "cache"], "edges": ["order-cache"] },
+      "nodeStates": { "order": { "status": "busy", "badge": "CREATED" }, "cache": { "status": "active" } },
+      "packets": [
+        { "edge": "order-cache", "shape": "dot", "label": "GET cart:u42", "durationMs": 700 },
+        { "edge": "order-cache", "shape": "dot", "direction": "backward", "startAt": 800, "durationMs": 700, "color": "success", "label": "3 kalem" }
+      ],
+      "annotations": [
+        { "id": "idem-check", "x": 555, "y": 200, "text": { "tr": "anahtar yeni → devam", "en": "key is new → proceed" }, "tone": "success", "target": "order" }
+      ]
+    },
+    {
+      "id": "reserve",
+      "title": { "tr": "4 · Envanter rezervasyonu", "en": "4 · Inventory reservation" },
+      "narration": {
+        "tr": "Her kalem için envanter servisi koşullu bir UPDATE çalıştırır: available >= qty ise düşer. 1 satır etkilendi → rezervasyon başarılı, 10 dakika TTL ile tutulur. 0 satır olsaydı saga burada iptal edilirdi.",
+        "en": "For each item the inventory service runs a conditional UPDATE: it decrements only if available >= qty. 1 row affected → the reservation succeeds and is held with a 10-minute TTL. With 0 rows the saga would be cancelled here."
+      },
+      "durationMs": 3800,
+      "highlight": { "nodes": ["order", "inventory"], "edges": ["order-inv"] },
+      "nodeStates": { "order": { "badge": "RESERVED" }, "inventory": { "status": "active", "badge": "1 row" } },
+      "packets": [
+        { "edge": "order-inv", "shape": "square", "label": "reserve(sku, 1)", "durationMs": 1000 },
+        { "edge": "order-inv", "shape": "square", "direction": "backward", "startAt": 1400, "durationMs": 1000, "color": "success", "label": "OK · ttl 600s" }
+      ],
+      "annotations": [
+        { "id": "cond", "x": 730, "y": 40, "text": { "tr": "UPDATE … WHERE available >= 1", "en": "UPDATE … WHERE available >= 1" }, "tone": "info", "target": "inventory" }
+      ]
+    },
+    {
+      "id": "authorize",
+      "title": { "tr": "5 · Ödeme yetkilendirme", "en": "5 · Payment authorization" },
+      "narration": {
+        "tr": "Ödeme servisi aynı idempotency anahtarıyla PSP'ye authorize çağrısı yapar (3 s timeout, circuit breaker). Kart tokenize edilmiştir; kart numarası bizim sistemimizden geçmez. Blokaj onayı dönünce sipariş PAID olur.",
+        "en": "The payment service calls the PSP's authorize endpoint with the same idempotency key (3 s timeout, circuit breaker). The card is tokenized; the card number never passes through our system. When the hold is approved the order becomes PAID."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["order", "payment", "psp"], "edges": ["order-pay", "pay-psp"] },
+      "nodeStates": { "order": { "badge": "PAID" }, "payment": { "status": "active" }, "psp": { "status": "active", "badge": "AUTH" } },
+      "packets": [
+        { "edge": "order-pay", "shape": "envelope", "durationMs": 700 },
+        { "edge": "pay-psp", "shape": "envelope", "label": "authorize", "startAt": 800, "durationMs": 900 },
+        { "edge": "pay-psp", "shape": "envelope", "direction": "backward", "startAt": 1900, "durationMs": 900, "color": "success", "label": "approved" },
+        { "edge": "order-pay", "shape": "envelope", "direction": "backward", "startAt": 2900, "durationMs": 700, "color": "success" }
+      ],
+      "annotations": [
+        { "id": "cb", "x": 910, "y": 390, "text": { "tr": "timeout 3 s · breaker kapalı", "en": "timeout 3 s · breaker closed" }, "target": "psp" }
+      ]
+    },
+    {
+      "id": "persist",
+      "title": { "tr": "6 · Veritabanı ve outbox", "en": "6 · Database and outbox" },
+      "narration": {
+        "tr": "Sipariş CONFIRMED durumuna geçer ve aynı transaction içinde outbox tablosuna bir OrderConfirmed satırı yazılır. Böylece \"sipariş kaydedildi ama olay yayınlanmadı\" durumu imkânsız olur.",
+        "en": "The order transitions to CONFIRMED and, inside the same transaction, an OrderConfirmed row is written to the outbox table. That makes \"order saved but event never published\" impossible."
+      },
+      "durationMs": 3500,
+      "highlight": { "nodes": ["order", "db"], "edges": ["order-db"] },
+      "nodeStates": { "order": { "status": "success", "badge": "CONFIRMED" }, "db": { "status": "active", "badge": "COMMIT" } },
+      "packets": [
+        { "edge": "order-db", "shape": "square", "label": "BEGIN … COMMIT", "durationMs": 1100 },
+        { "edge": "order-db", "shape": "dot", "direction": "backward", "startAt": 1300, "durationMs": 700, "color": "success" }
+      ],
+      "annotations": [
+        { "id": "outbox", "x": 730, "y": 560, "text": { "tr": "orders + outbox aynı tx", "en": "orders + outbox in one tx" }, "tone": "success", "target": "db" }
+      ]
+    },
+    {
+      "id": "publish",
+      "title": { "tr": "7 · Olay yayını", "en": "7 · Event publication" },
+      "narration": {
+        "tr": "Ayrı bir relay işçisi outbox satırını okuyup Kafka'ya yazar. E-posta, depo, analitik ve arama indeksleyici aynı olayı bağımsız tüketir; biri yavaşlasa checkout gecikmez.",
+        "en": "A separate relay worker reads the outbox row and writes it to Kafka. Email, warehouse, analytics and the search indexer consume the same event independently; if one is slow, checkout is not delayed."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["db", "queue"], "edges": ["db-queue"] },
+      "nodeStates": { "queue": { "status": "active", "badge": "+1" } },
+      "edgeStates": { "db-queue": { "status": "active" } },
+      "packets": [
+        { "edge": "db-queue", "shape": "diamond", "label": "OrderConfirmed", "durationMs": 1000 }
+      ],
+      "annotations": [
+        { "id": "consumers", "x": 910, "y": 560, "text": { "tr": "tüketiciler: e-posta, depo, analitik", "en": "consumers: email, warehouse, analytics" }, "target": "queue" }
+      ]
+    },
+    {
+      "id": "respond",
+      "title": { "tr": "8 · 201 Created geri döner", "en": "8 · 201 Created returns" },
+      "narration": {
+        "tr": "Yanıt aynı yoldan geri döner: sipariş servisi → gateway → LB → tarayıcı. Toplam süre ~450 ms; bunun büyük kısmı PSP çağrısıdır. Kullanıcı yeniden denese bile aynı anahtar aynı siparişi döndürür.",
+        "en": "The response travels back the same way: order service → gateway → LB → browser. Total ~450 ms, most of it the PSP call. Even if the user retries, the same key returns the same order."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["order", "gateway", "lb", "browser"], "edges": ["gw-order", "lb-gw", "b-lb"] },
+      "nodeStates": { "browser": { "status": "success", "badge": "201" }, "gateway": { "badge": "" }, "inventory": { "status": "idle", "badge": "" }, "payment": { "status": "idle" }, "psp": { "status": "idle", "badge": "" } },
+      "packets": [
+        { "edge": "gw-order", "shape": "envelope", "direction": "backward", "durationMs": 700, "color": "success", "label": "201" },
+        { "edge": "lb-gw", "shape": "envelope", "direction": "backward", "startAt": 800, "durationMs": 700, "color": "success" },
+        { "edge": "b-lb", "shape": "envelope", "direction": "backward", "startAt": 1600, "durationMs": 1000, "color": "success", "label": "orderId: 9f21" }
+      ],
+      "annotations": [
+        { "id": "latency", "x": 80, "y": 400, "text": { "tr": "toplam ≈ 450 ms (PSP ~300 ms)", "en": "total ≈ 450 ms (PSP ~300 ms)" }, "tone": "success", "target": "browser" }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["e-commerce", "checkout", "saga", "idempotency", "outbox"]
+}

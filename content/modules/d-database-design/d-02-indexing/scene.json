@@ -1,0 +1,215 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "d-02-btree-search",
+  "title": { "tr": "B-tree Araması: Kökten Yaprağa", "en": "B-tree Search: Root to Leaf" },
+  "summary": {
+    "tr": "Bir eşitlik sorgusunun önce sıralı taramayla, sonra B-tree indeksle (kök → iç düğüm → yaprak → heap) çözümlenmesi; hash ve composite indeks karşılaştırması.",
+    "en": "An equality query resolved first by a sequential scan, then by a B-tree index (root → internal node → leaf → heap); hash and composite index comparison."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda sorguyu gönderen uygulama, altta bir milyon satırlık orders tablosu (heap) vardır. Ortada üç seviyeli bir B-tree: üstte kök sayfa, ortada üç iç düğüm, altta dört yaprak sayfa. İlk adımda sorgu tüm heap'i tarar. Sonraki adımlarda sorgu kökten başlayıp doğru iç düğüme, oradan doğru yaprağa iner ve yapraktaki satır adresiyle heap'ten tek sayfa okur. Son adımlarda hash indeksin yalnızca eşitlikte çalıştığı ve composite indeksin en sol sütun olmadan kullanılamadığı gösterilir.",
+      "en": "On the left is the application sending the query; at the bottom is the one-million-row orders table (heap). In the middle is a three-level B-tree: a root page on top, three internal nodes in the middle and four leaf pages below. In the first step the query scans the whole heap. In later steps the query starts at the root, descends to the right internal node, then to the right leaf, and reads a single heap page using the row address from the leaf. The final steps show that a hash index works only for equality and that a composite index cannot be used without its leftmost column."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "app", "kind": "service", "label": { "tr": "Uygulama", "en": "Application" }, "sublabel": "WHERE customer_id = 4821", "x": 120, "y": 110, "w": 180, "h": 80 },
+    { "id": "root", "kind": "generic", "label": { "tr": "Kök sayfa", "en": "Root page" }, "sublabel": "[ <3000 | 3000–6000 | >6000 ]", "x": 560, "y": 80, "w": 230, "h": 60 },
+    { "id": "i1", "kind": "generic", "label": { "tr": "İç düğüm", "en": "Internal" }, "sublabel": "1 … 2999", "x": 340, "y": 220, "w": 150, "h": 56 },
+    { "id": "i2", "kind": "generic", "label": { "tr": "İç düğüm", "en": "Internal" }, "sublabel": "[ <4500 | ≥4500 ]", "x": 560, "y": 220, "w": 150, "h": 56 },
+    { "id": "i3", "kind": "generic", "label": { "tr": "İç düğüm", "en": "Internal" }, "sublabel": "6000 … 9999", "x": 780, "y": 220, "w": 150, "h": 56 },
+    { "id": "l1", "kind": "generic", "label": { "tr": "Yaprak", "en": "Leaf" }, "sublabel": "3000–3749", "x": 300, "y": 360, "w": 130, "h": 54 },
+    { "id": "l2", "kind": "generic", "label": { "tr": "Yaprak", "en": "Leaf" }, "sublabel": "3750–4499", "x": 460, "y": 360, "w": 130, "h": 54 },
+    { "id": "l3", "kind": "generic", "label": { "tr": "Yaprak", "en": "Leaf" }, "sublabel": "4500–5249", "x": 620, "y": 360, "w": 130, "h": 54 },
+    { "id": "l4", "kind": "generic", "label": { "tr": "Yaprak", "en": "Leaf" }, "sublabel": "5250–5999", "x": 780, "y": 360, "w": 130, "h": 54 },
+    { "id": "heap", "kind": "storage", "label": "orders (heap)", "sublabel": { "tr": "1.000.000 satır · 9.346 sayfa", "en": "1,000,000 rows · 9,346 pages" }, "x": 560, "y": 520, "w": 360, "h": 70 },
+    { "id": "hash", "kind": "cache", "label": { "tr": "Hash indeks", "en": "Hash index" }, "sublabel": "h(4821) → bucket 17", "x": 120, "y": 360, "w": 170, "h": 64 }
+  ],
+  "edges": [
+    { "id": "app-heap", "from": "app", "to": "heap", "kind": "request", "curvature": -0.35, "label": { "tr": "seq scan", "en": "seq scan" } },
+    { "id": "app-root", "from": "app", "to": "root", "kind": "request", "label": { "tr": "indeks araması", "en": "index lookup" } },
+    { "id": "root-i1", "from": "root", "to": "i1", "kind": "control" },
+    { "id": "root-i2", "from": "root", "to": "i2", "kind": "control" },
+    { "id": "root-i3", "from": "root", "to": "i3", "kind": "control" },
+    { "id": "i2-l2", "from": "i2", "to": "l2", "kind": "control" },
+    { "id": "i2-l3", "from": "i2", "to": "l3", "kind": "control" },
+    { "id": "l1-l2", "from": "l1", "to": "l2", "kind": "data", "style": "dotted" },
+    { "id": "l2-l3", "from": "l2", "to": "l3", "kind": "data", "style": "dotted" },
+    { "id": "l3-l4", "from": "l3", "to": "l4", "kind": "data", "style": "dotted" },
+    { "id": "l3-heap", "from": "l3", "to": "heap", "kind": "data", "label": "TID (812, 4)" },
+    { "id": "app-hash", "from": "app", "to": "hash", "kind": "request" },
+    { "id": "hash-heap", "from": "hash", "to": "heap", "kind": "data", "curvature": 0.3 }
+  ],
+  "steps": [
+    {
+      "id": "seq-scan",
+      "title": { "tr": "İndeks yok: sıralı tarama", "en": "No index: sequential scan" },
+      "narration": {
+        "tr": "customer_id üzerinde indeks yoksa planlayıcı tek seçeneği uygular: heap'teki 9.346 sayfanın tamamını okur ve her satırı filtreyle karşılaştırır. 11 satır için 187 ms.",
+        "en": "Without an index on customer_id the planner has one option: read all 9,346 heap pages and compare every row against the filter. 187 ms for 11 rows."
+      },
+      "durationMs": 4000,
+      "inherit": false,
+      "highlight": { "nodes": ["app", "heap"], "edges": ["app-heap"] },
+      "nodeStates": {
+        "app": { "status": "active" },
+        "heap": { "status": "busy", "badge": "Seq Scan", "progress": 1 },
+        "root": { "status": "muted" }, "i1": { "status": "muted" }, "i2": { "status": "muted" }, "i3": { "status": "muted" },
+        "l1": { "status": "muted" }, "l2": { "status": "muted" }, "l3": { "status": "muted" }, "l4": { "status": "muted" },
+        "hash": { "visible": false }
+      },
+      "edgeStates": {
+        "app-heap": { "status": "active" },
+        "app-root": { "status": "muted" }, "l3-heap": { "visible": false },
+        "app-hash": { "visible": false }, "hash-heap": { "visible": false }
+      },
+      "packets": [
+        { "edge": "app-heap", "shape": "envelope", "label": "SELECT …", "durationMs": 1200 },
+        { "edge": "app-heap", "shape": "dot", "direction": "backward", "label": "11 rows", "startAt": 2600, "durationMs": 1000, "color": "warning" }
+      ],
+      "annotations": [
+        { "id": "cost", "x": 560, "y": 455, "text": { "tr": "Buffers: 9.346 sayfa · 187 ms · Rows Removed by Filter: 999.989", "en": "Buffers: 9,346 pages · 187 ms · Rows Removed by Filter: 999,989" }, "tone": "danger", "target": "heap" }
+      ]
+    },
+    {
+      "id": "root",
+      "title": { "tr": "İndeks var: kök sayfadan başla", "en": "With an index: start at the root" },
+      "narration": {
+        "tr": "CREATE INDEX ON orders (customer_id) sonrası planlayıcı Index Scan seçer. Arama kök sayfada başlar: 4821 değeri 3000–6000 aralığına düşer, ortadaki alt ağaç seçilir.",
+        "en": "After CREATE INDEX ON orders (customer_id) the planner picks an Index Scan. The search begins at the root page: 4821 falls into the 3000–6000 range, so the middle subtree is chosen."
+      },
+      "durationMs": 3500,
+      "highlight": { "nodes": ["app", "root"], "edges": ["app-root"] },
+      "nodeStates": {
+        "heap": { "status": "idle", "badge": "", "progress": 0 },
+        "root": { "status": "active", "badge": "1" },
+        "i1": { "status": "idle" }, "i2": { "status": "idle" }, "i3": { "status": "idle" },
+        "l1": { "status": "idle" }, "l2": { "status": "idle" }, "l3": { "status": "idle" }, "l4": { "status": "idle" }
+      },
+      "edgeStates": { "app-heap": { "status": "muted" }, "app-root": { "status": "active" } },
+      "packets": [
+        { "edge": "app-root", "shape": "envelope", "label": "4821?", "durationMs": 1200 }
+      ],
+      "annotations": [
+        { "id": "root-cmp", "x": 560, "y": 25, "text": { "tr": "3000 ≤ 4821 < 6000 → ortadaki işaretçi", "en": "3000 ≤ 4821 < 6000 → middle pointer" }, "target": "root" }
+      ]
+    },
+    {
+      "id": "internal",
+      "title": { "tr": "İç düğüm: aralığı daralt", "en": "Internal node: narrow the range" },
+      "narration": {
+        "tr": "İç düğüm aynı soruyu daha dar aralıkta sorar: 4821 ≥ 4500, sağdaki yaprağa git. Her seviye bir sayfa okumasıdır; 3 seviye milyarlarca anahtar için yeterlidir.",
+        "en": "The internal node asks the same question over a narrower range: 4821 ≥ 4500, go to the right leaf. Each level is one page read; 3 levels suffice for billions of keys."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["root", "i2"], "edges": ["root-i2"] },
+      "nodeStates": { "i2": { "status": "active", "badge": "2" }, "i1": { "status": "muted" }, "i3": { "status": "muted" } },
+      "edgeStates": { "root-i2": { "status": "active" }, "root-i1": { "status": "muted" }, "root-i3": { "status": "muted" } },
+      "packets": [
+        { "edge": "root-i2", "shape": "dot", "label": "4821", "durationMs": 1000 }
+      ],
+      "annotations": [
+        { "id": "fanout", "x": 820, "y": 150, "text": { "tr": "8 KB sayfa ≈ 400 anahtar → 400³ = 64 M satır / 3 seviye", "en": "8 KB page ≈ 400 keys → 400³ = 64 M rows in 3 levels" } }
+      ]
+    },
+    {
+      "id": "leaf",
+      "title": { "tr": "Yaprak: anahtar ve satır adresi", "en": "Leaf: key and row address" },
+      "narration": {
+        "tr": "Yaprak sayfada 4821 anahtarı ve heap'teki fiziksel adresi (TID: sayfa 812, slot 4) bulunur. Yapraklar birbirine bağlıdır; aralık sorgusu buradan sağa doğru yürürdü.",
+        "en": "The leaf page holds key 4821 and its physical heap address (TID: page 812, slot 4). Leaves are linked; a range query would walk rightwards from here."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["i2", "l3"], "edges": ["i2-l3", "l2-l3", "l3-l4"] },
+      "nodeStates": { "l3": { "status": "active", "badge": "3" }, "l1": { "status": "muted" }, "l2": { "status": "muted" }, "l4": { "status": "muted" } },
+      "edgeStates": { "i2-l3": { "status": "active" }, "i2-l2": { "status": "muted" } },
+      "packets": [
+        { "edge": "i2-l3", "shape": "dot", "label": "4821", "durationMs": 1000 }
+      ],
+      "annotations": [
+        { "id": "leaf-entry", "x": 620, "y": 310, "text": { "tr": "4821 → TID (812, 4)", "en": "4821 → TID (812, 4)" }, "tone": "success", "target": "l3" }
+      ]
+    },
+    {
+      "id": "heap-fetch",
+      "title": { "tr": "Heap'ten tek sayfa", "en": "A single heap page" },
+      "narration": {
+        "tr": "TID ile heap'ten yalnızca 812 numaralı sayfa okunur. Toplam 4 sayfa okuma, 0,07 ms. Sorgu yalnızca indeksteki sütunları isteseydi bu adım da atlanırdı (Index Only Scan).",
+        "en": "Using the TID only heap page 812 is read. 4 page reads in total, 0.07 ms. Had the query needed only indexed columns, this step would be skipped too (Index Only Scan)."
+      },
+      "durationMs": 3500,
+      "highlight": { "nodes": ["l3", "heap", "app"], "edges": ["l3-heap"] },
+      "nodeStates": { "heap": { "status": "success", "badge": "Index Scan" }, "app": { "status": "success" } },
+      "edgeStates": { "l3-heap": { "visible": true, "status": "active" } },
+      "packets": [
+        { "edge": "l3-heap", "shape": "diamond", "label": "page 812", "durationMs": 900 },
+        { "edge": "app-root", "shape": "dot", "direction": "backward", "label": "11 rows", "startAt": 1400, "durationMs": 1000, "color": "success" }
+      ],
+      "annotations": [
+        { "id": "cost2", "x": 560, "y": 455, "text": { "tr": "Buffers: 4 sayfa · 0,07 ms · 2.600× daha az I/O", "en": "Buffers: 4 pages · 0.07 ms · 2,600× less I/O" }, "tone": "success", "target": "heap" }
+      ]
+    },
+    {
+      "id": "hash-index",
+      "title": { "tr": "Hash indeks: tek sıçrama, ama yalnızca eşitlik", "en": "Hash index: one hop, but equality only" },
+      "narration": {
+        "tr": "Hash indeks 4821'i hash'leyip doğrudan kovaya gider: ağaç inişi yok. Ancak 'customer_id BETWEEN 4000 AND 5000' sorulduğunda hash hiçbir şey yapamaz; kovalarda sıra yoktur.",
+        "en": "A hash index hashes 4821 and jumps straight to the bucket: no tree descent. But asked 'customer_id BETWEEN 4000 AND 5000' it can do nothing; buckets have no order."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["app", "hash", "heap"], "edges": ["app-hash", "hash-heap"] },
+      "nodeStates": {
+        "hash": { "visible": true, "status": "active" },
+        "root": { "status": "muted" }, "i2": { "status": "muted", "badge": "" }, "l3": { "status": "muted", "badge": "" },
+        "heap": { "status": "active", "badge": "" }, "app": { "status": "active", "sublabel": "= 4821 ✓ · BETWEEN ✗" }
+      },
+      "edgeStates": {
+        "app-hash": { "visible": true, "status": "active" }, "hash-heap": { "visible": true, "status": "active" },
+        "app-root": { "status": "muted" }, "root-i2": { "status": "muted" }, "i2-l3": { "status": "muted" }, "l3-heap": { "status": "muted" }
+      },
+      "packets": [
+        { "edge": "app-hash", "shape": "envelope", "label": "4821", "durationMs": 800 },
+        { "edge": "hash-heap", "shape": "diamond", "label": "bucket 17 → TID", "startAt": 900, "durationMs": 1000 },
+        { "edge": "app-hash", "shape": "square", "label": "BETWEEN?", "startAt": 2200, "durationMs": 800, "color": "danger" }
+      ],
+      "annotations": [
+        { "id": "hash-note", "x": 120, "y": 440, "text": { "tr": "aralık / ORDER BY / LIKE 'ab%' desteklenmez", "en": "no range / ORDER BY / LIKE 'ab%' support" }, "tone": "warning", "target": "hash" }
+      ]
+    },
+    {
+      "id": "composite",
+      "title": { "tr": "Composite indeks ve en sol önek", "en": "Composite index and the leftmost prefix" },
+      "narration": {
+        "tr": "İndeks (customer_id, status) olsaydı ağaç önce customer_id'ye, eşitlikte status'a göre sıralı olurdu. 'WHERE status = paid' tek başına kökte hangi işaretçiye gideceğini bilemez: en sol sütun yoksa indeks kullanılamaz, plan yine Seq Scan olur.",
+        "en": "With an index on (customer_id, status) the tree is ordered first by customer_id, then by status on ties. 'WHERE status = paid' alone cannot decide which root pointer to follow: without the leftmost column the index is unusable and the plan falls back to a Seq Scan."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["root", "i1", "i2", "i3"], "edges": ["root-i1", "root-i2", "root-i3"] },
+      "nodeStates": {
+        "hash": { "status": "muted" },
+        "root": { "status": "warning", "sublabel": "(customer_id, status)", "badge": "?" },
+        "i1": { "status": "warning" }, "i2": { "status": "warning" }, "i3": { "status": "warning" },
+        "app": { "status": "warning", "sublabel": "WHERE status = 'paid'" },
+        "heap": { "status": "busy", "badge": "Seq Scan" }
+      },
+      "edgeStates": {
+        "app-hash": { "status": "muted" }, "hash-heap": { "status": "muted" },
+        "app-root": { "status": "error" }, "root-i1": { "status": "error" }, "root-i2": { "status": "error" }, "root-i3": { "status": "error" }
+      },
+      "packets": [
+        { "edge": "app-root", "shape": "envelope", "label": "status = 'paid'", "durationMs": 1000, "color": "warning" },
+        { "edge": "root-i1", "shape": "dot", "startAt": 1100, "durationMs": 800, "color": "danger" },
+        { "edge": "root-i2", "shape": "dot", "startAt": 1100, "durationMs": 800, "color": "danger" },
+        { "edge": "root-i3", "shape": "dot", "startAt": 1100, "durationMs": 800, "color": "danger" }
+      ],
+      "annotations": [
+        { "id": "prefix", "x": 560, "y": 455, "text": { "tr": "Kullanılabilir önekler: (customer_id) ve (customer_id, status) — (status) tek başına değil", "en": "Usable prefixes: (customer_id) and (customer_id, status) — not (status) alone" }, "tone": "warning", "target": "heap" }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["index", "b-tree", "hash-index", "composite-index", "query-plan"]
+}

@@ -1,0 +1,110 @@
+{
+  "id": "g-08-nn-playground-quiz",
+  "title": { "tr": "Sinir Ağı Playground Quiz", "en": "Neural Network Playground Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Playground'da aktivasyonu 'linear' yapıp 3 gizli katman eklediğinizde XOR hâlâ öğrenilmiyor. Neden?",
+        "en": "In the playground you set the activation to 'linear' and add 3 hidden layers, yet XOR still is not learned. Why?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Öğrenme oranı çok düşük", "en": "The learning rate is too low" } },
+        { "id": "b", "text": { "tr": "Doğrusal katmanların bileşimi doğrusaldır; karar sınırı ne yaparsanız yapın düz bir çizgi kalır ve XOR doğrusal ayrılamaz", "en": "A composition of linear layers is linear; the decision boundary stays a straight line whatever you do, and XOR is not linearly separable" } },
+        { "id": "c", "text": { "tr": "XOR için en az 4 gizli katman gerekir", "en": "XOR needs at least 4 hidden layers" } },
+        { "id": "d", "text": { "tr": "Veri kümesi çok küçük", "en": "The dataset is too small" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Derinlik, doğrusal olmayan aktivasyon olmadan ifade gücü eklemez. XOR için tek gizli katman (2–3 nöron) ve tanh/ReLU yeterlidir; 4 örnek bu problem için tam veri kümesidir.",
+        "en": "Depth adds no expressive power without a non-linear activation. One hidden layer (2–3 neurons) with tanh/ReLU suffices for XOR; the 4 samples are the complete dataset for this problem."
+      },
+      "difficulty": "easy",
+      "concepts": ["xor-problem", "activation-function", "hidden-layers"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "Eğitim sırasında kayıp önce düşüyor, sonra her epoch'ta büyük zıplamalar yapıyor ve sonunda NaN oluyor. En olası neden nedir?",
+        "en": "During training the loss first drops, then jumps wildly every epoch and finally becomes NaN. What is the most likely cause?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Öğrenme oranı çok yüksek; adımlar minimumu aşıyor ve ağırlıklar patlıyor", "en": "The learning rate is too high; steps overshoot the minimum and weights explode" } },
+        { "id": "b", "text": { "tr": "Çok az epoch çalıştırıldı", "en": "Too few epochs were run" } },
+        { "id": "c", "text": { "tr": "Gizli nöron sayısı çok az", "en": "Too few hidden neurons" } },
+        { "id": "d", "text": { "tr": "Veri karıştırılmadı", "en": "The data was not shuffled" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "Zıplayan ve ıraksayan kayıp, büyük öğrenme oranının klasik belirtisidir. Çare: öğrenme oranını 10 kat düşürmek, Adam gibi uyarlanabilir optimizer kullanmak, gerekirse gradient clipping. Az epoch ya da az nöron kaybı yüksek bırakır ama patlatmaz.",
+        "en": "A bouncing, diverging loss is the classic symptom of a large learning rate. Remedy: lower it 10×, use an adaptive optimizer like Adam, add gradient clipping if needed. Too few epochs or neurons leave the loss high but do not blow it up."
+      },
+      "difficulty": "easy",
+      "concepts": ["learning-rate", "loss-curve"]
+    },
+    {
+      "id": "q3",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Gürültülü spiral veri kümesinde '16,16' gizli katmanlarla eğitim kaybı 0.01'e inerken doğrulama kaybı yükseliyor. Hangi müdahaleler mantıklıdır? (Birden fazla seçin)",
+        "en": "On the noisy spiral dataset with '16,16' hidden layers the training loss drops to 0.01 while validation loss rises. Which interventions make sense? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Nöron sayısını azaltmak", "en": "Reducing the number of neurons" } },
+        { "id": "b", "text": { "tr": "Doğrulama kaybının minimum olduğu epoch'ta durmak (early stopping)", "en": "Stopping at the epoch where validation loss is minimal (early stopping)" } },
+        { "id": "c", "text": { "tr": "L2 regularization eklemek", "en": "Adding L2 regularisation" } },
+        { "id": "d", "text": { "tr": "Öğrenme oranını 100 kat artırmak", "en": "Increasing the learning rate 100×" } }
+      ],
+      "correct": ["a", "b", "c"],
+      "explanation": {
+        "tr": "Tablo klasik overfitting'tir: kapasiteyi azaltmak, erken durdurmak ve regularization varyansı düşürür. Öğrenme oranını 100 kat artırmak yalnızca eğitimi kararsızlaştırır (d).",
+        "en": "The picture is classic overfitting: reducing capacity, stopping early and regularising all lower variance. Raising the learning rate 100× only destabilises training (d)."
+      },
+      "difficulty": "medium",
+      "concepts": ["overfitting", "epoch", "hidden-layers"]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Bir ağın tüm ağırlıkları sıfırla başlatılırsa, aynı katmandaki gizli nöronlar eğitim boyunca birbirinin aynısı kalır ve ağ tek nöronlu gibi davranır.",
+        "en": "If all weights of a network are initialised to zero, hidden neurons in the same layer stay identical throughout training and the network behaves like a single neuron."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["t"],
+      "explanation": {
+        "tr": "Doğru. Aynı başlangıç → aynı ileri çıktı → aynı gradyan → aynı güncelleme; simetri asla kırılmaz. Bu yüzden Xavier/He gibi rastgele başlatma kullanılır (sapmalar sıfır olabilir).",
+        "en": "True. Same start → same forward output → same gradient → same update; symmetry never breaks. That is why random schemes like Xavier/He are used (biases may be zero)."
+      },
+      "difficulty": "medium",
+      "concepts": ["weight-initialization"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "TensorFlow.js'te `model.fit` çağrısı sırasında `onEpochEnd` içinde `await tf.nextFrame()` kullanılmasının amacı nedir?",
+        "en": "What is the purpose of calling `await tf.nextFrame()` inside `onEpochEnd` during `model.fit` in TensorFlow.js?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Öğrenme oranını her epoch'ta otomatik azaltmak", "en": "Automatically decaying the learning rate every epoch" } },
+        { "id": "b", "text": { "tr": "Tarayıcının arayüzü çizmesine izin vermek; aksi hâlde uzun eğitim sayfayı dondurur", "en": "Letting the browser render the UI; otherwise a long training run freezes the page" } },
+        { "id": "c", "text": { "tr": "GPU belleğini boşaltmak", "en": "Freeing GPU memory" } },
+        { "id": "d", "text": { "tr": "Veriyi yeniden karıştırmak", "en": "Reshuffling the data" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Eğitim ana iş parçacığında koşar; `tf.nextFrame()` bir animasyon karesi bekleyerek olay döngüsüne nefes aldırır ve kayıp eğrisi/sınır canlı güncellenebilir. Bellek `dispose()`/`tf.tidy` ile yönetilir (c), karıştırma `shuffle` seçeneğiyle yapılır (d).",
+        "en": "Training runs on the main thread; `tf.nextFrame()` awaits an animation frame so the event loop can breathe and the loss curve/boundary update live. Memory is managed with `dispose()`/`tf.tidy` (c); shuffling is the `shuffle` option (d)."
+      },
+      "difficulty": "hard",
+      "concepts": ["tensorflow-js"]
+    }
+  ]
+}

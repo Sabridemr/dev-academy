@@ -1,0 +1,110 @@
+{
+  "id": "g-07-production-ai-systems-quiz",
+  "title": { "tr": "Üretimde AI Sistemleri Quiz", "en": "Production AI Systems Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Öneri sistemleri neden tek bir güçlü sıralama modeli yerine aday üretimi → sıralama → yeniden sıralama hunisi kullanır?",
+        "en": "Why do recommendation systems use a candidate generation → ranking → re-ranking funnel instead of a single powerful ranking model?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Tek model tüm kataloğu istek anında skorlayamaz; huni pahalı modeli küçük bir aday kümesinde çalıştırır", "en": "A single model cannot score the whole catalogue at request time; the funnel runs the expensive model on a small candidate set" } },
+        { "id": "b", "text": { "tr": "Sıralama modelleri yalnızca 500 girdiyle çalışabilir", "en": "Ranking models can only work with 500 inputs" } },
+        { "id": "c", "text": { "tr": "Huni, A/B testini gereksiz kılar", "en": "The funnel makes A/B testing unnecessary" } },
+        { "id": "d", "text": { "tr": "Aday üretimi her zaman sıralamadan daha doğrudur", "en": "Candidate generation is always more accurate than ranking" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "Yüz milyonlarca öğeyi 100 ms'de pahalı bir modelle skorlamak imkânsızdır. Ucuz ve geniş aşamalar (ANN, birlikte satın alma) adayları yüzlere indirir; pahalı model yalnızca onlara bakar. Doğruluk sırası tersidir (d yanlış).",
+        "en": "Scoring hundreds of millions of items with an expensive model in 100 ms is impossible. Cheap, wide stages (ANN, co-purchase) cut candidates to hundreds; the expensive model only sees those. The accuracy order is the reverse (d is wrong)."
+      },
+      "difficulty": "easy",
+      "concepts": ["candidate-generation", "ranking", "latency-budget"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "Two-tower modelin üretimde sağladığı asıl avantaj nedir?",
+        "en": "What is the main production advantage of a two-tower model?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Kullanıcı ve ürün özellikleri arasındaki tüm çapraz etkileşimleri modeller", "en": "It models every cross interaction between user and item features" } },
+        { "id": "b", "text": { "tr": "Ürün vektörleri önceden hesaplanıp ANN indeksine yazılabilir; istek anında yalnızca kullanıcı vektörü hesaplanır ve en yakın komşular milisaniyede bulunur", "en": "Item vectors can be precomputed into an ANN index; at request time only the user vector is computed and nearest neighbours are found in milliseconds" } },
+        { "id": "c", "text": { "tr": "Eğitim için etiket gerektirmez", "en": "It needs no labels for training" } },
+        { "id": "d", "text": { "tr": "Soğuk başlangıç problemini tamamen çözer", "en": "It completely solves the cold-start problem" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Kulelerin ayrılabilirliği, pahalı tarafı çevrimdışına taşır. Bedeli, çapraz etkileşimleri modelleyememesidir (a tam tersidir) — bu yüzden sıralama aşamasında ayrı bir model kullanılır. Etkileşim verisiyle eğitilir (c) ve yeni ürün için vektör içerik özelliklerinden türetilse de soğuk başlangıç tamamen çözülmez (d).",
+        "en": "Separable towers move the expensive part offline. The price is that it cannot model cross interactions (a is the opposite) — hence a separate ranking model. It trains on interaction data (c), and although a new item's vector can come from content features, cold start is not fully solved (d)."
+      },
+      "difficulty": "medium",
+      "concepts": ["two-tower-model", "approximate-nearest-neighbor"]
+    },
+    {
+      "id": "q3",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Gerçek zamanlı fraud skorlama sistemi için doğru tasarım kararları hangileridir? (Birden fazla seçin)",
+        "en": "Which are sound design decisions for a real-time fraud scoring system? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Son 1 saatteki deneme sayısı gibi özellikleri stream işleme ile sürekli güncel tutmak", "en": "Keeping features like attempts in the last hour continuously fresh via stream processing" } },
+        { "id": "b", "text": { "tr": "Onayla / reddet / ek doğrulama şeklinde üç yollu karar vermek", "en": "Making a three-way decision: approve / decline / step-up verification" } },
+        { "id": "c", "text": { "tr": "Modeli yalnızca yılda bir yeniden eğitmek çünkü dolandırıcılık örüntüleri sabittir", "en": "Retraining the model only once a year because fraud patterns are stable" } },
+        { "id": "d", "text": { "tr": "Skor eşiğini yanlış pozitif ve yanlış negatif maliyetlerine göre ayarlamak", "en": "Tuning the score threshold by the costs of false positives and false negatives" } }
+      ],
+      "correct": ["a", "b", "d"],
+      "explanation": {
+        "tr": "Taze özellikler, kademeli karar ve maliyete dayalı eşik üretim fraud sistemlerinin temelidir. Dolandırıcılar modele uyum sağladığı için concept drift süreklidir; yıllık eğitim (c) modeli hızla işe yaramaz hâle getirir.",
+        "en": "Fresh features, graded decisions and cost-based thresholds are the foundations of production fraud systems. Because fraudsters adapt to the model, concept drift is constant; yearly retraining (c) quickly makes the model useless."
+      },
+      "difficulty": "medium",
+      "concepts": ["fraud-scoring", "real-time-features"]
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": {
+        "tr": "Öneri servisinde feature store 60 ms yanıt vermeye başladı ve 100 ms'lik bütçe aşılıyor. En uygun davranış nedir?",
+        "en": "In the recommendation service the feature store starts responding in 60 ms and the 100 ms budget is exceeded. What is the most appropriate behaviour?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Yanıtı bekleyip sayfayı geç döndürmek", "en": "Wait for the response and return the page late" } },
+        { "id": "b", "text": { "tr": "Hata döndürüp widget'ı boş göstermek", "en": "Return an error and show an empty widget" } },
+        { "id": "c", "text": { "tr": "Zaman aşımında varsayılan özelliklerle ya da aday skorlarıyla devam etmek; o da olmazsa önbellekteki/popüler listeyi dönmek", "en": "On timeout continue with default features or candidate scores; failing that, return the cached/popular list" } },
+        { "id": "d", "text": { "tr": "Sıralama modelini kapatıp rastgele 20 ürün göstermek", "en": "Disable the ranking model and show 20 random items" } }
+      ],
+      "correct": ["c"],
+      "explanation": {
+        "tr": "Her aşamanın zaman aşımı ve yedeği olmalıdır: kalite kademeli düşer, sayfa yüklenir. Beklemek sayfa SLO'sunu bozar (a), boş widget ve rastgele liste gereksiz kalite kaybıdır (b, d).",
+        "en": "Every stage needs a timeout and a fallback: quality degrades gracefully, the page still loads. Waiting breaks the page SLO (a); an empty widget or a random list is needless quality loss (b, d)."
+      },
+      "difficulty": "easy",
+      "concepts": ["fallback", "latency-budget"]
+    },
+    {
+      "id": "q5",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Learning to rank'te listwise kayıp fonksiyonları (LambdaMART gibi) tüm listenin NDCG gibi bir sıralama metriğini doğrudan optimize etmeyi hedefler; pointwise yaklaşım ise her belgeye bağımsız bir ilgililik skoru tahmin eder.",
+        "en": "In learning to rank, listwise losses (such as LambdaMART) aim to directly optimise a ranking metric like NDCG over the whole list, whereas the pointwise approach predicts an independent relevance score per document."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["t"],
+      "explanation": {
+        "tr": "Doğru. Pointwise sıralamayı regresyon/sınıflandırmaya indirger ve göreli sırayı göz ardı eder; pairwise çiftlerin sırasını, listwise tüm listenin metriğini optimize eder. Üretimde LambdaMART (GBDT tabanlı listwise) hâlâ en yaygın tercihtir.",
+        "en": "True. Pointwise reduces ranking to regression/classification and ignores relative order; pairwise optimises pair order, listwise the metric of the whole list. In production LambdaMART (GBDT-based listwise) remains the most common choice."
+      },
+      "difficulty": "hard",
+      "concepts": ["learning-to-rank"]
+    }
+  ]
+}

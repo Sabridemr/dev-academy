@@ -33,6 +33,8 @@
       "import": "./dist/node/index.js",
       "require": "./dist/node/index.cjs"
     },
+    "./examples/*": "./examples/*",
+    "./schema/*": "./schema/*",
     "./package.json": "./package.json"
   },
   "typesVersions": {

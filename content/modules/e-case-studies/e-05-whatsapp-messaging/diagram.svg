@@ -1,0 +1,126 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 520" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">WhatsApp mesajlaşma mimarisi</title>
+  <desc id="desc">Solda ve sağda istemci cihazlar kalıcı WebSocket ile bağlantı sunucularına bağlıdır. Ortada mesaj yönlendirici; üstünde oturum kayıt servisi ve presence servisi, altında kullanıcı başına çevrimdışı kuyruk ve APNs/FCM push köprüsü. Altta anahtar sunucusu (yalnızca açık anahtar paketleri) ve şifreli medya deposu. Şifreleme cihazlarda yapılır; sunucular yalnızca şifreli yükü taşır.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+    <marker id="arrow-p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-primary, #6366f1)"/>
+    </marker>
+    <marker id="arrow-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-accent, #f59e0b)"/>
+    </marker>
+  </defs>
+
+  <!-- Güven sınırı -->
+  <rect x="170" y="30" width="620" height="440" rx="16" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)" stroke-dasharray="6 5"/>
+  <text x="480" y="54" text-anchor="middle" font-size="12" font-weight="600" fill="var(--da-muted, #64748b)">SUNUCU TARAFI — yalnızca şifreli yük, teslim sonrası silinir</text>
+
+  <!-- İstemciler -->
+  <g fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5">
+    <rect x="30" y="190" width="110" height="80" rx="12"/>
+    <rect x="820" y="190" width="110" height="80" rx="12"/>
+  </g>
+  <text x="85" y="216" text-anchor="middle" font-size="13" fill="var(--da-fg, #0f172a)">Alice</text>
+  <text x="85" y="234" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">cihazda şifrele</text>
+  <text x="85" y="248" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">Double Ratchet</text>
+  <text x="85" y="262" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">msgId · sayaç</text>
+  <text x="875" y="216" text-anchor="middle" font-size="13" fill="var(--da-fg, #0f172a)">Bob</text>
+  <text x="875" y="234" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">cihazda çöz</text>
+  <text x="875" y="248" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">msgId tekilleştir</text>
+  <text x="875" y="262" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">✓✓ gönder</text>
+
+  <!-- Bağlantı sunucuları -->
+  <g fill="var(--da-primary, #6366f1)" opacity="0.12" stroke="var(--da-primary, #6366f1)" stroke-width="1.6">
+    <rect x="195" y="190" width="130" height="80" rx="12"/>
+    <rect x="635" y="190" width="130" height="80" rx="12"/>
+  </g>
+  <g font-size="12" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="260" y="215">Bağlantı sunucusu A</text>
+    <text x="700" y="215">Bağlantı sunucusu B</text>
+  </g>
+  <g font-size="9.5" fill="var(--da-muted, #64748b)" text-anchor="middle">
+    <text x="260" y="233">Erlang · 1–2 M bağlantı</text>
+    <text x="260" y="247">durumsuz · heartbeat 30 s</text>
+    <text x="260" y="261">soket → userId</text>
+    <text x="700" y="233">Erlang · 1–2 M bağlantı</text>
+    <text x="700" y="247">durumsuz · heartbeat 30 s</text>
+    <text x="700" y="261">soket → userId</text>
+  </g>
+
+  <!-- Yönlendirici -->
+  <rect x="400" y="195" width="160" height="70" rx="12" fill="var(--da-primary, #6366f1)" opacity="0.18" stroke="var(--da-primary, #6366f1)" stroke-width="1.8"/>
+  <text x="480" y="220" text-anchor="middle" font-size="13" font-weight="600" fill="var(--da-fg, #0f172a)">Mesaj yönlendirici</text>
+  <text x="480" y="238" text-anchor="middle" font-size="9.5" fill="var(--da-muted, #64748b)">1. kalıcı yaz → ✓  2. kayda bak</text>
+  <text x="480" y="252" text-anchor="middle" font-size="9.5" fill="var(--da-muted, #64748b)">3. ilet ya da push · grup fan-out</text>
+
+  <!-- Oturum kaydı ve presence -->
+  <rect x="300" y="80" width="150" height="56" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)" stroke-width="1.4"/>
+  <text x="375" y="102" text-anchor="middle" font-size="12" fill="var(--da-fg, #0f172a)">Oturum kaydı</text>
+  <text x="375" y="118" text-anchor="middle" font-size="9.5" fill="var(--da-muted, #64748b)">userId → connServer · bellek içi</text>
+
+  <rect x="510" y="80" width="150" height="56" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)" stroke-width="1.4"/>
+  <text x="585" y="102" text-anchor="middle" font-size="12" fill="var(--da-fg, #0f172a)">Presence</text>
+  <text x="585" y="118" text-anchor="middle" font-size="9.5" fill="var(--da-muted, #64748b)">abonelik · son görülme · yazıyor…</text>
+
+  <!-- Çevrimdışı kuyruk ve push -->
+  <rect x="300" y="320" width="150" height="64" rx="10" fill="var(--da-accent, #f59e0b)" opacity="0.12" stroke="var(--da-accent, #f59e0b)" stroke-width="1.6"/>
+  <text x="375" y="342" text-anchor="middle" font-size="12" fill="var(--da-fg, #0f172a)">Çevrimdışı kuyruk</text>
+  <text x="375" y="358" text-anchor="middle" font-size="9.5" fill="var(--da-muted, #64748b)">alıcı başına · zaman sıralı</text>
+  <text x="375" y="372" text-anchor="middle" font-size="9.5" fill="var(--da-muted, #64748b)">≤ 30 gün · ✓✓ sonrası sil</text>
+
+  <rect x="510" y="320" width="150" height="64" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)" stroke-width="1.4"/>
+  <text x="585" y="342" text-anchor="middle" font-size="12" fill="var(--da-fg, #0f172a)">Push köprüsü</text>
+  <text x="585" y="358" text-anchor="middle" font-size="9.5" fill="var(--da-muted, #64748b)">APNs / FCM</text>
+  <text x="585" y="372" text-anchor="middle" font-size="9.5" fill="var(--da-muted, #64748b)">içeriksiz uyandırma</text>
+
+  <!-- Anahtar sunucusu ve medya -->
+  <rect x="195" y="410" width="200" height="46" rx="10" fill="var(--da-success, #10b981)" opacity="0.12" stroke="var(--da-success, #10b981)" stroke-width="1.5"/>
+  <text x="295" y="429" text-anchor="middle" font-size="12" fill="var(--da-fg, #0f172a)">Anahtar sunucusu</text>
+  <text x="295" y="444" text-anchor="middle" font-size="9.5" fill="var(--da-muted, #64748b)">yalnızca açık anahtar paketleri (X3DH)</text>
+
+  <rect x="565" y="410" width="200" height="46" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)" stroke-width="1.4"/>
+  <text x="665" y="429" text-anchor="middle" font-size="12" fill="var(--da-fg, #0f172a)">Medya deposu</text>
+  <text x="665" y="444" text-anchor="middle" font-size="9.5" fill="var(--da-muted, #64748b)">şifreli blob · anahtar mesajda</text>
+
+  <!-- Oklar -->
+  <g stroke="var(--da-primary, #6366f1)" stroke-width="2" fill="none" marker-end="url(#arrow-p)">
+    <path d="M 140 230 L 195 230"/>
+    <path d="M 325 230 L 400 230"/>
+    <path d="M 560 230 L 635 230"/>
+    <path d="M 765 230 L 820 230"/>
+  </g>
+  <g font-size="9" fill="var(--da-primary, #6366f1)" text-anchor="middle">
+    <text x="167" y="222">WebSocket</text>
+    <text x="792" y="222">WebSocket</text>
+  </g>
+  <g stroke="var(--da-muted, #64748b)" stroke-width="1.4" fill="none" stroke-dasharray="4 3" marker-end="url(#arrow)">
+    <path d="M 440 195 L 400 136"/>
+    <path d="M 700 190 L 620 136"/>
+    <path d="M 585 136 C 560 170, 300 160, 280 190"/>
+  </g>
+  <text x="408" y="170" font-size="9" fill="var(--da-muted, #64748b)">kim nerede?</text>
+  <text x="640" y="170" font-size="9" fill="var(--da-muted, #64748b)">online/offline</text>
+  <text x="330" y="168" font-size="9" fill="var(--da-muted, #64748b)">abonelere yay</text>
+  <g stroke="var(--da-accent, #f59e0b)" stroke-width="1.6" fill="none" marker-end="url(#arrow-a)">
+    <path d="M 440 265 L 400 320"/>
+    <path d="M 520 265 L 560 320"/>
+    <path d="M 660 352 C 760 352, 820 320, 860 270"/>
+  </g>
+  <text x="396" y="300" font-size="9" fill="var(--da-accent, #f59e0b)">kalıcı yaz</text>
+  <text x="548" y="300" font-size="9" fill="var(--da-accent, #f59e0b)">çevrimdışıysa</text>
+  <text x="780" y="330" font-size="9" fill="var(--da-accent, #f59e0b)">uyandır</text>
+  <g stroke="var(--da-success, #10b981)" stroke-width="1.4" fill="none" stroke-dasharray="3 3" marker-end="url(#arrow)">
+    <path d="M 100 270 C 110 380, 150 420, 195 433"/>
+  </g>
+  <text x="120" y="360" font-size="9" fill="var(--da-success, #10b981)">Bob'un paketi</text>
+
+  <!-- Teslim durumları lejantı -->
+  <g font-size="10" fill="var(--da-fg, #0f172a)">
+    <text x="30" y="500">✓ sunucu kalıcı aldı</text>
+    <text x="200" y="500">✓✓ alıcı cihazı aldı → sunucu kopyayı siler</text>
+    <text x="520" y="500">mavi ✓✓ okundu (yalnızca UX)</text>
+    <text x="760" y="500">en az bir kez + msgId tekilleştirme</text>
+  </g>
+</svg>

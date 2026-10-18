@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 320" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Dağıtık rate limiter mimarisi</title>
+  <desc id="desc">İstemciler yük dengeleyici üzerinden birden fazla gateway düğümüne dağılır; her düğümdeki limiter middleware kuralları kural servisinden alır ve sayaçları paylaşımlı Redis'te Lua betiğiyle atomik günceller. İzin verilen istekler korunan API'ye gider, aşanlar 429 ve Retry-After alır. Redis erişilemezse düğümler yerel sayaçla fail-open çalışır.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+    <marker id="arrow-p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-primary, #6366f1)"/>
+    </marker>
+    <marker id="arrow-d" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-danger, #ef4444)"/>
+    </marker>
+  </defs>
+
+  <!-- İstemciler -->
+  <g fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.3">
+    <rect x="24" y="90" width="90" height="36" rx="8"/>
+    <rect x="24" y="140" width="90" height="36" rx="8"/>
+    <rect x="24" y="190" width="90" height="36" rx="8"/>
+  </g>
+  <g font-size="10.5" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="69" y="112">key k1 · pro</text>
+    <text x="69" y="162">key k2 · free</text>
+    <text x="69" y="212">key k1 · pro</text>
+  </g>
+
+  <!-- LB -->
+  <rect x="150" y="135" width="60" height="46" rx="8" fill="var(--da-primary, #6366f1)" opacity="0.12" stroke="var(--da-primary, #6366f1)" stroke-width="1.4"/>
+  <text x="180" y="162" text-anchor="middle" font-size="11" fill="var(--da-fg, #0f172a)">LB</text>
+  <g stroke="var(--da-muted, #64748b)" stroke-width="1.3" fill="none" marker-end="url(#arrow)">
+    <path d="M 114 108 C 130 108, 135 150, 150 152"/>
+    <path d="M 114 158 L 150 158"/>
+    <path d="M 114 208 C 130 208, 135 166, 150 164"/>
+  </g>
+
+  <!-- Gateway düğümleri -->
+  <g fill="var(--da-primary, #6366f1)" opacity="0.12" stroke="var(--da-primary, #6366f1)" stroke-width="1.5">
+    <rect x="250" y="70" width="150" height="60" rx="10"/>
+    <rect x="250" y="186" width="150" height="60" rx="10"/>
+  </g>
+  <g font-size="11" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="325" y="91">Gateway düğümü 1</text>
+    <text x="325" y="207">Gateway düğümü 2</text>
+  </g>
+  <g font-size="9" fill="var(--da-muted, #64748b)" text-anchor="middle">
+    <text x="325" y="106">limiter middleware · &lt; 2 ms</text>
+    <text x="325" y="120">yerel yedek sayaç (fail-open)</text>
+    <text x="325" y="222">limiter middleware · &lt; 2 ms</text>
+    <text x="325" y="236">yerel yedek sayaç (fail-open)</text>
+  </g>
+  <g stroke="var(--da-muted, #64748b)" stroke-width="1.4" fill="none" marker-end="url(#arrow)">
+    <path d="M 210 150 C 230 150, 230 100, 250 100"/>
+    <path d="M 210 166 C 230 166, 230 216, 250 216"/>
+  </g>
+
+  <!-- Kural servisi -->
+  <rect x="250" y="12" width="150" height="36" rx="8" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)" stroke-width="1.3"/>
+  <text x="325" y="28" text-anchor="middle" font-size="10.5" fill="var(--da-fg, #0f172a)">Kural servisi</text>
+  <text x="325" y="41" text-anchor="middle" font-size="8.5" fill="var(--da-muted, #64748b)">pro: 100/dk · free: 20/dk · 30 s cache</text>
+  <g stroke="var(--da-muted, #64748b)" stroke-width="1.2" fill="none" stroke-dasharray="3 3" marker-end="url(#arrow)">
+    <path d="M 325 48 L 325 70"/>
+    <path d="M 420 30 C 440 30, 440 180, 400 200"/>
+  </g>
+
+  <!-- Redis -->
+  <rect x="480" y="110" width="170" height="96" rx="10" fill="var(--da-danger, #ef4444)" opacity="0.08" stroke="var(--da-danger, #ef4444)" stroke-width="1.6"/>
+  <text x="565" y="132" text-anchor="middle" font-size="12" font-weight="600" fill="var(--da-fg, #0f172a)">Redis (paylaşımlı)</text>
+  <g font-size="9" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="565" y="150">rl:k1:1718  → 37</text>
+    <text x="565" y="163">rl:k1:1717  → 100</text>
+    <text x="565" y="180">EVAL lua: oku → hesapla → INCR</text>
+    <text x="565" y="194">tek atomik adım · PEXPIRE</text>
+  </g>
+  <g stroke="var(--da-danger, #ef4444)" stroke-width="1.4" fill="none" marker-end="url(#arrow-d)">
+    <path d="M 400 100 C 440 100, 450 140, 480 145"/>
+    <path d="M 400 216 C 440 216, 450 176, 480 171"/>
+  </g>
+  <text x="440" y="118" font-size="8.5" fill="var(--da-danger, #ef4444)">aynı anahtar</text>
+
+  <!-- Korunan API -->
+  <rect x="730" y="90" width="150" height="56" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-success, #10b981)" stroke-width="1.6"/>
+  <text x="805" y="112" text-anchor="middle" font-size="11.5" fill="var(--da-fg, #0f172a)">Korunan API</text>
+  <text x="805" y="128" text-anchor="middle" font-size="9" fill="var(--da-muted, #64748b)">yalnızca izinli istekler</text>
+  <g stroke="var(--da-primary, #6366f1)" stroke-width="1.5" fill="none" marker-end="url(#arrow-p)">
+    <path d="M 400 84 C 560 60, 680 70, 730 104"/>
+    <path d="M 400 232 C 620 260, 700 200, 740 146"/>
+  </g>
+
+  <!-- 429 kutusu -->
+  <rect x="730" y="190" width="150" height="56" rx="10" fill="var(--da-danger, #ef4444)" opacity="0.1" stroke="var(--da-danger, #ef4444)" stroke-width="1.4"/>
+  <text x="805" y="211" text-anchor="middle" font-size="11.5" fill="var(--da-fg, #0f172a)">429 Too Many Requests</text>
+  <text x="805" y="227" text-anchor="middle" font-size="9" fill="var(--da-muted, #64748b)">Retry-After · X-RateLimit-*</text>
+  <text x="805" y="240" text-anchor="middle" font-size="9" fill="var(--da-muted, #64748b)">API'ye hiç gitmez</text>
+
+  <!-- Sliding window şeması -->
+  <g>
+    <rect x="24" y="262" width="856" height="44" rx="8" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)" stroke-width="1.2"/>
+    <text x="40" y="280" font-size="10" font-weight="600" fill="var(--da-fg, #0f172a)">Sliding window counter</text>
+    <rect x="200" y="270" width="200" height="14" rx="3" fill="var(--da-muted, #64748b)" opacity="0.3"/>
+    <rect x="400" y="270" width="200" height="14" rx="3" fill="var(--da-primary, #6366f1)" opacity="0.35"/>
+    <rect x="280" y="270" width="120" height="14" rx="3" fill="var(--da-primary, #6366f1)" opacity="0.25"/>
+    <line x1="480" y1="266" x2="480" y2="288" stroke="var(--da-danger, #ef4444)" stroke-width="1.5"/>
+    <text x="300" y="298" text-anchor="middle" font-size="8.5" fill="var(--da-muted, #64748b)">önceki pencere (100) × kalan oran 0.6 = 60</text>
+    <text x="520" y="298" text-anchor="middle" font-size="8.5" fill="var(--da-muted, #64748b)">+ mevcut (37) = 97 &lt; 100 → izin</text>
+    <text x="760" y="281" text-anchor="middle" font-size="9" fill="var(--da-fg, #0f172a)">2 sayaç · sabit bellek · sınır patlaması yok</text>
+  </g>
+</svg>

@@ -1,0 +1,110 @@
+{
+  "id": "g-04-deep-learning-architectures-quiz",
+  "title": { "tr": "Derin Öğrenme Mimarileri Quiz", "en": "Deep Learning Architectures Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "multiple",
+      "prompt": {
+        "tr": "CNN'lerin görüntü verisinde tam bağlı ağlara göre avantaj sağlamasının nedenleri hangileridir? (Birden fazla seçin)",
+        "en": "Why do CNNs have an advantage over fully connected networks on image data? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Aynı filtre tüm görüntüde paylaşılır; parametre sayısı girdi boyutundan bağımsızdır", "en": "The same filter is shared across the image; the parameter count is independent of input size" } },
+        { "id": "b", "text": { "tr": "Her çıktı yalnızca yerel bir komşuluğa bakar", "en": "Each output looks only at a local neighbourhood" } },
+        { "id": "c", "text": { "tr": "Konvolüsyon, görüntüdeki tüm pikseller arasındaki ilişkiyi tek katmanda yakalar", "en": "Convolution captures relationships between all pixels in a single layer" } },
+        { "id": "d", "text": { "tr": "CNN'ler aktivasyon fonksiyonuna ihtiyaç duymaz", "en": "CNNs do not need activation functions" } }
+      ],
+      "correct": ["a", "b"],
+      "explanation": {
+        "tr": "Ağırlık paylaşımı ve yerellik CNN'in temel önselleridir. Küresel bağlam ancak katmanlar derinleştikçe büyüyen alıcı alanla gelir (c yanlış); konvolüsyon da doğrusaldır, ReLU şarttır (d yanlış).",
+        "en": "Weight sharing and locality are the CNN's core priors. Global context only arrives as the receptive field grows with depth (c is wrong); convolution is linear, so ReLU is still required (d is wrong)."
+      },
+      "difficulty": "medium",
+      "concepts": ["convolution", "receptive-field"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "LSTM, basit RNN'in uzun bağımlılıkları öğrenememe sorununu temelde nasıl hafifletir?",
+        "en": "How does an LSTM fundamentally mitigate the simple RNN's inability to learn long dependencies?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Daha büyük bir gizli durum kullanarak", "en": "By using a larger hidden state" } },
+        { "id": "b", "text": { "tr": "Toplama ile güncellenen bir hücre durumu ve kapılar sayesinde gradyanın çarpılmadan akabildiği bir yol açarak", "en": "By opening a path where gradients flow without repeated multiplication, via an additively updated cell state and gates" } },
+        { "id": "c", "text": { "tr": "Diziyi paralel işleyerek", "en": "By processing the sequence in parallel" } },
+        { "id": "d", "text": { "tr": "tanh yerine sigmoid kullanarak", "en": "By using sigmoid instead of tanh" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "c_t = f_t⊙c_{t−1} + i_t⊙c̃_t toplamsal bir güncellemedir; forget kapısı 1'e yakınken gradyan sönmeden geçer. Boyut büyütmek (a) sorunu çözmez, LSTM hâlâ ardışıktır (c) ve sigmoid tek başına çare değildir (d).",
+        "en": "c_t = f_t⊙c_{t−1} + i_t⊙c̃_t is an additive update; with the forget gate near 1 the gradient passes without vanishing. A bigger state (a) does not fix it, LSTMs are still sequential (c) and sigmoid alone is no remedy (d)."
+      },
+      "difficulty": "medium",
+      "concepts": ["lstm", "rnn"]
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": {
+        "tr": "Self-attention'da skorlar neden √d_k ile bölünür?",
+        "en": "Why are the scores divided by √d_k in self-attention?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Hesaplamayı hızlandırmak için", "en": "To speed up computation" } },
+        { "id": "b", "text": { "tr": "Büyük boyutlarda nokta çarpımın varyansı büyür, softmax doyar ve gradyanlar söner; ölçekleme bunu önler", "en": "In high dimensions the dot product's variance grows, softmax saturates and gradients vanish; scaling prevents that" } },
+        { "id": "c", "text": { "tr": "Ağırlıkların toplamını 1 yapmak için", "en": "To make the weights sum to 1" } },
+        { "id": "d", "text": { "tr": "Konum bilgisini eklemek için", "en": "To add positional information" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "d_k bağımsız birim varyanslı bileşenin çarpımının varyansı d_k'dır; √d_k ile bölmek varyansı 1'e çeker. Toplamı 1 yapan softmax'tır (c), konum bilgisi gömmeye eklenir (d).",
+        "en": "The dot product of d_k independent unit-variance components has variance d_k; dividing by √d_k brings it back to 1. Softmax is what makes weights sum to 1 (c); position is added to the embedding (d)."
+      },
+      "difficulty": "hard",
+      "concepts": ["self-attention", "transformer"]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Self-attention sıraya duyarsızdır; bu yüzden Transformer'lar konum bilgisini (positional encoding) ayrıca eklemek zorundadır.",
+        "en": "Self-attention is order-blind; therefore Transformers must add positional information (positional encoding) separately."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["t"],
+      "explanation": {
+        "tr": "Doğru. Attention bir küme işlemidir: tokenların yerini değiştirseniz çıktı aynı şekilde yer değiştirir. 'Köpek adamı ısırdı' ile 'Adam köpeği ısırdı' arasındaki farkı ancak konum kodlaması (sinüs tabloları, öğrenilmiş vektörler, RoPE) verir.",
+        "en": "True. Attention is a set operation: permute the tokens and the output permutes identically. Only positional encoding (sinusoids, learned vectors, RoPE) distinguishes 'dog bites man' from 'man bites dog'."
+      },
+      "difficulty": "easy",
+      "concepts": ["positional-encoding", "self-attention"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "GAN ile diffusion modellerini karşılaştıran ifadelerden hangisi doğrudur?",
+        "en": "Which statement correctly compares GANs and diffusion models?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Diffusion tek ileri geçişte üretir, GAN onlarca adım gerektirir", "en": "Diffusion generates in one forward pass, GANs need dozens of steps" } },
+        { "id": "b", "text": { "tr": "GAN eğitimi kararsız olabilir (mode collapse); diffusion eğitimi kararlıdır ama örnekleme çok adımlı ve yavaştır", "en": "GAN training can be unstable (mode collapse); diffusion training is stable but sampling is multi-step and slow" } },
+        { "id": "c", "text": { "tr": "İkisi de etiketli veri olmadan eğitilemez", "en": "Neither can be trained without labelled data" } },
+        { "id": "d", "text": { "tr": "GAN'da tek ağ vardır, diffusion'da iki ağ yarışır", "en": "A GAN has one network, in diffusion two networks compete" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "GAN tek geçişte hızlı üretir ama min-max oyunu kararsızdır; diffusion gürültü tahmini gibi basit bir regresyon kaybıyla kararlı eğitilir, bedeli çok adımlı örneklemedir. (a) tersidir, ikisi de gözetimsiz çalışabilir (c), iki yarışan ağ GAN'dadır (d).",
+        "en": "A GAN generates fast in one pass but its min-max game is unstable; diffusion trains stably with a simple noise-regression loss at the cost of multi-step sampling. (a) is reversed, both can be unsupervised (c), and the two competing networks belong to the GAN (d)."
+      },
+      "difficulty": "medium",
+      "concepts": ["gan", "diffusion-model"]
+    }
+  ]
+}

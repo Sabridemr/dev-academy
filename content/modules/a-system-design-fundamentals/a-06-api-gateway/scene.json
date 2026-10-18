@@ -1,0 +1,207 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "a-06-api-gateway-filter-chain",
+  "title": { "tr": "Gateway'de Bir İstek: Auth → Rate Limit → Routing → Aggregation → Circuit Breaker", "en": "A Request in the Gateway: Auth → Rate Limit → Routing → Aggregation → Circuit Breaker" },
+  "summary": {
+    "tr": "Mobil istemciden gelen bir sipariş detay isteğinin API Gateway içinde kimlik doğrulama, rate limit, yönlendirme ve üç servise paralel dağıtılıp birleştirilmesi; ardından envanter servisinin hastalanması ve circuit breaker'ın açılarak fallback dönmesi.",
+    "en": "An order-detail request from a mobile client passing through authentication, rate limiting, routing and parallel fan-out to three services with aggregation inside the API Gateway; then the inventory service falling ill and the circuit breaker opening to return a fallback."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda mobil istemci, ortada API Gateway, gateway'in altında kimlik sağlayıcı ve Redis, sağda sipariş, kullanıcı ve envanter servisleri bulunur. İstek gateway'e gelir; token kimlik sağlayıcının anahtarıyla doğrulanır; Redis'te rate limit sayacı artırılır; istek üç servise paralel yönlendirilir ve yanıtlar tek JSON'da birleştirilir. Sonra envanter servisi yavaşlar ve zaman aşımları hata eşiğini aşar; gateway envanter devresini açar, istekleri envantere göndermeden fallback değeriyle yanıtlar; sipariş ve kullanıcı servisleri normal çalışmaya devam eder. Bekleme süresi dolunca yarı açık durumda bir deneme isteği başarılı olur ve devre kapanır.",
+      "en": "A mobile client on the left, the API Gateway in the middle, an identity provider and Redis below the gateway, and order, user and inventory services on the right. The request reaches the gateway; the token is verified with the identity provider's key; a rate-limit counter is incremented in Redis; the request is routed to three services in parallel and the responses are merged into one JSON. Then the inventory service slows down and timeouts exceed the error threshold; the gateway opens the inventory circuit and answers with a fallback value without calling inventory, while order and user services keep working normally. After the wait period a half-open trial request succeeds and the circuit closes."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "mobile", "kind": "mobile", "label": { "tr": "Mobil uygulama", "en": "Mobile app" }, "sublabel": "GET /api/orders/123", "x": 110, "y": 240, "w": 150, "h": 80 },
+    { "id": "gw", "kind": "gateway", "label": "API Gateway", "sublabel": { "tr": "filtre zinciri", "en": "filter chain" }, "x": 430, "y": 240, "w": 180, "h": 90 },
+    { "id": "idp", "kind": "service", "label": { "tr": "Kimlik sağlayıcı", "en": "Identity provider" }, "sublabel": "JWKS / public key", "x": 300, "y": 480, "w": 160, "h": 64 },
+    { "id": "redis", "kind": "cache", "label": "Redis", "sublabel": { "tr": "rate limit sayaçları", "en": "rate limit counters" }, "x": 560, "y": 480, "w": 150, "h": 64 },
+    { "id": "orders", "kind": "service", "label": { "tr": "Sipariş servisi", "en": "Order service" }, "sublabel": "/orders/{id}", "x": 840, "y": 100, "w": 170, "h": 70 },
+    { "id": "users", "kind": "service", "label": { "tr": "Kullanıcı servisi", "en": "User service" }, "sublabel": "/users/{id}", "x": 840, "y": 240, "w": 170, "h": 70 },
+    { "id": "inventory", "kind": "service", "label": { "tr": "Envanter servisi", "en": "Inventory service" }, "sublabel": "/stock?sku=…", "x": 840, "y": 380, "w": 170, "h": 70 }
+  ],
+  "edges": [
+    { "id": "m-gw", "from": "mobile", "to": "gw", "kind": "request" },
+    { "id": "gw-idp", "from": "gw", "to": "idp", "kind": "control", "style": "dotted", "label": { "tr": "imza doğrula", "en": "verify signature" } },
+    { "id": "gw-redis", "from": "gw", "to": "redis", "kind": "data", "style": "dashed", "label": "INCR rl:user42" },
+    { "id": "gw-orders", "from": "gw", "to": "orders", "kind": "request", "curvature": -0.15 },
+    { "id": "gw-users", "from": "gw", "to": "users", "kind": "request" },
+    { "id": "gw-inventory", "from": "gw", "to": "inventory", "kind": "request", "curvature": 0.15 }
+  ],
+  "steps": [
+    {
+      "id": "arrive",
+      "title": { "tr": "İstek kapıya geliyor", "en": "The request reaches the door" },
+      "narration": {
+        "tr": "Mobil uygulama sipariş detay ekranı için tek bir istek atar: GET /api/orders/123, Authorization başlığında bir JWT ile. İstemci arkadaki üç servisten habersizdir; yalnızca gateway'in adresini bilir. TLS burada sonlandırılır.",
+        "en": "The mobile app sends a single request for the order-detail screen: GET /api/orders/123 with a JWT in the Authorization header. The client knows nothing about the three services behind; it only knows the gateway's address. TLS is terminated here."
+      },
+      "durationMs": 3000,
+      "inherit": false,
+      "highlight": { "nodes": ["mobile", "gw"], "edges": ["m-gw"] },
+      "nodeStates": {
+        "mobile": { "status": "active" },
+        "gw": { "status": "active", "badge": "1/5 TLS" },
+        "idp": { "status": "idle" }, "redis": { "status": "idle" },
+        "orders": { "status": "idle" }, "users": { "status": "idle" }, "inventory": { "status": "idle" }
+      },
+      "packets": [
+        { "edge": "m-gw", "shape": "envelope", "label": "GET /api/orders/123 · Bearer eyJ…", "durationMs": 1200 }
+      ],
+      "annotations": [
+        { "id": "arrive-note", "x": 110, "y": 340, "text": { "tr": "Tek adres, tek istek; arkada 3 servis", "en": "One address, one request; 3 services behind" }, "target": "mobile" }
+      ]
+    },
+    {
+      "id": "auth",
+      "title": { "tr": "Authentication: kenarda doğrula", "en": "Authentication: verify at the edge" },
+      "narration": {
+        "tr": "Gateway JWT'nin imzasını kimlik sağlayıcının açık anahtarıyla (JWKS, cache'lenmiş) doğrular, exp alanına bakar ve kullanıcı id'sini çıkarır. Geçersizse 401 ile burada biter; arkadaki servisler kimliksiz istek hiç görmez. Pahalı kontroller öne alınmaz: önce ucuz ve çok reddeden adımlar.",
+        "en": "The gateway verifies the JWT signature with the identity provider's public key (JWKS, cached), checks the exp claim and extracts the user id. If invalid it ends here with 401; the services behind never see an unauthenticated request. Cheap, high-rejection checks come first."
+      },
+      "durationMs": 3500,
+      "highlight": { "nodes": ["gw", "idp"], "edges": ["gw-idp"] },
+      "nodeStates": {
+        "gw": { "status": "active", "badge": "2/5 auth" },
+        "idp": { "status": "active" }
+      },
+      "edgeStates": { "gw-idp": { "status": "active" } },
+      "packets": [
+        { "edge": "gw-idp", "shape": "diamond", "label": "kid=2024-10?", "durationMs": 800 },
+        { "edge": "gw-idp", "shape": "dot", "direction": "backward", "color": "success", "label": "public key (cached)", "startAt": 900, "durationMs": 800 }
+      ],
+      "annotations": [
+        { "id": "auth-note", "x": 430, "y": 140, "text": { "tr": "imza ✓ · exp ✓ → user42, scopes=[orders:read]", "en": "signature ✓ · exp ✓ → user42, scopes=[orders:read]" }, "tone": "success", "target": "gw" }
+      ]
+    },
+    {
+      "id": "ratelimit",
+      "title": { "tr": "Rate limiting: adil kota", "en": "Rate limiting: fair quota" },
+      "narration": {
+        "tr": "Kimlik belli olduğuna göre kullanıcı başına kota uygulanabilir: Redis'te rl:user42:<pencere> sayacı artırılır (INCR + EXPIRE). 100/dk sınırının altındaysa devam; aşıldıysa 429 ve Retry-After başlığı. Sayaç gateway belleğinde değil Redis'te tutulur ki tüm gateway örnekleri aynı kotayı görsün.",
+        "en": "Now that identity is known a per-user quota can apply: the rl:user42:<window> counter in Redis is incremented (INCR + EXPIRE). Under the 100/min limit, continue; over it, 429 with a Retry-After header. The counter lives in Redis rather than gateway memory so every gateway instance sees the same quota."
+      },
+      "durationMs": 3500,
+      "highlight": { "nodes": ["gw", "redis"], "edges": ["gw-redis"] },
+      "nodeStates": {
+        "gw": { "status": "active", "badge": "3/5 rate limit" },
+        "idp": { "status": "idle" },
+        "redis": { "status": "active", "badge": "37/100" }
+      },
+      "edgeStates": { "gw-idp": { "status": "idle" }, "gw-redis": { "status": "active" } },
+      "packets": [
+        { "edge": "gw-redis", "shape": "diamond", "label": "INCR rl:user42:1718", "durationMs": 800 },
+        { "edge": "gw-redis", "shape": "dot", "direction": "backward", "color": "success", "label": "37", "startAt": 900, "durationMs": 800 }
+      ],
+      "annotations": [
+        { "id": "rl-note", "x": 430, "y": 140, "text": { "tr": "37 < 100 → geç; aşımda 429 + Retry-After", "en": "37 < 100 → pass; on overflow 429 + Retry-After" }, "tone": "info", "target": "gw" }
+      ]
+    },
+    {
+      "id": "route-aggregate",
+      "title": { "tr": "Routing + aggregation: üç servis, tek yanıt", "en": "Routing + aggregation: three services, one response" },
+      "narration": {
+        "tr": "Gateway /api/orders/* kuralını eşleştirir ve detay ekranı için üç servise paralel çıkar: sipariş, kullanıcı (alıcı adı) ve envanter (stok durumu). Her çağrıya x-request-id ve x-user-id eklenir, 2 s zaman aşımı konur. Yanıtlar tek JSON'da birleştirilip mobil istemciye döner: 1 RTT yerine 3 RTT ödemek istemciye kalmaz.",
+        "en": "The gateway matches the /api/orders/* rule and fans out in parallel to three services for the detail screen: order, user (buyer name) and inventory (stock status). Each call gets x-request-id and x-user-id and a 2 s timeout. The responses are merged into one JSON and returned to the mobile client, which pays 1 RTT instead of 3."
+      },
+      "durationMs": 5000,
+      "highlight": { "nodes": ["gw", "orders", "users", "inventory"], "edges": ["gw-orders", "gw-users", "gw-inventory"] },
+      "nodeStates": {
+        "gw": { "status": "busy", "badge": "4/5 route+agg" },
+        "redis": { "status": "idle" },
+        "orders": { "status": "active" }, "users": { "status": "active" }, "inventory": { "status": "active" }
+      },
+      "edgeStates": { "gw-redis": { "status": "idle" }, "gw-orders": { "status": "active" }, "gw-users": { "status": "active" }, "gw-inventory": { "status": "active" } },
+      "packets": [
+        { "edge": "gw-orders", "shape": "envelope", "label": "GET /orders/123", "durationMs": 800 },
+        { "edge": "gw-users", "shape": "envelope", "label": "GET /users/42", "startAt": 100, "durationMs": 800 },
+        { "edge": "gw-inventory", "shape": "envelope", "label": "GET /stock?sku=A1", "startAt": 200, "durationMs": 800 },
+        { "edge": "gw-orders", "shape": "dot", "direction": "backward", "color": "success", "label": "120 ms", "startAt": 1100, "durationMs": 800 },
+        { "edge": "gw-users", "shape": "dot", "direction": "backward", "color": "success", "label": "60 ms", "startAt": 1200, "durationMs": 800 },
+        { "edge": "gw-inventory", "shape": "dot", "direction": "backward", "color": "success", "label": "180 ms", "startAt": 1500, "durationMs": 800 },
+        { "edge": "m-gw", "shape": "envelope", "direction": "backward", "color": "success", "label": "200 · {order, buyer, stock}", "startAt": 2600, "durationMs": 1200 }
+      ],
+      "annotations": [
+        { "id": "agg-note", "x": 430, "y": 140, "text": { "tr": "Paralel fan-out; toplam süre = en yavaş servis (180 ms)", "en": "Parallel fan-out; total = slowest service (180 ms)" }, "tone": "info", "target": "gw" }
+      ]
+    },
+    {
+      "id": "degrade",
+      "title": { "tr": "Envanter hastalanıyor", "en": "Inventory falls ill" },
+      "narration": {
+        "tr": "Envanter servisinin veritabanı yavaşlar; yanıtlar 2 s zaman aşımına takılmaya başlar. Gateway her isteği 2 s bekletirse bağlantı havuzu dolar ve sipariş/kullanıcı servislerine giden sağlıklı istekler de kuyrukta bekler: kaskad çöküş başlangıcı. Breaker son 10 saniyedeki hata oranını sayıyor.",
+        "en": "The inventory service's database slows down; responses start hitting the 2 s timeout. If the gateway waited 2 s on every request its connection pool would fill and healthy calls to order/user services would queue behind them: the start of a cascading failure. The breaker is counting the error rate over the last 10 seconds."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["inventory", "gw"], "edges": ["gw-inventory"] },
+      "nodeStates": {
+        "gw": { "status": "warning", "badge": "5/5 breaker: closed" },
+        "inventory": { "status": "error", "badge": "p99 4 s", "sublabel": { "tr": "DB yavaş · timeout", "en": "DB slow · timeouts" } },
+        "orders": { "status": "active" }, "users": { "status": "active" }
+      },
+      "edgeStates": { "gw-inventory": { "status": "error", "label": { "tr": "timeout 2 s", "en": "timeout 2 s" } } },
+      "packets": [
+        { "edge": "gw-inventory", "shape": "envelope", "durationMs": 700, "repeat": 4, "repeatGapMs": 150 },
+        { "edge": "gw-inventory", "shape": "square", "direction": "backward", "color": "danger", "label": "timeout", "startAt": 1500, "durationMs": 900, "repeat": 3, "repeatGapMs": 150 }
+      ],
+      "annotations": [
+        { "id": "deg-note", "x": 840, "y": 470, "text": { "tr": "hata oranı: 12/20 = %60 ≥ eşik %50", "en": "error rate: 12/20 = 60% ≥ 50% threshold" }, "tone": "danger", "target": "inventory" }
+      ]
+    },
+    {
+      "id": "open",
+      "title": { "tr": "Devre açılıyor: fast-fail + fallback", "en": "Circuit opens: fast-fail + fallback" },
+      "narration": {
+        "tr": "Eşik aşıldı; envanter servisinin devresi OPEN durumuna geçer. Artık gateway envanter çağrısını hiç yapmaz: stok alanına anında fallback ('stok bilgisi geçici olarak yok') yazar ve sipariş + kullanıcı verisiyle 200 döner. Kullanıcı sayfayı görür, hasta servis nefes alır, sağlıklı servisler etkilenmez. Devre servis başına tutulur.",
+        "en": "The threshold is exceeded; the inventory circuit switches to OPEN. The gateway no longer calls inventory at all: it immediately writes a fallback into the stock field ('stock info temporarily unavailable') and returns 200 with order + user data. The user sees the page, the sick service gets to breathe, healthy services are untouched. The circuit is kept per service."
+      },
+      "durationMs": 5000,
+      "highlight": { "nodes": ["gw", "orders", "users"], "edges": ["gw-orders", "gw-users", "m-gw"] },
+      "nodeStates": {
+        "gw": { "status": "active", "badge": "breaker: OPEN" },
+        "inventory": { "status": "muted", "badge": "⏸", "sublabel": { "tr": "30 s dinleniyor", "en": "resting for 30 s" } }
+      },
+      "edgeStates": { "gw-inventory": { "status": "muted", "label": { "tr": "çağrılmıyor", "en": "not called" } }, "gw-orders": { "status": "active" }, "gw-users": { "status": "active" } },
+      "packets": [
+        { "edge": "m-gw", "shape": "envelope", "label": "GET /api/orders/124", "durationMs": 900 },
+        { "edge": "gw-orders", "shape": "envelope", "startAt": 900, "durationMs": 700 },
+        { "edge": "gw-users", "shape": "envelope", "startAt": 1000, "durationMs": 700 },
+        { "edge": "gw-orders", "shape": "dot", "direction": "backward", "color": "success", "startAt": 1700, "durationMs": 700 },
+        { "edge": "gw-users", "shape": "dot", "direction": "backward", "color": "success", "startAt": 1800, "durationMs": 700 },
+        { "edge": "m-gw", "shape": "envelope", "direction": "backward", "color": "warning", "label": "200 · stock: fallback", "startAt": 2700, "durationMs": 1000 }
+      ],
+      "annotations": [
+        { "id": "open-note", "x": 430, "y": 140, "text": { "tr": "Fast-fail: 2 s bekleme yerine 0 ms fallback", "en": "Fast-fail: 0 ms fallback instead of a 2 s wait" }, "tone": "warning", "target": "gw" }
+      ]
+    },
+    {
+      "id": "half-open",
+      "title": { "tr": "Yarı açık: deneme ve iyileşme", "en": "Half-open: trial and recovery" },
+      "narration": {
+        "tr": "30 saniye sonra devre HALF-OPEN olur: tek bir deneme isteği envantere gönderilir. 150 ms'de 200 dönerse devre CLOSED'a geçer ve normal akış sürer; yine hata olursa 30 s daha OPEN kalır. Retry fırtınası olmaz çünkü iyileşme tek istekle sınanır.",
+        "en": "After 30 seconds the circuit becomes HALF-OPEN: a single trial request is sent to inventory. If it returns 200 in 150 ms the circuit goes CLOSED and normal flow resumes; if it fails again it stays OPEN for another 30 s. There is no retry storm because recovery is probed with one request."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["gw", "inventory"], "edges": ["gw-inventory"] },
+      "nodeStates": {
+        "gw": { "status": "active", "badge": "breaker: HALF-OPEN" },
+        "inventory": { "status": "active", "badge": "150 ms", "sublabel": { "tr": "DB toparlandı", "en": "DB recovered" } }
+      },
+      "edgeStates": { "gw-inventory": { "status": "active", "label": { "tr": "1 deneme", "en": "1 trial" } } },
+      "packets": [
+        { "edge": "gw-inventory", "shape": "diamond", "label": "trial GET /stock", "durationMs": 900 },
+        { "edge": "gw-inventory", "shape": "dot", "direction": "backward", "color": "success", "label": "200 · 150 ms", "startAt": 1000, "durationMs": 900 },
+        { "edge": "gw-inventory", "shape": "envelope", "startAt": 2400, "durationMs": 700, "repeat": 2, "repeatGapMs": 200 }
+      ],
+      "annotations": [
+        { "id": "closed-note", "x": 430, "y": 140, "text": { "tr": "deneme ✓ → CLOSED; normal trafik geri döner", "en": "trial ✓ → CLOSED; normal traffic resumes" }, "tone": "success", "target": "gw" }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["api-gateway", "authentication", "rate-limiting", "aggregation", "circuit-breaker"]
+}

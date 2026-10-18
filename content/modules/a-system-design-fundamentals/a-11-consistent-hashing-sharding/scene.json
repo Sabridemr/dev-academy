@@ -1,0 +1,227 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "a-11-consistent-hashing-ring",
+  "title": { "tr": "Consistent Hashing Halkası", "en": "The Consistent Hashing Ring" },
+  "summary": {
+    "tr": "Üç düğüm ve beş anahtar hash halkasına yerleşir; her anahtar saat yönündeki ilk düğüme aittir. N4 eklenince yalnızca N1–N4 aralığındaki anahtar taşınır. Sanal düğümler eklenince dağılım düzelir.",
+    "en": "Three nodes and five keys are placed on a hash ring; every key belongs to the first node clockwise. When N4 is added only the key in the N1–N4 range moves. Adding virtual nodes evens out the distribution."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Ortada hash halkasını temsil eden bir merkez etiketi; çevresinde saat yönünde N1 (üst), N4 (sağ üst, sonradan eklenir), K4, N2 (sağ alt), K2 (alt), N3 (sol alt), K5 ve K3 (sol üst) yer alır. Başta K1 ve K4 N2'ye, K2 N3'e, K5 ve K3 N1'e aittir. N4 eklenince yalnızca K1'in sahibi N2'den N4'e değişir; mod N ile anahtarların çoğu taşınırdı. Son adımda her düğüm için sanal düğüm noktaları görünür ve K3'ün sahibi N1'den N2'nin sanal düğümüne geçer; dağılım dengelenir.",
+      "en": "A centre label represents the hash ring; around it, clockwise, sit N1 (top), N4 (top right, added later), K4, N2 (bottom right), K2 (bottom), N3 (bottom left), K5 and K3 (top left). Initially K1 and K4 belong to N2, K2 to N3, K5 and K3 to N1. When N4 is added only K1's owner changes from N2 to N4; with mod N most keys would have moved. In the final step virtual node points appear for every node and K3's owner moves from N1 to a virtual node of N2; the distribution evens out."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "ring", "kind": "generic", "label": { "tr": "Hash halkası", "en": "Hash ring" }, "sublabel": "0 … 2³²−1", "x": 500, "y": 300, "w": 170, "h": 64 },
+    { "id": "n1", "kind": "server", "label": "N1", "sublabel": "hash(N1) = 0°", "x": 500, "y": 100, "w": 96, "h": 56 },
+    { "id": "n2", "kind": "server", "label": "N2", "sublabel": "130°", "x": 653, "y": 429, "w": 96, "h": 56 },
+    { "id": "n3", "kind": "server", "label": "N3", "sublabel": "230°", "x": 347, "y": 429, "w": 96, "h": 56 },
+    { "id": "n4", "kind": "server", "label": "N4", "sublabel": { "tr": "yeni · 60°", "en": "new · 60°" }, "x": 673, "y": 200, "w": 96, "h": 56, "color": "accent" },
+    { "id": "k1", "kind": "generic", "label": "K1", "sublabel": "30°", "x": 600, "y": 127, "w": 58, "h": 40 },
+    { "id": "k4", "kind": "generic", "label": "K4", "sublabel": "100°", "x": 697, "y": 335, "w": 58, "h": 40 },
+    { "id": "k2", "kind": "generic", "label": "K2", "sublabel": "185°", "x": 483, "y": 499, "w": 58, "h": 40 },
+    { "id": "k5", "kind": "generic", "label": "K5", "sublabel": "265°", "x": 301, "y": 317, "w": 58, "h": 40 },
+    { "id": "k3", "kind": "generic", "label": "K3", "sublabel": "300°", "x": 327, "y": 200, "w": 58, "h": 40 },
+    { "id": "n2v", "kind": "shard", "label": "N2#1", "sublabel": "330°", "x": 400, "y": 127, "w": 70, "h": 40 },
+    { "id": "n3v", "kind": "shard", "label": "N3#1", "sublabel": "205°", "x": 415, "y": 481, "w": 70, "h": 40 },
+    { "id": "n1v", "kind": "shard", "label": "N1#1", "sublabel": "160°", "x": 568, "y": 488, "w": 70, "h": 40 }
+  ],
+  "edges": [
+    { "id": "k1-n2", "from": "k1", "to": "n2", "kind": "data", "style": "dashed", "curvature": -0.3 },
+    { "id": "k4-n2", "from": "k4", "to": "n2", "kind": "data", "style": "dashed", "curvature": -0.2 },
+    { "id": "k2-n3", "from": "k2", "to": "n3", "kind": "data", "style": "dashed", "curvature": -0.2 },
+    { "id": "k5-n1", "from": "k5", "to": "n1", "kind": "data", "style": "dashed", "curvature": -0.35 },
+    { "id": "k3-n1", "from": "k3", "to": "n1", "kind": "data", "style": "dashed", "curvature": -0.3 },
+    { "id": "k1-n4", "from": "k1", "to": "n4", "kind": "data", "style": "dashed", "curvature": -0.3 },
+    { "id": "n2-n4", "from": "n2", "to": "n4", "kind": "replication", "label": { "tr": "K1 taşınır", "en": "K1 moves" }, "curvature": 0.2 },
+    { "id": "k3-n2v", "from": "k3", "to": "n2v", "kind": "data", "style": "dashed", "curvature": -0.3 }
+  ],
+  "steps": [
+    {
+      "id": "place-nodes",
+      "title": { "tr": "Düğümler halkaya yerleşir", "en": "Nodes are placed on the ring" },
+      "narration": {
+        "tr": "Hash uzayını (0 … 2³²−1) bir halka olarak düşünün. Her düğümün kimliği hash'lenir ve halkada bir noktaya konur: N1 0°, N2 130°, N3 230°. Konumlar rastgele gibi görünür çünkü hash fonksiyonu öyle ister.",
+        "en": "Think of the hash space (0 … 2³²−1) as a ring. Each node's id is hashed and placed at a point on the ring: N1 at 0°, N2 at 130°, N3 at 230°. The positions look random because that is what a hash function does."
+      },
+      "durationMs": 3000,
+      "inherit": false,
+      "highlight": { "nodes": ["ring", "n1", "n2", "n3"] },
+      "nodeStates": {
+        "n1": { "status": "active" },
+        "n2": { "status": "active" },
+        "n3": { "status": "active" },
+        "n4": { "visible": false },
+        "k1": { "visible": false },
+        "k2": { "visible": false },
+        "k3": { "visible": false },
+        "k4": { "visible": false },
+        "k5": { "visible": false },
+        "n2v": { "visible": false },
+        "n3v": { "visible": false },
+        "n1v": { "visible": false }
+      },
+      "edgeStates": {
+        "k1-n2": { "visible": false },
+        "k4-n2": { "visible": false },
+        "k2-n3": { "visible": false },
+        "k5-n1": { "visible": false },
+        "k3-n1": { "visible": false },
+        "k1-n4": { "visible": false },
+        "n2-n4": { "visible": false },
+        "k3-n2v": { "visible": false }
+      },
+      "annotations": [
+        { "id": "ring-note", "x": 500, "y": 560, "text": { "tr": "konum = hash(nodeId) mod 2³²", "en": "position = hash(nodeId) mod 2³²" }, "tone": "info", "target": "ring" }
+      ]
+    },
+    {
+      "id": "place-keys",
+      "title": { "tr": "Anahtarlar da aynı halkaya düşer", "en": "Keys land on the same ring" },
+      "narration": {
+        "tr": "Anahtarlar da aynı hash fonksiyonuyla halkaya yerleşir: K1 30°, K4 100°, K2 185°, K5 265°, K3 300°. Düğümlerle anahtarlar aynı uzayı paylaşır; bu, mod N'den temel farktır.",
+        "en": "Keys are placed on the ring with the same hash function: K1 at 30°, K4 at 100°, K2 at 185°, K5 at 265°, K3 at 300°. Nodes and keys share one space; that is the fundamental difference from mod N."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["k1", "k2", "k3", "k4", "k5"] },
+      "nodeStates": {
+        "k1": { "visible": true, "status": "active" },
+        "k2": { "visible": true, "status": "active" },
+        "k3": { "visible": true, "status": "active" },
+        "k4": { "visible": true, "status": "active" },
+        "k5": { "visible": true, "status": "active" }
+      },
+      "annotations": [
+        { "id": "key-note", "x": 500, "y": 560, "text": { "tr": "konum = hash(key) mod 2³² — aynı uzay", "en": "position = hash(key) mod 2³² — same space" }, "tone": "info", "target": "ring" }
+      ]
+    },
+    {
+      "id": "clockwise",
+      "title": { "tr": "Sahip: saat yönündeki ilk düğüm", "en": "Owner: first node clockwise" },
+      "narration": {
+        "tr": "Bir anahtarın sahibi, konumundan saat yönünde ilerlerken karşılaşılan ilk düğümdür. K1 (30°) ve K4 (100°) → N2 (130°); K2 (185°) → N3 (230°); K5 (265°) ve K3 (300°) halkanın sonundan başa sararak → N1 (0°). N1 iki, N2 iki, N3 bir anahtar aldı.",
+        "en": "A key's owner is the first node met while walking clockwise from its position. K1 (30°) and K4 (100°) → N2 (130°); K2 (185°) → N3 (230°); K5 (265°) and K3 (300°) wrap around the end of the ring → N1 (0°). N1 got two keys, N2 two, N3 one."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["n1", "n2", "n3"], "edges": ["k1-n2", "k4-n2", "k2-n3", "k5-n1", "k3-n1"] },
+      "nodeStates": {
+        "n1": { "badge": "2" },
+        "n2": { "badge": "2" },
+        "n3": { "badge": "1" }
+      },
+      "edgeStates": {
+        "k1-n2": { "visible": true, "status": "active" },
+        "k4-n2": { "visible": true, "status": "active" },
+        "k2-n3": { "visible": true, "status": "active" },
+        "k5-n1": { "visible": true, "status": "active" },
+        "k3-n1": { "visible": true, "status": "active" }
+      },
+      "packets": [
+        { "edge": "k1-n2", "shape": "dot", "durationMs": 800 },
+        { "edge": "k4-n2", "shape": "dot", "startAt": 300, "durationMs": 800 },
+        { "edge": "k2-n3", "shape": "dot", "startAt": 600, "durationMs": 800 },
+        { "edge": "k5-n1", "shape": "dot", "startAt": 900, "durationMs": 800 },
+        { "edge": "k3-n1", "shape": "dot", "startAt": 1200, "durationMs": 800 }
+      ],
+      "annotations": [
+        { "id": "cw-note", "x": 500, "y": 560, "text": { "tr": "owner(key) = ilk düğüm, konum ≥ hash(key) (yoksa başa sar)", "en": "owner(key) = first node with position ≥ hash(key) (else wrap)" }, "tone": "info", "target": "ring" }
+      ]
+    },
+    {
+      "id": "add-node",
+      "title": { "tr": "N4 eklenir: yalnızca komşu aralık taşınır", "en": "N4 is added: only the neighbouring range moves" },
+      "narration": {
+        "tr": "N4, 60°'ye eklenir. Artık N1 (0°) ile N4 (60°) arasındaki anahtarlar N4'e aittir: yalnızca K1 (30°). K1, N2'den N4'e taşınır; diğer dört anahtarın sahibi değişmez. Taşınan oran 1/5 — tam olarak yeni düğümün payı.",
+        "en": "N4 is added at 60°. Keys between N1 (0°) and N4 (60°) now belong to N4: only K1 (30°). K1 moves from N2 to N4; the other four keys keep their owners. The moved fraction is 1/5 — exactly the new node's share."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["n4", "k1", "n2"], "edges": ["k1-n4", "n2-n4"] },
+      "nodeStates": {
+        "n4": { "visible": true, "status": "success", "badge": "1" },
+        "n2": { "badge": "1" },
+        "k1": { "status": "warning" }
+      },
+      "edgeStates": {
+        "k1-n2": { "status": "muted", "visible": false },
+        "k1-n4": { "visible": true, "status": "active" },
+        "n2-n4": { "visible": true, "status": "active" }
+      },
+      "packets": [
+        { "edge": "n2-n4", "shape": "square", "label": "K1", "color": "accent", "durationMs": 1200 },
+        { "edge": "k1-n4", "shape": "dot", "startAt": 1400, "durationMs": 800 }
+      ],
+      "annotations": [
+        { "id": "move-note", "x": 820, "y": 110, "text": { "tr": "taşınan: 1 / 5 anahtar", "en": "moved: 1 of 5 keys" }, "tone": "success", "target": "n4" }
+      ]
+    },
+    {
+      "id": "vs-mod-n",
+      "title": { "tr": "mod N ile karşılaştırma", "en": "Compared with mod N" },
+      "narration": {
+        "tr": "Aynı değişikliği hash(key) mod N ile yapsaydık mod 3'ten mod 4'e geçerdik ve anahtarların yaklaşık 3/4'ü başka bir düğüme düşerdi. Bir cache için bu, isabet oranının bir anda çökmesi; bir veritabanı için terabaytlarca taşıma demektir. Halka bu maliyeti K/N'e indirir.",
+        "en": "Had we made the same change with hash(key) mod N we would switch from mod 3 to mod 4 and roughly 3/4 of all keys would land on a different node. For a cache that means the hit ratio collapses at once; for a database, terabytes of data movement. The ring cuts that cost to K/N."
+      },
+      "durationMs": 3500,
+      "highlight": { "nodes": ["ring"] },
+      "nodeStates": { "k1": { "status": "active" } },
+      "edgeStates": { "n2-n4": { "status": "idle" } },
+      "annotations": [
+        { "id": "modn-note", "x": 180, "y": 80, "text": { "tr": "mod N: 3 → 4 düğüm ≈ %75 anahtar taşınır", "en": "mod N: 3 → 4 nodes ≈ 75% of keys move" }, "tone": "danger" },
+        { "id": "ring-note2", "x": 180, "y": 530, "text": { "tr": "halka: ≈ K/N = %25 (burada 1/5)", "en": "ring: ≈ K/N = 25% (here 1/5)" }, "tone": "success" }
+      ]
+    },
+    {
+      "id": "imbalance",
+      "title": { "tr": "Problem: aralıklar eşit değil", "en": "Problem: ranges are not equal" },
+      "narration": {
+        "tr": "Düğümler rastgele konumlandığı için sahip oldukları yaylar eşit değildir: N1, 230°'den 360°'ye kadar 130°'lik bir yaya sahipken N4 yalnızca 60° alır. Ayrıca N1 düşerse tüm anahtarları tek komşusuna (N4) biner. Üç düğümle bu dengesizlik kaçınılmazdır.",
+        "en": "Because nodes land at random positions their arcs are unequal: N1 owns a 130° arc from 230° to 360° while N4 owns only 60°. And if N1 fails, all its keys pile onto its single neighbour (N4). With three nodes this imbalance is unavoidable."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["n1", "n4"] },
+      "nodeStates": {
+        "n1": { "status": "warning", "badge": "130°" },
+        "n4": { "status": "active", "badge": "60°" },
+        "n2": { "badge": "70°" },
+        "n3": { "badge": "100°" }
+      },
+      "annotations": [
+        { "id": "imb-note", "x": 500, "y": 560, "text": { "tr": "yük ∝ yay uzunluğu → N1 en ağır", "en": "load ∝ arc length → N1 is heaviest" }, "tone": "warning", "target": "ring" }
+      ]
+    },
+    {
+      "id": "vnodes",
+      "title": { "tr": "Sanal düğümler dengeyi kurar", "en": "Virtual nodes restore balance" },
+      "narration": {
+        "tr": "Her fiziksel düğüm halkaya bir değil, çok noktaya konur: N1#1 (160°), N2#1 (330°), N3#1 (205°)… Pratikte 100–200 nokta. Küçük yaylar halkanın her yerine dağılır; K3 (300°) artık N2#1'e, yani N2'ye aittir. Dağılım düzelir, bir düğüm düşünce yükü tüm düğümlere yayılır ve güçlü makineye daha çok sanal düğüm verilebilir.",
+        "en": "Each physical node is placed at many points instead of one: N1#1 (160°), N2#1 (330°), N3#1 (205°)… In practice 100–200 points. Small arcs are scattered all around the ring; K3 (300°) now belongs to N2#1, i.e. N2. Distribution evens out, a failing node's load spreads over all nodes, and a stronger machine can be given more virtual nodes."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["n1v", "n2v", "n3v", "k3"], "edges": ["k3-n2v"] },
+      "nodeStates": {
+        "n1v": { "visible": true, "status": "active" },
+        "n2v": { "visible": true, "status": "active" },
+        "n3v": { "visible": true, "status": "active" },
+        "n1": { "status": "active", "badge": "1" },
+        "n2": { "badge": "2" },
+        "n3": { "badge": "1" },
+        "n4": { "badge": "1" },
+        "k3": { "status": "warning" }
+      },
+      "edgeStates": {
+        "k3-n1": { "visible": false },
+        "k3-n2v": { "visible": true, "status": "active" }
+      },
+      "packets": [{ "edge": "k3-n2v", "shape": "dot", "label": "K3", "durationMs": 900 }],
+      "annotations": [
+        { "id": "vn-note", "x": 500, "y": 560, "text": { "tr": "150 vnode/düğüm → yük farkı < %5", "en": "150 vnodes/node → load spread < 5%" }, "tone": "success", "target": "ring" }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["consistent-hashing", "hash-ring", "virtual-nodes", "sharding"]
+}

@@ -1,0 +1,142 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 520" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Aynı gönderi verisinin beş veri modelinde yerleşimi</title>
+  <desc id="desc">Beş panel: ilişkisel modelde posts, users, comments ve likes tabloları; doküman modelinde gömülü yorumları olan tek JSON; key-value modelinde post:42 anahtarı ve blob değer; wide-column modelinde user_id partition anahtarı ve zamana göre sıralı hücreler; graf modelinde User ve Post düğümleri ile FOLLOWS ve LIKED kenarları.</desc>
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-primary, #6366f1)"/>
+    </marker>
+  </defs>
+
+  <!-- Panel 1: İlişkisel -->
+  <rect x="20" y="20" width="300" height="230" rx="12" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+  <text x="32" y="42" font-size="13" font-weight="600" fill="var(--da-primary, #6366f1)">İlişkisel · 4 tablo + JOIN</text>
+  <g font-size="10" fill="var(--da-fg, #0f172a)">
+    <rect x="32" y="56" width="120" height="58" rx="6" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)"/>
+    <text x="38" y="70" font-weight="600">posts</text>
+    <text x="38" y="84">id=42, author_id=7</text>
+    <text x="38" y="98">body, created_at</text>
+
+    <rect x="180" y="56" width="120" height="58" rx="6" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)"/>
+    <text x="186" y="70" font-weight="600">users</text>
+    <text x="186" y="84">id=7, handle=ayse</text>
+    <text x="186" y="98">avatar_url</text>
+
+    <rect x="32" y="130" width="120" height="58" rx="6" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)"/>
+    <text x="38" y="144" font-weight="600">comments</text>
+    <text x="38" y="158">post_id=42, by=ali</text>
+    <text x="38" y="172">text, at   (×3)</text>
+
+    <rect x="180" y="130" width="120" height="58" rx="6" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)"/>
+    <text x="186" y="144" font-weight="600">likes</text>
+    <text x="186" y="158">post_id=42, user_id</text>
+    <text x="186" y="172">PK(post_id, user_id) ×1280</text>
+  </g>
+  <g stroke="var(--da-primary, #6366f1)" stroke-width="1.2" fill="none" marker-end="url(#arr)">
+    <path d="M 152 78 L 180 78"/>
+    <path d="M 92 130 L 92 114"/>
+    <path d="M 240 130 L 240 114"/>
+  </g>
+  <text x="32" y="212" font-size="10" fill="var(--da-muted, #64748b)">+ her soru sorulabilir, çok satır ACID</text>
+  <text x="32" y="228" font-size="10" fill="var(--da-muted, #64748b)">− gönderi sayfası = 3 JOIN</text>
+
+  <!-- Panel 2: Document -->
+  <rect x="340" y="20" width="290" height="230" rx="12" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+  <text x="352" y="42" font-size="13" font-weight="600" fill="var(--da-primary, #6366f1)">Document · tek JSON</text>
+  <g font-size="10" fill="var(--da-fg, #0f172a)" font-family="monospace">
+    <text x="352" y="62">{</text>
+    <text x="364" y="76">_id: 42,</text>
+    <text x="364" y="90">author: { id: 7, handle: "ayse" },</text>
+    <text x="364" y="104">body: "Merhaba!",</text>
+    <text x="364" y="118">likeCount: 1280,</text>
+    <text x="364" y="132">comments: [</text>
+    <text x="376" y="146">{ by: "ali", text: "Harika", at: … },</text>
+    <text x="376" y="160">…  // en son 20, sınırlı</text>
+    <text x="364" y="174">]</text>
+    <text x="352" y="188">}</text>
+  </g>
+  <text x="352" y="212" font-size="10" fill="var(--da-muted, #64748b)">+ tek okuma, esnek alanlar</text>
+  <text x="352" y="228" font-size="10" fill="var(--da-muted, #64748b)">− sınırsız dizi gömülmez; çoka-çok zayıf</text>
+
+  <!-- Panel 3: Key-value -->
+  <rect x="650" y="20" width="290" height="230" rx="12" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+  <text x="662" y="42" font-size="13" font-weight="600" fill="var(--da-primary, #6366f1)">Key-value · anahtar → blob</text>
+  <g font-size="10" font-family="monospace" fill="var(--da-fg, #0f172a)">
+    <rect x="662" y="56" width="120" height="26" rx="5" fill="var(--da-accent, #f59e0b)" opacity="0.18"/>
+    <text x="668" y="73">post:42:view</text>
+    <rect x="800" y="56" width="128" height="26" rx="5" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)"/>
+    <text x="806" y="73">⟨render HTML 4 KB⟩</text>
+
+    <rect x="662" y="92" width="120" height="26" rx="5" fill="var(--da-accent, #f59e0b)" opacity="0.18"/>
+    <text x="668" y="109">post:42:views</text>
+    <rect x="800" y="92" width="128" height="26" rx="5" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)"/>
+    <text x="806" y="109">9031   (INCR)</text>
+
+    <rect x="662" y="128" width="120" height="26" rx="5" fill="var(--da-accent, #f59e0b)" opacity="0.18"/>
+    <text x="668" y="145">session:ab12</text>
+    <rect x="800" y="128" width="128" height="26" rx="5" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)"/>
+    <text x="806" y="145">{ userId: 7 } TTL 30m</text>
+  </g>
+  <text x="662" y="180" font-size="10" fill="var(--da-muted, #64748b)">GET / SET / INCR / EXPIRE — hepsi bu</text>
+  <text x="662" y="212" font-size="10" fill="var(--da-muted, #64748b)">+ µs gecikme, doğrusal ölçek</text>
+  <text x="662" y="228" font-size="10" fill="var(--da-muted, #64748b)">− "değeri X olanlar" sorgusu yok</text>
+
+  <!-- Panel 4: Wide-column -->
+  <rect x="20" y="270" width="450" height="220" rx="12" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+  <text x="32" y="292" font-size="13" font-weight="600" fill="var(--da-primary, #6366f1)">Wide-column · partition key + clustering key</text>
+  <g font-size="10" fill="var(--da-fg, #0f172a)">
+    <rect x="32" y="306" width="100" height="90" rx="6" fill="var(--da-primary, #6366f1)" opacity="0.14" stroke="var(--da-primary, #6366f1)"/>
+    <text x="40" y="324" font-weight="600">partition</text>
+    <text x="40" y="340">user_id = 7</text>
+    <text x="40" y="356">(ayse)</text>
+    <text x="40" y="380" fill="var(--da-muted, #64748b)">tek düğümde</text>
+
+    <g stroke="var(--da-fg, #0f172a)" fill="var(--da-surface, #ffffff)">
+      <rect x="150" y="306" width="100" height="90" rx="6"/>
+      <rect x="258" y="306" width="100" height="90" rx="6"/>
+      <rect x="366" y="306" width="92" height="90" rx="6"/>
+    </g>
+    <text x="158" y="324" font-weight="600">t3 (en yeni)</text>
+    <text x="158" y="340">post_id=42</text>
+    <text x="158" y="356">body=…</text>
+    <text x="266" y="324" font-weight="600">t2</text>
+    <text x="266" y="340">post_id=41</text>
+    <text x="266" y="356">body=…</text>
+    <text x="374" y="324" font-weight="600">t1</text>
+    <text x="374" y="340">post_id=40</text>
+    <text x="374" y="356">body=…</text>
+    <text x="150" y="384" fill="var(--da-muted, #64748b)">clustering: posted_at DESC → sıralı hücreler</text>
+  </g>
+  <text x="32" y="420" font-size="10" fill="var(--da-fg, #0f172a)" font-family="monospace">SELECT * FROM timeline_by_user WHERE user_id = 7 LIMIT 50;</text>
+  <text x="32" y="446" font-size="10" fill="var(--da-muted, #64748b)">+ dev yazma hacmi, çok bölge, sıralı akış tek partition'dan</text>
+  <text x="32" y="462" font-size="10" fill="var(--da-muted, #64748b)">− partition key olmadan sorgu yok; "en çok beğenilen" için ayrı tablo</text>
+
+  <!-- Panel 5: Graph -->
+  <rect x="490" y="270" width="450" height="220" rx="12" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+  <text x="502" y="292" font-size="13" font-weight="600" fill="var(--da-primary, #6366f1)">Graph · düğüm + kenar</text>
+  <g>
+    <circle cx="560" cy="360" r="26" fill="var(--da-primary, #6366f1)" opacity="0.15" stroke="var(--da-primary, #6366f1)"/>
+    <text x="560" y="364" text-anchor="middle" font-size="10" fill="var(--da-fg, #0f172a)">me</text>
+    <circle cx="680" cy="330" r="26" fill="var(--da-primary, #6366f1)" opacity="0.15" stroke="var(--da-primary, #6366f1)"/>
+    <text x="680" y="334" text-anchor="middle" font-size="10" fill="var(--da-fg, #0f172a)">ali</text>
+    <circle cx="680" cy="410" r="26" fill="var(--da-primary, #6366f1)" opacity="0.15" stroke="var(--da-primary, #6366f1)"/>
+    <text x="680" y="414" text-anchor="middle" font-size="10" fill="var(--da-fg, #0f172a)">ayse</text>
+    <rect x="790" y="340" width="90" height="44" rx="8" fill="var(--da-accent, #f59e0b)" opacity="0.18" stroke="var(--da-accent, #f59e0b)"/>
+    <text x="835" y="366" text-anchor="middle" font-size="10" fill="var(--da-fg, #0f172a)">Post #42</text>
+  </g>
+  <g stroke="var(--da-primary, #6366f1)" stroke-width="1.4" fill="none" marker-end="url(#arr)">
+    <path d="M 584 350 L 654 336"/>
+    <path d="M 584 370 L 654 404"/>
+    <path d="M 706 336 L 790 354"/>
+    <path d="M 706 404 L 790 374"/>
+  </g>
+  <g font-size="9" fill="var(--da-muted, #64748b)">
+    <text x="600" y="334">FOLLOWS</text>
+    <text x="600" y="398">FOLLOWS</text>
+    <text x="730" y="336">LIKED</text>
+    <text x="730" y="400">AUTHORED</text>
+  </g>
+  <text x="502" y="446" font-size="10" fill="var(--da-fg, #0f172a)" font-family="monospace">MATCH (me)-[:FOLLOWS]->()-[:LIKED]->(p) RETURN p</text>
+  <text x="502" y="466" font-size="10" fill="var(--da-muted, #64748b)">+ çok atlamalı sorgu atlama sayısıyla ölçeklenir   − grafı shard'lamak zor</text>
+
+  <text x="480" y="510" text-anchor="middle" font-size="12" fill="var(--da-muted, #64748b)">Aynı gerçek, beş yerleşim. Zaman serisi (post_views: post_id, ts) altıncı modeldir: yalnızca ekleme, zaman bazlı parçalama ve sıkıştırma.</text>
+</svg>

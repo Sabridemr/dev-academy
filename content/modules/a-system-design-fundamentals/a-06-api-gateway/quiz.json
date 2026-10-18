@@ -1,0 +1,110 @@
+{
+  "id": "a-06-api-gateway-quiz",
+  "title": { "tr": "API Gateway Quiz", "en": "API Gateway Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "order",
+      "prompt": {
+        "tr": "Bir API Gateway'de aşağıdaki filtreleri, 'ucuz ve çok reddeden kontroller öne' ilkesine göre doğru sıraya koyun.",
+        "en": "Order the following API Gateway filters according to the principle 'cheap, high-rejection checks first'."
+      },
+      "options": [
+        { "id": "agg", "text": { "tr": "Aggregation (servis yanıtlarını birleştir)", "en": "Aggregation (merge service responses)" } },
+        { "id": "auth", "text": { "tr": "Authentication (token doğrula)", "en": "Authentication (verify token)" } },
+        { "id": "route", "text": { "tr": "Routing (hedef servisi seç)", "en": "Routing (pick the target service)" } },
+        { "id": "rl", "text": { "tr": "Rate limiting (kullanıcı başına kota)", "en": "Rate limiting (per-user quota)" } }
+      ],
+      "correct": ["auth", "rl", "route", "agg"],
+      "explanation": {
+        "tr": "Önce kimlik doğrulanır (kimliksiz isteğe kota uygulanamaz), sonra kullanıcı başına rate limit, ardından hedef servis seçilir ve en son servis yanıtları birleştirilir. Aggregation en pahalı adımdır ve yalnızca tüm kontrollerden geçen istekler için yapılmalıdır.",
+        "en": "Identity is verified first (you cannot apply a quota to an anonymous request), then the per-user rate limit, then the target service is chosen, and finally the service responses are merged. Aggregation is the most expensive step and should only run for requests that passed every check."
+      },
+      "difficulty": "medium",
+      "concepts": ["api-gateway", "edge-authentication", "rate-limiting", "request-routing"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "Circuit breaker 'open' durumundayken ne olur?",
+        "en": "What happens while a circuit breaker is in the 'open' state?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "İstekler hedef servise normal şekilde gider ve hata oranı sayılır", "en": "Requests go to the target service normally and the error rate is counted" } },
+        { "id": "b", "text": { "tr": "İstekler hedef servise hiç gönderilmez; anında hata ya da fallback döner", "en": "Requests are not sent to the target service at all; an error or fallback is returned immediately" } },
+        { "id": "c", "text": { "tr": "Her istek üç kez yeniden denenir", "en": "Every request is retried three times" } },
+        { "id": "d", "text": { "tr": "Gateway tüm servislere gelen trafiği durdurur", "en": "The gateway stops traffic to all services" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Open durumu 'fast-fail' demektir: hasta servise yük bindirmeden ve gateway'in havuzunu bekleyen isteklerle doldurmadan anında yanıt verilir. (a) closed durumunu tanımlar; retry yapmak (c) hasta servisi daha da boğar; devre hedef servis başına tutulduğundan diğer servisler etkilenmez (d yanlış).",
+        "en": "Open means 'fast-fail': respond immediately without loading the sick service or filling the gateway's pool with waiting requests. (a) describes the closed state; retrying (c) would choke the sick service further; since the circuit is kept per target service, other services are unaffected (d is wrong)."
+      },
+      "difficulty": "easy",
+      "concepts": ["circuit-breaker"]
+    },
+    {
+      "id": "q3",
+      "type": "multiple",
+      "prompt": {
+        "tr": "API Gateway'in tek hata noktası ve darboğaz olmasını önlemek için hangileri yapılmalıdır? (Birden fazla seçin)",
+        "en": "Which should be done to keep the API Gateway from becoming a single point of failure and a bottleneck? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Rate limit sayaçlarını gateway belleği yerine Redis gibi paylaşımlı bir depoda tutmak", "en": "Keep rate-limit counters in a shared store such as Redis instead of gateway memory" } },
+        { "id": "b", "text": { "tr": "Birden fazla gateway örneğini bir L4 load balancer arkasında çalıştırmak", "en": "Run multiple gateway instances behind an L4 load balancer" } },
+        { "id": "c", "text": { "tr": "Sipariş toplamı hesaplama gibi iş mantığını gateway'e taşımak", "en": "Move business logic such as order-total calculation into the gateway" } },
+        { "id": "d", "text": { "tr": "Gateway'i stateless tutmak", "en": "Keep the gateway stateless" } }
+      ],
+      "correct": ["a", "b", "d"],
+      "explanation": {
+        "tr": "Gateway stateless olursa (d) ve paylaşımlı durum Redis'te tutulursa (a) birden çok örnek çalıştırılabilir (b). İş mantığını gateway'e taşımak ise onu 'dağıtık monolit'e çevirir, her değişiklikte gateway dağıtımı gerektirir ve gecikme ekler; aggregation kabul edilebilir ama hesaplama değil (c yanlış).",
+        "en": "If the gateway is stateless (d) and shared state lives in Redis (a), multiple instances can run (b). Moving business logic into the gateway turns it into a 'distributed monolith', forces a gateway deploy on every change and adds latency; aggregation is acceptable, computation is not (c is wrong)."
+      },
+      "difficulty": "medium",
+      "concepts": ["gateway-bottleneck", "api-gateway"]
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": {
+        "tr": "Servisler arası (doğu-batı) trafikte mTLS, retry ve tracing'i her servise kod yazmadan sağlamak istiyorsunuz. Hangi bileşen bunun için tasarlanmıştır?",
+        "en": "You want mTLS, retries and tracing on service-to-service (east-west) traffic without writing code in every service. Which component is designed for this?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "API Gateway", "en": "API Gateway" } },
+        { "id": "b", "text": { "tr": "Reverse proxy (NGINX) tek örnek", "en": "A single reverse proxy (NGINX) instance" } },
+        { "id": "c", "text": { "tr": "Service mesh (sidecar proxy'ler + kontrol düzlemi)", "en": "Service mesh (sidecar proxies + control plane)" } },
+        { "id": "d", "text": { "tr": "DNS round-robin", "en": "DNS round-robin" } }
+      ],
+      "correct": ["c"],
+      "explanation": {
+        "tr": "Service mesh her servisin yanına bir sidecar proxy koyar ve servisler arası trafiği oradan geçirir; mTLS, retry, circuit breaker ve tracing kodsuz gelir. API Gateway dış (kuzey-güney) trafiğin kapısıdır; iç trafiği yönetmek için tasarlanmamıştır. Tek bir reverse proxy iç trafiği merkezileştirir ve SPOF olur; DNS round-robin yalnızca adres dağıtır.",
+        "en": "A service mesh places a sidecar proxy next to every service and routes inter-service traffic through it; mTLS, retries, circuit breakers and tracing come without code. The API Gateway is the door for external (north-south) traffic and is not designed to manage internal traffic. A single reverse proxy would centralise internal traffic and become a SPOF; DNS round-robin merely distributes addresses."
+      },
+      "difficulty": "medium",
+      "concepts": ["service-mesh", "reverse-proxy", "api-gateway"]
+    },
+    {
+      "id": "q5",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Gateway'de aggregation yapıldığında, birleştirilen yanıtın toplam süresi çağrılan servislerin en yavaşı tarafından belirlenir; bu yüzden her alt çağrıya zaman aşımı ve kısmi yanıt stratejisi gerekir.",
+        "en": "When the gateway aggregates, the merged response's total time is determined by the slowest of the called services; therefore every sub-call needs a timeout and a partial-response strategy."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["t"],
+      "explanation": {
+        "tr": "Doğru. Paralel fan-out'ta yanıt, en son dönen servisi bekler (tail latency amplification). Bir servis takılırsa tüm sayfa takılmasın diye her alt çağrıya kısa bir zaman aşımı konur ve gelmeyen parça için fallback/null döndürülür — animasyondaki 'stock: fallback' örneği gibi.",
+        "en": "True. In a parallel fan-out the response waits for the last service to return (tail latency amplification). So that one stuck service does not stall the whole page, each sub-call gets a short timeout and a fallback/null is returned for the missing piece — like the 'stock: fallback' example in the animation."
+      },
+      "difficulty": "hard",
+      "concepts": ["response-aggregation", "bff-pattern", "circuit-breaker"]
+    }
+  ]
+}

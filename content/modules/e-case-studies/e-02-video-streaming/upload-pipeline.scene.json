@@ -1,0 +1,182 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "e-02-video-upload-pipeline",
+  "title": { "tr": "Ingest: Upload'dan CDN'e", "en": "Ingest: From Upload to CDN" },
+  "summary": {
+    "tr": "Presigned URL ile multipart upload, VideoUploaded olayı, transcoding kuyruğu, segment bazlı paralel ffmpeg işçileri, bitrate merdiveni çıktıları, READY bayrağı ve CDN ön yükleme.",
+    "en": "Multipart upload via presigned URL, the VideoUploaded event, the transcoding queue, segment-parallel ffmpeg workers, bitrate-ladder outputs, the READY flag and CDN prepositioning."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda yükleyici istemci; üstte upload servisi ve metadata veritabanı; altta ham dosya deposu ve çıktı deposu; ortada transcode kuyruğu ve üç ffmpeg işçisi; sağda CDN. İstemci presigned URL alıp dosyayı parçalar hâlinde doğrudan ham depoya yükler; depo bir olay yayınlar, kuyruktaki iş üç işçiye segment segment dağılır, işçiler farklı kalitelerdeki segmentleri ve manifest'i çıktı deposuna yazar, metadata READY olur ve popüler içerik CDN'e önceden kopyalanır.",
+      "en": "An uploading client on the left; upload service and metadata database at the top; raw storage and output storage at the bottom; the transcode queue and three ffmpeg workers in the middle; the CDN on the right. The client obtains a presigned URL and uploads the file in parts straight to raw storage; storage emits an event, the queued job is split across three workers segment by segment, workers write segments in several qualities plus the manifest to output storage, metadata becomes READY and popular content is pre-copied to the CDN."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "uploader", "kind": "client", "label": { "tr": "Yükleyici", "en": "Uploader" }, "sublabel": "1.2 GB mp4", "x": 90, "y": 300, "w": 110, "h": 70 },
+    { "id": "upsvc", "kind": "service", "label": { "tr": "Upload servisi", "en": "Upload service" }, "sublabel": "presigned URL", "x": 280, "y": 130, "w": 140, "h": 66 },
+    { "id": "raw", "kind": "storage", "label": { "tr": "Ham depo", "en": "Raw storage" }, "sublabel": "S3 · multipart", "x": 280, "y": 470, "w": 130, "h": 70 },
+    { "id": "queue", "kind": "queue", "label": "transcode-jobs", "sublabel": "SQS / Kafka", "x": 470, "y": 300, "w": 140, "h": 66 },
+    { "id": "w1", "kind": "worker", "label": "ffmpeg-1", "sublabel": "seg 1–40", "x": 650, "y": 160, "w": 110, "h": 60 },
+    { "id": "w2", "kind": "worker", "label": "ffmpeg-2", "sublabel": "seg 41–80", "x": 650, "y": 300, "w": 110, "h": 60 },
+    { "id": "w3", "kind": "worker", "label": "ffmpeg-3", "sublabel": "seg 81–120", "x": 650, "y": 440, "w": 110, "h": 60 },
+    { "id": "metadb", "kind": "db", "label": { "tr": "Metadata DB", "en": "Metadata DB" }, "sublabel": "status", "x": 830, "y": 130, "w": 130, "h": 66 },
+    { "id": "out", "kind": "storage", "label": { "tr": "Çıktı deposu", "en": "Output storage" }, "sublabel": "segments · m3u8", "x": 830, "y": 470, "w": 140, "h": 70 },
+    { "id": "cdn", "kind": "cdn", "label": "CDN", "sublabel": { "tr": "ön yükleme", "en": "preposition" }, "x": 900, "y": 300, "w": 110, "h": 64 }
+  ],
+  "edges": [
+    { "id": "up-svc", "from": "uploader", "to": "upsvc", "kind": "request", "curvature": -0.15 },
+    { "id": "svc-meta", "from": "upsvc", "to": "metadb", "kind": "data", "style": "dashed", "curvature": -0.1 },
+    { "id": "up-raw", "from": "uploader", "to": "raw", "kind": "data", "label": "PUT part n", "curvature": 0.15 },
+    { "id": "raw-q", "from": "raw", "to": "queue", "kind": "event", "style": "dotted", "label": "VideoUploaded" },
+    { "id": "q-w1", "from": "queue", "to": "w1", "kind": "event", "curvature": -0.1 },
+    { "id": "q-w2", "from": "queue", "to": "w2", "kind": "event" },
+    { "id": "q-w3", "from": "queue", "to": "w3", "kind": "event", "curvature": 0.1 },
+    { "id": "w1-out", "from": "w1", "to": "out", "kind": "data", "curvature": 0.2 },
+    { "id": "w2-out", "from": "w2", "to": "out", "kind": "data" },
+    { "id": "w3-out", "from": "w3", "to": "out", "kind": "data" },
+    { "id": "w2-meta", "from": "w2", "to": "metadb", "kind": "control", "style": "dashed" },
+    { "id": "out-cdn", "from": "out", "to": "cdn", "kind": "data", "style": "dashed" }
+  ],
+  "steps": [
+    {
+      "id": "presign",
+      "title": { "tr": "1 · Presigned URL", "en": "1 · Presigned URL" },
+      "narration": {
+        "tr": "İstemci dosyayı uygulama sunucusuna değil, doğrudan depoya yükleyecek. Upload servisinden kısa ömürlü bir presigned multipart URL'si ister; servis metadata DB'ye videoId kaydını UPLOADING durumunda açar.",
+        "en": "The client will upload straight to storage, not through an application server. It asks the upload service for a short-lived presigned multipart URL; the service opens the videoId record in the metadata DB in UPLOADING state."
+      },
+      "durationMs": 3200,
+      "inherit": false,
+      "highlight": { "nodes": ["uploader", "upsvc", "metadb"], "edges": ["up-svc", "svc-meta"] },
+      "nodeStates": { "uploader": { "status": "active" }, "upsvc": { "status": "active" }, "metadb": { "status": "active", "badge": "UPLOADING" } },
+      "packets": [
+        { "edge": "up-svc", "shape": "envelope", "durationMs": 800 },
+        { "edge": "svc-meta", "shape": "dot", "startAt": 900, "durationMs": 700 },
+        { "edge": "up-svc", "shape": "envelope", "direction": "backward", "startAt": 1700, "durationMs": 800, "color": "success", "label": "url · 15 dk" }
+      ],
+      "annotations": [
+        { "id": "nobytes", "x": 280, "y": 40, "text": { "tr": "video baytı uygulama sunucusundan geçmez", "en": "video bytes never touch the app server" }, "tone": "info", "target": "upsvc" }
+      ]
+    },
+    {
+      "id": "multipart",
+      "title": { "tr": "2 · Multipart upload", "en": "2 · Multipart upload" },
+      "narration": {
+        "tr": "1.2 GB'lık dosya 8 MB'lık parçalara bölünür ve paralel yüklenir. 3. parça kopar; yalnızca o parça yeniden gönderilir (resumable). Son parçadan sonra CompleteMultipartUpload ile parçalar tek nesneye birleşir.",
+        "en": "The 1.2 GB file is split into 8 MB parts uploaded in parallel. Part 3 drops; only that part is re-sent (resumable). After the last part, CompleteMultipartUpload joins the parts into one object."
+      },
+      "durationMs": 4200,
+      "highlight": { "nodes": ["uploader", "raw"], "edges": ["up-raw"] },
+      "nodeStates": { "raw": { "status": "active", "progress": 0.2 }, "upsvc": { "status": "idle" }, "metadb": { "status": "idle" } },
+      "packets": [
+        { "edge": "up-raw", "shape": "square", "label": "part 1", "durationMs": 700 },
+        { "edge": "up-raw", "shape": "square", "label": "part 2", "startAt": 300, "durationMs": 700 },
+        { "edge": "up-raw", "shape": "square", "label": "part 3", "startAt": 600, "durationMs": 500, "color": "danger" },
+        { "edge": "up-raw", "shape": "square", "label": "part 3 (retry)", "startAt": 1500, "durationMs": 700, "color": "warning" },
+        { "edge": "up-raw", "shape": "square", "label": "part 150", "startAt": 2600, "durationMs": 700 },
+        { "edge": "up-raw", "shape": "dot", "label": "complete", "startAt": 3400, "durationMs": 600, "color": "success" }
+      ],
+      "annotations": [
+        { "id": "resume", "x": 90, "y": 410, "text": { "tr": "parça başına checksum + retry", "en": "checksum + retry per part" }, "tone": "warning", "target": "uploader" }
+      ]
+    },
+    {
+      "id": "event",
+      "title": { "tr": "3 · VideoUploaded olayı", "en": "3 · The VideoUploaded event" },
+      "narration": {
+        "tr": "Nesne tamamlanınca depo bir olay üretir ve iş transcode kuyruğuna düşer. Upload servisi bu anda çoktan devreden çıkmıştır; boru hattı tamamen asenkrondur ve kullanıcı 'videonuz işleniyor' mesajı görür.",
+        "en": "When the object completes, storage emits an event and a job lands in the transcode queue. The upload service is already out of the loop; the pipeline is fully asynchronous and the user sees 'your video is processing'."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["raw", "queue"], "edges": ["raw-q"] },
+      "nodeStates": { "raw": { "status": "success", "progress": 1, "badge": "1.2 GB" }, "queue": { "status": "active", "badge": "+1" }, "uploader": { "status": "idle", "badge": "202" } },
+      "edgeStates": { "raw-q": { "status": "active" } },
+      "packets": [
+        { "edge": "raw-q", "shape": "diamond", "label": "VideoUploaded", "durationMs": 1000 }
+      ],
+      "annotations": [
+        { "id": "async", "x": 470, "y": 400, "text": { "tr": "kuyruk: dalgaları düzleştirir, işçileri ayrıştırır", "en": "queue: flattens bursts, decouples workers" }, "target": "queue" }
+      ]
+    },
+    {
+      "id": "split",
+      "title": { "tr": "4 · Segment bazlı paralellik", "en": "4 · Segment-level parallelism" },
+      "narration": {
+        "tr": "İş tek bir işçiye değil, önce 4 saniyelik 120 segmente bölünür ve segment aralıkları üç işçiye dağıtılır. Böylece 8 dakikalık video 8 dakika değil, yaklaşık 1 dakikada kodlanır. İşçiler durumsuzdur; biri ölürse işi başka işçi alır (visibility timeout).",
+        "en": "The job is not sent to one worker: the video is first split into 120 four-second segments and segment ranges are spread over three workers. An 8-minute video encodes in about a minute instead of eight. Workers are stateless; if one dies another picks up its job (visibility timeout)."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["queue", "w1", "w2", "w3"], "edges": ["q-w1", "q-w2", "q-w3"] },
+      "nodeStates": { "w1": { "status": "busy", "progress": 0.3 }, "w2": { "status": "busy", "progress": 0.3 }, "w3": { "status": "busy", "progress": 0.3 }, "queue": { "badge": "" }, "metadb": { "badge": "PROCESSING" } },
+      "packets": [
+        { "edge": "q-w1", "shape": "envelope", "durationMs": 800 },
+        { "edge": "q-w2", "shape": "envelope", "startAt": 200, "durationMs": 800 },
+        { "edge": "q-w3", "shape": "envelope", "startAt": 400, "durationMs": 800 }
+      ],
+      "annotations": [
+        { "id": "ladder", "x": 650, "y": 60, "text": { "tr": "her segment × 6 kademe × 2 codec", "en": "each segment × 6 renditions × 2 codecs" }, "target": "w1" }
+      ]
+    },
+    {
+      "id": "outputs",
+      "title": { "tr": "5 · Bitrate merdiveni çıktıları", "en": "5 · Bitrate-ladder outputs" },
+      "narration": {
+        "tr": "Her işçi kendi segmentlerini 240p'den 1080p'ye tüm kademelerde kodlayıp çıktı deposuna yazar: /v1/720p/seg_0042.ts gibi versiyonlu, değişmez yollar. Son işçi bittiğinde HLS/DASH manifest dosyaları üretilir.",
+        "en": "Each worker encodes its segments at every rendition from 240p to 1080p and writes them to output storage under versioned, immutable paths like /v1/720p/seg_0042.ts. When the last worker finishes, the HLS/DASH manifests are generated."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["w1", "w2", "w3", "out"], "edges": ["w1-out", "w2-out", "w3-out"] },
+      "nodeStates": { "w1": { "status": "success", "progress": 1 }, "w2": { "status": "success", "progress": 1 }, "w3": { "status": "success", "progress": 1 }, "out": { "status": "active", "badge": "720 seg" } },
+      "packets": [
+        { "edge": "w1-out", "shape": "square", "durationMs": 700, "repeat": 3, "repeatGapMs": 200 },
+        { "edge": "w2-out", "shape": "square", "startAt": 150, "durationMs": 700, "repeat": 3, "repeatGapMs": 200 },
+        { "edge": "w3-out", "shape": "square", "startAt": 300, "durationMs": 700, "repeat": 3, "repeatGapMs": 200 },
+        { "edge": "w2-out", "shape": "diamond", "label": "master.m3u8", "startAt": 3000, "durationMs": 700, "color": "success" }
+      ],
+      "annotations": [
+        { "id": "immut", "x": 830, "y": 560, "text": { "tr": "immutable yollar → sonsuz TTL", "en": "immutable paths → infinite TTL" }, "tone": "success", "target": "out" }
+      ]
+    },
+    {
+      "id": "ready",
+      "title": { "tr": "6 · READY", "en": "6 · READY" },
+      "narration": {
+        "tr": "Manifest yazıldıktan sonra metadata DB'de status READY olur ve video aramada/listede görünür. Başarısız bir iş üç kez yeniden denenir, hâlâ başarısızsa DLQ'ya düşer ve kullanıcıya 'işlenemedi' bildirimi gider.",
+        "en": "After the manifest is written, status becomes READY in the metadata DB and the video appears in search and listings. A failed job is retried three times; if it still fails it goes to the DLQ and the user is notified 'could not be processed'."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["w2", "metadb"], "edges": ["w2-meta"] },
+      "nodeStates": { "metadb": { "status": "success", "badge": "READY" }, "out": { "status": "success" } },
+      "packets": [
+        { "edge": "w2-meta", "shape": "diamond", "label": "status = READY", "durationMs": 1000 }
+      ],
+      "annotations": [
+        { "id": "dlq", "x": 470, "y": 400, "text": { "tr": "3 deneme → DLQ", "en": "3 attempts → DLQ" }, "tone": "warning", "target": "queue" }
+      ]
+    },
+    {
+      "id": "preposition",
+      "title": { "tr": "7 · CDN'e ön yükleme", "en": "7 · Prepositioning to the CDN" },
+      "narration": {
+        "tr": "Popülerlik tahmini yüksekse (yeni dizi bölümü, abonesi çok kanal) segmentler gece saatlerinde edge'lere önceden itilir. Aksi hâlde içerik ilk izleyici istediğinde çekilir (pull). Her iki durumda da oynatma yolu artık yalnızca CDN'e bağımlıdır.",
+        "en": "If predicted popularity is high (a new series episode, a channel with many subscribers), segments are pushed to edges during off-peak hours. Otherwise content is pulled on the first viewer's request. Either way, the playback path now depends only on the CDN."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["out", "cdn"], "edges": ["out-cdn"] },
+      "nodeStates": { "cdn": { "status": "active", "badge": "fill" }, "w1": { "status": "idle", "progress": 0 }, "w2": { "status": "idle", "progress": 0 }, "w3": { "status": "idle", "progress": 0 } },
+      "edgeStates": { "out-cdn": { "status": "active" } },
+      "packets": [
+        { "edge": "out-cdn", "shape": "square", "durationMs": 600, "repeat": 4, "repeatGapMs": 200 }
+      ],
+      "annotations": [
+        { "id": "night", "x": 900, "y": 400, "text": { "tr": "gece 02:00–06:00 fill window", "en": "02:00–06:00 fill window" }, "tone": "info", "target": "cdn" }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["video", "upload", "transcoding", "ffmpeg", "queue", "cdn"]
+}

@@ -1,0 +1,124 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 460" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">API Gateway mimarisi ve filtre zinciri</title>
+  <desc id="desc">Solda web, mobil ve üçüncü taraf istemciler. Ortada API Gateway kutusu; içinde soldan sağa sıralı altı filtre: TLS/WAF, auth, rate limit, routing, aggregation, circuit breaker. Gateway'in altında kimlik sağlayıcı ve Redis. Sağda sipariş, kullanıcı ve envanter servisleri; envanter servisine giden ok kesik ve devre açık olarak işaretli. En altta Reverse Proxy, API Gateway ve Service Mesh karşılaştırma şeridi.</desc>
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+    <marker id="arr-p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-primary, #6366f1)"/>
+    </marker>
+    <marker id="arr-d" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-danger, #ef4444)"/>
+    </marker>
+    <marker id="arr-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-accent, #f59e0b)"/>
+    </marker>
+  </defs>
+
+  <!-- İstemciler -->
+  <text x="80" y="40" text-anchor="middle" font-size="12" fill="var(--da-muted, #64748b)">İstemciler (kuzey-güney)</text>
+  <g fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5">
+    <rect x="20" y="70" width="120" height="44" rx="10"/>
+    <rect x="20" y="134" width="120" height="44" rx="10"/>
+    <rect x="20" y="198" width="120" height="44" rx="10"/>
+  </g>
+  <g font-size="12" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="80" y="96">Web</text>
+    <text x="80" y="160">Mobil</text>
+    <text x="80" y="224">3. taraf API</text>
+  </g>
+  <g stroke="var(--da-muted, #64748b)" stroke-width="1.6" fill="none" marker-end="url(#arr)">
+    <path d="M 140 92 C 170 92, 170 150, 196 152"/>
+    <path d="M 140 156 L 196 156"/>
+    <path d="M 140 220 C 170 220, 170 162, 196 160"/>
+  </g>
+  <text x="168" y="138" text-anchor="middle" font-size="9" fill="var(--da-muted, #64748b)">HTTPS</text>
+
+  <!-- Gateway kutusu -->
+  <rect x="200" y="60" width="440" height="190" rx="14" fill="var(--da-primary, #6366f1)" opacity="0.08" stroke="var(--da-primary, #6366f1)" stroke-width="2"/>
+  <text x="420" y="84" text-anchor="middle" font-size="15" font-weight="600" fill="var(--da-primary, #6366f1)">API Gateway</text>
+  <text x="420" y="100" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">stateless · N örnek · filtre zinciri</text>
+
+  <!-- filtreler -->
+  <g font-size="9.5" text-anchor="middle" fill="var(--da-fg, #0f172a)">
+    <rect x="212" y="128" width="62" height="56" rx="8" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+    <text x="243" y="150">1 · TLS</text><text x="243" y="163">WAF</text><text x="243" y="176" fill="var(--da-muted, #64748b)">403</text>
+    <rect x="282" y="128" width="62" height="56" rx="8" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+    <text x="313" y="150">2 · Auth</text><text x="313" y="163">JWT / key</text><text x="313" y="176" fill="var(--da-muted, #64748b)">401</text>
+    <rect x="352" y="128" width="62" height="56" rx="8" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+    <text x="383" y="150">3 · Rate</text><text x="383" y="163">limit</text><text x="383" y="176" fill="var(--da-muted, #64748b)">429</text>
+    <rect x="422" y="128" width="62" height="56" rx="8" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+    <text x="453" y="150">4 · Routing</text><text x="453" y="163">+ LB</text><text x="453" y="176" fill="var(--da-muted, #64748b)">404/502</text>
+    <rect x="492" y="128" width="62" height="56" rx="8" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+    <text x="523" y="150">5 · Aggre-</text><text x="523" y="163">gation</text><text x="523" y="176" fill="var(--da-muted, #64748b)">fan-out</text>
+    <rect x="562" y="128" width="66" height="56" rx="8" fill="var(--da-surface, #ffffff)" stroke="var(--da-danger, #ef4444)"/>
+    <text x="595" y="150">6 · Circuit</text><text x="595" y="163">breaker</text><text x="595" y="176" fill="var(--da-danger, #ef4444)">503 / fallback</text>
+  </g>
+  <g stroke="var(--da-primary, #6366f1)" stroke-width="1.4" fill="none" marker-end="url(#arr-p)">
+    <path d="M 274 156 L 280 156"/><path d="M 344 156 L 350 156"/><path d="M 414 156 L 420 156"/><path d="M 484 156 L 490 156"/><path d="M 554 156 L 560 156"/>
+  </g>
+  <text x="420" y="214" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">ucuz ve çok reddeden kontroller öne · her isteğe x-request-id</text>
+  <text x="420" y="232" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">REST/JSON dışarıda → gRPC içeride · timeout · retry+backoff</text>
+
+  <!-- Alt bağımlılıklar -->
+  <rect x="236" y="280" width="140" height="44" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5"/>
+  <text x="306" y="298" text-anchor="middle" font-size="11" fill="var(--da-fg, #0f172a)">Kimlik sağlayıcı</text>
+  <text x="306" y="313" text-anchor="middle" font-size="9" fill="var(--da-muted, #64748b)">JWKS · OAuth2</text>
+  <rect x="440" y="280" width="140" height="44" rx="10" fill="var(--da-accent, #f59e0b)" opacity="0.15" stroke="var(--da-accent, #f59e0b)" stroke-width="1.5"/>
+  <text x="510" y="298" text-anchor="middle" font-size="11" fill="var(--da-fg, #0f172a)">Redis</text>
+  <text x="510" y="313" text-anchor="middle" font-size="9" fill="var(--da-muted, #64748b)">rate limit sayaçları · cache</text>
+  <g stroke-width="1.3" fill="none" stroke-dasharray="3 3">
+    <path d="M 313 184 L 308 280" stroke="var(--da-muted, #64748b)" marker-end="url(#arr)"/>
+    <path d="M 383 184 C 383 230, 500 240, 505 280" stroke="var(--da-accent, #f59e0b)" marker-end="url(#arr-a)"/>
+  </g>
+
+  <!-- Servisler -->
+  <text x="780" y="40" text-anchor="middle" font-size="12" fill="var(--da-muted, #64748b)">Mikroservisler (doğu-batı: mesh)</text>
+  <g fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5">
+    <rect x="700" y="70" width="160" height="44" rx="10"/>
+    <rect x="700" y="134" width="160" height="44" rx="10"/>
+    <rect x="700" y="198" width="160" height="44" rx="10" stroke="var(--da-danger, #ef4444)"/>
+  </g>
+  <g font-size="12" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="780" y="90">Sipariş servisi</text>
+    <text x="780" y="154">Kullanıcı servisi</text>
+    <text x="780" y="218">Envanter servisi</text>
+  </g>
+  <g font-size="9" fill="var(--da-muted, #64748b)" text-anchor="middle">
+    <text x="780" y="105">/orders · 120 ms</text>
+    <text x="780" y="169">/users · 60 ms</text>
+    <text x="780" y="233" fill="var(--da-danger, #ef4444)">/stock · timeout → devre AÇIK</text>
+  </g>
+  <g stroke="var(--da-primary, #6366f1)" stroke-width="1.8" fill="none" marker-end="url(#arr-p)">
+    <path d="M 640 140 C 670 140, 670 92, 698 92"/>
+    <path d="M 640 156 L 698 156"/>
+  </g>
+  <path d="M 640 172 C 670 172, 670 220, 698 220" stroke="var(--da-danger, #ef4444)" stroke-width="1.8" fill="none" stroke-dasharray="5 4" marker-end="url(#arr-d)"/>
+  <!-- sidecar noktaları -->
+  <g fill="var(--da-success, #10b981)">
+    <circle cx="852" cy="78" r="4"/><circle cx="852" cy="142" r="4"/><circle cx="852" cy="206" r="4"/>
+  </g>
+  <text x="866" y="60" text-anchor="end" font-size="8" fill="var(--da-success, #10b981)">sidecar</text>
+
+  <!-- Karşılaştırma şeridi -->
+  <rect x="20" y="350" width="860" height="94" rx="12" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+  <g font-size="11" fill="var(--da-fg, #0f172a)">
+    <text x="36" y="372" font-weight="600">Reverse Proxy</text>
+    <text x="36" y="390" fill="var(--da-muted, #64748b)" font-size="10">servisin önünde; iletir</text>
+    <text x="36" y="406" fill="var(--da-muted, #64748b)" font-size="10">TLS, cache, sıkıştırma, LB</text>
+    <text x="36" y="424" fill="var(--da-muted, #64748b)" font-size="10">NGINX · HAProxy · Envoy</text>
+
+    <text x="320" y="372" font-weight="600" fill="var(--da-primary, #6366f1)">API Gateway</text>
+    <text x="320" y="390" fill="var(--da-muted, #64748b)" font-size="10">sistemin dış kapısı; anlar ve dönüştürür</text>
+    <text x="320" y="406" fill="var(--da-muted, #64748b)" font-size="10">auth, rate limit, routing, aggregation, breaker</text>
+    <text x="320" y="424" fill="var(--da-muted, #64748b)" font-size="10">Kong · AWS API GW · Apigee · Zuul</text>
+
+    <text x="620" y="372" font-weight="600" fill="var(--da-success, #10b981)">Service Mesh</text>
+    <text x="620" y="390" fill="var(--da-muted, #64748b)" font-size="10">her servisin yanında sidecar; iç trafik</text>
+    <text x="620" y="406" fill="var(--da-muted, #64748b)" font-size="10">mTLS, retry, breaker, tracing, trafik bölme</text>
+    <text x="620" y="424" fill="var(--da-muted, #64748b)" font-size="10">Istio · Linkerd · Consul Connect</text>
+  </g>
+  <line x1="300" y1="360" x2="300" y2="434" stroke="var(--da-border, #cbd5e1)"/>
+  <line x1="600" y1="360" x2="600" y2="434" stroke="var(--da-border, #cbd5e1)"/>
+</svg>

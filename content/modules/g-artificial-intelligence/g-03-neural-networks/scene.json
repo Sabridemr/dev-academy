@@ -1,0 +1,174 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "g-03-neural-networks-forward",
+  "title": { "tr": "İleri Yayılım: 2-3-1 Ağ", "en": "Forward Propagation: a 2-3-1 Network" },
+  "summary": {
+    "tr": "İki girdi, üç ReLU gizli nöron ve bir sigmoid çıktı; tek bir örneğin katman katman işlenmesi ve kaybın hesaplanması.",
+    "en": "Two inputs, three ReLU hidden neurons and one sigmoid output; a single example processed layer by layer and the loss computed."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Soldan sağa dört sütun: girdi nöronları x1 ve x2, gizli nöronlar h1, h2, h3, çıktı nöronu ŷ ve en sağda kayıp kutusu. Kenar etiketleri ağırlıklardır. Girdi (1.0, 0.5) ile gizli toplamlar 0.45, −0.5, 0.45 olur; ReLU h2'yi sıfırlar. Çıkış toplamı 0.465, sigmoid sonrası 0.614; hedef 1 için kayıp 0.488.",
+      "en": "Four columns left to right: input neurons x1 and x2, hidden neurons h1, h2, h3, output neuron ŷ and a loss box at the far right. Edge labels are weights. With input (1.0, 0.5) the hidden sums are 0.45, −0.5, 0.45; ReLU zeroes h2. The output sum is 0.465, 0.614 after the sigmoid; loss for target 1 is 0.488."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "x1", "kind": "neuron", "label": "x₁", "sublabel": "1.0", "x": 130, "y": 200, "w": 80, "h": 60 },
+    { "id": "x2", "kind": "neuron", "label": "x₂", "sublabel": "0.5", "x": 130, "y": 400, "w": 80, "h": 60 },
+    { "id": "h1", "kind": "neuron", "label": "h₁", "sublabel": "b = 0.1", "x": 430, "y": 120, "w": 90, "h": 64 },
+    { "id": "h2", "kind": "neuron", "label": "h₂", "sublabel": "b = 0.0", "x": 430, "y": 300, "w": 90, "h": 64 },
+    { "id": "h3", "kind": "neuron", "label": "h₃", "sublabel": "b = −0.2", "x": 430, "y": 480, "w": 90, "h": 64 },
+    { "id": "out", "kind": "neuron", "label": "ŷ", "sublabel": "b = −0.3", "x": 720, "y": 300, "w": 90, "h": 64 },
+    { "id": "loss", "kind": "generic", "label": { "tr": "Kayıp (BCE)", "en": "Loss (BCE)" }, "sublabel": "y = 1", "x": 900, "y": 300, "w": 120, "h": 64 }
+  ],
+  "edges": [
+    { "id": "x1-h1", "from": "x1", "to": "h1", "kind": "data", "label": "w = 0.5" },
+    { "id": "x1-h2", "from": "x1", "to": "h2", "kind": "data", "label": "w = −0.8" },
+    { "id": "x1-h3", "from": "x1", "to": "h3", "kind": "data", "label": "w = 0.2" },
+    { "id": "x2-h1", "from": "x2", "to": "h1", "kind": "data", "label": "w = −0.3" },
+    { "id": "x2-h2", "from": "x2", "to": "h2", "kind": "data", "label": "w = 0.6" },
+    { "id": "x2-h3", "from": "x2", "to": "h3", "kind": "data", "label": "w = 0.9" },
+    { "id": "h1-out", "from": "h1", "to": "out", "kind": "data", "label": "v = 1.0" },
+    { "id": "h2-out", "from": "h2", "to": "out", "kind": "data", "label": "v = −0.5" },
+    { "id": "h3-out", "from": "h3", "to": "out", "kind": "data", "label": "v = 0.7" },
+    { "id": "out-loss", "from": "out", "to": "loss", "kind": "response" }
+  ],
+  "steps": [
+    {
+      "id": "input",
+      "title": { "tr": "Girdi", "en": "Input" },
+      "narration": {
+        "tr": "Tek bir örnek: x = (1.0, 0.5), hedef y = 1. Ağın 9 ağırlığı ve 4 sapması vardır; kenar etiketleri ağırlıkları gösterir. Amaç ŷ'yi 1'e yaklaştırmak.",
+        "en": "A single example: x = (1.0, 0.5), target y = 1. The network has 9 weights and 4 biases; edge labels show the weights. The goal is to push ŷ towards 1."
+      },
+      "durationMs": 3000,
+      "inherit": false,
+      "highlight": { "nodes": ["x1", "x2"], "edges": [] },
+      "nodeStates": {
+        "x1": { "status": "active", "badge": "1.0" },
+        "x2": { "status": "active", "badge": "0.5" }
+      },
+      "annotations": [
+        { "id": "arch-note", "x": 430, "y": 40, "text": { "tr": "2 girdi → 3 ReLU → 1 sigmoid", "en": "2 inputs → 3 ReLU → 1 sigmoid" }, "tone": "info" }
+      ]
+    },
+    {
+      "id": "hidden-sum",
+      "title": { "tr": "Gizli katman: ağırlıklı toplam", "en": "Hidden layer: weighted sum" },
+      "narration": {
+        "tr": "Her gizli nöron z = w₁x₁ + w₂x₂ + b hesaplar. h₁: 0.5·1.0 + (−0.3)·0.5 + 0.1 = 0.45. h₂: −0.8·1.0 + 0.6·0.5 + 0 = −0.5. h₃: 0.2·1.0 + 0.9·0.5 − 0.2 = 0.45.",
+        "en": "Each hidden neuron computes z = w₁x₁ + w₂x₂ + b. h₁: 0.5·1.0 + (−0.3)·0.5 + 0.1 = 0.45. h₂: −0.8·1.0 + 0.6·0.5 + 0 = −0.5. h₃: 0.2·1.0 + 0.9·0.5 − 0.2 = 0.45."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["h1", "h2", "h3"], "edges": ["x1-h1", "x1-h2", "x1-h3", "x2-h1", "x2-h2", "x2-h3"] },
+      "nodeStates": {
+        "h1": { "status": "busy", "badge": "z = 0.45" },
+        "h2": { "status": "busy", "badge": "z = −0.5" },
+        "h3": { "status": "busy", "badge": "z = 0.45" }
+      },
+      "edgeStates": {
+        "x1-h1": { "status": "active" }, "x1-h2": { "status": "active" }, "x1-h3": { "status": "active" },
+        "x2-h1": { "status": "active" }, "x2-h2": { "status": "active" }, "x2-h3": { "status": "active" }
+      },
+      "packets": [
+        { "edge": "x1-h1", "label": "0.5", "durationMs": 1000 },
+        { "edge": "x2-h1", "label": "−0.15", "durationMs": 1000 },
+        { "edge": "x1-h2", "label": "−0.8", "startAt": 1000, "durationMs": 1000 },
+        { "edge": "x2-h2", "label": "0.3", "startAt": 1000, "durationMs": 1000 },
+        { "edge": "x1-h3", "label": "0.2", "startAt": 2000, "durationMs": 1000 },
+        { "edge": "x2-h3", "label": "0.45", "startAt": 2000, "durationMs": 1000 }
+      ],
+      "annotations": [
+        { "id": "sum-note", "x": 280, "y": 560, "text": { "tr": "z = Σ wᵢxᵢ + b (matris çarpımı)", "en": "z = Σ wᵢxᵢ + b (a matrix multiply)" }, "tone": "info" }
+      ]
+    },
+    {
+      "id": "hidden-act",
+      "title": { "tr": "Gizli katman: ReLU", "en": "Hidden layer: ReLU" },
+      "narration": {
+        "tr": "ReLU: a = max(0, z). h₁ = 0.45, h₃ = 0.45 geçer; h₂ = max(0, −0.5) = 0 — bu örnek için h₂ 'susar'. Doğrusal olmayan adım tam burası; onsuz ağ tek bir doğrusal fonksiyona çökerdi.",
+        "en": "ReLU: a = max(0, z). h₁ = 0.45 and h₃ = 0.45 pass through; h₂ = max(0, −0.5) = 0 — h₂ 'goes silent' for this example. This is the non-linear step; without it the network would collapse into one linear function."
+      },
+      "durationMs": 3500,
+      "highlight": { "nodes": ["h1", "h2", "h3"], "edges": [] },
+      "nodeStates": {
+        "h1": { "status": "success", "badge": "a = 0.45" },
+        "h2": { "status": "muted", "badge": "a = 0" },
+        "h3": { "status": "success", "badge": "a = 0.45" }
+      },
+      "edgeStates": {
+        "x1-h1": { "status": "idle" }, "x1-h2": { "status": "idle" }, "x1-h3": { "status": "idle" },
+        "x2-h1": { "status": "idle" }, "x2-h2": { "status": "idle" }, "x2-h3": { "status": "idle" }
+      },
+      "annotations": [
+        { "id": "relu-note", "x": 600, "y": 230, "text": { "tr": "ReLU negatifi sıfırlar → h₂ bu örnekte katkısız", "en": "ReLU zeroes negatives → h₂ contributes nothing here" }, "tone": "warning", "target": "h2" }
+      ]
+    },
+    {
+      "id": "output-sum",
+      "title": { "tr": "Çıkış katmanı: toplam", "en": "Output layer: sum" },
+      "narration": {
+        "tr": "Çıkış nöronu gizli aktivasyonları tartar: z = 1.0·0.45 + (−0.5)·0 + 0.7·0.45 − 0.3 = 0.465. h₂ sıfır olduğu için v = −0.5 ağırlığı bu örnekte hiç etki etmez.",
+        "en": "The output neuron weighs the hidden activations: z = 1.0·0.45 + (−0.5)·0 + 0.7·0.45 − 0.3 = 0.465. Because h₂ is zero, the weight v = −0.5 has no effect on this example."
+      },
+      "durationMs": 3800,
+      "highlight": { "nodes": ["out"], "edges": ["h1-out", "h2-out", "h3-out"] },
+      "nodeStates": {
+        "out": { "status": "busy", "badge": "z = 0.465" }
+      },
+      "edgeStates": {
+        "h1-out": { "status": "active" }, "h2-out": { "status": "muted" }, "h3-out": { "status": "active" }
+      },
+      "packets": [
+        { "edge": "h1-out", "label": "0.45", "durationMs": 1100 },
+        { "edge": "h3-out", "label": "0.315", "startAt": 400, "durationMs": 1100 },
+        { "edge": "h2-out", "label": "0", "startAt": 800, "durationMs": 1100, "color": "muted" }
+      ],
+      "annotations": [
+        { "id": "out-sum-note", "x": 720, "y": 420, "text": { "tr": "0.45 + 0 + 0.315 − 0.3 = 0.465", "en": "0.45 + 0 + 0.315 − 0.3 = 0.465" }, "tone": "info", "target": "out" }
+      ]
+    },
+    {
+      "id": "output-act",
+      "title": { "tr": "Çıkış katmanı: sigmoid", "en": "Output layer: sigmoid" },
+      "narration": {
+        "tr": "İkili sınıflandırma için sigmoid: ŷ = 1 / (1 + e^(−0.465)) = 0.614. Model '%61 olasılıkla pozitif' diyor. Hedef 1 olduğu için yön doğru ama güven düşük.",
+        "en": "Sigmoid for binary classification: ŷ = 1 / (1 + e^(−0.465)) = 0.614. The model says 'positive with 61% probability'. The target is 1, so the direction is right but confidence is low."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["out"], "edges": [] },
+      "nodeStates": {
+        "out": { "status": "success", "badge": "ŷ = 0.614" }
+      },
+      "edgeStates": { "h1-out": { "status": "idle" }, "h3-out": { "status": "idle" } },
+      "annotations": [
+        { "id": "sig-note", "x": 720, "y": 420, "text": { "tr": "σ(0.465) = 0.614 — olasılık", "en": "σ(0.465) = 0.614 — a probability" }, "tone": "success", "target": "out" }
+      ]
+    },
+    {
+      "id": "loss",
+      "title": { "tr": "Kayıp", "en": "Loss" },
+      "narration": {
+        "tr": "Binary cross-entropy: L = −[y·ln ŷ + (1−y)·ln(1−ŷ)] = −ln 0.614 = 0.488. Bu sayı 'ne kadar yanlışız'ın ölçüsüdür; geri yayılım bunu her ağırlığa dağıtacak.",
+        "en": "Binary cross-entropy: L = −[y·ln ŷ + (1−y)·ln(1−ŷ)] = −ln 0.614 = 0.488. This number measures 'how wrong we are'; backpropagation will distribute it to every weight."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["out", "loss"], "edges": ["out-loss"] },
+      "nodeStates": {
+        "loss": { "status": "warning", "badge": "L = 0.488", "progress": 0.49 }
+      },
+      "edgeStates": { "out-loss": { "status": "active" } },
+      "packets": [
+        { "edge": "out-loss", "label": "0.614 vs 1", "shape": "envelope", "durationMs": 1000 }
+      ],
+      "annotations": [
+        { "id": "loss-note", "x": 880, "y": 420, "text": { "tr": "Sonraki sahne: bu hata geriye akar", "en": "Next scene: this error flows backwards" }, "tone": "warning", "target": "loss" }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["neural-network", "forward-propagation", "relu", "sigmoid"]
+}

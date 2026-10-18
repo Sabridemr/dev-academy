@@ -1,0 +1,212 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "a-09-message-queues-partitions-dlq",
+  "title": { "tr": "Producer → Partition → Consumer Group → Retry → DLQ", "en": "Producer → Partition → Consumer Group → Retry → DLQ" },
+  "summary": {
+    "tr": "Bir sipariş servisi olayları anahtara göre üç partition'a yayınlar; billing consumer group'u partition'ları paylaşır; bir mesaj ödeme API'si çöktüğü için başarısız olur, backoff ile tekrar denenir ve dead-letter kuyruğuna düşer; tekrar teslim edilen bir mesaj idempotency anahtarıyla atlanır.",
+    "en": "An order service publishes events to three partitions by key; the billing consumer group shares the partitions; one message fails because the payment API is down, is retried with backoff and lands in the dead-letter queue; a redelivered message is skipped via its idempotency key."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda üretici (Order Service), ortada üst üste üç partition (P0, P1, P2), sağda iki tüketici (C1, C2), en sağda ödeme API'si ve sağ altta dead-letter kuyruğu. Üretici mesajları orderId anahtarına göre partition'lara dağıtır. C1 P0 ve P1'i, C2 P2'yi okur. Ödeme API'si düşünce C2'nin mesajı başarısız olur, üç kez artan aralıklarla tekrar denenir ve DLQ'ya gönderilir. Son adımda C1'e aynı mesaj ikinci kez gelir ve idempotency anahtarı sayesinde atlanır.",
+      "en": "Producer (Order Service) on the left, three stacked partitions (P0, P1, P2) in the middle, two consumers (C1, C2) on the right, the payment API far right and the dead-letter queue bottom right. The producer spreads messages across partitions by the orderId key. C1 reads P0 and P1, C2 reads P2. When the payment API goes down C2's message fails, is retried three times with increasing gaps and sent to the DLQ. In the last step the same message reaches C1 a second time and is skipped thanks to its idempotency key."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "producer", "kind": "service", "label": "Order Service", "sublabel": { "tr": "producer", "en": "producer" }, "x": 110, "y": 300, "w": 150, "h": 76 },
+    { "id": "p0", "kind": "queue", "label": "orders · P0", "sublabel": "offset 0", "x": 400, "y": 130, "w": 150, "h": 60 },
+    { "id": "p1", "kind": "queue", "label": "orders · P1", "sublabel": "offset 0", "x": 400, "y": 300, "w": 150, "h": 60 },
+    { "id": "p2", "kind": "queue", "label": "orders · P2", "sublabel": "offset 0", "x": 400, "y": 470, "w": 150, "h": 60 },
+    { "id": "c1", "kind": "worker", "label": "Consumer C1", "sublabel": { "tr": "group: billing", "en": "group: billing" }, "x": 680, "y": 190, "w": 150, "h": 72 },
+    { "id": "c2", "kind": "worker", "label": "Consumer C2", "sublabel": { "tr": "group: billing", "en": "group: billing" }, "x": 680, "y": 410, "w": 150, "h": 72 },
+    { "id": "pay", "kind": "service", "label": "Payment API", "sublabel": { "tr": "dış bağımlılık", "en": "external dependency" }, "x": 900, "y": 300, "w": 130, "h": 70 },
+    { "id": "dlq", "kind": "queue", "label": "orders.DLQ", "sublabel": { "tr": "boş", "en": "empty" }, "x": 900, "y": 540, "w": 130, "h": 56 }
+  ],
+  "edges": [
+    { "id": "prod-p0", "from": "producer", "to": "p0", "kind": "event", "curvature": -0.15 },
+    { "id": "prod-p1", "from": "producer", "to": "p1", "kind": "event" },
+    { "id": "prod-p2", "from": "producer", "to": "p2", "kind": "event", "curvature": 0.15 },
+    { "id": "p0-c1", "from": "p0", "to": "c1", "kind": "event", "style": "dashed" },
+    { "id": "p1-c1", "from": "p1", "to": "c1", "kind": "event", "style": "dashed", "curvature": -0.1 },
+    { "id": "p2-c2", "from": "p2", "to": "c2", "kind": "event", "style": "dashed" },
+    { "id": "c1-pay", "from": "c1", "to": "pay", "kind": "request", "curvature": -0.1 },
+    { "id": "c2-pay", "from": "c2", "to": "pay", "kind": "request", "curvature": 0.1 },
+    { "id": "c2-dlq", "from": "c2", "to": "dlq", "kind": "event", "style": "dotted", "label": { "tr": "max deneme aşıldı", "en": "max retries exceeded" } }
+  ],
+  "steps": [
+    {
+      "id": "publish",
+      "title": { "tr": "Anahtara göre partition seç", "en": "Pick a partition by key" },
+      "narration": {
+        "tr": "Order Service üç olay yayınlar. Her mesajın anahtarı orderId'dir; broker partition = hash(orderId) mod 3 hesaplar. Aynı siparişin tüm olayları aynı partition'a düşer, böylece kendi aralarında sıralı kalırlar.",
+        "en": "Order Service publishes three events. Each message is keyed by orderId; the broker computes partition = hash(orderId) mod 3. All events of one order land in the same partition, so they stay ordered among themselves."
+      },
+      "durationMs": 3200,
+      "inherit": false,
+      "highlight": { "nodes": ["producer", "p0", "p1", "p2"], "edges": ["prod-p0", "prod-p1", "prod-p2"] },
+      "nodeStates": {
+        "producer": { "status": "active" },
+        "dlq": { "status": "muted" }
+      },
+      "edgeStates": {
+        "p0-c1": { "status": "muted" },
+        "p1-c1": { "status": "muted" },
+        "p2-c2": { "status": "muted" },
+        "c2-dlq": { "visible": false }
+      },
+      "packets": [
+        { "edge": "prod-p0", "shape": "envelope", "label": "#101", "durationMs": 1000 },
+        { "edge": "prod-p1", "shape": "envelope", "label": "#102", "startAt": 600, "durationMs": 1000 },
+        { "edge": "prod-p2", "shape": "envelope", "label": "#103", "startAt": 1200, "durationMs": 1000 }
+      ],
+      "annotations": [
+        { "id": "hash-note", "x": 250, "y": 540, "text": { "tr": "partition = hash(orderId) mod 3", "en": "partition = hash(orderId) mod 3" }, "tone": "info", "target": "producer" }
+      ]
+    },
+    {
+      "id": "assign",
+      "title": { "tr": "Consumer group ataması", "en": "Consumer group assignment" },
+      "narration": {
+        "tr": "billing grubunda iki tüketici var. Her partition grupta aynı anda yalnızca bir tüketiciye atanır: P0 ve P1 → C1, P2 → C2. Üçüncü bir tüketici eklenirse P1 ona kayar; dördüncüsü boş oturur — paralellik partition sayısıyla sınırlıdır.",
+        "en": "The billing group has two consumers. Each partition is assigned to exactly one consumer in the group at a time: P0 and P1 → C1, P2 → C2. A third consumer would take P1; a fourth would sit idle — parallelism is capped by the partition count."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["c1", "c2"], "edges": ["p0-c1", "p1-c1", "p2-c2"] },
+      "nodeStates": {
+        "producer": { "status": "idle" },
+        "c1": { "status": "active", "badge": "P0, P1" },
+        "c2": { "status": "active", "badge": "P2" }
+      },
+      "edgeStates": {
+        "p0-c1": { "status": "active" },
+        "p1-c1": { "status": "active" },
+        "p2-c2": { "status": "active" }
+      },
+      "annotations": [
+        { "id": "assign-note", "x": 680, "y": 300, "text": { "tr": "1 partition → en fazla 1 tüketici (grup içinde)", "en": "1 partition → at most 1 consumer (within a group)" }, "tone": "info" }
+      ]
+    },
+    {
+      "id": "consume",
+      "title": { "tr": "Tüket, işle, offset commit et", "en": "Consume, process, commit offset" },
+      "narration": {
+        "tr": "Tüketiciler mesajları çeker, Payment API'yi çağırır ve iş bitince offset'i commit eder. Commit işlemden SONRA yapıldığı için bu at-least-once teslimattır: çökme anında commit edilmemiş mesaj tekrar gelir.",
+        "en": "Consumers pull messages, call the Payment API and commit the offset once the work is done. Because the commit happens AFTER processing this is at-least-once delivery: a message not yet committed at crash time will be redelivered."
+      },
+      "durationMs": 3800,
+      "highlight": { "nodes": ["c1", "c2", "pay"], "edges": ["p0-c1", "p1-c1", "p2-c2", "c1-pay", "c2-pay"] },
+      "nodeStates": {
+        "c1": { "status": "busy" },
+        "c2": { "status": "busy" },
+        "pay": { "status": "success" },
+        "p0": { "sublabel": "offset 1" },
+        "p1": { "sublabel": "offset 1" },
+        "p2": { "sublabel": "offset 1" }
+      },
+      "packets": [
+        { "edge": "p0-c1", "shape": "envelope", "label": "#101", "durationMs": 800 },
+        { "edge": "p2-c2", "shape": "envelope", "label": "#103", "startAt": 200, "durationMs": 800 },
+        { "edge": "c1-pay", "label": "charge", "startAt": 900, "durationMs": 700 },
+        { "edge": "c2-pay", "label": "charge", "startAt": 1100, "durationMs": 700 },
+        { "edge": "c1-pay", "direction": "backward", "label": "200", "color": "success", "shape": "square", "startAt": 1700, "durationMs": 600 },
+        { "edge": "c2-pay", "direction": "backward", "label": "200", "color": "success", "shape": "square", "startAt": 1900, "durationMs": 600 },
+        { "edge": "p1-c1", "shape": "envelope", "label": "#102", "startAt": 2500, "durationMs": 800 }
+      ],
+      "annotations": [
+        { "id": "commit-note", "x": 400, "y": 60, "text": { "tr": "commit = işledikten sonra → at-least-once", "en": "commit = after processing → at-least-once" }, "tone": "success" }
+      ]
+    },
+    {
+      "id": "failure",
+      "title": { "tr": "Payment API düşer, #107 başarısız", "en": "Payment API goes down, #107 fails" },
+      "narration": {
+        "tr": "Payment API 503 döndürmeye başlar. C2, #107 numaralı mesajı işleyemez; offset commit edilmez. Bu doğru davranıştır: mesaj kaybolmamalı. Ama P2 kuyruğu bu mesajın arkasında birikmeye başlar.",
+        "en": "The Payment API starts returning 503. C2 cannot process message #107; the offset is not committed. That is the right behavior: the message must not be lost. But partition P2 starts backing up behind it."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["c2", "pay"], "edges": ["p2-c2", "c2-pay"] },
+      "nodeStates": {
+        "c1": { "status": "idle" },
+        "pay": { "status": "down", "badge": "503" },
+        "c2": { "status": "error", "badge": "#107 ✕" },
+        "p2": { "sublabel": "offset 4 · lag 3", "status": "warning" }
+      },
+      "edgeStates": { "c2-pay": { "status": "error" } },
+      "packets": [
+        { "edge": "p2-c2", "shape": "envelope", "label": "#107", "durationMs": 800 },
+        { "edge": "c2-pay", "label": "charge", "startAt": 900, "durationMs": 700 },
+        { "edge": "c2-pay", "direction": "backward", "label": "503", "color": "danger", "shape": "square", "startAt": 1700, "durationMs": 700 }
+      ],
+      "annotations": [
+        { "id": "fail-note", "x": 680, "y": 520, "text": { "tr": "offset commit edilmedi → mesaj güvende", "en": "offset not committed → message is safe" }, "tone": "warning", "target": "c2" }
+      ]
+    },
+    {
+      "id": "retry",
+      "title": { "tr": "Üstel geri çekilme ile tekrar dene", "en": "Retry with exponential backoff" },
+      "narration": {
+        "tr": "C2 mesajı hemen değil, artan aralıklarla tekrar dener: 1 s, 2 s, 4 s (+ jitter). Hemen tekrar denemek çökmüş servise yük bindirir; backoff servise toparlanma zamanı tanır. Üç deneme de 503 ile biter.",
+        "en": "C2 retries not immediately but with growing gaps: 1 s, 2 s, 4 s (+ jitter). Retrying instantly would hammer the failing service; backoff gives it room to recover. All three attempts end in 503."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["c2", "pay"], "edges": ["c2-pay"] },
+      "nodeStates": { "c2": { "status": "warning", "badge": "retry 3/3" } },
+      "packets": [
+        { "edge": "c2-pay", "shape": "diamond", "label": "retry", "color": "danger", "durationMs": 700, "repeat": 3, "repeatGapMs": 500 }
+      ],
+      "annotations": [
+        { "id": "backoff-note", "x": 790, "y": 470, "text": { "tr": "backoff: 1 s → 2 s → 4 s (+jitter)", "en": "backoff: 1 s → 2 s → 4 s (+jitter)" }, "tone": "warning" }
+      ]
+    },
+    {
+      "id": "dlq",
+      "title": { "tr": "Dead-letter queue'ya taşı, akışı aç", "en": "Move to dead-letter queue, unblock the flow" },
+      "narration": {
+        "tr": "Deneme sınırı aşılınca #107 dead-letter kuyruğuna yazılır ve offset commit edilir; P2 yeniden akmaya başlar. DLQ bir alarm tetikler; hata giderilince mesaj incelenip ana topic'e yeniden yayınlanır (replay). Kaybolan bir şey yok, yalnızca ertelenen bir iş var.",
+        "en": "Once the retry limit is exceeded #107 is written to the dead-letter queue and the offset is committed; P2 flows again. The DLQ triggers an alert; after the fix the message is inspected and republished to the main topic (replay). Nothing is lost, only deferred."
+      },
+      "durationMs": 3500,
+      "highlight": { "nodes": ["c2", "dlq", "p2"], "edges": ["c2-dlq", "p2-c2"] },
+      "nodeStates": {
+        "c2": { "status": "active", "badge": "offset 5" },
+        "dlq": { "status": "warning", "badge": "1", "sublabel": { "tr": "alarm!", "en": "alert!" } },
+        "p2": { "sublabel": "offset 5 · lag 2", "status": "idle" }
+      },
+      "edgeStates": { "c2-dlq": { "visible": true, "status": "active" }, "c2-pay": { "status": "idle" } },
+      "packets": [
+        { "edge": "c2-dlq", "shape": "envelope", "label": "#107", "color": "danger", "durationMs": 1000 },
+        { "edge": "p2-c2", "shape": "envelope", "label": "#108", "startAt": 1400, "durationMs": 800 }
+      ],
+      "annotations": [
+        { "id": "dlq-note", "x": 790, "y": 590, "text": { "tr": "incele → düzelt → yeniden oynat", "en": "inspect → fix → replay" }, "tone": "danger", "target": "dlq" }
+      ]
+    },
+    {
+      "id": "idempotent",
+      "title": { "tr": "Tekrar teslim: idempotency anahtarı kurtarır", "en": "Redelivery: the idempotency key saves the day" },
+      "narration": {
+        "tr": "Bir rebalance sonrası #102 C1'e ikinci kez gelir (at-least-once bunu vaat eder). C1 işlemeden önce Redis'te idem:billing:102 anahtarını SET NX ile rezerve etmeye çalışır; anahtar zaten var → mesaj daha önce işlenmiş → atla ve offset'i commit et. Müşteriye iki fatura kesilmez.",
+        "en": "After a rebalance #102 reaches C1 a second time (at-least-once promises exactly this). Before processing, C1 tries to reserve key idem:billing:102 in Redis with SET NX; the key already exists → already processed → skip and commit the offset. The customer is not invoiced twice."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["c1", "p1"], "edges": ["p1-c1"] },
+      "nodeStates": {
+        "pay": { "status": "success", "badge": "" },
+        "c1": { "status": "success", "badge": "dup → skip" },
+        "c2": { "status": "idle", "badge": "" }
+      },
+      "packets": [
+        { "edge": "p1-c1", "shape": "envelope", "label": { "tr": "#102 (tekrar)", "en": "#102 (again)" }, "durationMs": 900 },
+        { "edge": "c1-pay", "shape": "square", "label": "SET NX → 0", "color": "success", "startAt": 1100, "durationMs": 600 }
+      ],
+      "annotations": [
+        { "id": "idem-note", "x": 680, "y": 90, "text": { "tr": "at-least-once + idempotent tüketici = etkili exactly-once", "en": "at-least-once + idempotent consumer = effectively exactly-once" }, "tone": "success", "target": "c1" }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["message-queue", "kafka", "consumer-group", "dead-letter-queue", "idempotency"]
+}

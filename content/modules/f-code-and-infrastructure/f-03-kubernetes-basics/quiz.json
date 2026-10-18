@@ -1,0 +1,110 @@
+{
+  "id": "f-03-kubernetes-basics-quiz",
+  "title": { "tr": "Kubernetes Temelleri Quiz", "en": "Kubernetes Basics Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Pod'lar sürekli yeniden yaratılıp yeni IP aldığına göre, bir servise küme içinden kararlı biçimde nasıl erişilir?",
+        "en": "Since pods are constantly recreated with new IPs, how do you reach a service reliably from inside the cluster?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Pod IP'sini bir konfigürasyon dosyasına yazarak", "en": "By writing the pod IP into a config file" } },
+        { "id": "b", "text": { "tr": "Service üzerinden: etiket seçicisiyle eşleşen hazır pod'ların önünde sabit bir sanal IP ve DNS adı sağlar", "en": "Through a Service: it provides a stable virtual IP and DNS name in front of the ready pods matching its label selector" } },
+        { "id": "c", "text": { "tr": "Her pod'a ayrı bir Ingress tanımlayarak", "en": "By defining a separate Ingress for every pod" } },
+        { "id": "d", "text": { "tr": "Deployment'ın adını doğrudan HTTP isteğinde kullanarak", "en": "By using the Deployment's name directly in the HTTP request" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Service, pod'ların gelip gitmesinden bağımsız sabit bir adres (ClusterIP + DNS) sunar ve yalnızca readiness'ı geçen pod'ları endpoint olarak tutar. Pod IP'si sabitlenemez (a), Ingress dış L7 girişidir (c), Deployment bir ağ adresi değildir (d).",
+        "en": "A Service offers a stable address (ClusterIP + DNS) independent of pods coming and going, and only keeps pods that pass readiness as endpoints. Pod IPs cannot be pinned (a), Ingress is the external L7 entry (c), and a Deployment is not a network address (d)."
+      },
+      "difficulty": "easy",
+      "concepts": ["service", "pod"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "3 pod çalışıyor, ortalama CPU kullanımı request'in %90'ı, HPA hedefi %60. HPA kaç replika ister?",
+        "en": "3 pods are running, average CPU is 90% of the request, the HPA target is 60%. How many replicas will the HPA request?"
+      },
+      "options": [
+        { "id": "a", "text": "4" },
+        { "id": "b", "text": "5" },
+        { "id": "c", "text": "6" },
+        { "id": "d", "text": "9" }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "desired = ceil(current × current/target) = ceil(3 × 90/60) = ceil(4,5) = 5. Yukarı yuvarlama (ceil) yapıldığı için 4 değil 5'tir.",
+        "en": "desired = ceil(current × current/target) = ceil(3 × 90/60) = ceil(4.5) = 5. Because the result is rounded up (ceil), it is 5 rather than 4."
+      },
+      "difficulty": "medium",
+      "concepts": ["horizontal-pod-autoscaler", "resource-requests-limits"]
+    },
+    {
+      "id": "q3",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Readiness probe ile liveness probe hakkında hangileri doğrudur? (Birden fazla seçin)",
+        "en": "Which statements about readiness and liveness probes are true? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Liveness başarısız olursa kubelet container'ı yeniden başlatır", "en": "If liveness fails, the kubelet restarts the container" } },
+        { "id": "b", "text": { "tr": "Readiness başarısız olursa pod Service endpoint'lerinden çıkarılır ama yeniden başlatılmaz", "en": "If readiness fails, the pod is removed from Service endpoints but not restarted" } },
+        { "id": "c", "text": { "tr": "Liveness probe'u veritabanı bağlantısını da kontrol etmelidir", "en": "The liveness probe should also check the database connection" } },
+        { "id": "d", "text": { "tr": "Readiness'ı geçmeyen yeni bir pod trafik almaz", "en": "A new pod that has not passed readiness receives no traffic" } }
+      ],
+      "correct": ["a", "b", "d"],
+      "explanation": {
+        "tr": "Liveness yeniden başlatır, readiness trafikten çıkarır; yeni pod'lar readiness geçmeden endpoint olmaz. Liveness'ı DB'ye bağlamak (c) tehlikelidir: DB yavaşlayınca tüm pod'lar aynı anda yeniden başlar ve bağlantı fırtınası sorunu büyütür.",
+        "en": "Liveness restarts, readiness removes from traffic; new pods do not become endpoints before passing readiness. Tying liveness to the DB (c) is dangerous: when the DB slows down every pod restarts at once and the connection storm makes it worse."
+      },
+      "difficulty": "medium",
+      "concepts": ["readiness-probe", "liveness-probe"]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "HPA pod sayısını artırdığında, node'larda yer yoksa yeni pod'lar Pending durumunda kalır; yeni node açmak HPA'nın değil Cluster Autoscaler/Karpenter'ın işidir.",
+        "en": "When the HPA increases the pod count but nodes have no room, the new pods stay Pending; starting new nodes is the job of the Cluster Autoscaler/Karpenter, not the HPA."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["t"],
+      "explanation": {
+        "tr": "Doğru. HPA yalnızca Deployment'ın replicas alanını değiştirir. Pod'u yerleştirecek kaynak yoksa scheduler onu Pending bırakır; node seviyesinde ölçekleme ayrı bir bileşenin (Cluster Autoscaler, Karpenter) görevidir ve dakikalar sürebilir.",
+        "en": "True. The HPA only changes the Deployment's replicas field. If there is no capacity to place the pod, the scheduler leaves it Pending; node-level scaling is a separate component's job (Cluster Autoscaler, Karpenter) and can take minutes."
+      },
+      "difficulty": "medium",
+      "concepts": ["horizontal-pod-autoscaler"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "Bir Deployment'ta imajı güncellediğinizde Kubernetes rollback'i nasıl mümkün kılar?",
+        "en": "When you update the image in a Deployment, how does Kubernetes make rollback possible?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Eski pod'ları askıya alıp bellekte tutar", "en": "It suspends the old pods and keeps them in memory" } },
+        { "id": "b", "text": { "tr": "Yeni bir ReplicaSet yaratır, eskisini küçültür ama siler; rollback eski ReplicaSet'i yeniden büyütmektir", "en": "It creates a new ReplicaSet and scales the old one down but keeps it; rollback is scaling the old ReplicaSet back up" } },
+        { "id": "c", "text": { "tr": "İmajı registry'den otomatik olarak geri çeker", "en": "It automatically pulls the image back from the registry" } },
+        { "id": "d", "text": { "tr": "Rollback mümkün değildir; yeniden deploy gerekir", "en": "Rollback is not possible; a redeploy is required" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Deployment her sürüm için ayrı bir ReplicaSet tutar (revisionHistoryLimit kadar). Rolling update yeni ReplicaSet'i büyütüp eskisini sıfıra indirir; `kubectl rollout undo` tersini yapar. Pod'lar askıya alınmaz (a), yeniden derleme veya yeni imaj gerekmez (c, d).",
+        "en": "A Deployment keeps a separate ReplicaSet per revision (up to revisionHistoryLimit). A rolling update scales the new ReplicaSet up and the old one to zero; `kubectl rollout undo` does the reverse. Pods are not suspended (a), and no rebuild or new image is needed (c, d)."
+      },
+      "difficulty": "hard",
+      "concepts": ["deployment", "replicaset", "declarative-reconciliation"]
+    }
+  ]
+}

@@ -1,0 +1,97 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 460" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Klasik ML algoritmaları haritası</title>
+  <desc id="desc">Altı kart: üst sırada gözetimli yöntemler (doğrusal regresyon: noktalara uydurulan doğru; lojistik regresyon: iki sınıfı ayıran doğru ve sigmoid; karar ağacı ve random forest: dallanan eşik soruları; SVM: en geniş marjlı sınır ve destek vektörleri), alt sırada gözetimsiz yöntemler (k-means: iki küme ve merkezler; PCA: nokta bulutunun en çok yayıldığı eksen).</desc>
+
+  <text x="450" y="28" text-anchor="middle" font-size="15" font-weight="600" fill="var(--da-fg, #0f172a)">Klasik araç kutusu: ne öğrenir, ne zaman seçilir?</text>
+
+  <!-- Gözetimli satırı etiketi -->
+  <text x="24" y="60" font-size="12" font-weight="600" fill="var(--da-primary, #6366f1)">Gözetimli</text>
+  <text x="24" y="276" font-size="12" font-weight="600" fill="var(--da-accent, #f59e0b)">Gözetimsiz</text>
+
+  <!-- Kart 1: Doğrusal regresyon -->
+  <rect x="24" y="70" width="200" height="180" rx="12" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+  <text x="124" y="92" text-anchor="middle" font-size="13" font-weight="600" fill="var(--da-fg, #0f172a)">Doğrusal regresyon</text>
+  <g fill="var(--da-muted, #64748b)">
+    <circle cx="50" cy="190" r="3"/><circle cx="70" cy="175" r="3"/><circle cx="90" cy="178" r="3"/><circle cx="110" cy="160" r="3"/>
+    <circle cx="130" cy="150" r="3"/><circle cx="150" cy="140" r="3"/><circle cx="170" cy="128" r="3"/><circle cx="190" cy="120" r="3"/>
+  </g>
+  <line x1="44" y1="196" x2="196" y2="114" stroke="var(--da-primary, #6366f1)" stroke-width="2"/>
+  <text x="124" y="218" text-anchor="middle" font-size="10.5" fill="var(--da-muted, #64748b)">ŷ = w·x + b · kayıp: MSE</text>
+  <text x="124" y="236" text-anchor="middle" font-size="10.5" fill="var(--da-muted, #64748b)">sürekli hedef, yorumlanabilir</text>
+
+  <!-- Kart 2: Lojistik regresyon -->
+  <rect x="244" y="70" width="200" height="180" rx="12" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+  <text x="344" y="92" text-anchor="middle" font-size="13" font-weight="600" fill="var(--da-fg, #0f172a)">Lojistik regresyon</text>
+  <g fill="var(--da-primary, #6366f1)"><circle cx="270" cy="130" r="3.5"/><circle cx="290" cy="150" r="3.5"/><circle cx="275" cy="170" r="3.5"/><circle cx="300" cy="125" r="3.5"/></g>
+  <g fill="var(--da-danger, #ef4444)"><circle cx="400" cy="160" r="3.5"/><circle cx="415" cy="185" r="3.5"/><circle cx="390" cy="190" r="3.5"/><circle cx="420" cy="140" r="3.5"/></g>
+  <line x1="320" y1="200" x2="380" y2="110" stroke="var(--da-fg, #0f172a)" stroke-width="1.5" stroke-dasharray="5 3"/>
+  <path d="M 262 206 C 300 206, 320 160, 344 160 S 388 114, 426 114" fill="none" stroke="var(--da-accent, #f59e0b)" stroke-width="1.5" opacity="0.7"/>
+  <text x="344" y="226" text-anchor="middle" font-size="10.5" fill="var(--da-muted, #64748b)">p = σ(w·x + b) · kayıp: log-loss</text>
+  <text x="344" y="242" text-anchor="middle" font-size="10.5" fill="var(--da-muted, #64748b)">ikili sınıf, güçlü baseline</text>
+
+  <!-- Kart 3: Karar ağacı / RF -->
+  <rect x="464" y="70" width="200" height="180" rx="12" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+  <text x="564" y="92" text-anchor="middle" font-size="13" font-weight="600" fill="var(--da-fg, #0f172a)">Karar ağacı · Random forest</text>
+  <g stroke="var(--da-border, #cbd5e1)" stroke-width="1.5">
+    <line x1="564" y1="118" x2="524" y2="150"/><line x1="564" y1="118" x2="604" y2="150"/>
+    <line x1="524" y1="150" x2="504" y2="182"/><line x1="524" y1="150" x2="544" y2="182"/>
+    <line x1="604" y1="150" x2="584" y2="182"/><line x1="604" y1="150" x2="624" y2="182"/>
+  </g>
+  <rect x="534" y="106" width="60" height="22" rx="6" fill="var(--da-primary, #6366f1)" opacity="0.15" stroke="var(--da-primary, #6366f1)"/>
+  <text x="564" y="121" text-anchor="middle" font-size="9.5" fill="var(--da-fg, #0f172a)">tutar &gt; 500?</text>
+  <rect x="499" y="140" width="50" height="20" rx="6" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+  <text x="524" y="154" text-anchor="middle" font-size="9" fill="var(--da-fg, #0f172a)">yaş &lt; 30?</text>
+  <rect x="579" y="140" width="50" height="20" rx="6" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+  <text x="604" y="154" text-anchor="middle" font-size="9" fill="var(--da-fg, #0f172a)">yeni mi?</text>
+  <g font-size="9" text-anchor="middle">
+    <text x="504" y="196" fill="var(--da-success, #10b981)">temiz</text><text x="544" y="196" fill="var(--da-danger, #ef4444)">fraud</text>
+    <text x="584" y="196" fill="var(--da-success, #10b981)">temiz</text><text x="624" y="196" fill="var(--da-danger, #ef4444)">fraud</text>
+  </g>
+  <text x="564" y="222" text-anchor="middle" font-size="10.5" fill="var(--da-muted, #64748b)">Gini/entropi ile böl · ölçek gerekmez</text>
+  <text x="564" y="238" text-anchor="middle" font-size="10.5" fill="var(--da-muted, #64748b)">RF: çok ağaç + oy → düşük varyans</text>
+
+  <!-- Kart 4: SVM -->
+  <rect x="684" y="70" width="200" height="180" rx="12" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+  <text x="784" y="92" text-anchor="middle" font-size="13" font-weight="600" fill="var(--da-fg, #0f172a)">SVM</text>
+  <line x1="710" y1="200" x2="860" y2="110" stroke="var(--da-fg, #0f172a)" stroke-width="2"/>
+  <line x1="700" y1="178" x2="846" y2="92" stroke="var(--da-muted, #64748b)" stroke-width="1" stroke-dasharray="4 3"/>
+  <line x1="724" y1="222" x2="874" y2="130" stroke="var(--da-muted, #64748b)" stroke-width="1" stroke-dasharray="4 3"/>
+  <g fill="var(--da-primary, #6366f1)"><circle cx="716" cy="120" r="3.5"/><circle cx="740" cy="110" r="3.5"/><circle cx="760" cy="140" r="4.5" stroke="var(--da-fg, #0f172a)" stroke-width="1.5"/></g>
+  <g fill="var(--da-danger, #ef4444)"><circle cx="830" cy="200" r="3.5"/><circle cx="850" cy="180" r="3.5"/><circle cx="800" cy="186" r="4.5" stroke="var(--da-fg, #0f172a)" stroke-width="1.5"/></g>
+  <text x="784" y="226" text-anchor="middle" font-size="10.5" fill="var(--da-muted, #64748b)">en geniş marj · destek vektörleri</text>
+  <text x="784" y="242" text-anchor="middle" font-size="10.5" fill="var(--da-muted, #64748b)">kernel (RBF) → doğrusal olmayan sınır</text>
+
+  <!-- Kart 5: k-means -->
+  <rect x="24" y="286" width="420" height="160" rx="12" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+  <text x="234" y="308" text-anchor="middle" font-size="13" font-weight="600" fill="var(--da-fg, #0f172a)">k-means (kümeleme)</text>
+  <g fill="var(--da-primary, #6366f1)" opacity="0.8">
+    <circle cx="80" cy="350" r="3.5"/><circle cx="100" cy="370" r="3.5"/><circle cx="70" cy="385" r="3.5"/><circle cx="115" cy="345" r="3.5"/><circle cx="95" cy="395" r="3.5"/>
+  </g>
+  <g fill="var(--da-accent, #f59e0b)" opacity="0.9">
+    <circle cx="200" cy="360" r="3.5"/><circle cx="225" cy="380" r="3.5"/><circle cx="190" cy="395" r="3.5"/><circle cx="235" cy="350" r="3.5"/><circle cx="215" cy="400" r="3.5"/>
+  </g>
+  <g stroke="var(--da-fg, #0f172a)" stroke-width="2">
+    <line x1="86" y1="363" x2="98" y2="375"/><line x1="98" y1="363" x2="86" y2="375"/>
+    <line x1="207" y1="371" x2="219" y2="383"/><line x1="219" y1="371" x2="207" y2="383"/>
+  </g>
+  <text x="330" y="352" text-anchor="middle" font-size="10.5" fill="var(--da-fg, #0f172a)">1) en yakın merkeze ata</text>
+  <text x="330" y="370" text-anchor="middle" font-size="10.5" fill="var(--da-fg, #0f172a)">2) merkezi ortalamaya taşı</text>
+  <text x="330" y="388" text-anchor="middle" font-size="10.5" fill="var(--da-fg, #0f172a)">3) değişim yoksa dur</text>
+  <text x="234" y="428" text-anchor="middle" font-size="10.5" fill="var(--da-muted, #64748b)">k-means++ başlangıç · elbow/silhouette ile k · küresel küme varsayımı</text>
+
+  <!-- Kart 6: PCA -->
+  <rect x="464" y="286" width="420" height="160" rx="12" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+  <text x="674" y="308" text-anchor="middle" font-size="13" font-weight="600" fill="var(--da-fg, #0f172a)">PCA (boyut indirgeme)</text>
+  <g fill="var(--da-muted, #64748b)">
+    <circle cx="520" cy="400" r="3"/><circle cx="540" cy="392" r="3"/><circle cx="555" cy="378" r="3"/><circle cx="575" cy="372" r="3"/><circle cx="590" cy="358" r="3"/>
+    <circle cx="610" cy="352" r="3"/><circle cx="625" cy="340" r="3"/><circle cx="545" cy="372" r="3"/><circle cx="580" cy="392" r="3"/><circle cx="605" cy="372" r="3"/>
+  </g>
+  <line x1="505" y1="410" x2="645" y2="330" stroke="var(--da-accent, #f59e0b)" stroke-width="2.5"/>
+  <line x1="560" y1="356" x2="590" y2="398" stroke="var(--da-primary, #6366f1)" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <text x="648" y="328" font-size="10" fill="var(--da-accent, #f59e0b)">PC1 (en çok varyans)</text>
+  <text x="594" y="410" font-size="10" fill="var(--da-primary, #6366f1)">PC2 ⟂ PC1</text>
+  <text x="780" y="356" text-anchor="middle" font-size="10.5" fill="var(--da-fg, #0f172a)">kovaryansın özvektörleri</text>
+  <text x="780" y="374" text-anchor="middle" font-size="10.5" fill="var(--da-fg, #0f172a)">100 özellik → 10 bileşen</text>
+  <text x="780" y="392" text-anchor="middle" font-size="10.5" fill="var(--da-fg, #0f172a)">görselleştirme · gürültü azaltma</text>
+  <text x="674" y="428" text-anchor="middle" font-size="10.5" fill="var(--da-muted, #64748b)">etiketi görmez; önce standardize et</text>
+</svg>

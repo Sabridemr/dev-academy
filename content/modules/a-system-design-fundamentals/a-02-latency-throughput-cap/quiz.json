@@ -1,0 +1,110 @@
+{
+  "id": "a-02-latency-throughput-cap-quiz",
+  "title": { "tr": "Gecikme, SLO ve CAP Quiz", "en": "Latency, SLO and CAP Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Bir API'nin ortalama yanıt süresi 40 ms, p99'u 2,5 saniye. Bu ne anlama gelir?",
+        "en": "An API has an average response time of 40 ms and a p99 of 2.5 seconds. What does this mean?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Sistem hızlı; p99 önemsiz bir istatistiktir", "en": "The system is fast; p99 is an unimportant statistic" } },
+        { "id": "b", "text": { "tr": "İsteklerin %1'i 2,5 saniye veya daha uzun sürüyor; ortalama bu kuyruğu gizliyor", "en": "1% of requests take 2.5 seconds or longer; the average hides this tail" } },
+        { "id": "c", "text": { "tr": "İsteklerin %99'u 2,5 saniye sürüyor", "en": "99% of requests take 2.5 seconds" } },
+        { "id": "d", "text": { "tr": "Ölçüm hatalı; p99 ortalamadan büyük olamaz", "en": "The measurement is wrong; p99 cannot exceed the average" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "p99, isteklerin %99'unun altında kaldığı değerdir; yani %1'i bundan yavaştır. Ortalama, çoğunluğun hızlı olmasıyla bu kuyruğu maskeler. Çok sayıda bağımlı servisi olan bir sayfada bu %1, kullanıcıların çoğunluğunu etkileyebilir (tail latency amplification).",
+        "en": "p99 is the value below which 99% of requests fall; the other 1% are slower than that. The average masks this tail because most requests are fast. On a page with many dependent services that 1% can affect most users (tail latency amplification)."
+      },
+      "difficulty": "easy",
+      "concepts": ["percentiles", "tail-latency"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "SLO'su %99.9 olan bir servis için 30 günlük hata bütçesi yaklaşık ne kadardır?",
+        "en": "For a service with a 99.9% SLO, roughly how large is the 30-day error budget?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "4 dakika", "en": "4 minutes" } },
+        { "id": "b", "text": { "tr": "43 dakika", "en": "43 minutes" } },
+        { "id": "c", "text": { "tr": "7 saat", "en": "7 hours" } },
+        { "id": "d", "text": { "tr": "3,6 gün", "en": "3.6 days" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "30 gün = 43.200 dakika; %0,1'i 43,2 dakikadır. 4 dakika %99.99'un, 7 saat %99'un, 3,6 gün ise yıllık %99'un bütçesidir. Her ek 'dokuz' bütçeyi 10'a böler ve insan müdahalesine zaman bırakmaz.",
+        "en": "30 days = 43,200 minutes; 0.1% of that is 43.2 minutes. 4 minutes is the budget for 99.99%, 7 hours for 99%, and 3.6 days is the yearly budget for 99%. Each extra 'nine' divides the budget by ten and leaves no time for human intervention."
+      },
+      "difficulty": "medium",
+      "concepts": ["sla-slo-sli", "error-budget"]
+    },
+    {
+      "id": "q3",
+      "type": "multiple",
+      "prompt": {
+        "tr": "CAP teoremi hakkında hangi ifadeler doğrudur? (Birden fazla seçin)",
+        "en": "Which statements about the CAP theorem are correct? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Ağ bölünmesi tasarımcının seçimi değildir; dağıtık sistemlerde kaçınılmazdır", "en": "A network partition is not the designer's choice; it is unavoidable in distributed systems" } },
+        { "id": "b", "text": { "tr": "CP bir sistem bölünme sırasında azınlık tarafta yazmayı reddedebilir", "en": "A CP system may reject writes on the minority side during a partition" } },
+        { "id": "c", "text": { "tr": "AP bir sistem bölünme sırasında asla eski veri döndürmez", "en": "An AP system never returns stale data during a partition" } },
+        { "id": "d", "text": { "tr": "CAP, bölünme olmadığı zamanlardaki gecikme-tutarlılık takasını açıklamaz; bunun için PACELC gerekir", "en": "CAP does not describe the latency-consistency trade-off when there is no partition; PACELC covers that" } }
+      ],
+      "correct": ["a", "b", "d"],
+      "explanation": {
+        "tr": "AP sistemler erişilebilirliği korumak için bölünme sırasında eski ya da çelişkili veri döndürebilir; c bu yüzden yanlıştır. P'den vazgeçilemez (a), CP azınlıkta hata döner (b) ve CAP yalnızca bölünme anını tanımlar; normal zamanlardaki L/C takası PACELC'in konusudur (d).",
+        "en": "AP systems may return stale or conflicting data during a partition in order to stay available, so c is wrong. P cannot be given up (a), CP returns errors on the minority side (b), and CAP only describes the moment of partition; the everyday L/C trade-off belongs to PACELC (d)."
+      },
+      "difficulty": "medium",
+      "concepts": ["cap-theorem", "network-partition", "cp-vs-ap", "pacelc"]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Bir sayfa, her birinin p99 gecikmesi 1 saniye olan 100 bağımsız servise paralel istek atıyorsa, sayfanın 1 saniyeyi aşma olasılığı yaklaşık %1'dir.",
+        "en": "If a page fans out in parallel to 100 independent services, each with a p99 latency of 1 second, the probability that the page exceeds 1 second is about 1%."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "Yanlış. Sayfa en yavaş servisi bekler; 100 servisin hepsinin 1 saniyenin altında kalma olasılığı 0,99^100 ≈ %37'dir, yani sayfanın 1 saniyeyi aşma olasılığı ≈ %63. Tekil servislerin p99'u, çok bağımlılıklı sayfalarda neredeyse medyan deneyim olur; bu yüzden hedged request ve zaman aşımı gibi kuyruk kısaltma teknikleri gerekir.",
+        "en": "False. The page waits for the slowest service; the probability that all 100 stay under 1 second is 0.99^100 ≈ 37%, so the page exceeds 1 second about 63% of the time. A single service's p99 becomes almost the median experience on a page with many dependencies, which is why tail-cutting techniques like hedged requests and timeouts are needed."
+      },
+      "difficulty": "hard",
+      "concepts": ["tail-latency", "percentiles"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "Bir kullanıcı profil fotoğrafını değiştirdikten hemen sonra sayfayı yenilediğinde eski fotoğrafı görüyor; birkaç saniye sonra yenisi geliyor. Hangi tutarlılık garantisi eksiktir?",
+        "en": "Right after changing their profile photo, a user refreshes the page and sees the old photo; a few seconds later the new one appears. Which consistency guarantee is missing?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Read-your-writes (kendi yazdığını okuma)", "en": "Read-your-writes" } },
+        { "id": "b", "text": { "tr": "Eventual consistency", "en": "Eventual consistency" } },
+        { "id": "c", "text": { "tr": "Partition tolerance", "en": "Partition tolerance" } },
+        { "id": "d", "text": { "tr": "Linearizability tüm kullanıcılar için zaten sağlanıyor", "en": "Linearizability is already provided for all users" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "Kullanıcının kendi yazmasını hemen görememesi read-your-writes garantisinin eksikliğidir; sistem eventual consistency sağlıyor (b doğru bir tespit ama eksik olan garanti değil). Tipik çözüm: yazmadan sonra kısa süre kullanıcıyı lider replikadan okutmak ya da aynı replikaya yapıştırmak. Partition tolerance bu senaryoyla ilgisizdir; linearizable bir sistemde bu sorun zaten yaşanmazdı.",
+        "en": "Not seeing your own write immediately is the absence of the read-your-writes guarantee; the system does provide eventual consistency (b is a true observation but not the missing guarantee). The typical fix: read from the leader for a short while after a write, or pin the user to the same replica. Partition tolerance is unrelated here; a linearizable system would not show this problem at all."
+      },
+      "difficulty": "medium",
+      "concepts": ["consistency-models", "eventual-consistency"]
+    }
+  ]
+}

@@ -1,0 +1,110 @@
+{
+  "id": "e-02-video-streaming-quiz",
+  "title": { "tr": "Video Streaming Quiz", "en": "Video Streaming Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Adaptive bitrate (ABR) kararı — bir sonraki segmentin hangi kalitede isteneceği — tipik olarak nerede verilir?",
+        "en": "Where is the adaptive bitrate (ABR) decision — which quality to request for the next segment — typically made?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "CDN edge sunucusunda", "en": "On the CDN edge server" } },
+        { "id": "b", "text": { "tr": "Playback API sunucusunda", "en": "On the playback API server" } },
+        { "id": "c", "text": { "tr": "İstemcideki oynatıcıda, ölçülen hız ve tampon doluluğuna göre", "en": "In the client player, based on measured throughput and buffer level" } },
+        { "id": "d", "text": { "tr": "Transcoding işçisinde", "en": "In the transcoding worker" } }
+      ],
+      "correct": ["c"],
+      "explanation": {
+        "tr": "ABR istemcide çalışır: oynatıcı son segmentlerin indirme hızını ve tamponu bilir, sunucu bilmez. Bu sayede sunucu ve CDN durumsuz kalır ve sonsuz ölçeklenir. Transcoding işçisi yalnızca kademeleri üretir; hangi kademenin seçileceğine karışmaz.",
+        "en": "ABR runs on the client: the player knows recent download speeds and its buffer, the server does not. This keeps the server and CDN stateless and infinitely scalable. The transcoding worker only produces the renditions; it has no say in which one is chosen."
+      },
+      "difficulty": "easy",
+      "concepts": ["adaptive-bitrate"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "Yeni bir dizi bölümü yayınlandığı anda binlerce CDN edge'i aynı segmenti ister. Origin'in çökmesini en doğrudan engelleyen yapı hangisidir?",
+        "en": "The moment a new episode is released, thousands of CDN edges request the same segment. Which structure most directly prevents the origin from collapsing?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Origin shield katmanı ve istek birleştirme (request coalescing)", "en": "An origin shield layer with request coalescing" } },
+        { "id": "b", "text": { "tr": "Veritabanına read replica eklemek", "en": "Adding a database read replica" } },
+        { "id": "c", "text": { "tr": "Daha yüksek bitrate kademeleri üretmek", "en": "Producing higher bitrate renditions" } },
+        { "id": "d", "text": { "tr": "Presigned URL kullanmak", "en": "Using presigned URLs" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "Shield, edge'ler ile origin arasına girerek aynı nesne için yalnızca bir origin isteği üretir; prepositioning bunu daha da ileri taşır. Read replica metadata sorgularını ölçekler ama segment baytlarını değil; yüksek bitrate problemi büyütür; presigned URL upload tarafının çözümüdür.",
+        "en": "The shield sits between edges and origin and produces only one origin request per object; prepositioning takes this further. A read replica scales metadata queries, not segment bytes; higher bitrates make the problem bigger; presigned URLs solve the upload side."
+      },
+      "difficulty": "medium",
+      "concepts": ["cdn-prepositioning"]
+    },
+    {
+      "id": "q3",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Büyük video yüklemeleri için doğru tasarım kararları hangileridir? (Birden fazla seçin)",
+        "en": "Which are correct design decisions for large video uploads? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "İstemci presigned URL ile doğrudan object storage'a yükler", "en": "The client uploads straight to object storage with a presigned URL" } },
+        { "id": "b", "text": { "tr": "Dosya parçalara bölünür; kopan parça tek başına yeniden gönderilir", "en": "The file is split into parts; a dropped part is re-sent on its own" } },
+        { "id": "c", "text": { "tr": "Upload tamamlanana kadar HTTP isteği açık tutulur ve transcoding aynı istekte yapılır", "en": "The HTTP request stays open until upload completes and transcoding runs in the same request" } },
+        { "id": "d", "text": { "tr": "Upload tamamlanınca bir olay yayınlanır, işleme asenkron kuyruğa düşer", "en": "An event is published on completion and processing goes to an asynchronous queue" } }
+      ],
+      "correct": ["a", "b", "d"],
+      "explanation": {
+        "tr": "Presigned URL uygulama sunucusunu bayt taşımaktan kurtarır, multipart kopmalara dayanıklılık sağlar, olay + kuyruk işlemeyi ayrıştırır. Tek bir uzun HTTP isteği içinde transcoding yapmak sunucuyu dakikalarca kilitler ve bağlantı kopunca her şey kaybolur.",
+        "en": "Presigned URLs free the app server from moving bytes, multipart gives resilience to drops, and event + queue decouples processing. Transcoding inside one long HTTP request ties up the server for minutes and loses everything when the connection drops."
+      },
+      "difficulty": "medium",
+      "concepts": ["video-upload", "transcoding-pipeline"]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Kodlanmış video segmentleri değişmez (immutable) olduğundan CDN'de çok uzun TTL ile önbelleğe alınabilir; içerik güncellenirse yeni bir versiyon yolu kullanmak yeterlidir.",
+        "en": "Because encoded video segments are immutable, they can be cached on the CDN with a very long TTL; if content is updated, using a new versioned path is enough."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["t"],
+      "explanation": {
+        "tr": "Doğru. /v2/720p/seg_0042.ts gibi versiyonlu yol, içerik değişince farklı bir anahtar üretir; eski girdinin geçersiz kılınmasına gerek kalmaz. Bu, cache invalidation problemini tasarımla ortadan kaldırmanın klasik örneğidir.",
+        "en": "True. A versioned path like /v2/720p/seg_0042.ts produces a different key when content changes, so the old entry never needs invalidating. This is the classic example of designing away the cache invalidation problem."
+      },
+      "difficulty": "easy",
+      "concepts": ["video-storage", "hls-dash-manifest"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "2 saatlik bir filmin transcoding süresini en çok kısaltan teknik hangisidir?",
+        "en": "Which technique shortens the transcoding time of a 2-hour film the most?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Daha büyük tek bir sunucu kullanmak", "en": "Using a single bigger server" } },
+        { "id": "b", "text": { "tr": "Filmi birkaç saniyelik segmentlere bölüp segmentleri yüzlerce işçide paralel kodlamak", "en": "Splitting the film into few-second segments and encoding them in parallel on hundreds of workers" } },
+        { "id": "c", "text": { "tr": "Yalnızca 1080p kademesini üretmek", "en": "Producing only the 1080p rendition" } },
+        { "id": "d", "text": { "tr": "Transcoding'i CDN edge'de yapmak", "en": "Doing transcoding on the CDN edge" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Video kodlama segment sınırlarında bağımsızdır; bu yüzden iş yatay olarak dağıtılabilir ve süre işçi sayısıyla neredeyse doğrusal düşer. Tek büyük sunucu dikey sınırlara takılır; kademe sayısını azaltmak kullanıcı deneyimini bozar; edge'ler CPU açısından bu iş için tasarlanmamıştır.",
+        "en": "Video encoding is independent across segment boundaries, so the work scales out horizontally and time drops almost linearly with worker count. A single big server hits vertical limits; fewer renditions hurt user experience; edges are not designed for this CPU load."
+      },
+      "difficulty": "medium",
+      "concepts": ["transcoding-pipeline", "bitrate-ladder"]
+    }
+  ]
+}

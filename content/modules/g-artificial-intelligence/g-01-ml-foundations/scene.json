@@ -1,0 +1,187 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "g-01-ml-foundations-overfitting",
+  "title": { "tr": "Veri Ayrımı ve Overfitting", "en": "Data Split and Overfitting" },
+  "summary": {
+    "tr": "Veri eğitim/doğrulama/test olarak bölünür; model karmaşıklığı arttıkça eğitim hatası düşerken doğrulama hatası önce düşer sonra yükselir.",
+    "en": "Data is split into train/validation/test; as model complexity grows the training error falls while validation error first drops and then rises."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda ham veri kümesi, ortada üç parça (eğitim, doğrulama, test) ve bir model düğümü, sağda eğitim/doğrulama/test hatasını gösteren üç çubuk vardır. Model karmaşıklığı 1'den 15'e çıkarken eğitim hatası çubuğu sürekli kısalır; doğrulama hatası önce kısalır, karmaşıklık 15'te tekrar uzar. Son adımda test kümesine bir kez bakılır.",
+      "en": "A raw dataset on the left, three partitions (train, validation, test) plus a model node in the middle, and three bars on the right showing train/validation/test error. As model complexity rises from 1 to 15 the training error bar keeps shrinking; validation error first shrinks and then grows again at complexity 15. In the last step the test set is evaluated once."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "dataset", "kind": "storage", "label": { "tr": "Ham veri", "en": "Raw data" }, "sublabel": "10 000 satır", "x": 110, "y": 300, "w": 130, "h": 80 },
+    { "id": "train", "kind": "storage", "label": "Train", "sublabel": "%70", "x": 330, "y": 140, "w": 120, "h": 64 },
+    { "id": "val", "kind": "storage", "label": "Validation", "sublabel": "%15", "x": 330, "y": 300, "w": 120, "h": 64 },
+    { "id": "test", "kind": "storage", "label": "Test", "sublabel": "%15", "x": 330, "y": 460, "w": 120, "h": 64 },
+    { "id": "model", "kind": "model", "label": { "tr": "Model", "en": "Model" }, "sublabel": { "tr": "karmaşıklık: —", "en": "complexity: —" }, "x": 570, "y": 300, "w": 150, "h": 90 },
+    { "id": "err-train", "kind": "generic", "label": { "tr": "Eğitim hatası", "en": "Train error" }, "sublabel": "—", "x": 840, "y": 140, "w": 150, "h": 64 },
+    { "id": "err-val", "kind": "generic", "label": { "tr": "Doğrulama hatası", "en": "Validation error" }, "sublabel": "—", "x": 840, "y": 300, "w": 150, "h": 64 },
+    { "id": "err-test", "kind": "generic", "label": { "tr": "Test hatası", "en": "Test error" }, "sublabel": "—", "x": 840, "y": 460, "w": 150, "h": 64 }
+  ],
+  "edges": [
+    { "id": "ds-train", "from": "dataset", "to": "train", "kind": "data", "curvature": -0.15 },
+    { "id": "ds-val", "from": "dataset", "to": "val", "kind": "data" },
+    { "id": "ds-test", "from": "dataset", "to": "test", "kind": "data", "curvature": 0.15 },
+    { "id": "train-model", "from": "train", "to": "model", "kind": "data", "label": { "tr": "fit", "en": "fit" }, "curvature": -0.1 },
+    { "id": "val-model", "from": "val", "to": "model", "kind": "control", "style": "dashed", "label": { "tr": "predict", "en": "predict" } },
+    { "id": "test-model", "from": "test", "to": "model", "kind": "control", "style": "dotted", "curvature": 0.1 },
+    { "id": "model-etrain", "from": "model", "to": "err-train", "kind": "response", "curvature": -0.1 },
+    { "id": "model-eval", "from": "model", "to": "err-val", "kind": "response" },
+    { "id": "model-etest", "from": "model", "to": "err-test", "kind": "response", "style": "dotted", "curvature": 0.1 }
+  ],
+  "steps": [
+    {
+      "id": "split",
+      "title": { "tr": "Veriyi üçe böl", "en": "Split the data" },
+      "narration": {
+        "tr": "Ham veri karıştırılır ve üçe ayrılır: eğitim (%70) parametreleri öğrenmek, doğrulama (%15) model seçmek, test (%15) nihai raporu vermek için. Ayrım her türlü normalizasyondan ÖNCE yapılır.",
+        "en": "The raw data is shuffled and split in three: train (70%) to learn parameters, validation (15%) to pick a model, test (15%) for the final report. The split happens BEFORE any normalisation."
+      },
+      "durationMs": 3500,
+      "inherit": false,
+      "highlight": { "nodes": ["dataset", "train", "val", "test"], "edges": ["ds-train", "ds-val", "ds-test"] },
+      "nodeStates": {
+        "dataset": { "status": "active" },
+        "train": { "status": "active", "badge": "7000" },
+        "val": { "status": "active", "badge": "1500" },
+        "test": { "status": "muted", "badge": "1500", "sublabel": { "tr": "kilitli", "en": "locked" } }
+      },
+      "packets": [
+        { "edge": "ds-train", "shape": "square", "durationMs": 900, "repeat": 3, "repeatGapMs": 150 },
+        { "edge": "ds-val", "shape": "square", "startAt": 400, "durationMs": 900 },
+        { "edge": "ds-test", "shape": "square", "startAt": 800, "durationMs": 900 }
+      ],
+      "annotations": [
+        { "id": "lock-note", "x": 330, "y": 540, "text": { "tr": "Test kümesi sona kadar açılmaz", "en": "Test set stays sealed until the end" }, "tone": "warning", "target": "test" }
+      ]
+    },
+    {
+      "id": "simple",
+      "title": { "tr": "Basit model: underfitting", "en": "Simple model: underfitting" },
+      "narration": {
+        "tr": "Karmaşıklık 1 (düz çizgi). Model veriyi açıklayamaz: eğitim hatası da doğrulama hatası da yüksek. Buna underfitting, yani yüksek bias denir.",
+        "en": "Complexity 1 (a straight line). The model cannot explain the data: both training and validation error are high. This is underfitting, i.e. high bias."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["model", "err-train", "err-val"], "edges": ["train-model", "val-model", "model-etrain", "model-eval"] },
+      "nodeStates": {
+        "model": { "status": "active", "badge": "d=1", "sublabel": { "tr": "karmaşıklık: 1", "en": "complexity: 1" } },
+        "err-train": { "status": "warning", "progress": 0.62, "sublabel": "0.62" },
+        "err-val": { "status": "warning", "progress": 0.64, "sublabel": "0.64" }
+      },
+      "edgeStates": { "train-model": { "status": "active" }, "val-model": { "status": "active" } },
+      "packets": [
+        { "edge": "train-model", "label": "fit", "durationMs": 900 },
+        { "edge": "model-etrain", "startAt": 900, "durationMs": 700, "color": "warning" },
+        { "edge": "val-model", "label": "predict", "startAt": 1400, "durationMs": 900, "shape": "diamond" },
+        { "edge": "model-eval", "startAt": 2300, "durationMs": 700, "color": "warning" }
+      ],
+      "annotations": [
+        { "id": "under-note", "x": 570, "y": 420, "text": { "tr": "Yüksek bias: ikisi de kötü", "en": "High bias: both bad" }, "tone": "warning", "target": "model" }
+      ]
+    },
+    {
+      "id": "medium",
+      "title": { "tr": "Orta karmaşıklık: tatlı nokta", "en": "Medium complexity: the sweet spot" },
+      "narration": {
+        "tr": "Karmaşıklık 3. Model ana örüntüyü yakalar: eğitim hatası 0.24'e, doğrulama hatası 0.27'ye iner. İkisi birbirine yakın — genelleme iyi.",
+        "en": "Complexity 3. The model captures the main pattern: training error drops to 0.24 and validation error to 0.27. They stay close — generalisation is good."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["model", "err-train", "err-val"], "edges": ["model-etrain", "model-eval"] },
+      "nodeStates": {
+        "model": { "status": "success", "badge": "d=3", "sublabel": { "tr": "karmaşıklık: 3", "en": "complexity: 3" } },
+        "err-train": { "status": "success", "progress": 0.24, "sublabel": "0.24" },
+        "err-val": { "status": "success", "progress": 0.27, "sublabel": "0.27" }
+      },
+      "packets": [
+        { "edge": "train-model", "label": "fit", "durationMs": 900 },
+        { "edge": "model-etrain", "startAt": 900, "durationMs": 700, "color": "success" },
+        { "edge": "val-model", "label": "predict", "startAt": 1400, "durationMs": 900, "shape": "diamond" },
+        { "edge": "model-eval", "startAt": 2300, "durationMs": 700, "color": "success" }
+      ],
+      "annotations": [
+        { "id": "sweet-note", "x": 570, "y": 420, "text": { "tr": "Doğrulama hatası minimumda", "en": "Validation error at its minimum" }, "tone": "success", "target": "model" }
+      ]
+    },
+    {
+      "id": "complex",
+      "title": { "tr": "Çok karmaşık model: overfitting", "en": "Very complex model: overfitting" },
+      "narration": {
+        "tr": "Karmaşıklık 15. Model eğitim verisini gürültüsüyle birlikte ezberler: eğitim hatası 0.02'ye düşer ama doğrulama hatası 0.58'e fırlar. Aradaki makas overfitting'in imzasıdır: yüksek varyans.",
+        "en": "Complexity 15. The model memorises the training data including its noise: training error drops to 0.02 but validation error jumps to 0.58. That gap is the signature of overfitting: high variance."
+      },
+      "durationMs": 4200,
+      "highlight": { "nodes": ["model", "err-train", "err-val"], "edges": ["model-etrain", "model-eval"] },
+      "nodeStates": {
+        "model": { "status": "error", "badge": "d=15", "sublabel": { "tr": "karmaşıklık: 15", "en": "complexity: 15" } },
+        "err-train": { "status": "success", "progress": 0.02, "sublabel": "0.02" },
+        "err-val": { "status": "error", "progress": 0.58, "sublabel": "0.58" }
+      },
+      "edgeStates": { "model-eval": { "status": "error", "label": { "tr": "makas açıldı", "en": "gap opened" } } },
+      "packets": [
+        { "edge": "train-model", "label": "fit", "durationMs": 900 },
+        { "edge": "model-etrain", "startAt": 900, "durationMs": 700, "color": "success" },
+        { "edge": "val-model", "label": "predict", "startAt": 1400, "durationMs": 900, "shape": "diamond" },
+        { "edge": "model-eval", "startAt": 2300, "durationMs": 700, "color": "danger", "shape": "square" }
+      ],
+      "annotations": [
+        { "id": "over-note", "x": 840, "y": 380, "text": { "tr": "Eğitim ≈ 0, doğrulama ↑ → ezber", "en": "Train ≈ 0, validation ↑ → memorisation" }, "tone": "danger", "target": "err-val" }
+      ]
+    },
+    {
+      "id": "regularize",
+      "title": { "tr": "Çare: regularization / early stopping", "en": "Remedy: regularisation / early stopping" },
+      "narration": {
+        "tr": "Karmaşıklığı düşürmek, L2 cezası eklemek, dropout ya da doğrulama hatası yükselmeye başlayınca durmak (early stopping) makası kapatır. Doğrulama hatasına göre en iyi ayar seçilir: karmaşıklık 3 + L2.",
+        "en": "Lowering complexity, adding an L2 penalty, dropout, or stopping once validation error starts rising (early stopping) closes the gap. The best setting is picked by validation error: complexity 3 + L2."
+      },
+      "durationMs": 3500,
+      "highlight": { "nodes": ["model", "err-val"], "edges": ["val-model"] },
+      "nodeStates": {
+        "model": { "status": "success", "badge": "d=3 + L2", "sublabel": { "tr": "karmaşıklık: 3, λ=0.01", "en": "complexity: 3, λ=0.01" } },
+        "err-train": { "status": "success", "progress": 0.25, "sublabel": "0.25" },
+        "err-val": { "status": "success", "progress": 0.26, "sublabel": "0.26" }
+      },
+      "edgeStates": { "model-eval": { "status": "idle", "label": "" } },
+      "packets": [
+        { "edge": "val-model", "label": "predict", "durationMs": 900, "shape": "diamond" },
+        { "edge": "model-eval", "startAt": 900, "durationMs": 700, "color": "success" }
+      ],
+      "annotations": [
+        { "id": "reg-note", "x": 570, "y": 420, "text": { "tr": "Hiperparametre seçimi yalnızca doğrulama ile", "en": "Hyperparameters chosen with validation only" }, "tone": "info", "target": "model" }
+      ]
+    },
+    {
+      "id": "test-once",
+      "title": { "tr": "Test kümesine bir kez bak", "en": "Evaluate on test once" },
+      "narration": {
+        "tr": "Seçilen model artık değiştirilmez. Mühürlü test kümesi açılır ve bir kez değerlendirilir: 0.28. Bu sayı raporlanır; test'e bakıp tekrar ayar yapmak doğrulama sızıntısı yaratır.",
+        "en": "The chosen model is now frozen. The sealed test set is opened and evaluated once: 0.28. This number is reported; tuning again after looking at test would leak validation into it."
+      },
+      "durationMs": 3500,
+      "highlight": { "nodes": ["test", "model", "err-test"], "edges": ["test-model", "model-etest"] },
+      "nodeStates": {
+        "test": { "status": "active", "sublabel": { "tr": "açıldı", "en": "unsealed" } },
+        "err-test": { "status": "success", "progress": 0.28, "sublabel": "0.28" }
+      },
+      "edgeStates": { "test-model": { "status": "active" }, "model-etest": { "status": "active" } },
+      "packets": [
+        { "edge": "test-model", "label": "predict", "durationMs": 1000, "shape": "diamond" },
+        { "edge": "model-etest", "startAt": 1000, "durationMs": 800, "color": "success" }
+      ],
+      "annotations": [
+        { "id": "test-note", "x": 840, "y": 540, "text": { "tr": "Tek seferlik, tarafsız rapor", "en": "One-shot, unbiased report" }, "tone": "success", "target": "err-test" }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["machine-learning", "overfitting", "train-validation-test", "bias-variance"]
+}

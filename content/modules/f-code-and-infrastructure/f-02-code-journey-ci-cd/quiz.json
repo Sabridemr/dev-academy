@@ -1,0 +1,112 @@
+{
+  "id": "f-02-code-journey-ci-cd-quiz",
+  "title": { "tr": "Kodun Yolculuğu: CI/CD Quiz", "en": "The Code Journey: CI/CD Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Production'a giden Docker imajını neden `latest` yerine commit SHA'sı ile etiketleriz?",
+        "en": "Why do we tag the Docker image that goes to production with the commit SHA instead of `latest`?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "SHA etiketli imajlar daha küçüktür", "en": "SHA-tagged images are smaller" } },
+        { "id": "b", "text": { "tr": "İmaj değişmez olur: staging'de test edilen bit bit aynı imaj production'a gider ve hangi kodun çalıştığı her zaman bilinir", "en": "The image becomes immutable: the exact same bits tested in staging go to production and you always know which code is running" } },
+        { "id": "c", "text": { "tr": "`latest` etiketi Docker tarafından yasaklanmıştır", "en": "The `latest` tag is forbidden by Docker" } },
+        { "id": "d", "text": { "tr": "SHA etiketi imajı otomatik olarak imzalar", "en": "A SHA tag automatically signs the image" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "`latest` hareketli bir hedeftir: dün başka, bugün başka bir imajı gösterir. SHA etiketi imajı belirli bir commit'e sabitler; rollback da yalnızca önceki SHA'yı deploy etmektir. Etiket imaj boyutunu değiştirmez (a) ve imzalama ayrı bir adımdır, ör. cosign (d).",
+        "en": "`latest` is a moving target: it points to a different image today than yesterday. A SHA tag pins the image to a specific commit; rollback is just deploying the previous SHA. A tag does not change image size (a) and signing is a separate step, e.g. cosign (d)."
+      },
+      "difficulty": "easy",
+      "concepts": ["immutable-artifact", "artifact-registry"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "Blue-green ile canary dağıtımı arasındaki temel fark nedir?",
+        "en": "What is the key difference between blue-green and canary deployment?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Blue-green trafiğin tamamını tek seferde yeni ortama çevirir; canary küçük bir yüzdeyle başlayıp metriklere göre kademeli artırır", "en": "Blue-green switches all traffic to the new environment at once; canary starts with a small percentage and increases gradually based on metrics" } },
+        { "id": "b", "text": { "tr": "Blue-green yalnızca veritabanları için, canary yalnızca uygulamalar için kullanılır", "en": "Blue-green is only for databases, canary only for applications" } },
+        { "id": "c", "text": { "tr": "Canary ek kapasite gerektirir, blue-green gerektirmez", "en": "Canary needs extra capacity, blue-green does not" } },
+        { "id": "d", "text": { "tr": "Aralarında fark yoktur", "en": "There is no difference" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "Blue-green iki tam ortam kurar (2× kapasite) ve LB'yi bir kerede çevirir; geri alma saniyeler sürer ama kötü sürüm anında herkese ulaşır. Canary küçük dilimle riski ölçer ve az ek kapasite ister; c seçeneği tam tersidir.",
+        "en": "Blue-green builds two full environments (2× capacity) and flips the LB at once; rollback takes seconds but a bad release reaches everyone instantly. Canary measures risk with a small slice and needs little extra capacity; option c is the reverse."
+      },
+      "difficulty": "medium",
+      "concepts": ["blue-green-deployment", "canary-release"]
+    },
+    {
+      "id": "q3",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Trunk-based development için hangileri doğrudur? (Birden fazla seçin)",
+        "en": "Which statements about trunk-based development are true? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Dallar kısa ömürlüdür (saatler–1-2 gün) ve main'e sık birleşir", "en": "Branches are short-lived (hours to 1–2 days) and merge to main often" } },
+        { "id": "b", "text": { "tr": "Yarım kalan özellikler feature flag arkasına gizlenir", "en": "Unfinished features are hidden behind feature flags" } },
+        { "id": "c", "text": { "tr": "Uzun ömürlü develop ve release dalları zorunludur", "en": "Long-lived develop and release branches are mandatory" } },
+        { "id": "d", "text": { "tr": "Herkes main'e doğrudan, inceleme olmadan push eder", "en": "Everyone pushes directly to main without review" } }
+      ],
+      "correct": ["a", "b"],
+      "explanation": {
+        "tr": "Uzun ömürlü develop/release dalları Gitflow'a aittir (c yanlış). Trunk-based, inceleme ve CI'ı kaldırmaz; PR, branch koruma ve merge queue ile main her zaman yeşil tutulur (d yanlış).",
+        "en": "Long-lived develop/release branches belong to Gitflow (c is wrong). Trunk-based does not remove review or CI; PRs, branch protection and merge queues keep main always green (d is wrong)."
+      },
+      "difficulty": "medium",
+      "concepts": ["trunk-based-development", "gitflow"]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Rolling deployment sırasında eski ve yeni sürüm aynı anda çalıştığı için API ve veritabanı şeması her iki sürümle uyumlu olmalıdır.",
+        "en": "During a rolling deployment the old and new versions run simultaneously, so the API and database schema must be compatible with both versions."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["t"],
+      "explanation": {
+        "tr": "Doğru. Pod'lar dalga dalga değiştiğinden dakikalarca iki sürüm birlikte yaşar. Bir kolonu silen migration eski pod'ları kırar; bu yüzden expand → migrate → contract sırası izlenir.",
+        "en": "True. Because pods are replaced in waves, two versions coexist for minutes. A migration that drops a column breaks the old pods; that is why the expand → migrate → contract order is followed."
+      },
+      "difficulty": "medium",
+      "concepts": ["rolling-deployment", "rollback"]
+    },
+    {
+      "id": "q5",
+      "type": "order",
+      "prompt": {
+        "tr": "Bir commit'in production'a yolculuğundaki aşamaları doğru sıraya koyun.",
+        "en": "Put the stages of a commit's journey to production in the correct order."
+      },
+      "options": [
+        { "id": "ci", "text": { "tr": "CI: build, test, lint", "en": "CI: build, test, lint" } },
+        { "id": "git", "text": { "tr": "Git'e push ve PR merge", "en": "Push to Git and PR merge" } },
+        { "id": "canary", "text": { "tr": "Canary: trafiğin %5'i", "en": "Canary: 5% of traffic" } },
+        { "id": "registry", "text": { "tr": "SHA etiketli imaj registry'ye itilir", "en": "SHA-tagged image pushed to the registry" } },
+        { "id": "staging", "text": { "tr": "Staging'e deploy ve e2e testler", "en": "Deploy to staging and e2e tests" } },
+        { "id": "prod", "text": { "tr": "Kademeli tam yayın (%100)", "en": "Gradual full rollout (100%)" } }
+      ],
+      "correct": ["git", "ci", "registry", "staging", "canary", "prod"],
+      "explanation": {
+        "tr": "Önce kod Git'e gider ve CI değişikliği doğrular; yalnızca yeşil CI artifact üretir. Artifact staging'de test edilir, sonra küçük bir canary dilimiyle production'a girer ve metrikler temizse %100'e çıkar. Canary'nin staging'den önce gelmesi riski gereksiz büyütür.",
+        "en": "Code goes to Git first and CI validates it; only a green CI produces an artifact. The artifact is tested in staging, then enters production with a small canary slice and reaches 100% if metrics are clean. Putting canary before staging needlessly increases risk."
+      },
+      "difficulty": "hard",
+      "concepts": ["continuous-integration", "continuous-delivery", "staging", "canary-release"]
+    }
+  ]
+}

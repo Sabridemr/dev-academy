@@ -1,0 +1,110 @@
+{
+  "id": "f-07-security-layers-quiz",
+  "title": { "tr": "Güvenlik Katmanları Quiz", "en": "Security Layers Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Anycast, hacimsel bir DDoS saldırısına karşı neden etkilidir?",
+        "en": "Why is anycast effective against a volumetric DDoS attack?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Saldırganın IP'sini otomatik olarak engeller", "en": "It automatically blocks the attacker's IP" } },
+        { "id": "b", "text": { "tr": "Aynı IP dünyanın birçok PoP'undan yayınlandığı için dağınık botnet trafiği onlarca noktaya bölünür ve hiçbiri tek başına boğulmaz", "en": "Because the same IP is announced from many PoPs worldwide, the dispersed botnet traffic is split across dozens of sites and none is overwhelmed alone" } },
+        { "id": "c", "text": { "tr": "Trafiği şifreler", "en": "It encrypts the traffic" } },
+        { "id": "d", "text": { "tr": "SQL injection imzalarını tanır", "en": "It recognises SQL injection signatures" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Anycast bir yönlendirme tekniğidir: BGP her kaynağı en yakın PoP'a götürür, böylece 2 Tb/sn'lik sel PoP başına birkaç Gb/sn'ye iner ve scrubbing ile temizlenir. IP engelleme (a) ve imza tanıma (d) WAF/scrubbing'in işidir; şifreleme (c) TLS'indir.",
+        "en": "Anycast is a routing technique: BGP sends each source to the nearest PoP, so a 2 Tb/s flood drops to a few Gb/s per PoP and is cleaned by scrubbing. IP blocking (a) and signature matching (d) belong to WAF/scrubbing; encryption (c) is TLS."
+      },
+      "difficulty": "easy",
+      "concepts": ["ddos-mitigation", "anycast-scrubbing"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "Bir istek geçerli bir JWT ile geliyor ama kullanıcı başkasının siparişini görmeye çalışıyor. Doğru HTTP yanıtı nedir ve bu hangi kontrolün sonucudur?",
+        "en": "A request arrives with a valid JWT but the user is trying to view someone else's order. What is the correct HTTP response and which check produces it?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "401 — authentication (kimlik doğrulama) başarısız", "en": "401 — authentication failed" } },
+        { "id": "b", "text": { "tr": "403 — authorization (yetkilendirme) başarısız: kimlik doğru ama hak yok", "en": "403 — authorization failed: identity is correct but there is no right" } },
+        { "id": "c", "text": { "tr": "429 — rate limit aşıldı", "en": "429 — rate limit exceeded" } },
+        { "id": "d", "text": { "tr": "500 — sunucu hatası", "en": "500 — server error" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Kimlik doğrulandı (token geçerli) ama kaynak üzerinde yetki yok: bu authorization hatasıdır, 403. 401 'kim olduğunu bilmiyorum' demektir (a). Bazı API'ler kaynağın varlığını sızdırmamak için bilinçli olarak 404 döner; bu da kabul edilebilir bir tasarımdır.",
+        "en": "Identity was verified (the token is valid) but there is no right on the resource: that is an authorization failure, 403. 401 means 'I do not know who you are' (a). Some APIs deliberately return 404 to avoid leaking the resource's existence; that is also an acceptable design."
+      },
+      "difficulty": "easy",
+      "concepts": ["authentication-vs-authorization"]
+    },
+    {
+      "id": "q3",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Zero-trust yaklaşımı için hangileri doğrudur? (Birden fazla seçin)",
+        "en": "Which statements about the zero-trust approach are true? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "İç ağda (VPC/küme içinde) olmak tek başına güven sağlamaz", "en": "Being inside the internal network (VPC/cluster) grants no trust by itself" } },
+        { "id": "b", "text": { "tr": "Servisler arası çağrılar mTLS ile iki tarafın da kimliğini kanıtladığı bağlantılar üzerinden yapılır", "en": "Service-to-service calls go over mTLS connections in which both sides prove their identity" } },
+        { "id": "c", "text": { "tr": "Güçlü bir dış güvenlik duvarı varsa içeride şifreleme gereksizdir", "en": "With a strong perimeter firewall, encryption inside is unnecessary" } },
+        { "id": "d", "text": { "tr": "Yetki politikaları IP adresine değil, servis kimliğine (ör. SPIFFE ID) bağlanır", "en": "Authorisation policies are tied to service identity (e.g. SPIFFE ID), not IP address" } }
+      ],
+      "correct": ["a", "b", "d"],
+      "explanation": {
+        "tr": "Zero-trust, 'kale ve hendek' modelinin reddidir: dış duvar aşılınca iç ağ serbest olmamalıdır (c yanlış). Kimlik tabanlı mTLS ve politikalar, ele geçirilen bir pod'un yanal hareketini el sıkışma aşamasında durdurur.",
+        "en": "Zero-trust rejects the 'castle and moat' model: once the perimeter is breached the inner network must not be open (c is wrong). Identity-based mTLS and policies stop a compromised pod's lateral movement at the handshake."
+      },
+      "difficulty": "medium",
+      "concepts": ["zero-trust", "mutual-tls", "service-identity"]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "WAF SQL injection saldırılarını engellediği için uygulama kodunda parametreli sorgu kullanmaya gerek yoktur.",
+        "en": "Because the WAF blocks SQL injection attacks, there is no need to use parameterised queries in application code."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "Yanlış. WAF kuralları encoding ve parçalama ile atlatılabilir. Derinlemesine savunma tam da bunun içindir: WAF yakalar, kod parametreli sorgu kullanır, DB rolü yalnızca gereken tablolara erişir. Üç katmanın birden başarısız olması gerekir.",
+        "en": "False. WAF rules can be bypassed with encoding and fragmentation. Defense in depth exists precisely for this: the WAF catches, the code uses parameterised queries, the DB role reaches only the needed tables. All three layers would have to fail."
+      },
+      "difficulty": "medium",
+      "concepts": ["web-application-firewall", "defense-in-depth"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "Saldırgan cart-service pod'unun içinde kod çalıştırmayı başardı. Hangi önlem, orders tablosunu okumasını ve carts tablosunu silmesini engeller?",
+        "en": "An attacker managed to run code inside the cart-service pod. Which measure prevents them from reading the orders table and deleting the carts table?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "WAF kuralları", "en": "WAF rules" } },
+        { "id": "b", "text": { "tr": "TLS 1.3", "en": "TLS 1.3" } },
+        { "id": "c", "text": { "tr": "Pod'a IRSA ile bağlı, yalnızca carts tablosunda GetItem/PutItem'a izin veren en az yetkili IAM rolü ve kısa ömürlü kimlik bilgileri", "en": "A least-privilege IAM role bound to the pod via IRSA that allows only GetItem/PutItem on the carts table, with short-lived credentials" } },
+        { "id": "d", "text": { "tr": "Anycast", "en": "Anycast" } }
+      ],
+      "correct": ["c"],
+      "explanation": {
+        "tr": "Saldırgan artık en dış katmanların (WAF, TLS, anycast) içindedir; onlar bu aşamada yardımcı olmaz. En az yetki ilkesi, ele geçirilen servisin yetkisini işini yapmak için gerekenle sınırlar: Scan orders ve DeleteTable carts çağrıları AccessDenied alır, CloudTrail kaydeder.",
+        "en": "The attacker is now past the outer layers (WAF, TLS, anycast); they do not help at this stage. Least privilege limits the compromised service to exactly what it needs: Scan orders and DeleteTable carts get AccessDenied and CloudTrail records them."
+      },
+      "difficulty": "hard",
+      "concepts": ["iam-least-privilege", "iam-roles", "audit-logging"]
+    }
+  ]
+}

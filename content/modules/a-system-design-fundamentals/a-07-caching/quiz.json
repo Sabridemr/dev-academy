@@ -1,0 +1,113 @@
+{
+  "id": "a-07-caching-quiz",
+  "title": { "tr": "Caching Quiz", "en": "Caching Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Cache-aside deseninde bir okuma isteği cache'te bulunamazsa (miss) ne olur?",
+        "en": "In the cache-aside pattern, what happens when a read request misses the cache?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Cache sunucusu kendisi veritabanına gidip veriyi getirir", "en": "The cache server itself fetches the data from the database" } },
+        { "id": "b", "text": { "tr": "Uygulama veritabanından okur, sonucu cache'e yazar ve kullanıcıya döner", "en": "The application reads from the database, writes the result into the cache and responds" } },
+        { "id": "c", "text": { "tr": "İstek hata ile reddedilir, kullanıcı tekrar dener", "en": "The request is rejected with an error and the user retries" } },
+        { "id": "d", "text": { "tr": "Uygulama veritabanından okur ama cache'e yazmaz", "en": "The application reads from the database but never writes to the cache" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Cache-aside'da mantık uygulamadadır: miss'te uygulama DB'den okur ve cache'i doldurur ki bir sonraki istek hit olsun. (a) read-through'u tanımlar; (d) cache'in hiç dolmamasına yol açar.",
+        "en": "In cache-aside the logic lives in the application: on a miss it reads the DB and populates the cache so the next request hits. (a) describes read-through; (d) would leave the cache permanently empty."
+      },
+      "difficulty": "easy",
+      "concepts": ["cache-aside", "read-through"]
+    },
+    {
+      "id": "q2",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Write-back (write-behind) stratejisi için hangileri doğrudur? (Birden fazla seçin)",
+        "en": "Which statements are true for the write-back (write-behind) strategy? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Yazma gecikmesi çok düşüktür çünkü yalnızca cache'e yazılır", "en": "Write latency is very low because only the cache is written" } },
+        { "id": "b", "text": { "tr": "Cache düşerse henüz DB'ye aktarılmamış (dirty) yazmalar kaybolabilir", "en": "If the cache crashes, dirty writes not yet flushed to the DB can be lost" } },
+        { "id": "c", "text": { "tr": "Cache ile veritabanı her an birebir aynıdır", "en": "The cache and the database are identical at every instant" } },
+        { "id": "d", "text": { "tr": "Beğeni/görüntülenme sayaçları gibi kayba tahammüllü veriler için uygundur", "en": "It suits loss-tolerant data such as like/view counters" } }
+      ],
+      "correct": ["a", "b", "d"],
+      "explanation": {
+        "tr": "Write-back yazmayı hızlandırır ama DB'ye aktarım asenkron olduğu için cache ile DB bir süre farklıdır (c yanlış) ve çökme anında dirty veriler kaybolabilir. Bu yüzden kayıpla yaşanabilen sayaçlar için tercih edilir; sipariş kayıtları için değil.",
+        "en": "Write-back speeds up writes, but because the flush to the DB is asynchronous the cache and DB diverge for a while (c is false) and dirty data can be lost on a crash. That is why it is chosen for loss-tolerant counters, not for order records."
+      },
+      "difficulty": "medium",
+      "concepts": ["write-back", "write-through"]
+    },
+    {
+      "id": "q3",
+      "type": "order",
+      "prompt": {
+        "tr": "Bir isteğin kullanıcıdan veritabanına giderken geçtiği cache katmanlarını, kullanıcıya en yakından en uzağa sıralayın.",
+        "en": "Order the cache layers a request passes through from the user to the database, nearest to the user first."
+      },
+      "options": [
+        { "id": "browser", "text": { "tr": "Tarayıcı cache'i (Cache-Control / ETag)", "en": "Browser cache (Cache-Control / ETag)" } },
+        { "id": "cdn", "text": { "tr": "CDN edge cache", "en": "CDN edge cache" } },
+        { "id": "gateway", "text": { "tr": "API Gateway yanıt cache'i", "en": "API Gateway response cache" } },
+        { "id": "redis", "text": { "tr": "Uygulamanın kullandığı dağıtık cache (Redis)", "en": "Distributed cache used by the app (Redis)" } },
+        { "id": "db", "text": { "tr": "Veritabanı buffer pool", "en": "Database buffer pool" } }
+      ],
+      "correct": ["browser", "cdn", "gateway", "redis", "db"],
+      "explanation": {
+        "tr": "İstek dışarıdan içeriye ilerler: tarayıcı → CDN → gateway → uygulama (Redis) → DB. Her katmanda miss olan istek bir alt katmana iner; bu yüzden en dıştaki katmanların isabeti toplam yükü en çok azaltır.",
+        "en": "The request moves from the outside in: browser → CDN → gateway → application (Redis) → DB. A miss at each layer falls through to the next, so hits in the outermost layers reduce total load the most."
+      },
+      "difficulty": "easy",
+      "concepts": ["cache-layers"]
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": {
+        "tr": "Kapasitesi 3 olan bir LRU cache'e sırasıyla A, B, C, A, D erişimleri yapılıyor. D eklenirken hangi anahtar tahliye edilir?",
+        "en": "An LRU cache with capacity 3 sees the accesses A, B, C, A, D in order. Which key is evicted when D is inserted?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "A", "en": "A" } },
+        { "id": "b", "text": { "tr": "B", "en": "B" } },
+        { "id": "c", "text": { "tr": "C", "en": "C" } },
+        { "id": "d", "text": { "tr": "Hiçbiri; D reddedilir", "en": "None; D is rejected" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "A'ya ikinci erişim A'yı en yeni yapar; erişim sırası (eski → yeni) B, C, A olur. LRU en uzun süredir kullanılmayan B'yi çıkarır. FIFO olsaydı da B çıkardı (ilk giren), ama erişim sırası A, B, C, B, D olsaydı FIFO yine A'yı, LRU ise C'yi çıkarırdı.",
+        "en": "The second access to A makes it most recent; the order (old → new) becomes B, C, A. LRU evicts B, the least recently used. FIFO would also evict B here (first in), but for the sequence A, B, C, B, D FIFO would evict A while LRU would evict C."
+      },
+      "difficulty": "medium",
+      "concepts": ["lru", "lfu"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "Çok popüler bir anahtarın TTL'i dolduğu anda binlerce istek aynı anda miss alıp veritabanına yükleniyor. Bu problemin adı ve en doğrudan çözümü nedir?",
+        "en": "The moment a very popular key's TTL expires, thousands of requests miss simultaneously and pile onto the database. What is this problem called and what is the most direct fix?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Cache penetration — Bloom filtresi eklemek", "en": "Cache penetration — add a Bloom filter" } },
+        { "id": "b", "text": { "tr": "Thundering herd (cache stampede) — tek bir isteğin DB'ye gitmesine izin verip diğerlerini bekletmek (single-flight) ya da bayat değeri sunarken arka planda yenilemek", "en": "Thundering herd (cache stampede) — let one request go to the DB while others wait (single-flight), or serve stale while revalidating" } },
+        { "id": "c", "text": { "tr": "Hot key — TTL'i tamamen kaldırmak", "en": "Hot key — remove the TTL entirely" } },
+        { "id": "d", "text": { "tr": "Write-back kaybı — write-through'a geçmek", "en": "Write-back loss — switch to write-through" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Eşzamanlı miss dalgası cache stampede/thundering herd'dür; single-flight, stale-while-revalidate veya erken yenileme ile çözülür. Penetration var olmayan anahtarlarla, hot key ise tek anahtara yoğunlaşan trafikle ilgilidir; TTL'i kaldırmak bayatlık problemini doğurur.",
+        "en": "A wave of simultaneous misses is a cache stampede/thundering herd; it is solved with single-flight, stale-while-revalidate or early refresh. Penetration concerns non-existent keys, hot keys concern traffic concentrated on one key; removing the TTL creates a staleness problem."
+      },
+      "difficulty": "hard",
+      "concepts": ["thundering-herd", "ttl", "cache-invalidation"]
+    }
+  ]
+}

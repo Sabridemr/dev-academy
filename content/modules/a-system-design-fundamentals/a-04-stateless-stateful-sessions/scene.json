@@ -1,0 +1,206 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "a-04-session-strategies",
+  "title": { "tr": "Oturum Nerede Yaşar: Sticky, Redis, JWT", "en": "Where the Session Lives: Sticky, Redis, JWT" },
+  "summary": {
+    "tr": "Aynı kullanıcının üç farklı oturum stratejisinde yaşadıkları: sticky session ile sunucu düşünce oturum kaybı, merkezi Redis deposu ile herhangi bir sunucunun hizmet vermesi, JWT ile depo sorgusuz doğrulama ama gecikmeli iptal.",
+    "en": "The same user under three session strategies: session loss when the server dies with sticky sessions, any server serving with a central Redis store, and store-free verification but delayed revocation with JWT."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda bir kullanıcı, ortada load balancer, sağda üç uygulama sunucusu, altta bir Redis oturum deposu bulunur. İlk bölümde load balancer kullanıcıyı S1'e yapıştırır; S1 çökünce oturum kaybolur ve kullanıcı 401 alır. İkinci bölümde oturum Redis'e yazılır; istekler S2 ve S3'e gitse de Redis'ten oturum okunur ve çalışır; çıkışta Redis'teki kayıt silinir. Üçüncü bölümde kullanıcı imzalı bir JWT taşır; sunucular hiçbir depoya gitmeden imzayı doğrular; kullanıcı çıkış yapsa bile token süresi dolana kadar geçerli kalır, bu yüzden kısa ömürlü token ve refresh token kullanılır.",
+      "en": "A user on the left, a load balancer in the middle, three application servers on the right and a Redis session store at the bottom. In the first part the load balancer pins the user to S1; when S1 crashes the session is lost and the user gets a 401. In the second part the session is written to Redis; requests go to S2 and S3 but the session is read from Redis and works; on logout the Redis entry is deleted. In the third part the user carries a signed JWT; servers verify the signature without any store lookup; even after logout the token stays valid until it expires, which is why short-lived tokens and refresh tokens are used."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "user", "kind": "user", "label": { "tr": "Kullanıcı", "en": "User" }, "sublabel": { "tr": "çerez: sid=abc", "en": "cookie: sid=abc" }, "x": 120, "y": 260, "w": 130, "h": 76 },
+    { "id": "lb", "kind": "lb", "label": "Load Balancer", "sublabel": "sticky: on", "x": 400, "y": 260, "w": 150, "h": 76 },
+    { "id": "s1", "kind": "server", "label": "S1", "sublabel": { "tr": "bellek: {abc → user42}", "en": "memory: {abc → user42}" }, "x": 780, "y": 110, "w": 190, "h": 72 },
+    { "id": "s2", "kind": "server", "label": "S2", "sublabel": { "tr": "bellek: boş", "en": "memory: empty" }, "x": 780, "y": 260, "w": 190, "h": 72 },
+    { "id": "s3", "kind": "server", "label": "S3", "sublabel": { "tr": "bellek: boş", "en": "memory: empty" }, "x": 780, "y": 410, "w": 190, "h": 72 },
+    { "id": "redis", "kind": "cache", "label": "Redis", "sublabel": { "tr": "oturum deposu", "en": "session store" }, "x": 540, "y": 520, "w": 150, "h": 64 }
+  ],
+  "edges": [
+    { "id": "u-lb", "from": "user", "to": "lb", "kind": "request" },
+    { "id": "lb-s1", "from": "lb", "to": "s1", "kind": "request", "curvature": -0.15 },
+    { "id": "lb-s2", "from": "lb", "to": "s2", "kind": "request" },
+    { "id": "lb-s3", "from": "lb", "to": "s3", "kind": "request", "curvature": 0.15 },
+    { "id": "s1-redis", "from": "s1", "to": "redis", "kind": "data", "style": "dashed", "curvature": 0.2 },
+    { "id": "s2-redis", "from": "s2", "to": "redis", "kind": "data", "style": "dashed", "curvature": 0.1 },
+    { "id": "s3-redis", "from": "s3", "to": "redis", "kind": "data", "style": "dashed" }
+  ],
+  "steps": [
+    {
+      "id": "sticky-login",
+      "title": { "tr": "1 · Sticky: giriş S1'de", "en": "1 · Sticky: login on S1" },
+      "narration": {
+        "tr": "Kullanıcı giriş yapar; istek S1'e düşer ve oturum S1'in belleğinde oluşur. Load balancer sticky modda: çereze bakarak bu kullanıcının sonraki isteklerini hep S1'e yollar. Kod değişmedi ama dağılım artık round-robin değil.",
+        "en": "The user logs in; the request lands on S1 and the session is created in S1's memory. The load balancer is in sticky mode: it reads the cookie and sends this user's later requests to S1 every time. No code changed, but distribution is no longer round-robin."
+      },
+      "durationMs": 4000,
+      "inherit": false,
+      "highlight": { "nodes": ["user", "lb", "s1"], "edges": ["u-lb", "lb-s1"] },
+      "nodeStates": {
+        "user": { "status": "active" },
+        "lb": { "status": "active", "sublabel": "sticky: on", "badge": "abc→S1" },
+        "s1": { "status": "active", "badge": "1 oturum" },
+        "redis": { "status": "muted" }
+      },
+      "edgeStates": { "s1-redis": { "visible": false }, "s2-redis": { "visible": false }, "s3-redis": { "visible": false } },
+      "packets": [
+        { "edge": "u-lb", "shape": "envelope", "label": "POST /login", "durationMs": 900 },
+        { "edge": "lb-s1", "shape": "envelope", "label": "→ S1", "startAt": 900, "durationMs": 900 },
+        { "edge": "u-lb", "shape": "envelope", "label": "GET /sepet", "startAt": 2000, "durationMs": 800 },
+        { "edge": "lb-s1", "shape": "envelope", "label": "→ S1 (sticky)", "startAt": 2800, "durationMs": 800 }
+      ],
+      "annotations": [
+        { "id": "sticky-note", "x": 400, "y": 150, "text": { "tr": "Çerez: SERVERID=s1 → hep aynı sunucu", "en": "Cookie: SERVERID=s1 → always the same server" }, "target": "lb" }
+      ]
+    },
+    {
+      "id": "sticky-crash",
+      "title": { "tr": "1 · Sticky: S1 düşer, oturum gider", "en": "1 · Sticky: S1 dies, session gone" },
+      "narration": {
+        "tr": "S1 deploy ya da arıza nedeniyle yeniden başlar; bellekteki oturum tablosu silinir. Load balancer kullanıcıyı S2'ye yollar ama S2 'abc' diye bir oturum tanımıyor: 401, kullanıcı yeniden giriş yapar, sepeti boşalmıştır. Ayrıca yoğun kullanıcılar tek sunucuya yığıldığı için yük dengesizdi.",
+        "en": "S1 restarts because of a deploy or a fault; the in-memory session table is wiped. The load balancer sends the user to S2, but S2 knows no session 'abc': 401, the user logs in again and their cart is empty. Load was also uneven, since heavy users piled onto one server."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["s1", "s2", "user"], "edges": ["lb-s2"] },
+      "nodeStates": {
+        "s1": { "status": "down", "badge": "✕", "sublabel": { "tr": "yeniden başlıyor · bellek silindi", "en": "restarting · memory wiped" } },
+        "s2": { "status": "warning", "badge": "?" },
+        "user": { "status": "error", "badge": "401" },
+        "lb": { "badge": "abc→S2" }
+      },
+      "edgeStates": { "lb-s1": { "status": "muted" }, "lb-s2": { "status": "error" } },
+      "packets": [
+        { "edge": "u-lb", "shape": "envelope", "label": "GET /sepet", "durationMs": 800 },
+        { "edge": "lb-s2", "shape": "envelope", "label": "sid=abc?", "startAt": 800, "durationMs": 800 },
+        { "edge": "lb-s2", "shape": "square", "direction": "backward", "color": "danger", "label": "401", "startAt": 1700, "durationMs": 800 },
+        { "edge": "u-lb", "shape": "square", "direction": "backward", "color": "danger", "label": { "tr": "oturum yok", "en": "no session" }, "startAt": 2500, "durationMs": 800 }
+      ],
+      "annotations": [
+        { "id": "crash-note", "x": 780, "y": 40, "text": { "tr": "Her deploy bir grup kullanıcıyı düşürür", "en": "Every deploy logs out a group of users" }, "tone": "danger", "target": "s1" }
+      ]
+    },
+    {
+      "id": "redis-login",
+      "title": { "tr": "2 · Redis: oturum paylaşımlı depoda", "en": "2 · Redis: session in a shared store" },
+      "narration": {
+        "tr": "Oturum katmanı değiştirilir: giriş yapan kullanıcının verisi S1'in belleğine değil Redis'e yazılır (SET session:abc ... EX 1800). Çerezde yine yalnızca sid var. Sticky kapatılır; load balancer serbestçe dağıtabilir.",
+        "en": "The session layer is changed: the logged-in user's data is written to Redis (SET session:abc ... EX 1800) instead of S1's memory. The cookie still carries only the sid. Sticky is turned off; the load balancer can distribute freely."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["lb", "s1", "redis"], "edges": ["lb-s1", "s1-redis"] },
+      "nodeStates": {
+        "user": { "status": "active", "badge": "" },
+        "lb": { "status": "active", "sublabel": "sticky: off · round-robin", "badge": "" },
+        "s1": { "status": "active", "badge": "", "sublabel": { "tr": "bellek: oturum yok", "en": "memory: no session" } },
+        "s2": { "status": "idle", "badge": "" },
+        "redis": { "status": "active", "badge": "session:abc", "sublabel": { "tr": "{userId: 42, sepet: 3}", "en": "{userId: 42, cart: 3}" } }
+      },
+      "edgeStates": { "lb-s1": { "status": "active" }, "lb-s2": { "status": "idle" }, "s1-redis": { "visible": true, "status": "active" } },
+      "packets": [
+        { "edge": "u-lb", "shape": "envelope", "label": "POST /login", "durationMs": 800 },
+        { "edge": "lb-s1", "shape": "envelope", "startAt": 800, "durationMs": 800 },
+        { "edge": "s1-redis", "shape": "diamond", "label": "SET session:abc EX 1800", "startAt": 1700, "durationMs": 900 },
+        { "edge": "s1-redis", "shape": "dot", "direction": "backward", "color": "success", "label": "OK", "startAt": 2700, "durationMs": 700 }
+      ],
+      "annotations": [
+        { "id": "redis-note", "x": 300, "y": 520, "text": { "tr": "Sunucu belleği → paylaşımlı depo; servis artık stateless", "en": "Server memory → shared store; the service is now stateless" }, "tone": "success", "target": "redis" }
+      ]
+    },
+    {
+      "id": "redis-any",
+      "title": { "tr": "2 · Redis: herhangi bir sunucu, anında iptal", "en": "2 · Redis: any server, instant revocation" },
+      "narration": {
+        "tr": "Sonraki istekler S2'ye ve S3'e düşer; her biri Redis'ten GET session:abc yapar (~0,5 ms) ve kullanıcıyı tanır. S1 çökse de kimse fark etmez. Çıkış yapınca DEL session:abc ile oturum anında ve kesin olarak biter. Bedel: Redis yeni bir bağımlılıktır, replikalı kurulmalıdır.",
+        "en": "Later requests land on S2 and S3; each does GET session:abc on Redis (~0.5 ms) and recognises the user. Even if S1 crashes nobody notices. On logout, DEL session:abc ends the session instantly and definitively. The cost: Redis is a new dependency and must run replicated."
+      },
+      "durationMs": 5500,
+      "highlight": { "nodes": ["s2", "s3", "redis"], "edges": ["lb-s2", "lb-s3", "s2-redis", "s3-redis"] },
+      "nodeStates": {
+        "s1": { "status": "muted", "sublabel": { "tr": "düşse de sorun yok", "en": "fine even if it dies" } },
+        "s2": { "status": "success", "badge": "200" },
+        "s3": { "status": "success", "badge": "200" },
+        "user": { "status": "success", "badge": "200" }
+      },
+      "edgeStates": { "lb-s1": { "status": "idle" }, "lb-s2": { "status": "active" }, "lb-s3": { "status": "active" }, "s1-redis": { "status": "idle" }, "s2-redis": { "visible": true, "status": "active" }, "s3-redis": { "visible": true, "status": "active" } },
+      "packets": [
+        { "edge": "u-lb", "shape": "envelope", "label": "GET /sepet", "durationMs": 700 },
+        { "edge": "lb-s2", "shape": "envelope", "startAt": 700, "durationMs": 700 },
+        { "edge": "s2-redis", "shape": "diamond", "label": "GET session:abc", "startAt": 1400, "durationMs": 700 },
+        { "edge": "s2-redis", "shape": "dot", "direction": "backward", "color": "success", "label": "user42", "startAt": 2100, "durationMs": 600 },
+        { "edge": "u-lb", "shape": "envelope", "label": "POST /logout", "startAt": 3000, "durationMs": 700 },
+        { "edge": "lb-s3", "shape": "envelope", "startAt": 3700, "durationMs": 700 },
+        { "edge": "s3-redis", "shape": "diamond", "color": "danger", "label": "DEL session:abc", "startAt": 4400, "durationMs": 700 }
+      ],
+      "annotations": [
+        { "id": "any-note", "x": 400, "y": 150, "text": { "tr": "Round-robin serbest; dağılım dengeli", "en": "Round-robin is free; distribution is even" }, "tone": "success", "target": "lb" },
+        { "id": "del-note", "x": 300, "y": 520, "text": { "tr": "Çıkış = DEL → anında iptal", "en": "Logout = DEL → instant revocation" }, "tone": "info", "target": "redis" }
+      ]
+    },
+    {
+      "id": "jwt-verify",
+      "title": { "tr": "3 · JWT: durum istemcide, depo yok", "en": "3 · JWT: state on the client, no store" },
+      "narration": {
+        "tr": "Giriş sonrası sunucu, kullanıcı bilgisini imzalayıp token olarak istemciye verir: header.payload.signature. Sonraki her istekte token Authorization başlığıyla gelir; S2 ya da S3 yalnızca HMAC imzasını doğrular (mikrosaniyeler), Redis'e hiç gitmez. Mikroservisler arası en uygun yöntem budur.",
+        "en": "After login the server signs the user's claims and hands them to the client as a token: header.payload.signature. Every later request carries the token in the Authorization header; S2 or S3 only verifies the HMAC signature (microseconds) and never touches Redis. This is the best fit between microservices."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["user", "s2", "s3"], "edges": ["u-lb", "lb-s2", "lb-s3"] },
+      "nodeStates": {
+        "user": { "status": "active", "badge": "JWT", "sublabel": "Authorization: Bearer eyJ…" },
+        "redis": { "status": "muted", "badge": "", "sublabel": { "tr": "sorgulanmıyor", "en": "not queried" } },
+        "s2": { "status": "success", "badge": "✓ imza" },
+        "s3": { "status": "success", "badge": "✓ imza" },
+        "s1": { "status": "idle", "sublabel": { "tr": "bellek: oturum yok", "en": "memory: no session" } }
+      },
+      "edgeStates": { "s2-redis": { "status": "muted" }, "s3-redis": { "status": "muted" } },
+      "packets": [
+        { "edge": "u-lb", "shape": "envelope", "label": "Bearer eyJ…", "durationMs": 800 },
+        { "edge": "lb-s2", "shape": "envelope", "startAt": 800, "durationMs": 800 },
+        { "edge": "lb-s2", "shape": "dot", "direction": "backward", "color": "success", "label": "200", "startAt": 1700, "durationMs": 700 },
+        { "edge": "u-lb", "shape": "envelope", "label": "Bearer eyJ…", "startAt": 2400, "durationMs": 800 },
+        { "edge": "lb-s3", "shape": "envelope", "startAt": 3200, "durationMs": 800 },
+        { "edge": "lb-s3", "shape": "dot", "direction": "backward", "color": "success", "label": "200", "startAt": 4000, "durationMs": 700 }
+      ],
+      "annotations": [
+        { "id": "jwt-note", "x": 780, "y": 520, "text": { "tr": "Doğrulama = HMAC(header.payload) == signature", "en": "Verify = HMAC(header.payload) == signature" }, "tone": "info" }
+      ]
+    },
+    {
+      "id": "jwt-revoke",
+      "title": { "tr": "3 · JWT: iptal problemi", "en": "3 · JWT: the revocation problem" },
+      "narration": {
+        "tr": "Kullanıcı çıkış yapar ama sunucunun 'unutacağı' bir şey yoktur: token exp alanı dolana kadar geçerlidir; çalınmışsa saldırgan kullanmaya devam eder. Çözüm: 10 dakikalık access token + Redis'te tutulan, iptal edilebilir refresh token (ya da jti denylist). Yani biraz durum geri gelir — ama tüm oturumlar değil, yalnızca iptal listesi.",
+        "en": "The user logs out but the server has nothing to 'forget': the token stays valid until its exp claim passes; if stolen, an attacker keeps using it. The fix: a 10-minute access token plus a revocable refresh token kept in Redis (or a jti denylist). Some state comes back — but only the revocation list, not every session."
+      },
+      "durationMs": 5000,
+      "highlight": { "nodes": ["user", "s2", "redis"], "edges": ["lb-s2", "s2-redis"] },
+      "nodeStates": {
+        "user": { "status": "warning", "badge": "logout", "sublabel": { "tr": "çıkış yaptı ama token elde", "en": "logged out but token still held" } },
+        "s2": { "status": "warning", "badge": "✓ imza?!" },
+        "redis": { "status": "active", "badge": "refresh:*", "sublabel": { "tr": "refresh token / denylist", "en": "refresh tokens / denylist" } },
+        "s3": { "status": "idle", "badge": "" }
+      },
+      "edgeStates": { "s2-redis": { "status": "active", "label": { "tr": "jti denylist?", "en": "jti denylist?" } } },
+      "packets": [
+        { "edge": "u-lb", "shape": "envelope", "color": "danger", "label": { "tr": "çalınan token", "en": "stolen token" }, "durationMs": 800 },
+        { "edge": "lb-s2", "shape": "envelope", "color": "danger", "startAt": 800, "durationMs": 800 },
+        { "edge": "lb-s2", "shape": "dot", "direction": "backward", "color": "warning", "label": { "tr": "200 (exp'e kadar)", "en": "200 (until exp)" }, "startAt": 1700, "durationMs": 700 },
+        { "edge": "s2-redis", "shape": "diamond", "label": "GET refresh:xyz", "startAt": 2800, "durationMs": 700 },
+        { "edge": "s2-redis", "shape": "square", "direction": "backward", "color": "danger", "label": { "tr": "iptal edilmiş", "en": "revoked" }, "startAt": 3500, "durationMs": 700 }
+      ],
+      "annotations": [
+        { "id": "revoke-note", "x": 780, "y": 520, "text": { "tr": "Kısa ömür (5–15 dk) hasar penceresini daraltır", "en": "Short lifetime (5–15 min) narrows the damage window" }, "tone": "warning" },
+        { "id": "mix-note", "x": 400, "y": 150, "text": { "tr": "Pratikte karışım: kimlik için JWT, veri için Redis", "en": "In practice a mix: JWT for identity, Redis for data" }, "tone": "success", "target": "lb" }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["session", "sticky-session", "redis", "jwt", "stateless"]
+}

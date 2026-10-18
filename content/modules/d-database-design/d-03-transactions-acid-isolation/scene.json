@@ -1,0 +1,216 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "d-03-deadlock-detection",
+  "title": { "tr": "İki Transaction, İki Kilit, Bir Deadlock", "en": "Two Transactions, Two Locks, One Deadlock" },
+  "summary": {
+    "tr": "T1 ve T2'nin iki hesabı ters sırada kilitlemesi, çapraz bekleyişin döngüye dönüşmesi, deadlock dedektörünün kurban seçmesi ve kazanan işlemin tamamlanması.",
+    "en": "T1 and T2 lock two accounts in opposite order, the cross-wait becomes a cycle, the deadlock detector picks a victim and the surviving transaction completes."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda T1, sağda T2 adlı iki transaction; ortada hesap 42 ve hesap 77 satırları; altta kilit yöneticisi ve deadlock dedektörü. T1 hesap 42'yi, T2 hesap 77'yi kilitler. Sonra T1 77'yi, T2 42'yi ister; ikisi de bekler. Dedektör bekleme grafiğinde döngü bulur, T2'yi kurban seçip geri alır. T1 iki hesabı da güncelleyip commit eder; T2 yeniden dener.",
+      "en": "Two transactions, T1 on the left and T2 on the right; account rows 42 and 77 in the middle; the lock manager and deadlock detector at the bottom. T1 locks account 42, T2 locks account 77. Then T1 requests 77 and T2 requests 42; both wait. The detector finds a cycle in the wait-for graph, picks T2 as the victim and rolls it back. T1 updates both accounts and commits; T2 retries."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "t1", "kind": "client", "label": "T1", "sublabel": { "tr": "havale 42 → 77", "en": "transfer 42 → 77" }, "x": 130, "y": 200, "w": 160, "h": 80 },
+    { "id": "t2", "kind": "client", "label": "T2", "sublabel": { "tr": "havale 77 → 42", "en": "transfer 77 → 42" }, "x": 870, "y": 200, "w": 160, "h": 80 },
+    { "id": "acc42", "kind": "db", "label": { "tr": "hesap 42", "en": "account 42" }, "sublabel": "balance: 500", "x": 400, "y": 120, "w": 170, "h": 70 },
+    { "id": "acc77", "kind": "db", "label": { "tr": "hesap 77", "en": "account 77" }, "sublabel": "balance: 300", "x": 600, "y": 300, "w": 170, "h": 70 },
+    { "id": "detector", "kind": "service", "label": { "tr": "Deadlock dedektörü", "en": "Deadlock detector" }, "sublabel": "deadlock_timeout = 1s", "x": 500, "y": 500, "w": 230, "h": 70 }
+  ],
+  "edges": [
+    { "id": "t1-42", "from": "t1", "to": "acc42", "kind": "request", "label": "UPDATE 42" },
+    { "id": "t1-77", "from": "t1", "to": "acc77", "kind": "request", "curvature": 0.25, "label": "UPDATE 77" },
+    { "id": "t2-77", "from": "t2", "to": "acc77", "kind": "request", "label": "UPDATE 77" },
+    { "id": "t2-42", "from": "t2", "to": "acc42", "kind": "request", "curvature": -0.25, "label": "UPDATE 42" },
+    { "id": "det-t1", "from": "detector", "to": "t1", "kind": "control", "style": "dotted", "curvature": 0.2 },
+    { "id": "det-t2", "from": "detector", "to": "t2", "kind": "control", "style": "dotted", "curvature": -0.2 },
+    { "id": "wait-t1-t2", "from": "t1", "to": "t2", "kind": "event", "style": "dashed", "curvature": -0.45, "label": { "tr": "T1, T2'yi bekler", "en": "T1 waits for T2" } },
+    { "id": "wait-t2-t1", "from": "t2", "to": "t1", "kind": "event", "style": "dashed", "curvature": -0.45, "label": { "tr": "T2, T1'i bekler", "en": "T2 waits for T1" } }
+  ],
+  "steps": [
+    {
+      "id": "begin",
+      "title": { "tr": "İki havale aynı anda başlar", "en": "Two transfers start at once" },
+      "narration": {
+        "tr": "T1, 42'den 77'ye; T2, 77'den 42'ye para gönderiyor. İkisi de BEGIN dedi; henüz kimse kilit almadı. Her UPDATE satır üzerinde exclusive kilit isteyecek.",
+        "en": "T1 sends money from 42 to 77; T2 from 77 to 42. Both said BEGIN; nobody holds a lock yet. Every UPDATE will request an exclusive row lock."
+      },
+      "durationMs": 3000,
+      "inherit": false,
+      "highlight": { "nodes": ["t1", "t2"] },
+      "nodeStates": {
+        "t1": { "status": "active", "badge": "BEGIN" },
+        "t2": { "status": "active", "badge": "BEGIN" },
+        "detector": { "status": "idle" }
+      },
+      "edgeStates": {
+        "wait-t1-t2": { "visible": false },
+        "wait-t2-t1": { "visible": false },
+        "det-t1": { "visible": false },
+        "det-t2": { "visible": false },
+        "t1-77": { "status": "muted" },
+        "t2-42": { "status": "muted" }
+      },
+      "annotations": [
+        { "id": "iso", "x": 500, "y": 40, "text": { "tr": "READ COMMITTED · satır kilidi: UPDATE alır, COMMIT bırakır", "en": "READ COMMITTED · row lock: taken by UPDATE, released at COMMIT" } }
+      ]
+    },
+    {
+      "id": "lock-first",
+      "title": { "tr": "İlk kilitler alınır", "en": "First locks acquired" },
+      "narration": {
+        "tr": "T1 hesap 42'yi günceller ve kilidini alır. Aynı anda T2 hesap 77'yi günceller ve onun kilidini alır. Şimdilik sorun yok: farklı satırlar.",
+        "en": "T1 updates account 42 and takes its lock. Simultaneously T2 updates account 77 and takes that lock. No problem yet: different rows."
+      },
+      "durationMs": 3500,
+      "highlight": { "nodes": ["t1", "acc42", "t2", "acc77"], "edges": ["t1-42", "t2-77"] },
+      "nodeStates": {
+        "acc42": { "status": "busy", "badge": "🔒 T1", "sublabel": "balance: 500 → 400" },
+        "acc77": { "status": "busy", "badge": "🔒 T2", "sublabel": "balance: 300 → 200" }
+      },
+      "edgeStates": { "t1-42": { "status": "active" }, "t2-77": { "status": "active" } },
+      "packets": [
+        { "edge": "t1-42", "shape": "envelope", "label": "UPDATE … -100", "durationMs": 1000 },
+        { "edge": "t2-77", "shape": "envelope", "label": "UPDATE … -100", "startAt": 200, "durationMs": 1000 }
+      ],
+      "annotations": [
+        { "id": "lock1", "x": 400, "y": 60, "text": { "tr": "X-lock(42) ← T1", "en": "X-lock(42) ← T1" }, "tone": "info", "target": "acc42" },
+        { "id": "lock2", "x": 600, "y": 380, "text": { "tr": "X-lock(77) ← T2", "en": "X-lock(77) ← T2" }, "tone": "info", "target": "acc77" }
+      ]
+    },
+    {
+      "id": "cross-wait",
+      "title": { "tr": "Çapraz bekleyiş", "en": "Cross-wait" },
+      "narration": {
+        "tr": "T1 şimdi 77'yi güncellemek ister ama kilit T2'de: bekler. T2 de 42'yi ister ama kilit T1'de: o da bekler. Bekleme grafiğinde T1 → T2 → T1 döngüsü oluştu.",
+        "en": "T1 now wants to update 77 but T2 holds the lock: it waits. T2 wants 42 but T1 holds that lock: it waits too. The wait-for graph now has a cycle T1 → T2 → T1."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["t1", "t2"], "edges": ["t1-77", "t2-42", "wait-t1-t2", "wait-t2-t1"] },
+      "nodeStates": {
+        "t1": { "status": "warning", "badge": "WAIT" },
+        "t2": { "status": "warning", "badge": "WAIT" }
+      },
+      "edgeStates": {
+        "t1-77": { "status": "error", "label": { "tr": "UPDATE 77 — bekliyor", "en": "UPDATE 77 — waiting" } },
+        "t2-42": { "status": "error", "label": { "tr": "UPDATE 42 — bekliyor", "en": "UPDATE 42 — waiting" } },
+        "wait-t1-t2": { "visible": true, "status": "error" },
+        "wait-t2-t1": { "visible": true, "status": "error" }
+      },
+      "packets": [
+        { "edge": "t1-77", "shape": "square", "label": "UPDATE 77", "durationMs": 1200, "color": "danger" },
+        { "edge": "t2-42", "shape": "square", "label": "UPDATE 42", "startAt": 300, "durationMs": 1200, "color": "danger" }
+      ],
+      "annotations": [
+        { "id": "cycle", "x": 500, "y": 40, "text": { "tr": "wait-for graph: T1 → T2 → T1 (döngü!)", "en": "wait-for graph: T1 → T2 → T1 (cycle!)" }, "tone": "danger" }
+      ]
+    },
+    {
+      "id": "detect",
+      "title": { "tr": "Dedektör döngüyü bulur", "en": "The detector finds the cycle" },
+      "narration": {
+        "tr": "Bir işlem deadlock_timeout (1 s) kadar beklediğinde PostgreSQL bekleme grafiğini tarar. Döngü var: ikisi de sonsuza dek bekler. Kimse kendiliğinden geri çekilmeyecek; veritabanı müdahale etmeli.",
+        "en": "Once a transaction has waited for deadlock_timeout (1 s), PostgreSQL scans the wait-for graph. There is a cycle: both would wait forever. Neither will back off on its own; the database must intervene."
+      },
+      "durationMs": 3500,
+      "highlight": { "nodes": ["detector"], "edges": ["det-t1", "det-t2"] },
+      "nodeStates": { "detector": { "status": "active", "badge": "SCAN" } },
+      "edgeStates": { "det-t1": { "visible": true, "status": "active" }, "det-t2": { "visible": true, "status": "active" } },
+      "packets": [
+        { "edge": "det-t1", "shape": "diamond", "label": "?", "durationMs": 900 },
+        { "edge": "det-t2", "shape": "diamond", "label": "?", "durationMs": 900 }
+      ],
+      "annotations": [
+        { "id": "timeout", "x": 500, "y": 430, "text": { "tr": "1 s bekleme → döngü taraması (ucuz değil, bu yüzden periyodik)", "en": "1 s wait → cycle scan (not cheap, hence periodic)" }, "tone": "warning", "target": "detector" }
+      ]
+    },
+    {
+      "id": "victim",
+      "title": { "tr": "Kurban seçimi: T2 geri alınır", "en": "Victim selection: T2 is rolled back" },
+      "narration": {
+        "tr": "Dedektör döngüyü kıran en ucuz işlemi kurban seçer (PostgreSQL: tespit eden işlem; InnoDB: en az undo kaydı olan). T2, '40P01 deadlock detected' hatasıyla ROLLBACK edilir ve 77 üzerindeki kilidi bırakır.",
+        "en": "The detector picks the cheapest transaction that breaks the cycle as the victim (PostgreSQL: the detecting one; InnoDB: the one with the least undo). T2 is rolled back with '40P01 deadlock detected' and releases its lock on 77."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["t2", "acc77"], "edges": ["det-t2"] },
+      "nodeStates": {
+        "t2": { "status": "error", "badge": "ROLLBACK", "sublabel": "SQLSTATE 40P01" },
+        "acc77": { "status": "idle", "badge": "", "sublabel": "balance: 300 (geri alındı)" },
+        "detector": { "status": "success", "badge": "" }
+      },
+      "edgeStates": {
+        "t2-77": { "status": "muted", "label": "" },
+        "t2-42": { "status": "muted", "label": "" },
+        "wait-t2-t1": { "visible": false },
+        "wait-t1-t2": { "visible": false },
+        "det-t1": { "status": "idle" }
+      },
+      "packets": [
+        { "edge": "det-t2", "shape": "square", "label": "ABORT", "durationMs": 1000, "color": "danger" }
+      ],
+      "annotations": [
+        { "id": "victim-note", "x": 870, "y": 300, "text": { "tr": "ERROR: deadlock detected — kilit serbest", "en": "ERROR: deadlock detected — lock released" }, "tone": "danger", "target": "t2" }
+      ]
+    },
+    {
+      "id": "winner",
+      "title": { "tr": "T1 tamamlanır", "en": "T1 completes" },
+      "narration": {
+        "tr": "77'nin kilidi boşalınca T1'in bekleyen UPDATE'i çalışır. T1 iki satırı da güncelleyip COMMIT eder; kilitler bırakılır. Havale tutarlı: 400 + 400 = 800 toplam korundu.",
+        "en": "With 77's lock free, T1's pending UPDATE runs. T1 updates both rows and COMMITs; the locks are released. The transfer is consistent: 400 + 400 = 800 total preserved."
+      },
+      "durationMs": 3500,
+      "highlight": { "nodes": ["t1", "acc42", "acc77"], "edges": ["t1-77"] },
+      "nodeStates": {
+        "t1": { "status": "success", "badge": "COMMIT" },
+        "acc42": { "status": "success", "badge": "", "sublabel": "balance: 400" },
+        "acc77": { "status": "success", "badge": "", "sublabel": "balance: 400" }
+      },
+      "edgeStates": {
+        "t1-77": { "status": "active", "label": "UPDATE 77" },
+        "t1-42": { "status": "idle" }
+      },
+      "packets": [
+        { "edge": "t1-77", "shape": "envelope", "label": "UPDATE … +100", "durationMs": 1000, "color": "success" }
+      ],
+      "annotations": [
+        { "id": "commit", "x": 130, "y": 300, "text": { "tr": "WAL'a yazıldı, fsync, kilitler bırakıldı", "en": "written to WAL, fsync, locks released" }, "tone": "success", "target": "t1" }
+      ]
+    },
+    {
+      "id": "retry",
+      "title": { "tr": "T2 yeniden dener — bu kez doğru sırada", "en": "T2 retries — in the right order this time" },
+      "narration": {
+        "tr": "Uygulama 40P01 hatasını yakalayıp T2'yi yeniden başlatır. Kilitleri hep küçük id'den büyüğe (42, sonra 77) alırsa iki havale asla çapraz bekleyemez: deadlock tamamen önlenir.",
+        "en": "The application catches 40P01 and restarts T2. If locks are always taken from the smaller id to the larger (42, then 77), two transfers can never cross-wait: the deadlock is prevented entirely."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["t2", "acc42", "acc77"], "edges": ["t2-42", "t2-77"] },
+      "nodeStates": {
+        "t1": { "status": "idle", "badge": "" },
+        "t2": { "status": "active", "badge": "RETRY #2", "sublabel": { "tr": "kilit sırası: 42 → 77", "en": "lock order: 42 → 77" } },
+        "acc42": { "status": "busy", "badge": "🔒 T2", "sublabel": "balance: 500" },
+        "acc77": { "status": "busy", "badge": "🔒 T2", "sublabel": "balance: 300" }
+      },
+      "edgeStates": {
+        "t2-42": { "status": "active", "label": "1. FOR UPDATE 42" },
+        "t2-77": { "status": "active", "label": "2. FOR UPDATE 77" }
+      },
+      "packets": [
+        { "edge": "t2-42", "shape": "envelope", "label": "lock 42", "durationMs": 1000 },
+        { "edge": "t2-77", "shape": "envelope", "label": "lock 77", "startAt": 1100, "durationMs": 1000 },
+        { "edge": "t2-42", "shape": "dot", "label": "COMMIT", "startAt": 2400, "durationMs": 800, "color": "success" }
+      ],
+      "annotations": [
+        { "id": "order", "x": 500, "y": 40, "text": { "tr": "Tutarlı kilit sırası + kısa işlem + yeniden deneme = deadlock stratejisi", "en": "Consistent lock order + short transactions + retry = the deadlock strategy" }, "tone": "success" }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["transaction", "deadlock", "lock", "isolation-level"]
+}

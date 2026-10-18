@@ -1,0 +1,110 @@
+{
+  "id": "g-02-classical-algorithms-quiz",
+  "title": { "tr": "Klasik Algoritmalar Quiz", "en": "Classical Algorithms Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Lojistik regresyonda kayıp fonksiyonu olarak neden MSE yerine log-loss tercih edilir?",
+        "en": "Why is log-loss preferred over MSE as the loss function in logistic regression?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "MSE yalnızca regresyon kütüphanelerinde bulunur", "en": "MSE is only available in regression libraries" } },
+        { "id": "b", "text": { "tr": "Sigmoid ile MSE dışbükey olmaz; log-loss dışbükeydir ve olasılıksal (maksimum olabilirlik) yorumu vardır", "en": "With a sigmoid, MSE is non-convex; log-loss is convex and has a probabilistic (maximum likelihood) interpretation" } },
+        { "id": "c", "text": { "tr": "Log-loss hesaplaması daha ucuzdur", "en": "Log-loss is cheaper to compute" } },
+        { "id": "d", "text": { "tr": "MSE yalnızca çok sınıflı problemlerde çalışır", "en": "MSE only works for multi-class problems" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Sigmoid çıktısının karesi alınınca kayıp yüzeyinde düz bölgeler ve yerel minimumlar oluşur. Log-loss dışbükeydir, gradient descent güvenle çalışır; ayrıca Bernoulli olabilirliğinin negatif logaritmasıdır.",
+        "en": "Squaring the sigmoid output creates plateaus and local minima in the loss surface. Log-loss is convex so gradient descent works reliably; it is also the negative log of the Bernoulli likelihood."
+      },
+      "difficulty": "hard",
+      "concepts": ["logistic-regression", "gradient-descent"]
+    },
+    {
+      "id": "q2",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Hangi algoritmalar özelliklerin ölçeklenmesine (standardizasyon) duyarlıdır? (Birden fazla seçin)",
+        "en": "Which algorithms are sensitive to feature scaling (standardisation)? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "k-means", "en": "k-means" } },
+        { "id": "b", "text": { "tr": "Karar ağacı", "en": "Decision tree" } },
+        { "id": "c", "text": { "tr": "SVM (RBF kernel)", "en": "SVM (RBF kernel)" } },
+        { "id": "d", "text": { "tr": "PCA", "en": "PCA" } }
+      ],
+      "correct": ["a", "c", "d"],
+      "explanation": {
+        "tr": "k-means, SVM ve PCA uzaklık ya da varyans üzerinden çalışır; büyük ölçekli özellik sonucu domine eder. Karar ağacı eşik karşılaştırması yaptığı için ölçeklemeden etkilenmez (b yanlış).",
+        "en": "k-means, SVM and PCA rely on distances or variance, so a large-scale feature dominates. A decision tree compares thresholds and is unaffected by scaling (b is wrong)."
+      },
+      "difficulty": "medium",
+      "concepts": ["feature-scaling", "k-means", "svm", "pca", "decision-tree"]
+    },
+    {
+      "id": "q3",
+      "type": "order",
+      "prompt": {
+        "tr": "k-means (Lloyd) algoritmasının adımlarını doğru sıraya koyun.",
+        "en": "Put the steps of the k-means (Lloyd) algorithm in the correct order."
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Merkezleri başlat (rastgele ya da k-means++)", "en": "Initialise centroids (random or k-means++)" } },
+        { "id": "b", "text": { "tr": "Her noktayı en yakın merkeze ata", "en": "Assign each point to its nearest centroid" } },
+        { "id": "c", "text": { "tr": "Her merkezi üyelerinin ortalamasına taşı", "en": "Move each centroid to the mean of its members" } },
+        { "id": "d", "text": { "tr": "Atamalar değişmediyse dur, değiştiyse atamaya dön", "en": "Stop if assignments did not change, otherwise go back to assignment" } }
+      ],
+      "correct": ["a", "b", "c", "d"],
+      "explanation": {
+        "tr": "Önce başlangıç, sonra atama–güncelleme döngüsü; yakınsama testi her güncellemeden sonra yapılır. Güncellemeyi atamadan önce yapmak anlamsızdır çünkü üyeler henüz belli değildir.",
+        "en": "Initialisation first, then the assign–update loop; the convergence test happens after each update. Updating before assigning makes no sense because there are no members yet."
+      },
+      "difficulty": "easy",
+      "concepts": ["k-means"]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Random forest, tek bir karar ağacına göre genellikle daha düşük varyansa sahiptir çünkü bootstrap örnekleme ve rastgele özellik alt kümeleri ağaçları birbirinden farklılaştırır.",
+        "en": "A random forest usually has lower variance than a single decision tree because bootstrap sampling and random feature subsets decorrelate the trees."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["t"],
+      "explanation": {
+        "tr": "Doğru. İlişkisiz yüksek varyanslı tahmincilerin ortalaması varyansı düşürür; rastgelelik ağaçların aynı hatayı yapmasını engeller. Bias neredeyse değişmez, varyans belirgin düşer.",
+        "en": "True. Averaging decorrelated high-variance estimators reduces variance; the randomness keeps the trees from making the same mistakes. Bias barely changes while variance drops noticeably."
+      },
+      "difficulty": "medium",
+      "concepts": ["random-forest", "decision-tree"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "SVM'deki 'kernel hilesi' (kernel trick) ne sağlar?",
+        "en": "What does the 'kernel trick' in SVM provide?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Eğitim verisini küçülterek hızlandırma", "en": "Speeding up by shrinking the training data" } },
+        { "id": "b", "text": { "tr": "Veriyi açıkça yüksek boyuta taşımadan doğrusal olmayan karar sınırları öğrenme", "en": "Learning non-linear decision boundaries without explicitly mapping data to a higher dimension" } },
+        { "id": "c", "text": { "tr": "Etiketsiz veriyle eğitim", "en": "Training with unlabelled data" } },
+        { "id": "d", "text": { "tr": "Marjı otomatik olarak sıfıra indirme", "en": "Automatically shrinking the margin to zero" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Kernel, yüksek boyutlu uzaydaki iç çarpımı orijinal uzayda hesaplar; böylece doğrusal SVM, orijinal uzayda eğri sınırlar üretir. Veriyi küçültmez (a), etiket gerektirir (c) ve marjı maksimize etmeye devam eder (d).",
+        "en": "A kernel computes the inner product of the high-dimensional space in the original space, so a linear SVM yields curved boundaries in the original space. It does not shrink data (a), still needs labels (c) and still maximises the margin (d)."
+      },
+      "difficulty": "medium",
+      "concepts": ["svm"]
+    }
+  ]
+}

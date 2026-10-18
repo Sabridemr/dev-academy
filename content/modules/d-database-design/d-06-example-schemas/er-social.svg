@@ -1,0 +1,106 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 520" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Sosyal medya ER diyagramı</title>
+  <desc id="desc">Tablolar: users, follows, posts, likes, comments, feed_items. follows tablosu users ile users arasındaki çoka-çok takip ilişkisini çözer. Bir kullanıcının çok gönderisi, bir gönderinin çok beğenisi ve yorumu vardır. feed_items her kullanıcı için önceden hesaplanmış akış satırlarını tutar. users ve posts tablolarında denormalize sayaçlar bulunur.</desc>
+  <defs>
+    <marker id="many" viewBox="0 0 20 20" refX="18" refY="10" markerWidth="13" markerHeight="13" orient="auto-start-reverse">
+      <path d="M 2 2 L 18 10 L 2 18 M 2 10 L 18 10" fill="none" stroke="var(--da-primary, #6366f1)" stroke-width="1.6"/>
+    </marker>
+    <marker id="one" viewBox="0 0 20 20" refX="18" refY="10" markerWidth="13" markerHeight="13" orient="auto-start-reverse">
+      <path d="M 12 2 L 12 18 M 2 10 L 18 10" fill="none" stroke="var(--da-primary, #6366f1)" stroke-width="1.6"/>
+    </marker>
+  </defs>
+  <style>
+    .t { fill: var(--da-fg, #0f172a); font-size: 11px; }
+    .h { fill: var(--da-fg, #0f172a); font-size: 13px; font-weight: 600; }
+    .k { font-weight: 600; }
+    .fk { fill: var(--da-accent, #f59e0b); font-weight: 600; }
+    .dn { fill: var(--da-success, #10b981); }
+    .box { fill: var(--da-surface, #ffffff); stroke: var(--da-fg, #0f172a); stroke-width: 1.4; }
+    .head { fill: var(--da-primary, #6366f1); opacity: 0.14; }
+    .rel { stroke: var(--da-primary, #6366f1); stroke-width: 1.6; fill: none; }
+    .m { fill: var(--da-muted, #64748b); font-size: 10px; }
+  </style>
+
+  <!-- users -->
+  <rect class="box" x="40" y="60" width="200" height="140" rx="8"/><rect class="head" x="40" y="60" width="200" height="26" rx="8"/>
+  <text class="h" x="140" y="78" text-anchor="middle">users</text>
+  <text class="t" x="50" y="104"><tspan class="k">PK</tspan> id bigint (Snowflake)</text>
+  <text class="t" x="50" y="120">handle citext UNIQUE</text>
+  <text class="t" x="50" y="136">display_name, bio, avatar_url</text>
+  <text class="t dn" x="50" y="152">follower_count  (denormalize)</text>
+  <text class="t dn" x="50" y="168">following_count (denormalize)</text>
+  <text class="t" x="50" y="184">created_at</text>
+
+  <!-- follows -->
+  <rect class="box" x="40" y="280" width="200" height="108" rx="8"/><rect class="head" x="40" y="280" width="200" height="26" rx="8" fill="var(--da-accent, #f59e0b)" opacity="0.18"/>
+  <text class="h" x="140" y="298" text-anchor="middle">follows</text>
+  <text class="t" x="50" y="324"><tspan class="k">PK</tspan> <tspan class="fk">FK</tspan> follower_id</text>
+  <text class="t" x="50" y="340"><tspan class="k">PK</tspan> <tspan class="fk">FK</tspan> followee_id</text>
+  <text class="t" x="50" y="356">created_at</text>
+  <text class="t" x="50" y="372">IDX (followee_id, created_at)</text>
+
+  <!-- posts -->
+  <rect class="box" x="380" y="60" width="210" height="156" rx="8"/><rect class="head" x="380" y="60" width="210" height="26" rx="8"/>
+  <text class="h" x="485" y="78" text-anchor="middle">posts</text>
+  <text class="t" x="390" y="104"><tspan class="k">PK</tspan> id bigint (Snowflake)</text>
+  <text class="t" x="390" y="120"><tspan class="fk">FK</tspan> author_id</text>
+  <text class="t" x="390" y="136">body text (≤ 500), media jsonb</text>
+  <text class="t dn" x="390" y="152">like_count, reply_count</text>
+  <text class="t" x="390" y="168">deleted_at (soft delete)</text>
+  <text class="t" x="390" y="184">created_at</text>
+  <text class="t" x="390" y="200">IDX (author_id, created_at DESC)</text>
+
+  <!-- likes -->
+  <rect class="box" x="380" y="280" width="210" height="92" rx="8"/><rect class="head" x="380" y="280" width="210" height="26" rx="8"/>
+  <text class="h" x="485" y="298" text-anchor="middle">likes</text>
+  <text class="t" x="390" y="324"><tspan class="k">PK</tspan> <tspan class="fk">FK</tspan> post_id</text>
+  <text class="t" x="390" y="340"><tspan class="k">PK</tspan> <tspan class="fk">FK</tspan> user_id</text>
+  <text class="t" x="390" y="356">created_at</text>
+
+  <!-- comments -->
+  <rect class="box" x="380" y="410" width="210" height="92" rx="8"/><rect class="head" x="380" y="410" width="210" height="26" rx="8"/>
+  <text class="h" x="485" y="428" text-anchor="middle">comments</text>
+  <text class="t" x="390" y="454"><tspan class="k">PK</tspan> id</text>
+  <text class="t" x="390" y="470"><tspan class="fk">FK</tspan> post_id, <tspan class="fk">FK</tspan> author_id</text>
+  <text class="t" x="390" y="486">body, parent_id (thread), created_at</text>
+
+  <!-- feed_items -->
+  <rect class="box" x="730" y="60" width="210" height="124" rx="8"/><rect class="head" x="730" y="60" width="210" height="26" rx="8" fill="var(--da-success, #10b981)" opacity="0.16"/>
+  <text class="h" x="835" y="78" text-anchor="middle">feed_items</text>
+  <text class="t" x="740" y="104"><tspan class="k">PK</tspan> user_id  (akış sahibi)</text>
+  <text class="t" x="740" y="120"><tspan class="k">PK</tspan> created_at DESC</text>
+  <text class="t" x="740" y="136"><tspan class="k">PK</tspan> post_id</text>
+  <text class="t" x="740" y="152">fan-out on write ile doldurulur</text>
+  <text class="t" x="740" y="168">Redis/Cassandra'ya taşınabilir</text>
+
+  <!-- not kutusu -->
+  <rect x="730" y="280" width="210" height="150" rx="8" fill="var(--da-surface, #f8fafc)" stroke="var(--da-border, #cbd5e1)" stroke-dasharray="4 4"/>
+  <text class="h" x="740" y="300">Tasarım kararları</text>
+  <text class="m" x="740" y="320">· sayaçlar yazmayla aynı tx'te ya da</text>
+  <text class="m" x="740" y="334">  olayla güncellenir; gece yeniden sayım</text>
+  <text class="m" x="740" y="354">· ünlü hesaplar: fan-out on read</text>
+  <text class="m" x="740" y="374">· soft delete: akış referansı kırılmaz</text>
+  <text class="m" x="740" y="394">· shard key: user_id (profil = tek shard)</text>
+  <text class="m" x="740" y="414">· likes milyarlarca satır → Cassandra</text>
+
+  <!-- İlişkiler -->
+  <path class="rel" d="M 100 200 L 100 280" marker-start="url(#one)" marker-end="url(#many)"/>
+  <path class="rel" d="M 180 200 L 180 280" marker-start="url(#one)" marker-end="url(#many)"/>
+  <path class="rel" d="M 240 110 L 380 110" marker-start="url(#one)" marker-end="url(#many)"/>
+  <path class="rel" d="M 485 216 L 485 280" marker-start="url(#one)" marker-end="url(#many)"/>
+  <path class="rel" d="M 540 216 C 560 300, 600 380, 560 410" marker-start="url(#one)" marker-end="url(#many)"/>
+  <path class="rel" d="M 240 150 C 300 150, 320 330, 380 330" marker-start="url(#one)" marker-end="url(#many)"/>
+  <path class="rel" d="M 590 120 L 730 120" marker-start="url(#one)" marker-end="url(#many)"/>
+  <path class="rel" d="M 240 90 C 320 20, 700 20, 760 60" marker-start="url(#one)" marker-end="url(#many)"/>
+
+  <text class="m" x="60" y="250">follower</text>
+  <text class="m" x="190" y="250">followee</text>
+  <text class="m" x="290" y="102">authors 1:N</text>
+  <text class="m" x="495" y="252">liked 1:N</text>
+  <text class="m" x="600" y="330">commented 1:N</text>
+  <text class="m" x="290" y="320">user likes N</text>
+  <text class="m" x="640" y="112">appears in</text>
+  <text class="m" x="450" y="34">owner's feed 1:N</text>
+
+  <text class="m" x="480" y="512" text-anchor="middle">follows = users × users (N:M) ara tablosu; iki yönlü sorgu için PK (follower, followee) + ikincil indeks (followee). Sayaçlar bilinçli denormalizasyondur.</text>
+</svg>

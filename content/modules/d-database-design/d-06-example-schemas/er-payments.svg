@@ -1,0 +1,105 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 520" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Ödeme sistemi ER diyagramı</title>
+  <desc id="desc">Tablolar: accounts, transfers, ledger_entries, payment_intents, idempotency_keys, webhooks_inbox. Her transfer, ledger_entries tablosuna biri borç biri alacak iki satır ekler; ledger_entries yalnızca eklenir. transfers idempotency_key ile tekilleştirilir; webhooks_inbox sağlayıcıdan gelen olayları provider_event_id ile bir kez işler. Bakiye account_balances görünümüyle defterden türetilir.</desc>
+  <defs>
+    <marker id="many" viewBox="0 0 20 20" refX="18" refY="10" markerWidth="13" markerHeight="13" orient="auto-start-reverse">
+      <path d="M 2 2 L 18 10 L 2 18 M 2 10 L 18 10" fill="none" stroke="var(--da-primary, #6366f1)" stroke-width="1.6"/>
+    </marker>
+    <marker id="one" viewBox="0 0 20 20" refX="18" refY="10" markerWidth="13" markerHeight="13" orient="auto-start-reverse">
+      <path d="M 12 2 L 12 18 M 2 10 L 18 10" fill="none" stroke="var(--da-primary, #6366f1)" stroke-width="1.6"/>
+    </marker>
+  </defs>
+  <style>
+    .t { fill: var(--da-fg, #0f172a); font-size: 11px; }
+    .h { fill: var(--da-fg, #0f172a); font-size: 13px; font-weight: 600; }
+    .k { font-weight: 600; }
+    .fk { fill: var(--da-accent, #f59e0b); font-weight: 600; }
+    .box { fill: var(--da-surface, #ffffff); stroke: var(--da-fg, #0f172a); stroke-width: 1.4; }
+    .head { fill: var(--da-primary, #6366f1); opacity: 0.14; }
+    .rel { stroke: var(--da-primary, #6366f1); stroke-width: 1.6; fill: none; }
+    .m { fill: var(--da-muted, #64748b); font-size: 10px; }
+  </style>
+
+  <!-- accounts -->
+  <rect class="box" x="40" y="60" width="200" height="108" rx="8"/><rect class="head" x="40" y="60" width="200" height="26" rx="8"/>
+  <text class="h" x="140" y="78" text-anchor="middle">accounts</text>
+  <text class="t" x="50" y="104"><tspan class="k">PK</tspan> id</text>
+  <text class="t" x="50" y="120">owner_id, currency char(3)</text>
+  <text class="t" x="50" y="136">kind (user, merchant, fees, settlement)</text>
+  <text class="t" x="50" y="152">status (active, frozen)</text>
+
+  <!-- payment_intents -->
+  <rect class="box" x="40" y="240" width="200" height="124" rx="8"/><rect class="head" x="40" y="240" width="200" height="26" rx="8"/>
+  <text class="h" x="140" y="258" text-anchor="middle">payment_intents</text>
+  <text class="t" x="50" y="284"><tspan class="k">PK</tspan> id (pi_…)</text>
+  <text class="t" x="50" y="300">customer_id, amount_cents, currency</text>
+  <text class="t" x="50" y="316">status (requires_payment →</text>
+  <text class="t" x="50" y="332">  processing → succeeded / failed)</text>
+  <text class="t" x="50" y="348">provider_ref, created_at</text>
+
+  <!-- idempotency_keys -->
+  <rect class="box" x="40" y="410" width="200" height="92" rx="8"/><rect class="head" x="40" y="410" width="200" height="26" rx="8"/>
+  <text class="h" x="140" y="428" text-anchor="middle">idempotency_keys</text>
+  <text class="t" x="50" y="454"><tspan class="k">PK</tspan> (customer_id, key)</text>
+  <text class="t" x="50" y="470">response_code, response_body</text>
+  <text class="t" x="50" y="486">expires_at (24 s)</text>
+
+  <!-- transfers -->
+  <rect class="box" x="380" y="60" width="210" height="140" rx="8"/><rect class="head" x="380" y="60" width="210" height="26" rx="8"/>
+  <text class="h" x="485" y="78" text-anchor="middle">transfers</text>
+  <text class="t" x="390" y="104"><tspan class="k">PK</tspan> id uuid (istemci üretir)</text>
+  <text class="t" x="390" y="120">idempotency_key UNIQUE</text>
+  <text class="t" x="390" y="136">amount_cents bigint &gt; 0, currency</text>
+  <text class="t" x="390" y="152">status (pending → posted /</text>
+  <text class="t" x="390" y="168">  failed → reversed)</text>
+  <text class="t" x="390" y="184"><tspan class="fk">FK</tspan> payment_intent_id (opsiyonel)</text>
+
+  <!-- ledger_entries -->
+  <rect class="box" x="380" y="260" width="210" height="140" rx="8" stroke="var(--da-success, #10b981)" stroke-width="2"/><rect class="head" x="380" y="260" width="210" height="26" rx="8" fill="var(--da-success, #10b981)" opacity="0.16"/>
+  <text class="h" x="485" y="278" text-anchor="middle">ledger_entries  (append-only)</text>
+  <text class="t" x="390" y="304"><tspan class="k">PK</tspan> id bigint identity</text>
+  <text class="t" x="390" y="320"><tspan class="fk">FK</tspan> transfer_id</text>
+  <text class="t" x="390" y="336"><tspan class="fk">FK</tspan> account_id</text>
+  <text class="t" x="390" y="352">direction (debit, credit)</text>
+  <text class="t" x="390" y="368">amount_cents &gt; 0, created_at</text>
+  <text class="t" x="390" y="384">IDX (account_id, created_at DESC)</text>
+
+  <!-- webhooks_inbox -->
+  <rect class="box" x="730" y="60" width="200" height="108" rx="8"/><rect class="head" x="730" y="60" width="200" height="26" rx="8"/>
+  <text class="h" x="830" y="78" text-anchor="middle">webhooks_inbox</text>
+  <text class="t" x="740" y="104"><tspan class="k">PK</tspan> provider_event_id</text>
+  <text class="t" x="740" y="120">event_type, payload jsonb</text>
+  <text class="t" x="740" y="136">received_at, processed_at</text>
+  <text class="t" x="740" y="152">en az bir kez gelir, bir kez işlenir</text>
+
+  <!-- account_balances view -->
+  <rect x="730" y="260" width="200" height="108" rx="8" fill="var(--da-surface, #f8fafc)" stroke="var(--da-border, #cbd5e1)" stroke-dasharray="5 4"/>
+  <text class="h" x="830" y="278" text-anchor="middle">account_balances (VIEW)</text>
+  <text class="t" x="740" y="304">account_id</text>
+  <text class="t" x="740" y="320">balance_cents = Σ credit − Σ debit</text>
+  <text class="t" x="740" y="336">türetilmiş; sık okuma için</text>
+  <text class="t" x="740" y="352">günlük snapshot + delta</text>
+
+  <!-- Örnek çift kayıt -->
+  <rect x="380" y="430" width="550" height="72" rx="8" fill="var(--da-surface, #f8fafc)" stroke="var(--da-border, #cbd5e1)"/>
+  <text class="h" x="390" y="450">Örnek: 100,00 TRY ödeme, %2 komisyon → bir transfer, üç defter satırı</text>
+  <text class="t" x="390" y="470" font-family="monospace">debit   user:ayse        10000</text>
+  <text class="t" x="390" y="486" font-family="monospace">credit  merchant:kitapci  9800   credit  fees:platform  200   → toplam 0</text>
+
+  <!-- İlişkiler -->
+  <path class="rel" d="M 240 114 C 300 114, 320 330, 380 330" marker-start="url(#one)" marker-end="url(#many)"/>
+  <path class="rel" d="M 485 200 L 485 260" marker-start="url(#one)" marker-end="url(#many)"/>
+  <path class="rel" d="M 240 300 C 300 300, 320 170, 380 170" marker-start="url(#one)" marker-end="url(#many)"/>
+  <path class="rel" d="M 140 364 L 140 410" marker-start="url(#one)" marker-end="url(#many)"/>
+  <path class="rel" d="M 730 130 C 680 130, 660 300, 730 300" stroke-dasharray="4 3" marker-start="url(#one)" marker-end="url(#one)"/>
+  <path class="rel" d="M 590 330 L 730 330" stroke-dasharray="4 3" marker-start="url(#many)" marker-end="url(#one)"/>
+
+  <text class="m" x="290" y="222">posted to 1:N</text>
+  <text class="m" x="495" y="236">2+ satır / transfer</text>
+  <text class="m" x="290" y="190">settles 1:N</text>
+  <text class="m" x="150" y="392">dedupes</text>
+  <text class="m" x="640" y="322">SUM</text>
+  <text class="m" x="650" y="218">webhook → intent güncelle</text>
+
+  <text class="m" x="480" y="516" text-anchor="middle">Kural: ledger_entries üzerinde UPDATE/DELETE yetkisi yoktur; düzeltme = ters kayıt. Her transfer için debit toplamı = credit toplamı.</text>
+</svg>

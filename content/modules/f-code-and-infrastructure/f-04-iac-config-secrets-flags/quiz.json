@@ -1,0 +1,110 @@
+{
+  "id": "f-04-iac-config-secrets-flags-quiz",
+  "title": { "tr": "IaC, Konfigürasyon, Secret ve Feature Flag Quiz", "en": "IaC, Configuration, Secrets and Feature Flags Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "`terraform plan` çıktısında bir RDS kaynağının yanında `-/+` işareti görüyorsunuz. Bu ne anlama gelir?",
+        "en": "In the `terraform plan` output you see `-/+` next to an RDS resource. What does it mean?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Kaynak yerinde güncellenecek, kesinti olmayacak", "en": "The resource will be updated in place with no downtime" } },
+        { "id": "b", "text": { "tr": "Kaynak silinip yeniden yaratılacak; veritabanı için bu veri kaybı demektir", "en": "The resource will be destroyed and recreated; for a database that means data loss" } },
+        { "id": "c", "text": { "tr": "Kaynak yalnızca state'ten çıkarılacak", "en": "The resource will only be removed from state" } },
+        { "id": "d", "text": { "tr": "Plan başarısız oldu", "en": "The plan failed" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "`-/+` 'replace' demektir: önce destroy, sonra create. Yerinde güncelleme `~` ile gösterilir (a). Bu yüzden plan çıktısı insan tarafından incelenir ve kritik kaynaklara `prevent_destroy` konur.",
+        "en": "`-/+` means 'replace': destroy first, then create. An in-place update is shown with `~` (a). That is why plan output is reviewed by a human and critical resources get `prevent_destroy`."
+      },
+      "difficulty": "medium",
+      "concepts": ["terraform-plan-apply"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "Terraform state'i neden uzak bir backend'de (S3 + DynamoDB kilidi) tutulur?",
+        "en": "Why is Terraform state kept in a remote backend (S3 + DynamoDB lock)?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Böylece HCL dosyaları Git'e konmak zorunda kalmaz", "en": "So HCL files do not have to be committed to Git" } },
+        { "id": "b", "text": { "tr": "Ekip aynı state'i paylaşsın, aynı anda iki apply çalışıp state'i bozmasın ve state yerel diskte kaybolmasın", "en": "So the team shares one state, two applies cannot run at once and corrupt it, and it is not lost on a local disk" } },
+        { "id": "c", "text": { "tr": "Terraform yerel dosya okuyamaz", "en": "Terraform cannot read local files" } },
+        { "id": "d", "text": { "tr": "State, secret'ları şifrelemek için kullanılır", "en": "State is used to encrypt secrets" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "State, Terraform'un 'ne yarattım' defteridir; paylaşılmazsa herkes farklı gerçeklik görür. Kilit eşzamanlı apply'ı engeller. HCL yine Git'te durur (a). State, secret'ları şifrelemez; tersine içinde düz metin değerler bulunabileceği için şifreli saklanmalıdır (d).",
+        "en": "State is Terraform's ledger of 'what I created'; without sharing it everyone sees a different reality. The lock prevents concurrent applies. HCL still lives in Git (a). State does not encrypt secrets; on the contrary it may contain plaintext values, so it must be stored encrypted (d)."
+      },
+      "difficulty": "easy",
+      "concepts": ["terraform-state", "infrastructure-as-code"]
+    },
+    {
+      "id": "q3",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Secret yönetimi için hangileri doğru uygulamalardır? (Birden fazla seçin)",
+        "en": "Which are correct practices for secret management? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Secret'lar Vault/Secrets Manager gibi merkezi, şifreli ve denetimli bir depoda tutulur", "en": "Secrets live in a central, encrypted, audited store such as Vault/Secrets Manager" } },
+        { "id": "b", "text": { "tr": "Uygulama secret'a parola ile değil, kendi kimliğiyle (IAM rolü, service account) erişir", "en": "The application accesses secrets with its own identity (IAM role, service account), not with a password" } },
+        { "id": "c", "text": { "tr": "Yanlışlıkla Git'e giren bir anahtar commit'ten silinirse sorun çözülmüş olur", "en": "If a key accidentally committed to Git is deleted from the commit, the problem is solved" } },
+        { "id": "d", "text": { "tr": "Secret'lar düzenli olarak ve sızıntı şüphesinde anında döndürülür (rotate)", "en": "Secrets are rotated regularly and immediately on suspected leakage" } }
+      ],
+      "correct": ["a", "b", "d"],
+      "explanation": {
+        "tr": "Git geçmişi kalıcıdır ve fork'lar/klonlar kopyayı taşır; commit'lenen bir anahtar sızmış sayılır ve mutlaka döndürülür, yalnızca silmek yetmez (c yanlış). Diğer üçü secret yönetiminin temel kurallarıdır.",
+        "en": "Git history is permanent and forks/clones carry copies; a committed key is considered leaked and must be rotated, deleting it is not enough (c is wrong). The other three are the core rules of secret management."
+      },
+      "difficulty": "medium",
+      "concepts": ["secret-management", "secret-rotation"]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Feature flag'de kullanıcıları yüzdeye göre dağıtırken her istekte rastgele sayı üretmek yeterlidir; kullanıcının her seferinde aynı varyantı görmesi gerekmez.",
+        "en": "When splitting users by percentage in a feature flag, generating a random number per request is enough; a user does not need to see the same variant every time."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "Yanlış. Atama deterministik olmalıdır: hash(flagKey + userId) mod 100. Rastgele sayı kullanılırsa kullanıcı sayfayı yenileyince eski/yeni akış arasında zıplar, sepet gibi durumlar tutarsızlaşır ve A/B ölçümü bozulur.",
+        "en": "False. Assignment must be deterministic: hash(flagKey + userId) mod 100. With a random number the user flips between old and new flows on refresh, state such as the cart becomes inconsistent and A/B measurement breaks."
+      },
+      "difficulty": "medium",
+      "concepts": ["feature-flag", "gradual-rollout"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "Canary dağıtımı ile feature flag arasındaki fark en iyi hangi cümleyle açıklanır?",
+        "en": "Which sentence best explains the difference between a canary deployment and a feature flag?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Canary yeni imajı küçük bir dilime verir; flag aynı imaj içinde yeni davranışı küçük bir dilime açar ve deploy'suz kapatılabilir", "en": "Canary gives a new image to a small slice; a flag turns on new behaviour inside the same image for a small slice and can be turned off without a deploy" } },
+        { "id": "b", "text": { "tr": "İkisi aynı şeydir, yalnızca farklı araçlar kullanır", "en": "They are the same thing with different tools" } },
+        { "id": "c", "text": { "tr": "Flag yalnızca test ortamında, canary yalnızca production'da kullanılır", "en": "Flags are only used in test, canary only in production" } },
+        { "id": "d", "text": { "tr": "Canary kod değişikliği gerektirmez, flag Terraform gerektirir", "en": "Canary needs no code change, a flag requires Terraform" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "Canary, dağıtım (deploy) seviyesinde imaj riskini ölçer; flag, release seviyesinde davranışı kontrol eder ve kill switch olarak saniyeler içinde kapanır. Birlikte kullanılırlar: imaj canary ile çıkar, özellik flag ile açılır.",
+        "en": "Canary measures image risk at the deploy level; a flag controls behaviour at the release level and acts as a kill switch within seconds. They are used together: the image ships via canary, the feature opens via flag."
+      },
+      "difficulty": "hard",
+      "concepts": ["feature-flag", "kill-switch", "gradual-rollout"]
+    }
+  ]
+}

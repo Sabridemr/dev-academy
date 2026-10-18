@@ -1,0 +1,110 @@
+{
+  "id": "g-05-llms-quiz",
+  "title": { "tr": "LLM Quiz", "en": "LLM Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Şirketinizin sürekli güncellenen iç dokümanları hakkında soru cevaplayan bir asistan istiyorsunuz. En uygun ilk yaklaşım hangisidir?",
+        "en": "You want an assistant that answers questions about your company's constantly changing internal documents. What is the most suitable first approach?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Modeli dokümanlarla fine-tune etmek", "en": "Fine-tune the model on the documents" } },
+        { "id": "b", "text": { "tr": "RAG: dokümanları indeksleyip ilgili parçaları çıkarım anında bağlam olarak vermek", "en": "RAG: index the documents and provide relevant chunks as context at inference time" } },
+        { "id": "c", "text": { "tr": "Modeli sıfırdan yeniden pretrain etmek", "en": "Pretrain the model from scratch" } },
+        { "id": "d", "text": { "tr": "Sıcaklığı 0 yapmak", "en": "Set the temperature to 0" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "RAG günceldir (dokümanı değiştir, yeniden indeksle), ucuzdur ve kaynak gösterebilir. Fine-tuning bilgi eklemekte verimsizdir ve her güncellemede tekrar gerekir; pretraining milyonlarca dolardır; sıcaklık bilgi eklemez.",
+        "en": "RAG stays current (change the document, re-index), is cheap and can cite sources. Fine-tuning is inefficient at adding knowledge and must be redone on every update; pretraining costs millions; temperature adds no knowledge."
+      },
+      "difficulty": "easy",
+      "concepts": ["rag", "fine-tuning"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "Byte Pair Encoding (BPE) dağarcığını nasıl oluşturur?",
+        "en": "How does Byte Pair Encoding (BPE) build its vocabulary?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Sözlükteki tüm kelimeleri alfabetik sıraya koyarak", "en": "By listing all dictionary words alphabetically" } },
+        { "id": "b", "text": { "tr": "Korpusta en sık yan yana gelen sembol çiftini tekrar tekrar tek bir tokenda birleştirerek", "en": "By repeatedly merging the most frequent adjacent symbol pair in the corpus into a single token" } },
+        { "id": "c", "text": { "tr": "Her karaktere bir token atayarak", "en": "By assigning one token per character" } },
+        { "id": "d", "text": { "tr": "Kelimeleri boşluklardan bölerek", "en": "By splitting words on spaces" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "BPE byte/karakterlerden başlar ve en sık çifti birleştirir; böylece sık kelimeler tek token, nadir kelimeler alt parçalar olur ve 'bilinmeyen kelime' kalmaz. (c) karakter düzeyi, (d) kelime düzeyi tokenizasyondur.",
+        "en": "BPE starts from bytes/characters and merges the most frequent pair; frequent words become single tokens, rare words become sub-pieces and there is no 'unknown word'. (c) is character-level, (d) word-level tokenisation."
+      },
+      "difficulty": "medium",
+      "concepts": ["tokenization", "bpe"]
+    },
+    {
+      "id": "q3",
+      "type": "order",
+      "prompt": {
+        "tr": "Bir RAG sorgusunun sorgu zamanı adımlarını sıralayın.",
+        "en": "Order the query-time steps of a RAG request."
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Soruyu embedding modeliyle vektöre çevir", "en": "Turn the question into a vector with the embedding model" } },
+        { "id": "b", "text": { "tr": "Vektör DB'den en benzer k parçayı getir", "en": "Fetch the k most similar chunks from the vector DB" } },
+        { "id": "c", "text": { "tr": "Sistem talimatı + parçalar + sorudan prompt kur", "en": "Build the prompt from system instruction + chunks + question" } },
+        { "id": "d", "text": { "tr": "LLM ile bağlama dayalı yanıt üret", "en": "Generate a grounded answer with the LLM" } }
+      ],
+      "correct": ["a", "b", "c", "d"],
+      "explanation": {
+        "tr": "Önce gömme, sonra arama, sonra prompt, en son üretim. LLM'i aramadan önce çağırmak bağlamsız (halüsinasyona açık) cevap üretir; prompt parçalar olmadan kurulamaz.",
+        "en": "Embed first, then search, then prompt, generation last. Calling the LLM before retrieval produces an ungrounded (hallucination-prone) answer; the prompt cannot be built without the chunks."
+      },
+      "difficulty": "easy",
+      "concepts": ["rag", "vector-database"]
+    },
+    {
+      "id": "q4",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Prompt injection riskini azaltan uygulamalar hangileridir? (Birden fazla seçin)",
+        "en": "Which practices reduce prompt injection risk? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Dış içeriği talimattan ayrı, açıkça işaretlenmiş bir veri bölümünde sunmak", "en": "Presenting external content in a clearly delimited data section separate from instructions" } },
+        { "id": "b", "text": { "tr": "Araçlara en az yetki vermek ve geri dönüşü olmayan eylemlerde insan onayı istemek", "en": "Giving tools least privilege and requiring human approval for irreversible actions" } },
+        { "id": "c", "text": { "tr": "Sıcaklığı yükseltmek", "en": "Raising the temperature" } },
+        { "id": "d", "text": { "tr": "Bağlam penceresini olabildiğince doldurmak", "en": "Filling the context window as much as possible" } }
+      ],
+      "correct": ["a", "b"],
+      "explanation": {
+        "tr": "Veriyi talimattan ayırmak ve yetkiyi sınırlamak temel savunmalardır. Sıcaklık yükseltmek öngörülemezliği artırır (c), daha fazla bağlam daha fazla saldırı yüzeyi demektir (d).",
+        "en": "Separating data from instructions and limiting privileges are the core defences. Raising temperature adds unpredictability (c); more context means more attack surface (d)."
+      },
+      "difficulty": "medium",
+      "concepts": ["prompt-engineering", "agent-loop"]
+    },
+    {
+      "id": "q5",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "RLHF aşaması modele yeni olgusal bilgi eklemek için kullanılır; pretraining ise davranış ve üslubu belirler.",
+        "en": "The RLHF stage is used to add new factual knowledge to the model, while pretraining determines behaviour and style."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "Tam tersi. Pretraining bilginin ve yeteneğin neredeyse tamamını kazandırır; SFT ve RLHF/DPO görece az veriyle modelin davranışını (talimat izleme, yardımcı ve güvenli olma, üslup) şekillendirir.",
+        "en": "It is the other way round. Pretraining provides nearly all knowledge and capability; SFT and RLHF/DPO shape behaviour (instruction following, helpfulness and safety, style) with comparatively little data."
+      },
+      "difficulty": "medium",
+      "concepts": ["pretraining", "rlhf", "sft"]
+    }
+  ]
+}

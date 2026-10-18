@@ -1,0 +1,167 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "a-10-rate-limiting-token-bucket",
+  "title": { "tr": "Token Bucket: Dolum ve Tüketim", "en": "Token Bucket: Refill and Consumption" },
+  "summary": {
+    "tr": "Kapasitesi 10, dolum hızı 5 token/s olan bir token bucket: normal trafik token harcar, patlama kovayı boşaltır ve fazla istekler 429 alır, kova zamanla yeniden dolar ve uzun vadeli hız dolum hızına eşitlenir.",
+    "en": "A token bucket with capacity 10 and refill rate 5 tokens/s: normal traffic spends tokens, a burst drains the bucket and excess requests get 429, the bucket refills over time and the long-term rate converges to the refill rate."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda istemci, ortada token bucket (kova) ve üstünde sabit hızla token ekleyen doldurucu, sağda API servisi, sağ altta 429 ret kutusu. Başlangıçta kova 10/10 doludur. Üç normal istek üç token harcar (7/10). Ardından 10 isteklik bir patlama gelir: 7'si token bulup API'ye geçer, 3'ü 429 ile reddedilir ve kova 0/10 olur. Bir saniye sonra doldurucu 5 token ekler (5/10). Kararlı durumda saniyede 8 istek gelirken yalnızca 5'i geçer; uzun vadeli hız dolum hızına eşittir.",
+      "en": "Client on the left, the token bucket in the middle with a refiller above it adding tokens at a constant rate, the API service on the right and a 429 rejection box bottom right. The bucket starts full at 10/10. Three normal requests spend three tokens (7/10). Then a burst of 10 requests arrives: 7 find tokens and pass to the API, 3 are rejected with 429 and the bucket drops to 0/10. One second later the refiller adds 5 tokens (5/10). In steady state 8 requests per second arrive but only 5 pass; the long-term rate equals the refill rate."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "client", "kind": "client", "label": { "tr": "İstemci", "en": "Client" }, "sublabel": "api-key: k1", "x": 110, "y": 300, "w": 130, "h": 72 },
+    { "id": "refill", "kind": "generic", "label": { "tr": "Doldurucu", "en": "Refiller" }, "sublabel": { "tr": "+5 token / s", "en": "+5 tokens / s" }, "x": 450, "y": 90, "w": 160, "h": 60 },
+    { "id": "bucket", "kind": "gateway", "label": "Token bucket", "sublabel": { "tr": "kapasite 10", "en": "capacity 10" }, "x": 450, "y": 300, "w": 180, "h": 96 },
+    { "id": "api", "kind": "service", "label": { "tr": "API servisi", "en": "API service" }, "sublabel": { "tr": "korunan kaynak", "en": "protected resource" }, "x": 800, "y": 300, "w": 150, "h": 76 },
+    { "id": "reject", "kind": "generic", "label": "429 Too Many Requests", "sublabel": "Retry-After", "x": 800, "y": 520, "w": 200, "h": 60 }
+  ],
+  "edges": [
+    { "id": "c-b", "from": "client", "to": "bucket", "kind": "request" },
+    { "id": "r-b", "from": "refill", "to": "bucket", "kind": "control", "style": "dotted", "label": { "tr": "token ekle", "en": "add token" } },
+    { "id": "b-api", "from": "bucket", "to": "api", "kind": "request", "label": { "tr": "token var → geçir", "en": "has token → forward" } },
+    { "id": "b-rej", "from": "bucket", "to": "reject", "kind": "response", "style": "dashed", "curvature": 0.2, "label": { "tr": "token yok → reddet", "en": "no token → reject" } }
+  ],
+  "steps": [
+    {
+      "id": "full",
+      "title": { "tr": "Dolu kova", "en": "Full bucket" },
+      "narration": {
+        "tr": "Kova kapasiteye (10) kadar token tutar ve boştayken sabit hızla (5 token/s) dolar; dolunca fazlası taşar, birikmez. İstemci bir süredir sessiz olduğu için kova tam doludur: bir anda 10 isteklik bir patlama hakkı vardır.",
+        "en": "The bucket holds up to capacity (10) tokens and refills at a constant rate (5 tokens/s) while idle; once full the extra overflows, it does not accumulate. The client has been quiet for a while, so the bucket is full: it is entitled to a burst of 10 requests at once."
+      },
+      "durationMs": 2800,
+      "inherit": false,
+      "highlight": { "nodes": ["bucket", "refill"], "edges": ["r-b"] },
+      "nodeStates": {
+        "bucket": { "status": "success", "badge": "10 / 10", "progress": 1 },
+        "reject": { "status": "muted" }
+      },
+      "packets": [{ "edge": "r-b", "shape": "dot", "durationMs": 700, "repeat": 2, "repeatGapMs": 300 }],
+      "annotations": [
+        { "id": "cap-note", "x": 450, "y": 420, "text": { "tr": "tokens = min(kapasite, tokens + geçen_süre × hız)", "en": "tokens = min(capacity, tokens + elapsed × rate)" }, "tone": "info", "target": "bucket" }
+      ]
+    },
+    {
+      "id": "normal",
+      "title": { "tr": "Normal trafik", "en": "Normal traffic" },
+      "narration": {
+        "tr": "Üç istek gelir. Her biri bir token harcar ve API'ye geçer. Kova 7/10'a iner. Dolum hızının altındaki trafik kovayı asla boşaltamaz.",
+        "en": "Three requests arrive. Each spends one token and passes to the API. The bucket drops to 7/10. Traffic below the refill rate can never drain the bucket."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["client", "bucket", "api"], "edges": ["c-b", "b-api"] },
+      "nodeStates": {
+        "bucket": { "status": "active", "badge": "7 / 10", "progress": 0.7 },
+        "api": { "status": "active", "badge": "3" }
+      },
+      "packets": [
+        { "edge": "c-b", "shape": "envelope", "label": "#1", "durationMs": 600 },
+        { "edge": "c-b", "shape": "envelope", "label": "#2", "startAt": 500, "durationMs": 600 },
+        { "edge": "c-b", "shape": "envelope", "label": "#3", "startAt": 1000, "durationMs": 600 },
+        { "edge": "b-api", "shape": "envelope", "label": "#1", "startAt": 650, "durationMs": 600 },
+        { "edge": "b-api", "shape": "envelope", "label": "#2", "startAt": 1150, "durationMs": 600 },
+        { "edge": "b-api", "shape": "envelope", "label": "#3", "startAt": 1650, "durationMs": 600 }
+      ],
+      "annotations": [
+        { "id": "cost-note", "x": 450, "y": 420, "text": { "tr": "her istek = 1 token", "en": "each request = 1 token" }, "tone": "info", "target": "bucket" }
+      ]
+    },
+    {
+      "id": "burst",
+      "title": { "tr": "Patlama: 10 istek aynı anda", "en": "Burst: 10 requests at once" },
+      "narration": {
+        "tr": "İstemci aynı anda 10 istek gönderir. Kovada 7 token vardır: ilk 7 istek geçer, kova 0'a iner, kalan 3 istek 429 Too Many Requests alır. Kapasite patlamaya izin verir ama sınırsız değil.",
+        "en": "The client fires 10 requests at once. The bucket has 7 tokens: the first 7 pass, the bucket hits 0, the remaining 3 get 429 Too Many Requests. Capacity allows a burst, but not an unlimited one."
+      },
+      "durationMs": 4200,
+      "highlight": { "nodes": ["client", "bucket", "reject"], "edges": ["c-b", "b-api", "b-rej"] },
+      "nodeStates": {
+        "bucket": { "status": "warning", "badge": "0 / 10", "progress": 0 },
+        "api": { "status": "busy", "badge": "10" },
+        "reject": { "status": "error", "badge": "3" }
+      },
+      "edgeStates": { "b-rej": { "status": "error" } },
+      "packets": [
+        { "edge": "c-b", "shape": "envelope", "durationMs": 500, "repeat": 10, "repeatGapMs": 100 },
+        { "edge": "b-api", "shape": "envelope", "color": "success", "startAt": 550, "durationMs": 500, "repeat": 7, "repeatGapMs": 100 },
+        { "edge": "b-rej", "shape": "square", "color": "danger", "label": "429", "startAt": 4000, "durationMs": 600, "repeat": 3, "repeatGapMs": 200 }
+      ],
+      "annotations": [
+        { "id": "burst-note", "x": 450, "y": 420, "text": { "tr": "7 kabul · 3 red", "en": "7 accepted · 3 rejected" }, "tone": "warning", "target": "bucket" }
+      ]
+    },
+    {
+      "id": "refill",
+      "title": { "tr": "Yeniden dolum", "en": "Refill" },
+      "narration": {
+        "tr": "Bir saniye geçer; doldurucu 5 token ekler, kova 5/10 olur. Dolum gerçek bir zamanlayıcıyla değil, bir sonraki istekte geçen süreden hesaplanır (tembel dolum) — anahtar başına yalnızca iki sayı saklanır: token ve son zaman damgası.",
+        "en": "One second passes; the refiller adds 5 tokens, the bucket is at 5/10. Refill is not a real timer but computed from elapsed time on the next request (lazy refill) — only two numbers are stored per key: tokens and last timestamp."
+      },
+      "durationMs": 2800,
+      "highlight": { "nodes": ["refill", "bucket"], "edges": ["r-b"] },
+      "nodeStates": {
+        "bucket": { "status": "active", "badge": "5 / 10", "progress": 0.5 },
+        "reject": { "status": "idle" },
+        "api": { "status": "idle" }
+      },
+      "edgeStates": { "b-rej": { "status": "idle" } },
+      "packets": [{ "edge": "r-b", "shape": "dot", "color": "success", "durationMs": 500, "repeat": 5, "repeatGapMs": 200 }],
+      "annotations": [
+        { "id": "lazy-note", "x": 700, "y": 120, "text": { "tr": "bellek: {tokens, lastRefill} — zamanlayıcı yok", "en": "memory: {tokens, lastRefill} — no timer" }, "tone": "success", "target": "bucket" }
+      ]
+    },
+    {
+      "id": "steady",
+      "title": { "tr": "Kararlı durum: 8 rps gelir, 5 rps geçer", "en": "Steady state: 8 rps in, 5 rps through" },
+      "narration": {
+        "tr": "İstemci saniyede 8 istek göndermeye devam eder. Kova sürekli sıfıra yakın kalır: her saniye 5 token girer, 5 istek geçer, 3 istek 429 alır. Uzun vadeli hız = dolum hızı; burst = kapasite. İki parametre iki ayrı şeyi kontrol eder.",
+        "en": "The client keeps sending 8 requests per second. The bucket hovers near zero: 5 tokens enter every second, 5 requests pass, 3 get 429. Long-term rate = refill rate; burst = capacity. Two parameters control two separate things."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["bucket", "api", "reject"], "edges": ["c-b", "b-api", "b-rej"] },
+      "nodeStates": {
+        "bucket": { "status": "warning", "badge": "≈0 / 10", "progress": 0.1 },
+        "api": { "status": "active", "badge": "5 / s" },
+        "reject": { "status": "error", "badge": "3 / s" }
+      },
+      "edgeStates": { "b-rej": { "status": "error" } },
+      "packets": [
+        { "edge": "c-b", "shape": "envelope", "durationMs": 400, "repeat": 8, "repeatGapMs": 100 },
+        { "edge": "r-b", "shape": "dot", "color": "success", "durationMs": 400, "repeat": 5, "repeatGapMs": 300 },
+        { "edge": "b-api", "shape": "envelope", "color": "success", "startAt": 450, "durationMs": 400, "repeat": 5, "repeatGapMs": 250 },
+        { "edge": "b-rej", "shape": "square", "color": "danger", "label": "429", "startAt": 1900, "durationMs": 400, "repeat": 3, "repeatGapMs": 250 }
+      ],
+      "annotations": [
+        { "id": "steady-note", "x": 450, "y": 420, "text": { "tr": "ortalama hız = dolum hızı (5 rps) · burst = kapasite (10)", "en": "average rate = refill rate (5 rps) · burst = capacity (10)" }, "tone": "info", "target": "bucket" }
+      ]
+    },
+    {
+      "id": "distributed",
+      "title": { "tr": "Birden çok gateway: durum Redis'te", "en": "Multiple gateways: state in Redis" },
+      "narration": {
+        "tr": "Gateway'in üç kopyası varsa her biri kendi kovasını tutarsa limit fiilen 3 katına çıkar. Kova durumu paylaşımlı bir Redis'te tutulur ve 'oku → hesapla → yaz' adımları bir Lua betiğiyle tek atomik işlemde yapılır; yoksa iki gateway aynı son token'ı ikisi de harcar. Reddedilen isteğe Retry-After başlığı eklenir ki istemci sıkı döngüde tekrar denemesin.",
+        "en": "With three gateway replicas each keeping its own bucket, the effective limit triples. Bucket state lives in a shared Redis and the 'read → compute → write' steps run as one atomic Lua script; otherwise two gateways both spend the same last token. Rejected requests carry a Retry-After header so clients do not retry in a tight loop."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["bucket", "reject"], "edges": [] },
+      "nodeStates": {
+        "bucket": { "status": "active", "badge": "Redis · Lua", "sublabel": { "tr": "paylaşımlı durum", "en": "shared state" } },
+        "reject": { "status": "warning", "sublabel": "Retry-After: 1" }
+      },
+      "edgeStates": { "b-rej": { "status": "idle" } },
+      "annotations": [
+        { "id": "atomic-note", "x": 450, "y": 420, "text": { "tr": "HMGET → hesapla → HSET tek Lua betiğinde: yarış yok", "en": "HMGET → compute → HSET in one Lua script: no race" }, "tone": "success", "target": "bucket" },
+        { "id": "headers-note", "x": 800, "y": 420, "text": { "tr": "X-RateLimit-Limit / Remaining / Reset", "en": "X-RateLimit-Limit / Remaining / Reset" }, "tone": "info", "target": "api" }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["rate-limiting", "token-bucket", "redis", "429"]
+}

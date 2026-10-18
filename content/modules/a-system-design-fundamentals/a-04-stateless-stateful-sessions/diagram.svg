@@ -1,0 +1,125 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 440" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Oturum yönetimi: sticky session, merkezi depo ve JWT</title>
+  <desc id="desc">Üç sütun. Birinci sütun sticky session: load balancer kullanıcıyı çerezle hep S1'e gönderir, oturum S1 belleğindedir, S2 boştur. İkinci sütun merkezi oturum deposu: load balancer round-robin dağıtır, S1 ve S2 aynı Redis'ten oturumu okur. Üçüncü sütun JWT: kullanıcı imzalı token taşır, sunucular depoya gitmeden imzayı doğrular; altında iptal uyarısı.</desc>
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+    <marker id="arr-p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-primary, #6366f1)"/>
+    </marker>
+    <marker id="arr-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-accent, #f59e0b)"/>
+    </marker>
+  </defs>
+
+  <!-- ====== Sütun 1: Sticky ====== -->
+  <rect x="16" y="16" width="280" height="408" rx="14" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+  <text x="156" y="42" text-anchor="middle" font-size="14" font-weight="600" fill="var(--da-fg, #0f172a)">1 · Sticky session</text>
+  <text x="156" y="58" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">durum sunucuda, kullanıcı ona yapışır</text>
+
+  <rect x="30" y="150" width="60" height="40" rx="8" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5"/>
+  <text x="60" y="174" text-anchor="middle" font-size="11" fill="var(--da-fg, #0f172a)">Kullanıcı</text>
+  <text x="60" y="206" text-anchor="middle" font-size="9" fill="var(--da-muted, #64748b)">sid=abc</text>
+  <path d="M 90 170 L 118 170" stroke="var(--da-muted, #64748b)" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+
+  <rect x="120" y="148" width="60" height="44" rx="8" fill="var(--da-primary, #6366f1)" opacity="0.12" stroke="var(--da-primary, #6366f1)" stroke-width="1.5"/>
+  <text x="150" y="167" text-anchor="middle" font-size="10" font-weight="600" fill="var(--da-primary, #6366f1)">LB</text>
+  <text x="150" y="182" text-anchor="middle" font-size="9" fill="var(--da-fg, #0f172a)">abc → S1</text>
+
+  <path d="M 180 162 C 200 162, 200 110, 218 110" stroke="var(--da-primary, #6366f1)" stroke-width="2" fill="none" marker-end="url(#arr-p)"/>
+  <path d="M 180 178 C 200 178, 200 230, 218 230" stroke="var(--da-border, #cbd5e1)" stroke-width="1.5" fill="none" stroke-dasharray="3 3" marker-end="url(#arr)"/>
+
+  <rect x="220" y="88" width="64" height="44" rx="8" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5"/>
+  <text x="252" y="106" text-anchor="middle" font-size="11" fill="var(--da-fg, #0f172a)">S1</text>
+  <text x="252" y="122" text-anchor="middle" font-size="8" fill="var(--da-accent, #f59e0b)">{abc→user42}</text>
+  <rect x="220" y="208" width="64" height="44" rx="8" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)" stroke-width="1.5"/>
+  <text x="252" y="226" text-anchor="middle" font-size="11" fill="var(--da-muted, #64748b)">S2</text>
+  <text x="252" y="242" text-anchor="middle" font-size="8" fill="var(--da-muted, #64748b)">bellek boş</text>
+
+  <g font-size="10">
+    <text x="30" y="300" fill="var(--da-success, #10b981)">+ Kod değişmez</text>
+    <text x="30" y="320" fill="var(--da-danger, #ef4444)">− S1 düşerse oturum kaybolur</text>
+    <text x="30" y="340" fill="var(--da-danger, #ef4444)">− Dağılım bozulur</text>
+    <text x="30" y="360" fill="var(--da-danger, #ef4444)">− Deploy / küçültme zor</text>
+    <text x="30" y="396" fill="var(--da-muted, #64748b)" font-style="italic">Legacy geçişi için geçici çözüm</text>
+  </g>
+
+  <!-- ====== Sütun 2: Redis ====== -->
+  <rect x="310" y="16" width="280" height="408" rx="14" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+  <text x="450" y="42" text-anchor="middle" font-size="14" font-weight="600" fill="var(--da-fg, #0f172a)">2 · Merkezi oturum deposu</text>
+  <text x="450" y="58" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">durum paylaşımlı depoda, servis stateless</text>
+
+  <rect x="324" y="150" width="60" height="40" rx="8" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5"/>
+  <text x="354" y="174" text-anchor="middle" font-size="11" fill="var(--da-fg, #0f172a)">Kullanıcı</text>
+  <text x="354" y="206" text-anchor="middle" font-size="9" fill="var(--da-muted, #64748b)">sid=abc</text>
+  <path d="M 384 170 L 412 170" stroke="var(--da-muted, #64748b)" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+
+  <rect x="414" y="148" width="60" height="44" rx="8" fill="var(--da-primary, #6366f1)" opacity="0.12" stroke="var(--da-primary, #6366f1)" stroke-width="1.5"/>
+  <text x="444" y="167" text-anchor="middle" font-size="10" font-weight="600" fill="var(--da-primary, #6366f1)">LB</text>
+  <text x="444" y="182" text-anchor="middle" font-size="9" fill="var(--da-fg, #0f172a)">round-robin</text>
+
+  <path d="M 474 162 C 494 162, 494 110, 512 110" stroke="var(--da-primary, #6366f1)" stroke-width="2" fill="none" marker-end="url(#arr-p)"/>
+  <path d="M 474 178 C 494 178, 494 230, 512 230" stroke="var(--da-primary, #6366f1)" stroke-width="2" fill="none" marker-end="url(#arr-p)"/>
+
+  <rect x="514" y="88" width="64" height="44" rx="8" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5"/>
+  <text x="546" y="106" text-anchor="middle" font-size="11" fill="var(--da-fg, #0f172a)">S1</text>
+  <text x="546" y="122" text-anchor="middle" font-size="8" fill="var(--da-muted, #64748b)">stateless</text>
+  <rect x="514" y="208" width="64" height="44" rx="8" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5"/>
+  <text x="546" y="226" text-anchor="middle" font-size="11" fill="var(--da-fg, #0f172a)">S2</text>
+  <text x="546" y="242" text-anchor="middle" font-size="8" fill="var(--da-muted, #64748b)">stateless</text>
+
+  <!-- Redis -->
+  <rect x="414" y="236" width="70" height="46" rx="10" fill="var(--da-accent, #f59e0b)" opacity="0.15" stroke="var(--da-accent, #f59e0b)" stroke-width="1.5"/>
+  <text x="449" y="256" text-anchor="middle" font-size="11" fill="var(--da-fg, #0f172a)">Redis</text>
+  <text x="449" y="271" text-anchor="middle" font-size="8" fill="var(--da-muted, #64748b)">session:abc</text>
+  <g stroke="var(--da-accent, #f59e0b)" stroke-width="1.3" fill="none" stroke-dasharray="3 3" marker-end="url(#arr-a)">
+    <path d="M 514 128 C 500 160, 490 200, 470 236"/>
+    <path d="M 514 236 C 500 240, 495 248, 486 252"/>
+  </g>
+  <text x="470" y="222" text-anchor="middle" font-size="8" fill="var(--da-accent, #f59e0b)">GET / SET / DEL</text>
+
+  <g font-size="10">
+    <text x="324" y="300" fill="var(--da-success, #10b981)">+ Herhangi bir sunucu, dengeli dağılım</text>
+    <text x="324" y="320" fill="var(--da-success, #10b981)">+ Anında iptal (DEL)</text>
+    <text x="324" y="340" fill="var(--da-danger, #ef4444)">− Redis yeni bağımlılık (replikalı kur)</text>
+    <text x="324" y="360" fill="var(--da-danger, #ef4444)">− İstek başına +1 ağ turu (~0,5 ms)</text>
+    <text x="324" y="396" fill="var(--da-muted, #64748b)" font-style="italic">Web oturumları, sepet için varsayılan</text>
+  </g>
+
+  <!-- ====== Sütun 3: JWT ====== -->
+  <rect x="604" y="16" width="280" height="408" rx="14" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+  <text x="744" y="42" text-anchor="middle" font-size="14" font-weight="600" fill="var(--da-fg, #0f172a)">3 · JWT</text>
+  <text x="744" y="58" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">durum istemcide, imzalı; depo yok</text>
+
+  <rect x="618" y="150" width="60" height="40" rx="8" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5"/>
+  <text x="648" y="174" text-anchor="middle" font-size="11" fill="var(--da-fg, #0f172a)">Kullanıcı</text>
+  <rect x="612" y="196" width="72" height="30" rx="6" fill="var(--da-success, #10b981)" opacity="0.15" stroke="var(--da-success, #10b981)"/>
+  <text x="648" y="208" text-anchor="middle" font-size="8" fill="var(--da-fg, #0f172a)">header.payload</text>
+  <text x="648" y="219" text-anchor="middle" font-size="8" fill="var(--da-fg, #0f172a)">.signature</text>
+  <path d="M 678 170 L 706 170" stroke="var(--da-muted, #64748b)" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+
+  <rect x="708" y="148" width="60" height="44" rx="8" fill="var(--da-primary, #6366f1)" opacity="0.12" stroke="var(--da-primary, #6366f1)" stroke-width="1.5"/>
+  <text x="738" y="167" text-anchor="middle" font-size="10" font-weight="600" fill="var(--da-primary, #6366f1)">LB</text>
+  <text x="738" y="182" text-anchor="middle" font-size="9" fill="var(--da-fg, #0f172a)">herhangi</text>
+
+  <path d="M 768 162 C 788 162, 788 110, 806 110" stroke="var(--da-primary, #6366f1)" stroke-width="2" fill="none" marker-end="url(#arr-p)"/>
+  <path d="M 768 178 C 788 178, 788 230, 806 230" stroke="var(--da-primary, #6366f1)" stroke-width="2" fill="none" marker-end="url(#arr-p)"/>
+
+  <rect x="808" y="88" width="64" height="44" rx="8" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5"/>
+  <text x="840" y="106" text-anchor="middle" font-size="11" fill="var(--da-fg, #0f172a)">S1</text>
+  <text x="840" y="122" text-anchor="middle" font-size="8" fill="var(--da-success, #10b981)">HMAC ✓</text>
+  <rect x="808" y="208" width="64" height="44" rx="8" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5"/>
+  <text x="840" y="226" text-anchor="middle" font-size="11" fill="var(--da-fg, #0f172a)">S2</text>
+  <text x="840" y="242" text-anchor="middle" font-size="8" fill="var(--da-success, #10b981)">HMAC ✓</text>
+
+  <text x="744" y="262" text-anchor="middle" font-size="9" fill="var(--da-muted, #64748b)">doğrulama: imza + exp; depo sorgusu yok</text>
+
+  <g font-size="10">
+    <text x="618" y="300" fill="var(--da-success, #10b981)">+ Depo yok; mikroservisler bağımsız doğrular</text>
+    <text x="618" y="320" fill="var(--da-success, #10b981)">+ Ölçek sınırsız, ek ağ turu yok</text>
+    <text x="618" y="340" fill="var(--da-danger, #ef4444)">− Anında iptal yok → kısa ömür + refresh</text>
+    <text x="618" y="360" fill="var(--da-danger, #ef4444)">− Payload şifreli değil, boyut her istekte</text>
+    <text x="618" y="396" fill="var(--da-muted, #64748b)" font-style="italic">API'ler, mobil, servisler arası</text>
+  </g>
+</svg>

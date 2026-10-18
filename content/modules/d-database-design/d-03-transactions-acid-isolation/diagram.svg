@@ -1,0 +1,119 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 460" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">ACID özellikleri ve izolasyon seviyeleri matrisi</title>
+  <desc id="desc">Solda bir transaction'ın BEGIN, okuma/yazma, COMMIT ya da ROLLBACK yaşam döngüsü ve dört ACID özelliği. Sağda dört izolasyon seviyesinin dirty read, non-repeatable read, phantom read ve write skew anomalilerinden hangilerine izin verdiğini gösteren matris; seviye yükseldikçe engellenen anomali artar, eşzamanlılık azalır.</desc>
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+  </defs>
+
+  <!-- Sol: yaşam döngüsü -->
+  <text x="190" y="30" text-anchor="middle" font-size="14" font-weight="600" fill="var(--da-fg, #0f172a)">Transaction yaşam döngüsü</text>
+  <g fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.4">
+    <rect x="120" y="50" width="140" height="36" rx="18"/>
+    <rect x="100" y="120" width="180" height="60" rx="10"/>
+    <rect x="30" y="220" width="130" height="40" rx="10" stroke="var(--da-success, #10b981)" stroke-width="2"/>
+    <rect x="220" y="220" width="130" height="40" rx="10" stroke="var(--da-danger, #ef4444)" stroke-width="2"/>
+  </g>
+  <g font-size="12" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="190" y="73">BEGIN</text>
+    <text x="190" y="143">UPDATE accounts …</text>
+    <text x="190" y="161">INSERT ledger …</text>
+    <text x="95" y="245" fill="var(--da-success, #10b981)" font-weight="600">COMMIT</text>
+    <text x="285" y="245" fill="var(--da-danger, #ef4444)" font-weight="600">ROLLBACK</text>
+  </g>
+  <g stroke="var(--da-muted, #64748b)" stroke-width="1.4" fill="none" marker-end="url(#arr)">
+    <path d="M 190 86 L 190 120"/>
+    <path d="M 150 180 L 105 220"/>
+    <path d="M 230 180 L 275 220"/>
+  </g>
+  <text x="60" y="206" font-size="10" fill="var(--da-muted, #64748b)">WAL fsync → kalıcı</text>
+  <text x="262" y="206" font-size="10" fill="var(--da-muted, #64748b)">undo → hiç olmamış</text>
+
+  <!-- ACID kutuları -->
+  <g font-size="11">
+    <rect x="30" y="290" width="150" height="62" rx="8" fill="var(--da-primary, #6366f1)" opacity="0.12" stroke="var(--da-primary, #6366f1)"/>
+    <text x="40" y="308" font-weight="600" fill="var(--da-fg, #0f172a)">A · Atomicity</text>
+    <text x="40" y="325" fill="var(--da-muted, #64748b)">ya hepsi ya hiçbiri</text>
+    <text x="40" y="341" fill="var(--da-muted, #64748b)">undo log / WAL</text>
+
+    <rect x="200" y="290" width="150" height="62" rx="8" fill="var(--da-primary, #6366f1)" opacity="0.12" stroke="var(--da-primary, #6366f1)"/>
+    <text x="210" y="308" font-weight="600" fill="var(--da-fg, #0f172a)">C · Consistency</text>
+    <text x="210" y="325" fill="var(--da-muted, #64748b)">kısıtlar korunur</text>
+    <text x="210" y="341" fill="var(--da-muted, #64748b)">FK, UNIQUE, CHECK</text>
+
+    <rect x="30" y="365" width="150" height="62" rx="8" fill="var(--da-accent, #f59e0b)" opacity="0.14" stroke="var(--da-accent, #f59e0b)"/>
+    <text x="40" y="383" font-weight="600" fill="var(--da-fg, #0f172a)">I · Isolation</text>
+    <text x="40" y="400" fill="var(--da-muted, #64748b)">eşzamanlılar görünmez</text>
+    <text x="40" y="416" fill="var(--da-muted, #64748b)">MVCC + kilitler</text>
+
+    <rect x="200" y="365" width="150" height="62" rx="8" fill="var(--da-primary, #6366f1)" opacity="0.12" stroke="var(--da-primary, #6366f1)"/>
+    <text x="210" y="383" font-weight="600" fill="var(--da-fg, #0f172a)">D · Durability</text>
+    <text x="210" y="400" fill="var(--da-muted, #64748b)">COMMIT kaybolmaz</text>
+    <text x="210" y="416" fill="var(--da-muted, #64748b)">fsync, replikasyon</text>
+  </g>
+
+  <!-- Ayırıcı -->
+  <line x1="390" y1="40" x2="390" y2="430" stroke="var(--da-border, #cbd5e1)" stroke-dasharray="5 5"/>
+
+  <!-- Sağ: izolasyon matrisi -->
+  <text x="645" y="30" text-anchor="middle" font-size="14" font-weight="600" fill="var(--da-fg, #0f172a)">İzolasyon seviyeleri ve anomaliler</text>
+  <g font-size="11" fill="var(--da-muted, #64748b)" text-anchor="middle">
+    <text x="600" y="68">dirty</text>
+    <text x="600" y="81">read</text>
+    <text x="672" y="68">non-rep.</text>
+    <text x="672" y="81">read</text>
+    <text x="744" y="68">phantom</text>
+    <text x="744" y="81">read</text>
+    <text x="816" y="68">write</text>
+    <text x="816" y="81">skew</text>
+  </g>
+  <line x1="420" y1="90" x2="880" y2="90" stroke="var(--da-border, #cbd5e1)"/>
+
+  <g font-size="12" fill="var(--da-fg, #0f172a)">
+    <text x="425" y="118">Read Uncommitted</text>
+    <text x="425" y="168">Read Committed</text>
+    <text x="425" y="183" font-size="10" fill="var(--da-muted, #64748b)">PostgreSQL varsayılanı</text>
+    <text x="425" y="228">Repeatable Read</text>
+    <text x="425" y="243" font-size="10" fill="var(--da-muted, #64748b)">MySQL varsayılanı · snapshot</text>
+    <text x="425" y="288">Serializable</text>
+    <text x="425" y="303" font-size="10" fill="var(--da-muted, #64748b)">SSI · iptal + yeniden dene</text>
+  </g>
+
+  <!-- Hücreler: ✗ = engellenir (yeşil), ○ = mümkün (kırmızı) -->
+  <g font-size="14" font-weight="600" text-anchor="middle">
+    <!-- RU -->
+    <text x="600" y="120" fill="var(--da-danger, #ef4444)">○</text>
+    <text x="672" y="120" fill="var(--da-danger, #ef4444)">○</text>
+    <text x="744" y="120" fill="var(--da-danger, #ef4444)">○</text>
+    <text x="816" y="120" fill="var(--da-danger, #ef4444)">○</text>
+    <!-- RC -->
+    <text x="600" y="172" fill="var(--da-success, #10b981)">✓</text>
+    <text x="672" y="172" fill="var(--da-danger, #ef4444)">○</text>
+    <text x="744" y="172" fill="var(--da-danger, #ef4444)">○</text>
+    <text x="816" y="172" fill="var(--da-danger, #ef4444)">○</text>
+    <!-- RR -->
+    <text x="600" y="232" fill="var(--da-success, #10b981)">✓</text>
+    <text x="672" y="232" fill="var(--da-success, #10b981)">✓</text>
+    <text x="744" y="232" fill="var(--da-accent, #f59e0b)">✓*</text>
+    <text x="816" y="232" fill="var(--da-danger, #ef4444)">○</text>
+    <!-- S -->
+    <text x="600" y="292" fill="var(--da-success, #10b981)">✓</text>
+    <text x="672" y="292" fill="var(--da-success, #10b981)">✓</text>
+    <text x="744" y="292" fill="var(--da-success, #10b981)">✓</text>
+    <text x="816" y="292" fill="var(--da-success, #10b981)">✓</text>
+  </g>
+  <g stroke="var(--da-border, #cbd5e1)">
+    <line x1="420" y1="140" x2="880" y2="140"/>
+    <line x1="420" y1="200" x2="880" y2="200"/>
+    <line x1="420" y1="260" x2="880" y2="260"/>
+    <line x1="420" y1="320" x2="880" y2="320"/>
+  </g>
+
+  <!-- Eksen: eşzamanlılık vs güvenlik -->
+  <path d="M 440 345 L 440 420" stroke="var(--da-muted, #64748b)" stroke-width="1.4" fill="none" marker-end="url(#arr)"/>
+  <text x="452" y="360" font-size="11" fill="var(--da-muted, #64748b)">aşağı: daha güvenli, daha az eşzamanlılık, daha çok iptal</text>
+  <text x="452" y="380" font-size="11" fill="var(--da-muted, #64748b)">✓ engellenir   ○ mümkün   ✓* PostgreSQL'de engellenir, standart izin verir</text>
+  <text x="452" y="400" font-size="11" fill="var(--da-muted, #64748b)">PostgreSQL hiçbir seviyede dirty read yapmaz (RU = RC).</text>
+  <text x="452" y="420" font-size="11" fill="var(--da-muted, #64748b)">Write skew için Serializable ya da veritabanı kısıtı gerekir.</text>
+</svg>

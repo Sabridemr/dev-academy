@@ -1,0 +1,206 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "f-02-code-journey-pipeline",
+  "title": { "tr": "Bir Commit'in Production'a Yolculuğu", "en": "A Commit's Journey to Production" },
+  "summary": {
+    "tr": "Geliştirici makinesinden Git'e, CI'dan artifact registry'ye, CD ile staging, canary ve production'a sekiz adımlık tam pipeline.",
+    "en": "The full eight-step pipeline from a developer laptop to Git, CI, the artifact registry, and on through CD to staging, canary and production."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Soldan sağa: geliştirici makinesi, Git deposu, CI sunucusu; CI'dan yukarıda artifact registry'ye ve aşağıda CD sistemine iki kol ayrılır; sağda staging ortamı, canary pod'ları ve production filosu bulunur. Adımlar bir commit'in push edilmesini, CI'ın build/test/lint çalıştırmasını, SHA etiketli Docker imajının registry'ye itilmesini, CD'nin imajı staging'e dağıtmasını, uçtan uca testleri, trafiğin %5'ini alan canary'yi ve tam yayını gösterir.",
+      "en": "Left to right: a developer laptop, a Git repository, a CI server; from CI two branches lead up to the artifact registry and down to the CD system; on the right are the staging environment, canary pods and the production fleet. The steps show a commit being pushed, CI running build/test/lint, the SHA-tagged Docker image pushed to the registry, CD deploying it to staging, end-to-end tests, a canary receiving 5% of traffic and the full rollout."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "dev", "kind": "client", "label": { "tr": "Geliştirici", "en": "Developer" }, "sublabel": { "tr": "dizüstü · git commit", "en": "laptop · git commit" }, "x": 90, "y": 300, "w": 110, "h": 70 },
+    { "id": "git", "kind": "storage", "label": "Git (main)", "sublabel": { "tr": "PR + merge queue", "en": "PR + merge queue" }, "x": 250, "y": 300, "w": 120, "h": 70 },
+    { "id": "ci", "kind": "worker", "label": "CI runner", "sublabel": { "tr": "build · test · lint", "en": "build · test · lint" }, "x": 410, "y": 300, "w": 130, "h": 76 },
+    { "id": "registry", "kind": "storage", "label": "Artifact registry", "sublabel": { "tr": "ECR · imaj:SHA", "en": "ECR · image:SHA" }, "x": 580, "y": 130, "w": 140, "h": 70 },
+    { "id": "cd", "kind": "gateway", "label": "CD", "sublabel": { "tr": "Argo / CodeDeploy", "en": "Argo / CodeDeploy" }, "x": 580, "y": 470, "w": 130, "h": 70 },
+    { "id": "staging", "kind": "zone", "label": "Staging", "sublabel": { "tr": "prod kopyası · sentetik veri", "en": "prod copy · synthetic data" }, "x": 790, "y": 130, "w": 200, "h": 110 },
+    { "id": "stg-pod", "kind": "pod", "parent": "staging", "label": "cart v2", "x": 790, "y": 150, "w": 100, "h": 50 },
+    { "id": "prod", "kind": "zone", "label": "Production", "sublabel": { "tr": "eu-central-1 · 3 AZ", "en": "eu-central-1 · 3 AZ" }, "x": 790, "y": 390, "w": 200, "h": 240 },
+    { "id": "canary", "kind": "pod", "parent": "prod", "label": "canary v2", "sublabel": { "tr": "%5 trafik", "en": "5% traffic" }, "x": 740, "y": 400, "w": 90, "h": 56, "status": "muted" },
+    { "id": "fleet", "kind": "group", "parent": "prod", "label": "fleet v1 ×20", "sublabel": { "tr": "%95 trafik", "en": "95% traffic" }, "x": 850, "y": 400, "w": 100, "h": 56 },
+    { "id": "monitor", "kind": "generic", "label": { "tr": "Metrikler", "en": "Metrics" }, "sublabel": { "tr": "hata oranı · p99", "en": "error rate · p99" }, "x": 790, "y": 490, "w": 120, "h": 50 }
+  ],
+  "edges": [
+    { "id": "dev-git", "from": "dev", "to": "git", "kind": "data", "label": "git push" },
+    { "id": "git-ci", "from": "git", "to": "ci", "kind": "event", "label": "webhook" },
+    { "id": "ci-reg", "from": "ci", "to": "registry", "kind": "data", "curvature": -0.2, "label": "docker push" },
+    { "id": "ci-cd", "from": "ci", "to": "cd", "kind": "control", "curvature": 0.2, "label": { "tr": "yeşil ✓ → tetikle", "en": "green ✓ → trigger" } },
+    { "id": "reg-stg", "from": "registry", "to": "stg-pod", "kind": "data", "style": "dashed", "label": "pull" },
+    { "id": "reg-can", "from": "registry", "to": "canary", "kind": "data", "style": "dashed", "curvature": 0.25, "label": "pull" },
+    { "id": "cd-stg", "from": "cd", "to": "stg-pod", "kind": "control", "curvature": -0.3, "label": "deploy" },
+    { "id": "cd-can", "from": "cd", "to": "canary", "kind": "control", "label": "deploy" },
+    { "id": "cd-fleet", "from": "cd", "to": "fleet", "kind": "control", "curvature": 0.15 },
+    { "id": "mon-cd", "from": "monitor", "to": "cd", "kind": "event", "style": "dotted", "label": { "tr": "analiz", "en": "analysis" } }
+  ],
+  "steps": [
+    {
+      "id": "commit",
+      "title": { "tr": "1 · Commit ve push", "en": "1 · Commit and push" },
+      "narration": {
+        "tr": "Geliştirici cart-service'te bir hatayı düzeltir, yerelde testleri koşturur ve kısa ömürlü bir dala commit'leyip push eder. Trunk-based çalışıldığı için bu dal en fazla bir gün yaşayacak.",
+        "en": "The developer fixes a bug in cart-service, runs tests locally and pushes a commit on a short-lived branch. With trunk-based development this branch will live at most a day."
+      },
+      "durationMs": 3500,
+      "inherit": false,
+      "highlight": { "nodes": ["dev", "git"], "edges": ["dev-git"] },
+      "nodeStates": {
+        "dev": { "status": "active" },
+        "git": { "status": "active", "badge": "PR #4812" },
+        "canary": { "visible": false },
+        "stg-pod": { "status": "idle", "label": "cart v1" }
+      },
+      "edgeStates": { "reg-can": { "visible": false }, "cd-can": { "visible": false } },
+      "packets": [{ "edge": "dev-git", "shape": "envelope", "label": "a1b2c3d", "durationMs": 1200 }],
+      "annotations": [
+        { "id": "sha", "x": 250, "y": 200, "text": { "tr": "commit SHA: a1b2c3d — bundan sonra her şeyin kimliği", "en": "commit SHA: a1b2c3d — the identity of everything from here on" }, "target": "git" }
+      ]
+    },
+    {
+      "id": "ci-build",
+      "title": { "tr": "2 · CI tetiklenir: build", "en": "2 · CI triggers: build" },
+      "narration": {
+        "tr": "Git, bir webhook ile CI'ı tetikler. Temiz bir runner üzerinde kod çekilir, bağımlılıklar lockfile'a sadık kalınarak (frozen) kurulur ve proje derlenir. Önbellek sayesinde bu adım saniyeler sürer.",
+        "en": "Git triggers CI through a webhook. On a clean runner the code is checked out, dependencies are installed strictly from the lockfile and the project compiles. Thanks to caching this takes seconds."
+      },
+      "durationMs": 3500,
+      "highlight": { "nodes": ["git", "ci"], "edges": ["git-ci"] },
+      "nodeStates": {
+        "ci": { "status": "busy", "badge": "build", "progress": 0.3 }
+      },
+      "packets": [{ "edge": "git-ci", "shape": "diamond", "label": "push event", "durationMs": 900 }]
+    },
+    {
+      "id": "ci-test",
+      "title": { "tr": "3 · Test ve lint", "en": "3 · Test and lint" },
+      "narration": {
+        "tr": "Lint, tip kontrolü, birim testleri ve Docker ile ayağa kaldırılan gerçek bir Postgres üzerinde entegrasyon testleri çalışır. Herhangi biri kırmızıysa pipeline burada durur ve PR birleştirilemez: hata, en ucuz olduğu yerde yakalanır.",
+        "en": "Lint, type checks, unit tests and integration tests against a real Postgres started in Docker all run. If any is red the pipeline stops here and the PR cannot merge: the bug is caught where it is cheapest."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["ci"], "edges": [] },
+      "nodeStates": {
+        "ci": { "status": "busy", "badge": "test · lint", "progress": 0.7 },
+        "git": { "status": "success", "badge": "merged ✓" }
+      },
+      "annotations": [
+        { "id": "gate", "x": 410, "y": 420, "text": { "tr": "lint ✓ · tsc ✓ · 412 test ✓ · audit ✓", "en": "lint ✓ · tsc ✓ · 412 tests ✓ · audit ✓" }, "tone": "success", "target": "ci" }
+      ]
+    },
+    {
+      "id": "artifact",
+      "title": { "tr": "4 · İmaj oluşturulur ve registry'ye itilir", "en": "4 · Image built and pushed to registry" },
+      "narration": {
+        "tr": "Main'e merge sonrası CI bir Docker imajı derler, commit SHA'sı ile etiketler (cart-service:a1b2c3d), cosign ile imzalar ve ECR'a iter. Bu imaj değişmezdir: staging'de test edilen bit bit aynı imaj production'a gidecek.",
+        "en": "After the merge to main, CI builds a Docker image, tags it with the commit SHA (cart-service:a1b2c3d), signs it with cosign and pushes it to ECR. This image is immutable: the exact same bits tested in staging will go to production."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["ci", "registry"], "edges": ["ci-reg"] },
+      "nodeStates": {
+        "ci": { "status": "success", "badge": "✓", "progress": 1 },
+        "registry": { "status": "active", "badge": "a1b2c3d" }
+      },
+      "edgeStates": { "ci-reg": { "status": "active" } },
+      "packets": [{ "edge": "ci-reg", "shape": "square", "label": "image 142 MB", "durationMs": 1500, "color": "accent" }],
+      "annotations": [
+        { "id": "immutable", "x": 580, "y": 60, "text": { "tr": "asla :latest — her zaman :SHA", "en": "never :latest — always :SHA" }, "tone": "warning", "target": "registry" }
+      ]
+    },
+    {
+      "id": "cd-staging",
+      "title": { "tr": "5 · CD staging'e dağıtır", "en": "5 · CD deploys to staging" },
+      "narration": {
+        "tr": "CI yeşil olunca CD sistemi tetiklenir. Staging kümesindeki deployment'ın imaj etiketini a1b2c3d olarak günceller; pod yeni imajı registry'den çeker ve readiness probe geçince trafik almaya başlar.",
+        "en": "Once CI is green the CD system is triggered. It updates the image tag of the staging deployment to a1b2c3d; the pod pulls the new image from the registry and starts receiving traffic once its readiness probe passes."
+      },
+      "durationMs": 4200,
+      "highlight": { "nodes": ["cd", "staging", "stg-pod"], "edges": ["ci-cd", "cd-stg", "reg-stg"] },
+      "nodeStates": {
+        "cd": { "status": "active", "badge": "staging" },
+        "stg-pod": { "status": "active", "label": "cart v2", "badge": "a1b2c3d" }
+      },
+      "edgeStates": { "ci-cd": { "status": "active" }, "cd-stg": { "status": "active" }, "reg-stg": { "status": "active" } },
+      "packets": [
+        { "edge": "ci-cd", "shape": "diamond", "durationMs": 900 },
+        { "edge": "cd-stg", "shape": "diamond", "label": "set image", "startAt": 900, "durationMs": 1200 },
+        { "edge": "reg-stg", "shape": "square", "label": "pull", "startAt": 2100, "durationMs": 1200, "color": "accent" }
+      ]
+    },
+    {
+      "id": "e2e",
+      "title": { "tr": "6 · Staging'de uçtan uca test", "en": "6 · End-to-end tests in staging" },
+      "narration": {
+        "tr": "Staging'de smoke ve uçtan uca testler koşar: sepete ekle, ödeme adımına git, siparişi tamamla. Production'a benzeyen ama gerçek müşterisi olmayan bu ortam, entegrasyon hatalarını (yanlış ortam değişkeni, uyumsuz API) yakalamanın son ucuz noktasıdır.",
+        "en": "Smoke and end-to-end tests run in staging: add to cart, go to checkout, complete the order. This environment, which resembles production but has no real customers, is the last cheap place to catch integration bugs (wrong env var, incompatible API)."
+      },
+      "durationMs": 3800,
+      "highlight": { "nodes": ["staging", "stg-pod"], "edges": [] },
+      "nodeStates": {
+        "stg-pod": { "status": "success", "badge": "e2e ✓" }
+      },
+      "annotations": [
+        { "id": "e2e-note", "x": 790, "y": 60, "text": { "tr": "38 e2e senaryo · 3 dk 40 sn", "en": "38 e2e scenarios · 3 min 40 s" }, "tone": "success", "target": "staging" }
+      ]
+    },
+    {
+      "id": "canary-step",
+      "title": { "tr": "7 · Canary: trafiğin %5'i", "en": "7 · Canary: 5% of traffic" },
+      "narration": {
+        "tr": "Aynı imaj production'da tek bir canary pod'una dağıtılır ve trafiğin yalnızca %5'ini alır. Beş dakika boyunca hata oranı, p99 gecikme ve dönüşüm oranı v1 filosuyla karşılaştırılır. Fark eşiği aşarsa CD otomatik olarak geri alır.",
+        "en": "The same image is deployed to a single canary pod in production that receives only 5% of traffic. For five minutes its error rate, p99 latency and conversion rate are compared with the v1 fleet. If the difference crosses the threshold, CD rolls back automatically."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["cd", "canary", "monitor"], "edges": ["cd-can", "reg-can", "mon-cd"] },
+      "nodeStates": {
+        "cd": { "status": "active", "badge": "canary 5%" },
+        "canary": { "visible": true, "status": "active", "badge": "a1b2c3d" },
+        "fleet": { "status": "active" },
+        "monitor": { "status": "active", "badge": "5 dk" }
+      },
+      "edgeStates": { "cd-can": { "visible": true, "status": "active" }, "reg-can": { "visible": true, "status": "active" }, "mon-cd": { "status": "active" } },
+      "packets": [
+        { "edge": "cd-can", "shape": "diamond", "label": "deploy", "durationMs": 1000 },
+        { "edge": "reg-can", "shape": "square", "label": "pull", "startAt": 1000, "durationMs": 1200, "color": "accent" },
+        { "edge": "mon-cd", "shape": "dot", "label": "err 0.2% ≈ 0.2%", "startAt": 2400, "durationMs": 1000, "color": "success" }
+      ],
+      "annotations": [
+        { "id": "canary-note", "x": 600, "y": 380, "text": { "tr": "patlama yarıçapı: kullanıcıların %5'i", "en": "blast radius: 5% of users" }, "tone": "warning", "target": "canary" }
+      ]
+    },
+    {
+      "id": "rollout",
+      "title": { "tr": "8 · Tam yayın", "en": "8 · Full rollout" },
+      "narration": {
+        "tr": "Canary metrikleri temiz olduğu için CD, v1 filosunu rolling update ile v2'ye çevirir: her dalgada pod'ların %25'i değiştirilir, readiness geçmeden eski pod kapatılmaz. Birkaç dakika sonra tüm production a1b2c3d çalıştırır. Geri alma gerekirse önceki SHA'yı tekrar deploy etmek yeter — yeniden derleme yok.",
+        "en": "Because the canary metrics are clean, CD converts the v1 fleet to v2 with a rolling update: 25% of pods are replaced per wave and no old pod is stopped before the new one passes readiness. A few minutes later all of production runs a1b2c3d. If a rollback is ever needed, redeploying the previous SHA is enough — no rebuild."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["cd", "fleet", "prod"], "edges": ["cd-fleet"] },
+      "nodeStates": {
+        "cd": { "status": "success", "badge": "100%" },
+        "canary": { "status": "success", "sublabel": { "tr": "terfi etti", "en": "promoted" } },
+        "fleet": { "status": "success", "label": "fleet v2 ×20", "sublabel": { "tr": "%100 trafik", "en": "100% traffic" }, "badge": "a1b2c3d" },
+        "monitor": { "status": "success", "badge": "✓" }
+      },
+      "edgeStates": { "cd-fleet": { "status": "active", "label": { "tr": "rolling 25% dalgalar", "en": "rolling 25% waves" } } },
+      "packets": [
+        { "edge": "cd-fleet", "shape": "diamond", "label": "25%", "durationMs": 800 },
+        { "edge": "cd-fleet", "shape": "diamond", "label": "50%", "startAt": 900, "durationMs": 800 },
+        { "edge": "cd-fleet", "shape": "diamond", "label": "75%", "startAt": 1800, "durationMs": 800 },
+        { "edge": "cd-fleet", "shape": "diamond", "label": "100%", "startAt": 2700, "durationMs": 800, "color": "success" }
+      ],
+      "annotations": [
+        { "id": "rollback-note", "x": 300, "y": 520, "text": { "tr": "Rollback = önceki SHA'yı deploy et (saniyeler)", "en": "Rollback = deploy the previous SHA (seconds)" }, "tone": "info" }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["ci-cd", "pipeline", "artifact", "canary", "deployment"]
+}

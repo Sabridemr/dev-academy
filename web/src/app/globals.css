@@ -1,0 +1,163 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Tasarım token'ları. --da-*-rgb Tailwind için (alpha desteği), --da-* SVG/inline kullanım için.
+ * İçerik klasöründeki SVG diyagramları yalnızca --da-* değişkenlerini kullanır.
+ */
+:root {
+  --da-bg-rgb: 248 250 252;
+  --da-fg-rgb: 15 23 42;
+  --da-muted-rgb: 100 116 139;
+  --da-surface-rgb: 255 255 255;
+  --da-elevated-rgb: 241 245 249;
+  --da-border-rgb: 226 232 240;
+  --da-primary-rgb: 99 102 241;
+  --da-accent-rgb: 245 158 11;
+  --da-success-rgb: 16 185 129;
+  --da-warning-rgb: 234 179 8;
+  --da-danger-rgb: 239 68 68;
+
+  --da-bg: rgb(var(--da-bg-rgb));
+  --da-fg: rgb(var(--da-fg-rgb));
+  --da-muted: rgb(var(--da-muted-rgb));
+  --da-surface: rgb(var(--da-surface-rgb));
+  --da-elevated: rgb(var(--da-elevated-rgb));
+  --da-border: rgb(var(--da-border-rgb));
+  --da-primary: rgb(var(--da-primary-rgb));
+  --da-accent: rgb(var(--da-accent-rgb));
+  --da-success: rgb(var(--da-success-rgb));
+  --da-warning: rgb(var(--da-warning-rgb));
+  --da-danger: rgb(var(--da-danger-rgb));
+  color-scheme: light;
+}
+
+.dark {
+  --da-bg-rgb: 11 15 25;
+  --da-fg-rgb: 226 232 240;
+  --da-muted-rgb: 148 163 184;
+  --da-surface-rgb: 17 24 39;
+  --da-elevated-rgb: 30 41 59;
+  --da-border-rgb: 51 65 85;
+  --da-primary-rgb: 129 140 248;
+  --da-accent-rgb: 251 191 36;
+  --da-success-rgb: 52 211 153;
+  --da-warning-rgb: 250 204 21;
+  --da-danger-rgb: 248 113 113;
+  color-scheme: dark;
+}
+
+html,
+body {
+  background: var(--da-bg);
+  color: var(--da-fg);
+}
+
+body {
+  font-feature-settings: 'cv11', 'ss01';
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid var(--da-primary);
+  outline-offset: 2px;
+}
+
+@layer components {
+  .card {
+    @apply rounded-2xl border border-border bg-surface shadow-card;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply btn bg-primary text-white hover:brightness-110;
+  }
+  .btn-ghost {
+    @apply btn border border-border bg-surface hover:bg-elevated;
+  }
+  .btn-icon {
+    @apply inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-surface hover:bg-elevated disabled:opacity-40;
+  }
+  .input {
+    @apply w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-primary;
+  }
+  .label {
+    @apply mb-1 block text-xs font-medium uppercase tracking-wide text-muted;
+  }
+  .chip {
+    @apply inline-flex items-center gap-1 rounded-full border border-border bg-elevated px-2.5 py-0.5 text-xs text-muted;
+  }
+}
+
+/* Ders Markdown tipografisi */
+.prose-da {
+  @apply max-w-prose leading-7;
+}
+.prose-da h2 {
+  @apply mb-3 mt-10 text-2xl font-semibold tracking-tight;
+}
+.prose-da h3 {
+  @apply mb-2 mt-8 text-xl font-semibold;
+}
+.prose-da p {
+  @apply my-4;
+}
+.prose-da ul {
+  @apply my-4 list-disc pl-6;
+}
+.prose-da ol {
+  @apply my-4 list-decimal pl-6;
+}
+.prose-da li {
+  @apply my-1;
+}
+.prose-da a {
+  @apply text-primary underline underline-offset-2;
+}
+.prose-da code:not(pre code) {
+  @apply rounded bg-elevated px-1.5 py-0.5 font-mono text-[0.85em];
+}
+.prose-da blockquote {
+  @apply border-l-4 border-primary/40 pl-4 italic text-muted;
+}
+.prose-da table {
+  @apply my-6 w-full border-collapse overflow-hidden rounded-xl text-sm;
+}
+.prose-da th {
+  @apply border border-border bg-elevated px-3 py-2 text-left font-semibold;
+}
+.prose-da td {
+  @apply border border-border px-3 py-2 align-top;
+}
+.prose-da strong {
+  @apply font-semibold;
+}
+
+/* İçerik SVG diyagramları: viewBox ile ölçeklenir */
+.diagram-svg svg {
+  width: 100%;
+  height: auto;
+  max-height: 70vh;
+}
+
+/* Shiki: açık/koyu tema değişkenleri */
+.shiki,
+.shiki span {
+  color: var(--shiki-light);
+  background-color: transparent !important;
+}
+.dark .shiki,
+.dark .shiki span {
+  color: var(--shiki-dark);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

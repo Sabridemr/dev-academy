@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 330" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">URL kısaltıcı mimarisi</title>
+  <desc id="desc">Üstte kısaltma yolu: istemci, yük dengeleyici, durumsuz API, aralık tabanlı id üretici ve ZooKeeper, KV depo. Altta yönlendirme yolu: istemci, CDN/edge, API, Redis cache, KV depo, 302 yanıtı ve Kafka üzerinden analitik.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+    <marker id="arrow-p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-primary, #6366f1)"/>
+    </marker>
+    <marker id="arrow-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-accent, #f59e0b)"/>
+    </marker>
+  </defs>
+
+  <rect x="12" y="12" width="876" height="140" rx="12" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)" stroke-dasharray="6 5"/>
+  <text x="26" y="34" font-size="11.5" font-weight="600" fill="var(--da-accent, #f59e0b)">KISALTMA — ~40 yazma/s</text>
+  <rect x="12" y="166" width="876" height="152" rx="12" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)" stroke-dasharray="6 5"/>
+  <text x="26" y="188" font-size="11.5" font-weight="600" fill="var(--da-primary, #6366f1)">YÖNLENDİRME — ~4 K okuma/s, p99 &lt; 50 ms</text>
+
+  <!-- Kısaltma yolu -->
+  <g fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.3">
+    <rect x="30" y="70" width="90" height="44" rx="8"/>
+  </g>
+  <text x="75" y="89" text-anchor="middle" font-size="11" fill="var(--da-fg, #0f172a)">İstemci</text>
+  <text x="75" y="104" text-anchor="middle" font-size="9" fill="var(--da-muted, #64748b)">POST /shorten</text>
+
+  <rect x="150" y="70" width="70" height="44" rx="8" fill="var(--da-primary, #6366f1)" opacity="0.12" stroke="var(--da-primary, #6366f1)" stroke-width="1.4"/>
+  <text x="185" y="96" text-anchor="middle" font-size="11" fill="var(--da-fg, #0f172a)">LB</text>
+
+  <rect x="250" y="70" width="110" height="44" rx="8" fill="var(--da-surface, #ffffff)" stroke="var(--da-primary, #6366f1)" stroke-width="1.4"/>
+  <text x="305" y="89" text-anchor="middle" font-size="11" fill="var(--da-fg, #0f172a)">API (durumsuz)</text>
+  <text x="305" y="104" text-anchor="middle" font-size="9" fill="var(--da-muted, #64748b)">doğrula · kara liste</text>
+
+  <rect x="400" y="52" width="120" height="48" rx="8" fill="var(--da-accent, #f59e0b)" opacity="0.12" stroke="var(--da-accent, #f59e0b)" stroke-width="1.4"/>
+  <text x="460" y="72" text-anchor="middle" font-size="11" fill="var(--da-fg, #0f172a)">ID üretici</text>
+  <text x="460" y="88" text-anchor="middle" font-size="9" fill="var(--da-muted, #64748b)">yerel aralık → base62</text>
+
+  <rect x="560" y="52" width="110" height="48" rx="8" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)" stroke-width="1.3"/>
+  <text x="615" y="72" text-anchor="middle" font-size="11" fill="var(--da-fg, #0f172a)">ZooKeeper</text>
+  <text x="615" y="88" text-anchor="middle" font-size="9" fill="var(--da-muted, #64748b)">1 M'lik aralıklar</text>
+
+  <rect x="720" y="70" width="150" height="54" rx="8" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)" stroke-width="1.4"/>
+  <text x="795" y="90" text-anchor="middle" font-size="11" fill="var(--da-fg, #0f172a)">KV depo</text>
+  <text x="795" y="105" text-anchor="middle" font-size="9" fill="var(--da-muted, #64748b)">code → {url, owner, exp}</text>
+  <text x="795" y="117" text-anchor="middle" font-size="9" fill="var(--da-muted, #64748b)">~3 TB / 5 yıl</text>
+
+  <g stroke="var(--da-muted, #64748b)" stroke-width="1.4" fill="none" marker-end="url(#arrow)">
+    <path d="M 120 92 L 150 92"/>
+    <path d="M 220 92 L 250 92"/>
+    <path d="M 360 92 C 380 92, 380 76, 400 76"/>
+    <path d="M 360 100 C 540 100, 600 110, 720 100"/>
+  </g>
+  <g stroke="var(--da-accent, #f59e0b)" stroke-width="1.3" fill="none" stroke-dasharray="4 3" marker-end="url(#arrow-a)">
+    <path d="M 520 76 L 560 76"/>
+  </g>
+  <text x="540" y="68" text-anchor="middle" font-size="8.5" fill="var(--da-accent, #f59e0b)">bitince</text>
+  <text x="540" y="128" text-anchor="middle" font-size="9" fill="var(--da-muted, #64748b)">PUT aB3x9Q · 201</text>
+
+  <!-- Yönlendirme yolu -->
+  <g fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.3">
+    <rect x="30" y="226" width="90" height="44" rx="8"/>
+  </g>
+  <text x="75" y="245" text-anchor="middle" font-size="11" fill="var(--da-fg, #0f172a)">Tarayıcı</text>
+  <text x="75" y="260" text-anchor="middle" font-size="9" fill="var(--da-muted, #64748b)">GET /aB3x9Q</text>
+
+  <rect x="150" y="226" width="90" height="44" rx="8" fill="var(--da-success, #10b981)" opacity="0.12" stroke="var(--da-success, #10b981)" stroke-width="1.4"/>
+  <text x="195" y="245" text-anchor="middle" font-size="11" fill="var(--da-fg, #0f172a)">CDN / edge</text>
+  <text x="195" y="260" text-anchor="middle" font-size="9" fill="var(--da-muted, #64748b)">viral linkler</text>
+
+  <rect x="270" y="226" width="90" height="44" rx="8" fill="var(--da-surface, #ffffff)" stroke="var(--da-primary, #6366f1)" stroke-width="1.4"/>
+  <text x="315" y="252" text-anchor="middle" font-size="11" fill="var(--da-fg, #0f172a)">API</text>
+
+  <rect x="400" y="226" width="110" height="44" rx="8" fill="var(--da-danger, #ef4444)" opacity="0.08" stroke="var(--da-danger, #ef4444)" stroke-width="1.4"/>
+  <text x="455" y="245" text-anchor="middle" font-size="11" fill="var(--da-fg, #0f172a)">Redis</text>
+  <text x="455" y="260" text-anchor="middle" font-size="9" fill="var(--da-muted, #64748b)">isabet %90+ · negatif cache</text>
+
+  <rect x="560" y="226" width="110" height="44" rx="8" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)" stroke-width="1.4"/>
+  <text x="615" y="245" text-anchor="middle" font-size="11" fill="var(--da-fg, #0f172a)">KV depo</text>
+  <text x="615" y="260" text-anchor="middle" font-size="9" fill="var(--da-muted, #64748b)">miss durumunda</text>
+
+  <rect x="720" y="226" width="150" height="44" rx="8" fill="var(--da-accent, #f59e0b)" opacity="0.12" stroke="var(--da-accent, #f59e0b)" stroke-width="1.4"/>
+  <text x="795" y="245" text-anchor="middle" font-size="11" fill="var(--da-fg, #0f172a)">Kafka → analitik</text>
+  <text x="795" y="260" text-anchor="middle" font-size="9" fill="var(--da-muted, #64748b)">tıklama olayı, asenkron</text>
+
+  <g stroke="var(--da-primary, #6366f1)" stroke-width="1.5" fill="none" marker-end="url(#arrow-p)">
+    <path d="M 120 248 L 150 248"/>
+    <path d="M 240 248 L 270 248"/>
+    <path d="M 360 248 L 400 248"/>
+  </g>
+  <g stroke="var(--da-muted, #64748b)" stroke-width="1.3" fill="none" stroke-dasharray="4 3" marker-end="url(#arrow)">
+    <path d="M 510 248 L 560 248"/>
+  </g>
+  <g stroke="var(--da-accent, #f59e0b)" stroke-width="1.3" fill="none" stroke-dasharray="4 3" marker-end="url(#arrow-a)">
+    <path d="M 340 270 C 420 300, 640 300, 720 262"/>
+  </g>
+  <text x="535" y="240" text-anchor="middle" font-size="8.5" fill="var(--da-muted, #64748b)">miss</text>
+  <text x="535" y="296" text-anchor="middle" font-size="9" fill="var(--da-accent, #f59e0b)">fire-and-forget</text>
+  <text x="195" y="292" text-anchor="middle" font-size="9.5" fill="var(--da-fg, #0f172a)">← 302 Found · Location: https://example.com/…</text>
+</svg>

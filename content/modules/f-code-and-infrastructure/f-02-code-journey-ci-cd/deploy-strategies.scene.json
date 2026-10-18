@@ -1,0 +1,231 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "f-02-deploy-strategies-canary",
+  "title": { "tr": "Canary Dağıtımı: %5 → %25 → Geri Alma → %100", "en": "Canary Deployment: 5% → 25% → Rollback → 100%" },
+  "summary": {
+    "tr": "Yeni sürüm trafiğin küçük bir dilimini alır, metrikler karşılaştırılır, hata oranı yükselince otomatik geri alınır; düzeltilmiş sürüm aynı kapılardan geçip tam yayına ulaşır.",
+    "en": "The new version receives a small slice of traffic, metrics are compared, an error spike triggers automatic rollback; the fixed version passes the same gates and reaches full rollout."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda kullanıcılar ve trafiği yüzdelere bölen bir yük dengeleyici; sağ üstte v1 (kararlı) pod grubu, sağ altta v2 (canary) pod grubu; altta ikisini karşılaştıran bir metrik paneli. Trafik önce %100 v1'e gider, sonra %5 ve %25 v2'ye verilir. %25'te v2'nin hata oranı yükselir ve trafik tamamen v1'e geri alınır. Düzeltilmiş v2.1 aynı adımlardan geçerek %100'e ulaşır.",
+      "en": "Users on the left and a load balancer splitting traffic by percentage; the v1 (stable) pod group top right, the v2 (canary) pod group bottom right; a metrics panel at the bottom comparing both. Traffic first goes 100% to v1, then 5% and 25% to v2. At 25% v2's error rate rises and traffic is rolled back entirely to v1. The fixed v2.1 passes the same steps and reaches 100%."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "users", "kind": "user", "label": { "tr": "Kullanıcılar", "en": "Users" }, "x": 100, "y": 280 },
+    { "id": "lb", "kind": "lb", "label": { "tr": "Yük dengeleyici", "en": "Load balancer" }, "sublabel": { "tr": "ağırlıklı yönlendirme", "en": "weighted routing" }, "x": 320, "y": 280, "w": 160, "h": 80 },
+    { "id": "v1", "kind": "group", "label": "v1 · stable", "sublabel": { "tr": "20 pod", "en": "20 pods" }, "x": 700, "y": 130, "w": 300, "h": 120 },
+    { "id": "v1a", "kind": "pod", "parent": "v1", "label": "v1", "x": 610, "y": 140, "w": 70, "h": 50 },
+    { "id": "v1b", "kind": "pod", "parent": "v1", "label": "v1", "x": 700, "y": 140, "w": 70, "h": 50 },
+    { "id": "v1c", "kind": "pod", "parent": "v1", "label": "v1", "x": 790, "y": 140, "w": 70, "h": 50 },
+    { "id": "v2", "kind": "group", "label": "v2 · canary", "sublabel": { "tr": "1 → 5 pod", "en": "1 → 5 pods" }, "x": 700, "y": 400, "w": 300, "h": 120 },
+    { "id": "v2a", "kind": "pod", "parent": "v2", "label": "v2", "x": 610, "y": 410, "w": 70, "h": 50, "status": "muted" },
+    { "id": "v2b", "kind": "pod", "parent": "v2", "label": "v2", "x": 700, "y": 410, "w": 70, "h": 50, "status": "muted" },
+    { "id": "v2c", "kind": "pod", "parent": "v2", "label": "v2", "x": 790, "y": 410, "w": 70, "h": 50, "status": "muted" },
+    { "id": "metrics", "kind": "generic", "label": { "tr": "Canary analizi", "en": "Canary analysis" }, "sublabel": { "tr": "hata oranı · p99 · dönüşüm", "en": "error rate · p99 · conversion" }, "x": 320, "y": 500, "w": 200, "h": 64 }
+  ],
+  "edges": [
+    { "id": "u-lb", "from": "users", "to": "lb", "kind": "request" },
+    { "id": "lb-v1", "from": "lb", "to": "v1a", "kind": "request", "curvature": -0.15, "label": "100%" },
+    { "id": "lb-v2", "from": "lb", "to": "v2a", "kind": "request", "curvature": 0.15, "label": "0%" },
+    { "id": "v1-m", "from": "v1b", "to": "metrics", "kind": "event", "style": "dotted", "curvature": 0.2 },
+    { "id": "v2-m", "from": "v2b", "to": "metrics", "kind": "event", "style": "dotted", "curvature": -0.1 },
+    { "id": "m-lb", "from": "metrics", "to": "lb", "kind": "control", "style": "dashed", "label": { "tr": "karar", "en": "verdict" } }
+  ],
+  "steps": [
+    {
+      "id": "baseline",
+      "title": { "tr": "Başlangıç: %100 v1", "en": "Baseline: 100% v1" },
+      "narration": {
+        "tr": "Kararlı sürüm v1 tüm trafiği taşır. Analiz paneli v1'in normal değerlerini kaydeder: hata oranı %0,2, p99 gecikme 180 ms, dönüşüm %3,1. Bu değerler canary için karşılaştırma temeli (baseline) olacak.",
+        "en": "Stable version v1 carries all traffic. The analysis panel records v1's normal values: 0.2% error rate, 180 ms p99 latency, 3.1% conversion. These will be the baseline the canary is compared against."
+      },
+      "durationMs": 3500,
+      "inherit": false,
+      "highlight": { "nodes": ["lb", "v1"], "edges": ["lb-v1"] },
+      "nodeStates": {
+        "v1a": { "status": "active" }, "v1b": { "status": "active" }, "v1c": { "status": "active" },
+        "v2a": { "visible": false }, "v2b": { "visible": false }, "v2c": { "visible": false },
+        "v2": { "status": "muted" },
+        "metrics": { "status": "active", "badge": "baseline" }
+      },
+      "edgeStates": { "lb-v2": { "visible": false }, "v2-m": { "visible": false } },
+      "packets": [
+        { "edge": "u-lb", "shape": "envelope", "repeat": 3, "repeatGapMs": 200, "durationMs": 700 },
+        { "edge": "lb-v1", "startAt": 700, "repeat": 3, "repeatGapMs": 200, "durationMs": 800 },
+        { "edge": "v1-m", "shape": "dot", "startAt": 2000, "durationMs": 800, "color": "success" }
+      ],
+      "annotations": [
+        { "id": "base-note", "x": 320, "y": 400, "text": { "tr": "baseline: err %0,2 · p99 180 ms", "en": "baseline: err 0.2% · p99 180 ms" }, "target": "metrics" }
+      ]
+    },
+    {
+      "id": "canary-5",
+      "title": { "tr": "Canary %5", "en": "Canary 5%" },
+      "narration": {
+        "tr": "Tek bir v2 pod'u açılır ve yük dengeleyici ağırlığı 95/5 yapılır. Yalnızca her 20 kullanıcıdan biri yeni sürümü görür. Kötü bir sürüm olsa bile patlama yarıçapı %5 ile sınırlıdır.",
+        "en": "A single v2 pod starts and the load balancer weight is set to 95/5. Only one in twenty users sees the new version. Even if the release is bad, the blast radius is capped at 5%."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["lb", "v2a"], "edges": ["lb-v2"] },
+      "nodeStates": {
+        "v2a": { "visible": true, "status": "active", "badge": "NEW" },
+        "v2": { "status": "active" },
+        "lb": { "status": "active", "badge": "95 / 5" }
+      },
+      "edgeStates": {
+        "lb-v1": { "label": "95%" },
+        "lb-v2": { "visible": true, "status": "active", "label": "5%" },
+        "v2-m": { "visible": true }
+      },
+      "packets": [
+        { "edge": "u-lb", "shape": "envelope", "repeat": 4, "repeatGapMs": 150, "durationMs": 600 },
+        { "edge": "lb-v1", "startAt": 600, "repeat": 3, "repeatGapMs": 150, "durationMs": 700 },
+        { "edge": "lb-v2", "startAt": 1300, "durationMs": 700, "color": "accent" }
+      ]
+    },
+    {
+      "id": "analyze",
+      "title": { "tr": "Metrikler karşılaştırılıyor", "en": "Comparing metrics" },
+      "narration": {
+        "tr": "Beş dakika boyunca v2'nin hata oranı, p99 gecikmesi ve dönüşüm oranı v1 ile yan yana ölçülür. Yalnızca teknik metrikler yetmez: kod hatasız çalışıp yanlış fiyat gösteriyorsa bunu ancak iş metriği (dönüşüm) yakalar. %5'te her şey temiz.",
+        "en": "For five minutes v2's error rate, p99 latency and conversion rate are measured side by side with v1. Technical metrics alone are not enough: if the code runs without errors but shows the wrong price, only the business metric (conversion) catches it. At 5% everything is clean."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["metrics", "v1b", "v2a"], "edges": ["v1-m", "v2-m"] },
+      "nodeStates": {
+        "metrics": { "status": "active", "badge": "5 dk" }
+      },
+      "edgeStates": { "v1-m": { "status": "active" }, "v2-m": { "status": "active" } },
+      "packets": [
+        { "edge": "v1-m", "shape": "dot", "label": "err 0.2%", "durationMs": 900, "color": "success" },
+        { "edge": "v2-m", "shape": "dot", "label": "err 0.2%", "startAt": 300, "durationMs": 900, "color": "success" },
+        { "edge": "m-lb", "shape": "diamond", "label": "promote", "startAt": 2000, "durationMs": 900, "color": "success" }
+      ],
+      "annotations": [
+        { "id": "ok-note", "x": 320, "y": 400, "text": { "tr": "v2: err %0,2 · p99 185 ms · dönüşüm %3,1 → ilerle", "en": "v2: err 0.2% · p99 185 ms · conv 3.1% → promote" }, "tone": "success", "target": "metrics" }
+      ]
+    },
+    {
+      "id": "canary-25",
+      "title": { "tr": "Canary %25", "en": "Canary 25%" },
+      "narration": {
+        "tr": "Analiz 'promote' dediği için v2 pod sayısı 5'e çıkarılır ve ağırlık 75/25 olur. Daha fazla trafik, daha nadir hata yollarını (ör. belirli bir ödeme yöntemi) ortaya çıkarır.",
+        "en": "Because analysis said 'promote', the v2 pod count rises to 5 and the weight becomes 75/25. More traffic exposes rarer code paths (for example a specific payment method)."
+      },
+      "durationMs": 3800,
+      "highlight": { "nodes": ["lb", "v2"], "edges": ["lb-v2"] },
+      "nodeStates": {
+        "v2b": { "visible": true, "status": "active" },
+        "v2c": { "visible": true, "status": "active" },
+        "v2a": { "badge": "" },
+        "lb": { "badge": "75 / 25" }
+      },
+      "edgeStates": { "lb-v1": { "label": "75%" }, "lb-v2": { "label": "25%" } },
+      "packets": [
+        { "edge": "u-lb", "shape": "envelope", "repeat": 4, "repeatGapMs": 150, "durationMs": 600 },
+        { "edge": "lb-v1", "startAt": 600, "repeat": 3, "repeatGapMs": 150, "durationMs": 700 },
+        { "edge": "lb-v2", "startAt": 900, "repeat": 2, "repeatGapMs": 300, "durationMs": 700, "color": "accent" }
+      ]
+    },
+    {
+      "id": "spike",
+      "title": { "tr": "Hata oranı fırlıyor", "en": "Error rate spikes" },
+      "narration": {
+        "tr": "%25'te v2'nin hata oranı %0,2'den %2,4'e çıkar: yeni kod, taksitli ödeme isteklerinde null pointer hatası veriyor. Eşik (baseline'ın 2 katı veya mutlak %1) aşıldı. İnsan müdahalesi beklenmez.",
+        "en": "At 25% v2's error rate jumps from 0.2% to 2.4%: the new code throws a null pointer on installment payment requests. The threshold (2× baseline or an absolute 1%) is crossed. No human intervention is awaited."
+      },
+      "durationMs": 3800,
+      "highlight": { "nodes": ["v2", "metrics"], "edges": ["v2-m"] },
+      "nodeStates": {
+        "v2a": { "status": "error", "badge": "500" },
+        "v2b": { "status": "error", "badge": "500" },
+        "v2c": { "status": "warning" },
+        "v2": { "status": "error" },
+        "metrics": { "status": "error", "badge": "ALARM" }
+      },
+      "edgeStates": { "v2-m": { "status": "error" } },
+      "packets": [
+        { "edge": "v2-m", "shape": "square", "label": "err 2.4%", "durationMs": 900, "color": "danger" },
+        { "edge": "v2-m", "shape": "square", "label": "p99 410 ms", "startAt": 500, "durationMs": 900, "color": "danger" }
+      ],
+      "annotations": [
+        { "id": "spike-note", "x": 320, "y": 400, "text": { "tr": "%2,4 > max(2 × %0,2, %1) → ROLLBACK", "en": "2.4% > max(2 × 0.2%, 1%) → ROLLBACK" }, "tone": "danger", "target": "metrics" }
+      ]
+    },
+    {
+      "id": "rollback",
+      "title": { "tr": "Otomatik geri alma", "en": "Automatic rollback" },
+      "narration": {
+        "tr": "CD, yük dengeleyici ağırlığını saniyeler içinde 100/0 yapar ve v2 pod'larını kapatır. v1 hiç durmadığı için geri alma yeniden derleme ya da yeniden deploy gerektirmez. Zarar: kullanıcıların %25'i birkaç dakika boyunca ödeme hatası gördü — %100'ü değil.",
+        "en": "CD sets the load balancer weight to 100/0 within seconds and shuts down the v2 pods. Because v1 never stopped, the rollback needs no rebuild or redeploy. Damage: 25% of users saw a payment error for a few minutes — not 100%."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["lb", "v1"], "edges": ["m-lb", "lb-v1"] },
+      "nodeStates": {
+        "lb": { "status": "active", "badge": "100 / 0" },
+        "v2a": { "status": "muted", "badge": "" },
+        "v2b": { "status": "muted", "badge": "" },
+        "v2c": { "status": "muted" },
+        "v2": { "status": "muted", "sublabel": { "tr": "kapatıldı", "en": "terminated" } },
+        "metrics": { "status": "warning", "badge": "rolled back" }
+      },
+      "edgeStates": {
+        "m-lb": { "status": "active" },
+        "lb-v1": { "label": "100%" },
+        "lb-v2": { "status": "muted", "label": "0%" },
+        "v2-m": { "status": "muted" }
+      },
+      "packets": [
+        { "edge": "m-lb", "shape": "diamond", "label": "rollback", "durationMs": 800, "color": "danger" },
+        { "edge": "u-lb", "shape": "envelope", "startAt": 800, "repeat": 3, "repeatGapMs": 200, "durationMs": 600 },
+        { "edge": "lb-v1", "startAt": 1400, "repeat": 3, "repeatGapMs": 200, "durationMs": 700 }
+      ],
+      "annotations": [
+        { "id": "rb-note", "x": 320, "y": 160, "text": { "tr": "geri alma süresi: ~15 sn (LB ağırlığı)", "en": "rollback time: ~15 s (LB weight)" }, "tone": "success", "target": "lb" }
+      ]
+    },
+    {
+      "id": "fixed",
+      "title": { "tr": "Düzeltme: v2.1 → %100", "en": "Fix: v2.1 → 100%" },
+      "narration": {
+        "tr": "Geliştirici hatayı düzeltir, yeni commit aynı pipeline'dan geçer (CI, staging, canary %5, %25) ve bu kez metrikler temiz kalır. Ağırlık %50 ve %100'e çıkarılır; v1 pod'ları kapatılır. Canary, kötü sürümü üretime 'girdikten sonra' ama 'herkese ulaşmadan önce' yakalayan son güvenlik ağıdır.",
+        "en": "The developer fixes the bug, the new commit goes through the same pipeline (CI, staging, canary 5%, 25%) and this time the metrics stay clean. The weight is raised to 50% and 100%; v1 pods are shut down. Canary is the last safety net that catches a bad release 'after it reaches production' but 'before it reaches everyone'."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["lb", "v2"], "edges": ["lb-v2"] },
+      "nodeStates": {
+        "lb": { "status": "success", "badge": "0 / 100" },
+        "v2": { "status": "success", "label": "v2.1 · stable", "sublabel": { "tr": "20 pod", "en": "20 pods" } },
+        "v2a": { "status": "success", "label": "v2.1" },
+        "v2b": { "status": "success", "label": "v2.1" },
+        "v2c": { "status": "success", "label": "v2.1" },
+        "v1": { "status": "muted", "sublabel": { "tr": "kapatılıyor", "en": "draining" } },
+        "v1a": { "status": "muted" }, "v1b": { "status": "muted" }, "v1c": { "status": "muted" },
+        "metrics": { "status": "success", "badge": "✓" }
+      },
+      "edgeStates": {
+        "lb-v1": { "status": "muted", "label": "0%" },
+        "lb-v2": { "status": "active", "label": "100%" },
+        "v2-m": { "status": "active" },
+        "m-lb": { "status": "idle" }
+      },
+      "packets": [
+        { "edge": "lb-v2", "label": "5%", "durationMs": 700, "color": "accent" },
+        { "edge": "lb-v2", "label": "25%", "startAt": 800, "durationMs": 700, "color": "accent" },
+        { "edge": "lb-v2", "label": "50%", "startAt": 1600, "durationMs": 700, "color": "accent" },
+        { "edge": "lb-v2", "label": "100%", "startAt": 2400, "durationMs": 700, "color": "success" },
+        { "edge": "v2-m", "shape": "dot", "label": "err 0.2%", "startAt": 3200, "durationMs": 800, "color": "success" }
+      ],
+      "annotations": [
+        { "id": "fixed-note", "x": 320, "y": 400, "text": { "tr": "aynı kapılar, bu kez temiz → tam yayın", "en": "same gates, clean this time → full rollout" }, "tone": "success", "target": "metrics" }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["canary", "rollback", "deployment", "progressive-delivery"]
+}

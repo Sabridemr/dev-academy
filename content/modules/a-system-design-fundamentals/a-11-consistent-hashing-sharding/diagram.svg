@@ -1,0 +1,117 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 460" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Consistent hashing halkası ve mod N karşılaştırması</title>
+  <desc id="desc">Solda bir hash halkası: N1, N2, N3 düğümleri ve K1–K5 anahtarları; her anahtar saat yönündeki ilk düğüme aittir. N4 adlı yeni düğüm eklenince yalnızca N1 ile N4 arasındaki yay (vurgulu) N2'den N4'e taşınır. Sağda iki kutu: mod N ile 3'ten 4 düğüme geçişte anahtarların yaklaşık yüzde 75'i taşınırken halkada yalnızca yüzde 25 taşınır; altta sanal düğümlerin dağılımı nasıl düzelttiği özetlenir.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+    <marker id="arrow-acc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-accent, #f59e0b)"/>
+    </marker>
+  </defs>
+
+  <!-- ===== Halka ===== -->
+  <circle cx="250" cy="230" r="160" fill="none" stroke="var(--da-border, #cbd5e1)" stroke-width="10"/>
+  <!-- Taşınan yay: 0° → 60° (üstten saat yönünde) -->
+  <path d="M 250 70 A 160 160 0 0 1 388.6 150" fill="none" stroke="var(--da-accent, #f59e0b)" stroke-width="10" stroke-linecap="butt"/>
+  <text x="250" y="232" text-anchor="middle" font-size="12" fill="var(--da-muted, #64748b)">0 … 2³²−1</text>
+  <text x="250" y="250" text-anchor="middle" font-size="11" fill="var(--da-muted, #64748b)">saat yönü ↻</text>
+  <!-- saat yönü oku -->
+  <path d="M 150 120 A 140 140 0 0 1 250 90" fill="none" stroke="var(--da-muted, #64748b)" stroke-width="1.4" marker-end="url(#arrow)"/>
+
+  <!-- Düğümler (0°, 130°, 230°, yeni 60°) -->
+  <g stroke="var(--da-fg, #0f172a)" stroke-width="1.5" fill="var(--da-primary, #6366f1)">
+    <circle cx="250" cy="70" r="13"/>
+    <circle cx="372.6" cy="332.8" r="13"/>
+    <circle cx="127.4" cy="332.8" r="13"/>
+  </g>
+  <circle cx="388.6" cy="150" r="13" fill="var(--da-accent, #f59e0b)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5"/>
+  <g font-size="11" font-weight="600" fill="var(--da-surface, #ffffff)" text-anchor="middle">
+    <text x="250" y="74">N1</text>
+    <text x="372.6" y="336.8">N2</text>
+    <text x="127.4" y="336.8">N3</text>
+    <text x="388.6" y="154">N4</text>
+  </g>
+  <g font-size="10" fill="var(--da-muted, #64748b)" text-anchor="middle">
+    <text x="250" y="48">0°</text>
+    <text x="400" y="360">130°</text>
+    <text x="100" y="360">230°</text>
+    <text x="420" y="138" fill="var(--da-accent, #f59e0b)">60° · yeni</text>
+  </g>
+
+  <!-- Anahtarlar: K1 30°, K4 100°, K2 185°, K5 265°, K3 300° -->
+  <g fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.3">
+    <rect x="316" y="78" width="28" height="18" rx="4"/>
+    <rect x="393" y="193" width="28" height="18" rx="4"/>
+    <rect x="222" y="380" width="28" height="18" rx="4"/>
+    <rect x="76" y="207" width="28" height="18" rx="4"/>
+    <rect x="97" y="80" width="28" height="18" rx="4"/>
+  </g>
+  <g font-size="10" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="330" y="91">K1</text>
+    <text x="407" y="206">K4</text>
+    <text x="236" y="393">K2</text>
+    <text x="90" y="220">K5</text>
+    <text x="111" y="93">K3</text>
+  </g>
+  <!-- K1 → N2 (eski) üstü çizili, K1 → N4 (yeni) -->
+  <path d="M 344 92 C 380 110, 395 125, 388 137" fill="none" stroke="var(--da-accent, #f59e0b)" stroke-width="1.6" marker-end="url(#arrow-acc)"/>
+  <text x="330" y="118" font-size="9" fill="var(--da-accent, #f59e0b)">K1: N2 → N4</text>
+
+  <!-- Sahiplik özet -->
+  <g font-size="10" fill="var(--da-muted, #64748b)">
+    <text x="30" y="430">Sahiplik: K3, K5 → N1 · K4 → N2 · K2 → N3 · K1 → N4 (eskiden N2)</text>
+  </g>
+
+  <!-- ===== Sağ panel: karşılaştırma ===== -->
+  <g fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)" stroke-width="1.4">
+    <rect x="520" y="40" width="200" height="150" rx="12"/>
+    <rect x="740" y="40" width="200" height="150" rx="12"/>
+  </g>
+  <text x="620" y="66" text-anchor="middle" font-size="13" font-weight="600" fill="var(--da-fg, #0f172a)">hash(key) mod N</text>
+  <text x="840" y="66" text-anchor="middle" font-size="13" font-weight="600" fill="var(--da-fg, #0f172a)">Consistent hashing</text>
+  <g font-size="11" fill="var(--da-muted, #64748b)" text-anchor="middle">
+    <text x="620" y="88">3 → 4 düğüm</text>
+    <text x="840" y="88">3 → 4 düğüm</text>
+  </g>
+  <!-- çubuklar -->
+  <rect x="545" y="104" width="150" height="18" rx="4" fill="var(--da-border, #cbd5e1)"/>
+  <rect x="545" y="104" width="112" height="18" rx="4" fill="var(--da-danger, #ef4444)"/>
+  <text x="620" y="140" text-anchor="middle" font-size="12" font-weight="600" fill="var(--da-danger, #ef4444)">≈ %75 anahtar taşınır</text>
+  <text x="620" y="160" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">cache isabeti çöker</text>
+  <rect x="765" y="104" width="150" height="18" rx="4" fill="var(--da-border, #cbd5e1)"/>
+  <rect x="765" y="104" width="38" height="18" rx="4" fill="var(--da-success, #10b981)"/>
+  <text x="840" y="140" text-anchor="middle" font-size="12" font-weight="600" fill="var(--da-success, #10b981)">≈ %25 (K/N) taşınır</text>
+  <text x="840" y="160" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">yalnızca komşu aralık</text>
+
+  <!-- Sanal düğüm kutusu -->
+  <rect x="520" y="215" width="420" height="120" rx="12" fill="var(--da-primary, #6366f1)" opacity="0.08" stroke="var(--da-primary, #6366f1)" stroke-dasharray="6 5"/>
+  <text x="730" y="240" text-anchor="middle" font-size="13" font-weight="600" fill="var(--da-primary, #6366f1)">Sanal düğümler (vnodes)</text>
+  <!-- mini halka: tek nokta vs çok nokta -->
+  <circle cx="580" cy="290" r="30" fill="none" stroke="var(--da-border, #cbd5e1)" stroke-width="5"/>
+  <g fill="var(--da-primary, #6366f1)">
+    <circle cx="580" cy="260" r="4"/><circle cx="606" cy="305" r="4"/><circle cx="554" cy="305" r="4"/>
+  </g>
+  <text x="580" y="332" text-anchor="middle" font-size="9" fill="var(--da-muted, #64748b)">1 nokta / düğüm</text>
+  <text x="640" y="294" text-anchor="middle" font-size="12" fill="var(--da-muted, #64748b)">→</text>
+  <circle cx="700" cy="290" r="30" fill="none" stroke="var(--da-border, #cbd5e1)" stroke-width="5"/>
+  <g fill="var(--da-primary, #6366f1)">
+    <circle cx="700" cy="260" r="3"/><circle cx="715" cy="264" r="3"/><circle cx="726" cy="275" r="3"/><circle cx="730" cy="290" r="3"/><circle cx="726" cy="305" r="3"/><circle cx="715" cy="316" r="3"/>
+    <circle cx="700" cy="320" r="3"/><circle cx="685" cy="316" r="3"/><circle cx="674" cy="305" r="3"/><circle cx="670" cy="290" r="3"/><circle cx="674" cy="275" r="3"/><circle cx="685" cy="264" r="3"/>
+  </g>
+  <text x="700" y="332" text-anchor="middle" font-size="9" fill="var(--da-muted, #64748b)">150 nokta / düğüm</text>
+  <g font-size="10" fill="var(--da-fg, #0f172a)">
+    <text x="760" y="268">• yük farkı &lt; %5</text>
+    <text x="760" y="286">• güçlü makine = daha çok vnode</text>
+    <text x="760" y="304">• düşen düğümün yükü herkese yayılır</text>
+    <text x="760" y="322">• lookup: ikili arama O(log N·v)</text>
+  </g>
+
+  <!-- Sharding stratejileri şeridi -->
+  <g font-size="11" fill="var(--da-muted, #64748b)">
+    <text x="520" y="372" font-weight="600" fill="var(--da-fg, #0f172a)">Sharding stratejileri</text>
+    <text x="520" y="392">Range: A–F → S1, G–M → S2 … aralık sorgusu kolay, hot shard riski</text>
+    <text x="520" y="410">Hash: hash(key) → shard … eşit dağılım, aralık sorgusu scatter-gather</text>
+    <text x="520" y="428">Directory: lookup servisi → shard … esnek, ekstra atlama + SPOF</text>
+  </g>
+</svg>

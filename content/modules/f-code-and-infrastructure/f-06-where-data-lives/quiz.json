@@ -1,0 +1,110 @@
+{
+  "id": "f-06-where-data-lives-quiz",
+  "title": { "tr": "Hangi Veri Nerede Tutulur Quiz", "en": "Where Does Each Kind of Data Live Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "\"Son üç yılın siparişlerini ülke ve aya göre topla\" sorgusu için en uygun depo hangisidir?",
+        "en": "Which store is best suited for the query \"aggregate the last three years of orders by country and month\"?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Redis", "en": "Redis" } },
+        { "id": "b", "text": { "tr": "OLTP Postgres (sipariş servisinin veritabanı)", "en": "OLTP Postgres (the order service's database)" } },
+        { "id": "c", "text": { "tr": "Sütunsal bir data warehouse (Redshift, BigQuery, Snowflake)", "en": "A columnar data warehouse (Redshift, BigQuery, Snowflake)" } },
+        { "id": "d", "text": { "tr": "Prometheus", "en": "Prometheus" } }
+      ],
+      "correct": ["c"],
+      "explanation": {
+        "tr": "Milyarlarca satırda birkaç sütunu toplamak sütunsal depoların işidir. OLTP'de bu sorgu tüm tabloyu tarar ve canlı trafiği yavaşlatır (b). Redis yalnızca sıcak anahtarları tutar (a); Prometheus yaklaşık metrik saklar, iş sayıları için kaynak değildir (d).",
+        "en": "Aggregating a few columns over billions of rows is what columnar stores do. In OLTP this query scans the whole table and slows live traffic (b). Redis holds only hot keys (a); Prometheus stores approximate metrics and is not a source for business numbers (d)."
+      },
+      "difficulty": "easy",
+      "concepts": ["oltp-vs-olap", "data-warehouse"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "Uygulama önce Postgres'e yazıp sonra Kafka'ya olay gönderiyor. Bu yaklaşımın temel riski nedir ve nasıl çözülür?",
+        "en": "The application writes to Postgres first and then sends an event to Kafka. What is the main risk of this approach and how is it solved?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Kafka yavaştır; çözüm Redis kullanmaktır", "en": "Kafka is slow; the solution is to use Redis" } },
+        { "id": "b", "text": { "tr": "Dual write: DB commit olur ama Kafka yazması başarısız olabilir (ya da tersi); çözüm CDC ya da outbox kalıbıdır", "en": "Dual write: the DB commit may succeed while the Kafka write fails (or vice versa); the solution is CDC or the outbox pattern" } },
+        { "id": "c", "text": { "tr": "Postgres olay gönderemez; çözüm MongoDB'ye geçmektir", "en": "Postgres cannot send events; the solution is to switch to MongoDB" } },
+        { "id": "d", "text": { "tr": "Risk yoktur; iki yazma her zaman birlikte başarılı olur", "en": "There is no risk; both writes always succeed together" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "İki ayrı sisteme yapılan yazmalar atomik değildir. Outbox kalıbı olayı aynı transaction'da bir tabloya yazar, CDC (Debezium) bunu WAL'dan okuyup Kafka'ya taşır; böylece 'önce DB, sonra olay' garantisi korunur.",
+        "en": "Writes to two separate systems are not atomic. The outbox pattern writes the event to a table in the same transaction and CDC (Debezium) reads it from the WAL into Kafka, preserving the 'DB first, then event' guarantee."
+      },
+      "difficulty": "medium",
+      "concepts": ["change-data-capture", "event-stream"]
+    },
+    {
+      "id": "q3",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Aşağıdakilerden hangileri 'türev' (derived) depolardır, yani kaybolursa doğruluk kaynağından yeniden üretilebilir? (Birden fazla seçin)",
+        "en": "Which of the following are 'derived' stores, i.e. can be rebuilt from the source of truth if lost? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Redis cache", "en": "Redis cache" } },
+        { "id": "b", "text": { "tr": "OpenSearch arama indeksi", "en": "OpenSearch search index" } },
+        { "id": "c", "text": { "tr": "Siparişlerin yazıldığı OLTP veritabanı", "en": "The OLTP database the orders are written to" } },
+        { "id": "d", "text": { "tr": "Data warehouse'taki sipariş tablosu", "en": "The order table in the data warehouse" } }
+      ],
+      "correct": ["a", "b", "d"],
+      "explanation": {
+        "tr": "Cache, arama indeksi ve warehouse doğruluk kaynağından (OLTP) CDC/yeniden indeksleme/yeniden yükleme ile türetilir. OLTP'nin kendisi kaynaktır; kaybı gerçek veri kaybıdır, bu yüzden senkron standby ve yedekleri vardır.",
+        "en": "The cache, search index and warehouse are derived from the source of truth (OLTP) via CDC, re-indexing or re-loading. OLTP itself is the source; losing it is real data loss, which is why it has a synchronous standby and backups."
+      },
+      "difficulty": "medium",
+      "concepts": ["cache-layer", "relational-database", "data-warehouse"]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Prometheus'taki orders_created_total sayacı, finans raporunda 'bu ay kaç sipariş alındı' sorusunun resmi kaynağı olarak kullanılmalıdır.",
+        "en": "The orders_created_total counter in Prometheus should be used as the official source for 'how many orders were placed this month' in the finance report."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "Yanlış. Metrikler yaklaşıktır: kazıma aralığında örneklenir, pod yeniden başlayınca sayaç sıfırlanır, saklama süresi kısadır. Alarm ve trend için mükemmeldir; kesin iş sayıları doğruluk kaynağından türeyen warehouse'tan alınır.",
+        "en": "False. Metrics are approximate: sampled at the scrape interval, counters reset on pod restart, retention is short. They are perfect for alerts and trends; exact business numbers come from the warehouse derived from the source of truth."
+      },
+      "difficulty": "medium",
+      "concepts": ["metrics-store", "time-series"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "Ürün görselleri ve PDF faturalar için en uygun depo hangisidir ve neden?",
+        "en": "Which store is best for product images and PDF invoices, and why?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Object storage (S3): sınırsız boyut, çok düşük maliyet, 3 AZ'ye otomatik kopya, yaşam döngüsü ile soğuk katmana taşıma", "en": "Object storage (S3): unlimited size, very low cost, automatic copies across 3 AZs, lifecycle rules to move to cold tiers" } },
+        { "id": "b", "text": { "tr": "Postgres BLOB kolonu: transaction garantisi için", "en": "A Postgres BLOB column: for transactional guarantees" } },
+        { "id": "c", "text": { "tr": "Redis: en hızlı erişim için", "en": "Redis: for the fastest access" } },
+        { "id": "d", "text": { "tr": "Kafka: kalıcı log olduğu için", "en": "Kafka: because it is a durable log" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "Büyük, nadiren değişen dosyalar için object storage hem en ucuz hem en dayanıklı seçenektir ve CDN ile doğrudan servis edilir. DB'de BLOB tutmak yedekleri ve replikasyonu şişirir (b); RAM pahalıdır ve dosya için uygun değildir (c); Kafka rastgele erişim ve dosya servisi için tasarlanmamıştır (d).",
+        "en": "For large, rarely changing files object storage is both the cheapest and most durable option and is served directly via CDN. BLOBs in the DB bloat backups and replication (b); RAM is expensive and unsuited to files (c); Kafka is not designed for random access or file serving (d)."
+      },
+      "difficulty": "easy",
+      "concepts": ["object-storage", "data-retention"]
+    }
+  ]
+}

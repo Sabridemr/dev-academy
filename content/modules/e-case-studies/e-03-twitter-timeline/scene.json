@@ -1,0 +1,203 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "e-03-twitter-timeline-journey",
+  "title": { "tr": "Tweet'ten Takipçinin Timeline'ına", "en": "From a Tweet to a Follower's Timeline" },
+  "summary": {
+    "tr": "Bir tweet'in yazılması, veritabanına kaydı, Kafka üzerinden fan-out işçisine ulaşması, takipçilerin Redis timeline listelerine itilmesi ve bir takipçinin timeline'ı açtığında cache, ünlü birleştirme ve hidrasyon ile yanıt alması.",
+    "en": "A tweet being posted, stored in the database, reaching the fan-out worker via Kafka, being pushed into followers' Redis timeline lists, and a follower opening the timeline to get a response via cache, celebrity merge and hydration."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda üstte yazar, altta takipçi; ortada yük dengeleyici ve API gateway; sağ üstte tweet servisi, tweet veritabanı ve Kafka; sağda fan-out işçileri ve sosyal graf; sağ altta Redis timeline cache'i, tweet cache'i ve timeline servisi. Yazarın tweet'i veritabanına yazılır, olay Kafka'ya düşer, fan-out işçisi takipçi listesini alıp tweet id'sini 1200 takipçinin listesine iter. Takipçi uygulamayı açınca timeline servisi cache'ten id listesini alır, takip edilen ünlülerin son tweet'lerini birleştirir, gövdeleri tweet cache'inden hidrate eder ve 20 tweet'lik yanıtı 80 ms'de döndürür.",
+      "en": "Author at top left, follower at bottom left; load balancer and API gateway in the middle; tweet service, tweet database and Kafka at top right; fan-out workers and social graph on the right; Redis timeline cache, tweet cache and timeline service at bottom right. The author's tweet is written to the database, the event lands in Kafka, the fan-out worker fetches the follower list and pushes the tweet id into 1,200 followers' lists. When the follower opens the app, the timeline service reads the id list from cache, merges the latest tweets of followed celebrities, hydrates bodies from the tweet cache and returns 20 tweets in 80 ms."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "author", "kind": "user", "label": { "tr": "Yazar", "en": "Author" }, "sublabel": { "tr": "1 200 takipçi", "en": "1,200 followers" }, "x": 80, "y": 150 },
+    { "id": "reader", "kind": "mobile", "label": { "tr": "Takipçi", "en": "Follower" }, "sublabel": { "tr": "uygulamayı açar", "en": "opens the app" }, "x": 80, "y": 450 },
+    { "id": "lb", "kind": "lb", "label": "Load Balancer", "x": 230, "y": 300, "w": 120, "h": 66 },
+    { "id": "gateway", "kind": "gateway", "label": "API Gateway", "x": 370, "y": 300, "w": 120, "h": 66 },
+    { "id": "tweetsvc", "kind": "service", "label": { "tr": "Tweet servisi", "en": "Tweet service" }, "sublabel": "snowflake id", "x": 530, "y": 130, "w": 130, "h": 66 },
+    { "id": "tweetdb", "kind": "db", "label": "Tweet DB", "sublabel": { "tr": "shard: tweet_id", "en": "shard: tweet_id" }, "x": 720, "y": 70, "w": 120, "h": 60 },
+    { "id": "kafka", "kind": "queue", "label": "Kafka", "sublabel": "tweet-created", "x": 720, "y": 200, "w": 120, "h": 60 },
+    { "id": "fanout", "kind": "worker", "label": { "tr": "Fan-out işçisi", "en": "Fan-out worker" }, "x": 900, "y": 200, "w": 120, "h": 66 },
+    { "id": "graph", "kind": "db", "label": { "tr": "Sosyal graf", "en": "Social graph" }, "sublabel": "followers()", "x": 900, "y": 350, "w": 120, "h": 60 },
+    { "id": "tlcache", "kind": "cache", "label": "Redis timeline", "sublabel": "timeline:{uid} · 800", "x": 720, "y": 350, "w": 140, "h": 66 },
+    { "id": "tlsvc", "kind": "service", "label": { "tr": "Timeline servisi", "en": "Timeline service" }, "sublabel": { "tr": "birleştir · hidrate", "en": "merge · hydrate" }, "x": 530, "y": 450, "w": 140, "h": 66 },
+    { "id": "tweetcache", "kind": "cache", "label": "Tweet cache", "sublabel": "MGET", "x": 720, "y": 510, "w": 120, "h": 60 }
+  ],
+  "edges": [
+    { "id": "a-lb", "from": "author", "to": "lb", "kind": "request", "label": "POST /tweets", "curvature": -0.1 },
+    { "id": "lb-gw", "from": "lb", "to": "gateway", "kind": "request" },
+    { "id": "gw-tsvc", "from": "gateway", "to": "tweetsvc", "kind": "request", "curvature": -0.1 },
+    { "id": "tsvc-db", "from": "tweetsvc", "to": "tweetdb", "kind": "data" },
+    { "id": "tsvc-kafka", "from": "tweetsvc", "to": "kafka", "kind": "event", "style": "dotted" },
+    { "id": "kafka-fan", "from": "kafka", "to": "fanout", "kind": "event" },
+    { "id": "fan-graph", "from": "fanout", "to": "graph", "kind": "data", "style": "dashed" },
+    { "id": "fan-cache", "from": "fanout", "to": "tlcache", "kind": "data" },
+    { "id": "r-lb", "from": "reader", "to": "lb", "kind": "request", "label": "GET /home", "curvature": 0.1 },
+    { "id": "gw-tlsvc", "from": "gateway", "to": "tlsvc", "kind": "request", "curvature": 0.1 },
+    { "id": "tlsvc-cache", "from": "tlsvc", "to": "tlcache", "kind": "data" },
+    { "id": "tlsvc-tcache", "from": "tlsvc", "to": "tweetcache", "kind": "data" }
+  ],
+  "steps": [
+    {
+      "id": "post",
+      "title": { "tr": "1 · Tweetle", "en": "1 · Tweet" },
+      "narration": {
+        "tr": "Yazar \"Tweetle\"ye basar. POST /tweets isteği yük dengeleyici ve gateway'den (auth, rate limit: 300 tweet/3 saat) geçerek tweet servisine ulaşır.",
+        "en": "The author presses \"Tweet\". The POST /tweets request passes through the load balancer and gateway (auth, rate limit: 300 tweets/3 h) to the tweet service."
+      },
+      "durationMs": 3200,
+      "inherit": false,
+      "highlight": { "nodes": ["author", "lb", "gateway", "tweetsvc"], "edges": ["a-lb", "lb-gw", "gw-tsvc"] },
+      "nodeStates": { "author": { "status": "active" }, "gateway": { "badge": "auth ✓" } },
+      "packets": [
+        { "edge": "a-lb", "shape": "envelope", "durationMs": 800 },
+        { "edge": "lb-gw", "shape": "envelope", "startAt": 850, "durationMs": 600 },
+        { "edge": "gw-tsvc", "shape": "envelope", "startAt": 1500, "durationMs": 800 }
+      ],
+      "annotations": [
+        { "id": "body", "x": 80, "y": 250, "text": { "tr": "280 karakter + 1 görsel", "en": "280 chars + 1 image" }, "target": "author" }
+      ]
+    },
+    {
+      "id": "persist",
+      "title": { "tr": "2 · Kalıcı yazma ve anında 201", "en": "2 · Persist and respond 201 at once" },
+      "narration": {
+        "tr": "Tweet servisi bir Snowflake id üretir (zaman sıralı) ve tweet'i tweet_id'ye göre shard'lanmış depoya yazar. Fan-out'u beklemeden yazara 201 döner: yazar kendi profilinde tweet'i hemen görür, takipçiler birkaç saniye sonra.",
+        "en": "The tweet service generates a Snowflake id (time-ordered) and writes the tweet to the store sharded by tweet_id. It returns 201 to the author without waiting for fan-out: the author sees the tweet on their profile immediately, followers a few seconds later."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["tweetsvc", "tweetdb"], "edges": ["tsvc-db", "gw-tsvc", "lb-gw", "a-lb"] },
+      "nodeStates": { "tweetsvc": { "status": "active", "badge": "id 1771…" }, "tweetdb": { "status": "active", "badge": "COMMIT" }, "author": { "status": "success", "badge": "201" } },
+      "packets": [
+        { "edge": "tsvc-db", "shape": "square", "durationMs": 700 },
+        { "edge": "tsvc-db", "shape": "dot", "direction": "backward", "startAt": 750, "durationMs": 500, "color": "success" },
+        { "edge": "gw-tsvc", "shape": "envelope", "direction": "backward", "startAt": 1400, "durationMs": 500, "color": "success" },
+        { "edge": "lb-gw", "shape": "envelope", "direction": "backward", "startAt": 1950, "durationMs": 400, "color": "success" },
+        { "edge": "a-lb", "shape": "envelope", "direction": "backward", "startAt": 2400, "durationMs": 600, "color": "success", "label": "201" }
+      ],
+      "annotations": [
+        { "id": "snowflake", "x": 720, "y": 20, "text": { "tr": "41 bit zaman · 10 bit makine · 12 bit sıra", "en": "41-bit time · 10-bit machine · 12-bit seq" }, "target": "tweetdb" }
+      ]
+    },
+    {
+      "id": "event",
+      "title": { "tr": "3 · TweetCreated olayı", "en": "3 · The TweetCreated event" },
+      "narration": {
+        "tr": "Aynı anda tweet servisi Kafka'ya bir TweetCreated olayı yayınlar. Fan-out, arama indeksleyici, trending sayacı ve bildirim servisi bu olayı bağımsız tüketir; biri yavaşlarsa diğerleri etkilenmez.",
+        "en": "At the same time the tweet service publishes a TweetCreated event to Kafka. Fan-out, the search indexer, the trending counter and notifications consume it independently; if one is slow the others are unaffected."
+      },
+      "durationMs": 2800,
+      "highlight": { "nodes": ["tweetsvc", "kafka"], "edges": ["tsvc-kafka"] },
+      "nodeStates": { "kafka": { "status": "active", "badge": "+1" }, "tweetdb": { "status": "idle", "badge": "" } },
+      "edgeStates": { "tsvc-kafka": { "status": "active" } },
+      "packets": [
+        { "edge": "tsvc-kafka", "shape": "diamond", "label": "TweetCreated", "durationMs": 900 }
+      ],
+      "annotations": [
+        { "id": "consumers", "x": 720, "y": 270, "text": { "tr": "tüketiciler: fan-out, arama, trending, bildirim", "en": "consumers: fan-out, search, trending, notifications" }, "target": "kafka" }
+      ]
+    },
+    {
+      "id": "lookup",
+      "title": { "tr": "4 · Takipçi listesi", "en": "4 · Follower list" },
+      "narration": {
+        "tr": "Fan-out işçisi olayı alır ve sosyal graftan yazarın takipçi sayısını sorar: 1 200 — ünlü eşiğinin (10 K) altında, yani push yapılacak. Takipçi listesi 1 000'lik sayfalar hâlinde çekilir ve 30 gündür girmeyen pasif kullanıcılar atlanır.",
+        "en": "The fan-out worker consumes the event and asks the social graph for the author's follower count: 1,200 — below the celebrity threshold (10 K), so push proceeds. The follower list is fetched in pages of 1,000 and users inactive for 30 days are skipped."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["kafka", "fanout", "graph"], "edges": ["kafka-fan", "fan-graph"] },
+      "nodeStates": { "fanout": { "status": "busy" }, "graph": { "status": "active", "badge": "1 200" }, "kafka": { "badge": "" } },
+      "packets": [
+        { "edge": "kafka-fan", "shape": "diamond", "durationMs": 700 },
+        { "edge": "fan-graph", "shape": "dot", "label": "followers(author)", "startAt": 800, "durationMs": 700 },
+        { "edge": "fan-graph", "shape": "dot", "direction": "backward", "startAt": 1600, "durationMs": 700, "color": "success", "label": "920 aktif" }
+      ],
+      "annotations": [
+        { "id": "threshold", "x": 900, "y": 120, "text": { "tr": "1 200 < 10 K → push; ünlü olsaydı atlanırdı", "en": "1,200 < 10 K → push; a celebrity would be skipped" }, "tone": "info", "target": "fanout" }
+      ]
+    },
+    {
+      "id": "push",
+      "title": { "tr": "5 · Timeline'lara it", "en": "5 · Push into timelines" },
+      "narration": {
+        "tr": "İşçi 920 aktif takipçinin her biri için LPUSH timeline:{uid} tweetId ve LTRIM 0 799 komutlarını tek bir pipeline'da gönderir. Yalnızca id yazılır (16 bayt); gövde kopyalanmaz. Tweet'in atılmasından bu ana kadar ~2 s geçti.",
+        "en": "For each of the 920 active followers the worker sends LPUSH timeline:{uid} tweetId and LTRIM 0 799 in a single pipeline. Only the id is written (16 bytes); the body is not copied. About 2 s have passed since the tweet was posted."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["fanout", "tlcache"], "edges": ["fan-cache"] },
+      "nodeStates": { "fanout": { "status": "active", "badge": "920 LPUSH" }, "tlcache": { "status": "active", "progress": 0.6 }, "graph": { "status": "idle", "badge": "" } },
+      "packets": [
+        { "edge": "fan-cache", "shape": "dot", "durationMs": 500, "repeat": 8, "repeatGapMs": 120 }
+      ],
+      "annotations": [
+        { "id": "cap", "x": 720, "y": 430, "text": { "tr": "LTRIM 0 799 → liste 800'de sabit", "en": "LTRIM 0 799 → list capped at 800" }, "tone": "info", "target": "tlcache" }
+      ]
+    },
+    {
+      "id": "open",
+      "title": { "tr": "6 · Takipçi uygulamayı açıyor", "en": "6 · The follower opens the app" },
+      "narration": {
+        "tr": "Birkaç saniye sonra bir takipçi uygulamayı açar: GET /home. İstek LB ve gateway üzerinden timeline servisine gelir. Bu yol saniyede 145 K kez yürür; o yüzden ileride hiçbir adım veritabanına gitmemeli.",
+        "en": "A few seconds later a follower opens the app: GET /home. The request reaches the timeline service through the LB and gateway. This path runs 145 K times per second, so no step ahead should touch the database."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["reader", "lb", "gateway", "tlsvc"], "edges": ["r-lb", "lb-gw", "gw-tlsvc"] },
+      "nodeStates": { "reader": { "status": "active" }, "tlsvc": { "status": "busy" }, "fanout": { "status": "idle", "badge": "" }, "tweetsvc": { "status": "idle", "badge": "" }, "author": { "status": "idle", "badge": "" } },
+      "packets": [
+        { "edge": "r-lb", "shape": "envelope", "durationMs": 700 },
+        { "edge": "lb-gw", "shape": "envelope", "startAt": 750, "durationMs": 500 },
+        { "edge": "gw-tlsvc", "shape": "envelope", "startAt": 1300, "durationMs": 700 }
+      ],
+      "annotations": [
+        { "id": "qps", "x": 530, "y": 540, "text": { "tr": "145 K QPS · hedef p99 < 200 ms", "en": "145 K QPS · target p99 < 200 ms" }, "target": "tlsvc" }
+      ]
+    },
+    {
+      "id": "merge-hydrate",
+      "title": { "tr": "7 · Cache, ünlü birleştirme, hidrasyon", "en": "7 · Cache, celebrity merge, hydration" },
+      "narration": {
+        "tr": "Timeline servisi LRANGE ile cache'ten 40 id alır (HIT). Takipçinin izlediği 3 ünlünün son tweet id'lerini ayrıca çeker ve Snowflake id'ye göre tek listede birleştirir. İlk 20 id'nin gövdesi tweet cache'inden tek bir MGET ile hidrate edilir.",
+        "en": "The timeline service takes 40 ids from the cache with LRANGE (HIT). It separately fetches the latest tweet ids of the 3 celebrities the follower follows and merges them into one list by Snowflake id. The bodies of the first 20 ids are hydrated from the tweet cache with a single MGET."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["tlsvc", "tlcache", "tweetcache"], "edges": ["tlsvc-cache", "tlsvc-tcache"] },
+      "nodeStates": { "tlcache": { "status": "success", "badge": "HIT", "progress": 0.6 }, "tweetcache": { "status": "success", "badge": "MGET 20" }, "tlsvc": { "status": "active", "badge": "merge" } },
+      "packets": [
+        { "edge": "tlsvc-cache", "shape": "dot", "label": "LRANGE 0 39", "durationMs": 600 },
+        { "edge": "tlsvc-cache", "shape": "dot", "direction": "backward", "startAt": 700, "durationMs": 600, "color": "success", "label": "40 id" },
+        { "edge": "tlsvc-tcache", "shape": "dot", "label": "MGET", "startAt": 1900, "durationMs": 600 },
+        { "edge": "tlsvc-tcache", "shape": "square", "direction": "backward", "startAt": 2600, "durationMs": 700, "color": "success", "label": "20 tweet" }
+      ],
+      "annotations": [
+        { "id": "celeb", "x": 530, "y": 370, "text": { "tr": "+ 3 ünlünün son tweet'leri (okurken çekildi)", "en": "+ latest tweets of 3 celebrities (pulled on read)" }, "tone": "warning", "target": "tlsvc" }
+      ]
+    },
+    {
+      "id": "respond",
+      "title": { "tr": "8 · 200 OK: akış dolu", "en": "8 · 200 OK: the feed is full" },
+      "narration": {
+        "tr": "20 tweet'lik sayfa gateway ve LB üzerinden takipçiye döner: toplam ~80 ms, hiçbir veritabanı sorgusu yok. Yazarın tweet'i, atılmasından ~3 s sonra takipçinin ekranında — eventual consistency'nin bilinçli ve ölçülü hâli.",
+        "en": "The 20-tweet page returns to the follower via the gateway and LB: ~80 ms total, zero database queries. The author's tweet is on the follower's screen ~3 s after posting — eventual consistency, deliberate and measured."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["tlsvc", "gateway", "lb", "reader"], "edges": ["gw-tlsvc", "lb-gw", "r-lb"] },
+      "nodeStates": { "reader": { "status": "success", "badge": "200 · 20" }, "tlsvc": { "status": "success", "badge": "" }, "tlcache": { "badge": "" }, "tweetcache": { "badge": "" } },
+      "packets": [
+        { "edge": "gw-tlsvc", "shape": "envelope", "direction": "backward", "durationMs": 600, "color": "success" },
+        { "edge": "lb-gw", "shape": "envelope", "direction": "backward", "startAt": 700, "durationMs": 500, "color": "success" },
+        { "edge": "r-lb", "shape": "envelope", "direction": "backward", "startAt": 1300, "durationMs": 800, "color": "success", "label": "20 KB" }
+      ],
+      "annotations": [
+        { "id": "latency", "x": 80, "y": 540, "text": { "tr": "okuma 80 ms · uçtan uca görünürlük ~3 s", "en": "read 80 ms · end-to-end visibility ~3 s" }, "tone": "success", "target": "reader" }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["twitter", "fan-out", "timeline", "cache", "kafka"]
+}

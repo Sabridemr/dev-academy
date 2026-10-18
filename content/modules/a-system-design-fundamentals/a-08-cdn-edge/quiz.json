@@ -1,0 +1,110 @@
+{
+  "id": "a-08-cdn-edge-quiz",
+  "title": { "tr": "CDN ve Edge Computing Quiz", "en": "CDN and Edge Computing Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Bir CDN'in gecikmeyi düşürmesinin temel nedeni nedir?",
+        "en": "What is the fundamental reason a CDN reduces latency?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Daha hızlı CPU'lara sahip olması", "en": "It has faster CPUs" } },
+        { "id": "b", "text": { "tr": "İçeriği ve TCP/TLS el sıkışmalarını kullanıcıya fiziksel olarak yakın bir PoP'a taşıyarak RTT'yi kısaltması", "en": "It shortens the RTT by moving content and the TCP/TLS handshakes to a PoP physically close to the user" } },
+        { "id": "c", "text": { "tr": "HTTP yerine UDP kullanması", "en": "It uses UDP instead of HTTP" } },
+        { "id": "d", "text": { "tr": "Origin sunucusunu daha büyük bir makineye taşıması", "en": "It moves the origin server to a bigger machine" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Işık hızı sabittir; CDN mesafeyi kısaltır. İlk isteğin 3–4 RTT'si yakın PoP ile 8–20 ms üzerinden yapılır ve içerik cache'ten yakından gelir. CPU hızı, protokol seçimi ya da origin boyutu buradaki kazanımın kaynağı değildir.",
+        "en": "The speed of light is fixed; a CDN shortens the distance. The 3–4 RTTs of a first request happen against a nearby PoP at 8–20 ms, and content is served from a nearby cache. CPU speed, protocol choice or origin size are not the source of the gain here."
+      },
+      "difficulty": "easy",
+      "concepts": ["cdn", "point-of-presence"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "Popüler bir dosyanın yayınlanma anında yüzlerce PoP'un aynı anda origin'e miss göndermesini (thundering herd) hangi mekanizma önler?",
+        "en": "Which mechanism prevents hundreds of PoPs from sending a miss to the origin at the same moment a popular file is published (thundering herd)?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Origin shield / tiered cache ile request coalescing", "en": "Origin shield / tiered cache with request coalescing" } },
+        { "id": "b", "text": { "tr": "TTL'i sıfıra indirmek", "en": "Setting the TTL to zero" } },
+        { "id": "c", "text": { "tr": "GeoDNS", "en": "GeoDNS" } },
+        { "id": "d", "text": { "tr": "Cache-Control: private", "en": "Cache-Control: private" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "Origin shield, tüm PoP miss'lerini önce tek bir ara katmana yönlendirir; shield aynı nesneye gelen eş zamanlı istekleri tek bir origin çağrısında birleştirir. TTL'i sıfırlamak sorunu büyütür, GeoDNS yalnızca PoP seçer, private ise CDN'in hiç saklamamasına yol açar.",
+        "en": "An origin shield routes every PoP miss to a single intermediate layer first; the shield collapses concurrent requests for the same object into one origin call. Zeroing the TTL makes the problem worse, GeoDNS only picks a PoP, and private stops the CDN from caching at all."
+      },
+      "difficulty": "medium",
+      "concepts": ["origin-shield", "edge-cache-hit-miss"]
+    },
+    {
+      "id": "q3",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Aşağıdaki Cache-Control kullanımlarından hangileri doğrudur? (Birden fazla seçin)",
+        "en": "Which of the following Cache-Control usages are correct? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Hash'li dosya adı (app.3f9a2c.js) için `public, max-age=31536000, immutable`", "en": "`public, max-age=31536000, immutable` for a hashed filename (app.3f9a2c.js)" } },
+        { "id": "b", "text": { "tr": "Giriş yapmış kullanıcının hesap sayfası için `public, s-maxage=600`", "en": "`public, s-maxage=600` for a logged-in user's account page" } },
+        { "id": "c", "text": { "tr": "Origin 5xx dönerse eski kopyayı sunmak için `stale-if-error=86400`", "en": "`stale-if-error=86400` to serve the old copy when the origin returns 5xx" } },
+        { "id": "d", "text": { "tr": "Tarayıcının 1 dk, CDN'in 10 dk saklaması için `max-age=60, s-maxage=600`", "en": "`max-age=60, s-maxage=600` so the browser keeps it 1 min and the CDN 10 min" } }
+      ],
+      "correct": ["a", "c", "d"],
+      "explanation": {
+        "tr": "Sürümlü URL'ler 1 yıl immutable saklanabilir (a); stale-if-error dayanıklılık sağlar (c); s-maxage yalnızca paylaşımlı cache'leri (CDN) etkiler, max-age tarayıcıyı (d). Kullanıcıya özel bir sayfayı public işaretlemek, A'nın hesabını B'ye göstermek demektir — veri sızıntısıdır; `private, no-store` olmalıdır (b yanlış).",
+        "en": "Versioned URLs can be cached immutable for a year (a); stale-if-error provides resilience (c); s-maxage affects only shared caches (CDN) while max-age affects the browser (d). Marking a user-specific page public means showing A's account to B — a data leak; it must be `private, no-store` (b is wrong)."
+      },
+      "difficulty": "medium",
+      "concepts": ["cache-control-headers", "cache-invalidation"]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Anycast ile tüm PoP'lar aynı IP adresini duyurur; bir PoP devre dışı kaldığında BGP rotayı çeker ve trafik DNS değişikliğine gerek kalmadan komşu PoP'a akar.",
+        "en": "With anycast all PoPs announce the same IP address; when a PoP goes down BGP withdraws the route and traffic flows to a neighbouring PoP without any DNS change."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["t"],
+      "explanation": {
+        "tr": "Doğru. Anycast'te yönlendirme internetin BGP tablosuyla yapılır; aynı prefix birçok yerden duyurulur ve her kullanıcı topolojik olarak en yakın PoP'a gider. DNS TTL'lerini beklemek gerekmez; failover saniyeler içindedir. GeoDNS ise resolver konumuna göre farklı IP döner ve TTL'e bağımlıdır.",
+        "en": "True. In anycast, routing is done by the internet's BGP table; the same prefix is announced from many places and each user reaches the topologically nearest PoP. No DNS TTLs need to expire; failover takes seconds. GeoDNS, by contrast, returns different IPs based on resolver location and depends on TTLs."
+      },
+      "difficulty": "medium",
+      "concepts": ["anycast-routing"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "Hangi iş yükü edge fonksiyonundan EN AZ fayda görür?",
+        "en": "Which workload benefits LEAST from an edge function?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "İstek başlığına göre A/B varyantı atayıp çerez yazmak", "en": "Assigning an A/B variant from request headers and setting a cookie" } },
+        { "id": "b", "text": { "tr": "Cache'teki görseli istenen genişlikte yeniden boyutlandırmak", "en": "Resizing a cached image to the requested width" } },
+        { "id": "c", "text": { "tr": "Her istekte tek bölgedeki merkezi veritabanına 5 ayrı sorgu atan kişiselleştirilmiş sayfa üretmek", "en": "Rendering a personalised page that issues 5 separate queries to a single-region central database on every request" } },
+        { "id": "d", "text": { "tr": "JWT imzasını doğrulayıp yetkisiz isteği 401 ile kenarda reddetmek", "en": "Verifying a JWT signature and rejecting unauthorised requests with 401 at the edge" } }
+      ],
+      "correct": ["c"],
+      "explanation": {
+        "tr": "Edge'in kazancı, işin kullanıcıya yakın ve veriden bağımsız (ya da edge'de cache'lenmiş veriyle) yapılabilmesidir. Durum tek bölgedeki merkezi veritabanındaysa fonksiyon her sorgu için o bölgeye gider ve 5 sorgu × 150 ms ile kazanım erir, hatta kötüleşir. A/B atama, görsel boyutlandırma ve JWT doğrulama ise tamamen yerel bilgiyle yapılabilir.",
+        "en": "The edge wins when the work can be done close to the user and independently of data (or with data cached at the edge). If state lives in a single-region central database, the function travels to that region for every query and 5 queries × 150 ms erases the gain, possibly making things worse. A/B assignment, image resizing and JWT verification can all be done with purely local information."
+      },
+      "difficulty": "hard",
+      "concepts": ["edge-functions", "dynamic-content-cdn"]
+    }
+  ]
+}

@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 520" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Derinlemesine savunma: dıştan içe yedi güvenlik katmanı</title>
+  <desc id="desc">Soldan sağa daralan yedi katman: anycast edge ve DDoS scrubbing, WAF, TLS sonlandırma, API gateway ile kimlik doğrulama ve rate limit, VPC ağ segmentasyonu, mTLS servis mesh ve en içte IAM en az yetki ile korunan veritabanı. Üstte her katmanda durdurulan tehdit örnekleri, altta katmanın fiziksel konumu yazılıdır. Solda saldırgan okları her katmanda kırmızı çarpı ile kesilir; meşru kullanıcı oku yeşil olarak tüm katmanları geçer.</desc>
+  <defs>
+    <marker id="arrow-g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-success, #10b981)"/>
+    </marker>
+    <marker id="arrow-r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-danger, #ef4444)"/>
+    </marker>
+  </defs>
+
+  <!-- Katman şeritleri (iç içe, soldan sağa daralan) -->
+  <g stroke-width="1.5">
+    <rect x="150" y="60" width="790" height="400" rx="16" fill="var(--da-primary, #6366f1)" opacity="0.05" stroke="var(--da-primary, #6366f1)"/>
+    <rect x="260" y="85" width="680" height="350" rx="14" fill="var(--da-primary, #6366f1)" opacity="0.05" stroke="var(--da-primary, #6366f1)"/>
+    <rect x="370" y="110" width="570" height="300" rx="12" fill="var(--da-primary, #6366f1)" opacity="0.05" stroke="var(--da-primary, #6366f1)"/>
+    <rect x="480" y="135" width="460" height="250" rx="12" fill="var(--da-primary, #6366f1)" opacity="0.05" stroke="var(--da-primary, #6366f1)"/>
+    <rect x="590" y="160" width="350" height="200" rx="10" fill="var(--da-primary, #6366f1)" opacity="0.05" stroke="var(--da-primary, #6366f1)"/>
+    <rect x="700" y="185" width="240" height="150" rx="10" fill="var(--da-primary, #6366f1)" opacity="0.05" stroke="var(--da-primary, #6366f1)"/>
+    <rect x="810" y="210" width="130" height="100" rx="10" fill="var(--da-success, #10b981)" opacity="0.15" stroke="var(--da-success, #10b981)" stroke-width="2"/>
+  </g>
+
+  <!-- Katman adları (dikey hizalı, şerit üstünde) -->
+  <g font-size="11" font-weight="600" fill="var(--da-fg, #0f172a)">
+    <text x="160" y="78">1 · Anycast edge + DDoS scrubbing</text>
+    <text x="270" y="103">2 · WAF</text>
+    <text x="380" y="128">3 · TLS 1.3</text>
+    <text x="490" y="153">4 · API gateway: authn + authz + 429</text>
+    <text x="600" y="178">5 · VPC segmentasyonu</text>
+    <text x="710" y="203">6 · mTLS mesh</text>
+    <text x="820" y="232">7 · IAM</text>
+  </g>
+  <g font-size="10" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="875" y="252">en az yetki</text>
+    <text x="875" y="268">IRSA · 15 dk</text>
+    <text x="875" y="290" font-weight="600">DynamoDB</text>
+    <text x="875" y="303">carts · KMS</text>
+  </g>
+
+  <!-- Fiziksel konum notları (şerit altları) -->
+  <g font-size="9" fill="var(--da-muted, #64748b)">
+    <text x="160" y="450">edge PoP · 100+ şehir · L3/L4</text>
+    <text x="270" y="426">edge PoP · L7 kuralları</text>
+    <text x="380" y="402">edge'de sonlanır → origin'e yeniden şifreli</text>
+    <text x="490" y="377">Frankfurt · EKS pod'ları</text>
+    <text x="600" y="352">özel subnet · SG · NetworkPolicy</text>
+    <text x="710" y="327">sidecar · SPIFFE ID · 1 saat sertifika</text>
+  </g>
+
+  <!-- Durdurulan tehditler (kırmızı etiketler) -->
+  <g font-size="9" fill="var(--da-danger, #ef4444)">
+    <text x="160" y="94">✕ SYN/UDP seli, amplifikasyon</text>
+    <text x="270" y="119">✕ SQLi, XSS, kötü bot, L7 flood</text>
+    <text x="380" y="144">✕ dinleme, downgrade, MITM</text>
+    <text x="490" y="169">✕ sahte/süresi dolmuş JWT, kaba kuvvet</text>
+    <text x="600" y="194">✕ dışarıdan DB'ye doğrudan erişim</text>
+    <text x="710" y="219">✕ yanal hareket, kimliksiz pod</text>
+    <text x="820" y="320">✕ yetki aşımı (AccessDenied)</text>
+  </g>
+
+  <!-- Saldırgan -->
+  <rect x="20" y="130" width="110" height="56" rx="10" fill="var(--da-danger, #ef4444)" opacity="0.15" stroke="var(--da-danger, #ef4444)" stroke-width="1.5"/>
+  <text x="75" y="153" font-size="12" font-weight="600" fill="var(--da-fg, #0f172a)" text-anchor="middle">Saldırgan</text>
+  <text x="75" y="169" font-size="9" fill="var(--da-muted, #64748b)" text-anchor="middle">botnet · SQLi · sahte token</text>
+  <!-- saldırı okları: her biri bir katmanda kesilir -->
+  <g stroke="var(--da-danger, #ef4444)" stroke-width="1.8" fill="none" marker-end="url(#arrow-r)">
+    <path d="M 130 150 L 200 150"/>
+    <path d="M 130 158 C 180 158, 230 200, 300 200"/>
+    <path d="M 130 166 C 200 166, 300 240, 420 240"/>
+    <path d="M 130 174 C 220 174, 380 280, 530 280"/>
+  </g>
+  <g fill="var(--da-danger, #ef4444)" font-size="14" font-weight="700">
+    <text x="206" y="155">✕</text>
+    <text x="306" y="205">✕</text>
+    <text x="426" y="245">✕</text>
+    <text x="536" y="285">✕</text>
+  </g>
+  <g font-size="8" fill="var(--da-danger, #ef4444)">
+    <text x="150" y="142">1,2 Tb/s</text>
+    <text x="236" y="192">' OR 1=1</text>
+    <text x="340" y="232">TLS 1.0</text>
+    <text x="440" y="272">Bearer exp</text>
+  </g>
+  <!-- içeriden yanal hareket -->
+  <rect x="600" y="240" width="90" height="36" rx="8" fill="var(--da-danger, #ef4444)" opacity="0.12" stroke="var(--da-danger, #ef4444)" stroke-dasharray="4 3"/>
+  <text x="645" y="256" font-size="9" fill="var(--da-fg, #0f172a)" text-anchor="middle">ele geçirilmiş pod</text>
+  <text x="645" y="268" font-size="8" fill="var(--da-muted, #64748b)" text-anchor="middle">küme içinde</text>
+  <path d="M 690 258 L 740 258" stroke="var(--da-danger, #ef4444)" stroke-width="1.8" marker-end="url(#arrow-r)"/>
+  <text x="746" y="262" font-size="14" font-weight="700" fill="var(--da-danger, #ef4444)">✕</text>
+  <text x="700" y="250" font-size="8" fill="var(--da-danger, #ef4444)">mTLS yok</text>
+
+  <!-- Meşru kullanıcı -->
+  <rect x="20" y="360" width="110" height="56" rx="10" fill="var(--da-success, #10b981)" opacity="0.15" stroke="var(--da-success, #10b981)" stroke-width="1.5"/>
+  <text x="75" y="383" font-size="12" font-weight="600" fill="var(--da-fg, #0f172a)" text-anchor="middle">Meşru kullanıcı</text>
+  <text x="75" y="399" font-size="9" fill="var(--da-muted, #64748b)" text-anchor="middle">geçerli JWT · TLS 1.3</text>
+  <path d="M 130 388 C 300 388, 500 330, 700 330 C 760 330, 790 300, 808 290" stroke="var(--da-success, #10b981)" stroke-width="2.5" fill="none" marker-end="url(#arrow-g)"/>
+  <text x="420" y="348" font-size="9" fill="var(--da-success, #10b981)">200 OK · 7 katman · ~80 ms · görünmez</text>
+
+  <!-- Alt not -->
+  <rect x="20" y="478" width="920" height="32" rx="8" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+  <text x="480" y="498" font-size="11" fill="var(--da-fg, #0f172a)" text-anchor="middle">Hiçbir katman tek başına güvenilmez. Dış katman aşılsa bile iç katmanlar zararı sınırlar; her olay CloudTrail / GuardDuty ile kaydedilip tespit edilir.</text>
+</svg>

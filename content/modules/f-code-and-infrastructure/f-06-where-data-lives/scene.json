@@ -1,0 +1,185 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "f-06-order-data-journey",
+  "title": { "tr": "Bir Siparişin Verisi: OLTP'den Dashboard'a", "en": "An Order's Data: From OLTP to the Dashboard" },
+  "summary": {
+    "tr": "Sipariş Postgres'e transaction ile yazılır, cache güncellenir, CDC WAL'dan olay üretir, Kafka tüketicilere dağıtır, S3 ve warehouse'a yüklenir, dashboard'da belirir; loglar ve metrikler yan kanaldan akar.",
+    "en": "The order is written to Postgres in a transaction, the cache is updated, CDC produces an event from the WAL, Kafka fans it out to consumers, it is loaded into S3 and the warehouse and appears on the dashboard; logs and metrics flow through a side channel."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda orders-service pod'u; onun sağında Postgres (OLTP, doğruluk kaynağı) ve üstünde Redis cache. Postgres'ten Debezium CDC'ye, oradan Kafka'ya bir akış vardır. Kafka'dan üç tüketiciye kollar ayrılır: OpenSearch arama indeksi, S3 data lake ve bildirim servisi. S3'ten Redshift warehouse'a saatlik yükleme, warehouse'tan dashboard'a sorgu gider. Altta Fluent Bit ile loglar OpenSearch log kümesine, Prometheus ile metrikler zaman serisi deposuna akar. Adımlar bu akışı sırayla ve her depodaki gecikmeyle gösterir.",
+      "en": "The orders-service pod on the left; to its right Postgres (OLTP, source of truth) and above it the Redis cache. A flow goes from Postgres to Debezium CDC and on to Kafka. From Kafka branches lead to three consumers: the OpenSearch search index, the S3 data lake and the notification service. An hourly load goes from S3 to the Redshift warehouse, and a query from the warehouse to the dashboard. At the bottom, logs flow via Fluent Bit to the OpenSearch log cluster and metrics via Prometheus to the time-series store. The steps show this flow in order with the latency at each store."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "svc", "kind": "pod", "label": "orders-service", "sublabel": { "tr": "EKS pod · AZ-a", "en": "EKS pod · AZ-a" }, "x": 90, "y": 280, "w": 120, "h": 70 },
+    { "id": "cache", "kind": "cache", "label": "Redis", "sublabel": { "tr": "RAM · TTL 10 dk", "en": "RAM · TTL 10 min" }, "x": 90, "y": 110, "w": 110, "h": 60 },
+    { "id": "db", "kind": "db", "label": "Postgres (OLTP)", "sublabel": { "tr": "doğruluk kaynağı · primary AZ-a", "en": "source of truth · primary AZ-a" }, "x": 280, "y": 280, "w": 150, "h": 76 },
+    { "id": "cdc", "kind": "worker", "label": "Debezium CDC", "sublabel": { "tr": "WAL okur → olay", "en": "reads WAL → event" }, "x": 450, "y": 160, "w": 130, "h": 60 },
+    { "id": "kafka", "kind": "queue", "label": "Kafka", "sublabel": { "tr": "orders.changes · 3 AZ · 7 gün", "en": "orders.changes · 3 AZ · 7 days" }, "x": 620, "y": 280, "w": 140, "h": 70 },
+    { "id": "search", "kind": "storage", "label": "OpenSearch", "sublabel": { "tr": "arama indeksi", "en": "search index" }, "x": 800, "y": 110, "w": 130, "h": 60 },
+    { "id": "lake", "kind": "storage", "label": "S3 data lake", "sublabel": { "tr": "Parquet · dt=2026-10-18", "en": "Parquet · dt=2026-10-18" }, "x": 800, "y": 280, "w": 130, "h": 60 },
+    { "id": "notify", "kind": "service", "label": { "tr": "Bildirim", "en": "Notifications" }, "sublabel": "e-posta / push", "x": 620, "y": 110, "w": 120, "h": 56 },
+    { "id": "dwh", "kind": "db", "label": "Redshift (OLAP)", "sublabel": { "tr": "sütunsal · saatlik COPY", "en": "columnar · hourly COPY" }, "x": 800, "y": 440, "w": 140, "h": 64 },
+    { "id": "dash", "kind": "browser", "label": "Dashboard", "sublabel": { "tr": "ciro / ülke · 5 dk yenile", "en": "revenue / country · 5 min refresh" }, "x": 620, "y": 520, "w": 130, "h": 60 },
+    { "id": "logs", "kind": "storage", "label": "OpenSearch logs", "sublabel": { "tr": "JSON log · 14 gün SSD", "en": "JSON logs · 14 days SSD" }, "x": 280, "y": 520, "w": 140, "h": 60 },
+    { "id": "metrics", "kind": "generic", "label": "Prometheus", "sublabel": { "tr": "time series · 15 sn scrape", "en": "time series · 15 s scrape" }, "x": 90, "y": 520, "w": 130, "h": 60 }
+  ],
+  "edges": [
+    { "id": "svc-db", "from": "svc", "to": "db", "kind": "data", "label": "BEGIN … COMMIT" },
+    { "id": "svc-cache", "from": "svc", "to": "cache", "kind": "data", "label": "DEL / SET" },
+    { "id": "db-cdc", "from": "db", "to": "cdc", "kind": "replication", "style": "dotted", "label": "WAL" },
+    { "id": "cdc-kafka", "from": "cdc", "to": "kafka", "kind": "event", "label": "OrderPlaced" },
+    { "id": "kafka-search", "from": "kafka", "to": "search", "kind": "event", "curvature": -0.2 },
+    { "id": "kafka-lake", "from": "kafka", "to": "lake", "kind": "event" },
+    { "id": "kafka-notify", "from": "kafka", "to": "notify", "kind": "event", "curvature": -0.1 },
+    { "id": "lake-dwh", "from": "lake", "to": "dwh", "kind": "data", "style": "dashed", "label": { "tr": "saatlik", "en": "hourly" } },
+    { "id": "dwh-dash", "from": "dwh", "to": "dash", "kind": "response", "label": "SQL" },
+    { "id": "svc-logs", "from": "svc", "to": "logs", "kind": "data", "style": "dotted", "curvature": 0.2, "label": "Fluent Bit" },
+    { "id": "svc-metrics", "from": "svc", "to": "metrics", "kind": "data", "style": "dotted", "label": "/metrics" }
+  ],
+  "steps": [
+    {
+      "id": "oltp",
+      "title": { "tr": "1 · OLTP transaction", "en": "1 · OLTP transaction" },
+      "narration": {
+        "tr": "Kullanıcı siparişi tamamlar. orders-service tek bir transaction'da orders, order_items ve inventory tablolarına yazar; outbox tablosuna da OrderPlaced olayını ekler. Commit, AZ-b'deki standby'a senkron kopyalanınca döner: 5 ms. Bu satırlar siparişin tek doğruluk kaynağıdır.",
+        "en": "The user completes the order. orders-service writes to the orders, order_items and inventory tables in a single transaction and adds an OrderPlaced event to the outbox table. The commit returns once synchronously copied to the standby in AZ-b: 5 ms. These rows are the order's single source of truth."
+      },
+      "durationMs": 4000,
+      "inherit": false,
+      "highlight": { "nodes": ["svc", "db"], "edges": ["svc-db"] },
+      "nodeStates": { "svc": { "status": "active" }, "db": { "status": "active", "badge": "COMMIT" } },
+      "packets": [
+        { "edge": "svc-db", "shape": "square", "label": "INSERT ×3 + outbox", "durationMs": 1000 },
+        { "edge": "svc-db", "shape": "square", "direction": "backward", "label": "ok · 5 ms", "startAt": 1200, "durationMs": 800, "color": "success" }
+      ],
+      "annotations": [
+        { "id": "truth", "x": 280, "y": 400, "text": { "tr": "doğruluk kaynağı: order #9001 · PLACED", "en": "source of truth: order #9001 · PLACED" }, "tone": "info", "target": "db" }
+      ]
+    },
+    {
+      "id": "cache-step",
+      "title": { "tr": "2 · Cache: türev ve geçici", "en": "2 · Cache: derived and temporary" },
+      "narration": {
+        "tr": "Servis Redis'te sepeti siler ve sipariş özetini 10 dakikalık TTL ile yazar; 'Siparişlerim' sayfası DB'ye gitmeden açılır. Bu yazma başarısız olsa bile sipariş geçerlidir — cache kaybı veri kaybı değil, yalnızca birkaç ms gecikme demektir.",
+        "en": "The service deletes the cart in Redis and writes the order summary with a 10-minute TTL; the 'My orders' page opens without touching the DB. Even if this write fails the order is valid — losing the cache is not data loss, only a few ms of latency."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["svc", "cache"], "edges": ["svc-cache"] },
+      "nodeStates": { "cache": { "status": "active", "badge": "order:9001" }, "db": { "status": "success", "badge": "" } },
+      "packets": [
+        { "edge": "svc-cache", "shape": "dot", "label": "DEL cart:u42", "durationMs": 600 },
+        { "edge": "svc-cache", "shape": "dot", "label": "SET order:9001 EX 600", "startAt": 700, "durationMs": 600 }
+      ],
+      "annotations": [
+        { "id": "cache-note", "x": 90, "y": 40, "text": { "tr": "1 ms · kaybedilebilir · RAM", "en": "1 ms · disposable · RAM" }, "target": "cache" }
+      ]
+    },
+    {
+      "id": "cdc-step",
+      "title": { "tr": "3 · CDC: WAL'dan olay üret", "en": "3 · CDC: produce an event from the WAL" },
+      "narration": {
+        "tr": "Debezium, Postgres'in write-ahead log'unu bir replikasyon yuvası üzerinden okur ve outbox satırını OrderPlaced olayına çevirir. Uygulama ikinci bir yazma yapmadı; bu yüzden 'DB'ye yazdım ama Kafka'ya yazamadım' tutarsızlığı (dual write) imkânsızdır.",
+        "en": "Debezium reads Postgres's write-ahead log through a replication slot and turns the outbox row into an OrderPlaced event. The application made no second write; that is why the 'wrote to the DB but not to Kafka' inconsistency (dual write) is impossible."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["db", "cdc"], "edges": ["db-cdc"] },
+      "nodeStates": { "cdc": { "status": "active", "badge": "LSN 0/1A2B" } },
+      "edgeStates": { "db-cdc": { "status": "active" } },
+      "packets": [{ "edge": "db-cdc", "shape": "diamond", "label": "WAL: outbox insert", "durationMs": 1200, "color": "accent" }],
+      "annotations": [
+        { "id": "cdc-note", "x": 450, "y": 60, "text": { "tr": "outbox kalıbı: olay iş verisiyle aynı transaction'da", "en": "outbox pattern: event in the same transaction as business data" }, "tone": "info", "target": "cdc" }
+      ]
+    },
+    {
+      "id": "kafka-step",
+      "title": { "tr": "4 · Kafka: tek olay, çok tüketici", "en": "4 · Kafka: one event, many consumers" },
+      "narration": {
+        "tr": "Olay orders.changes topic'ine order_id anahtarıyla yazılır; aynı siparişin olayları aynı partition'da sıralı kalır. Üç AZ'ye yayılmış broker'lar 3 kopya tutar, 7 gün saklar. Yazma gecikmesi 50–200 ms. Artık birden çok tüketici aynı akışı bağımsız okuyabilir.",
+        "en": "The event is written to the orders.changes topic keyed by order_id; events of the same order stay ordered in one partition. Brokers spread over three AZs keep 3 copies for 7 days. Write latency is 50–200 ms. Multiple consumers can now read the same stream independently."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["cdc", "kafka"], "edges": ["cdc-kafka"] },
+      "nodeStates": { "kafka": { "status": "active", "badge": "offset 48,211" }, "cdc": { "status": "success", "badge": "" } },
+      "edgeStates": { "cdc-kafka": { "status": "active" } },
+      "packets": [{ "edge": "cdc-kafka", "shape": "envelope", "label": "OrderPlaced #9001", "durationMs": 1100 }],
+      "annotations": [
+        { "id": "kafka-note", "x": 620, "y": 400, "text": { "tr": "partition = hash(order_id) · RF 3 · 7 gün replay", "en": "partition = hash(order_id) · RF 3 · 7-day replay" }, "target": "kafka" }
+      ]
+    },
+    {
+      "id": "consumers",
+      "title": { "tr": "5 · Tüketiciler: arama, S3, bildirim", "en": "5 · Consumers: search, S3, notifications" },
+      "narration": {
+        "tr": "Üç bağımsız tüketici grubu olayı alır: indeksleyici OpenSearch'e yazar (1–2 sn sonra 'siparişlerimde ara' çalışır), lake yazıcı olayları 5 dakikalık Parquet dosyaları hâlinde S3'e bırakır, bildirim servisi e-posta gönderir. Biri yavaşlarsa diğerleri etkilenmez; her biri kendi offset'inden devam eder.",
+        "en": "Three independent consumer groups receive the event: the indexer writes to OpenSearch ('search my orders' works 1–2 s later), the lake writer drops events into S3 as 5-minute Parquet files, the notification service sends an email. If one slows down the others are unaffected; each resumes from its own offset."
+      },
+      "durationMs": 4200,
+      "highlight": { "nodes": ["kafka", "search", "lake", "notify"], "edges": ["kafka-search", "kafka-lake", "kafka-notify"] },
+      "nodeStates": {
+        "search": { "status": "active", "badge": "+1 doc" },
+        "lake": { "status": "active", "badge": "part-0042.parquet" },
+        "notify": { "status": "success", "badge": "sent" }
+      },
+      "edgeStates": { "kafka-search": { "status": "active" }, "kafka-lake": { "status": "active" }, "kafka-notify": { "status": "active" } },
+      "packets": [
+        { "edge": "kafka-notify", "shape": "envelope", "durationMs": 900 },
+        { "edge": "kafka-search", "shape": "envelope", "startAt": 300, "durationMs": 1000 },
+        { "edge": "kafka-lake", "shape": "envelope", "startAt": 600, "durationMs": 1000, "color": "accent" }
+      ],
+      "annotations": [
+        { "id": "cons-note", "x": 800, "y": 200, "text": { "tr": "arama: 1–2 sn · S3: 5 dk toplu · bildirim: anında", "en": "search: 1–2 s · S3: 5-min batches · notify: instant" }, "target": "search" }
+      ]
+    },
+    {
+      "id": "warehouse",
+      "title": { "tr": "6 · Warehouse: saatlik yükleme", "en": "6 · Warehouse: hourly load" },
+      "narration": {
+        "tr": "Saat başı Airflow işi S3'teki yeni Parquet bölümlerini Redshift'e COPY eder. Veri sütunsal ve sıkıştırılmış tutulur: 2 milyar sipariş birkaç yüz GB olur ve 'ülkeye göre ciro' sorgusu yalnızca 3 sütunu tarar. OLTP'ye hiçbir rapor sorgusu gitmez.",
+        "en": "At the top of each hour an Airflow job COPYs the new Parquet partitions from S3 into Redshift. Data is stored columnar and compressed: 2 billion orders become a few hundred GB and a 'revenue by country' query scans only 3 columns. No reporting query ever hits OLTP."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["lake", "dwh"], "edges": ["lake-dwh"] },
+      "nodeStates": { "dwh": { "status": "active", "badge": "COPY 1.2M rows" }, "search": { "badge": "" }, "lake": { "badge": "" } },
+      "edgeStates": { "lake-dwh": { "status": "active" } },
+      "packets": [{ "edge": "lake-dwh", "shape": "square", "label": "COPY FROM s3://", "durationMs": 1500, "color": "accent" }],
+      "annotations": [
+        { "id": "dwh-note", "x": 800, "y": 560, "text": { "tr": "OLAP: sütunsal · ~1 saat gecikme kabul edilir", "en": "OLAP: columnar · ~1 hour lag is acceptable" }, "target": "dwh" }
+      ]
+    },
+    {
+      "id": "dashboard",
+      "title": { "tr": "7 · Dashboard ve yan kanal: log + metrik", "en": "7 · Dashboard and the side channel: logs + metrics" },
+      "narration": {
+        "tr": "Yöneticinin dashboard'u 5 dakikada bir warehouse'a SQL atar; sipariş #9001 verildikten ~1 saat sonra grafikte belirir. Bu arada yan kanalda servis her isteği JSON log olarak yazdı (Fluent Bit → OpenSearch, 14 gün) ve orders_created_total sayacını artırdı (Prometheus, 15 sn'de bir kazıma). Bunlar gözlemlenebilirlik verisidir; 'kaç sipariş alındı' sorusunun kesin cevabı warehouse'tur, Prometheus değil.",
+        "en": "The manager's dashboard runs SQL against the warehouse every 5 minutes; order #9001 appears on the chart ~1 hour after it was placed. Meanwhile in the side channel the service wrote each request as a JSON log (Fluent Bit → OpenSearch, 14 days) and incremented the orders_created_total counter (Prometheus, scraped every 15 s). That is observability data; the exact answer to 'how many orders' is the warehouse, not Prometheus."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["dwh", "dash", "logs", "metrics"], "edges": ["dwh-dash", "svc-logs", "svc-metrics"] },
+      "nodeStates": {
+        "dash": { "status": "success", "badge": "+₺1.240" },
+        "dwh": { "status": "success", "badge": "" },
+        "logs": { "status": "active", "badge": "14 gün" },
+        "metrics": { "status": "active", "badge": "+1" },
+        "svc": { "status": "success" }
+      },
+      "edgeStates": { "dwh-dash": { "status": "active" }, "svc-logs": { "status": "active" }, "svc-metrics": { "status": "active" } },
+      "packets": [
+        { "edge": "dwh-dash", "shape": "square", "label": "SELECT country, SUM(total)", "direction": "backward", "durationMs": 900 },
+        { "edge": "dwh-dash", "shape": "square", "label": "3 s", "startAt": 1000, "durationMs": 900, "color": "success" },
+        { "edge": "svc-logs", "shape": "dot", "label": "{\"msg\":\"order created\"}", "startAt": 400, "durationMs": 1000 },
+        { "edge": "svc-metrics", "shape": "dot", "label": "orders_created_total", "startAt": 900, "durationMs": 900, "direction": "backward" }
+      ],
+      "annotations": [
+        { "id": "side-note", "x": 280, "y": 440, "text": { "tr": "gözlemlenebilirlik verisi ≠ iş verisi: yaklaşık, kısa ömürlü, ayrı depo", "en": "observability data ≠ business data: approximate, short-lived, separate stores" }, "tone": "warning", "target": "logs" }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["data-flow", "cdc", "kafka", "warehouse", "oltp-olap", "observability"]
+}

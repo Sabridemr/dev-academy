@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 500" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Mesajlaşma ER diyagramı</title>
+  <desc id="desc">Tablolar: users, conversations, participants, messages, message_receipts (opsiyonel), attachments. Bir konuşmanın çok katılımcısı ve çok mesajı vardır; mesajlar conversation_id ve konuşma içi seq ile anahtarlanır. Okundu bilgisi participants tablosunda last_read_seq olarak tutulur; message_receipts yalnızca grup sohbetlerinde kişi bazlı okundu listesi gerekiyorsa kullanılır. attachments mesajın dosyalarını nesne depolamadaki URL ile tutar.</desc>
+  <defs>
+    <marker id="many" viewBox="0 0 20 20" refX="18" refY="10" markerWidth="13" markerHeight="13" orient="auto-start-reverse">
+      <path d="M 2 2 L 18 10 L 2 18 M 2 10 L 18 10" fill="none" stroke="var(--da-primary, #6366f1)" stroke-width="1.6"/>
+    </marker>
+    <marker id="one" viewBox="0 0 20 20" refX="18" refY="10" markerWidth="13" markerHeight="13" orient="auto-start-reverse">
+      <path d="M 12 2 L 12 18 M 2 10 L 18 10" fill="none" stroke="var(--da-primary, #6366f1)" stroke-width="1.6"/>
+    </marker>
+  </defs>
+  <style>
+    .t { fill: var(--da-fg, #0f172a); font-size: 11px; }
+    .h { fill: var(--da-fg, #0f172a); font-size: 13px; font-weight: 600; }
+    .k { font-weight: 600; }
+    .fk { fill: var(--da-accent, #f59e0b); font-weight: 600; }
+    .box { fill: var(--da-surface, #ffffff); stroke: var(--da-fg, #0f172a); stroke-width: 1.4; }
+    .head { fill: var(--da-primary, #6366f1); opacity: 0.14; }
+    .rel { stroke: var(--da-primary, #6366f1); stroke-width: 1.6; fill: none; }
+    .m { fill: var(--da-muted, #64748b); font-size: 10px; }
+  </style>
+
+  <!-- users -->
+  <rect class="box" x="40" y="60" width="190" height="92" rx="8"/><rect class="head" x="40" y="60" width="190" height="26" rx="8"/>
+  <text class="h" x="135" y="78" text-anchor="middle">users</text>
+  <text class="t" x="50" y="104"><tspan class="k">PK</tspan> id</text>
+  <text class="t" x="50" y="120">phone / handle UNIQUE</text>
+  <text class="t" x="50" y="136">public_key (E2EE), last_seen_at</text>
+
+  <!-- conversations -->
+  <rect class="box" x="380" y="60" width="210" height="108" rx="8"/><rect class="head" x="380" y="60" width="210" height="26" rx="8"/>
+  <text class="h" x="485" y="78" text-anchor="middle">conversations</text>
+  <text class="t" x="390" y="104"><tspan class="k">PK</tspan> id</text>
+  <text class="t" x="390" y="120">kind (direct, group), title</text>
+  <text class="t" x="390" y="136">last_seq bigint  (atomik sayaç)</text>
+  <text class="t" x="390" y="152">created_at</text>
+
+  <!-- participants -->
+  <rect class="box" x="40" y="240" width="190" height="124" rx="8"/><rect class="head" x="40" y="240" width="190" height="26" rx="8" fill="var(--da-accent, #f59e0b)" opacity="0.18"/>
+  <text class="h" x="135" y="258" text-anchor="middle">participants</text>
+  <text class="t" x="50" y="284"><tspan class="k">PK</tspan> <tspan class="fk">FK</tspan> conversation_id</text>
+  <text class="t" x="50" y="300"><tspan class="k">PK</tspan> <tspan class="fk">FK</tspan> user_id</text>
+  <text class="t" x="50" y="316">role (member, admin)</text>
+  <text class="t" x="50" y="332">last_read_seq  (okundu işareti)</text>
+  <text class="t" x="50" y="348">muted_until, joined_at</text>
+
+  <!-- messages -->
+  <rect class="box" x="380" y="240" width="210" height="156" rx="8" stroke="var(--da-success, #10b981)" stroke-width="2"/><rect class="head" x="380" y="240" width="210" height="26" rx="8" fill="var(--da-success, #10b981)" opacity="0.16"/>
+  <text class="h" x="485" y="258" text-anchor="middle">messages</text>
+  <text class="t" x="390" y="284"><tspan class="k">PK</tspan> <tspan class="fk">FK</tspan> conversation_id</text>
+  <text class="t" x="390" y="300"><tspan class="k">PK</tspan> seq bigint  (konuşma içi sıra)</text>
+  <text class="t" x="390" y="316"><tspan class="fk">FK</tspan> sender_id</text>
+  <text class="t" x="390" y="332">body text / ciphertext bytea</text>
+  <text class="t" x="390" y="348">sent_at (bilgi, sıra değil)</text>
+  <text class="t" x="390" y="364">deleted_at, edited_at</text>
+  <text class="t" x="390" y="380">PARTITION BY HASH (conversation_id)</text>
+
+  <!-- attachments -->
+  <rect class="box" x="730" y="240" width="200" height="108" rx="8"/><rect class="head" x="730" y="240" width="200" height="26" rx="8"/>
+  <text class="h" x="830" y="258" text-anchor="middle">attachments</text>
+  <text class="t" x="740" y="284"><tspan class="k">PK</tspan> id</text>
+  <text class="t" x="740" y="300"><tspan class="fk">FK</tspan> (conversation_id, seq)</text>
+  <text class="t" x="740" y="316">object_url (S3), mime, size</text>
+  <text class="t" x="740" y="332">thumbnail_url</text>
+
+  <!-- message_receipts (opsiyonel) -->
+  <rect class="box" x="730" y="60" width="200" height="108" rx="8" stroke-dasharray="5 4"/><rect class="head" x="730" y="60" width="200" height="26" rx="8"/>
+  <text class="h" x="830" y="78" text-anchor="middle">message_receipts (ops.)</text>
+  <text class="t" x="740" y="104"><tspan class="k">PK</tspan> (conversation_id, seq, user_id)</text>
+  <text class="t" x="740" y="120">delivered_at, read_at</text>
+  <text class="t" x="740" y="136">yalnızca grup "kim okudu" listesi</text>
+  <text class="t" x="740" y="152">mesaj × katılımcı satır → pahalı</text>
+
+  <!-- İlişkiler -->
+  <path class="rel" d="M 135 152 L 135 240" marker-start="url(#one)" marker-end="url(#many)"/>
+  <path class="rel" d="M 380 130 C 300 130, 280 300, 230 300" marker-start="url(#one)" marker-end="url(#many)"/>
+  <path class="rel" d="M 485 168 L 485 240" marker-start="url(#one)" marker-end="url(#many)"/>
+  <path class="rel" d="M 230 100 L 380 100" stroke-dasharray="4 3" marker-start="url(#one)" marker-end="url(#many)"/>
+  <path class="rel" d="M 590 300 L 730 300" marker-start="url(#one)" marker-end="url(#many)"/>
+  <path class="rel" d="M 590 270 C 650 270, 660 120, 730 120" stroke-dasharray="4 3" marker-start="url(#one)" marker-end="url(#many)"/>
+
+  <text class="m" x="145" y="200">member of 1:N</text>
+  <text class="m" x="250" y="236">has 1:N</text>
+  <text class="m" x="495" y="208">contains 1:N (seq ↑)</text>
+  <text class="m" x="270" y="92">sender</text>
+  <text class="m" x="640" y="292">0..N files</text>
+  <text class="m" x="640" y="190">per-user receipts</text>
+
+  <!-- Alt notlar -->
+  <rect x="40" y="420" width="890" height="64" rx="8" fill="var(--da-surface, #f8fafc)" stroke="var(--da-border, #cbd5e1)"/>
+  <text class="t" x="52" y="440"><tspan class="k">seq üretimi:</tspan> UPDATE conversations SET last_seq = last_seq + 1 WHERE id = $1 RETURNING last_seq  →  INSERT messages (…, seq)</text>
+  <text class="t" x="52" y="458"><tspan class="k">okunmamış:</tspan> conversations.last_seq − participants.last_read_seq  (COUNT yok, tablo taraması yok)</text>
+  <text class="t" x="52" y="476"><tspan class="k">ölçek:</tspan> messages → Cassandra: PRIMARY KEY ((conversation_id), seq) WITH CLUSTERING ORDER BY (seq DESC); son 50 mesaj = tek partition okuması</text>
+</svg>

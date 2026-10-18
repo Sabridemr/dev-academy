@@ -1,0 +1,107 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 440" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Sinir ağı playground anatomisi</title>
+  <desc id="desc">Solda üç küçük veri kümesi çizimi: XOR (çapraz köşelerde iki renk), daire (içte bir sınıf, dışta diğer) ve spiral (iki iç içe sarmal). Ortada ayar paneli (katmanlar 4,4; aktivasyon tanh; öğrenme oranı 0.03; batch 10; gürültü) ve 2-4-4-1 ağ çizimi; kalın kenarlar büyük ağırlıkları temsil eder. Sağda epoch'lara göre kayıp eğrisi: eğitim kaybı düşmeye devam eder, doğrulama kaybı bir noktadan sonra yükselir; early stopping noktası işaretlidir.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+  </defs>
+
+  <!-- Sol: veri kümeleri -->
+  <text x="110" y="26" text-anchor="middle" font-size="13" font-weight="600" fill="var(--da-fg, #0f172a)">Veri kümeleri</text>
+
+  <!-- XOR -->
+  <rect x="30" y="40" width="160" height="110" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+  <text x="110" y="58" text-anchor="middle" font-size="11" font-weight="600" fill="var(--da-fg, #0f172a)">XOR</text>
+  <g fill="var(--da-primary, #6366f1)"><circle cx="60" cy="80" r="3"/><circle cx="72" cy="90" r="3"/><circle cx="55" cy="95" r="3"/><circle cx="150" cy="130" r="3"/><circle cx="160" cy="120" r="3"/><circle cx="165" cy="135" r="3"/></g>
+  <g fill="var(--da-accent, #f59e0b)"><circle cx="150" cy="80" r="3"/><circle cx="160" cy="92" r="3"/><circle cx="165" cy="78" r="3"/><circle cx="60" cy="130" r="3"/><circle cx="70" cy="122" r="3"/><circle cx="55" cy="138" r="3"/></g>
+  <line x1="110" y1="68" x2="110" y2="144" stroke="var(--da-border, #cbd5e1)" stroke-dasharray="3 3"/>
+  <line x1="44" y1="106" x2="178" y2="106" stroke="var(--da-border, #cbd5e1)" stroke-dasharray="3 3"/>
+  <text x="110" y="146" text-anchor="middle" font-size="8.5" fill="var(--da-muted, #64748b)">1 gizli katman yeter</text>
+
+  <!-- Circle -->
+  <rect x="30" y="160" width="160" height="110" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+  <text x="110" y="178" text-anchor="middle" font-size="11" font-weight="600" fill="var(--da-fg, #0f172a)">Circle</text>
+  <circle cx="110" cy="218" r="34" fill="none" stroke="var(--da-border, #cbd5e1)" stroke-dasharray="3 3"/>
+  <g fill="var(--da-primary, #6366f1)"><circle cx="104" cy="212" r="3"/><circle cx="116" cy="224" r="3"/><circle cx="110" cy="206" r="3"/><circle cx="98" cy="226" r="3"/><circle cx="120" cy="212" r="3"/></g>
+  <g fill="var(--da-accent, #f59e0b)"><circle cx="70" cy="200" r="3"/><circle cx="150" cy="236" r="3"/><circle cx="150" cy="200" r="3"/><circle cx="70" cy="238" r="3"/><circle cx="110" cy="176" r="3"/><circle cx="110" cy="258" r="3"/><circle cx="62" cy="220" r="3"/><circle cx="158" cy="220" r="3"/></g>
+  <text x="110" y="266" text-anchor="middle" font-size="8.5" fill="var(--da-muted, #64748b)">eğri sınır: 3–4 nöron</text>
+
+  <!-- Spiral -->
+  <rect x="30" y="280" width="160" height="110" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+  <text x="110" y="298" text-anchor="middle" font-size="11" font-weight="600" fill="var(--da-fg, #0f172a)">Spiral</text>
+  <path d="M 110 338 C 118 330, 130 334, 130 344 C 130 358, 110 364, 96 356 C 80 346, 82 322, 100 312 C 122 300, 152 312, 156 338" fill="none" stroke="var(--da-primary, #6366f1)" stroke-width="3" stroke-linecap="round"/>
+  <path d="M 110 338 C 102 346, 90 342, 90 332 C 90 318, 110 312, 124 320 C 140 330, 138 354, 120 364 C 98 376, 68 364, 64 338" fill="none" stroke="var(--da-accent, #f59e0b)" stroke-width="3" stroke-linecap="round"/>
+  <text x="110" y="386" text-anchor="middle" font-size="8.5" fill="var(--da-muted, #64748b)">2 katman, çok epoch</text>
+
+  <!-- Orta: ayarlar + ağ -->
+  <text x="450" y="26" text-anchor="middle" font-size="13" font-weight="600" fill="var(--da-fg, #0f172a)">Ayarlar ve ağ (2-4-4-1)</text>
+  <rect x="220" y="40" width="460" height="56" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+  <g font-size="10" fill="var(--da-fg, #0f172a)">
+    <text x="234" y="60">katmanlar</text><text x="234" y="80" font-weight="600" fill="var(--da-primary, #6366f1)">4, 4</text>
+    <text x="314" y="60">aktivasyon</text><text x="314" y="80" font-weight="600" fill="var(--da-primary, #6366f1)">tanh</text>
+    <text x="404" y="60">öğrenme oranı</text><text x="404" y="80" font-weight="600" fill="var(--da-primary, #6366f1)">0.03</text>
+    <text x="504" y="60">batch</text><text x="504" y="80" font-weight="600" fill="var(--da-primary, #6366f1)">10</text>
+    <text x="564" y="60">gürültü</text><text x="564" y="80" font-weight="600" fill="var(--da-primary, #6366f1)">%0</text>
+    <text x="624" y="60">L2</text><text x="624" y="80" font-weight="600" fill="var(--da-primary, #6366f1)">0</text>
+  </g>
+
+  <!-- Ağ -->
+  <g stroke="var(--da-muted, #64748b)" fill="none" opacity="0.7">
+    <!-- girdi → gizli1 (kalınlık = |w|) -->
+    <line x1="270" y1="190" x2="370" y2="140" stroke-width="2.5"/><line x1="270" y1="190" x2="370" y2="190" stroke-width="1"/><line x1="270" y1="190" x2="370" y2="240" stroke-width="3"/><line x1="270" y1="190" x2="370" y2="290" stroke-width="0.8"/>
+    <line x1="270" y1="270" x2="370" y2="140" stroke-width="1.2"/><line x1="270" y1="270" x2="370" y2="190" stroke-width="2.8"/><line x1="270" y1="270" x2="370" y2="240" stroke-width="0.8"/><line x1="270" y1="270" x2="370" y2="290" stroke-width="2.2"/>
+    <!-- gizli1 → gizli2 -->
+    <line x1="370" y1="140" x2="470" y2="140" stroke-width="1.5"/><line x1="370" y1="140" x2="470" y2="240" stroke-width="0.8"/>
+    <line x1="370" y1="190" x2="470" y2="190" stroke-width="2.6"/><line x1="370" y1="190" x2="470" y2="290" stroke-width="1"/>
+    <line x1="370" y1="240" x2="470" y2="140" stroke-width="0.8"/><line x1="370" y1="240" x2="470" y2="240" stroke-width="3"/>
+    <line x1="370" y1="290" x2="470" y2="190" stroke-width="1.2"/><line x1="370" y1="290" x2="470" y2="290" stroke-width="2"/>
+    <!-- gizli2 → çıkış -->
+    <line x1="470" y1="140" x2="570" y2="215" stroke-width="2"/><line x1="470" y1="190" x2="570" y2="215" stroke-width="3.2"/><line x1="470" y1="240" x2="570" y2="215" stroke-width="1"/><line x1="470" y1="290" x2="570" y2="215" stroke-width="2.4"/>
+  </g>
+  <g fill="var(--da-surface, #ffffff)" stroke="var(--da-primary, #6366f1)" stroke-width="1.5">
+    <circle cx="270" cy="190" r="14"/><circle cx="270" cy="270" r="14"/>
+    <circle cx="370" cy="140" r="12"/><circle cx="370" cy="190" r="12"/><circle cx="370" cy="240" r="12"/><circle cx="370" cy="290" r="12"/>
+    <circle cx="470" cy="140" r="12"/><circle cx="470" cy="190" r="12"/><circle cx="470" cy="240" r="12"/><circle cx="470" cy="290" r="12"/>
+  </g>
+  <circle cx="570" cy="215" r="16" fill="var(--da-accent, #f59e0b)" opacity="0.25" stroke="var(--da-accent, #f59e0b)" stroke-width="1.5"/>
+  <g font-size="10" text-anchor="middle" fill="var(--da-fg, #0f172a)">
+    <text x="270" y="194">x₁</text><text x="270" y="274">x₂</text><text x="570" y="219">ŷ</text>
+  </g>
+  <g font-size="9.5" text-anchor="middle" fill="var(--da-muted, #64748b)">
+    <text x="270" y="318">girdi</text><text x="370" y="318">gizli 1 (4)</text><text x="470" y="318">gizli 2 (4)</text><text x="570" y="318">sigmoid</text>
+  </g>
+  <text x="420" y="345" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">çizgi kalınlığı = |w| — eğitim boyunca canlı değişir</text>
+  <!-- karar sınırı küçük önizleme -->
+  <rect x="604" y="120" width="70" height="70" rx="6" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+  <rect x="605" y="121" width="34" height="34" fill="var(--da-primary, #6366f1)" opacity="0.2"/>
+  <rect x="639" y="155" width="34" height="34" fill="var(--da-primary, #6366f1)" opacity="0.2"/>
+  <rect x="639" y="121" width="34" height="34" fill="var(--da-accent, #f59e0b)" opacity="0.2"/>
+  <rect x="605" y="155" width="34" height="34" fill="var(--da-accent, #f59e0b)" opacity="0.2"/>
+  <text x="639" y="204" text-anchor="middle" font-size="9" fill="var(--da-muted, #64748b)">karar sınırı</text>
+
+  <!-- Sağ: kayıp eğrisi -->
+  <text x="800" y="26" text-anchor="middle" font-size="13" font-weight="600" fill="var(--da-fg, #0f172a)">Kayıp eğrisi</text>
+  <g stroke="var(--da-muted, #64748b)" stroke-width="1.5" fill="none" marker-end="url(#arrow)">
+    <path d="M 710 300 L 710 50"/><path d="M 710 300 L 885 300"/>
+  </g>
+  <text x="704" y="56" text-anchor="end" font-size="9" fill="var(--da-muted, #64748b)">kayıp</text>
+  <text x="880" y="314" text-anchor="end" font-size="9" fill="var(--da-muted, #64748b)">epoch →</text>
+  <line x1="712" y1="100" x2="880" y2="100" stroke="var(--da-border, #cbd5e1)" stroke-dasharray="3 3"/>
+  <text x="716" y="96" font-size="8.5" fill="var(--da-muted, #64748b)">0.69 (plato)</text>
+  <!-- eğitim -->
+  <path d="M 714 102 C 740 102, 750 104, 770 160 S 820 270, 880 285" fill="none" stroke="var(--da-primary, #6366f1)" stroke-width="2.2"/>
+  <!-- doğrulama -->
+  <path d="M 714 104 C 740 104, 752 108, 772 170 S 800 220, 815 222 S 860 190, 880 160" fill="none" stroke="var(--da-danger, #ef4444)" stroke-width="2.2" stroke-dasharray="6 4"/>
+  <line x1="815" y1="60" x2="815" y2="298" stroke="var(--da-success, #10b981)" stroke-dasharray="4 3"/>
+  <circle cx="815" cy="222" r="4" fill="var(--da-success, #10b981)"/>
+  <text x="815" y="54" text-anchor="middle" font-size="9" fill="var(--da-success, #10b981)">early stop</text>
+  <line x1="722" y1="340" x2="748" y2="340" stroke="var(--da-primary, #6366f1)" stroke-width="2.2"/>
+  <text x="754" y="344" font-size="9.5" fill="var(--da-fg, #0f172a)">eğitim</text>
+  <line x1="722" y1="358" x2="748" y2="358" stroke="var(--da-danger, #ef4444)" stroke-width="2.2" stroke-dasharray="6 4"/>
+  <text x="754" y="362" font-size="9.5" fill="var(--da-fg, #0f172a)">doğrulama</text>
+  <text x="800" y="386" text-anchor="middle" font-size="9" fill="var(--da-muted, #64748b)">lr düşük → plato uzar</text>
+  <text x="800" y="400" text-anchor="middle" font-size="9" fill="var(--da-muted, #64748b)">lr yüksek → zıplama / NaN</text>
+
+  <text x="450" y="426" text-anchor="middle" font-size="10.5" fill="var(--da-muted, #64748b)">tf.sequential → dense(4, tanh) → dense(4, tanh) → dense(1, sigmoid) · adam(0.03) · binaryCrossentropy</text>
+</svg>

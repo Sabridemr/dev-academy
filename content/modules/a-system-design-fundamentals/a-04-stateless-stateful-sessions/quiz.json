@@ -1,0 +1,110 @@
+{
+  "id": "a-04-stateless-stateful-sessions-quiz",
+  "title": { "tr": "Stateless Servisler ve Oturum Yönetimi Quiz", "en": "Stateless Services and Session Management Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "\"Stateless servis\" ifadesi için en doğru tanım hangisidir?",
+        "en": "Which is the most accurate definition of a \"stateless service\"?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Uygulamanın hiçbir veriyi hiçbir yerde saklamadığı servis", "en": "A service in which the application stores no data anywhere" } },
+        { "id": "b", "text": { "tr": "İki istek arasında sunucunun kendi belleğinde bir şey tutmadığı; gereken durumun istekle geldiği ya da paylaşımlı depodan okunduğu servis", "en": "A service whose server keeps nothing in its own memory between requests; needed state arrives with the request or is read from a shared store" } },
+        { "id": "c", "text": { "tr": "Yalnızca GET isteklerine cevap veren servis", "en": "A service that only answers GET requests" } },
+        { "id": "d", "text": { "tr": "Veritabanı kullanmayan servis", "en": "A service that does not use a database" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Stateless, 'durum yok' değil 'durum sunucuda değil' demektir. Durum ya istemcide (JWT) ya da paylaşımlı bir depoda (Redis, DB) yaşar; böylece herhangi bir replika herhangi bir isteği işleyebilir. Servis veri saklayabilir ve POST kabul edebilir; önemli olan iki istek arasında sunucu belleğine bağımlı olmamasıdır.",
+        "en": "Stateless means 'state is not on the server', not 'no state'. State lives on the client (JWT) or in a shared store (Redis, DB) so that any replica can handle any request. The service may store data and accept POSTs; what matters is not depending on server memory between requests."
+      },
+      "difficulty": "easy",
+      "concepts": ["stateless-service", "state-externalization"]
+    },
+    {
+      "id": "q2",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Sticky session'ın dezavantajları hangileridir? (Birden fazla seçin)",
+        "en": "Which are disadvantages of sticky sessions? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Yük dağılımı bozulur; bazı sunucular yoğun kullanıcılarla dolar", "en": "Load distribution degrades; some servers fill with heavy users" } },
+        { "id": "b", "text": { "tr": "Sunucu yeniden başlayınca üzerindeki oturumlar kaybolur", "en": "Sessions on a server are lost when it restarts" } },
+        { "id": "c", "text": { "tr": "Uygulama kodunda büyük değişiklik gerektirir", "en": "It requires large changes to application code" } },
+        { "id": "d", "text": { "tr": "Rolling deploy ve ölçek küçültme zorlaşır", "en": "Rolling deploys and scaling in become harder" } }
+      ],
+      "correct": ["a", "b", "d"],
+      "explanation": {
+        "tr": "Sticky session'ın tek avantajı tam da c seçeneğinin tersidir: kod değişmez. Bedelleri dağılımın bozulması, sunucu kaybında oturum kaybı ve her deploy/küçültmede kullanıcıları düşürmemek için drain beklemek zorunda kalmaktır. Bu yüzden yeni tasarımlarda geçici çözüm olarak görülür.",
+        "en": "The one advantage of sticky sessions is the opposite of option c: no code change. Its costs are uneven distribution, session loss when a server dies, and having to wait for connection draining on every deploy or scale-in to avoid logging users out. That is why new designs treat it as a stopgap."
+      },
+      "difficulty": "medium",
+      "concepts": ["sticky-session"]
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": {
+        "tr": "Kullanıcı 'tüm cihazlardan çıkış yap' dediğinde oturumun anında geçersiz olmasını istiyorsunuz. Hangi yaklaşım bunu en doğal biçimde sağlar?",
+        "en": "You want the session to become invalid immediately when the user clicks 'log out of all devices'. Which approach provides this most naturally?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "30 günlük, iptal listesi olmayan JWT", "en": "A 30-day JWT with no revocation list" } },
+        { "id": "b", "text": { "tr": "Merkezi oturum deposu (Redis): kullanıcının tüm oturum anahtarlarını DEL ile silmek", "en": "A central session store (Redis): DEL all of the user's session keys" } },
+        { "id": "c", "text": { "tr": "Sticky session ile sunucuyu yeniden başlatmak", "en": "Sticky sessions and restarting the server" } },
+        { "id": "d", "text": { "tr": "JWT'nin payload'ındaki exp alanını istemcide değiştirmek", "en": "Editing the exp claim in the JWT payload on the client" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Sunucu tarafında tutulan oturum kayıtlarını silmek anında ve kesin iptal sağlar. İptal listesi olmayan uzun ömürlü JWT'yi sunucu 'unutamaz' (a yanlış). Sunucuyu yeniden başlatmak tüm kullanıcıları düşürür (c saçma bir çözümdür). İstemci token'ın payload'ını değiştirirse imza bozulur ve token zaten geçersiz olur; ama bu, saldırganın elindeki orijinal token'ı iptal etmez (d yanlış).",
+        "en": "Deleting server-side session records gives instant, definitive revocation. A long-lived JWT without a revocation list cannot be 'forgotten' by the server (a is wrong). Restarting the server logs out everyone (c is absurd). Editing the payload on the client breaks the signature and invalidates that copy, but does not revoke the original token an attacker may hold (d is wrong)."
+      },
+      "difficulty": "medium",
+      "concepts": ["central-session-store", "token-revocation"]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "JWT'nin payload kısmı şifrelidir; bu yüzden içine kullanıcının kredi kartı numarası gibi hassas veriler güvenle konulabilir.",
+        "en": "The payload of a JWT is encrypted, so sensitive data such as the user's credit card number can safely be placed in it."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "Yanlış. Standart (JWS) bir JWT'nin payload'ı yalnızca Base64URL ile kodlanmıştır ve herkes okuyabilir; imza yalnızca değiştirilmediğini garanti eder, gizliliğini değil. Token'a yalnızca kullanıcı id'si, roller ve süre gibi hassas olmayan iddialar (claims) konur. Gizlilik gerekiyorsa JWE kullanılır ya da veri sunucu tarafında tutulur.",
+        "en": "False. The payload of a standard (JWS) JWT is merely Base64URL-encoded and anyone can read it; the signature guarantees integrity, not confidentiality. Put only non-sensitive claims such as user id, roles and expiry in the token. If secrecy is required, use JWE or keep the data server-side."
+      },
+      "difficulty": "easy",
+      "concepts": ["jwt"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "Beş replikaya ölçeklenen bir servis, her gece 03:00'te 'süresi dolan kuponları temizle' işini sunucu içi bir cron ile çalıştırıyor. Yatay ölçekleme açısından sorun nedir?",
+        "en": "A service scaled to five replicas runs an in-process cron job at 03:00 every night to 'clean up expired coupons'. What is the problem from a horizontal scaling perspective?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Hiçbir sorun yok; cron her sunucuda bağımsız çalışır", "en": "No problem; cron runs independently on each server" } },
+        { "id": "b", "text": { "tr": "İş beş kez çalışır; zamanlanmış işler gibi gizli durum da sunucudan çıkarılmalı (dağıtık kilit veya kuyruk)", "en": "The job runs five times; hidden state like scheduled jobs must also leave the server (distributed lock or queue)" } },
+        { "id": "c", "text": { "tr": "Cron yalnızca stateful servislerde çalışır", "en": "Cron only works on stateful services" } },
+        { "id": "d", "text": { "tr": "Sticky session açılırsa sorun çözülür", "en": "Turning on sticky sessions solves it" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Her replika aynı kodu çalıştırdığı için iş beş kez tetiklenir; idempotent değilse veri bozulur, idempotent olsa bile kaynak israfıdır. 'Ben bu işi yapıyorum' bilgisi bir tür durumdur ve sunucudan çıkmalıdır: Redis/DB üzerinde dağıtık kilit, tek bir zamanlayıcıdan beslenen kuyruk ya da ayrı bir scheduler servisi. Sticky session HTTP isteklerini ilgilendirir, cron'u değil.",
+        "en": "Because every replica runs the same code, the job fires five times; if it is not idempotent data gets corrupted, and even if it is, resources are wasted. 'I am running this job' is a kind of state and must leave the server: a distributed lock on Redis/DB, a queue fed by a single scheduler, or a separate scheduler service. Sticky sessions concern HTTP requests, not cron."
+      },
+      "difficulty": "hard",
+      "concepts": ["state-externalization", "idempotency"]
+    }
+  ]
+}

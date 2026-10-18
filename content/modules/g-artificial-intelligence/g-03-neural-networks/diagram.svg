@@ -1,0 +1,112 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 420" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Nöron anatomisi ve aktivasyon fonksiyonları</title>
+  <desc id="desc">Solda tek bir yapay nöron: üç girdi x1, x2, x3 ağırlıklar w1, w2, w3 ile çarpılıp sapma b ile toplanır (z), ardından aktivasyon fonksiyonu φ uygulanır ve a çıktısı üretilir. Sağda dört küçük grafik: sigmoid (0 ile 1 arasında S eğrisi), tanh (−1 ile 1 arasında S eğrisi), ReLU (negatifte sıfır, pozitifte doğru) ve GELU (ReLU'ya benzer ama sıfır civarında yumuşak).</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+  </defs>
+
+  <!-- Sol: nöron -->
+  <text x="220" y="30" text-anchor="middle" font-size="14" font-weight="600" fill="var(--da-fg, #0f172a)">Bir nöron = ağırlıklı toplam + aktivasyon</text>
+
+  <!-- Girdiler -->
+  <g fill="var(--da-surface, #ffffff)" stroke="var(--da-primary, #6366f1)" stroke-width="1.5">
+    <circle cx="60" cy="120" r="22"/><circle cx="60" cy="200" r="22"/><circle cx="60" cy="280" r="22"/>
+  </g>
+  <g font-size="13" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="60" y="125">x₁</text><text x="60" y="205">x₂</text><text x="60" y="285">x₃</text>
+  </g>
+  <!-- Ağırlıklı kenarlar -->
+  <g stroke="var(--da-muted, #64748b)" stroke-width="1.8" fill="none" marker-end="url(#arrow)">
+    <path d="M 82 120 C 130 120, 150 190, 196 196"/>
+    <path d="M 82 200 L 196 200"/>
+    <path d="M 82 280 C 130 280, 150 210, 196 204"/>
+  </g>
+  <g font-size="11" fill="var(--da-primary, #6366f1)" font-weight="600">
+    <text x="118" y="140">w₁</text><text x="118" y="192">w₂</text><text x="118" y="268">w₃</text>
+  </g>
+  <!-- Sapma -->
+  <text x="236" y="120" text-anchor="middle" font-size="12" fill="var(--da-accent, #f59e0b)" font-weight="600">b</text>
+  <path d="M 236 128 L 236 162" stroke="var(--da-accent, #f59e0b)" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Toplam -->
+  <circle cx="236" cy="200" r="34" fill="var(--da-primary, #6366f1)" opacity="0.12" stroke="var(--da-primary, #6366f1)" stroke-width="2"/>
+  <text x="236" y="196" text-anchor="middle" font-size="18" fill="var(--da-primary, #6366f1)">Σ</text>
+  <text x="236" y="214" text-anchor="middle" font-size="10" fill="var(--da-fg, #0f172a)">z = w·x + b</text>
+
+  <path d="M 272 200 L 316 200" stroke="var(--da-muted, #64748b)" stroke-width="1.8" marker-end="url(#arrow)"/>
+
+  <!-- Aktivasyon -->
+  <rect x="318" y="166" width="70" height="68" rx="12" fill="var(--da-accent, #f59e0b)" opacity="0.14" stroke="var(--da-accent, #f59e0b)" stroke-width="2"/>
+  <text x="353" y="192" text-anchor="middle" font-size="16" fill="var(--da-accent, #f59e0b)">φ</text>
+  <!-- mini relu çizimi -->
+  <path d="M 330 222 L 353 222 L 376 204" fill="none" stroke="var(--da-fg, #0f172a)" stroke-width="1.5"/>
+
+  <path d="M 390 200 L 430 200" stroke="var(--da-muted, #64748b)" stroke-width="1.8" marker-end="url(#arrow)"/>
+  <text x="446" y="205" font-size="13" fill="var(--da-fg, #0f172a)">a = φ(z)</text>
+
+  <!-- Açıklama -->
+  <g font-size="11" fill="var(--da-muted, #64748b)">
+    <text x="30" y="340">• w: girdinin önemi (öğrenilir)</text>
+    <text x="30" y="358">• b: eşik / kaydırma (öğrenilir)</text>
+    <text x="30" y="376">• φ: doğrusal olmayan adım — onsuz ağ tek matris çarpımı</text>
+    <text x="30" y="394">• Katman: bu nöronlardan n tanesi yan yana → a = φ(Wx + b)</text>
+  </g>
+
+  <!-- Ayırıcı -->
+  <line x1="490" y1="40" x2="490" y2="400" stroke="var(--da-border, #cbd5e1)" stroke-dasharray="4 4"/>
+
+  <!-- Sağ: aktivasyon grafikleri (her biri 170x130) -->
+  <text x="700" y="30" text-anchor="middle" font-size="14" font-weight="600" fill="var(--da-fg, #0f172a)">Aktivasyon fonksiyonları</text>
+
+  <!-- Sigmoid -->
+  <g transform="translate(510, 50)">
+    <rect x="0" y="0" width="180" height="150" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+    <text x="90" y="18" text-anchor="middle" font-size="12" font-weight="600" fill="var(--da-fg, #0f172a)">Sigmoid</text>
+    <line x1="20" y1="110" x2="160" y2="110" stroke="var(--da-border, #cbd5e1)"/>
+    <line x1="90" y1="30" x2="90" y2="130" stroke="var(--da-border, #cbd5e1)"/>
+    <line x1="20" y1="40" x2="160" y2="40" stroke="var(--da-border, #cbd5e1)" stroke-dasharray="3 3"/>
+    <path d="M 20 108 C 60 108, 70 42, 90 42 S 120 40, 160 40" fill="none" stroke="var(--da-primary, #6366f1)" stroke-width="2.2"/>
+    <text x="164" y="44" font-size="9" fill="var(--da-muted, #64748b)">1</text>
+    <text x="164" y="114" font-size="9" fill="var(--da-muted, #64748b)">0</text>
+    <text x="90" y="144" text-anchor="middle" font-size="9.5" fill="var(--da-danger, #ef4444)">uçlarda türev ≈ 0 (doyma)</text>
+  </g>
+
+  <!-- tanh -->
+  <g transform="translate(710, 50)">
+    <rect x="0" y="0" width="180" height="150" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+    <text x="90" y="18" text-anchor="middle" font-size="12" font-weight="600" fill="var(--da-fg, #0f172a)">tanh</text>
+    <line x1="20" y1="80" x2="160" y2="80" stroke="var(--da-border, #cbd5e1)"/>
+    <line x1="90" y1="30" x2="90" y2="130" stroke="var(--da-border, #cbd5e1)"/>
+    <path d="M 20 118 C 60 118, 75 42, 90 80 S 120 42, 160 42" fill="none" stroke="var(--da-primary, #6366f1)" stroke-width="2.2"/>
+    <text x="164" y="46" font-size="9" fill="var(--da-muted, #64748b)">1</text>
+    <text x="164" y="122" font-size="9" fill="var(--da-muted, #64748b)">−1</text>
+    <text x="90" y="144" text-anchor="middle" font-size="9.5" fill="var(--da-muted, #64748b)">sıfır merkezli, yine doyar</text>
+  </g>
+
+  <!-- ReLU -->
+  <g transform="translate(510, 215)">
+    <rect x="0" y="0" width="180" height="150" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+    <text x="90" y="18" text-anchor="middle" font-size="12" font-weight="600" fill="var(--da-fg, #0f172a)">ReLU = max(0, z)</text>
+    <line x1="20" y1="110" x2="160" y2="110" stroke="var(--da-border, #cbd5e1)"/>
+    <line x1="90" y1="30" x2="90" y2="130" stroke="var(--da-border, #cbd5e1)"/>
+    <path d="M 20 110 L 90 110 L 155 45" fill="none" stroke="var(--da-success, #10b981)" stroke-width="2.4"/>
+    <text x="50" y="100" text-anchor="middle" font-size="9" fill="var(--da-danger, #ef4444)">türev 0 (ölü)</text>
+    <text x="135" y="100" text-anchor="middle" font-size="9" fill="var(--da-success, #10b981)">türev 1</text>
+    <text x="90" y="144" text-anchor="middle" font-size="9.5" fill="var(--da-muted, #64748b)">gizli katman varsayılanı</text>
+  </g>
+
+  <!-- GELU -->
+  <g transform="translate(710, 215)">
+    <rect x="0" y="0" width="180" height="150" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+    <text x="90" y="18" text-anchor="middle" font-size="12" font-weight="600" fill="var(--da-fg, #0f172a)">GELU = z·Φ(z)</text>
+    <line x1="20" y1="110" x2="160" y2="110" stroke="var(--da-border, #cbd5e1)"/>
+    <line x1="90" y1="30" x2="90" y2="130" stroke="var(--da-border, #cbd5e1)"/>
+    <path d="M 20 110 C 50 110, 65 116, 80 114 C 95 110, 120 80, 155 45" fill="none" stroke="var(--da-accent, #f59e0b)" stroke-width="2.4"/>
+    <text x="55" y="128" text-anchor="middle" font-size="9" fill="var(--da-muted, #64748b)">hafif negatif çukur</text>
+    <text x="90" y="144" text-anchor="middle" font-size="9.5" fill="var(--da-muted, #64748b)">Transformer FFN (BERT, GPT)</text>
+  </g>
+
+  <text x="700" y="395" text-anchor="middle" font-size="11" fill="var(--da-muted, #64748b)">Çıkış katmanı: regresyon → doğrusal · ikili sınıf → sigmoid · çok sınıf → softmax</text>
+</svg>

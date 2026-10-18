@@ -1,0 +1,225 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "f-03-kubernetes-hpa-scaling",
+  "title": { "tr": "HPA ile Otomatik Ölçekleme", "en": "Autoscaling with the HPA" },
+  "summary": {
+    "tr": "Trafik artınca CPU yükselir; HPA metrics-server'dan okur, istenen replika sayısını hesaplar, ReplicaSet yeni pod'lar yaratır, Service endpoint'leri günceller ve Ingress yeni pod'lara trafik verir.",
+    "en": "Traffic rises and CPU climbs; the HPA reads metrics-server, computes the desired replica count, the ReplicaSet creates new pods, the Service updates its endpoints and the Ingress sends traffic to the new pods."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Soldan sağa: kullanıcılar, Ingress, Service ve dört pod (başta ikisi görünür). Altta HPA, metrics-server ve Deployment/ReplicaSet kutuları bir kontrol döngüsü oluşturur. Trafik artınca pod'ların CPU'su yüzde 85'e çıkar; HPA 4 replika hesaplar; ReplicaSet iki yeni pod başlatır; readiness probe geçince Service onları endpoint listesine ekler; trafik dört pod'a dağılır ve CPU yüzde 45'e düşer. Son adımda trafik azalır ve HPA 5 dakikalık bekleme sonrası küçülür.",
+      "en": "Left to right: users, Ingress, Service and four pods (two visible at first). Below, HPA, metrics-server and Deployment/ReplicaSet boxes form a control loop. As traffic rises, pod CPU reaches 85%; the HPA computes 4 replicas; the ReplicaSet starts two new pods; once readiness passes the Service adds them to its endpoints; traffic spreads over four pods and CPU drops to 45%. In the last step traffic falls and the HPA scales down after a 5-minute window."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "users", "kind": "user", "label": { "tr": "Kullanıcılar", "en": "Users" }, "x": 80, "y": 200 },
+    { "id": "ingress", "kind": "gateway", "label": "Ingress", "sublabel": { "tr": "ALB · L7 · TLS", "en": "ALB · L7 · TLS" }, "x": 240, "y": 200, "w": 120, "h": 70 },
+    { "id": "svc", "kind": "lb", "label": "Service", "sublabel": { "tr": "ClusterIP · endpoints: 2", "en": "ClusterIP · endpoints: 2" }, "x": 430, "y": 200, "w": 150, "h": 70 },
+    { "id": "pods", "kind": "group", "label": "ReplicaSet cart-service", "sublabel": { "tr": "node'lar: 2 AZ", "en": "nodes: 2 AZs" }, "x": 770, "y": 200, "w": 300, "h": 260 },
+    { "id": "p1", "kind": "pod", "parent": "pods", "label": "pod-1", "sublabel": "AZ-a", "x": 700, "y": 130, "w": 100, "h": 56 },
+    { "id": "p2", "kind": "pod", "parent": "pods", "label": "pod-2", "sublabel": "AZ-b", "x": 840, "y": 130, "w": 100, "h": 56 },
+    { "id": "p3", "kind": "pod", "parent": "pods", "label": "pod-3", "sublabel": "AZ-a", "x": 700, "y": 280, "w": 100, "h": 56, "status": "muted" },
+    { "id": "p4", "kind": "pod", "parent": "pods", "label": "pod-4", "sublabel": "AZ-b", "x": 840, "y": 280, "w": 100, "h": 56, "status": "muted" },
+    { "id": "metrics", "kind": "generic", "label": "metrics-server", "sublabel": { "tr": "kubelet'ten CPU/bellek", "en": "CPU/memory from kubelet" }, "x": 770, "y": 470, "w": 150, "h": 60 },
+    { "id": "hpa", "kind": "worker", "label": "HPA", "sublabel": { "tr": "hedef CPU %50 · her 15 sn", "en": "target CPU 50% · every 15 s" }, "x": 480, "y": 470, "w": 170, "h": 64 },
+    { "id": "deploy", "kind": "service", "label": "Deployment", "sublabel": { "tr": "replicas: 2", "en": "replicas: 2" }, "x": 240, "y": 470, "w": 140, "h": 64 }
+  ],
+  "edges": [
+    { "id": "u-ing", "from": "users", "to": "ingress", "kind": "request", "label": "HTTPS" },
+    { "id": "ing-svc", "from": "ingress", "to": "svc", "kind": "request", "label": "/cart" },
+    { "id": "svc-p1", "from": "svc", "to": "p1", "kind": "request", "curvature": -0.15 },
+    { "id": "svc-p2", "from": "svc", "to": "p2", "kind": "request", "curvature": -0.25 },
+    { "id": "svc-p3", "from": "svc", "to": "p3", "kind": "request", "curvature": 0.1, "style": "dashed" },
+    { "id": "svc-p4", "from": "svc", "to": "p4", "kind": "request", "curvature": 0.2, "style": "dashed" },
+    { "id": "pods-met", "from": "pods", "to": "metrics", "kind": "data", "style": "dotted", "label": { "tr": "kubelet /metrics", "en": "kubelet /metrics" } },
+    { "id": "met-hpa", "from": "metrics", "to": "hpa", "kind": "data", "style": "dotted", "label": { "tr": "ort. CPU", "en": "avg CPU" } },
+    { "id": "hpa-dep", "from": "hpa", "to": "deploy", "kind": "control", "label": { "tr": "scale", "en": "scale" } },
+    { "id": "dep-pods", "from": "deploy", "to": "pods", "kind": "control", "curvature": 0.35, "label": { "tr": "ReplicaSet: N pod", "en": "ReplicaSet: N pods" } }
+  ],
+  "steps": [
+    {
+      "id": "steady",
+      "title": { "tr": "Sakin durum: 2 pod", "en": "Steady state: 2 pods" },
+      "narration": {
+        "tr": "cart-service iki pod ile çalışır; farklı AZ'lerdeki node'lara yerleştirilmiştir. Kullanıcı istekleri Ingress'ten Service'e, oradan readiness'ı geçmiş iki pod'a gider. CPU kullanımı request'in %30'u civarındadır.",
+        "en": "cart-service runs with two pods placed on nodes in different AZs. User requests go from the Ingress to the Service and on to the two pods that passed readiness. CPU usage sits around 30% of the request."
+      },
+      "durationMs": 4000,
+      "inherit": false,
+      "highlight": { "nodes": ["ingress", "svc", "p1", "p2"], "edges": ["u-ing", "ing-svc", "svc-p1", "svc-p2"] },
+      "nodeStates": {
+        "p1": { "status": "active", "progress": 0.3, "badge": "CPU 30%" },
+        "p2": { "status": "active", "progress": 0.3, "badge": "CPU 30%" },
+        "p3": { "visible": false },
+        "p4": { "visible": false },
+        "svc": { "status": "active" }
+      },
+      "edgeStates": { "svc-p3": { "visible": false }, "svc-p4": { "visible": false } },
+      "packets": [
+        { "edge": "u-ing", "shape": "envelope", "repeat": 2, "repeatGapMs": 400, "durationMs": 700 },
+        { "edge": "ing-svc", "startAt": 700, "repeat": 2, "repeatGapMs": 400, "durationMs": 600 },
+        { "edge": "svc-p1", "startAt": 1300, "durationMs": 800 },
+        { "edge": "svc-p2", "startAt": 1700, "durationMs": 800 }
+      ],
+      "annotations": [
+        { "id": "req-note", "x": 480, "y": 330, "text": { "tr": "request: cpu 250m · HPA hedefi %50", "en": "request: cpu 250m · HPA target 50%" }, "target": "hpa" }
+      ]
+    },
+    {
+      "id": "surge",
+      "title": { "tr": "Trafik artıyor, CPU %85", "en": "Traffic rises, CPU at 85%" },
+      "narration": {
+        "tr": "Bir kampanya başlar ve istek sayısı üçe katlanır. İki pod'un CPU'su request'in %85'ine çıkar; gecikme artmaya başlar. Pod'lar henüz limitlerine çarpmadı ama hedefin (%50) çok üzerindeler.",
+        "en": "A promotion starts and request volume triples. CPU on both pods climbs to 85% of the request; latency begins to grow. The pods have not hit their limits yet, but they are far above the target (50%)."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["p1", "p2"], "edges": ["svc-p1", "svc-p2"] },
+      "nodeStates": {
+        "p1": { "status": "busy", "progress": 0.85, "badge": "CPU 85%" },
+        "p2": { "status": "busy", "progress": 0.85, "badge": "CPU 85%" }
+      },
+      "packets": [
+        { "edge": "u-ing", "shape": "envelope", "repeat": 6, "repeatGapMs": 120, "durationMs": 600 },
+        { "edge": "ing-svc", "startAt": 500, "repeat": 6, "repeatGapMs": 120, "durationMs": 500 },
+        { "edge": "svc-p1", "startAt": 1000, "repeat": 3, "repeatGapMs": 250, "durationMs": 700 },
+        { "edge": "svc-p2", "startAt": 1150, "repeat": 3, "repeatGapMs": 250, "durationMs": 700 }
+      ],
+      "annotations": [
+        { "id": "surge-note", "x": 770, "y": 60, "text": { "tr": "p99: 180 ms → 420 ms", "en": "p99: 180 ms → 420 ms" }, "tone": "warning", "target": "pods" }
+      ]
+    },
+    {
+      "id": "measure",
+      "title": { "tr": "metrics-server ölçer, HPA hesaplar", "en": "metrics-server measures, HPA computes" },
+      "narration": {
+        "tr": "Her node'daki kubelet, pod CPU değerlerini metrics-server'a bildirir. HPA 15 saniyede bir ortalamayı okur: %85. Formül: desired = ceil(2 × 85 / 50) = ceil(3,4) = 4 replika.",
+        "en": "The kubelet on each node reports pod CPU to metrics-server. Every 15 seconds the HPA reads the average: 85%. The formula: desired = ceil(2 × 85 / 50) = ceil(3.4) = 4 replicas."
+      },
+      "durationMs": 4200,
+      "highlight": { "nodes": ["metrics", "hpa"], "edges": ["pods-met", "met-hpa"] },
+      "nodeStates": {
+        "metrics": { "status": "active" },
+        "hpa": { "status": "active", "badge": "desired: 4" }
+      },
+      "edgeStates": { "pods-met": { "status": "active" }, "met-hpa": { "status": "active" } },
+      "packets": [
+        { "edge": "pods-met", "shape": "dot", "label": "85%", "durationMs": 900 },
+        { "edge": "met-hpa", "shape": "dot", "label": "avg 85%", "startAt": 1000, "durationMs": 1000 }
+      ],
+      "annotations": [
+        { "id": "formula", "x": 480, "y": 330, "text": { "tr": "ceil(2 × 85/50) = 4", "en": "ceil(2 × 85/50) = 4" }, "tone": "info", "target": "hpa" }
+      ]
+    },
+    {
+      "id": "scale",
+      "title": { "tr": "Deployment → ReplicaSet: 4 pod", "en": "Deployment → ReplicaSet: 4 pods" },
+      "narration": {
+        "tr": "HPA, Deployment'ın replicas alanını 4 yapar. Deployment controller bunu ReplicaSet'e iletir; ReplicaSet mevcut 2 ile istenen 4 arasındaki farkı görüp iki yeni pod yaratır. Scheduler, AZ dağılım kuralına uyarak her birini farklı AZ'deki node'lara koyar.",
+        "en": "The HPA sets the Deployment's replicas field to 4. The Deployment controller passes it to the ReplicaSet; the ReplicaSet sees the gap between the current 2 and desired 4 and creates two new pods. The scheduler places each on nodes in different AZs per the spread rule."
+      },
+      "durationMs": 4200,
+      "highlight": { "nodes": ["hpa", "deploy", "pods", "p3", "p4"], "edges": ["hpa-dep", "dep-pods"] },
+      "nodeStates": {
+        "deploy": { "status": "active", "sublabel": { "tr": "replicas: 4", "en": "replicas: 4" }, "badge": "2 → 4" },
+        "p3": { "visible": true, "status": "warning", "badge": "ContainerCreating", "progress": 0 },
+        "p4": { "visible": true, "status": "warning", "badge": "ContainerCreating", "progress": 0 }
+      },
+      "edgeStates": { "hpa-dep": { "status": "active" }, "dep-pods": { "status": "active" } },
+      "packets": [
+        { "edge": "hpa-dep", "shape": "diamond", "label": "replicas=4", "durationMs": 900 },
+        { "edge": "dep-pods", "shape": "diamond", "label": "+2 pod", "startAt": 1000, "durationMs": 1400 }
+      ],
+      "annotations": [
+        { "id": "sched-note", "x": 770, "y": 370, "text": { "tr": "imaj çek + başlat: 20–60 sn", "en": "pull image + start: 20–60 s" }, "tone": "warning", "target": "p3" }
+      ]
+    },
+    {
+      "id": "ready",
+      "title": { "tr": "Readiness geçer, Service endpoint ekler", "en": "Readiness passes, Service adds endpoints" },
+      "narration": {
+        "tr": "Yeni pod'lar açılır ve kubelet /ready probe'unu yoklar. Probe 200 döndürünce endpoint controller pod IP'lerini Service'in endpoint listesine ekler: artık 4 hedef var. Readiness'ı geçmeyen bir pod asla trafik almaz.",
+        "en": "The new pods start and the kubelet probes /ready. Once the probe returns 200, the endpoints controller adds the pod IPs to the Service's endpoint list: now 4 targets. A pod that fails readiness never receives traffic."
+      },
+      "durationMs": 3800,
+      "highlight": { "nodes": ["p3", "p4", "svc"], "edges": ["svc-p3", "svc-p4"] },
+      "nodeStates": {
+        "p3": { "status": "active", "badge": "Ready", "progress": 0.1 },
+        "p4": { "status": "active", "badge": "Ready", "progress": 0.1 },
+        "svc": { "status": "active", "sublabel": { "tr": "ClusterIP · endpoints: 4", "en": "ClusterIP · endpoints: 4" }, "badge": "+2" }
+      },
+      "edgeStates": { "svc-p3": { "visible": true, "status": "active" }, "svc-p4": { "visible": true, "status": "active" } },
+      "packets": [
+        { "edge": "svc-p3", "shape": "diamond", "label": "GET /ready", "direction": "backward", "durationMs": 700, "color": "success" },
+        { "edge": "svc-p4", "shape": "diamond", "label": "GET /ready", "direction": "backward", "startAt": 300, "durationMs": 700, "color": "success" }
+      ],
+      "annotations": [
+        { "id": "ep-note", "x": 430, "y": 330, "text": { "tr": "endpoints: 10.0.1.5, 10.0.2.9, 10.0.1.12, 10.0.2.17", "en": "endpoints: 10.0.1.5, 10.0.2.9, 10.0.1.12, 10.0.2.17" }, "target": "svc" }
+      ]
+    },
+    {
+      "id": "spread",
+      "title": { "tr": "Ingress trafiği 4 pod'a dağıtır", "en": "Ingress spreads traffic over 4 pods" },
+      "narration": {
+        "tr": "Aynı trafik artık dört pod'a bölünür; CPU pod başına %45'e, p99 gecikme normal seviyeye iner. Kullanıcı hiçbir şey fark etmedi. Bütün bu süreç insan müdahalesi olmadan 1–2 dakikada tamamlandı.",
+        "en": "The same traffic is now split across four pods; CPU drops to 45% per pod and p99 latency returns to normal. Users noticed nothing. The whole process completed in 1–2 minutes without human intervention."
+      },
+      "durationMs": 4200,
+      "highlight": { "nodes": ["ingress", "svc", "p1", "p2", "p3", "p4"], "edges": ["svc-p1", "svc-p2", "svc-p3", "svc-p4"] },
+      "nodeStates": {
+        "p1": { "status": "active", "progress": 0.45, "badge": "CPU 45%" },
+        "p2": { "status": "active", "progress": 0.45, "badge": "CPU 45%" },
+        "p3": { "status": "active", "progress": 0.45, "badge": "CPU 45%" },
+        "p4": { "status": "active", "progress": 0.45, "badge": "CPU 45%" },
+        "svc": { "badge": "" },
+        "hpa": { "status": "success", "badge": "stable" }
+      },
+      "packets": [
+        { "edge": "u-ing", "shape": "envelope", "repeat": 6, "repeatGapMs": 120, "durationMs": 600 },
+        { "edge": "ing-svc", "startAt": 500, "repeat": 6, "repeatGapMs": 120, "durationMs": 500 },
+        { "edge": "svc-p1", "startAt": 1000, "durationMs": 700 },
+        { "edge": "svc-p3", "startAt": 1200, "durationMs": 700 },
+        { "edge": "svc-p2", "startAt": 1400, "durationMs": 700 },
+        { "edge": "svc-p4", "startAt": 1600, "durationMs": 700 },
+        { "edge": "svc-p1", "startAt": 1900, "durationMs": 700 },
+        { "edge": "svc-p3", "startAt": 2100, "durationMs": 700 }
+      ],
+      "annotations": [
+        { "id": "ok-note", "x": 770, "y": 60, "text": { "tr": "p99: 420 ms → 190 ms", "en": "p99: 420 ms → 190 ms" }, "tone": "success", "target": "pods" }
+      ]
+    },
+    {
+      "id": "scale-down",
+      "title": { "tr": "Trafik düşer: 5 dk bekle, sonra küçül", "en": "Traffic falls: wait 5 min, then scale down" },
+      "narration": {
+        "tr": "Kampanya biter, CPU %20'ye iner. HPA hemen küçülmez: 5 dakikalık stabilizasyon penceresi boyunca en yüksek öneriyi tutar (flapping önlemi). Pencere dolunca replicas tekrar 2 olur; ReplicaSet iki pod'a SIGTERM gönderir, açık istekler tamamlanır ve pod'lar kapanır.",
+        "en": "The promotion ends and CPU drops to 20%. The HPA does not shrink immediately: for a 5-minute stabilization window it keeps the highest recommendation (anti-flapping). When the window expires replicas return to 2; the ReplicaSet sends SIGTERM to two pods, in-flight requests finish and the pods terminate."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["hpa", "deploy", "p3", "p4"], "edges": ["met-hpa", "hpa-dep", "dep-pods"] },
+      "nodeStates": {
+        "p1": { "status": "active", "progress": 0.3, "badge": "CPU 30%" },
+        "p2": { "status": "active", "progress": 0.3, "badge": "CPU 30%" },
+        "p3": { "status": "muted", "badge": "Terminating", "progress": 0 },
+        "p4": { "status": "muted", "badge": "Terminating", "progress": 0 },
+        "hpa": { "status": "active", "badge": "desired: 2" },
+        "deploy": { "sublabel": { "tr": "replicas: 2", "en": "replicas: 2" }, "badge": "4 → 2" },
+        "svc": { "sublabel": { "tr": "ClusterIP · endpoints: 2", "en": "ClusterIP · endpoints: 2" } }
+      },
+      "edgeStates": { "svc-p3": { "status": "muted" }, "svc-p4": { "status": "muted" } },
+      "packets": [
+        { "edge": "met-hpa", "shape": "dot", "label": "avg 20%", "durationMs": 900 },
+        { "edge": "hpa-dep", "shape": "diamond", "label": "replicas=2", "startAt": 1800, "durationMs": 900 },
+        { "edge": "dep-pods", "shape": "diamond", "label": "SIGTERM ×2", "startAt": 2700, "durationMs": 1200, "color": "danger" }
+      ],
+      "annotations": [
+        { "id": "window-note", "x": 480, "y": 330, "text": { "tr": "stabilizationWindow: 300 sn — hemen küçülme", "en": "stabilizationWindow: 300 s — no instant shrink" }, "tone": "info", "target": "hpa" }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["kubernetes", "hpa", "autoscaling", "service", "ingress"]
+}

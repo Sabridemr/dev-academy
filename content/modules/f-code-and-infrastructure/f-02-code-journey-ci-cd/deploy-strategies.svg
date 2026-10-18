@@ -1,0 +1,107 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 400" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Rolling, blue-green ve canary dağıtım stratejileri</title>
+  <desc id="desc">Üç sütun. Rolling: bir yük dengeleyici altında dört pod'dan ikisi eski (v1) ikisi yeni (v2), dalga dalga değişir. Blue-green: iki tam ortam (mavi v1, yeşil v2), yük dengeleyici trafiği tek seferde yeşile çevirir. Canary: yük dengeleyici trafiğin yüzde 95'ini v1 havuzuna, yüzde 5'ini tek bir v2 pod'una gönderir; metrik paneli ikisini karşılaştırır.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+  </defs>
+
+  <!-- Sütun arka planları -->
+  <g fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)">
+    <rect x="20" y="20" width="290" height="360" rx="14"/>
+    <rect x="335" y="20" width="290" height="360" rx="14"/>
+    <rect x="650" y="20" width="290" height="360" rx="14"/>
+  </g>
+  <g font-size="15" font-weight="600" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="165" y="48">Rolling</text>
+    <text x="480" y="48">Blue-green</text>
+    <text x="795" y="48">Canary</text>
+  </g>
+  <g font-size="10" fill="var(--da-muted, #64748b)" text-anchor="middle">
+    <text x="165" y="64">pod'lar dalga dalga değişir</text>
+    <text x="480" y="64">trafik tek seferde çevrilir</text>
+    <text x="795" y="64">küçük dilim + metrik karşılaştırma</text>
+  </g>
+
+  <!-- ==== Rolling ==== -->
+  <rect x="115" y="85" width="100" height="40" rx="10" fill="var(--da-primary, #6366f1)" opacity="0.15" stroke="var(--da-primary, #6366f1)"/>
+  <text x="165" y="110" font-size="12" fill="var(--da-fg, #0f172a)" text-anchor="middle">Load balancer</text>
+  <g stroke="var(--da-muted, #64748b)" stroke-width="1.5" fill="none" marker-end="url(#arrow)">
+    <path d="M 140 125 L 70 180"/><path d="M 155 125 L 130 180"/><path d="M 175 125 L 200 180"/><path d="M 190 125 L 260 180"/>
+  </g>
+  <g stroke-width="1.5">
+    <rect x="45" y="182" width="50" height="40" rx="8" fill="var(--da-success, #10b981)" opacity="0.25" stroke="var(--da-success, #10b981)"/>
+    <rect x="105" y="182" width="50" height="40" rx="8" fill="var(--da-success, #10b981)" opacity="0.25" stroke="var(--da-success, #10b981)"/>
+    <rect x="175" y="182" width="50" height="40" rx="8" fill="var(--da-border, #cbd5e1)" opacity="0.5" stroke="var(--da-muted, #64748b)"/>
+    <rect x="235" y="182" width="50" height="40" rx="8" fill="var(--da-border, #cbd5e1)" opacity="0.5" stroke="var(--da-muted, #64748b)"/>
+  </g>
+  <g font-size="11" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="70" y="206">v2</text><text x="130" y="206">v2</text><text x="200" y="206">v1</text><text x="260" y="206">v1</text>
+  </g>
+  <text x="165" y="245" font-size="10" fill="var(--da-muted, #64748b)" text-anchor="middle">dalga 2/4 · iki sürüm aynı anda canlı</text>
+  <g font-size="10" fill="var(--da-fg, #0f172a)">
+    <text x="40" y="285">+ ek kapasite az (%10–25)</text>
+    <text x="40" y="303">+ Kubernetes varsayılanı</text>
+    <text x="40" y="321">− geri alma yavaş (dalga dalga)</text>
+    <text x="40" y="339">− API / DB iki sürümle uyumlu olmalı</text>
+    <text x="40" y="365" fill="var(--da-muted, #64748b)">maxSurge / maxUnavailable ile ayarlanır</text>
+  </g>
+
+  <!-- ==== Blue-green ==== -->
+  <rect x="430" y="85" width="100" height="40" rx="10" fill="var(--da-primary, #6366f1)" opacity="0.15" stroke="var(--da-primary, #6366f1)"/>
+  <text x="480" y="110" font-size="12" fill="var(--da-fg, #0f172a)" text-anchor="middle">Load balancer</text>
+  <!-- blue ortam -->
+  <rect x="350" y="165" width="120" height="80" rx="10" fill="var(--da-primary, #6366f1)" opacity="0.12" stroke="var(--da-primary, #6366f1)" stroke-dasharray="5 4"/>
+  <text x="410" y="183" font-size="11" font-weight="600" fill="var(--da-primary, #6366f1)" text-anchor="middle">BLUE · v1</text>
+  <g fill="var(--da-primary, #6366f1)" opacity="0.4">
+    <rect x="362" y="195" width="28" height="30" rx="5"/><rect x="396" y="195" width="28" height="30" rx="5"/><rect x="430" y="195" width="28" height="30" rx="5"/>
+  </g>
+  <text x="410" y="240" font-size="9" fill="var(--da-muted, #64748b)" text-anchor="middle">boşta, geri alma için hazır</text>
+  <!-- green ortam -->
+  <rect x="490" y="165" width="120" height="80" rx="10" fill="var(--da-success, #10b981)" opacity="0.12" stroke="var(--da-success, #10b981)"/>
+  <text x="550" y="183" font-size="11" font-weight="600" fill="var(--da-success, #10b981)" text-anchor="middle">GREEN · v2</text>
+  <g fill="var(--da-success, #10b981)" opacity="0.5">
+    <rect x="502" y="195" width="28" height="30" rx="5"/><rect x="536" y="195" width="28" height="30" rx="5"/><rect x="570" y="195" width="28" height="30" rx="5"/>
+  </g>
+  <text x="550" y="240" font-size="9" fill="var(--da-muted, #64748b)" text-anchor="middle">%100 trafik</text>
+  <!-- oklar -->
+  <path d="M 460 125 L 415 163" stroke="var(--da-border, #cbd5e1)" stroke-width="1.5" stroke-dasharray="4 3" fill="none" marker-end="url(#arrow)"/>
+  <path d="M 500 125 L 545 163" stroke="var(--da-success, #10b981)" stroke-width="2.5" fill="none" marker-end="url(#arrow)"/>
+  <text x="480" y="150" font-size="10" fill="var(--da-success, #10b981)" text-anchor="middle">switch</text>
+  <g font-size="10" fill="var(--da-fg, #0f172a)">
+    <text x="355" y="285">+ geri alma saniyeler (LB'yi geri çevir)</text>
+    <text x="355" y="303">+ yeni ortam önceden ısıtılır / test edilir</text>
+    <text x="355" y="321">− 2× kapasite</text>
+    <text x="355" y="339">− kötü sürüm anında herkese ulaşır</text>
+    <text x="355" y="365" fill="var(--da-muted, #64748b)">DB şeması iki sürümle uyumlu olmalı</text>
+  </g>
+
+  <!-- ==== Canary ==== -->
+  <rect x="745" y="85" width="100" height="40" rx="10" fill="var(--da-primary, #6366f1)" opacity="0.15" stroke="var(--da-primary, #6366f1)"/>
+  <text x="795" y="110" font-size="12" fill="var(--da-fg, #0f172a)" text-anchor="middle">Load balancer</text>
+  <path d="M 775 125 L 720 163" stroke="var(--da-muted, #64748b)" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+  <path d="M 820 125 L 870 163" stroke="var(--da-accent, #f59e0b)" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
+  <text x="735" y="148" font-size="10" fill="var(--da-fg, #0f172a)" text-anchor="middle">95%</text>
+  <text x="860" y="148" font-size="10" fill="var(--da-accent, #f59e0b)" text-anchor="middle">5%</text>
+  <!-- v1 havuzu -->
+  <rect x="665" y="165" width="130" height="70" rx="10" fill="var(--da-border, #cbd5e1)" opacity="0.35" stroke="var(--da-muted, #64748b)"/>
+  <text x="730" y="183" font-size="11" font-weight="600" fill="var(--da-fg, #0f172a)" text-anchor="middle">v1 × 19</text>
+  <g fill="var(--da-muted, #64748b)" opacity="0.5">
+    <rect x="676" y="195" width="20" height="26" rx="4"/><rect x="702" y="195" width="20" height="26" rx="4"/><rect x="728" y="195" width="20" height="26" rx="4"/><rect x="754" y="195" width="20" height="26" rx="4"/>
+  </g>
+  <!-- canary pod -->
+  <rect x="840" y="170" width="60" height="60" rx="10" fill="var(--da-accent, #f59e0b)" opacity="0.2" stroke="var(--da-accent, #f59e0b)" stroke-width="2"/>
+  <text x="870" y="196" font-size="11" font-weight="600" fill="var(--da-fg, #0f172a)" text-anchor="middle">v2</text>
+  <text x="870" y="212" font-size="9" fill="var(--da-muted, #64748b)" text-anchor="middle">canary</text>
+  <!-- metrik paneli -->
+  <rect x="690" y="250" width="210" height="26" rx="6" fill="var(--da-success, #10b981)" opacity="0.15" stroke="var(--da-success, #10b981)"/>
+  <text x="795" y="267" font-size="10" fill="var(--da-fg, #0f172a)" text-anchor="middle">err 0.2% vs 0.2% · p99 180 vs 185 ms ✓</text>
+  <g font-size="10" fill="var(--da-fg, #0f172a)">
+    <text x="670" y="300">+ en küçük patlama yarıçapı</text>
+    <text x="670" y="318">+ iş metrikleriyle (dönüşüm) doğrulama</text>
+    <text x="670" y="336">− iyi gözlemlenebilirlik şart</text>
+    <text x="670" y="354">− iki sürüm aynı anda canlı</text>
+    <text x="670" y="372" fill="var(--da-muted, #64748b)">5% → 25% → 50% → 100%, otomatik rollback</text>
+  </g>
+</svg>

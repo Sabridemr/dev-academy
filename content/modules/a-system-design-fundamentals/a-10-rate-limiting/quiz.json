@@ -1,0 +1,110 @@
+{
+  "id": "a-10-rate-limiting-quiz",
+  "title": { "tr": "Rate Limiting Quiz", "en": "Rate Limiting Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Kullanıcıların kısa patlamalar (burst) yapmasına izin verirken uzun vadeli ortalama hızı sınırlamak isteyen bir API için en uygun algoritma hangisidir?",
+        "en": "Which algorithm fits best for an API that wants to allow short bursts while capping the long-term average rate?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Fixed window counter", "en": "Fixed window counter" } },
+        { "id": "b", "text": { "tr": "Token bucket", "en": "Token bucket" } },
+        { "id": "c", "text": { "tr": "Leaky bucket", "en": "Leaky bucket" } },
+        { "id": "d", "text": { "tr": "Sliding window log", "en": "Sliding window log" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Token bucket'ta kapasite burst'ü, dolum hızı ortalamayı ayrı ayrı kontrol eder. Leaky bucket çıkışı pürüzsüzleştirir ve burst'ü kuyruğa alır (geçirmez); fixed window sınırda 2× burst'e izin verir ama kontrolsüzdür; sliding log doğrudur ama burst kavramı yoktur ve bellek pahalıdır.",
+        "en": "In a token bucket, capacity controls the burst and refill rate controls the average, independently. A leaky bucket smooths output and queues bursts rather than passing them; fixed window allows an uncontrolled 2x burst at the boundary; sliding log is exact but has no burst notion and is memory-hungry."
+      },
+      "difficulty": "easy",
+      "concepts": ["token-bucket", "leaky-bucket"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "Limit \"dakikada 100 istek\" olan bir fixed window sayacında bir istemci en kötü durumda 2 saniye içinde kaç istek geçirebilir?",
+        "en": "With a fixed window counter limited to \"100 requests per minute\", how many requests can a client push through in 2 seconds in the worst case?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "100", "en": "100" } },
+        { "id": "b", "text": { "tr": "200", "en": "200" } },
+        { "id": "c", "text": { "tr": "4 (100/60 × 2, yukarı yuvarlanmış)", "en": "4 (100/60 × 2, rounded up)" } },
+        { "id": "d", "text": { "tr": "Sınırsız", "en": "Unlimited" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Pencere sınırı problemi: 12:00:59'da 100 istek (ilk pencere), 12:01:00'da 100 istek daha (ikinci pencere sıfırdan başlar). 2 saniyede 200 istek — limitin iki katı. Sliding window ve token bucket bu açığı kapatır.",
+        "en": "The window boundary problem: 100 requests at 12:00:59 (first window) and 100 more at 12:01:00 (second window starts from zero). 200 requests in 2 seconds — twice the limit. Sliding window and token bucket close this gap."
+      },
+      "difficulty": "medium",
+      "concepts": ["fixed-window", "sliding-window-counter"]
+    },
+    {
+      "id": "q3",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Sliding window log algoritması için hangileri doğrudur? (Birden fazla seçin)",
+        "en": "Which statements are true for the sliding window log algorithm? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Pencere sınırı problemi yoktur; karar tam doğrudur", "en": "There is no window boundary problem; the decision is exact" } },
+        { "id": "b", "text": { "tr": "Her istek için bir zaman damgası saklar; bellek anahtar başına limitle orantılıdır", "en": "It stores a timestamp per request; memory per key is proportional to the limit" } },
+        { "id": "c", "text": { "tr": "Anahtar başına yalnızca iki sayaç tutar", "en": "It keeps only two counters per key" } },
+        { "id": "d", "text": { "tr": "Düşük limitli hassas uç noktalar (saatte 5 şifre sıfırlama) için uygundur", "en": "It suits low-limit sensitive endpoints (5 password resets per hour)" } }
+      ],
+      "correct": ["a", "b", "d"],
+      "explanation": {
+        "tr": "Sliding log her isteğin zaman damgasını tutar (b), bu yüzden tam doğrudur (a) ama yüksek limitlerde bellek pahalıdır; düşük limitlerde idealdir (d). İki sayaçla çalışan (c) sliding window counter'dır, log değil.",
+        "en": "Sliding log keeps every request's timestamp (b), which makes it exact (a) but memory-expensive at high limits; it is ideal at low limits (d). The two-counter approach (c) is the sliding window counter, not the log."
+      },
+      "difficulty": "medium",
+      "concepts": ["sliding-window-log", "sliding-window-counter"]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Leaky bucket algoritması istekleri bir kuyrukta tamponlayıp sabit hızla işlediği için arka uca pürüzsüz (burst'süz) bir trafik iletir.",
+        "en": "The leaky bucket algorithm buffers requests in a queue and processes them at a constant rate, so it delivers smooth (burst-free) traffic to the backend."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["t"],
+      "explanation": {
+        "tr": "Doğru. Leaky bucket'ın tanımlayıcı özelliği sabit çıkış hızıdır; patlama kuyrukta bekler (ya da kuyruk doluysa reddedilir). Bu yüzden trafik şekillendirme için tercih edilir; bedeli kuyrukta bekleyen isteklerin gecikmesidir.",
+        "en": "True. The defining property of the leaky bucket is a constant output rate; bursts wait in the queue (or are rejected if it is full). That is why it is chosen for traffic shaping; the cost is added latency for queued requests."
+      },
+      "difficulty": "easy",
+      "concepts": ["leaky-bucket"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "Üç gateway kopyası aynı Redis'te token bucket tutuyor. Her kopya 'GET tokens → hesapla → SET tokens' şeklinde üç ayrı komut gönderiyor. Bunun sakıncası nedir ve nasıl giderilir?",
+        "en": "Three gateway replicas share a token bucket in Redis. Each one sends three separate commands: 'GET tokens → compute → SET tokens'. What is the problem and how is it fixed?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Sakıncası yok; Redis tek thread'lidir, komutlar zaten sıralıdır", "en": "No problem; Redis is single-threaded, commands are already serialized" } },
+        { "id": "b", "text": { "tr": "İki kopya aynı değeri okuyup ikisi de son token'ı harcayabilir (yarış); çözüm hesabı tek atomik Lua betiğinde yapmak", "en": "Two replicas can read the same value and both spend the last token (race); fix it by doing the computation in one atomic Lua script" } },
+        { "id": "c", "text": { "tr": "Redis çok yavaştır; sayaç her gateway'in yerel belleğinde tutulmalı", "en": "Redis is too slow; the counter should live in each gateway's local memory" } },
+        { "id": "d", "text": { "tr": "Token bucket dağıtık çalışamaz; fixed window'a geçilmeli", "en": "Token bucket cannot work distributed; switch to fixed window" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Tek tek komutlar atomiktir ama GET ile SET arasına başka bir kopyanın komutları girebilir (check-then-act yarışı). Lua betiği (ya da uygun tek komut) tüm adımı kesintisiz çalıştırır. Yerel bellek (c) limiti kopya sayısıyla çarpar; (d) yanlıştır, token bucket Redis'te yaygın biçimde dağıtık çalışır.",
+        "en": "Individual commands are atomic, but another replica's commands can slip between GET and SET (a check-then-act race). A Lua script (or a suitable single command) runs the whole step uninterrupted. Local memory (c) multiplies the limit by the replica count; (d) is false, token buckets run distributed in Redis all the time."
+      },
+      "difficulty": "hard",
+      "concepts": ["distributed-rate-limiter", "token-bucket"]
+    }
+  ]
+}

@@ -1,0 +1,110 @@
+{
+  "id": "d-02-indexing-quiz",
+  "title": { "tr": "İndeksleme Quiz", "en": "Indexing Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "orders tablosunda (customer_id, status, created_at) composite indeksi var. Hangi sorgu bu indeksi KULLANAMAZ?",
+        "en": "The orders table has a composite index on (customer_id, status, created_at). Which query CANNOT use this index?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "WHERE customer_id = 7", "en": "WHERE customer_id = 7" } },
+        { "id": "b", "text": { "tr": "WHERE customer_id = 7 AND status = 'paid'", "en": "WHERE customer_id = 7 AND status = 'paid'" } },
+        { "id": "c", "text": { "tr": "WHERE status = 'paid' AND created_at > '2024-01-01'", "en": "WHERE status = 'paid' AND created_at > '2024-01-01'" } },
+        { "id": "d", "text": { "tr": "WHERE customer_id = 7 AND status = 'paid' AND created_at > '2024-01-01'", "en": "WHERE customer_id = 7 AND status = 'paid' AND created_at > '2024-01-01'" } }
+      ],
+      "correct": ["c"],
+      "explanation": {
+        "tr": "Composite indeks sözlük sırasıyla sıralıdır; en soldaki sütun (customer_id) koşulda yoksa ağaçta nereye inileceği bilinemez. a, b ve d soldan başlayan kesintisiz önekler kullandığı için indeksten yararlanır.",
+        "en": "A composite index is ordered lexicographically; without the leftmost column (customer_id) in the predicate there is no way to know where to descend in the tree. a, b and d use contiguous prefixes starting from the left and benefit from the index."
+      },
+      "difficulty": "medium",
+      "concepts": ["composite-index", "leftmost-prefix"]
+    },
+    {
+      "id": "q2",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Hash indeksin B-tree'ye göre YAPAMADIĞI işlemler hangileridir? (Birden fazla seçin)",
+        "en": "Which operations can a hash index NOT do compared to a B-tree? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Aralık sorgusu (BETWEEN, <, >)", "en": "Range queries (BETWEEN, <, >)" } },
+        { "id": "b", "text": { "tr": "Eşitlik sorgusu (=)", "en": "Equality queries (=)" } },
+        { "id": "c", "text": { "tr": "ORDER BY için sıralı okuma", "en": "Ordered reads for ORDER BY" } },
+        { "id": "d", "text": { "tr": "Önek araması (LIKE 'ab%')", "en": "Prefix search (LIKE 'ab%')" } }
+      ],
+      "correct": ["a", "c", "d"],
+      "explanation": {
+        "tr": "Hash fonksiyonu sırayı korumaz; bu yüzden aralık, sıralama ve önek araması imkânsızdır. Eşitlik ise hash indeksin tam olarak iyi yaptığı tek şeydir (ortalama O(1)).",
+        "en": "A hash function does not preserve order, so range, sorting and prefix search are impossible. Equality is the one thing a hash index does well (O(1) on average)."
+      },
+      "difficulty": "easy",
+      "concepts": ["hash-index", "b-tree"]
+    },
+    {
+      "id": "q3",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Bir sütunda indeks varsa planlayıcı o sütunu filtreleyen her sorguda mutlaka indeksi kullanır.",
+        "en": "If a column has an index, the planner always uses it for every query filtering on that column."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "Yanlış. Sorgu satırların büyük bir yüzdesini döndürüyorsa (düşük seçicilik, ör. status = 'paid' satırların %70'i) rastgele heap erişimi sıralı taramadan pahalıdır ve planlayıcı bilinçli olarak Seq Scan seçer. İndeks, küçük bir alt küme için kazandırır.",
+        "en": "False. If the query returns a large fraction of rows (low selectivity, e.g. status = 'paid' matching 70% of rows), random heap access costs more than a sequential scan and the planner deliberately picks a Seq Scan. Indexes pay off for small subsets."
+      },
+      "difficulty": "medium",
+      "concepts": ["selectivity", "query-plan"]
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": {
+        "tr": "EXPLAIN ANALYZE çıktısında 'rows=12' tahmini ama 'actual rows=48000' görüyorsunuz. İlk yapmanız gereken nedir?",
+        "en": "In EXPLAIN ANALYZE output you see an estimate of 'rows=12' but 'actual rows=48000'. What should you do first?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Tabloya daha fazla indeks eklemek", "en": "Add more indexes to the table" } },
+        { "id": "b", "text": { "tr": "ANALYZE ile tablo istatistiklerini güncellemek", "en": "Refresh table statistics with ANALYZE" } },
+        { "id": "c", "text": { "tr": "Sorguyu hash indeksle yeniden yazmak", "en": "Rewrite the query to use a hash index" } },
+        { "id": "d", "text": { "tr": "work_mem değerini artırmak", "en": "Increase work_mem" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Tahmin ile gerçek arasında binlerce kat fark, planlayıcının bayat istatistiklerle karar verdiğini gösterir; önce ANALYZE çalıştırılır ve plan yeniden incelenir. Yeni indeks ya da bellek ayarı, yanlış tahminle yanlış plan seçilmeye devam ettiği sürece sorunu çözmez.",
+        "en": "A thousand-fold gap between estimate and actual means the planner decided with stale statistics; run ANALYZE first and re-examine the plan. New indexes or memory settings will not help while the planner keeps choosing a wrong plan from wrong estimates."
+      },
+      "difficulty": "hard",
+      "concepts": ["explain", "query-plan"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "SELECT total_amount FROM orders WHERE customer_id = 7 AND status = 'paid' sorgusunun heap'e hiç gitmemesi için hangi indeks tanımı uygundur?",
+        "en": "Which index definition lets SELECT total_amount FROM orders WHERE customer_id = 7 AND status = 'paid' avoid touching the heap at all?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "CREATE INDEX ON orders (customer_id)", "en": "CREATE INDEX ON orders (customer_id)" } },
+        { "id": "b", "text": { "tr": "CREATE INDEX ON orders (total_amount)", "en": "CREATE INDEX ON orders (total_amount)" } },
+        { "id": "c", "text": { "tr": "CREATE INDEX ON orders (customer_id, status) INCLUDE (total_amount)", "en": "CREATE INDEX ON orders (customer_id, status) INCLUDE (total_amount)" } },
+        { "id": "d", "text": { "tr": "CREATE INDEX ON orders USING hash (status)", "en": "CREATE INDEX ON orders USING hash (status)" } }
+      ],
+      "correct": ["c"],
+      "explanation": {
+        "tr": "Index Only Scan için sorgunun hem filtre hem de SELECT sütunları indekste bulunmalıdır. (customer_id, status) filtreyi karşılar, INCLUDE (total_amount) ise sonucu indekste taşır; böylece heap okuması sıfırlanır (covering index). Diğer seçenekler ya filtreyi tam karşılamaz ya da seçilen sütunu içermez.",
+        "en": "An Index Only Scan needs both the filter columns and the selected columns inside the index. (customer_id, status) covers the filter and INCLUDE (total_amount) carries the result, so heap reads drop to zero (covering index). The other options either miss part of the filter or the selected column."
+      },
+      "difficulty": "medium",
+      "concepts": ["covering-index", "composite-index"]
+    }
+  ]
+}

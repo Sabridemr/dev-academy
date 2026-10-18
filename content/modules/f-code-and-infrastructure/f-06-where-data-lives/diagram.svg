@@ -1,0 +1,153 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 540" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Veri akış diyagramı: doğruluk kaynağından türev depolara</title>
+  <desc id="desc">Solda uygulama servisleri; ortada doğruluk kaynağı olan OLTP veritabanı (Postgres) ve NoSQL (DynamoDB), üstte cache (Redis) ve object storage (S3 medya). Veritabanından CDC ile Kafka'ya olay akışı, Kafka'dan arama indeksi, S3 data lake ve bildirim servisine kollar; data lake'ten data warehouse'a saatlik yükleme, warehouse'tan BI dashboard'a sorgu. Alt şeritte gözlemlenebilirlik: loglar Elasticsearch veya Loki'ye, metrikler Prometheus'a, izler Jaeger'a gider. Her depo için saklama süresi ve gecikme notu bulunur.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+    <marker id="arrow-p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-primary, #6366f1)"/>
+    </marker>
+  </defs>
+
+  <!-- Bölge başlıkları -->
+  <g font-size="11" font-weight="600" fill="var(--da-muted, #64748b)">
+    <text x="30" y="30">UYGULAMA</text>
+    <text x="230" y="30">DOĞRULUK KAYNAĞI (OLTP)</text>
+    <text x="520" y="30">AKIŞ</text>
+    <text x="700" y="30">TÜREV DEPOLAR (yeniden üretilebilir)</text>
+  </g>
+  <line x1="20" y1="38" x2="960" y2="38" stroke="var(--da-border, #cbd5e1)"/>
+
+  <!-- Servisler -->
+  <g fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.4">
+    <rect x="30" y="150" width="130" height="46" rx="9"/>
+    <rect x="30" y="210" width="130" height="46" rx="9"/>
+  </g>
+  <g font-size="11" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="95" y="169">orders-service</text>
+    <text x="95" y="229">cart-service</text>
+  </g>
+  <g font-size="9" fill="var(--da-muted, #64748b)" text-anchor="middle">
+    <text x="95" y="184">EKS pod'ları</text>
+    <text x="95" y="244">EKS pod'ları</text>
+  </g>
+
+  <!-- Cache -->
+  <rect x="230" y="60" width="130" height="50" rx="9" fill="var(--da-accent, #f59e0b)" opacity="0.18" stroke="var(--da-accent, #f59e0b)" stroke-width="1.5"/>
+  <text x="295" y="80" font-size="11" font-weight="600" fill="var(--da-fg, #0f172a)" text-anchor="middle">Redis (cache)</text>
+  <text x="295" y="95" font-size="9" fill="var(--da-muted, #64748b)" text-anchor="middle">RAM · TTL dk · 0,3 ms · kaybedilebilir</text>
+
+  <!-- OLTP -->
+  <rect x="230" y="150" width="150" height="60" rx="9" fill="var(--da-danger, #ef4444)" opacity="0.13" stroke="var(--da-danger, #ef4444)" stroke-width="2"/>
+  <text x="305" y="172" font-size="12" font-weight="600" fill="var(--da-fg, #0f172a)" text-anchor="middle">Postgres (OLTP)</text>
+  <text x="305" y="187" font-size="9" fill="var(--da-muted, #64748b)" text-anchor="middle">orders · transaction · satır</text>
+  <text x="305" y="200" font-size="9" fill="var(--da-muted, #64748b)" text-anchor="middle">primary AZ-a · standby AZ-b · 2–5 ms</text>
+
+  <!-- NoSQL -->
+  <rect x="230" y="222" width="150" height="54" rx="9" fill="var(--da-danger, #ef4444)" opacity="0.13" stroke="var(--da-danger, #ef4444)" stroke-width="2"/>
+  <text x="305" y="243" font-size="12" font-weight="600" fill="var(--da-fg, #0f172a)" text-anchor="middle">DynamoDB (NoSQL)</text>
+  <text x="305" y="258" font-size="9" fill="var(--da-muted, #64748b)" text-anchor="middle">sepet · oturum · anahtar→belge</text>
+  <text x="305" y="270" font-size="9" fill="var(--da-muted, #64748b)" text-anchor="middle">partition'lara yayılmış · 1–5 ms</text>
+
+  <!-- S3 medya -->
+  <rect x="230" y="300" width="150" height="50" rx="9" fill="var(--da-success, #10b981)" opacity="0.15" stroke="var(--da-success, #10b981)" stroke-width="1.5"/>
+  <text x="305" y="320" font-size="11" font-weight="600" fill="var(--da-fg, #0f172a)" text-anchor="middle">S3 (object storage)</text>
+  <text x="305" y="335" font-size="9" fill="var(--da-muted, #64748b)" text-anchor="middle">görseller · faturalar · 3 AZ · 11 dokuz</text>
+
+  <!-- Servis → depolar -->
+  <g stroke="var(--da-muted, #64748b)" stroke-width="1.6" fill="none" marker-end="url(#arrow)">
+    <path d="M 160 165 L 228 172"/>
+    <path d="M 160 160 C 190 150, 200 95, 228 88"/>
+    <path d="M 160 233 L 228 245"/>
+    <path d="M 160 240 C 190 260, 200 318, 228 322"/>
+  </g>
+  <text x="192" y="210" font-size="9" fill="var(--da-muted, #64748b)" text-anchor="middle">yaz / oku</text>
+
+  <!-- CDC -->
+  <rect x="420" y="150" width="90" height="46" rx="9" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.4"/>
+  <text x="465" y="169" font-size="11" font-weight="600" fill="var(--da-fg, #0f172a)" text-anchor="middle">CDC</text>
+  <text x="465" y="184" font-size="9" fill="var(--da-muted, #64748b)" text-anchor="middle">Debezium · WAL</text>
+  <path d="M 380 178 L 418 174" stroke="var(--da-primary, #6366f1)" stroke-width="2" marker-end="url(#arrow-p)"/>
+  <path d="M 380 248 C 400 248, 410 200, 418 185" stroke="var(--da-primary, #6366f1)" stroke-width="2" fill="none" stroke-dasharray="4 3" marker-end="url(#arrow-p)"/>
+  <text x="398" y="222" font-size="8" fill="var(--da-primary, #6366f1)">Streams</text>
+
+  <!-- Kafka -->
+  <rect x="540" y="140" width="110" height="66" rx="9" fill="var(--da-primary, #6366f1)" opacity="0.15" stroke="var(--da-primary, #6366f1)" stroke-width="2"/>
+  <text x="595" y="162" font-size="12" font-weight="600" fill="var(--da-fg, #0f172a)" text-anchor="middle">Kafka</text>
+  <text x="595" y="177" font-size="9" fill="var(--da-muted, #64748b)" text-anchor="middle">orders.changes</text>
+  <text x="595" y="190" font-size="9" fill="var(--da-muted, #64748b)" text-anchor="middle">3 AZ · RF 3 · 7 gün</text>
+  <path d="M 510 173 L 538 173" stroke="var(--da-primary, #6366f1)" stroke-width="2" marker-end="url(#arrow-p)"/>
+
+  <!-- Türev depolar -->
+  <g fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)" stroke-width="1.5">
+    <rect x="700" y="60" width="130" height="50" rx="9"/>
+    <rect x="700" y="150" width="130" height="50" rx="9"/>
+    <rect x="700" y="240" width="130" height="50" rx="9"/>
+    <rect x="860" y="150" width="105" height="50" rx="9"/>
+  </g>
+  <g font-size="11" font-weight="600" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="765" y="80">OpenSearch</text>
+    <text x="765" y="170">S3 data lake</text>
+    <text x="765" y="260">Bildirim</text>
+    <text x="912" y="170">Flink</text>
+  </g>
+  <g font-size="9" fill="var(--da-muted, #64748b)" text-anchor="middle">
+    <text x="765" y="95">arama indeksi · 1–2 sn</text>
+    <text x="765" y="185">Parquet · dt=… · 5 dk</text>
+    <text x="765" y="275">e-posta / push · anında</text>
+    <text x="912" y="185">gerçek zamanlı</text>
+  </g>
+  <g stroke="var(--da-primary, #6366f1)" stroke-width="1.8" fill="none" marker-end="url(#arrow-p)">
+    <path d="M 650 160 C 670 160, 680 85, 698 85"/>
+    <path d="M 650 173 L 698 175"/>
+    <path d="M 650 186 C 670 186, 680 265, 698 265"/>
+    <path d="M 650 150 C 680 120, 820 120, 858 165"/>
+  </g>
+
+  <!-- Warehouse + dashboard -->
+  <rect x="700" y="330" width="130" height="54" rx="9" fill="var(--da-primary, #6366f1)" opacity="0.12" stroke="var(--da-primary, #6366f1)" stroke-width="1.5"/>
+  <text x="765" y="351" font-size="11" font-weight="600" fill="var(--da-fg, #0f172a)" text-anchor="middle">Redshift (OLAP)</text>
+  <text x="765" y="366" font-size="9" fill="var(--da-muted, #64748b)" text-anchor="middle">sütunsal · saatlik COPY · 3–5 yıl</text>
+  <text x="765" y="378" font-size="9" fill="var(--da-muted, #64748b)" text-anchor="middle">sorgu: saniyeler</text>
+  <path d="M 765 202 L 765 328" stroke="var(--da-muted, #64748b)" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+  <text x="790" y="268" font-size="9" fill="var(--da-muted, #64748b)">Airflow · saatlik</text>
+
+  <rect x="860" y="330" width="105" height="54" rx="9" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.4"/>
+  <text x="912" y="351" font-size="11" font-weight="600" fill="var(--da-fg, #0f172a)" text-anchor="middle">BI dashboard</text>
+  <text x="912" y="366" font-size="9" fill="var(--da-muted, #64748b)" text-anchor="middle">ciro / ülke</text>
+  <text x="912" y="378" font-size="9" fill="var(--da-muted, #64748b)" text-anchor="middle">5 dk yenile</text>
+  <path d="M 830 357 L 858 357" stroke="var(--da-muted, #64748b)" stroke-width="1.6" marker-end="url(#arrow)"/>
+
+  <!-- Gözlemlenebilirlik şeridi -->
+  <rect x="20" y="410" width="940" height="110" rx="12" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)" stroke-dasharray="6 5"/>
+  <text x="36" y="432" font-size="11" font-weight="600" fill="var(--da-muted, #64748b)">YAN KANAL: GÖZLEMLENEBİLİRLİK VERİSİ (iş verisi değil · yaklaşık · kısa ömürlü)</text>
+  <g fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.2">
+    <rect x="40" y="448" width="150" height="56" rx="8"/>
+    <rect x="260" y="448" width="190" height="56" rx="8"/>
+    <rect x="520" y="448" width="190" height="56" rx="8"/>
+    <rect x="780" y="448" width="160" height="56" rx="8"/>
+  </g>
+  <g font-size="11" font-weight="600" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="115" y="468">pod stdout + /metrics</text>
+    <text x="355" y="468">Loglar → OpenSearch / Loki</text>
+    <text x="615" y="468">Metrikler → Prometheus</text>
+    <text x="860" y="468">İzler → Jaeger / Tempo</text>
+  </g>
+  <g font-size="9" fill="var(--da-muted, #64748b)" text-anchor="middle">
+    <text x="115" y="483">Fluent Bit sidecar</text>
+    <text x="115" y="495">OpenTelemetry SDK</text>
+    <text x="355" y="483">JSON belge · tam metin arama</text>
+    <text x="355" y="495">14 gün SSD → S3 arşiv 1–7 yıl</text>
+    <text x="615" y="483">time series · 15 sn kazıma</text>
+    <text x="615" y="495">15 gün yerel → 13 ay S3 (Thanos)</text>
+    <text x="860" y="483">span'ler · %1–10 örnekleme</text>
+    <text x="860" y="495">7 gün</text>
+  </g>
+  <g stroke="var(--da-muted, #64748b)" stroke-width="1.4" fill="none" marker-end="url(#arrow)">
+    <path d="M 190 470 L 258 470"/>
+    <path d="M 190 482 C 230 482, 240 500, 300 506 C 400 512, 470 506, 518 486"/>
+    <path d="M 190 460 C 300 420, 600 420, 778 460"/>
+  </g>
+  <path d="M 95 258 L 95 446" stroke="var(--da-muted, #64748b)" stroke-width="1.2" stroke-dasharray="3 3" marker-end="url(#arrow)"/>
+</svg>

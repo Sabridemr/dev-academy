@@ -1,0 +1,110 @@
+{
+  "id": "a-13-observability-12-factor-quiz",
+  "title": { "tr": "Observability ve 12-Factor Quiz", "en": "Observability and 12-Factor Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "\"Bu belirli istek 10 servisten geçti; zamanın hangi serviste harcandığını görmek istiyorum.\" Bu soruyu doğrudan hangi sinyal cevaplar?",
+        "en": "\"This particular request passed through 10 services; I want to see in which service the time was spent.\" Which signal answers this question directly?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Metrikler (p99 gecikme grafiği)", "en": "Metrics (p99 latency graph)" } },
+        { "id": "b", "text": { "tr": "Dağıtık trace (span şelalesi)", "en": "Distributed trace (span waterfall)" } },
+        { "id": "c", "text": { "tr": "CPU kullanım panosu", "en": "CPU utilization dashboard" } },
+        { "id": "d", "text": { "tr": "Erişim logları toplamı", "en": "Aggregated access logs" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Trace, tek bir isteğin servisler arasındaki span ağacını ve her span'in süresini gösterir. Metrikler toplulaştırılmıştır ve tek isteği açıklayamaz; loglar bağlamı verir ama süre dağılımını görselleştirmez; CPU bir sebep metriğidir.",
+        "en": "A trace shows one request's span tree across services and the duration of each span. Metrics are aggregated and cannot explain a single request; logs give context but do not visualize the time breakdown; CPU is a cause metric."
+      },
+      "difficulty": "easy",
+      "concepts": ["distributed-tracing", "three-pillars"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "Servisler arasında trace bağlamını taşıyan W3C standardı HTTP başlığı hangisidir?",
+        "en": "Which W3C standard HTTP header carries trace context between services?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "X-Request-ID", "en": "X-Request-ID" } },
+        { "id": "b", "text": { "tr": "traceparent", "en": "traceparent" } },
+        { "id": "c", "text": { "tr": "Authorization", "en": "Authorization" } },
+        { "id": "d", "text": { "tr": "Cache-Control", "en": "Cache-Control" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "traceparent: 00-<trace-id>-<parent-span-id>-<flags> biçimindedir ve OpenTelemetry dahil tüm modern araçların ortak dilidir. X-Request-ID yaygın ama standart dışı ve tek değerlidir (parent span ve örnekleme bayrağı taşımaz).",
+        "en": "traceparent has the form 00-<trace-id>-<parent-span-id>-<flags> and is the common language of all modern tooling including OpenTelemetry. X-Request-ID is common but non-standard and single-valued (no parent span or sampling flag)."
+      },
+      "difficulty": "easy",
+      "concepts": ["trace-context", "span"]
+    },
+    {
+      "id": "q3",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Prometheus metriklerine `user_id` etiketi eklemek, kullanıcı bazında gecikmeyi görmek için iyi bir uygulamadır.",
+        "en": "Adding a `user_id` label to Prometheus metrics is a good practice for seeing latency per user."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "Yanlış. Her etiket değeri kombinasyonu ayrı bir zaman serisidir; milyonlarca kullanıcı kardinalite patlamasına ve metrik sisteminin çökmesine yol açar. Kullanıcı bazlı inceleme log ve trace'in işidir; metrik etiketleri şablon rota, durum kodu sınıfı, bölge gibi düşük kardinaliteli alanlarla sınırlı kalmalıdır.",
+        "en": "False. Every label value combination is a separate time series; millions of users cause a cardinality explosion and bring the metrics system down. Per-user investigation belongs to logs and traces; metric labels should stay low-cardinality: templated route, status class, region."
+      },
+      "difficulty": "medium",
+      "concepts": ["cardinality", "metrics"]
+    },
+    {
+      "id": "q4",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Aşağıdakilerden hangileri 12-Factor App ilkelerini doğru ifade eder? (Birden fazla seçin)",
+        "en": "Which of the following correctly state 12-Factor App principles? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Konfigürasyon ortam değişkenlerinde tutulur, koda gömülmez", "en": "Configuration lives in environment variables, not in code" } },
+        { "id": "b", "text": { "tr": "Süreçler stateless'tır; kalıcı durum backing service'lerde tutulur", "en": "Processes are stateless; persistent state lives in backing services" } },
+        { "id": "c", "text": { "tr": "Loglar uygulama tarafından dosyalara yazılıp rotasyonu uygulama yönetir", "en": "Logs are written to files by the app, which also manages rotation" } },
+        { "id": "d", "text": { "tr": "Geliştirme ve üretim ortamları olabildiğince benzer tutulur", "en": "Development and production environments are kept as similar as possible" } }
+      ],
+      "correct": ["a", "b", "d"],
+      "explanation": {
+        "tr": "III (config), VI (processes) ve X (dev/prod parity) doğru ifade edilmiştir. XI (logs) ise tam tersini söyler: uygulama logu bir olay akışı olarak stdout'a yazar; toplama, depolama ve rotasyon platformun işidir.",
+        "en": "III (config), VI (processes) and X (dev/prod parity) are stated correctly. XI (logs) says the opposite of (c): the app writes logs to stdout as an event stream; collection, storage and rotation are the platform's job."
+      },
+      "difficulty": "medium",
+      "concepts": ["twelve-factor", "config-in-env", "stateless-processes", "structured-logging"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "Gece nöbetçisini sayfalayan alarmların hangisine bağlanması en doğrudur?",
+        "en": "Which of these is the best thing to base on-call paging alerts on?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Herhangi bir sunucuda CPU > %85", "en": "CPU > 85% on any server" } },
+        { "id": "b", "text": { "tr": "SLO hata bütçesinin tükenme hızı (burn rate): kullanıcıya yansıyan hata/gecikme", "en": "SLO error budget burn rate: user-facing errors/latency" } },
+        { "id": "c", "text": { "tr": "Log satırı sayısının artması", "en": "An increase in the number of log lines" } },
+        { "id": "d", "text": { "tr": "Replication lag'in 100 ms'yi aşması", "en": "Replication lag exceeding 100 ms" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Alarmlar belirtiye (kullanıcının gördüğü hata ve gecikme) bağlanmalıdır; SLO burn rate bunu nicelleştirir ve her sayfalamayı eyleme bağlar. CPU, log hacmi ve replication lag sebep metrikleridir: tanı sırasında bakılır, kullanıcıyı etkilemiyorsa gece kimseyi uyandırmamalıdır.",
+        "en": "Alerts should be tied to symptoms (the errors and latency users see); SLO burn rate quantifies that and makes every page actionable. CPU, log volume and replication lag are cause metrics: consulted during diagnosis, but they should not wake anyone up if users are unaffected."
+      },
+      "difficulty": "hard",
+      "concepts": ["slo-alerting", "observability"]
+    }
+  ]
+}

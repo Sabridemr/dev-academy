@@ -1,0 +1,212 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "d-05-replica-lag",
+  "title": { "tr": "Read Replica ve Replication Lag", "en": "Read Replicas and Replication Lag" },
+  "summary": {
+    "tr": "Yazmanın birincile gitmesi, WAL akışıyla replikalara yayılması, geride kalan replikadan bayat okuma ve read-your-writes için iki çözüm: yazma sonrası birincile yapışma ve LSN bekleme.",
+    "en": "A write goes to the primary and streams to replicas via WAL; a lagging replica serves a stale read; two fixes for read-your-writes: sticking to the primary after a write and waiting for the LSN."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda kullanıcı ve uygulama, ortada yönlendirici, sağda üstte birincil veritabanı, altında iki read replica. Kullanıcı profilini günceller; yazma birincile gider ve WAL olarak replikalara akar. Replika 2 geride kalmışken kullanıcı sayfayı yeniler ve eski değeri görür. Çözüm adımlarında yönlendirici yazma sonrası okumaları birincile gönderir, sonra replikanın LSN'ini kontrol ederek yalnızca güncel replikadan okur.",
+      "en": "User and application on the left, a router in the middle, the primary database at the top right with two read replicas below it. The user updates their profile; the write goes to the primary and streams to the replicas as WAL. While replica 2 lags, the user refreshes and sees the old value. In the fix steps the router sends post-write reads to the primary, then checks the replica's LSN and reads only from a caught-up replica."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "user", "kind": "user", "label": { "tr": "Kullanıcı", "en": "User" }, "x": 90, "y": 300, "w": 110, "h": 70 },
+    { "id": "app", "kind": "service", "label": { "tr": "Uygulama", "en": "Application" }, "sublabel": { "tr": "okuma/yazma ayrımı", "en": "read/write split" }, "x": 290, "y": 300, "w": 170, "h": 80 },
+    { "id": "router", "kind": "proxy", "label": "PgBouncer", "sublabel": { "tr": "havuz + yönlendirme", "en": "pool + routing" }, "x": 520, "y": 300, "w": 150, "h": 76 },
+    { "id": "primary", "kind": "db", "label": "Primary", "sublabel": "LSN 0/1A2B", "x": 820, "y": 110, "w": 170, "h": 80 },
+    { "id": "r1", "kind": "replica", "label": "Replica 1", "sublabel": "replay LSN 0/1A2B", "x": 820, "y": 310, "w": 170, "h": 76 },
+    { "id": "r2", "kind": "replica", "label": "Replica 2", "sublabel": "replay LSN 0/1A1F", "x": 820, "y": 500, "w": 170, "h": 76 }
+  ],
+  "edges": [
+    { "id": "u-app", "from": "user", "to": "app", "kind": "request" },
+    { "id": "app-router", "from": "app", "to": "router", "kind": "request" },
+    { "id": "router-primary", "from": "router", "to": "primary", "kind": "request", "label": { "tr": "yazma", "en": "writes" } },
+    { "id": "router-r1", "from": "router", "to": "r1", "kind": "request", "label": { "tr": "okuma", "en": "reads" } },
+    { "id": "router-r2", "from": "router", "to": "r2", "kind": "request", "label": { "tr": "okuma", "en": "reads" } },
+    { "id": "rep-r1", "from": "primary", "to": "r1", "kind": "replication", "style": "dashed", "curvature": 0.4, "label": "WAL" },
+    { "id": "rep-r2", "from": "primary", "to": "r2", "kind": "replication", "style": "dashed", "curvature": 0.55, "label": "WAL" }
+  ],
+  "steps": [
+    {
+      "id": "steady",
+      "title": { "tr": "Normal akış: yazmalar birincile, okumalar replikalara", "en": "Steady state: writes to primary, reads to replicas" },
+      "narration": {
+        "tr": "Uygulama SELECT'leri iki replikaya, yazmaları birincile yollar. Okuma kapasitesi replika sayısıyla doğrusal artar; yazma kapasitesi tek birincilin sınırında kalır.",
+        "en": "The application sends SELECTs to the two replicas and writes to the primary. Read capacity grows linearly with replicas; write capacity stays bounded by the single primary."
+      },
+      "durationMs": 4000,
+      "inherit": false,
+      "highlight": { "nodes": ["router", "primary", "r1", "r2"], "edges": ["router-primary", "router-r1", "router-r2"] },
+      "nodeStates": {
+        "primary": { "status": "active", "badge": "W" },
+        "r1": { "status": "active", "badge": "R" },
+        "r2": { "status": "active", "badge": "R" }
+      },
+      "packets": [
+        { "edge": "router-r1", "shape": "dot", "label": "SELECT", "durationMs": 800, "repeat": 2, "repeatGapMs": 400 },
+        { "edge": "router-r2", "shape": "dot", "label": "SELECT", "startAt": 200, "durationMs": 800, "repeat": 2, "repeatGapMs": 400 },
+        { "edge": "router-primary", "shape": "envelope", "label": "UPDATE", "startAt": 600, "durationMs": 900 }
+      ],
+      "annotations": [
+        { "id": "ratio", "x": 520, "y": 420, "text": { "tr": "tipik oran: 10–100 okuma / 1 yazma", "en": "typical ratio: 10–100 reads per write" }, "target": "router" }
+      ]
+    },
+    {
+      "id": "write",
+      "title": { "tr": "Kullanıcı profilini günceller", "en": "The user updates their profile" },
+      "narration": {
+        "tr": "Kullanıcı adını 'Ayşe K.' yapar. UPDATE birincile gider, WAL'a yazılır, COMMIT döner. Birincil WAL kaydını replikalara akıtmaya başlar; henüz uygulanmış değil.",
+        "en": "The user changes their name to 'Ayşe K.'. The UPDATE goes to the primary, is written to WAL and COMMIT returns. The primary starts streaming the WAL record to the replicas; it is not applied yet."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["user", "app", "router", "primary"], "edges": ["u-app", "app-router", "router-primary"] },
+      "nodeStates": {
+        "primary": { "status": "success", "badge": "COMMIT", "sublabel": "LSN 0/1A2C · name = 'Ayşe K.'" },
+        "r1": { "status": "idle", "badge": "" },
+        "r2": { "status": "idle", "badge": "" }
+      },
+      "packets": [
+        { "edge": "u-app", "shape": "envelope", "label": "PUT /profile", "durationMs": 700 },
+        { "edge": "app-router", "shape": "envelope", "label": "UPDATE users", "startAt": 700, "durationMs": 700 },
+        { "edge": "router-primary", "shape": "envelope", "label": "UPDATE users", "startAt": 1400, "durationMs": 900 },
+        { "edge": "u-app", "shape": "dot", "direction": "backward", "label": "200 OK", "startAt": 2600, "durationMs": 700, "color": "success" }
+      ],
+      "annotations": [
+        { "id": "async", "x": 820, "y": 40, "text": { "tr": "asenkron: COMMIT replikayı beklemez", "en": "asynchronous: COMMIT does not wait for replicas" }, "tone": "info", "target": "primary" }
+      ]
+    },
+    {
+      "id": "lag",
+      "title": { "tr": "WAL akışı: Replica 2 geride", "en": "WAL streaming: Replica 2 falls behind" },
+      "narration": {
+        "tr": "Replica 1 kaydı 8 ms'de uygular. Replica 2 o sırada ağır bir rapor sorgusu çalıştırıyor; WAL uygulaması 3 saniye gecikir. İki replika artık farklı gerçekleri anlatıyor.",
+        "en": "Replica 1 applies the record in 8 ms. Replica 2 is busy with a heavy report query; WAL replay lags by 3 seconds. The two replicas now tell different truths."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["primary", "r1", "r2"], "edges": ["rep-r1", "rep-r2"] },
+      "nodeStates": {
+        "primary": { "status": "active", "badge": "" },
+        "r1": { "status": "success", "badge": "8 ms", "sublabel": "replay LSN 0/1A2C ✓" },
+        "r2": { "status": "warning", "badge": "lag 3 s", "sublabel": "replay LSN 0/1A1F (eski)" }
+      },
+      "edgeStates": { "rep-r1": { "status": "active" }, "rep-r2": { "status": "error", "label": { "tr": "WAL — kuyrukta", "en": "WAL — queued" } } },
+      "packets": [
+        { "edge": "rep-r1", "shape": "square", "label": "WAL 0/1A2C", "durationMs": 800 },
+        { "edge": "rep-r2", "shape": "square", "label": "WAL 0/1A2C", "durationMs": 3000, "color": "warning" }
+      ],
+      "annotations": [
+        { "id": "why", "x": 820, "y": 580, "text": { "tr": "nedenler: uzun sorgu, ağ, yoğun yazma, vacuum", "en": "causes: long query, network, write burst, vacuum" }, "tone": "warning", "target": "r2" }
+      ]
+    },
+    {
+      "id": "stale-read",
+      "title": { "tr": "Sayfa yenilenir: bayat okuma", "en": "Page refresh: a stale read" },
+      "narration": {
+        "tr": "Kullanıcı sayfayı yeniler. Round-robin bu kez Replica 2'yi seçer; eski ad döner. Kullanıcı 'kaydedilmedi' sanır ve tekrar dener: read-your-writes ihlali.",
+        "en": "The user refreshes. Round-robin picks Replica 2 this time; the old name comes back. The user thinks 'it did not save' and tries again: a read-your-writes violation."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["user", "router", "r2"], "edges": ["u-app", "app-router", "router-r2"] },
+      "nodeStates": {
+        "r2": { "status": "error", "badge": "STALE" },
+        "user": { "status": "warning", "sublabel": { "tr": "eski adı görüyor", "en": "sees the old name" } }
+      },
+      "edgeStates": { "router-r2": { "status": "error" } },
+      "packets": [
+        { "edge": "u-app", "shape": "envelope", "label": "GET /profile", "durationMs": 600 },
+        { "edge": "app-router", "shape": "envelope", "label": "SELECT", "startAt": 600, "durationMs": 600 },
+        { "edge": "router-r2", "shape": "envelope", "label": "SELECT", "startAt": 1200, "durationMs": 800 },
+        { "edge": "router-r2", "shape": "square", "direction": "backward", "label": "name = 'Ayşe'", "startAt": 2000, "durationMs": 800, "color": "danger" },
+        { "edge": "u-app", "shape": "square", "direction": "backward", "label": "eski!", "startAt": 2800, "durationMs": 700, "color": "danger" }
+      ],
+      "annotations": [
+        { "id": "violation", "x": 290, "y": 420, "text": { "tr": "yazdığını okuyamıyor → çift kayıt, destek bileti", "en": "cannot read own write → duplicate submits, support tickets" }, "tone": "danger", "target": "app" }
+      ]
+    },
+    {
+      "id": "sticky",
+      "title": { "tr": "Çözüm 1: yazma sonrası birincile yapış", "en": "Fix 1: stick to the primary after a write" },
+      "narration": {
+        "tr": "Uygulama kullanıcının son yazma zamanını oturuma yazar. Sonraki 5 saniyede o kullanıcının okumaları birincile gider; diğer kullanıcılar replikalardan okumaya devam eder. Basit ve çoğu durumda yeterli.",
+        "en": "The application records the user's last write time in the session. For the next 5 seconds that user's reads go to the primary; everyone else keeps reading from replicas. Simple and usually sufficient."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["app", "router", "primary"], "edges": ["router-primary"] },
+      "nodeStates": {
+        "user": { "status": "success", "sublabel": { "tr": "yeni adı görüyor", "en": "sees the new name" } },
+        "r2": { "status": "warning", "badge": "lag" },
+        "primary": { "status": "success", "badge": "R+W" },
+        "app": { "status": "active", "sublabel": "last_write_at < 5 s → primary" }
+      },
+      "edgeStates": { "router-r2": { "status": "muted" }, "router-primary": { "status": "active" } },
+      "packets": [
+        { "edge": "u-app", "shape": "envelope", "label": "GET /profile", "durationMs": 600 },
+        { "edge": "app-router", "shape": "envelope", "label": "SELECT (sticky)", "startAt": 600, "durationMs": 600 },
+        { "edge": "router-primary", "shape": "envelope", "label": "SELECT", "startAt": 1200, "durationMs": 800 },
+        { "edge": "router-primary", "shape": "dot", "direction": "backward", "label": "'Ayşe K.'", "startAt": 2000, "durationMs": 800, "color": "success" }
+      ],
+      "annotations": [
+        { "id": "sticky-note", "x": 290, "y": 420, "text": { "tr": "bedel: yazan kullanıcıların okumaları kısa süre birincile biner", "en": "cost: writers' reads briefly land on the primary" }, "tone": "info", "target": "app" }
+      ]
+    },
+    {
+      "id": "lsn",
+      "title": { "tr": "Çözüm 2: LSN'e göre güncel replikayı seç", "en": "Fix 2: pick a caught-up replica by LSN" },
+      "narration": {
+        "tr": "Yazma yanıtı WAL konumunu (0/1A2C) taşır. Okumada yönlendirici replikaya 'bu LSN'i uyguladın mı?' diye sorar: Replica 1 evet, Replica 2 hayır. Okuma Replica 1'e gider; birincil hiç yorulmaz.",
+        "en": "The write response carries the WAL position (0/1A2C). On read, the router asks the replica 'have you replayed this LSN?': Replica 1 yes, Replica 2 no. The read goes to Replica 1; the primary is never touched."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["router", "r1", "r2"], "edges": ["router-r1", "router-r2"] },
+      "nodeStates": {
+        "primary": { "status": "idle", "badge": "W" },
+        "app": { "status": "active", "sublabel": "X-Last-LSN: 0/1A2C" },
+        "r1": { "status": "success", "badge": "≥ LSN ✓" },
+        "r2": { "status": "muted", "badge": "< LSN ✗" }
+      },
+      "edgeStates": { "router-primary": { "status": "idle" }, "router-r1": { "status": "active" }, "router-r2": { "status": "muted" } },
+      "packets": [
+        { "edge": "router-r2", "shape": "diamond", "label": "replay ≥ 0/1A2C?", "durationMs": 700 },
+        { "edge": "router-r2", "shape": "diamond", "direction": "backward", "label": "no", "startAt": 700, "durationMs": 600, "color": "danger" },
+        { "edge": "router-r1", "shape": "diamond", "label": "replay ≥ 0/1A2C?", "startAt": 1400, "durationMs": 700 },
+        { "edge": "router-r1", "shape": "diamond", "direction": "backward", "label": "yes", "startAt": 2100, "durationMs": 600, "color": "success" },
+        { "edge": "router-r1", "shape": "envelope", "label": "SELECT", "startAt": 2800, "durationMs": 800 }
+      ],
+      "annotations": [
+        { "id": "lsn-note", "x": 520, "y": 420, "text": { "tr": "pg_last_wal_replay_lsn() ≥ istemcinin LSN'i → güvenli", "en": "pg_last_wal_replay_lsn() ≥ client's LSN → safe" }, "tone": "success", "target": "router" }
+      ]
+    },
+    {
+      "id": "limits",
+      "title": { "tr": "Replika neyi çözmez?", "en": "What replicas do not solve" },
+      "narration": {
+        "tr": "Replica 2 yetişti; okumalar yine dengeli. Ama tüm yazmalar hâlâ tek birincile gidiyor: yazma hacmi ya da veri boyutu onu aşarsa sırada bağlantı havuzunu sıkılaştırmak ve en son sharding var.",
+        "en": "Replica 2 has caught up; reads are balanced again. But every write still goes to one primary: if write volume or data size outgrows it, the next steps are tightening the connection pool and, last, sharding."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["primary"], "edges": ["router-primary"] },
+      "nodeStates": {
+        "r1": { "status": "active", "badge": "R" },
+        "r2": { "status": "active", "badge": "R", "sublabel": "replay LSN 0/1A2C ✓" },
+        "primary": { "status": "warning", "badge": "W ×1", "sublabel": { "tr": "tüm yazmalar burada", "en": "all writes land here" } },
+        "app": { "status": "idle", "sublabel": { "tr": "okuma/yazma ayrımı", "en": "read/write split" } },
+        "user": { "status": "idle", "sublabel": "" }
+      },
+      "edgeStates": { "router-r2": { "status": "idle" }, "router-r1": { "status": "idle" }, "router-primary": { "status": "active" }, "rep-r2": { "status": "idle", "label": "WAL" } },
+      "packets": [
+        { "edge": "router-primary", "shape": "envelope", "label": "INSERT", "durationMs": 700, "repeat": 4, "repeatGapMs": 200 }
+      ],
+      "annotations": [
+        { "id": "next", "x": 820, "y": 40, "text": { "tr": "yazma duvarı → connection pool → sharding", "en": "write wall → connection pool → sharding" }, "tone": "warning", "target": "primary" }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["read-replica", "replication-lag", "read-your-writes"]
+}

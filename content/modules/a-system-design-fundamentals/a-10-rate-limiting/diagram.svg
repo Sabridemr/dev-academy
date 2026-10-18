@@ -1,0 +1,121 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 430" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Dört rate limiting algoritması</title>
+  <desc id="desc">Dört panel. Token bucket: sabit hızla dolan bir kova, her istek bir jeton alır, jeton yoksa 429. Leaky bucket: istekler kuyruğa girer ve altından sabit hızla sızar, kuyruk doluysa taşar. Fixed window: dakikalık sayaçlar; pencere sınırında art arda iki yüzlük patlama. Sliding window: son 60 saniyeyi kapsayan kayan bir pencere; önceki pencerenin örtüşen kısmı ağırlıklı sayılır.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+  </defs>
+
+  <!-- Panel çerçeveleri -->
+  <g fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)" stroke-width="1.4">
+    <rect x="20" y="20" width="220" height="380" rx="14"/>
+    <rect x="260" y="20" width="220" height="380" rx="14"/>
+    <rect x="500" y="20" width="220" height="380" rx="14"/>
+    <rect x="740" y="20" width="200" height="380" rx="14"/>
+  </g>
+  <g font-size="14" font-weight="600" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="130" y="46">Token bucket</text>
+    <text x="370" y="46">Leaky bucket</text>
+    <text x="610" y="46">Fixed window</text>
+    <text x="840" y="46">Sliding window</text>
+  </g>
+
+  <!-- ===== Token bucket ===== -->
+  <text x="130" y="76" text-anchor="middle" font-size="11" fill="var(--da-success, #10b981)">+5 jeton / s</text>
+  <path d="M 130 82 L 130 108" stroke="var(--da-success, #10b981)" stroke-width="1.6" marker-end="url(#arrow)" fill="none"/>
+  <!-- kova -->
+  <path d="M 80 115 L 90 235 L 170 235 L 180 115" fill="none" stroke="var(--da-fg, #0f172a)" stroke-width="1.6"/>
+  <!-- jetonlar -->
+  <g fill="var(--da-accent, #f59e0b)">
+    <circle cx="104" cy="222" r="7"/><circle cx="122" cy="222" r="7"/><circle cx="140" cy="222" r="7"/><circle cx="158" cy="222" r="7"/>
+    <circle cx="113" cy="206" r="7"/><circle cx="131" cy="206" r="7"/><circle cx="149" cy="206" r="7"/>
+  </g>
+  <text x="130" y="132" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">kapasite 10 = burst</text>
+  <!-- istek akışı -->
+  <path d="M 40 300 L 100 300" stroke="var(--da-muted, #64748b)" stroke-width="1.6" marker-end="url(#arrow)" fill="none"/>
+  <text x="50" y="292" font-size="10" fill="var(--da-muted, #64748b)">istek</text>
+  <rect x="102" y="284" width="56" height="32" rx="6" fill="var(--da-primary, #6366f1)" opacity="0.15" stroke="var(--da-primary, #6366f1)"/>
+  <text x="130" y="304" text-anchor="middle" font-size="10" fill="var(--da-primary, #6366f1)">jeton al</text>
+  <path d="M 158 294 L 215 270" stroke="var(--da-success, #10b981)" stroke-width="1.6" marker-end="url(#arrow)" fill="none"/>
+  <text x="200" y="262" text-anchor="middle" font-size="10" fill="var(--da-success, #10b981)">var → geç</text>
+  <path d="M 158 308 L 215 334" stroke="var(--da-danger, #ef4444)" stroke-width="1.6" marker-end="url(#arrow)" fill="none" stroke-dasharray="4 3"/>
+  <text x="200" y="350" text-anchor="middle" font-size="10" fill="var(--da-danger, #ef4444)">yok → 429</text>
+  <text x="130" y="380" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">bellek: {tokens, lastRefill}</text>
+
+  <!-- ===== Leaky bucket ===== -->
+  <path d="M 370 72 L 370 100" stroke="var(--da-muted, #64748b)" stroke-width="1.6" marker-end="url(#arrow)" fill="none"/>
+  <text x="370" y="68" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">istekler (patlamalı)</text>
+  <!-- kova/kuyruk -->
+  <path d="M 325 106 L 335 236 L 405 236 L 415 106" fill="none" stroke="var(--da-fg, #0f172a)" stroke-width="1.6"/>
+  <g fill="var(--da-primary, #6366f1)" opacity="0.6">
+    <rect x="342" y="214" width="56" height="12" rx="3"/>
+    <rect x="341" y="198" width="58" height="12" rx="3"/>
+    <rect x="340" y="182" width="60" height="12" rx="3"/>
+    <rect x="339" y="166" width="62" height="12" rx="3"/>
+  </g>
+  <text x="370" y="128" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">kuyruk (kapasite)</text>
+  <path d="M 418 118 L 450 118" stroke="var(--da-danger, #ef4444)" stroke-width="1.4" marker-end="url(#arrow)" fill="none" stroke-dasharray="4 3"/>
+  <text x="452" y="108" font-size="9" fill="var(--da-danger, #ef4444)">dolu →</text>
+  <text x="452" y="122" font-size="9" fill="var(--da-danger, #ef4444)">taşar</text>
+  <!-- sızıntı -->
+  <g fill="var(--da-success, #10b981)">
+    <circle cx="370" cy="256" r="4"/><circle cx="370" cy="280" r="4"/><circle cx="370" cy="304" r="4"/><circle cx="370" cy="328" r="4"/>
+  </g>
+  <text x="400" y="296" font-size="10" fill="var(--da-success, #10b981)">sabit hız</text>
+  <text x="400" y="310" font-size="10" fill="var(--da-success, #10b981)">(pürüzsüz)</text>
+  <path d="M 370 340 L 370 360" stroke="var(--da-muted, #64748b)" stroke-width="1.6" marker-end="url(#arrow)" fill="none"/>
+  <text x="370" y="380" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">arka uç hiç burst görmez</text>
+
+  <!-- ===== Fixed window ===== -->
+  <!-- zaman ekseni -->
+  <path d="M 520 300 L 705 300" stroke="var(--da-muted, #64748b)" stroke-width="1.4" marker-end="url(#arrow)" fill="none"/>
+  <g stroke="var(--da-border, #cbd5e1)" stroke-width="1" stroke-dasharray="3 3">
+    <path d="M 610 100 L 610 300"/>
+  </g>
+  <g font-size="10" fill="var(--da-muted, #64748b)" text-anchor="middle">
+    <text x="565" y="316">12:00</text>
+    <text x="655" y="316">12:01</text>
+  </g>
+  <!-- çubuklar: düşük trafik sonra sınırda iki patlama -->
+  <g fill="var(--da-primary, #6366f1)" opacity="0.45">
+    <rect x="528" y="270" width="12" height="30"/>
+    <rect x="546" y="262" width="12" height="38"/>
+    <rect x="564" y="276" width="12" height="24"/>
+  </g>
+  <g fill="var(--da-danger, #ef4444)" opacity="0.8">
+    <rect x="590" y="130" width="16" height="170"/>
+    <rect x="614" y="130" width="16" height="170"/>
+  </g>
+  <text x="610" y="118" text-anchor="middle" font-size="10" fill="var(--da-danger, #ef4444)">100 + 100 = 2 s'de 200</text>
+  <text x="610" y="90" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">limit 100 / dk</text>
+  <g font-size="10" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="565" y="340">sayaç: 100</text>
+    <text x="655" y="340">sayaç: 100</text>
+  </g>
+  <text x="610" y="366" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">INCR + EXPIRE — en ucuz</text>
+  <text x="610" y="382" text-anchor="middle" font-size="10" fill="var(--da-danger, #ef4444)">pencere sınırı problemi</text>
+
+  <!-- ===== Sliding window ===== -->
+  <path d="M 755 300 L 930 300" stroke="var(--da-muted, #64748b)" stroke-width="1.4" marker-end="url(#arrow)" fill="none"/>
+  <g font-size="10" fill="var(--da-muted, #64748b)" text-anchor="middle">
+    <text x="790" y="316">önceki</text>
+    <text x="880" y="316">mevcut</text>
+  </g>
+  <path d="M 840 110 L 840 300" stroke="var(--da-border, #cbd5e1)" stroke-width="1" stroke-dasharray="3 3"/>
+  <!-- istek noktaları -->
+  <g fill="var(--da-primary, #6366f1)" opacity="0.5">
+    <circle cx="762" cy="285" r="3"/><circle cx="770" cy="275" r="3"/><circle cx="784" cy="290" r="3"/><circle cx="798" cy="268" r="3"/><circle cx="812" cy="282" r="3"/><circle cx="826" cy="272" r="3"/>
+    <circle cx="848" cy="288" r="3"/><circle cx="858" cy="276" r="3"/><circle cx="866" cy="286" r="3"/>
+  </g>
+  <!-- kayan pencere -->
+  <rect x="784" y="140" width="90" height="160" rx="6" fill="var(--da-success, #10b981)" opacity="0.14" stroke="var(--da-success, #10b981)" stroke-dasharray="5 4"/>
+  <text x="829" y="132" text-anchor="middle" font-size="10" fill="var(--da-success, #10b981)">son 60 s (kayar)</text>
+  <path d="M 874 230 L 892 230" stroke="var(--da-success, #10b981)" stroke-width="1.6" marker-end="url(#arrow)" fill="none"/>
+  <text x="872" y="222" font-size="9" fill="var(--da-muted, #64748b)">şimdi</text>
+  <text x="840" y="346" text-anchor="middle" font-size="10" fill="var(--da-fg, #0f172a)">mevcut + önceki × (1 − geçen oran)</text>
+  <text x="840" y="366" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">log: tam doğru, O(limit) bellek</text>
+  <text x="840" y="382" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">counter: ~doğru, 2 sayaç</text>
+
+  <text x="480" y="420" text-anchor="middle" font-size="11" fill="var(--da-muted, #64748b)">Aynı soru — "bu isteği şimdi kabul edeyim mi?" — dört farklı bellek/adalet dengesi.</text>
+</svg>

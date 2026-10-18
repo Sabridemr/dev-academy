@@ -1,0 +1,144 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 460" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Dört alanın şema haritası</title>
+  <desc id="desc">Dört panel: e-ticaret (users, products, inventory, orders, order_items, payments; karar: fiyat snapshot ve rezervasyon), sosyal medya (users, follows, posts, likes, feed_items; karar: denormalize sayaçlar ve fan-out), ödeme (accounts, transfers, ledger_entries, idempotency; karar: append-only çift kayıt), mesajlaşma (conversations, participants, messages; karar: konuşma içi seq ve katılımcı başına okundu işareti).</desc>
+
+  <!-- E-ticaret -->
+  <rect x="20" y="20" width="430" height="200" rx="12" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+  <rect x="20" y="20" width="430" height="34" rx="12" fill="var(--da-primary, #6366f1)" opacity="0.14"/>
+  <text x="34" y="42" font-size="13" font-weight="600" fill="var(--da-fg, #0f172a)">1 · E-ticaret — tutarlılık: stok ve fiyat</text>
+  <g font-size="11" fill="var(--da-fg, #0f172a)">
+    <g fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.1">
+      <rect x="34" y="68" width="78" height="26" rx="5"/>
+      <rect x="124" y="68" width="78" height="26" rx="5"/>
+      <rect x="214" y="68" width="78" height="26" rx="5"/>
+      <rect x="34" y="110" width="78" height="26" rx="5"/>
+      <rect x="124" y="110" width="78" height="26" rx="5"/>
+      <rect x="214" y="110" width="78" height="26" rx="5"/>
+    </g>
+    <text x="73" y="85" text-anchor="middle">users</text>
+    <text x="163" y="85" text-anchor="middle">products</text>
+    <text x="253" y="85" text-anchor="middle">inventory</text>
+    <text x="73" y="127" text-anchor="middle">orders</text>
+    <text x="163" y="127" text-anchor="middle">order_items</text>
+    <text x="253" y="127" text-anchor="middle">payments</text>
+  </g>
+  <g stroke="var(--da-primary, #6366f1)" stroke-width="1.2" fill="none">
+    <path d="M 73 94 L 73 110"/>
+    <path d="M 112 123 L 124 123"/>
+    <path d="M 163 94 L 163 110"/>
+    <path d="M 202 123 L 214 123"/>
+    <path d="M 202 81 L 214 81"/>
+  </g>
+  <g font-size="10" fill="var(--da-muted, #64748b)">
+    <text x="310" y="78">karar:</text>
+    <text x="310" y="94" fill="var(--da-fg, #0f172a)">· unit_price snapshot</text>
+    <text x="310" y="110" fill="var(--da-fg, #0f172a)">· on_hand / reserved</text>
+    <text x="310" y="126" fill="var(--da-fg, #0f172a)">· para = integer kuruş</text>
+    <text x="34" y="162">kritik transaction: FOR UPDATE (sıralı) → rezerve → orders → items → outbox → COMMIT</text>
+    <text x="34" y="180">shard key: user_id · analitik ayrı depoda</text>
+    <text x="34" y="200">partial index: orders(created_at) WHERE status = 'pending' (rezerv zaman aşımı işi)</text>
+  </g>
+
+  <!-- Sosyal -->
+  <rect x="470" y="20" width="430" height="200" rx="12" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+  <rect x="470" y="20" width="430" height="34" rx="12" fill="var(--da-accent, #f59e0b)" opacity="0.16"/>
+  <text x="484" y="42" font-size="13" font-weight="600" fill="var(--da-fg, #0f172a)">2 · Sosyal medya — okuma hacmi: fan-out</text>
+  <g font-size="11" fill="var(--da-fg, #0f172a)">
+    <g fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.1">
+      <rect x="484" y="68" width="78" height="26" rx="5"/>
+      <rect x="574" y="68" width="78" height="26" rx="5"/>
+      <rect x="664" y="68" width="78" height="26" rx="5"/>
+      <rect x="484" y="110" width="78" height="26" rx="5"/>
+      <rect x="574" y="110" width="78" height="26" rx="5"/>
+      <rect x="664" y="110" width="78" height="26" rx="5"/>
+    </g>
+    <text x="523" y="85" text-anchor="middle">users</text>
+    <text x="613" y="85" text-anchor="middle">follows</text>
+    <text x="703" y="85" text-anchor="middle">posts</text>
+    <text x="523" y="127" text-anchor="middle">feed_items</text>
+    <text x="613" y="127" text-anchor="middle">likes</text>
+    <text x="703" y="127" text-anchor="middle">comments</text>
+  </g>
+  <g stroke="var(--da-primary, #6366f1)" stroke-width="1.2" fill="none">
+    <path d="M 562 81 L 574 81"/>
+    <path d="M 652 81 L 664 81"/>
+    <path d="M 523 94 L 523 110"/>
+    <path d="M 703 94 L 703 110"/>
+    <path d="M 652 123 L 664 123"/>
+  </g>
+  <g font-size="10" fill="var(--da-muted, #64748b)">
+    <text x="760" y="78">karar:</text>
+    <text x="760" y="94" fill="var(--da-fg, #0f172a)">· follower_count denormalize</text>
+    <text x="760" y="110" fill="var(--da-fg, #0f172a)">· feed_items önceden hesaplı</text>
+    <text x="760" y="126" fill="var(--da-fg, #0f172a)">· soft delete (deleted_at)</text>
+    <text x="484" y="162">follows: PK(follower, followee) + ters indeks (followee) · likes: PK(post, user)</text>
+    <text x="484" y="180">hibrit: normal kullanıcı fan-out on write, ünlü fan-out on read</text>
+    <text x="484" y="200">id: Snowflake (zaman + shard + sayaç) → shard hesaplanabilir</text>
+  </g>
+
+  <!-- Ödeme -->
+  <rect x="20" y="240" width="430" height="200" rx="12" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+  <rect x="20" y="240" width="430" height="34" rx="12" fill="var(--da-success, #10b981)" opacity="0.16"/>
+  <text x="34" y="262" font-size="13" font-weight="600" fill="var(--da-fg, #0f172a)">3 · Ödeme — para kaybolmaz: append-only defter</text>
+  <g font-size="11" fill="var(--da-fg, #0f172a)">
+    <g fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.1">
+      <rect x="34" y="288" width="78" height="26" rx="5"/>
+      <rect x="124" y="288" width="78" height="26" rx="5"/>
+      <rect x="214" y="288" width="86" height="26" rx="5" stroke="var(--da-success, #10b981)" stroke-width="1.8"/>
+      <rect x="34" y="330" width="86" height="26" rx="5"/>
+      <rect x="132" y="330" width="96" height="26" rx="5"/>
+    </g>
+    <text x="73" y="305" text-anchor="middle">accounts</text>
+    <text x="163" y="305" text-anchor="middle">transfers</text>
+    <text x="257" y="305" text-anchor="middle">ledger_entries</text>
+    <text x="77" y="347" text-anchor="middle">payment_intents</text>
+    <text x="180" y="347" text-anchor="middle">webhooks_inbox</text>
+  </g>
+  <g stroke="var(--da-primary, #6366f1)" stroke-width="1.2" fill="none">
+    <path d="M 112 301 L 124 301"/>
+    <path d="M 202 301 L 214 301"/>
+    <path d="M 163 314 L 163 330"/>
+  </g>
+  <g font-size="10" fill="var(--da-muted, #64748b)">
+    <text x="310" y="298">karar:</text>
+    <text x="310" y="314" fill="var(--da-fg, #0f172a)">· INSERT only, REVOKE UPDATE</text>
+    <text x="310" y="330" fill="var(--da-fg, #0f172a)">· debit + credit = 0</text>
+    <text x="310" y="346" fill="var(--da-fg, #0f172a)">· idempotency_key UNIQUE</text>
+    <text x="34" y="382">bakiye = SUM(ledger) → türetilmiş; sık okuma için snapshot tablosu</text>
+    <text x="34" y="400">durum makinesi: pending → posted / failed → reversed (silme yok)</text>
+    <text x="34" y="420">webhook: provider_event_id PK → en az bir kez gelir, bir kez işlenir</text>
+  </g>
+
+  <!-- Mesajlaşma -->
+  <rect x="470" y="240" width="430" height="200" rx="12" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+  <rect x="470" y="240" width="430" height="34" rx="12" fill="var(--da-danger, #ef4444)" opacity="0.12"/>
+  <text x="484" y="262" font-size="13" font-weight="600" fill="var(--da-fg, #0f172a)">4 · Mesajlaşma — yazma hacmi ve sıra</text>
+  <g font-size="11" fill="var(--da-fg, #0f172a)">
+    <g fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.1">
+      <rect x="484" y="288" width="78" height="26" rx="5"/>
+      <rect x="574" y="288" width="92" height="26" rx="5"/>
+      <rect x="678" y="288" width="86" height="26" rx="5"/>
+      <rect x="484" y="330" width="78" height="26" rx="5" stroke="var(--da-danger, #ef4444)" stroke-width="1.8"/>
+      <rect x="574" y="330" width="92" height="26" rx="5"/>
+    </g>
+    <text x="523" y="305" text-anchor="middle">users</text>
+    <text x="620" y="305" text-anchor="middle">conversations</text>
+    <text x="721" y="305" text-anchor="middle">participants</text>
+    <text x="523" y="347" text-anchor="middle">messages</text>
+    <text x="620" y="347" text-anchor="middle">attachments</text>
+  </g>
+  <g stroke="var(--da-primary, #6366f1)" stroke-width="1.2" fill="none">
+    <path d="M 562 301 L 574 301"/>
+    <path d="M 666 301 L 678 301"/>
+    <path d="M 620 314 L 620 330 L 562 343"/>
+  </g>
+  <g font-size="10" fill="var(--da-muted, #64748b)">
+    <text x="780" y="298">karar:</text>
+    <text x="780" y="314" fill="var(--da-fg, #0f172a)">· PK (conversation_id, seq)</text>
+    <text x="780" y="330" fill="var(--da-fg, #0f172a)">· last_read_seq / katılımcı</text>
+    <text x="780" y="346" fill="var(--da-fg, #0f172a)">· partition: conversation</text>
+    <text x="484" y="382">seq: UPDATE conversations SET last_seq = last_seq + 1 RETURNING last_seq (atomik)</text>
+    <text x="484" y="400">unread = last_seq − last_read_seq · mesaj × kişi tablosu yok</text>
+    <text x="484" y="420">ölçek: aynı anahtarlarla Cassandra (partition conversation_id, clustering seq)</text>
+  </g>
+</svg>
