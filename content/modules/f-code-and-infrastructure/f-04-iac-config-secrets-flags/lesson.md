@@ -231,8 +231,8 @@ Yeni "tek tıkla ödeme" özelliği için sıra şöyle olur:
 4. **Flag**: Önce çalışanlara, sonra %1, %10, %50, %100. Her adımda hata oranı ve dönüşüm izlenir; sorun olursa kill switch.
 5. **Temizlik**: Özellik %100'de birkaç hafta sorunsuz kalınca flag ve eski kod yolu silinir — unutulan flag'ler teknik borçtur.
 
-:::interactive{type="pipeline" stages="terraform-plan,plan-review,terraform-apply,deploy-image,flag-1,flag-10,flag-50,flag-100" failureStage="flag-10" mode="infrastructure"}
-Pipeline'ı çalıştırın: önce Terraform plan çıktısını inceleyip onaylayın (bir kaynak "replace" görünüyorsa apply'ı reddetmeyi deneyin). Sonra flag yüzdesini kademeli artırın; %10 adımında hata oranı yükselince kill switch'e basın ve rollback gerekmeden trafiğin eski akışa döndüğünü gözlemleyin.
+:::interactive{type="pipeline" stages="terraform-plan,plan-review,terraform-apply,deploy-image,flag-1,flag-10,flag-50,flag-100" failureStage="plan-review"}
+Pipeline'ı çalıştırıp plan → review → apply → image → bayrak %1 → %10 → %50 → %100 aşamalarını izleyin. "Hata enjekte et" kutusunu işaretleyip aşamayı "plan-review" bırakın ve yeniden çalıştırın: plan onaylanmayınca (ör. bir kaynak "replace" görünüyor) apply ve sonrası hiç çalışmaz. Kutuyu kaldırıp "Canary hata oranı"nı %2'nin üstüne çıkarın: ilk bayrak adımında hata oranı eşiği aşar, bayrak otomatik kapanır ve trafik v1'e döner — kill switch'in yaptığı tam olarak budur: dağıtımı geri almadan davranışı geri almak.
 :::
 
 :::realworld{company="Amazon"}

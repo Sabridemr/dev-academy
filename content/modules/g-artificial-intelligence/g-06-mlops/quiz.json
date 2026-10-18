@@ -11,15 +11,15 @@
         "en": "What is the core problem a feature store solves?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "GPU maliyetini düşürmek", "en": "Reducing GPU cost" } },
-        { "id": "b", "text": { "tr": "Aynı özellik tanımını eğitim (offline, geçmiş) ve serving (online, güncel) için tek yerden sunarak training-serving skew'u önlemek", "en": "Serving the same feature definition for training (offline, historical) and serving (online, current) from one place to prevent training-serving skew" } },
-        { "id": "c", "text": { "tr": "Model ağırlıklarını sürümlemek", "en": "Versioning model weights" } },
-        { "id": "d", "text": { "tr": "A/B test gruplarını atamak", "en": "Assigning A/B test groups" } }
+        { "id": "a", "text": { "tr": "Model ağırlıklarını ve eğitim verisi sürümünü birlikte saklayarak üretimdeki modelin nasıl üretildiğini izlenebilir kılmak", "en": "Storing model weights together with the training data version so how the production model was produced is traceable" } },
+        { "id": "b", "text": { "tr": "Kullanıcıları hash(userId) ile sabit gruplara atayarak A/B testinde aynı kullanıcının hep aynı modeli görmesini garanti etmek", "en": "Assigning users to sticky groups via hash(userId) so the same user always sees the same model in an A/B test" } },
+        { "id": "c", "text": { "tr": "Özellik dağılımlarını eğitim profiliyle karşılaştırıp PSI eşiği aşıldığında yeniden eğitim pipeline'ını tetiklemek", "en": "Comparing feature distributions with the training profile and triggering the retraining pipeline when the PSI threshold is exceeded" } },
+        { "id": "d", "text": { "tr": "Aynı özellik tanımını eğitim (offline, geçmiş) ve serving (online, güncel) için tek yerden sunarak training-serving skew'u önlemek", "en": "Serving the same feature definition for training (offline, historical) and serving (online, current) from one place to prevent training-serving skew" } }
       ],
-      "correct": ["b"],
+      "correct": ["d"],
       "explanation": {
-        "tr": "Feature store özellik tanımını bir kez yazdırır ve iki erişim deseni (toplu/point-in-time ve düşük gecikmeli anahtar araması) sunar. Ağırlıkları sürümleyen model registry'dir (c); A/B ataması deney platformunun işidir (d).",
-        "en": "A feature store defines a feature once and offers two access patterns (batch/point-in-time and low-latency key lookup). Model weights are versioned by the model registry (c); A/B assignment belongs to the experimentation platform (d)."
+        "tr": "Feature store özellik tanımını bir kez yazdırır ve iki erişim deseni (toplu/point-in-time ve düşük gecikmeli anahtar araması) sunar. Ağırlıkları ve veri sürümünü saklayan model registry'dir; sabit grup ataması deney platformunun işidir; PSI ile drift tespiti izleme katmanına aittir — feature store bunların hiçbirini yapmaz, girdiyi tutarlı kılar.",
+        "en": "A feature store defines a feature once and offers two access patterns (batch/point-in-time and low-latency key lookup). Storing weights and data versions is the model registry's job; sticky group assignment belongs to the experimentation platform; PSI-based drift detection belongs to monitoring — the feature store does none of these, it keeps the inputs consistent."
       },
       "difficulty": "easy",
       "concepts": ["feature-store", "training-serving-skew"]
@@ -32,15 +32,15 @@
         "en": "Fraudsters changed tactics, so the same input features now correspond to different outcomes. What kind of drift is this and when is it noticed?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "Data drift; özellik dağılımından anında", "en": "Data drift; immediately from the feature distribution" } },
+        { "id": "a", "text": { "tr": "Data drift; özellik dağılımındaki kaymadan PSI ile anında", "en": "Data drift; immediately, from the shift in the feature distribution via PSI" } },
         { "id": "b", "text": { "tr": "Concept drift; ancak gerçek etiketler geldikten sonra", "en": "Concept drift; only after true labels arrive" } },
-        { "id": "c", "text": { "tr": "Training-serving skew; dağıtım anında", "en": "Training-serving skew; at deployment time" } },
-        { "id": "d", "text": { "tr": "Bu drift değildir, model hatasıdır", "en": "This is not drift, it is a model bug" } }
+        { "id": "c", "text": { "tr": "Concept drift; girdi dağılımındaki kaymadan PSI ile anında", "en": "Concept drift; immediately, from the shift in the input distribution via PSI" } },
+        { "id": "d", "text": { "tr": "Training-serving skew; dağıtım anında shadow karşılaştırmasıyla", "en": "Training-serving skew; at deployment time, via the shadow comparison" } }
       ],
       "correct": ["b"],
       "explanation": {
-        "tr": "Girdi–çıktı ilişkisinin değişmesi concept drift'tir; girdi dağılımı aynı kalabileceği için PSI gibi testler yakalamaz, gecikmeli gelen gerçek etiketlerle ölçülen AUC/precision düşüşü gösterir. Data drift (a) girdi dağılımının değişmesidir.",
-        "en": "A change in the input–output relationship is concept drift; since the input distribution may stay the same, tests like PSI miss it, and it shows up as a drop in AUC/precision measured with delayed true labels. Data drift (a) is a change in the input distribution."
+        "tr": "Girdi–çıktı ilişkisinin değişmesi concept drift'tir; girdi dağılımı aynı kalabileceği için PSI gibi testler yakalamaz, gecikmeli gelen gerçek etiketlerle ölçülen AUC/precision düşüşü gösterir. Data drift girdi dağılımının değişmesidir ve anında görülür; training-serving skew ise aynı özelliğin eğitim ve serving'de farklı hesaplanmasıdır, dolandırıcı davranışıyla ilgisi yoktur.",
+        "en": "A change in the input–output relationship is concept drift; since the input distribution may stay the same, tests like PSI miss it, and it shows up as a drop in AUC/precision measured with delayed true labels. Data drift is a change in the input distribution and is visible immediately; training-serving skew is the same feature being computed differently in training and serving, unrelated to fraudster behaviour."
       },
       "difficulty": "medium",
       "concepts": ["concept-drift", "data-drift"]
@@ -75,9 +75,9 @@
       },
       "options": [
         { "id": "a", "text": { "tr": "Tahmin, istek anındaki bilgiye bağlı değilse (gece hesaplanan churn skoru)", "en": "When the prediction does not depend on request-time information (a nightly churn score)" } },
-        { "id": "b", "text": { "tr": "Arama sorgusu gibi anlık girdiyle skorlama gerekiyorsa", "en": "When scoring needs an instantaneous input such as a search query" } },
+        { "id": "b", "text": { "tr": "Arama sorgusu gibi istek anında gelen girdiyle skorlama gerekiyorsa (sorgu önceden bilinmez)", "en": "When scoring needs a request-time input such as a search query (the query is not known in advance)" } },
         { "id": "c", "text": { "tr": "Milyonlarca kullanıcı için tahminler önceden hesaplanıp cache'e yazılabiliyorsa", "en": "When predictions for millions of users can be precomputed and written to a cache" } },
-        { "id": "d", "text": { "tr": "Fraud kararı 50 ms içinde verilmek zorundaysa", "en": "When a fraud decision must be made within 50 ms" } }
+        { "id": "d", "text": { "tr": "Fraud kararı kart ağı zaman aşımı nedeniyle 50 ms içinde verilmek zorundaysa", "en": "When a fraud decision must be made within 50 ms because of the card network timeout" } }
       ],
       "correct": ["a", "c"],
       "explanation": {

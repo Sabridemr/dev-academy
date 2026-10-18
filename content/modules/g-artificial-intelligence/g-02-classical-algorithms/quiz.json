@@ -11,15 +11,15 @@
         "en": "Why is log-loss preferred over MSE as the loss function in logistic regression?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "MSE yalnızca regresyon kütüphanelerinde bulunur", "en": "MSE is only available in regression libraries" } },
-        { "id": "b", "text": { "tr": "Sigmoid ile MSE dışbükey olmaz; log-loss dışbükeydir ve olasılıksal (maksimum olabilirlik) yorumu vardır", "en": "With a sigmoid, MSE is non-convex; log-loss is convex and has a probabilistic (maximum likelihood) interpretation" } },
-        { "id": "c", "text": { "tr": "Log-loss hesaplaması daha ucuzdur", "en": "Log-loss is cheaper to compute" } },
-        { "id": "d", "text": { "tr": "MSE yalnızca çok sınıflı problemlerde çalışır", "en": "MSE only works for multi-class problems" } }
+        { "id": "a", "text": { "tr": "MSE sınıf olasılıklarını 0–1 aralığının dışına taşır; log-loss sigmoid çıkışını bu aralığa sıkıştırır", "en": "MSE pushes class probabilities outside the 0–1 range; log-loss squashes the sigmoid output into it" } },
+        { "id": "b", "text": { "tr": "Sigmoid ile MSE dışbükey olmaz; log-loss dışbükeydir ve maksimum olabilirlik yorumu vardır", "en": "With a sigmoid, MSE is non-convex; log-loss is convex and has a maximum likelihood interpretation" } },
+        { "id": "c", "text": { "tr": "MSE yalnızca sürekli hedeflerde tanımlıdır; ikili etiketlerde türevi alınamadığından gradient descent çalışmaz", "en": "MSE is only defined for continuous targets; with binary labels it is not differentiable, so gradient descent fails" } },
+        { "id": "d", "text": { "tr": "Log-loss gradyanı her zaman daha büyüktür; bu yüzden aynı öğrenme oranıyla kat kat hızlı yakınsar", "en": "The log-loss gradient is always larger, so it converges many times faster at the same learning rate" } }
       ],
       "correct": ["b"],
       "explanation": {
-        "tr": "Sigmoid çıktısının karesi alınınca kayıp yüzeyinde düz bölgeler ve yerel minimumlar oluşur. Log-loss dışbükeydir, gradient descent güvenle çalışır; ayrıca Bernoulli olabilirliğinin negatif logaritmasıdır.",
-        "en": "Squaring the sigmoid output creates plateaus and local minima in the loss surface. Log-loss is convex so gradient descent works reliably; it is also the negative log of the Bernoulli likelihood."
+        "tr": "Sigmoid çıktısının karesi alınınca kayıp yüzeyinde düz bölgeler ve yerel minimumlar oluşur. Log-loss dışbükeydir, gradient descent güvenle çalışır; ayrıca Bernoulli olabilirliğinin negatif logaritmasıdır. Çıkışı 0–1'e sıkıştıran kayıp değil sigmoid'dir; MSE ikili etiketlerde de tanımlı ve türevlenebilirdir; gradyan büyüklüğü tercih nedeni değildir.",
+        "en": "Squaring the sigmoid output creates plateaus and local minima in the loss surface. Log-loss is convex so gradient descent works reliably; it is also the negative log of the Bernoulli likelihood. It is the sigmoid, not the loss, that squashes the output into 0–1; MSE is defined and differentiable with binary labels too; gradient magnitude is not the reason for the choice."
       },
       "difficulty": "hard",
       "concepts": ["logistic-regression", "gradient-descent"]
@@ -93,15 +93,15 @@
         "en": "What does the 'kernel trick' in SVM provide?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "Eğitim verisini küçülterek hızlandırma", "en": "Speeding up by shrinking the training data" } },
-        { "id": "b", "text": { "tr": "Veriyi açıkça yüksek boyuta taşımadan doğrusal olmayan karar sınırları öğrenme", "en": "Learning non-linear decision boundaries without explicitly mapping data to a higher dimension" } },
-        { "id": "c", "text": { "tr": "Etiketsiz veriyle eğitim", "en": "Training with unlabelled data" } },
-        { "id": "d", "text": { "tr": "Marjı otomatik olarak sıfıra indirme", "en": "Automatically shrinking the margin to zero" } }
+        { "id": "a", "text": { "tr": "Veriyi önce PCA ile düşük boyuta indirip marjı daha geniş bir uzayda hesaplama", "en": "Reducing the data to a lower dimension with PCA first and computing the margin in a wider space" } },
+        { "id": "b", "text": { "tr": "Destek vektörü sayısını azaltarak eğitim maliyetini O(n²)'den O(n)'e indirme", "en": "Reducing the number of support vectors to bring training cost from O(n²) down to O(n)" } },
+        { "id": "c", "text": { "tr": "Veriyi açıkça yüksek boyuta taşımadan doğrusal olmayan karar sınırları öğrenme", "en": "Learning non-linear decision boundaries without explicitly mapping data to a higher dimension" } },
+        { "id": "d", "text": { "tr": "Özellikleri açıkça polinom terimlerine genişletip ardından doğrusal SVM eğitme", "en": "Explicitly expanding features into polynomial terms and then training a linear SVM" } }
       ],
-      "correct": ["b"],
+      "correct": ["c"],
       "explanation": {
-        "tr": "Kernel, yüksek boyutlu uzaydaki iç çarpımı orijinal uzayda hesaplar; böylece doğrusal SVM, orijinal uzayda eğri sınırlar üretir. Veriyi küçültmez (a), etiket gerektirir (c) ve marjı maksimize etmeye devam eder (d).",
-        "en": "A kernel computes the inner product of the high-dimensional space in the original space, so a linear SVM yields curved boundaries in the original space. It does not shrink data (a), still needs labels (c) and still maximises the margin (d)."
+        "tr": "Kernel, yüksek boyutlu uzaydaki iç çarpımı orijinal uzayda hesaplar; böylece doğrusal SVM orijinal uzayda eğri sınırlar üretir. Polinom terimlerini açıkça üretmek tam da kernel hilesinin kaçındığı maliyetli yoldur; PCA boyutu düşürür, yükseltmez; eğitim maliyeti O(n²) kalır ve destek vektörü sayısı azalmaz.",
+        "en": "A kernel computes the inner product of the high-dimensional space in the original space, so a linear SVM yields curved boundaries in the original space. Explicitly generating polynomial terms is exactly the costly route the kernel trick avoids; PCA lowers dimension rather than raising it; training cost stays O(n²) and the number of support vectors does not shrink."
       },
       "difficulty": "medium",
       "concepts": ["svm"]

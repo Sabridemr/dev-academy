@@ -11,15 +11,15 @@
         "en": "You want an assistant that answers questions about your company's constantly changing internal documents. What is the most suitable first approach?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "Modeli dokümanlarla fine-tune etmek", "en": "Fine-tune the model on the documents" } },
-        { "id": "b", "text": { "tr": "RAG: dokümanları indeksleyip ilgili parçaları çıkarım anında bağlam olarak vermek", "en": "RAG: index the documents and provide relevant chunks as context at inference time" } },
-        { "id": "c", "text": { "tr": "Modeli sıfırdan yeniden pretrain etmek", "en": "Pretrain the model from scratch" } },
-        { "id": "d", "text": { "tr": "Sıcaklığı 0 yapmak", "en": "Set the temperature to 0" } }
+        { "id": "a", "text": { "tr": "Modeli dokümanlarla LoRA ile fine-tune etmek; her güncellemede kısa bir ek eğitim turu yeterlidir", "en": "Fine-tune the model on the documents with LoRA; a short extra training round suffices on every update" } },
+        { "id": "b", "text": { "tr": "Şirket dokümanlarını ön eğitim korpusuna ekleyip modeli sıfırdan yeniden pretrain etmek", "en": "Add the company documents to the pretraining corpus and pretrain the model again from scratch" } },
+        { "id": "c", "text": { "tr": "RAG: dokümanları indeksleyip ilgili parçaları çıkarım anında bağlam olarak vermek", "en": "RAG: index the documents and provide relevant chunks as context at inference time" } },
+        { "id": "d", "text": { "tr": "Sıcaklığı 0'a çekip few-shot örneklerle modelin halüsinasyon yapmasını engellemek", "en": "Set the temperature to 0 and use few-shot examples to stop the model hallucinating" } }
       ],
-      "correct": ["b"],
+      "correct": ["c"],
       "explanation": {
-        "tr": "RAG günceldir (dokümanı değiştir, yeniden indeksle), ucuzdur ve kaynak gösterebilir. Fine-tuning bilgi eklemekte verimsizdir ve her güncellemede tekrar gerekir; pretraining milyonlarca dolardır; sıcaklık bilgi eklemez.",
-        "en": "RAG stays current (change the document, re-index), is cheap and can cite sources. Fine-tuning is inefficient at adding knowledge and must be redone on every update; pretraining costs millions; temperature adds no knowledge."
+        "tr": "RAG günceldir (dokümanı değiştir, yeniden indeksle), ucuzdur ve kaynak gösterebilir. Fine-tuning — LoRA ile bile — bilgi eklemekte verimsizdir ve her güncellemede tekrar gerekir; pretraining milyonlarca dolardır; sıcaklık ve few-shot örnekler üslubu etkiler, modele bilmediği olguları kazandırmaz.",
+        "en": "RAG stays current (change the document, re-index), is cheap and can cite sources. Fine-tuning — even with LoRA — is inefficient at adding knowledge and must be redone on every update; pretraining costs millions; temperature and few-shot examples shape style, they do not give the model facts it does not know."
       },
       "difficulty": "easy",
       "concepts": ["rag", "fine-tuning"]
@@ -32,15 +32,15 @@
         "en": "How does Byte Pair Encoding (BPE) build its vocabulary?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "Sözlükteki tüm kelimeleri alfabetik sıraya koyarak", "en": "By listing all dictionary words alphabetically" } },
-        { "id": "b", "text": { "tr": "Korpusta en sık yan yana gelen sembol çiftini tekrar tekrar tek bir tokenda birleştirerek", "en": "By repeatedly merging the most frequent adjacent symbol pair in the corpus into a single token" } },
-        { "id": "c", "text": { "tr": "Her karaktere bir token atayarak", "en": "By assigning one token per character" } },
-        { "id": "d", "text": { "tr": "Kelimeleri boşluklardan bölerek", "en": "By splitting words on spaces" } }
+        { "id": "a", "text": { "tr": "Korpustaki her kelimeyi sıklığına göre sıralayıp en sık 100 000 kelimeyi token, gerisini <UNK> yaparak", "en": "By ranking every word in the corpus by frequency, making the top 100,000 tokens and the rest <UNK>" } },
+        { "id": "b", "text": { "tr": "Her kelimeyi sözlükteki kök ve eklerine (morfem) ayırıp her morfeme bir token atayarak", "en": "By splitting every word into its dictionary stems and affixes (morphemes) and assigning one token per morpheme" } },
+        { "id": "c", "text": { "tr": "Metni sabit uzunlukta (örn. 4 karakter) parçalara bölüp her parçayı tek token olarak numaralandırarak", "en": "By cutting the text into fixed-length pieces (e.g. 4 characters) and numbering each piece as one token" } },
+        { "id": "d", "text": { "tr": "Korpusta en sık yan yana gelen sembol çiftini tekrar tekrar tek bir tokenda birleştirerek", "en": "By repeatedly merging the most frequent adjacent symbol pair in the corpus into a single token" } }
       ],
-      "correct": ["b"],
+      "correct": ["d"],
       "explanation": {
-        "tr": "BPE byte/karakterlerden başlar ve en sık çifti birleştirir; böylece sık kelimeler tek token, nadir kelimeler alt parçalar olur ve 'bilinmeyen kelime' kalmaz. (c) karakter düzeyi, (d) kelime düzeyi tokenizasyondur.",
-        "en": "BPE starts from bytes/characters and merges the most frequent pair; frequent words become single tokens, rare words become sub-pieces and there is no 'unknown word'. (c) is character-level, (d) word-level tokenisation."
+        "tr": "BPE byte/karakterlerden başlar ve en sık yan yana gelen çifti birleştirir; böylece sık kelimeler tek token, nadir kelimeler alt parçalar olur ve 'bilinmeyen kelime' kalmaz. Kelime düzeyi sözlük <UNK> üretir; morfem ayrımı dilbilgisel bir sözlük ister ve veriden öğrenilmez; sabit uzunluklu parçalama sıklık bilgisini hiç kullanmaz.",
+        "en": "BPE starts from bytes/characters and merges the most frequent adjacent pair; frequent words become single tokens, rare words become sub-pieces and there is no 'unknown word'. A word-level vocabulary produces <UNK>; morpheme splitting needs a grammatical dictionary and is not learned from data; fixed-length chunking ignores frequency entirely."
       },
       "difficulty": "medium",
       "concepts": ["tokenization", "bpe"]
@@ -76,8 +76,8 @@
       "options": [
         { "id": "a", "text": { "tr": "Dış içeriği talimattan ayrı, açıkça işaretlenmiş bir veri bölümünde sunmak", "en": "Presenting external content in a clearly delimited data section separate from instructions" } },
         { "id": "b", "text": { "tr": "Araçlara en az yetki vermek ve geri dönüşü olmayan eylemlerde insan onayı istemek", "en": "Giving tools least privilege and requiring human approval for irreversible actions" } },
-        { "id": "c", "text": { "tr": "Sıcaklığı yükseltmek", "en": "Raising the temperature" } },
-        { "id": "d", "text": { "tr": "Bağlam penceresini olabildiğince doldurmak", "en": "Filling the context window as much as possible" } }
+        { "id": "c", "text": { "tr": "Sıcaklığı yükseltmek; model enjekte edilen talimatı daha az deterministik izler", "en": "Raising the temperature; the model follows an injected instruction less deterministically" } },
+        { "id": "d", "text": { "tr": "Bağlam penceresini olabildiğince çok dokümanla doldurmak; fazla bağlam kötü talimatı seyreltir", "en": "Filling the context window with as many documents as possible; more context dilutes a bad instruction" } }
       ],
       "correct": ["a", "b"],
       "explanation": {

@@ -11,15 +11,15 @@
         "en": "What happens if hidden layers have no activation function (only linear layers)?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "Ağ daha hızlı öğrenir ve aynı gücü korur", "en": "The network learns faster and keeps the same power" } },
-        { "id": "b", "text": { "tr": "Kaç katman olursa olsun ağ tek bir doğrusal fonksiyona indirgenir", "en": "No matter how many layers, the network collapses into a single linear function" } },
-        { "id": "c", "text": { "tr": "Gradyanlar patlar", "en": "Gradients explode" } },
-        { "id": "d", "text": { "tr": "Yalnızca çıkış katmanı eğitilebilir", "en": "Only the output layer can be trained" } }
+        { "id": "a", "text": { "tr": "Kaç katman olursa olsun ağ tek bir doğrusal fonksiyona indirgenir", "en": "No matter how many layers, the network collapses into a single linear function" } },
+        { "id": "b", "text": { "tr": "Gradyanlar katman sayısıyla üstel biçimde söner ve ilk katmanlar öğrenemez", "en": "Gradients vanish exponentially with depth and the first layers cannot learn" } },
+        { "id": "c", "text": { "tr": "Ağ yalnızca sigmoid çıkış katmanı sayesinde doğrusal olmayan sınır öğrenir", "en": "The network learns a non-linear boundary only thanks to the sigmoid output layer" } },
+        { "id": "d", "text": { "tr": "Yalnızca son gizli katmanın ağırlıkları güncellenir; öncekiler sabit kalır", "en": "Only the last hidden layer's weights are updated; the earlier ones stay fixed" } }
       ],
-      "correct": ["b"],
+      "correct": ["a"],
       "explanation": {
-        "tr": "Doğrusal dönüşümlerin bileşimi doğrusaldır: W₃(W₂(W₁x)) = Wx. Böyle bir ağ XOR gibi doğrusal ayrılamayan problemleri çözemez. Aktivasyon fonksiyonu derinliğe anlam kazandıran öğedir.",
-        "en": "A composition of linear maps is linear: W₃(W₂(W₁x)) = Wx. Such a network cannot solve non-linearly separable problems like XOR. The activation function is what gives depth its meaning."
+        "tr": "Doğrusal dönüşümlerin bileşimi doğrusaldır: W₃(W₂(W₁x)) = Wx. Çıkıştaki sigmoid karar sınırını değiştirmez (lojistik regresyon gibi düz kalır), ağ XOR'u çözemez. Gradyanlar aktivasyon türevi 1 olduğu için sönmez ve tüm katmanlar güncellenir — sorun öğrenememek değil, ifade gücünün tek katmana eşit olmasıdır.",
+        "en": "A composition of linear maps is linear: W₃(W₂(W₁x)) = Wx. The sigmoid at the output does not change the decision boundary (it stays straight, as in logistic regression), so the network cannot solve XOR. Gradients do not vanish since the activation derivative is 1 and every layer is updated — the problem is not an inability to learn but expressive power equal to a single layer."
       },
       "difficulty": "easy",
       "concepts": ["activation-function", "neuron"]
@@ -93,15 +93,15 @@
         "en": "Why did no gradient reach neuron h₂ during backpropagation in the animation?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "h₂'nin ağırlıkları çok küçüktü", "en": "h₂'s weights were too small" } },
-        { "id": "b", "text": { "tr": "İleri geçişte z₂ < 0 olduğu için ReLU'nun türevi 0'dı", "en": "ReLU's derivative was 0 because z₂ < 0 in the forward pass" } },
-        { "id": "c", "text": { "tr": "Öğrenme oranı sıfırdı", "en": "The learning rate was zero" } },
-        { "id": "d", "text": { "tr": "Çıkış katmanı sigmoid kullanıyordu", "en": "The output layer used a sigmoid" } }
+        { "id": "a", "text": { "tr": "h₂'nin çıkış ağırlığı v₂ negatifti; negatif çarpan gradyanı sıfırlar", "en": "h₂'s output weight v₂ was negative; a negative factor zeroes the gradient" } },
+        { "id": "b", "text": { "tr": "h₂'ye giren ağırlıklar sıfırla başlatılmıştı; simetri kırılamadı", "en": "The weights into h₂ were initialised to zero; symmetry never broke" } },
+        { "id": "c", "text": { "tr": "Çıkış sigmoid olduğu için δ_out = ŷ − y sıfıra çok yakındı", "en": "Because the output was a sigmoid, δ_out = ŷ − y was very close to zero" } },
+        { "id": "d", "text": { "tr": "İleri geçişte z₂ < 0 olduğu için ReLU'nun türevi 0'dı", "en": "ReLU's derivative was 0 because z₂ < 0 in the forward pass" } }
       ],
-      "correct": ["b"],
+      "correct": ["d"],
       "explanation": {
-        "tr": "δ_h = φ'(z)·v·δ_out ve ReLU'(−0.5) = 0 olduğundan δ_h₂ = 0; dolayısıyla h₂'ye giren ağırlıkların gradyanı da sıfırdır. Bu, çok sık olursa 'ölü nöron' problemidir; Leaky ReLU bir çaredir.",
-        "en": "δ_h = φ'(z)·v·δ_out and ReLU'(−0.5) = 0, so δ_h₂ = 0 and the gradients of weights into h₂ are zero too. If this happens persistently it is the 'dead neuron' problem; Leaky ReLU is one remedy."
+        "tr": "δ_h = φ'(z)·v·δ_out ve ReLU'(−0.5) = 0 olduğundan δ_h₂ = 0; dolayısıyla h₂'ye giren ağırlıkların gradyanı da sıfırdır. Negatif bir v yalnızca işareti değiştirir, sıfırlamaz; δ_out = 0.614 − 1 sıfırdan uzaktır; ağırlıklar sıfır değil küçük rastgele değerlerdi. Bu çok sık olursa 'ölü nöron' problemidir; Leaky ReLU bir çaredir.",
+        "en": "δ_h = φ'(z)·v·δ_out and ReLU'(−0.5) = 0, so δ_h₂ = 0 and the gradients of weights into h₂ are zero too. A negative v only flips the sign, it does not zero anything; δ_out = 0.614 − 1 is far from zero; the weights were small random values, not zero. If this happens persistently it is the 'dead neuron' problem; Leaky ReLU is one remedy."
       },
       "difficulty": "medium",
       "concepts": ["relu", "backpropagation"]

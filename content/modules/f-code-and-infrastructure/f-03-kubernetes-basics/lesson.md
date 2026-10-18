@@ -112,7 +112,7 @@ HPA döngüsü: metrics-server CPU'yu ölçer, HPA istenen replika sayısını h
 2. **HPA pod ekler, node eklemez**: Node'larda yer kalmazsa yeni pod'lar `Pending` durumunda bekler. Bu noktada **Cluster Autoscaler** ya da **Karpenter** devreye girip yeni EC2 node'ları açar — bu dakikalar sürer. Bu yüzden HPA hedefini %50–60 gibi tutup node tarafında biraz boş kapasite bırakmak yaygındır.
 
 :::interactive{type="kubernetes-hpa" minReplicas=2 maxReplicas=10 targetCpuPercent=50 cpuRequestMillicores=250 stabilizationWindowSec=300}
-Trafik kaydırıcısını yükseltin ve CPU'nun hedefin üzerine çıkmasını izleyin: HPA formülünün hesapladığı istenen replika sayısını ve yeni pod'ların readiness'ı geçip trafik almasını görün. Sonra trafiği düşürün; stabilizasyon penceresi dolmadan pod sayısının azalmadığını fark edin. Hedef CPU'yu %80'e çıkarıp ani trafik artışında ne olduğunu karşılaştırın.
+"Başlat"a basıp CPU talebi kaydırıcısını yükseltin ve ortalama CPU'nun hedefin üzerine çıkmasını izleyin: HPA formülünün hesapladığı istenen replika sayısını ve yeni pod'ların "başlıyor" durumundan geçip trafik almasını görün. Sonra talebi düşürün; stabilizasyon penceresi dolmadan pod sayısının azalmadığını fark edin. Hedef CPU'yu %80'e çıkarıp yük desenini "Ani artış" yapın: daha az pod ile daha yüksek kullanımda çalışmanın ani artışta ne kadar gecikmeye yol açtığını karşılaştırın.
 :::
 
 ## Örnek manifest'ler

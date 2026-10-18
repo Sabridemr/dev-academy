@@ -32,15 +32,15 @@
         "en": "Training error is 0.02, validation error is 0.58. What is the most likely diagnosis?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "Underfitting — model çok basit", "en": "Underfitting — the model is too simple" } },
-        { "id": "b", "text": { "tr": "Overfitting — model eğitim verisini ezberlemiş", "en": "Overfitting — the model memorised the training data" } },
-        { "id": "c", "text": { "tr": "Öğrenme oranı çok düşük", "en": "The learning rate is too low" } },
-        { "id": "d", "text": { "tr": "Test kümesi çok büyük", "en": "The test set is too large" } }
+        { "id": "a", "text": { "tr": "Underfitting — model eğitim verisini bile açıklayamıyor", "en": "Underfitting — the model cannot even explain the training data" } },
+        { "id": "b", "text": { "tr": "Veri sızıntısı — doğrulama kümesi eğitimde görülmüş", "en": "Data leakage — the validation set was seen during training" } },
+        { "id": "c", "text": { "tr": "Öğrenme oranı çok düşük — model henüz yakınsamadı", "en": "The learning rate is too low — the model has not converged yet" } },
+        { "id": "d", "text": { "tr": "Overfitting — model eğitim verisini ezberlemiş", "en": "Overfitting — the model memorised the training data" } }
       ],
-      "correct": ["b"],
+      "correct": ["d"],
       "explanation": {
-        "tr": "Eğitim hatası neredeyse sıfırken doğrulama hatasının yüksek olması yüksek varyansın, yani overfitting'in imzasıdır. Underfitting'de her iki hata da yüksek olurdu; düşük öğrenme oranı eğitim hatasını da yüksek bırakırdı.",
-        "en": "Near-zero training error with high validation error is the signature of high variance, i.e. overfitting. Underfitting would show both errors high; a low learning rate would leave training error high too."
+        "tr": "Eğitim hatası neredeyse sıfırken doğrulama hatasının yüksek olması yüksek varyansın, yani overfitting'in imzasıdır. Underfitting'de ve düşük öğrenme oranında eğitim hatası da yüksek kalırdı; veri sızıntısı ise tam tersine doğrulama hatasını yapay biçimde düşük gösterirdi.",
+        "en": "Near-zero training error with high validation error is the signature of high variance, i.e. overfitting. Underfitting and a too-low learning rate would leave training error high too; data leakage would do the opposite and make validation error artificially low."
       },
       "difficulty": "easy",
       "concepts": ["overfitting", "bias-variance"]
@@ -55,7 +55,7 @@
       "options": [
         { "id": "a", "text": { "tr": "L2 regularization eklemek", "en": "Adding L2 regularisation" } },
         { "id": "b", "text": { "tr": "Daha fazla eğitim verisi toplamak", "en": "Collecting more training data" } },
-        { "id": "c", "text": { "tr": "Ağacın derinliğini artırmak", "en": "Increasing the tree depth" } },
+        { "id": "c", "text": { "tr": "Ağacın maksimum derinliğini ve yaprak sayısını artırmak", "en": "Increasing the tree's maximum depth and number of leaves" } },
         { "id": "d", "text": { "tr": "Doğrulama hatası yükselmeye başlayınca eğitimi durdurmak", "en": "Stopping training once validation error starts rising" } }
       ],
       "correct": ["a", "b", "d"],
@@ -93,15 +93,15 @@
         "en": "In gradient descent, what typically happens if the learning rate (η) is set too large?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "Yakınsama çok yavaşlar", "en": "Convergence becomes very slow" } },
-        { "id": "b", "text": { "tr": "Kayıp minimumun etrafında zıplar ya da ıraksar", "en": "The loss bounces around the minimum or diverges" } },
-        { "id": "c", "text": { "tr": "Model otomatik olarak regularize olur", "en": "The model becomes automatically regularised" } },
-        { "id": "d", "text": { "tr": "Doğrulama hatası her zaman düşer", "en": "Validation error always decreases" } }
+        { "id": "a", "text": { "tr": "Kayıp minimumun etrafında zıplar ya da ıraksar", "en": "The loss bounces around the minimum or diverges" } },
+        { "id": "b", "text": { "tr": "Yakınsama çok yavaşlar; kayıp eğrisi platoda kalır", "en": "Convergence becomes very slow; the loss curve stays on a plateau" } },
+        { "id": "c", "text": { "tr": "Mini-batch gürültüsü artar; model sığ minimumlardan kaçar", "en": "Mini-batch noise increases; the model escapes shallow minima" } },
+        { "id": "d", "text": { "tr": "L2 cezası devreye girer; ağırlıklar sıfıra doğru küçülür", "en": "The L2 penalty kicks in; weights shrink towards zero" } }
       ],
-      "correct": ["b"],
+      "correct": ["a"],
       "explanation": {
-        "tr": "Büyük adımlar minimumun üzerinden atlar; kayıp salınır ya da sonsuza gider. Çok küçük öğrenme oranı ise (a) yavaş yakınsamaya yol açar.",
-        "en": "Large steps overshoot the minimum; the loss oscillates or blows up. A too-small learning rate causes (a), slow convergence."
+        "tr": "Büyük adımlar minimumun üzerinden atlar; kayıp salınır ya da sonsuza gider. Çok küçük öğrenme oranı ise yavaş yakınsamaya ve platoya yol açar. Gürültü mini-batch boyutunun, ağırlıkların küçülmesi ise regularization'ın sonucudur; ikisi de adım boyuyla ilgili değildir.",
+        "en": "Large steps overshoot the minimum; the loss oscillates or blows up. A too-small learning rate instead causes slow convergence and plateaus. Noise comes from the mini-batch size and shrinking weights from regularisation; neither is an effect of the step size."
       },
       "difficulty": "hard",
       "concepts": ["gradient-descent"]

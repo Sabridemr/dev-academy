@@ -99,8 +99,8 @@ Saldırgan yedi katmanı aşıp `cart-service` pod'unun içinde kod çalıştır
 Kötü niyetli bir istek katman katman filtrelenir: hacimsel sel anycast edge'de dağıtılır, SQL injection WAF'ta, eski TLS el sıkışmada, geçersiz JWT gateway'de, kimliksiz pod mTLS'te, yetkisiz DELETE IAM'de durur; meşru istek tüm katmanlardan geçer.
 :::
 
-:::interactive{type="request-journey" path="anycast-edge,waf,tls,api-gateway,service-mesh,iam,database" mode="security" attackTypes="syn-flood,sql-injection,expired-token,lateral-movement,privilege-escalation"}
-Soldan bir saldırı türü seçip gönderin ve hangi katmanda, hangi HTTP koduyla durdurulduğunu izleyin. Sonra katmanları tek tek kapatın (ör. WAF'ı devre dışı bırakın) ve aynı saldırının bir sonraki katmana ulaştığını, ama IAM en az yetki sayesinde yine de veriye erişemediğini gözlemleyin. Son olarak meşru bir isteği gönderip tüm katmanlardan geçtiğini doğrulayın.
+:::interactive{type="request-journey" path="anycast-edge,waf,tls,api-gateway,service-mesh,iam,database" failureStage="waf"}
+Önce meşru bir isteği gönderip yedi katmanın tamamından geçtiğini ve her katmanın şelaledeki maliyetini izleyin. Sonra "Hata enjekte et: waf" kutusunu işaretleyip tekrar gönderin: SQL injection taşıyan bir isteğin akıbeti budur — WAF'ta durur; tls, gateway, mesh, IAM ve veritabanı hiç çalışmaz. Her katmanın yalnızca kendi tehdidini tanıdığını hatırlayın: WAF'ı geçen bir istek yine de geçersiz JWT ile gateway'de, kimliksiz pod olarak mTLS'te, yetkisiz DELETE olarak IAM'de durur; katmanlar birbirinin yedeğidir (defense in depth).
 :::
 
 :::code{lang="ts" title="Gateway'de kimlik doğrulama ve serviste ince yetki kontrolü (iki katman)"}

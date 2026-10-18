@@ -32,15 +32,15 @@
         "en": "How does an LSTM fundamentally mitigate the simple RNN's inability to learn long dependencies?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "Daha büyük bir gizli durum kullanarak", "en": "By using a larger hidden state" } },
-        { "id": "b", "text": { "tr": "Toplama ile güncellenen bir hücre durumu ve kapılar sayesinde gradyanın çarpılmadan akabildiği bir yol açarak", "en": "By opening a path where gradients flow without repeated multiplication, via an additively updated cell state and gates" } },
-        { "id": "c", "text": { "tr": "Diziyi paralel işleyerek", "en": "By processing the sequence in parallel" } },
-        { "id": "d", "text": { "tr": "tanh yerine sigmoid kullanarak", "en": "By using sigmoid instead of tanh" } }
+        { "id": "a", "text": { "tr": "Her zaman adımında farklı bir W_h matrisi kullanarak aynı matrisin yüzlerce kez çarpılmasını önleyerek", "en": "By using a different W_h matrix at every time step so the same matrix is never multiplied hundreds of times" } },
+        { "id": "b", "text": { "tr": "Toplamayla güncellenen hücre durumu ve kapılar sayesinde gradyanın çarpılmadan akabildiği bir yol açarak", "en": "By opening a path where gradients flow without repeated multiplication, via an additively updated cell state and gates" } },
+        { "id": "c", "text": { "tr": "Gizli durumu her adımda tanh yerine sigmoid'den geçirerek doyumu ve gradyan sönmesini engelleyerek", "en": "By passing the hidden state through a sigmoid instead of tanh at every step, preventing saturation and vanishing gradients" } },
+        { "id": "d", "text": { "tr": "Geri yayılımı zaman boyunca açmak yerine yalnızca son k adımla sınırlayarak (truncated BPTT)", "en": "By limiting backpropagation to the last k steps instead of unrolling it through time (truncated BPTT)" } }
       ],
       "correct": ["b"],
       "explanation": {
-        "tr": "c_t = f_t⊙c_{t−1} + i_t⊙c̃_t toplamsal bir güncellemedir; forget kapısı 1'e yakınken gradyan sönmeden geçer. Boyut büyütmek (a) sorunu çözmez, LSTM hâlâ ardışıktır (c) ve sigmoid tek başına çare değildir (d).",
-        "en": "c_t = f_t⊙c_{t−1} + i_t⊙c̃_t is an additive update; with the forget gate near 1 the gradient passes without vanishing. A bigger state (a) does not fix it, LSTMs are still sequential (c) and sigmoid alone is no remedy (d)."
+        "tr": "c_t = f_t⊙c_{t−1} + i_t⊙c̃_t toplamsal bir güncellemedir; forget kapısı 1'e yakınken gradyan sönmeden geçer. LSTM de ağırlıkları zaman boyunca paylaşır, adım başına ayrı matris yoktur; truncated BPTT bir eğitim kısayoludur, uzun bağımlılığı öğretmez; sigmoid türevi ≤ 0.25 olduğundan sönmeyi azaltmaz, artırır.",
+        "en": "c_t = f_t⊙c_{t−1} + i_t⊙c̃_t is an additive update; with the forget gate near 1 the gradient passes without vanishing. An LSTM also shares weights across time, there is no separate matrix per step; truncated BPTT is a training shortcut that does not teach long dependencies; sigmoid's derivative is ≤ 0.25, so it worsens vanishing rather than curing it."
       },
       "difficulty": "medium",
       "concepts": ["lstm", "rnn"]
@@ -53,15 +53,15 @@
         "en": "Why are the scores divided by √d_k in self-attention?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "Hesaplamayı hızlandırmak için", "en": "To speed up computation" } },
-        { "id": "b", "text": { "tr": "Büyük boyutlarda nokta çarpımın varyansı büyür, softmax doyar ve gradyanlar söner; ölçekleme bunu önler", "en": "In high dimensions the dot product's variance grows, softmax saturates and gradients vanish; scaling prevents that" } },
-        { "id": "c", "text": { "tr": "Ağırlıkların toplamını 1 yapmak için", "en": "To make the weights sum to 1" } },
-        { "id": "d", "text": { "tr": "Konum bilgisini eklemek için", "en": "To add positional information" } }
+        { "id": "a", "text": { "tr": "Kafa sayısı arttıkça skorların toplamı büyür; √d_k bölmesi kafaların katkısını eşitler (multi-head normalizasyonu)", "en": "As the number of heads grows the scores add up; dividing by √d_k equalises each head's contribution (multi-head normalisation)" } },
+        { "id": "b", "text": { "tr": "Q ve K vektörlerini birim uzunluğa normalize ederek skoru kosinüs benzerliğine çevirir; böylece ağırlıklar 0–1'e düşer", "en": "It normalises Q and K to unit length, turning the score into cosine similarity so the weights fall into 0–1" } },
+        { "id": "c", "text": { "tr": "Dizi uzunluğu n büyüdükçe O(n²) bellek maliyetini sabitlemek için skor matrisini √d_k faktörüyle sıkıştırır", "en": "It compresses the score matrix by a factor of √d_k to keep the O(n²) memory cost constant as sequence length n grows" } },
+        { "id": "d", "text": { "tr": "Yüksek boyutta nokta çarpımın varyansı büyür, softmax doyar ve gradyanlar söner; ölçekleme bunu önler", "en": "In high dimensions the dot product's variance grows, softmax saturates and gradients vanish; scaling prevents that" } }
       ],
-      "correct": ["b"],
+      "correct": ["d"],
       "explanation": {
-        "tr": "d_k bağımsız birim varyanslı bileşenin çarpımının varyansı d_k'dır; √d_k ile bölmek varyansı 1'e çeker. Toplamı 1 yapan softmax'tır (c), konum bilgisi gömmeye eklenir (d).",
-        "en": "The dot product of d_k independent unit-variance components has variance d_k; dividing by √d_k brings it back to 1. Softmax is what makes weights sum to 1 (c); position is added to the embedding (d)."
+        "tr": "d_k bağımsız birim varyanslı bileşenin çarpımının varyansı d_k'dır; √d_k ile bölmek varyansı 1'e çeker. Bu kafa sayısıyla ilgili değildir; vektörleri birim uzunluğa getirmez (kosinüs için normlara bölmek gerekirdi); bellek maliyetine de dokunmaz — O(n²) aynen kalır. Toplamı 1 yapan softmax'tır, konum bilgisi gömmeye eklenir.",
+        "en": "The dot product of d_k independent unit-variance components has variance d_k; dividing by √d_k brings it back to 1. It has nothing to do with the number of heads; it does not make the vectors unit length (cosine would require dividing by the norms); it does not touch memory cost — O(n²) remains. Softmax is what makes weights sum to 1; position is added to the embedding."
       },
       "difficulty": "hard",
       "concepts": ["self-attention", "transformer"]
@@ -93,15 +93,15 @@
         "en": "Which statement correctly compares GANs and diffusion models?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "Diffusion tek ileri geçişte üretir, GAN onlarca adım gerektirir", "en": "Diffusion generates in one forward pass, GANs need dozens of steps" } },
-        { "id": "b", "text": { "tr": "GAN eğitimi kararsız olabilir (mode collapse); diffusion eğitimi kararlıdır ama örnekleme çok adımlı ve yavaştır", "en": "GAN training can be unstable (mode collapse); diffusion training is stable but sampling is multi-step and slow" } },
-        { "id": "c", "text": { "tr": "İkisi de etiketli veri olmadan eğitilemez", "en": "Neither can be trained without labelled data" } },
-        { "id": "d", "text": { "tr": "GAN'da tek ağ vardır, diffusion'da iki ağ yarışır", "en": "A GAN has one network, in diffusion two networks compete" } }
+        { "id": "a", "text": { "tr": "GAN eğitimi kararsız olabilir (mode collapse); diffusion kararlı eğitilir ama örnekleme çok adımlı ve yavaştır", "en": "GAN training can be unstable (mode collapse); diffusion trains stably but sampling is multi-step and slow" } },
+        { "id": "b", "text": { "tr": "Diffusion üretimi tek ileri geçişte yapar; GAN üretici ve ayırt edicinin sırayla onlarca kez çağrılmasını gerektirir", "en": "Diffusion generates in a single forward pass; a GAN needs the generator and discriminator to be called dozens of times in turn" } },
+        { "id": "c", "text": { "tr": "Her ikisi de etiketli veri ister: GAN sınıf etiketi, diffusion ise metin açıklaması olmadan eğitilemez", "en": "Both need labelled data: a GAN cannot be trained without class labels, diffusion without text captions" } },
+        { "id": "d", "text": { "tr": "GAN gürültü tahmini gibi basit bir regresyon kaybıyla eğitilir; diffusion'ın min-max oyunu mode collapse'a yatkındır", "en": "A GAN trains with a simple regression loss such as noise prediction; diffusion's min-max game is prone to mode collapse" } }
       ],
-      "correct": ["b"],
+      "correct": ["a"],
       "explanation": {
-        "tr": "GAN tek geçişte hızlı üretir ama min-max oyunu kararsızdır; diffusion gürültü tahmini gibi basit bir regresyon kaybıyla kararlı eğitilir, bedeli çok adımlı örneklemedir. (a) tersidir, ikisi de gözetimsiz çalışabilir (c), iki yarışan ağ GAN'dadır (d).",
-        "en": "A GAN generates fast in one pass but its min-max game is unstable; diffusion trains stably with a simple noise-regression loss at the cost of multi-step sampling. (a) is reversed, both can be unsupervised (c), and the two competing networks belong to the GAN (d)."
+        "tr": "GAN tek geçişte hızlı üretir ama min-max oyunu kararsızdır; diffusion gürültü tahmini gibi basit bir regresyon kaybıyla kararlı eğitilir, bedeli çok adımlı örneklemedir. Üretim adımı sayısını ve kayıp türlerini tersine çeviren seçenekler yanlıştır; ikisi de etiketsiz veriyle eğitilebilir, metin koşullandırması isteğe bağlıdır.",
+        "en": "A GAN generates fast in one pass but its min-max game is unstable; diffusion trains stably with a simple noise-regression loss at the cost of multi-step sampling. The options that swap the number of generation steps and the loss types are wrong; both can be trained on unlabelled data, and text conditioning is optional."
       },
       "difficulty": "medium",
       "concepts": ["gan", "diffusion-model"]

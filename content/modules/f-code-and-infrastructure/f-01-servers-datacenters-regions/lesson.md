@@ -87,7 +87,7 @@ Dikkat edilecek üç ayrıntı:
 3. **Dalgalanma**: AZ-a kısmen geri geldiğinde health check'ler "sağlıklı – sağlıksız" arasında gidip gelebilir. İyi bir sistem, bir AZ'yi havuza geri almadan önce birkaç ardışık başarılı kontrol bekler.
 
 :::interactive{type="scaling" mode="horizontal" zones=2 instancesPerZone=3 failureZone="a"}
-Önce zone başına örnek (instance) sayısını ve bir zone'un normalde taşıdığı yük yüzdesini ayarlayın. Sonra "AZ-a'yı düşür" düğmesine basın ve kalan AZ'nin yükünün nasıl %100'e çıktığını, otomatik ölçeklemenin yeni örnekleri ne kadar sürede açtığını izleyin. Üç AZ'ye çıkıp headroom ihtiyacının nasıl azaldığını karşılaştırın.
+Altı replika iki bölgeye (a, b) dağıtılmış durumda. Trafiği, her replikanın CPU çubuğu yaklaşık %50 olacak şekilde ayarlayın. Sonra "Bölge a" düğmesine basın: kalan bölgenin CPU'su iki katına çıkar, kapasite yetmezse istekler düşer. "Otomatik ölçekleme"yi açıp yeni replikaların saniyede bir açılmasıyla düşen isteklerin nasıl sıfırlandığını izleyin. Bölge sayısını 3'e çıkarın ve aynı arızayı tekrarlayın: tek bölge kaybı artık yükün üçte birini taşıdığı için gereken headroom azalır.
 :::
 
 ## Hangi yükü nereye koyarsınız? Karar kılavuzu

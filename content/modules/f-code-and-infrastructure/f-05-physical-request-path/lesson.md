@@ -92,8 +92,8 @@ Yanıt aynı yolu tersine izler: pod → gateway → ALB → özel omurga üzeri
 Tipik bir cache miss'li `/api/cart` isteği (yaklaşık): DNS 0–5 · TLS (edge'de) 20–30 · İstanbul→Frankfurt gidiş-dönüş 30 · ALB + gateway 3 · servis mantığı 10 · Redis miss 1 · Postgres 5 · geri serileştirme 2 · **toplam ≈ 80–90 ms**. Aynı istek Frankfurt'ta oturan bir kullanıcı için ≈ 40 ms, São Paulo'daki bir kullanıcı için ≈ 250 ms. Kullanıcı coğrafyası gecikmeyi koddan çok etkiler; bu yüzden büyük sistemler ikinci region'ı performans için de açar.
 :::
 
-:::interactive{type="request-journey" path="dns,cdn-edge,load-balancer,api-gateway,service,cache,database" showLocations=true userLocation="istanbul" region="eu-central-1" cacheHitRate=70}
-Kullanıcının konumunu değiştirin (İstanbul, Frankfurt, São Paulo) ve her katmanın gecikme katkısının nasıl değiştiğini izleyin. Edge cache isabet oranını %0'dan %90'a çıkarın: isteklerin kaçının Frankfurt'a hiç gitmediğini ve ortalama gecikmenin nasıl düştüğünü görün. Redis'i servisle farklı AZ'ye taşıyıp çapraz AZ maliyetini karşılaştırın.
+:::interactive{type="request-journey" path="dns,cdn-edge,load-balancer,api-gateway,service,cache,database" rttMs=40 cacheHitRate=70}
+RTT kaydırıcısı kullanıcının Frankfurt'taki region'a uzaklığını temsil eder: 40 ms (İstanbul), 5 ms (Frankfurt) ve 200 ms (São Paulo) değerlerini deneyip her katmanın gecikme katkısının şelalede nasıl değiştiğini izleyin — ağ maliyeti kodun yaptığı işi gölgeliyor mu? "CDN hit" kutusunu işaretleyin: istek edge'den döner, Frankfurt'a hiç gitmez. "20 istek" ile cache hit oranını %0'dan %90'a çıkarın: isteklerin kaçı veritabanına inmekten kurtuluyor, ortalama ve p95 nasıl düşüyor?
 :::
 
 ## Bu yolu production'da nasıl görürüz? Distributed tracing

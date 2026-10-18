@@ -11,15 +11,15 @@
         "en": "In the playground you set the activation to 'linear' and add 3 hidden layers, yet XOR still is not learned. Why?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "Öğrenme oranı çok düşük", "en": "The learning rate is too low" } },
-        { "id": "b", "text": { "tr": "Doğrusal katmanların bileşimi doğrusaldır; karar sınırı ne yaparsanız yapın düz bir çizgi kalır ve XOR doğrusal ayrılamaz", "en": "A composition of linear layers is linear; the decision boundary stays a straight line whatever you do, and XOR is not linearly separable" } },
-        { "id": "c", "text": { "tr": "XOR için en az 4 gizli katman gerekir", "en": "XOR needs at least 4 hidden layers" } },
-        { "id": "d", "text": { "tr": "Veri kümesi çok küçük", "en": "The dataset is too small" } }
+        { "id": "a", "text": { "tr": "Üç gizli katman 4 örnek için fazla kapasitedir; ağ gürültüyü ezberler ve doğrulama kaybı yükselir", "en": "Three hidden layers are too much capacity for 4 samples; the network memorises noise and validation loss rises" } },
+        { "id": "b", "text": { "tr": "Doğrusal katmanların bileşimi doğrusaldır; karar sınırı düz bir çizgi kalır ve XOR doğrusal ayrılamaz", "en": "A composition of linear layers is linear; the decision boundary stays a straight line, and XOR is not linearly separable" } },
+        { "id": "c", "text": { "tr": "Linear aktivasyonda gradyan katman başına 0.25 ile çarpılır; üç katmanda ilk katmana gradyan ulaşmaz", "en": "With a linear activation the gradient is multiplied by 0.25 per layer; with three layers no gradient reaches the first one" } },
+        { "id": "d", "text": { "tr": "XOR için derinlik değil genişlik gerekir; katman eklemek yerine tek katmana en az 8 nöron konmalıdır", "en": "XOR needs width, not depth; instead of adding layers, a single layer should have at least 8 neurons" } }
       ],
       "correct": ["b"],
       "explanation": {
-        "tr": "Derinlik, doğrusal olmayan aktivasyon olmadan ifade gücü eklemez. XOR için tek gizli katman (2–3 nöron) ve tanh/ReLU yeterlidir; 4 örnek bu problem için tam veri kümesidir.",
-        "en": "Depth adds no expressive power without a non-linear activation. One hidden layer (2–3 neurons) with tanh/ReLU suffices for XOR; the 4 samples are the complete dataset for this problem."
+        "tr": "Derinlik, doğrusal olmayan aktivasyon olmadan ifade gücü eklemez; kaç katman olursa olsun ağ tek bir doğrusal fonksiyona indirgenir. Gradyan sönmesi sigmoid'in özelliğidir, linear'da türev 1'dir; XOR için tek gizli katman ve 2–3 nöron (tanh/ReLU ile) yeterlidir; 4 örnek bu problemin tam veri kümesidir, overfitting söz konusu değildir.",
+        "en": "Depth adds no expressive power without a non-linear activation; however many layers there are, the network collapses into a single linear function. Vanishing gradients are a sigmoid property, a linear activation has derivative 1; XOR needs one hidden layer with 2–3 neurons (tanh/ReLU); the 4 samples are the complete dataset for this problem, so overfitting is not the issue."
       },
       "difficulty": "easy",
       "concepts": ["xor-problem", "activation-function", "hidden-layers"]
@@ -32,15 +32,15 @@
         "en": "During training the loss first drops, then jumps wildly every epoch and finally becomes NaN. What is the most likely cause?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "Öğrenme oranı çok yüksek; adımlar minimumu aşıyor ve ağırlıklar patlıyor", "en": "The learning rate is too high; steps overshoot the minimum and weights explode" } },
-        { "id": "b", "text": { "tr": "Çok az epoch çalıştırıldı", "en": "Too few epochs were run" } },
-        { "id": "c", "text": { "tr": "Gizli nöron sayısı çok az", "en": "Too few hidden neurons" } },
-        { "id": "d", "text": { "tr": "Veri karıştırılmadı", "en": "The data was not shuffled" } }
+        { "id": "a", "text": { "tr": "Batch boyutu çok küçük; mini-batch gürültüsü kaybı zıplatır ve sonunda taşmaya yol açar", "en": "The batch size is too small; mini-batch noise makes the loss jump and eventually overflow" } },
+        { "id": "b", "text": { "tr": "Ölü ReLU nöronları; türevi sıfır olan nöronlar gradyanı keser ve kayıp tanımsız olur", "en": "Dead ReLU neurons; neurons with zero derivative cut the gradient and the loss becomes undefined" } },
+        { "id": "c", "text": { "tr": "Öğrenme oranı çok yüksek; adımlar minimumu aşıyor ve ağırlıklar patlıyor", "en": "The learning rate is too high; steps overshoot the minimum and weights explode" } },
+        { "id": "d", "text": { "tr": "Ağırlıklar sıfırla başlatıldı; simetri kırılamayınca kayıp platoda kalır ve NaN'a düşer", "en": "Weights were initialised to zero; with symmetry unbroken the loss stays on a plateau and drops to NaN" } }
       ],
-      "correct": ["a"],
+      "correct": ["c"],
       "explanation": {
-        "tr": "Zıplayan ve ıraksayan kayıp, büyük öğrenme oranının klasik belirtisidir. Çare: öğrenme oranını 10 kat düşürmek, Adam gibi uyarlanabilir optimizer kullanmak, gerekirse gradient clipping. Az epoch ya da az nöron kaybı yüksek bırakır ama patlatmaz.",
-        "en": "A bouncing, diverging loss is the classic symptom of a large learning rate. Remedy: lower it 10×, use an adaptive optimizer like Adam, add gradient clipping if needed. Too few epochs or neurons leave the loss high but do not blow it up."
+        "tr": "Zıplayan ve ıraksayan kayıp, büyük öğrenme oranının klasik belirtisidir. Çare: öğrenme oranını 10 kat düşürmek, Adam gibi uyarlanabilir optimizer kullanmak, gerekirse gradient clipping. Küçük batch gürültü ekler ama ıraksatmaz; ölü ReLU ve sıfır başlangıç kaybı yüksek ya da platoda bırakır, patlatmaz.",
+        "en": "A bouncing, diverging loss is the classic symptom of a large learning rate. Remedy: lower it 10×, use an adaptive optimizer like Adam, add gradient clipping if needed. A small batch adds noise but does not diverge; dead ReLUs and zero initialisation leave the loss high or on a plateau, they do not blow it up."
       },
       "difficulty": "easy",
       "concepts": ["learning-rate", "loss-curve"]
@@ -93,15 +93,15 @@
         "en": "What is the purpose of calling `await tf.nextFrame()` inside `onEpochEnd` during `model.fit` in TensorFlow.js?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "Öğrenme oranını her epoch'ta otomatik azaltmak", "en": "Automatically decaying the learning rate every epoch" } },
-        { "id": "b", "text": { "tr": "Tarayıcının arayüzü çizmesine izin vermek; aksi hâlde uzun eğitim sayfayı dondurur", "en": "Letting the browser render the UI; otherwise a long training run freezes the page" } },
-        { "id": "c", "text": { "tr": "GPU belleğini boşaltmak", "en": "Freeing GPU memory" } },
-        { "id": "d", "text": { "tr": "Veriyi yeniden karıştırmak", "en": "Reshuffling the data" } }
+        { "id": "a", "text": { "tr": "Tarayıcının arayüzü çizmesine izin vermek; aksi hâlde uzun eğitim sayfayı dondurur", "en": "Letting the browser render the UI; otherwise a long training run freezes the page" } },
+        { "id": "b", "text": { "tr": "Her epoch sonunda ara tensörleri serbest bırakıp WebGL belleğinin dolmasını önlemek", "en": "Releasing intermediate tensors at the end of each epoch to keep WebGL memory from filling up" } },
+        { "id": "c", "text": { "tr": "Öğrenme oranını her epoch'ta bir kare geciktirerek azaltmak (kosinüs azaltma programı)", "en": "Decaying the learning rate by delaying one frame every epoch (a cosine decay schedule)" } },
+        { "id": "d", "text": { "tr": "Eğitim verisini her epoch'ta yeniden karıştırıp mini-batch sırasının ezberlenmesini engellemek", "en": "Reshuffling the training data every epoch to stop the mini-batch order from being memorised" } }
       ],
-      "correct": ["b"],
+      "correct": ["a"],
       "explanation": {
-        "tr": "Eğitim ana iş parçacığında koşar; `tf.nextFrame()` bir animasyon karesi bekleyerek olay döngüsüne nefes aldırır ve kayıp eğrisi/sınır canlı güncellenebilir. Bellek `dispose()`/`tf.tidy` ile yönetilir (c), karıştırma `shuffle` seçeneğiyle yapılır (d).",
-        "en": "Training runs on the main thread; `tf.nextFrame()` awaits an animation frame so the event loop can breathe and the loss curve/boundary update live. Memory is managed with `dispose()`/`tf.tidy` (c); shuffling is the `shuffle` option (d)."
+        "tr": "Eğitim ana iş parçacığında koşar; `tf.nextFrame()` bir animasyon karesi bekleyerek olay döngüsüne nefes aldırır ve kayıp eğrisi/sınır canlı güncellenebilir. Bellek `dispose()`/`tf.tidy` ile yönetilir, karıştırma `shuffle` seçeneğiyle yapılır, öğrenme oranı programı optimizer ya da callback'le ayarlanır — bir kare beklemenin bunlarla ilgisi yoktur.",
+        "en": "Training runs on the main thread; `tf.nextFrame()` awaits an animation frame so the event loop can breathe and the loss curve/boundary update live. Memory is managed with `dispose()`/`tf.tidy`, shuffling is the `shuffle` option, and the learning-rate schedule is set via the optimizer or a callback — waiting a frame has nothing to do with any of them."
       },
       "difficulty": "hard",
       "concepts": ["tensorflow-js"]

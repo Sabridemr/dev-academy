@@ -11,15 +11,15 @@
         "en": "Why do recommendation systems use a candidate generation → ranking → re-ranking funnel instead of a single powerful ranking model?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "Tek model tüm kataloğu istek anında skorlayamaz; huni pahalı modeli küçük bir aday kümesinde çalıştırır", "en": "A single model cannot score the whole catalogue at request time; the funnel runs the expensive model on a small candidate set" } },
-        { "id": "b", "text": { "tr": "Sıralama modelleri yalnızca 500 girdiyle çalışabilir", "en": "Ranking models can only work with 500 inputs" } },
-        { "id": "c", "text": { "tr": "Huni, A/B testini gereksiz kılar", "en": "The funnel makes A/B testing unnecessary" } },
-        { "id": "d", "text": { "tr": "Aday üretimi her zaman sıralamadan daha doğrudur", "en": "Candidate generation is always more accurate than ranking" } }
+        { "id": "a", "text": { "tr": "Sıralama modelleri yalnızca sabit boyutlu (ör. 500) girdi alabildiği için aday üretimi bu sayıya indirmek zorundadır", "en": "Because ranking models can only take a fixed-size input (e.g. 500), candidate generation has to cut down to that number" } },
+        { "id": "b", "text": { "tr": "Tek model tüm kataloğu istek anında skorlayamaz; huni pahalı modeli küçük bir aday kümesinde çalıştırır", "en": "A single model cannot score the whole catalogue at request time; the funnel runs the expensive model on a small candidate set" } },
+        { "id": "c", "text": { "tr": "Huni çevrimiçi A/B testini gereksiz kılar; her aşama çevrimdışı NDCG ile ayrı ayrı doğrulanabildiği için risk ortadan kalkar", "en": "The funnel makes online A/B testing unnecessary; since each stage can be validated separately with offline NDCG, the risk disappears" } },
+        { "id": "d", "text": { "tr": "Aday üretimi sıralamadan daha doğru olduğu için pahalı model yalnızca son listeye çeşitlilik eklemek için kullanılır", "en": "Because candidate generation is more accurate than ranking, the expensive model is only used to add diversity to the final list" } }
       ],
-      "correct": ["a"],
+      "correct": ["b"],
       "explanation": {
-        "tr": "Yüz milyonlarca öğeyi 100 ms'de pahalı bir modelle skorlamak imkânsızdır. Ucuz ve geniş aşamalar (ANN, birlikte satın alma) adayları yüzlere indirir; pahalı model yalnızca onlara bakar. Doğruluk sırası tersidir (d yanlış).",
-        "en": "Scoring hundreds of millions of items with an expensive model in 100 ms is impossible. Cheap, wide stages (ANN, co-purchase) cut candidates to hundreds; the expensive model only sees those. The accuracy order is the reverse (d is wrong)."
+        "tr": "Yüz milyonlarca öğeyi 100 ms'de pahalı bir modelle skorlamak imkânsızdır. Ucuz ve geniş aşamalar (ANN, birlikte satın alma) adayları yüzlere indirir; pahalı model yalnızca onlara bakar. Sıralama modellerinin girdi sayısı sınırı yoktur, sınır bütçedir; doğruluk aday üretiminden sıralamaya doğru artar; çevrimdışı metrikler eleme içindir, kararı yine A/B verir.",
+        "en": "Scoring hundreds of millions of items with an expensive model in 100 ms is impossible. Cheap, wide stages (ANN, co-purchase) cut candidates to hundreds; the expensive model only sees those. Ranking models have no input-count limit, the limit is the budget; accuracy increases from candidate generation to ranking; offline metrics are for screening, the decision is still made by A/B."
       },
       "difficulty": "easy",
       "concepts": ["candidate-generation", "ranking", "latency-budget"]
@@ -32,15 +32,15 @@
         "en": "What is the main production advantage of a two-tower model?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "Kullanıcı ve ürün özellikleri arasındaki tüm çapraz etkileşimleri modeller", "en": "It models every cross interaction between user and item features" } },
-        { "id": "b", "text": { "tr": "Ürün vektörleri önceden hesaplanıp ANN indeksine yazılabilir; istek anında yalnızca kullanıcı vektörü hesaplanır ve en yakın komşular milisaniyede bulunur", "en": "Item vectors can be precomputed into an ANN index; at request time only the user vector is computed and nearest neighbours are found in milliseconds" } },
-        { "id": "c", "text": { "tr": "Eğitim için etiket gerektirmez", "en": "It needs no labels for training" } },
-        { "id": "d", "text": { "tr": "Soğuk başlangıç problemini tamamen çözer", "en": "It completely solves the cold-start problem" } }
+        { "id": "a", "text": { "tr": "Ürün vektörleri önceden hesaplanıp ANN indeksine yazılır; istek anında yalnızca kullanıcı vektörü hesaplanır ve en yakınlar ms'de bulunur", "en": "Item vectors are precomputed into an ANN index; at request time only the user vector is computed and nearest neighbours are found in ms" } },
+        { "id": "b", "text": { "tr": "Kullanıcı ve ürün özellikleri arasındaki tüm çapraz etkileşimleri tek bir ağda modellediği için sıralama aşamasını gereksiz kılar", "en": "Because it models every cross interaction between user and item features in one network, it makes the ranking stage unnecessary" } },
+        { "id": "c", "text": { "tr": "Eğitimi etiket gerektirmez: iki kule aynı ürünün iki görünümünü eşleştirerek kendi kendine (self-supervised) öğrenir", "en": "Its training needs no labels: the two towers learn self-supervised by matching two views of the same item" } },
+        { "id": "d", "text": { "tr": "Yeni eklenen ürünün vektörü içerik özelliklerinden anında türetildiği için soğuk başlangıç problemi tamamen ortadan kalkar", "en": "Because a newly added item's vector is derived instantly from content features, the cold-start problem disappears entirely" } }
       ],
-      "correct": ["b"],
+      "correct": ["a"],
       "explanation": {
-        "tr": "Kulelerin ayrılabilirliği, pahalı tarafı çevrimdışına taşır. Bedeli, çapraz etkileşimleri modelleyememesidir (a tam tersidir) — bu yüzden sıralama aşamasında ayrı bir model kullanılır. Etkileşim verisiyle eğitilir (c) ve yeni ürün için vektör içerik özelliklerinden türetilse de soğuk başlangıç tamamen çözülmez (d).",
-        "en": "Separable towers move the expensive part offline. The price is that it cannot model cross interactions (a is the opposite) — hence a separate ranking model. It trains on interaction data (c), and although a new item's vector can come from content features, cold start is not fully solved (d)."
+        "tr": "Kulelerin ayrılabilirliği pahalı tarafı çevrimdışına taşır. Bedeli, çapraz etkileşimleri modelleyememesidir — bu yüzden sıralama aşamasında ayrı bir model kullanılır. Etkileşim verisiyle (tıklama/satın alma çiftleri ve negatif örnekleme) eğitilir; yeni ürün için vektör içerik özelliklerinden türetilse de etkileşim sinyali olmadan soğuk başlangıç tamamen çözülmez.",
+        "en": "Separable towers move the expensive part offline. The price is that it cannot model cross interactions — hence a separate model in the ranking stage. It trains on interaction data (click/purchase pairs with negative sampling); although a new item's vector can come from content features, cold start is not fully solved without interaction signals."
       },
       "difficulty": "medium",
       "concepts": ["two-tower-model", "approximate-nearest-neighbor"]
@@ -74,15 +74,15 @@
         "en": "In the recommendation service the feature store starts responding in 60 ms and the 100 ms budget is exceeded. What is the most appropriate behaviour?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "Yanıtı bekleyip sayfayı geç döndürmek", "en": "Wait for the response and return the page late" } },
-        { "id": "b", "text": { "tr": "Hata döndürüp widget'ı boş göstermek", "en": "Return an error and show an empty widget" } },
-        { "id": "c", "text": { "tr": "Zaman aşımında varsayılan özelliklerle ya da aday skorlarıyla devam etmek; o da olmazsa önbellekteki/popüler listeyi dönmek", "en": "On timeout continue with default features or candidate scores; failing that, return the cached/popular list" } },
-        { "id": "d", "text": { "tr": "Sıralama modelini kapatıp rastgele 20 ürün göstermek", "en": "Disable the ranking model and show 20 random items" } }
+        { "id": "a", "text": { "tr": "Feature store yanıtını beklemek; sayfanın geç dönmesi boş ya da düşük kaliteli öneri göstermekten her zaman daha iyidir", "en": "Wait for the feature store; returning the page late is always better than showing empty or lower-quality recommendations" } },
+        { "id": "b", "text": { "tr": "Sıralama modelini devre dışı bırakıp 20 rastgele ürün göstermek; rastgelelik keşif dilimi olarak çalışır ve geri bildirim döngüsünü kırar", "en": "Disable the ranking model and show 20 random items; the randomness acts as an exploration slice and breaks the feedback loop" } },
+        { "id": "c", "text": { "tr": "Zaman aşımında varsayılan özellikler ya da aday skorlarıyla devam etmek; o da olmazsa önbellekteki/popüler listeyi dönmek", "en": "On timeout continue with default features or candidate scores; failing that, return the cached/popular list" } },
+        { "id": "d", "text": { "tr": "İsteği 5xx ile reddedip widget'ı boş göstermek; sayfa SLO'su korunur ve kullanıcı yanlış öneri görmez", "en": "Reject the request with a 5xx and show an empty widget; the page SLO is protected and the user sees no wrong recommendation" } }
       ],
       "correct": ["c"],
       "explanation": {
-        "tr": "Her aşamanın zaman aşımı ve yedeği olmalıdır: kalite kademeli düşer, sayfa yüklenir. Beklemek sayfa SLO'sunu bozar (a), boş widget ve rastgele liste gereksiz kalite kaybıdır (b, d).",
-        "en": "Every stage needs a timeout and a fallback: quality degrades gracefully, the page still loads. Waiting breaks the page SLO (a); an empty widget or a random list is needless quality loss (b, d)."
+        "tr": "Her aşamanın zaman aşımı ve yedeği olmalıdır: kalite kademeli düşer, sayfa yüklenir. Beklemek sayfa SLO'sunu bozar; boş widget gereksiz kalite kaybıdır; rastgele liste de öyledir — keşif dilimi %5'lik bilinçli bir paydır, tüm listenin rastgele olması değil.",
+        "en": "Every stage needs a timeout and a fallback: quality degrades gracefully, the page still loads. Waiting breaks the page SLO; an empty widget is needless quality loss; so is a random list — the exploration slice is a deliberate 5%, not the whole list being random."
       },
       "difficulty": "easy",
       "concepts": ["fallback", "latency-budget"]

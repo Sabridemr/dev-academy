@@ -83,8 +83,8 @@ Bu üç depo **asla iş mantığının doğruluk kaynağı değildir**; "kaç si
 Cache tablodaki tek depodur ki kaybı **hiçbir veri kaybı** demek değildir; yalnızca gecikme ve DB yükü artar. Bu yüzden Redis'e "soğuk başlangıç" planı yapılır: cache boşken DB'yi ezmemek için istek birleştirme (request coalescing) ve kademeli ısıtma. a-07'deki cache-aside ve TTL stratejileri tam burada devreye girer.
 :::
 
-:::interactive{type="cache" policy="lru" capacity=6 writePolicy="cache-aside" ttlMs=30000 workload="order-summary"}
-Sipariş özeti okumalarını simüle edin: önce cache boşken (soğuk) DB okuma sayısını izleyin, sonra ısındıkça isabet oranının artışını görün. TTL'i kısaltıp uzatın ve "bayat veri" ile "DB yükü" arasındaki dengeyi gözlemleyin. Write-through'a geçip sipariş güncellemelerinde cache'in nasıl tutarlı kaldığını, ama yazma gecikmesinin arttığını karşılaştırın.
+:::interactive{type="cache" policy="lru" capacity=6 writePolicy="cache-aside" ttlMs=30000}
+Anahtarları birer sipariş özeti olarak düşünün. Cache boşken (soğuk) A–H anahtarlarını okuyun ve DB okuma sayacını izleyin; "Rastgele 10 okuma" ile ısındıkça isabet oranının artışını görün. TTL'i kısaltıp uzatın: kısa TTL bayat veriyi azaltır ama DB okumalarını artırır, uzun TTL tam tersi. Yazma politikasını write-through yapıp bir anahtara yazın: cache ve DB aynı anda güncellenir (DB kutusunda "≠ cache" uyarısı hiç çıkmaz) ama her yazma DB yazma sayacını da artırır — tutarlılığın bedeli çift yazmadır.
 :::
 
 ## Kod: hangi veriyi nereye yazıyoruz?
