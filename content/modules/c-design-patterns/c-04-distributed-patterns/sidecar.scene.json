@@ -1,0 +1,428 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "c-04-sidecar",
+  "title": {
+    "tr": "Sidecar: Dayanıklılık Uygulama Kodunun Dışında",
+    "en": "Sidecar: Resilience Outside the Application Code"
+  },
+  "summary": {
+    "tr": "Uygulama yalnızca localhost'taki sidecar proxy ile konuşur; sidecar mTLS, retry, circuit breaker ve metrikleri üstlenip karşı pod'un sidecar'ına bağlanır; kontrol düzlemi politikayı günceller.",
+    "en": "The app talks only to the sidecar proxy on localhost; the sidecar handles mTLS, retry, circuit breaking and metrics and connects to the peer pod's sidecar; the control plane updates the policy."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda orders pod'u içinde OrderApp ve EnvoySidecar, sağda inventory pod'u içinde EnvoySidecar ve InventoryApp, üstte kontrol düzlemi. OrderApp localhost üzerinden kendi sidecar'ına düz HTTP gönderir; sidecar mTLS ile karşı sidecar'a bağlanır; karşı sidecar yetkiyi kontrol edip InventoryApp'e iletir. Bir hata olduğunda retry ve circuit breaker sidecar'da çalışır. Kontrol düzlemi yeni bir zaman aşımı politikasını uygulama yeniden başlatılmadan dağıtır.",
+      "en": "OrderApp and EnvoySidecar inside the orders pod on the left, EnvoySidecar and InventoryApp inside the inventory pod on the right, the control plane on top. OrderApp sends plain HTTP to its own sidecar over localhost; the sidecar connects to the peer sidecar with mTLS; the peer sidecar checks authorization and forwards to InventoryApp. On failure, retry and circuit breaking run in the sidecar. The control plane rolls out a new timeout policy without restarting the app."
+    }
+  },
+  "canvas": {
+    "width": 1000,
+    "height": 600
+  },
+  "nodes": [
+    {
+      "id": "pod-a",
+      "kind": "group",
+      "label": "Pod: orders",
+      "x": 300,
+      "y": 330,
+      "w": 420,
+      "h": 300
+    },
+    {
+      "id": "app",
+      "kind": "container",
+      "label": "OrderApp",
+      "x": 190,
+      "y": 330,
+      "w": 150,
+      "h": 70,
+      "sublabel": {
+        "tr": "Java · port 8080",
+        "en": "Java · port 8080"
+      }
+    },
+    {
+      "id": "sc",
+      "kind": "proxy",
+      "label": "EnvoySidecar",
+      "x": 420,
+      "y": 330,
+      "w": 190,
+      "h": 80,
+      "sublabel": {
+        "tr": "retry · CB · mTLS · metrics",
+        "en": "retry · CB · mTLS · metrics"
+      }
+    },
+    {
+      "id": "pod-b",
+      "kind": "group",
+      "label": "Pod: inventory",
+      "x": 790,
+      "y": 330,
+      "w": 340,
+      "h": 300
+    },
+    {
+      "id": "rsc",
+      "kind": "proxy",
+      "label": "EnvoySidecar",
+      "x": 700,
+      "y": 330,
+      "w": 170,
+      "h": 80,
+      "sublabel": {
+        "tr": "mTLS sonlandır · RBAC",
+        "en": "terminate mTLS · RBAC"
+      }
+    },
+    {
+      "id": "rapp",
+      "kind": "container",
+      "label": "InventoryApp",
+      "x": 890,
+      "y": 330,
+      "w": 150,
+      "h": 70,
+      "sublabel": {
+        "tr": "Go · port 9090",
+        "en": "Go · port 9090"
+      }
+    },
+    {
+      "id": "cp",
+      "kind": "service",
+      "label": "Control Plane (istiod)",
+      "x": 540,
+      "y": 80,
+      "w": 240,
+      "h": 64,
+      "sublabel": {
+        "tr": "politika · sertifika · keşif",
+        "en": "policy · certs · discovery"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "app-sc",
+      "from": "app",
+      "to": "sc",
+      "kind": "request",
+      "label": "HTTP localhost:15001"
+    },
+    {
+      "id": "sc-rsc",
+      "from": "sc",
+      "to": "rsc",
+      "kind": "request",
+      "label": "mTLS"
+    },
+    {
+      "id": "rsc-rapp",
+      "from": "rsc",
+      "to": "rapp",
+      "kind": "request",
+      "label": "HTTP localhost:9090"
+    },
+    {
+      "id": "cp-sc",
+      "from": "cp",
+      "to": "sc",
+      "kind": "control",
+      "label": "xDS config",
+      "style": "dotted",
+      "curvature": -0.1
+    },
+    {
+      "id": "cp-rsc",
+      "from": "cp",
+      "to": "rsc",
+      "kind": "control",
+      "label": "xDS config",
+      "style": "dotted",
+      "curvature": 0.1
+    }
+  ],
+  "steps": [
+    {
+      "id": "local",
+      "title": {
+        "tr": "1. Uygulama yalnızca localhost'u bilir",
+        "en": "1. The app knows only localhost"
+      },
+      "narration": {
+        "tr": "OrderApp, inventory servisini çağırmak için düz HTTP ile localhost:15001'e gider. Kodunda TLS, retry, servis keşfi yoktur; iptables kuralları tüm giden trafiği sidecar'a yönlendirir.",
+        "en": "OrderApp calls the inventory service with plain HTTP to localhost:15001. Its code has no TLS, retry or service discovery; iptables rules redirect all outbound traffic to the sidecar."
+      },
+      "durationMs": 3500,
+      "inherit": false,
+      "highlight": {
+        "nodes": [
+          "app",
+          "sc"
+        ],
+        "edges": [
+          "app-sc"
+        ]
+      },
+      "nodeStates": {
+        "app": {
+          "status": "active"
+        },
+        "sc": {
+          "status": "active"
+        }
+      },
+      "edgeStates": {},
+      "packets": [
+        {
+          "edge": "app-sc",
+          "shape": "envelope",
+          "label": "GET /stock/A1",
+          "durationMs": 900
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a1",
+          "x": 190,
+          "y": 450,
+          "text": {
+            "tr": "kodda: fetch(\"http://inventory/stock/A1\")",
+            "en": "in code: fetch(\"http://inventory/stock/A1\")"
+          },
+          "target": "app"
+        }
+      ]
+    },
+    {
+      "id": "mesh",
+      "title": {
+        "tr": "2. Sidecar'dan sidecar'a: mTLS",
+        "en": "2. Sidecar to sidecar: mTLS"
+      },
+      "narration": {
+        "tr": "Sidecar hedefi servis kayıt defterinden çözer, karşı pod'un sidecar'ına mTLS ile bağlanır (her iki taraf sertifikayla kimlik kanıtlar), isteğe trace başlığı ekler ve zaman aşımı uygular. Karşı sidecar RBAC politikasına bakar: orders → inventory GET'e izinli.",
+        "en": "The sidecar resolves the target from the service registry, connects to the peer pod's sidecar with mTLS (both sides prove identity with certificates), adds trace headers and applies a timeout. The peer sidecar checks the RBAC policy: orders → inventory GET is allowed."
+      },
+      "durationMs": 4000,
+      "highlight": {
+        "nodes": [
+          "sc",
+          "rsc",
+          "rapp"
+        ],
+        "edges": [
+          "sc-rsc",
+          "rsc-rapp"
+        ]
+      },
+      "nodeStates": {
+        "rsc": {
+          "status": "active",
+          "badge": "RBAC ✓"
+        },
+        "rapp": {
+          "status": "active"
+        }
+      },
+      "edgeStates": {},
+      "packets": [
+        {
+          "edge": "sc-rsc",
+          "shape": "envelope",
+          "color": "accent",
+          "label": "mTLS + trace-id",
+          "durationMs": 900
+        },
+        {
+          "edge": "rsc-rapp",
+          "startAt": 1000,
+          "shape": "envelope",
+          "durationMs": 600
+        },
+        {
+          "edge": "rsc-rapp",
+          "startAt": 1700,
+          "direction": "backward",
+          "color": "success",
+          "durationMs": 500
+        },
+        {
+          "edge": "sc-rsc",
+          "startAt": 2300,
+          "direction": "backward",
+          "color": "success",
+          "label": "200",
+          "durationMs": 700
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "id": "resilience",
+      "title": {
+        "tr": "3. Retry ve circuit breaker sidecar'da",
+        "en": "3. Retry and circuit breaking in the sidecar"
+      },
+      "narration": {
+        "tr": "Karşı taraf 503 dönerse sidecar politikaya göre bir kez yeniden dener (yalnızca idempotent GET için), ardışık hatalarda o uç noktayı havuzdan çıkarır (outlier detection = circuit breaker). Java uygulaması tüm bunlardan habersizdir; Go uygulaması da aynı korumaya sahiptir.",
+        "en": "If the peer returns 503, the sidecar retries once per policy (only for idempotent GET) and ejects that endpoint from the pool after consecutive failures (outlier detection = circuit breaker). The Java app knows nothing of this; the Go app gets the same protection."
+      },
+      "durationMs": 4000,
+      "highlight": {
+        "nodes": [
+          "sc"
+        ],
+        "edges": [
+          "sc-rsc"
+        ]
+      },
+      "nodeStates": {
+        "sc": {
+          "badge": "retry 1/1",
+          "status": "warning"
+        },
+        "rapp": {
+          "status": "error"
+        }
+      },
+      "edgeStates": {
+        "sc-rsc": {
+          "status": "error"
+        }
+      },
+      "packets": [
+        {
+          "edge": "sc-rsc",
+          "shape": "envelope",
+          "durationMs": 700
+        },
+        {
+          "edge": "sc-rsc",
+          "startAt": 800,
+          "direction": "backward",
+          "color": "danger",
+          "label": "503",
+          "durationMs": 600
+        },
+        {
+          "edge": "sc-rsc",
+          "startAt": 1600,
+          "shape": "envelope",
+          "label": "retry",
+          "durationMs": 700
+        },
+        {
+          "edge": "sc-rsc",
+          "startAt": 2400,
+          "direction": "backward",
+          "color": "success",
+          "label": "200",
+          "durationMs": 600
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a3",
+          "x": 420,
+          "y": 480,
+          "text": {
+            "tr": "dilden bağımsız dayanıklılık: Java, Go, Python aynı politika",
+            "en": "language-agnostic resilience: Java, Go, Python share one policy"
+          },
+          "tone": "success",
+          "target": "sc"
+        }
+      ]
+    },
+    {
+      "id": "control",
+      "title": {
+        "tr": "4. Kontrol düzlemi politikayı dağıtır",
+        "en": "4. The control plane pushes policy"
+      },
+      "narration": {
+        "tr": "Platform ekibi zaman aşımını 2 s'den 1 s'ye indirir; kontrol düzlemi yeni yapılandırmayı tüm sidecar'lara anında iter. Hiçbir uygulama yeniden başlatılmaz, hiçbir kütüphane güncellenmez. Bedel: pod başına ~50 MB bellek, ~1 ms ek gecikme, bir bileşen daha.",
+        "en": "The platform team lowers the timeout from 2 s to 1 s; the control plane pushes the new config to all sidecars instantly. No app restarts, no library upgrades. The cost: ~50 MB memory per pod, ~1 ms extra latency, one more component to operate."
+      },
+      "durationMs": 3500,
+      "highlight": {
+        "nodes": [
+          "cp",
+          "sc",
+          "rsc"
+        ],
+        "edges": [
+          "cp-sc",
+          "cp-rsc"
+        ]
+      },
+      "nodeStates": {
+        "cp": {
+          "status": "active"
+        },
+        "sc": {
+          "badge": "timeout 1 s",
+          "status": "success"
+        },
+        "rsc": {
+          "badge": "timeout 1 s",
+          "status": "success"
+        },
+        "rapp": {
+          "status": "idle"
+        }
+      },
+      "edgeStates": {
+        "sc-rsc": {
+          "status": "idle"
+        },
+        "cp-sc": {
+          "status": "active"
+        },
+        "cp-rsc": {
+          "status": "active"
+        }
+      },
+      "packets": [
+        {
+          "edge": "cp-sc",
+          "shape": "diamond",
+          "color": "accent",
+          "label": "xDS",
+          "durationMs": 900
+        },
+        {
+          "edge": "cp-rsc",
+          "shape": "diamond",
+          "color": "accent",
+          "label": "xDS",
+          "durationMs": 900
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a4",
+          "x": 540,
+          "y": 560,
+          "text": {
+            "tr": "bedel: bellek, +1 ms, ayrı yaşam döngüsü",
+            "en": "cost: memory, +1 ms, separate lifecycle"
+          },
+          "tone": "warning"
+        }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": [
+    "sidecar",
+    "service-mesh",
+    "envoy"
+  ]
+}

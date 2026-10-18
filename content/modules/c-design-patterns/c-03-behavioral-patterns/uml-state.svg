@@ -74,7 +74,7 @@
   <path d="M 365 240 L 550 156" stroke="var(--da-fg, #0f172a)" stroke-width="1.3" fill="none" stroke-dasharray="5 4" marker-end="url(#m-tri)"/>
   <path d="M 515 240 L 550 156" stroke="var(--da-fg, #0f172a)" stroke-width="1.3" fill="none" stroke-dasharray="5 4" marker-end="url(#m-tri)"/>
   <path d="M 665 240 L 550 156" stroke="var(--da-fg, #0f172a)" stroke-width="1.3" fill="none" stroke-dasharray="5 4" marker-end="url(#m-tri)"/>
-  <path d="M 750 276 L 550 156" stroke="var(--da-fg, #0f172a)" stroke-width="1.3" fill="none" stroke-dasharray="5 4" marker-end="url(#m-tri)"/>
+  <path d="M 815 240 L 550 156" stroke="var(--da-fg, #0f172a)" stroke-width="1.3" fill="none" stroke-dasharray="5 4" marker-end="url(#m-tri)"/>
   <path d="M 40 230 L 250 230 L 260 240 L 260 286 L 40 286 z" fill="var(--da-accent, #f59e0b)" fill-opacity="0.12" stroke="var(--da-accent, #f59e0b)" stroke-width="1"/>
   <text x="48" y="246" font-size="10.5" fill="var(--da-fg, #0f172a)">Geçiş kuralları durum sınıfında;</text>
   <text x="48" y="260" font-size="10.5" fill="var(--da-fg, #0f172a)">Order içinde switch(status) yok.</text>

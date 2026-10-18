@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 380" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Sidecar UML bileşen diyagramı</title>
+  <desc id="desc">Bir Pod içinde iki konteyner: OrderApp ve yanında EnvoySidecar. Uygulama yalnızca localhost üzerinden sidecar ile konuşur; sidecar mTLS, retry, circuit breaker, metrik ve izleme işlerini üstlenir ve uzak pod'un sidecar'ına bağlanır. ControlPlane sidecar'ları yapılandırır.</desc>
+  <defs>
+    <marker id="m-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+    <marker id="m-open" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M 1 1 L 9 5 L 1 9" fill="none" stroke="var(--da-fg, #0f172a)" stroke-width="1.4"/>
+    </marker>
+    <marker id="m-tri" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" orient="auto-start-reverse">
+      <path d="M 1 1 L 11 6 L 1 11 z" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.3"/>
+    </marker>
+    <marker id="m-dia" viewBox="0 0 14 10" refX="1" refY="5" markerWidth="14" markerHeight="10" orient="auto-start-reverse">
+      <path d="M 1 5 L 7 1 L 13 5 L 7 9 z" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.3"/>
+    </marker>
+    <marker id="m-diaf" viewBox="0 0 14 10" refX="1" refY="5" markerWidth="14" markerHeight="10" orient="auto-start-reverse">
+      <path d="M 1 5 L 7 1 L 13 5 L 7 9 z" fill="var(--da-fg, #0f172a)" stroke="var(--da-fg, #0f172a)" stroke-width="1.3"/>
+    </marker>
+    <marker id="m-primary" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-primary, #6366f1)"/>
+    </marker>
+    <marker id="m-danger" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-danger, #ef4444)"/>
+    </marker>
+    <marker id="m-success" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-success, #10b981)"/>
+    </marker>
+    <marker id="m-accent" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-accent, #f59e0b)"/>
+    </marker>
+  </defs>
+  <rect x="40" y="40" width="420" height="101" rx="4" fill="var(--da-surface, #ffffff)" stroke="var(--da-primary, #6366f1)" stroke-width="1.4"/>
+  <text x="250" y="54" text-anchor="middle" font-size="10" fill="var(--da-primary, #6366f1)">«kubernetes»</text>
+  <text x="250" y="70" text-anchor="middle" font-size="12" font-weight="700"  fill="var(--da-fg, #0f172a)">Pod: orders-7f3a</text>
+  <line x1="40" y1="80" x2="460" y2="80" stroke="var(--da-primary, #6366f1)" stroke-width="1"/>
+  <text x="46" y="96" font-size="10.5" fill="var(--da-fg, #0f172a)">paylaşılan ağ ad alanı (localhost)</text>
+  <text x="46" y="111" font-size="10.5" fill="var(--da-fg, #0f172a)">paylaşılan volume (sertifikalar, log)</text>
+  <line x1="40" y1="118" x2="460" y2="118" stroke="var(--da-primary, #6366f1)" stroke-width="1"/>
+  <rect x="60" y="160" width="170" height="101" rx="4" fill="var(--da-surface, #ffffff)" stroke="var(--da-primary, #6366f1)" stroke-width="1.4"/>
+  <text x="145" y="174" text-anchor="middle" font-size="10" fill="var(--da-primary, #6366f1)">«container»</text>
+  <text x="145" y="190" text-anchor="middle" font-size="12" font-weight="700"  fill="var(--da-fg, #0f172a)">OrderApp</text>
+  <line x1="60" y1="200" x2="230" y2="200" stroke="var(--da-primary, #6366f1)" stroke-width="1"/>
+  <text x="66" y="216" font-size="10.5" fill="var(--da-fg, #0f172a)">dil: Java</text>
+  <text x="66" y="231" font-size="10.5" fill="var(--da-fg, #0f172a)">port 8080</text>
+  <line x1="60" y1="238" x2="230" y2="238" stroke="var(--da-primary, #6366f1)" stroke-width="1"/>
+  <text x="66" y="254" font-size="10.5"  fill="var(--da-fg, #0f172a)">+http.get("localhost:15001/inv")</text>
+  <rect x="270" y="160" width="170" height="131" rx="4" fill="var(--da-surface, #ffffff)" stroke="var(--da-primary, #6366f1)" stroke-width="1.4"/>
+  <text x="355" y="174" text-anchor="middle" font-size="10" fill="var(--da-primary, #6366f1)">«container»</text>
+  <text x="355" y="190" text-anchor="middle" font-size="12" font-weight="700"  fill="var(--da-fg, #0f172a)">EnvoySidecar</text>
+  <line x1="270" y1="200" x2="440" y2="200" stroke="var(--da-primary, #6366f1)" stroke-width="1"/>
+  <text x="276" y="216" font-size="10.5" fill="var(--da-fg, #0f172a)">port 15001 (out)</text>
+  <text x="276" y="231" font-size="10.5" fill="var(--da-fg, #0f172a)">port 15006 (in)</text>
+  <line x1="270" y1="238" x2="440" y2="238" stroke="var(--da-primary, #6366f1)" stroke-width="1"/>
+  <text x="276" y="254" font-size="10.5"  fill="var(--da-fg, #0f172a)">mTLS, retry, CB</text>
+  <text x="276" y="269" font-size="10.5"  fill="var(--da-fg, #0f172a)">metrics, tracing</text>
+  <text x="276" y="284" font-size="10.5"  fill="var(--da-fg, #0f172a)">yönlendirme</text>
+  <rect x="560" y="160" width="150" height="101" rx="4" fill="var(--da-surface, #ffffff)" stroke="var(--da-primary, #6366f1)" stroke-width="1.4"/>
+  <text x="635" y="174" text-anchor="middle" font-size="10" fill="var(--da-primary, #6366f1)">«container»</text>
+  <text x="635" y="190" text-anchor="middle" font-size="12" font-weight="700"  fill="var(--da-fg, #0f172a)">EnvoySidecar</text>
+  <line x1="560" y1="200" x2="710" y2="200" stroke="var(--da-primary, #6366f1)" stroke-width="1"/>
+  <text x="566" y="216" font-size="10.5" fill="var(--da-fg, #0f172a)">inventory pod</text>
+  <line x1="560" y1="223" x2="710" y2="223" stroke="var(--da-primary, #6366f1)" stroke-width="1"/>
+  <text x="566" y="239" font-size="10.5"  fill="var(--da-fg, #0f172a)">mTLS sonlandır</text>
+  <text x="566" y="254" font-size="10.5"  fill="var(--da-fg, #0f172a)">yetki (RBAC)</text>
+  <rect x="740" y="160" width="140" height="101" rx="4" fill="var(--da-surface, #ffffff)" stroke="var(--da-primary, #6366f1)" stroke-width="1.4"/>
+  <text x="810" y="174" text-anchor="middle" font-size="10" fill="var(--da-primary, #6366f1)">«container»</text>
+  <text x="810" y="190" text-anchor="middle" font-size="12" font-weight="700"  fill="var(--da-fg, #0f172a)">InventoryApp</text>
+  <line x1="740" y1="200" x2="880" y2="200" stroke="var(--da-primary, #6366f1)" stroke-width="1"/>
+  <text x="746" y="216" font-size="10.5" fill="var(--da-fg, #0f172a)">dil: Go</text>
+  <text x="746" y="231" font-size="10.5" fill="var(--da-fg, #0f172a)">port 9090</text>
+  <line x1="740" y1="238" x2="880" y2="238" stroke="var(--da-primary, #6366f1)" stroke-width="1"/>
+  <rect x="560" y="40" width="300" height="72" rx="4" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.4"/>
+  <text x="710" y="58" text-anchor="middle" font-size="12" font-weight="700"  fill="var(--da-fg, #0f172a)">ControlPlane (istiod)</text>
+  <line x1="560" y1="66" x2="860" y2="66" stroke="var(--da-fg, #0f172a)" stroke-width="1"/>
+  <text x="566" y="82" font-size="10.5" fill="var(--da-fg, #0f172a)">politika, sertifika, servis keşfi</text>
+  <line x1="560" y1="89" x2="860" y2="89" stroke="var(--da-fg, #0f172a)" stroke-width="1"/>
+  <text x="566" y="105" font-size="10.5"  fill="var(--da-fg, #0f172a)">+pushConfig(sidecars)</text>
+  <path d="M 230 210.5 L 270 225.5" stroke="var(--da-fg, #0f172a)" stroke-width="1.3" fill="none" marker-end="url(#m-open)"/>
+  <text x="250" y="213" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">localhost</text>
+  <path d="M 440 225.5 L 560 210.5" stroke="var(--da-fg, #0f172a)" stroke-width="1.3" fill="none" marker-end="url(#m-open)"/>
+  <text x="500" y="213" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">mTLS (ağ)</text>
+  <path d="M 710 210.5 L 740 210.5" stroke="var(--da-fg, #0f172a)" stroke-width="1.3" fill="none" marker-end="url(#m-open)"/>
+  <text x="725" y="205.5" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">localhost</text>
+  <path d="M 710 112 L 500 130 L 355 130 L 355 160" stroke="var(--da-fg, #0f172a)" stroke-width="1.3" fill="none" stroke-dasharray="5 4" marker-end="url(#m-open)"/>
+  <text x="427.5" y="125" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">xDS</text>
+  <path d="M 710 112 L 635 160" stroke="var(--da-fg, #0f172a)" stroke-width="1.3" fill="none" stroke-dasharray="5 4" marker-end="url(#m-open)"/>
+  <path d="M 40 290 L 450 290 L 460 300 L 460 346 L 40 346 z" fill="var(--da-accent, #f59e0b)" fill-opacity="0.12" stroke="var(--da-accent, #f59e0b)" stroke-width="1"/>
+  <text x="48" y="306" font-size="10.5" fill="var(--da-fg, #0f172a)">Uygulama kodunda retry/CB/TLS yok; dilden bağımsız olarak</text>
+  <text x="48" y="320" font-size="10.5" fill="var(--da-fg, #0f172a)">platform sağlar. Bedel: her pod'a ek bellek/CPU, bir atlama</text>
+  <text x="48" y="334" font-size="10.5" fill="var(--da-fg, #0f172a)">daha gecikme, ayrı bir yaşam döngüsü (sidecar sürümü).</text>
+</svg>

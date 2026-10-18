@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 400" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Strangler Fig UML sınıf diyagramı</title>
+  <desc id="desc">StranglerFacade yönlendiricisi istekleri yol ve yüzde kuralına göre LegacyMonolith ya da yeni CatalogService hedefine dağıtır. RouteTable hangi yolun hangi hedefe, hangi oranla gideceğini tutar. Veri senkronizasyonu için bir SyncJob eski ve yeni depoları eşler.</desc>
+  <defs>
+    <marker id="m-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+    <marker id="m-open" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M 1 1 L 9 5 L 1 9" fill="none" stroke="var(--da-fg, #0f172a)" stroke-width="1.4"/>
+    </marker>
+    <marker id="m-tri" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" orient="auto-start-reverse">
+      <path d="M 1 1 L 11 6 L 1 11 z" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.3"/>
+    </marker>
+    <marker id="m-dia" viewBox="0 0 14 10" refX="1" refY="5" markerWidth="14" markerHeight="10" orient="auto-start-reverse">
+      <path d="M 1 5 L 7 1 L 13 5 L 7 9 z" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.3"/>
+    </marker>
+    <marker id="m-diaf" viewBox="0 0 14 10" refX="1" refY="5" markerWidth="14" markerHeight="10" orient="auto-start-reverse">
+      <path d="M 1 5 L 7 1 L 13 5 L 7 9 z" fill="var(--da-fg, #0f172a)" stroke="var(--da-fg, #0f172a)" stroke-width="1.3"/>
+    </marker>
+    <marker id="m-primary" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-primary, #6366f1)"/>
+    </marker>
+    <marker id="m-danger" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-danger, #ef4444)"/>
+    </marker>
+    <marker id="m-success" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-success, #10b981)"/>
+    </marker>
+    <marker id="m-accent" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-accent, #f59e0b)"/>
+    </marker>
+  </defs>
+  <rect x="30" y="110" width="130" height="87" rx="4" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.4"/>
+  <text x="95" y="128" text-anchor="middle" font-size="12" font-weight="700"  fill="var(--da-fg, #0f172a)">Clients</text>
+  <line x1="30" y1="136" x2="160" y2="136" stroke="var(--da-fg, #0f172a)" stroke-width="1"/>
+  <line x1="30" y1="159" x2="160" y2="159" stroke="var(--da-fg, #0f172a)" stroke-width="1"/>
+  <text x="36" y="175" font-size="10.5"  fill="var(--da-fg, #0f172a)">GET /products</text>
+  <text x="36" y="190" font-size="10.5"  fill="var(--da-fg, #0f172a)">POST /orders</text>
+  <rect x="240" y="70" width="240" height="102" rx="4" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.4"/>
+  <text x="360" y="88" text-anchor="middle" font-size="12" font-weight="700"  fill="var(--da-fg, #0f172a)">StranglerFacade</text>
+  <line x1="240" y1="96" x2="480" y2="96" stroke="var(--da-fg, #0f172a)" stroke-width="1"/>
+  <text x="246" y="112" font-size="10.5" fill="var(--da-fg, #0f172a)">-routes: RouteTable</text>
+  <text x="246" y="127" font-size="10.5" fill="var(--da-fg, #0f172a)">-flags: FeatureFlags</text>
+  <line x1="240" y1="134" x2="480" y2="134" stroke="var(--da-fg, #0f172a)" stroke-width="1"/>
+  <text x="246" y="150" font-size="10.5"  fill="var(--da-fg, #0f172a)">+handle(req): Response</text>
+  <text x="246" y="165" font-size="10.5"  fill="var(--da-fg, #0f172a)">-pick(req): Target</text>
+  <rect x="240" y="240" width="240" height="102" rx="4" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.4"/>
+  <text x="360" y="258" text-anchor="middle" font-size="12" font-weight="700"  fill="var(--da-fg, #0f172a)">RouteTable</text>
+  <line x1="240" y1="266" x2="480" y2="266" stroke="var(--da-fg, #0f172a)" stroke-width="1"/>
+  <text x="246" y="282" font-size="10.5" fill="var(--da-fg, #0f172a)">/products  → new 100%</text>
+  <text x="246" y="297" font-size="10.5" fill="var(--da-fg, #0f172a)">/orders    → legacy 100%</text>
+  <text x="246" y="312" font-size="10.5" fill="var(--da-fg, #0f172a)">/search    → new 10% (canary)</text>
+  <line x1="240" y1="319" x2="480" y2="319" stroke="var(--da-fg, #0f172a)" stroke-width="1"/>
+  <rect x="600" y="40" width="230" height="87" rx="4" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.4"/>
+  <text x="715" y="58" text-anchor="middle" font-size="12" font-weight="700"  fill="var(--da-fg, #0f172a)">LegacyMonolith</text>
+  <line x1="600" y1="66" x2="830" y2="66" stroke="var(--da-fg, #0f172a)" stroke-width="1"/>
+  <text x="606" y="82" font-size="10.5" fill="var(--da-fg, #0f172a)">tüm yetenekler (küçülüyor)</text>
+  <text x="606" y="97" font-size="10.5" fill="var(--da-fg, #0f172a)">legacy-db</text>
+  <line x1="600" y1="104" x2="830" y2="104" stroke="var(--da-fg, #0f172a)" stroke-width="1"/>
+  <rect x="600" y="180" width="230" height="87" rx="4" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.4"/>
+  <text x="715" y="198" text-anchor="middle" font-size="12" font-weight="700"  fill="var(--da-fg, #0f172a)">CatalogService</text>
+  <line x1="600" y1="206" x2="830" y2="206" stroke="var(--da-fg, #0f172a)" stroke-width="1"/>
+  <text x="606" y="222" font-size="10.5" fill="var(--da-fg, #0f172a)">/products (taşındı)</text>
+  <text x="606" y="237" font-size="10.5" fill="var(--da-fg, #0f172a)">catalog-db</text>
+  <line x1="600" y1="244" x2="830" y2="244" stroke="var(--da-fg, #0f172a)" stroke-width="1"/>
+  <rect x="600" y="300" width="230" height="72" rx="4" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.4"/>
+  <text x="715" y="318" text-anchor="middle" font-size="12" font-weight="700"  fill="var(--da-fg, #0f172a)">SyncJob / CDC</text>
+  <line x1="600" y1="326" x2="830" y2="326" stroke="var(--da-fg, #0f172a)" stroke-width="1"/>
+  <text x="606" y="342" font-size="10.5" fill="var(--da-fg, #0f172a)">legacy-db → catalog-db (geçiş süresince)</text>
+  <line x1="600" y1="349" x2="830" y2="349" stroke="var(--da-fg, #0f172a)" stroke-width="1"/>
+  <path d="M 160 153.5 L 240 121" stroke="var(--da-fg, #0f172a)" stroke-width="1.3" fill="none" marker-end="url(#m-open)"/>
+  <path d="M 360 172 L 360 240" stroke="var(--da-fg, #0f172a)" stroke-width="1.3" fill="none" marker-start="url(#m-diaf)" marker-end="url(#m-open)"/>
+  <path d="M 480 121 L 600 83.5" stroke="var(--da-fg, #0f172a)" stroke-width="1.3" fill="none" marker-end="url(#m-open)"/>
+  <text x="540" y="97.25" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">kalanlar</text>
+  <path d="M 480 121 L 600 223.5" stroke="var(--da-fg, #0f172a)" stroke-width="1.3" fill="none" marker-end="url(#m-open)"/>
+  <text x="540" y="167.25" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">taşınan yollar</text>
+  <path d="M 715 300 L 715 267" stroke="var(--da-fg, #0f172a)" stroke-width="1.3" fill="none" stroke-dasharray="5 4" marker-end="url(#m-open)"/>
+  <path d="M 30 230 L 200 230 L 210 240 L 210 300 L 30 300 z" fill="var(--da-accent, #f59e0b)" fill-opacity="0.12" stroke="var(--da-accent, #f59e0b)" stroke-width="1"/>
+  <text x="38" y="246" font-size="10.5" fill="var(--da-fg, #0f172a)">Yol yol taşı; her adımda</text>
+  <text x="38" y="260" font-size="10.5" fill="var(--da-fg, #0f172a)">geri dönüş = tablo satırı.</text>
+  <text x="38" y="274" font-size="10.5" fill="var(--da-fg, #0f172a)">Monolit kuruyunca facade</text>
+  <text x="38" y="288" font-size="10.5" fill="var(--da-fg, #0f172a)">da kalkar.</text>
+</svg>

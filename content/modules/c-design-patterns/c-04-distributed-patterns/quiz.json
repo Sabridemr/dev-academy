@@ -1,0 +1,299 @@
+{
+  "id": "c-04-distributed-patterns-quiz",
+  "title": {
+    "tr": "Dağıtık Sistem Kalıpları Quiz",
+    "en": "Distributed Patterns Quiz"
+  },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Circuit breaker OPEN durumundayken bir çağrı geldiğinde ne olur?",
+        "en": "What happens when a call arrives while the circuit breaker is OPEN?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Çağrı normal şekilde iletilir ve sonucu sayılır",
+            "en": "The call is forwarded normally and its result is counted"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Çağrı ağa çıkmadan anında reddedilir ve varsa fallback çalışır",
+            "en": "The call is rejected instantly without touching the network and the fallback runs, if any"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "Çağrı üstel geri çekilmeyle yeniden denenir",
+            "en": "The call is retried with exponential backoff"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Çağrı kuyruğa alınıp breaker kapanınca iletilir",
+            "en": "The call is queued and forwarded when the breaker closes"
+          }
+        }
+      ],
+      "correct": [
+        "b"
+      ],
+      "explanation": {
+        "tr": "OPEN durumun amacı hasta servise hiç trafik göndermemek ve çağıranın kaynaklarını (iş parçacığı, bağlantı) hızlı hata ile korumaktır. Retry (c) breaker açıkken yapılmaz; kuyruğa alma (d) ancak uygulamanın kendi fallback kararı olabilir, breaker'ın davranışı değildir.",
+        "en": "The purpose of OPEN is to send no traffic at all to the sick service and to protect the caller's resources (threads, connections) by failing fast. Retry (c) is not performed while open; queuing (d) may be the application's own fallback decision, not the breaker's behavior."
+      },
+      "difficulty": "easy",
+      "concepts": [
+        "circuit-breaker"
+      ]
+    },
+    {
+      "id": "q2",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Hangi durumlarda yeniden deneme (retry) YAPILMAMALIDIR? (Birden fazla seçin)",
+        "en": "In which situations should you NOT retry? (Select all that apply)"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Yanıt 400 Bad Request ya da 404 Not Found",
+            "en": "The response is 400 Bad Request or 404 Not Found"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "İşlem idempotent değil ve idempotency anahtarı yok (ör. kart çekimi)",
+            "en": "The operation is not idempotent and has no idempotency key (e.g. a card charge)"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "Yanıt 503 Service Unavailable ve işlem idempotent",
+            "en": "The response is 503 Service Unavailable and the operation is idempotent"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Circuit breaker şu anda OPEN",
+            "en": "The circuit breaker is currently OPEN"
+          }
+        }
+      ],
+      "correct": [
+        "a",
+        "b",
+        "d"
+      ],
+      "explanation": {
+        "tr": "4xx hataları isteğin kendisinin hatalı olduğunu söyler; tekrar aynı sonucu verir. İdempotent olmayan işlemi yeniden denemek çift etki (iki kez çekim) yaratır. Breaker açıkken yeniden denemek hasta servise baskıyı artırır. 503 + idempotent (c) ise retry'ın tam da tasarlandığı durumdur.",
+        "en": "4xx errors say the request itself is wrong; retrying yields the same result. Retrying a non-idempotent operation creates double effects (two charges). Retrying while the breaker is open adds pressure on the sick service. 503 + idempotent (c) is exactly what retry is designed for."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "retry-backoff",
+        "idempotency"
+      ]
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": {
+        "tr": "Üstel geri çekilmeye (exponential backoff) jitter eklenmesinin asıl nedeni nedir?",
+        "en": "What is the main reason to add jitter to exponential backoff?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Toplam bekleme süresini kısaltmak",
+            "en": "To shorten the total wait time"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Aynı anda hata alan istemcilerin aynı anda yeniden denemesini (thundering herd) önlemek",
+            "en": "To prevent clients that failed together from retrying together (thundering herd)"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "Yeniden deneme sayısını artırmak",
+            "en": "To increase the number of retries"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Kalıcı hataları geçici hatalardan ayırmak",
+            "en": "To distinguish permanent errors from transient ones"
+          }
+        }
+      ],
+      "correct": [
+        "b"
+      ],
+      "explanation": {
+        "tr": "Jitter olmadan base·2ⁿ formülü tüm istemcilere aynı bekleme süresini verir; hepsi aynı milisaniyede geri döner ve toparlanan servisi dalga dalga tekrar düşürür. Rastgelelik denemeleri zamana yayar. Süreyi kısaltmak ya da sayıyı artırmak amaç değildir; hata sınıflandırması ayrı bir karardır.",
+        "en": "Without jitter the base·2ⁿ formula gives every client the same delay; they all return in the same millisecond and knock the recovering service over in waves. Randomness spreads attempts over time. Shortening the wait or adding attempts is not the goal; error classification is a separate decision."
+      },
+      "difficulty": "easy",
+      "concepts": [
+        "retry-backoff",
+        "jitter"
+      ]
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": {
+        "tr": "Bir servis siparişi veritabanına yazdıktan hemen sonra Kafka'ya OrderPlaced yayınlıyor. Dağıtımdan hemen önce süreç ikisinin arasında çöktü ve olay kayboldu. Doğru çözüm hangisidir?",
+        "en": "A service publishes OrderPlaced to Kafka right after writing the order to the database. The process crashed between the two just before a deploy and the event was lost. What is the correct fix?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Önce Kafka'ya yayınla, sonra veritabanına yaz",
+            "en": "Publish to Kafka first, then write to the database"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Yayınlamayı 3 kez yeniden dene",
+            "en": "Retry the publish 3 times"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "Olayı aynı veritabanı transaction'ında bir outbox tablosuna yaz; ayrı bir relay/CDC onu Kafka'ya taşısın",
+            "en": "Write the event to an outbox table in the same database transaction; let a separate relay/CDC move it to Kafka"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Veritabanı ve Kafka arasında iki fazlı commit kullan",
+            "en": "Use two-phase commit between the database and Kafka"
+          }
+        }
+      ],
+      "correct": [
+        "c"
+      ],
+      "explanation": {
+        "tr": "Çift yazımın sırasını değiştirmek sorunu taşır (olay var, sipariş yok). Retry çökme anında çalışamaz. Kafka 2PC desteklemez ve 2PC zaten kaçınılan bir yaklaşımdır. Outbox, yerel ACID ile iki yazımı atomik yapar; relay en az bir kez teslim sağlar, tüketici idempotent olur.",
+        "en": "Swapping the dual-write order just moves the problem (event without order). Retry cannot run at the moment of the crash. Kafka does not support 2PC, and 2PC is avoided anyway. The outbox makes both writes atomic via local ACID; the relay gives at-least-once delivery and the consumer is idempotent."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "outbox",
+        "dual-write"
+      ]
+    },
+    {
+      "id": "q5",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Bulkhead kalıbında, \"olsa iyi olur\" türünden bir bağımlılığın (ör. öneri servisi) yavaşlaması kritik yolun (ör. ödeme) iş parçacıklarını tüketemez çünkü her bağımlılığın ayrı bir eşzamanlılık havuzu vardır.",
+        "en": "In the Bulkhead pattern, a slowdown in a nice-to-have dependency (e.g. recommendations) cannot exhaust the threads of the critical path (e.g. payments) because each dependency has its own concurrency pool."
+      },
+      "options": [
+        {
+          "id": "t",
+          "text": {
+            "tr": "Doğru",
+            "en": "True"
+          }
+        },
+        {
+          "id": "f",
+          "text": {
+            "tr": "Yanlış",
+            "en": "False"
+          }
+        }
+      ],
+      "correct": [
+        "t"
+      ],
+      "explanation": {
+        "tr": "Doğru. Bulkhead, gemi bölmeleri gibi kapasiteyi bağımlılık başına ayırır; dolu bölme yalnızca kendi çağrılarını reddeder (hızlı ret + fallback). Ortak havuzda ise yavaş bağımlılık tüm iş parçacıklarını tutar ve zincirleme çökme (cascading failure) oluşur.",
+        "en": "True. Like ship compartments, a bulkhead partitions capacity per dependency; a full compartment rejects only its own calls (fast reject + fallback). With a shared pool, the slow dependency holds all threads and a cascading failure follows."
+      },
+      "difficulty": "easy",
+      "concepts": [
+        "bulkhead",
+        "cascading-failure"
+      ]
+    },
+    {
+      "id": "q6",
+      "type": "order",
+      "prompt": {
+        "tr": "Strangler Fig ile bir yeteneği monolitten yeni servise taşırken adımları doğru sıraya koyun.",
+        "en": "Put the steps of moving one capability from a monolith to a new service with Strangler Fig in the correct order."
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Trafiği %10 canary ile yeni servise aç, metrikleri karşılaştır",
+            "en": "Open 10% canary traffic to the new service, compare metrics"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Monolitin önüne yönlendirici facade koy (her şey hâlâ monolite)",
+            "en": "Put a routing facade in front of the monolith (everything still goes to the monolith)"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "%100'e çık, senkronizasyonu kes, monolitteki kodu sil",
+            "en": "Go to 100%, cut the sync, delete the code in the monolith"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Yeni servisi kur ve veriyi CDC/senkronizasyonla akıt",
+            "en": "Build the new service and stream data via CDC/sync"
+          }
+        }
+      ],
+      "correct": [
+        "b",
+        "d",
+        "a",
+        "c"
+      ],
+      "explanation": {
+        "tr": "Facade risksiz ilk adımdır ve sonraki her adımın kontrol noktasıdır; yeni servis ve veri hazır olmadan trafik açılamaz; canary metrikleri doğruladıktan sonra tam geçiş ve eski kodun silinmesi gelir. Silme adımı atlanırsa iki sistem sonsuza dek birlikte taşınır.",
+        "en": "The facade is the risk-free first step and the control point for everything after; traffic cannot open before the new service and its data are ready; after canary metrics validate, full cutover and deletion of the old code follow. Skip the deletion and you carry two systems forever."
+      },
+      "difficulty": "hard",
+      "concepts": [
+        "strangler-fig"
+      ]
+    }
+  ]
+}

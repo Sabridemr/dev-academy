@@ -210,7 +210,7 @@ export default function ConsistentHashingSim({ params, onInteract }: SimulatorPr
           return (
             <g key={k}>
               <title>{`${k} → ${loc.owner}`}</title>
-              <motion.circle cx={pos.x} cy={pos.y} r={3.5} animate={{ fill: colorOf(loc.owner) }} transition={{ duration: reduced ? 0 : 0.5 }} />
+              <circle cx={pos.x} cy={pos.y} r={3.5} fill={colorOf(loc.owner)} style={{ transition: reduced ? 'none' : 'fill 0.5s' }} />
               {moved && <circle cx={pos.x} cy={pos.y} r={6} fill="none" stroke="var(--da-danger)" strokeWidth={1.2} />}
             </g>
           );

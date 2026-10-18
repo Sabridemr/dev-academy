@@ -93,8 +93,8 @@ export default function RequestJourneySim({ params, onInteract }: SimulatorProps
   const raw = ['layers', 'path', 'stages', 'services'].map((k) => params[k]).find((v): v is string => typeof v === 'string' && v.trim().length > 0);
   const names = raw ? raw.split(',').map((s) => s.trim()).filter(Boolean).slice(0, 10) : DEFAULT_LAYERS;
   const withClient = classify(names[0]).kind === 'client' ? names : ['user', ...names];
-  const slowService = strParam(params, 'slowService', '');
-  const failureStage = strParam(params, 'failureStage', '');
+  const slowService = strParam<string>(params, 'slowService', '');
+  const failureStage = strParam<string>(params, 'failureStage', '');
   const layersKey = withClient.join(',');
   const hops: Hop[] = useMemo(
     () =>

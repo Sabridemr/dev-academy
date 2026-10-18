@@ -94,7 +94,7 @@ export default function CapTheoremSim({ params, onInteract }: SimulatorProps) {
   const l = L[locale];
   const reduced = usePrefersReducedMotion();
   const initialN = numParam(params, 'replicas', numParam(params, 'nodes', 3, 2, 5), 2, 5);
-  const consistency = strParam(params, 'consistency', '');
+  const consistency = strParam<string>(params, 'consistency', '');
   const [mode, setMode] = useState<Mode>(() => strParam(params, 'mode', consistency === 'eventual' ? 'ap' : 'cp', ['cp', 'ap'] as const));
   const [replicas, setReplicas] = useState<Replica[]>(() => makeReplicas(initialN));
   const [partition, setPartition] = useState(() => boolParam(params, 'partition', false));

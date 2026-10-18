@@ -13,6 +13,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   slug: 'devacademy',
   scheme: 'devacademy',
   version: '0.1.0',
+  // Yalnızca mobil hedefler (web sürümü ayrı Next.js uygulamasıdır: web/)
+  platforms: ['ios', 'android'],
   orientation: 'portrait',
   userInterfaceStyle: 'automatic',
   newArchEnabled: true,
@@ -29,9 +31,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     package: IS_DEV ? 'com.devacademy.app.dev' : 'com.devacademy.app',
     edgeToEdgeEnabled: true,
     permissions: ['POST_NOTIFICATIONS', 'SCHEDULE_EXACT_ALARM'],
-  },
-  web: {
-    bundler: 'metro',
   },
   plugins: [
     'expo-router',

@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 560" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Dağıtık sistem kalıplarının karşılaştırma haritası</title>
+  <desc id="desc">Dört grup: dayanıklılık (Circuit Breaker, Retry + Backoff, Bulkhead), platform (Sidecar), geçiş (Strangler Fig) ve tutarlılık (Outbox). Her kartta çözülen problem, mekanizma ve dikkat edilecek nokta. Altta kalıpların birlikte kullanım sırası ve karar akışı.</desc>
+  <defs>
+    <marker id="m-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+    <marker id="m-open" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M 1 1 L 9 5 L 1 9" fill="none" stroke="var(--da-fg, #0f172a)" stroke-width="1.4"/>
+    </marker>
+    <marker id="m-tri" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" orient="auto-start-reverse">
+      <path d="M 1 1 L 11 6 L 1 11 z" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.3"/>
+    </marker>
+    <marker id="m-dia" viewBox="0 0 14 10" refX="1" refY="5" markerWidth="14" markerHeight="10" orient="auto-start-reverse">
+      <path d="M 1 5 L 7 1 L 13 5 L 7 9 z" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.3"/>
+    </marker>
+    <marker id="m-diaf" viewBox="0 0 14 10" refX="1" refY="5" markerWidth="14" markerHeight="10" orient="auto-start-reverse">
+      <path d="M 1 5 L 7 1 L 13 5 L 7 9 z" fill="var(--da-fg, #0f172a)" stroke="var(--da-fg, #0f172a)" stroke-width="1.3"/>
+    </marker>
+    <marker id="m-primary" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-primary, #6366f1)"/>
+    </marker>
+    <marker id="m-danger" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-danger, #ef4444)"/>
+    </marker>
+    <marker id="m-success" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-success, #10b981)"/>
+    </marker>
+    <marker id="m-accent" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-accent, #f59e0b)"/>
+    </marker>
+  </defs>
+  <rect x="20" y="56" width="920" height="180" rx="14" fill="var(--da-danger, #ef4444)" fill-opacity="0.06" stroke="var(--da-danger, #ef4444)" stroke-dasharray="6 6" stroke-width="1"/>
+  <text x="34" y="76" font-size="12" font-weight="600" fill="var(--da-danger, #ef4444)">Dayanıklılık: bağımlılık hastayken ben nasıl ayakta kalırım?</text>
+  <rect x="20" y="256" width="300" height="160" rx="14" fill="var(--da-primary, #6366f1)" fill-opacity="0.06" stroke="var(--da-primary, #6366f1)" stroke-dasharray="6 6" stroke-width="1"/>
+  <text x="34" y="276" font-size="12" font-weight="600" fill="var(--da-primary, #6366f1)">Platform</text>
+  <rect x="335" y="256" width="300" height="160" rx="14" fill="var(--da-accent, #f59e0b)" fill-opacity="0.06" stroke="var(--da-accent, #f59e0b)" stroke-dasharray="6 6" stroke-width="1"/>
+  <text x="349" y="276" font-size="12" font-weight="600" fill="var(--da-accent, #f59e0b)">Geçiş</text>
+  <rect x="650" y="256" width="290" height="160" rx="14" fill="var(--da-success, #10b981)" fill-opacity="0.06" stroke="var(--da-success, #10b981)" stroke-dasharray="6 6" stroke-width="1"/>
+  <text x="664" y="276" font-size="12" font-weight="600" fill="var(--da-success, #10b981)">Tutarlılık</text>
+  <rect x="40" y="90" width="290" height="130" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-danger, #ef4444)" stroke-width="1.5"/>
+  <rect x="40" y="90" width="290" height="26" rx="10" fill="var(--da-danger, #ef4444)" fill-opacity="0.16"/>
+  <text x="185" y="107" text-anchor="middle" font-size="12.5" font-weight="700" fill="var(--da-fg, #0f172a)">Circuit Breaker</text>
+  <text x="50" y="134" font-size="10.5" fill="var(--da-fg, #0f172a)">Problem: hasta servise çağrı yığılır, çağıran da çöker</text>
+  <text x="50" y="149" font-size="10.5" fill="var(--da-fg, #0f172a)">Mekanizma: CLOSED → OPEN (hızlı ret) → HALF-OPEN</text>
+  <text x="50" y="164" font-size="10.5" fill="var(--da-fg, #0f172a)">Eşik: pencere içi hata oranı + min istek sayısı</text>
+  <text x="50" y="179" font-size="10.5" fill="var(--da-muted, #64748b)">Dikkat: fallback tasarla; durumu metrik olarak yayınla</text>
+  <text x="50" y="194" font-size="10.5" fill="var(--da-muted, #64748b)">Araç: Resilience4j, Polly, Envoy outlier detection</text>
+  <rect x="345" y="90" width="290" height="130" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-danger, #ef4444)" stroke-width="1.5"/>
+  <rect x="345" y="90" width="290" height="26" rx="10" fill="var(--da-danger, #ef4444)" fill-opacity="0.16"/>
+  <text x="490" y="107" text-anchor="middle" font-size="12.5" font-weight="700" fill="var(--da-fg, #0f172a)">Retry + Exponential Backoff</text>
+  <text x="355" y="134" font-size="10.5" fill="var(--da-fg, #0f172a)">Problem: geçici hatalar (503, timeout, 429)</text>
+  <text x="355" y="149" font-size="10.5" fill="var(--da-fg, #0f172a)">Mekanizma: base·2ⁿ, cap, FULL JITTER, max deneme</text>
+  <text x="355" y="164" font-size="10.5" fill="var(--da-fg, #0f172a)">Yalnızca idempotent işlem + geçici hata</text>
+  <text x="355" y="179" font-size="10.5" fill="var(--da-muted, #64748b)">Dikkat: jitter yoksa thundering herd; retry bütçesi</text>
+  <text x="355" y="194" font-size="10.5" fill="var(--da-muted, #64748b)">Breaker açıkken retry yapma</text>
+  <rect x="650" y="90" width="270" height="130" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-danger, #ef4444)" stroke-width="1.5"/>
+  <rect x="650" y="90" width="270" height="26" rx="10" fill="var(--da-danger, #ef4444)" fill-opacity="0.16"/>
+  <text x="785" y="107" text-anchor="middle" font-size="12.5" font-weight="700" fill="var(--da-fg, #0f172a)">Bulkhead</text>
+  <text x="660" y="134" font-size="10.5" fill="var(--da-fg, #0f172a)">Problem: bir bağımlılık tüm iş parçacıklarını yer</text>
+  <text x="660" y="149" font-size="10.5" fill="var(--da-fg, #0f172a)">Mekanizma: bağımlılık başına semafor / havuz</text>
+  <text x="660" y="164" font-size="10.5" fill="var(--da-fg, #0f172a)">Dolunca: kuyruk ya da anında ret + fallback</text>
+  <text x="660" y="179" font-size="10.5" fill="var(--da-muted, #64748b)">Dikkat: boyut = λ × W (Little); kritik yola büyük</text>
+  <text x="660" y="194" font-size="10.5" fill="var(--da-muted, #64748b)">Araç: thread pool, semaphore, k8s kaynak limiti</text>
+  <rect x="40" y="290" width="260" height="110" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-primary, #6366f1)" stroke-width="1.5"/>
+  <rect x="40" y="290" width="260" height="26" rx="10" fill="var(--da-primary, #6366f1)" fill-opacity="0.16"/>
+  <text x="170" y="307" text-anchor="middle" font-size="12.5" font-weight="700" fill="var(--da-fg, #0f172a)">Sidecar</text>
+  <text x="50" y="334" font-size="10.5" fill="var(--da-fg, #0f172a)">Yardımcı süreç aynı pod'da, localhost</text>
+  <text x="50" y="349" font-size="10.5" fill="var(--da-fg, #0f172a)">mTLS, retry, CB, metrik: koddan çıkar</text>
+  <text x="50" y="364" font-size="10.5" fill="var(--da-muted, #64748b)">Dilden bağımsız politika, merkezi yapılandırma</text>
+  <text x="50" y="379" font-size="10.5" fill="var(--da-muted, #64748b)">Bedel: bellek, +1 ms, ayrı yaşam döngüsü</text>
+  <rect x="355" y="290" width="260" height="110" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-accent, #f59e0b)" stroke-width="1.5"/>
+  <rect x="355" y="290" width="260" height="26" rx="10" fill="var(--da-accent, #f59e0b)" fill-opacity="0.16"/>
+  <text x="485" y="307" text-anchor="middle" font-size="12.5" font-weight="700" fill="var(--da-fg, #0f172a)">Strangler Fig</text>
+  <text x="365" y="334" font-size="10.5" fill="var(--da-fg, #0f172a)">Facade önde; yol yol yeni servise taşı</text>
+  <text x="365" y="349" font-size="10.5" fill="var(--da-fg, #0f172a)">kur → senkronize et → canary → %100 → sil</text>
+  <text x="365" y="364" font-size="10.5" fill="var(--da-muted, #64748b)">Geri dönüş = yönlendirme satırı</text>
+  <text x="365" y="379" font-size="10.5" fill="var(--da-muted, #64748b)">Dikkat: eski kodu silmeyi unutma</text>
+  <rect x="670" y="290" width="250" height="110" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-success, #10b981)" stroke-width="1.5"/>
+  <rect x="670" y="290" width="250" height="26" rx="10" fill="var(--da-success, #10b981)" fill-opacity="0.16"/>
+  <text x="795" y="307" text-anchor="middle" font-size="12.5" font-weight="700" fill="var(--da-fg, #0f172a)">Transactional Outbox</text>
+  <text x="680" y="334" font-size="10.5" fill="var(--da-fg, #0f172a)">DB + broker çift yazımı atomik değil</text>
+  <text x="680" y="349" font-size="10.5" fill="var(--da-fg, #0f172a)">Olayı aynı tx'te outbox tablosuna yaz</text>
+  <text x="680" y="364" font-size="10.5" fill="var(--da-fg, #0f172a)">Relay / CDC broker'a taşır → at-least-once</text>
+  <text x="680" y="379" font-size="10.5" fill="var(--da-muted, #64748b)">Tüketici idempotent olmalı</text>
+  <text x="480" y="34" text-anchor="middle" font-size="15" font-weight="700" fill="var(--da-fg, #0f172a)">Dağıtık sistem kalıpları: ağ güvenilmez, süreçler çöker, saatler kayar</text>
+  <text x="480" y="446" text-anchor="middle" font-size="12" font-weight="700" fill="var(--da-fg, #0f172a)">Bir çağrıda katman sırası</text>
+  <text x="480" y="468" text-anchor="middle" font-size="11" font-weight="400" fill="var(--da-fg, #0f172a)">istek → Bulkhead (izin) → Circuit Breaker (geçir / reddet) → Retry (geçici hata) → Timeout (her deneme) → ağ</text>
+  <text x="480" y="492" text-anchor="middle" font-size="11" font-weight="400" fill="var(--da-fg, #0f172a)">Yazma + olay → Outbox   |   Monolit → servis → Strangler Fig   |   Hepsini koddan çıkar → Sidecar</text>
+  <text x="480" y="528" text-anchor="middle" font-size="10.5" font-weight="400" fill="var(--da-muted, #64748b)">Ortak ilke: hatayı erken, ucuz ve sınırlı biçimde ver; hiç hata vermemeye çalışma.</text>
+</svg>

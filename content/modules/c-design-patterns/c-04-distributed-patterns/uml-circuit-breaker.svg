@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 400" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Circuit Breaker UML sınıf diyagramı</title>
+  <desc id="desc">CircuitBreaker sınıfı durum, hata sayacı, eşik ve açık kalma süresi alanlarıyla call metodunu sunar. Durumlar Closed, Open ve HalfOpen olarak State kalıbıyla modellenmiştir. PaymentClient breaker üzerinden uzak servisi çağırır.</desc>
+  <defs>
+    <marker id="m-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+    <marker id="m-open" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M 1 1 L 9 5 L 1 9" fill="none" stroke="var(--da-fg, #0f172a)" stroke-width="1.4"/>
+    </marker>
+    <marker id="m-tri" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" orient="auto-start-reverse">
+      <path d="M 1 1 L 11 6 L 1 11 z" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.3"/>
+    </marker>
+    <marker id="m-dia" viewBox="0 0 14 10" refX="1" refY="5" markerWidth="14" markerHeight="10" orient="auto-start-reverse">
+      <path d="M 1 5 L 7 1 L 13 5 L 7 9 z" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.3"/>
+    </marker>
+    <marker id="m-diaf" viewBox="0 0 14 10" refX="1" refY="5" markerWidth="14" markerHeight="10" orient="auto-start-reverse">
+      <path d="M 1 5 L 7 1 L 13 5 L 7 9 z" fill="var(--da-fg, #0f172a)" stroke="var(--da-fg, #0f172a)" stroke-width="1.3"/>
+    </marker>
+    <marker id="m-primary" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-primary, #6366f1)"/>
+    </marker>
+    <marker id="m-danger" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-danger, #ef4444)"/>
+    </marker>
+    <marker id="m-success" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-success, #10b981)"/>
+    </marker>
+    <marker id="m-accent" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-accent, #f59e0b)"/>
+    </marker>
+  </defs>
+  <rect x="30" y="110" width="170" height="72" rx="4" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.4"/>
+  <text x="115" y="128" text-anchor="middle" font-size="12" font-weight="700"  fill="var(--da-fg, #0f172a)">PaymentClient</text>
+  <line x1="30" y1="136" x2="200" y2="136" stroke="var(--da-fg, #0f172a)" stroke-width="1"/>
+  <text x="36" y="152" font-size="10.5" fill="var(--da-fg, #0f172a)">-breaker: CircuitBreaker</text>
+  <line x1="30" y1="159" x2="200" y2="159" stroke="var(--da-fg, #0f172a)" stroke-width="1"/>
+  <text x="36" y="175" font-size="10.5"  fill="var(--da-fg, #0f172a)">+charge(req)</text>
+  <rect x="270" y="40" width="280" height="177" rx="4" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.4"/>
+  <text x="410" y="58" text-anchor="middle" font-size="12" font-weight="700"  fill="var(--da-fg, #0f172a)">CircuitBreaker</text>
+  <line x1="270" y1="66" x2="550" y2="66" stroke="var(--da-fg, #0f172a)" stroke-width="1"/>
+  <text x="276" y="82" font-size="10.5" fill="var(--da-fg, #0f172a)">-state: BreakerState</text>
+  <text x="276" y="97" font-size="10.5" fill="var(--da-fg, #0f172a)">-failures: number</text>
+  <text x="276" y="112" font-size="10.5" fill="var(--da-fg, #0f172a)">-failureThreshold = 5</text>
+  <text x="276" y="127" font-size="10.5" fill="var(--da-fg, #0f172a)">-openForMs = 30000</text>
+  <text x="276" y="142" font-size="10.5" fill="var(--da-fg, #0f172a)">-openedAt?: number</text>
+  <line x1="270" y1="149" x2="550" y2="149" stroke="var(--da-fg, #0f172a)" stroke-width="1"/>
+  <text x="276" y="165" font-size="10.5"  fill="var(--da-fg, #0f172a)">+call&lt;T&gt;(fn: () =&gt; Promise&lt;T&gt;): Promise&lt;T&gt;</text>
+  <text x="276" y="180" font-size="10.5"  fill="var(--da-fg, #0f172a)">-onSuccess()</text>
+  <text x="276" y="195" font-size="10.5"  fill="var(--da-fg, #0f172a)">-onFailure()</text>
+  <text x="276" y="210" font-size="10.5"  fill="var(--da-fg, #0f172a)">+snapshot(): Metrics</text>
+  <rect x="680" y="40" width="200" height="101" rx="4" fill="var(--da-surface, #ffffff)" stroke="var(--da-primary, #6366f1)" stroke-width="1.4"/>
+  <text x="780" y="54" text-anchor="middle" font-size="10" fill="var(--da-primary, #6366f1)">«interface»</text>
+  <text x="780" y="70" text-anchor="middle" font-size="12" font-weight="700"  fill="var(--da-fg, #0f172a)">BreakerState</text>
+  <line x1="680" y1="80" x2="880" y2="80" stroke="var(--da-primary, #6366f1)" stroke-width="1"/>
+  <line x1="680" y1="103" x2="880" y2="103" stroke="var(--da-primary, #6366f1)" stroke-width="1"/>
+  <text x="686" y="119" font-size="10.5"  fill="var(--da-fg, #0f172a)">+allowRequest(): boolean</text>
+  <text x="686" y="134" font-size="10.5"  fill="var(--da-fg, #0f172a)">+onResult(ok: boolean)</text>
+  <rect x="590" y="250" width="130" height="87" rx="4" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.4"/>
+  <text x="655" y="268" text-anchor="middle" font-size="12" font-weight="700"  fill="var(--da-fg, #0f172a)">HalfOpen</text>
+  <line x1="590" y1="276" x2="720" y2="276" stroke="var(--da-fg, #0f172a)" stroke-width="1"/>
+  <line x1="590" y1="299" x2="720" y2="299" stroke="var(--da-fg, #0f172a)" stroke-width="1"/>
+  <text x="596" y="315" font-size="10.5"  fill="var(--da-fg, #0f172a)">1 deneme; ok → Closed,</text>
+  <text x="596" y="330" font-size="10.5"  fill="var(--da-fg, #0f172a)">hata → Open</text>
+  <rect x="735" y="250" width="130" height="72" rx="4" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.4"/>
+  <text x="800" y="268" text-anchor="middle" font-size="12" font-weight="700"  fill="var(--da-fg, #0f172a)">Closed</text>
+  <line x1="735" y1="276" x2="865" y2="276" stroke="var(--da-fg, #0f172a)" stroke-width="1"/>
+  <line x1="735" y1="299" x2="865" y2="299" stroke="var(--da-fg, #0f172a)" stroke-width="1"/>
+  <text x="741" y="315" font-size="10.5"  fill="var(--da-fg, #0f172a)">hata say; eşik → Open</text>
+  <rect x="870" y="250" width="120" height="87" rx="4" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.4"/>
+  <text x="930" y="268" text-anchor="middle" font-size="12" font-weight="700"  fill="var(--da-fg, #0f172a)">Open</text>
+  <line x1="870" y1="276" x2="990" y2="276" stroke="var(--da-fg, #0f172a)" stroke-width="1"/>
+  <line x1="870" y1="299" x2="990" y2="299" stroke="var(--da-fg, #0f172a)" stroke-width="1"/>
+  <text x="876" y="315" font-size="10.5"  fill="var(--da-fg, #0f172a)">hemen reddet;</text>
+  <text x="876" y="330" font-size="10.5"  fill="var(--da-fg, #0f172a)">süre → HalfOpen</text>
+  <path d="M 200 146 L 270 128.5" stroke="var(--da-fg, #0f172a)" stroke-width="1.3" fill="none" marker-end="url(#m-open)"/>
+  <text x="235" y="132.25" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">call(fn)</text>
+  <path d="M 550 128.5 L 680 90.5" stroke="var(--da-fg, #0f172a)" stroke-width="1.3" fill="none" marker-start="url(#m-dia)" marker-end="url(#m-open)"/>
+  <text x="615" y="104.5" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">state 1</text>
+  <path d="M 800 250 L 780 141" stroke="var(--da-fg, #0f172a)" stroke-width="1.3" fill="none" stroke-dasharray="5 4" marker-end="url(#m-tri)"/>
+  <path d="M 930 250 L 780 141" stroke="var(--da-fg, #0f172a)" stroke-width="1.3" fill="none" stroke-dasharray="5 4" marker-end="url(#m-tri)"/>
+  <path d="M 655 250 L 780 141" stroke="var(--da-fg, #0f172a)" stroke-width="1.3" fill="none" stroke-dasharray="5 4" marker-end="url(#m-tri)"/>
+  <path d="M 30 250 L 320 250 L 330 260 L 330 320 L 30 320 z" fill="var(--da-accent, #f59e0b)" fill-opacity="0.12" stroke="var(--da-accent, #f59e0b)" stroke-width="1"/>
+  <text x="38" y="266" font-size="10.5" fill="var(--da-fg, #0f172a)">Open durumunda çağrı ağa HİÇ çıkmaz:</text>
+  <text x="38" y="280" font-size="10.5" fill="var(--da-fg, #0f172a)">hızlı hata (fail fast) + fallback.</text>
+  <text x="38" y="294" font-size="10.5" fill="var(--da-fg, #0f172a)">Hasta servise nefes aldırır, çağıranın</text>
+  <text x="38" y="308" font-size="10.5" fill="var(--da-fg, #0f172a)">iş parçacıklarını korur.</text>
+</svg>

@@ -38,7 +38,7 @@ export default function AttentionSim({ params, onInteract }: SimulatorProps) {
   const { t, locale } = useI18n();
   const l = L[locale];
   const reduced = usePrefersReducedMotion();
-  const [sentence, setSentence] = useState(() => strParam(params, 'sentence', 'The cat sat on the mat because it was tired'));
+  const [sentence, setSentence] = useState(() => strParam<string>(params, 'sentence', 'The cat sat on the mat because it was tired'));
   const [temperature, setTemperature] = useState(() => numParam(params, 'temperature', 1, 0.1, 3));
   const [causal, setCausal] = useState(() => boolParam(params, 'causal', false));
   const headCount = numParam(params, 'heads', 1, 1, HEAD_DIMS.length);

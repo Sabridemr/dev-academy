@@ -78,7 +78,7 @@ export default function PipelineSim({ params, onInteract }: SimulatorProps) {
   const l = L[locale];
   const reduced = usePrefersReducedMotion();
   const stages = typeof params.stages === 'string' && params.stages.trim() ? params.stages.split(',').map((s) => s.trim()).filter(Boolean).slice(0, 12) : DEFAULT_STAGES;
-  const failureParam = strParam(params, 'failureStage', '');
+  const failureParam = strParam<string>(params, 'failureStage', '');
   const [failAt, setFailAt] = useState<string>(stages.includes(failureParam) ? failureParam : stages.find((s) => s.includes('test')) ?? stages[1] ?? stages[0]);
   const [inject, setInject] = useState(false);
   const [canaryErr, setCanaryErr] = useState(0.5);
@@ -224,7 +224,7 @@ export default function PipelineSim({ params, onInteract }: SimulatorProps) {
           const x = i * stageW;
           const st = status[i];
           return (
-            <g key={s}>
+            <g key={`${s}-${i}`}>
               {i > 0 && <line x1={x - 6} y1={44} x2={x + 6} y2={44} stroke={status[i - 1] === 'success' ? 'var(--da-success)' : 'var(--da-border)'} strokeWidth={2} />}
               <rect x={x + 6} y={22} width={stageW - 12} height={44} rx={10} fill={`color-mix(in srgb, ${color(st)} ${st === 'idle' ? 0 : 18}%, var(--da-surface))`} stroke={color(st)} strokeWidth={st === 'running' ? 2.5 : 1.5} />
               {st === 'running' && !reduced && (

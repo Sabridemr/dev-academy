@@ -13,7 +13,7 @@
     "lint": "tsc --noEmit -p tsconfig.json",
     "test": "jest",
     "test:watch": "jest --watch",
-    "build": "echo \"Mobil derleme EAS ile yapılır: eas build --platform all (bundle doğrulaması için: pnpm run export)\"",
+    "build": "expo export --platform all --output-dir dist",
     "export": "expo export --platform all",
     "test:e2e": "detox test --configuration ios.sim.debug",
     "test:e2e:android": "detox test --configuration android.emu.debug",
@@ -24,6 +24,12 @@
     "@expo/metro-runtime": "~5.0.5",
     "@expo/vector-icons": "^14.1.0",
     "@react-native-community/netinfo": "11.4.1",
+    "@react-navigation/bottom-tabs": "7.4.6",
+    "@react-navigation/core": "7.12.4",
+    "@react-navigation/elements": "2.6.3",
+    "@react-navigation/native": "7.1.17",
+    "@react-navigation/native-stack": "7.3.25",
+    "@react-navigation/routers": "7.5.1",
     "@tanstack/react-query": "^5.80.0",
     "expo": "~53.0.27",
     "expo-apple-authentication": "~7.2.4",
@@ -65,5 +71,14 @@
     "jest-expo": "~53.0.14",
     "react-test-renderer": "19.0.0",
     "typescript": "~5.8.3"
+  },
+  "expo": {
+    "install": {
+      "exclude": [
+        "@react-navigation/native",
+        "@react-navigation/bottom-tabs",
+        "@react-navigation/native-stack"
+      ]
+    }
   }
 }

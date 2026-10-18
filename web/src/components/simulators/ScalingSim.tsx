@@ -83,7 +83,7 @@ export default function ScalingSim({ params, onInteract }: SimulatorProps) {
   const [autoscale, setAutoscale] = useState(() => boolParam(params, 'autoscale', false));
   const [wave, setWave] = useState(false);
   const [failedZone, setFailedZone] = useState<number | null>(null);
-  const failureZoneParam = strParam(params, 'failureZone', '');
+  const failureZoneParam = strParam<string>(params, 'failureZone', '');
   const mode = strParam(params, 'mode', 'both', ['both', 'vertical', 'horizontal'] as const);
 
   // Trafik dalgası: sinüs ile gerçekçi yük değişimi

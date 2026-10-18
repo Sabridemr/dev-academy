@@ -63,7 +63,7 @@ export default function GradientDescentSim({ params, onInteract }: SimulatorProp
   const { t, locale } = useI18n();
   const l = L[locale];
   // "saddle" MSE için mümkün değil (kayıp dışbükey); en yakın öğretici varyant olan vadiye düşülür
-  const initialSurface: Surface = strParam(params, 'surface', 'bowl') === 'bowl' ? 'bowl' : 'valley';
+  const initialSurface: Surface = strParam<string>(params, 'surface', 'bowl') === 'bowl' ? 'bowl' : 'valley';
   const [surface, setSurface] = useState<Surface>(initialSurface);
   const data = useMemo(() => makeData(surface), [surface]);
   const [start, setStart] = useState<RegressionParams>(() => ({ w: numParam(params, 'startX', -3, -4, 6), b: -6 }));

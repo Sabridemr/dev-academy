@@ -1,0 +1,393 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "c-04-bulkhead",
+  "title": {
+    "tr": "Bulkhead: Bölmeler Su Alsa da Gemi Batmaz",
+    "en": "Bulkhead: Compartments Flood, the Ship Floats"
+  },
+  "summary": {
+    "tr": "OrderService ödeme ve öneri çağrılarını ayrı eşzamanlılık havuzlarından yapar; öneri servisi yavaşlayınca yalnızca kendi havuzu dolar, ödeme çağrıları etkilenmez.",
+    "en": "OrderService makes payment and recommendation calls from separate concurrency pools; when the recommendation service slows down only its own pool saturates, payment calls are unaffected."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda OrderService, ortada üstte payments havuzu (20 izin) ve altta recommendations havuzu (5 izin), sağda PaymentService ve RecommendationService. Normalde her iki havuz da düşük dolulukta çalışır. RecommendationService yavaşlayınca recommendations havuzu 5/5 dolar ve yeni öneri istekleri hemen reddedilip boş liste döner; payments havuzu normal çalışmaya devam eder. Son adım havuzsuz durumda tüm iş parçacıklarının tükenişini anlatır.",
+      "en": "OrderService on the left, the payments pool (20 permits) top middle and the recommendations pool (5 permits) bottom middle, PaymentService and RecommendationService on the right. Normally both pools run at low occupancy. When RecommendationService slows down, the recommendations pool fills to 5/5 and new recommendation requests are rejected instantly with an empty list; the payments pool keeps working. The last step describes how, without pools, all threads would be exhausted."
+    }
+  },
+  "canvas": {
+    "width": 1000,
+    "height": 600
+  },
+  "nodes": [
+    {
+      "id": "svc",
+      "kind": "generic",
+      "label": "OrderService",
+      "x": 110,
+      "y": 300,
+      "w": 170,
+      "h": 70,
+      "sublabel": {
+        "tr": "200 iş parçacığı",
+        "en": "200 threads"
+      }
+    },
+    {
+      "id": "pool-pay",
+      "kind": "generic",
+      "label": "payments pool",
+      "x": 480,
+      "y": 160,
+      "w": 200,
+      "h": 70,
+      "sublabel": {
+        "tr": "inFlight 3/20",
+        "en": "inFlight 3/20"
+      }
+    },
+    {
+      "id": "pool-rec",
+      "kind": "generic",
+      "label": "recommendations pool",
+      "x": 480,
+      "y": 440,
+      "w": 220,
+      "h": 70,
+      "sublabel": {
+        "tr": "inFlight 1/5 · queue 0",
+        "en": "inFlight 1/5 · queue 0"
+      }
+    },
+    {
+      "id": "pay",
+      "kind": "generic",
+      "label": "PaymentService",
+      "x": 850,
+      "y": 160,
+      "w": 180,
+      "h": 64,
+      "sublabel": {
+        "tr": "80 ms",
+        "en": "80 ms"
+      }
+    },
+    {
+      "id": "rec",
+      "kind": "generic",
+      "label": "RecommendationService",
+      "x": 850,
+      "y": 440,
+      "w": 200,
+      "h": 64,
+      "sublabel": {
+        "tr": "40 ms",
+        "en": "40 ms"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "s-pp",
+      "from": "svc",
+      "to": "pool-pay",
+      "kind": "request",
+      "label": "charge()"
+    },
+    {
+      "id": "s-pr",
+      "from": "svc",
+      "to": "pool-rec",
+      "kind": "request",
+      "label": "suggest()"
+    },
+    {
+      "id": "pp-pay",
+      "from": "pool-pay",
+      "to": "pay",
+      "kind": "request"
+    },
+    {
+      "id": "pr-rec",
+      "from": "pool-rec",
+      "to": "rec",
+      "kind": "request"
+    }
+  ],
+  "steps": [
+    {
+      "id": "normal",
+      "title": {
+        "tr": "1. İki bağımlılık, iki bölme",
+        "en": "1. Two dependencies, two compartments"
+      },
+      "narration": {
+        "tr": "OrderService her bağımlılığı kendi bulkhead'i üzerinden çağırır: ödeme için 20, öneri için 5 eşzamanlı izin. Kritik olan ödemeye büyük, \"olsa iyi olur\" olan öneriye küçük bölme.",
+        "en": "OrderService calls each dependency through its own bulkhead: 20 concurrent permits for payments, 5 for recommendations. The critical payment path gets a big compartment, the nice-to-have recommendations a small one."
+      },
+      "durationMs": 4000,
+      "inherit": false,
+      "highlight": {
+        "nodes": [
+          "pool-pay",
+          "pool-rec"
+        ],
+        "edges": [
+          "s-pp",
+          "s-pr"
+        ]
+      },
+      "nodeStates": {
+        "pool-pay": {
+          "status": "success",
+          "progress": 0.15
+        },
+        "pool-rec": {
+          "status": "success",
+          "progress": 0.2
+        }
+      },
+      "edgeStates": {},
+      "packets": [
+        {
+          "edge": "s-pp",
+          "shape": "envelope",
+          "durationMs": 600,
+          "repeat": 2,
+          "repeatGapMs": 500
+        },
+        {
+          "edge": "pp-pay",
+          "startAt": 600,
+          "durationMs": 600,
+          "repeat": 2,
+          "repeatGapMs": 500
+        },
+        {
+          "edge": "s-pr",
+          "startAt": 300,
+          "shape": "envelope",
+          "durationMs": 600
+        },
+        {
+          "edge": "pr-rec",
+          "startAt": 900,
+          "durationMs": 600
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a1",
+          "x": 480,
+          "y": 300,
+          "text": {
+            "tr": "izin = semafor; dolunca bekleme ya da anında ret",
+            "en": "permit = semaphore; when full, queue or reject instantly"
+          },
+          "target": "pool-pay"
+        }
+      ]
+    },
+    {
+      "id": "slow",
+      "title": {
+        "tr": "2. Öneri servisi yavaşlıyor",
+        "en": "2. Recommendations slow down"
+      },
+      "narration": {
+        "tr": "RecommendationService 40 ms yerine 8 s yanıt vermeye başlar. Her öneri çağrısı iznini 8 s tutar; havuz hızla 5/5 dolar.",
+        "en": "RecommendationService starts responding in 8 s instead of 40 ms. Each recommendation call holds its permit for 8 s; the pool quickly fills to 5/5."
+      },
+      "durationMs": 3500,
+      "highlight": {
+        "nodes": [
+          "rec",
+          "pool-rec"
+        ],
+        "edges": [
+          "pr-rec"
+        ]
+      },
+      "nodeStates": {
+        "rec": {
+          "status": "error",
+          "sublabel": {
+            "tr": "8 s",
+            "en": "8 s"
+          }
+        },
+        "pool-rec": {
+          "status": "error",
+          "progress": 1,
+          "sublabel": {
+            "tr": "inFlight 5/5 · queue 0",
+            "en": "inFlight 5/5 · queue 0"
+          },
+          "badge": "FULL"
+        }
+      },
+      "edgeStates": {
+        "pr-rec": {
+          "status": "error"
+        }
+      },
+      "packets": [
+        {
+          "edge": "s-pr",
+          "shape": "envelope",
+          "durationMs": 500,
+          "repeat": 5,
+          "repeatGapMs": 200
+        },
+        {
+          "edge": "pr-rec",
+          "startAt": 500,
+          "shape": "envelope",
+          "color": "danger",
+          "durationMs": 1500,
+          "repeat": 3,
+          "repeatGapMs": 0
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "id": "isolated",
+      "title": {
+        "tr": "3. Bölme dolu: hızlı ret, ödeme etkilenmez",
+        "en": "3. Compartment full: fast reject, payments unaffected"
+      },
+      "narration": {
+        "tr": "Yeni öneri istekleri izin alamaz ve 0 ms'de BulkheadFullError ile reddedilir; fallback boş öneri listesi döner, sayfa önerisiz ama hızlı yüklenir. payments havuzu 3/20 ile normal çalışır: sipariş akışı hiç etkilenmez.",
+        "en": "New recommendation requests cannot get a permit and are rejected in 0 ms with BulkheadFullError; the fallback returns an empty list, the page loads without recommendations but fast. The payments pool runs normally at 3/20: the order flow is untouched."
+      },
+      "durationMs": 4500,
+      "highlight": {
+        "nodes": [
+          "pool-rec",
+          "pool-pay",
+          "pay"
+        ],
+        "edges": [
+          "s-pr",
+          "s-pp",
+          "pp-pay"
+        ]
+      },
+      "nodeStates": {
+        "pool-pay": {
+          "status": "success",
+          "badge": "OK"
+        }
+      },
+      "edgeStates": {},
+      "packets": [
+        {
+          "edge": "s-pr",
+          "shape": "envelope",
+          "durationMs": 500
+        },
+        {
+          "edge": "s-pr",
+          "startAt": 500,
+          "direction": "backward",
+          "color": "warning",
+          "label": "BulkheadFull → []",
+          "durationMs": 500
+        },
+        {
+          "edge": "s-pp",
+          "startAt": 300,
+          "shape": "envelope",
+          "durationMs": 600,
+          "repeat": 3,
+          "repeatGapMs": 400
+        },
+        {
+          "edge": "pp-pay",
+          "startAt": 900,
+          "durationMs": 600,
+          "repeat": 3,
+          "repeatGapMs": 400
+        },
+        {
+          "edge": "pp-pay",
+          "startAt": 1600,
+          "direction": "backward",
+          "color": "success",
+          "label": "200",
+          "durationMs": 500
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a3",
+          "x": 850,
+          "y": 300,
+          "text": {
+            "tr": "hasar sınırlı: yalnızca öneri yok",
+            "en": "damage contained: only recommendations missing"
+          },
+          "tone": "success"
+        }
+      ]
+    },
+    {
+      "id": "without",
+      "title": {
+        "tr": "4. Bölme olmasaydı",
+        "en": "4. Without compartments"
+      },
+      "narration": {
+        "tr": "Tek ortak havuz (200 iş parçacığı) olsaydı: 8 saniyelik öneri çağrıları dakikalar içinde 200 iş parçacığının tamamını tutar, ödeme istekleri sıraya girer, OrderService tamamen yanıt vermez olur. \"Olsa iyi olur\" bir özellik, kritik akışı batırır: zincirleme çökme (cascading failure).",
+        "en": "With one shared pool (200 threads): 8-second recommendation calls would hold all 200 threads within minutes, payment requests would queue up and OrderService would stop responding entirely. A nice-to-have feature sinks the critical flow: cascading failure."
+      },
+      "durationMs": 4000,
+      "highlight": {
+        "nodes": [
+          "svc"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "svc": {
+          "status": "warning",
+          "badge": "!"
+        }
+      },
+      "edgeStates": {},
+      "packets": [],
+      "annotations": [
+        {
+          "id": "a4",
+          "x": 110,
+          "y": 430,
+          "text": {
+            "tr": "ortak havuz: 200/200 öneriye gider, ödeme bekler",
+            "en": "shared pool: 200/200 go to recommendations, payments wait"
+          },
+          "tone": "danger",
+          "target": "svc"
+        },
+        {
+          "id": "a5",
+          "x": 480,
+          "y": 300,
+          "text": {
+            "tr": "bölme boyutu = Little yasası: λ × W",
+            "en": "pool size = Little's law: λ × W"
+          },
+          "tone": "info"
+        }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": [
+    "bulkhead",
+    "resilience",
+    "isolation"
+  ]
+}

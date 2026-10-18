@@ -1,0 +1,379 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "c-04-retry-backoff",
+  "title": {
+    "tr": "Retry + Exponential Backoff + Jitter",
+    "en": "Retry + Exponential Backoff + Jitter"
+  },
+  "summary": {
+    "tr": "Geçici hata alan istemci giderek artan ve rastgeleleştirilmiş aralıklarla yeniden dener; jitter olmadan tüm istemcilerin aynı anda geri dönmesi (thundering herd) gösterilir.",
+    "en": "A client hitting a transient error retries with growing, randomized delays; without jitter all clients return at the same moment (thundering herd)."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda istemci, ortada RetryPolicy, sağda InventoryService. İlk deneme 503 alır; politika 100 ms civarı rastgele bekler; ikinci deneme yine 503; 200 ms civarı bekler; üçüncü deneme başarılı olur. Son adımda yüzlerce istemcinin jitter olmadan aynı anda yeniden denemesinin servisi tekrar düşürdüğü gösterilir.",
+      "en": "Client on the left, RetryPolicy in the middle, InventoryService on the right. The first attempt gets 503; the policy waits a random time around 100 ms; the second attempt gets 503 again; it waits around 200 ms; the third attempt succeeds. The last step shows hundreds of clients retrying at the same moment without jitter and knocking the service over again."
+    }
+  },
+  "canvas": {
+    "width": 1000,
+    "height": 600
+  },
+  "nodes": [
+    {
+      "id": "client",
+      "kind": "generic",
+      "label": "CheckoutService",
+      "x": 110,
+      "y": 300,
+      "w": 180,
+      "h": 70,
+      "sublabel": {
+        "tr": "reserve(items) · idempotent",
+        "en": "reserve(items) · idempotent"
+      }
+    },
+    {
+      "id": "policy",
+      "kind": "generic",
+      "label": "RetryPolicy",
+      "x": 480,
+      "y": 300,
+      "w": 230,
+      "h": 90,
+      "sublabel": {
+        "tr": "attempt 0 · base 100 ms · cap 5 s",
+        "en": "attempt 0 · base 100 ms · cap 5 s"
+      }
+    },
+    {
+      "id": "svc",
+      "kind": "generic",
+      "label": "InventoryService",
+      "x": 850,
+      "y": 300,
+      "w": 180,
+      "h": 70,
+      "sublabel": {
+        "tr": "kısa süreli aşırı yük",
+        "en": "brief overload"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "c-p",
+      "from": "client",
+      "to": "policy",
+      "kind": "request",
+      "label": "execute(fn)"
+    },
+    {
+      "id": "p-svc",
+      "from": "policy",
+      "to": "svc",
+      "kind": "request",
+      "label": "POST /reservations (key=order-42)"
+    }
+  ],
+  "steps": [
+    {
+      "id": "attempt1",
+      "title": {
+        "tr": "1. Deneme 1: 503",
+        "en": "1. Attempt 1: 503"
+      },
+      "narration": {
+        "tr": "Çağrı Idempotency-Key ile gider; servis aşırı yüklü, 503 döner. Politika hatayı \"geçici\" olarak sınıflandırır (503, 429, timeout, bağlantı reseti) ve yeniden denemeye karar verir. 400/404 olsaydı hemen fırlatırdı.",
+        "en": "The call goes out with an Idempotency-Key; the service is overloaded and returns 503. The policy classifies the error as transient (503, 429, timeout, connection reset) and decides to retry. A 400/404 would have been thrown immediately."
+      },
+      "durationMs": 3500,
+      "inherit": false,
+      "highlight": {
+        "nodes": [
+          "policy",
+          "svc"
+        ],
+        "edges": [
+          "c-p",
+          "p-svc"
+        ]
+      },
+      "nodeStates": {
+        "policy": {
+          "status": "active",
+          "badge": "1/4"
+        },
+        "svc": {
+          "status": "error"
+        }
+      },
+      "edgeStates": {},
+      "packets": [
+        {
+          "edge": "c-p",
+          "shape": "envelope",
+          "durationMs": 600
+        },
+        {
+          "edge": "p-svc",
+          "startAt": 700,
+          "shape": "envelope",
+          "durationMs": 700
+        },
+        {
+          "edge": "p-svc",
+          "startAt": 1500,
+          "direction": "backward",
+          "color": "danger",
+          "label": "503",
+          "durationMs": 700
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a1",
+          "x": 480,
+          "y": 160,
+          "text": {
+            "tr": "yalnızca geçici hata + idempotent işlem",
+            "en": "only transient errors + idempotent operations"
+          },
+          "tone": "warning",
+          "target": "policy"
+        }
+      ]
+    },
+    {
+      "id": "backoff1",
+      "title": {
+        "tr": "2. Bekle: rand(0, 100 ms)",
+        "en": "2. Wait: rand(0, 100 ms)"
+      },
+      "narration": {
+        "tr": "Full jitter: bekleme süresi 0 ile min(cap, base·2⁰) = 100 ms arasında rastgele seçilir: 63 ms. Rastgelelik, aynı anda hata alan binlerce istemcinin aynı anda geri dönmesini engeller.",
+        "en": "Full jitter: the delay is drawn uniformly between 0 and min(cap, base·2⁰) = 100 ms: 63 ms. Randomness prevents thousands of clients that failed together from returning together."
+      },
+      "durationMs": 3000,
+      "highlight": {
+        "nodes": [
+          "policy"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "policy": {
+          "badge": "sleep 63 ms",
+          "sublabel": {
+            "tr": "attempt 1 · next ≤ 100 ms",
+            "en": "attempt 1 · next ≤ 100 ms"
+          }
+        }
+      },
+      "edgeStates": {},
+      "packets": [],
+      "annotations": [
+        {
+          "id": "a2",
+          "x": 480,
+          "y": 440,
+          "text": {
+            "tr": "delay = rand(0, min(cap, base × 2^attempt))",
+            "en": "delay = rand(0, min(cap, base × 2^attempt))"
+          },
+          "tone": "info",
+          "target": "policy"
+        }
+      ]
+    },
+    {
+      "id": "attempt2",
+      "title": {
+        "tr": "3. Deneme 2: 503, bekle: rand(0, 200 ms)",
+        "en": "3. Attempt 2: 503, wait: rand(0, 200 ms)"
+      },
+      "narration": {
+        "tr": "İkinci deneme de 503 alır. Üst sınır ikiye katlanır: rand(0, 200) = 171 ms. Her başarısız denemede pencere büyür; cap (5 s) tavanı aşmayı önler. Toplam deneme sayısı sınırlıdır (4): sonsuz retry, kesintiyi uzatır.",
+        "en": "The second attempt also gets 503. The window doubles: rand(0, 200) = 171 ms. Each failed attempt widens the window; the cap (5 s) bounds it. The total attempt count is limited (4): infinite retries prolong outages."
+      },
+      "durationMs": 4000,
+      "highlight": {
+        "nodes": [
+          "policy",
+          "svc"
+        ],
+        "edges": [
+          "p-svc"
+        ]
+      },
+      "nodeStates": {
+        "policy": {
+          "badge": "2/4 · sleep 171 ms",
+          "sublabel": {
+            "tr": "attempt 2 · next ≤ 200 ms",
+            "en": "attempt 2 · next ≤ 200 ms"
+          }
+        }
+      },
+      "edgeStates": {},
+      "packets": [
+        {
+          "edge": "p-svc",
+          "shape": "envelope",
+          "durationMs": 700
+        },
+        {
+          "edge": "p-svc",
+          "startAt": 800,
+          "direction": "backward",
+          "color": "danger",
+          "label": "503",
+          "durationMs": 700
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "id": "success",
+      "title": {
+        "tr": "4. Deneme 3: başarılı",
+        "en": "4. Attempt 3: success"
+      },
+      "narration": {
+        "tr": "Servis toparlanmıştır; 201 döner. Aynı Idempotency-Key sayesinde önceki denemelerden biri aslında işlenmiş olsa bile çift rezervasyon oluşmaz. Retry bütçesi: toplam trafiğin %10'undan fazlası yeniden deneme olmamalı; aşılırsa circuit breaker devreye girmeli.",
+        "en": "The service has recovered; 201 returns. Thanks to the same Idempotency-Key, no double reservation occurs even if an earlier attempt was actually processed. Retry budget: retries should not exceed 10% of total traffic; beyond that the circuit breaker should take over."
+      },
+      "durationMs": 3500,
+      "highlight": {
+        "nodes": [
+          "client",
+          "svc"
+        ],
+        "edges": [
+          "p-svc",
+          "c-p"
+        ]
+      },
+      "nodeStates": {
+        "policy": {
+          "status": "success",
+          "badge": "3/4 ✓"
+        },
+        "svc": {
+          "status": "success",
+          "sublabel": {
+            "tr": "toparlandı",
+            "en": "recovered"
+          }
+        }
+      },
+      "edgeStates": {},
+      "packets": [
+        {
+          "edge": "p-svc",
+          "shape": "envelope",
+          "durationMs": 700
+        },
+        {
+          "edge": "p-svc",
+          "startAt": 800,
+          "direction": "backward",
+          "color": "success",
+          "label": "201",
+          "durationMs": 700
+        },
+        {
+          "edge": "c-p",
+          "startAt": 1600,
+          "direction": "backward",
+          "color": "success",
+          "durationMs": 600
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "id": "herd",
+      "title": {
+        "tr": "5. Jitter olmazsa: thundering herd",
+        "en": "5. Without jitter: thundering herd"
+      },
+      "narration": {
+        "tr": "Jitter yoksa, aynı saniyede hata alan 1000 istemci tam 100 ms sonra, sonra tam 200 ms sonra AYNI ANDA geri döner; toparlanmaya çalışan servis her dalgada tekrar düşer. Retry, dikkatsiz kullanıldığında DDoS aracıdır.",
+        "en": "Without jitter, 1000 clients that failed in the same second return at exactly 100 ms, then exactly 200 ms, ALL AT ONCE; the recovering service falls over on every wave. Used carelessly, retry is a DDoS tool."
+      },
+      "durationMs": 4500,
+      "highlight": {
+        "nodes": [
+          "svc"
+        ],
+        "edges": [
+          "p-svc"
+        ]
+      },
+      "nodeStates": {
+        "policy": {
+          "status": "warning",
+          "badge": "jitter: OFF",
+          "sublabel": {
+            "tr": "1000 istemci · aynı zamanlama",
+            "en": "1000 clients · same timing"
+          }
+        },
+        "svc": {
+          "status": "error",
+          "sublabel": {
+            "tr": "dalga dalga çöküş",
+            "en": "collapsing in waves"
+          }
+        }
+      },
+      "edgeStates": {
+        "p-svc": {
+          "status": "error"
+        }
+      },
+      "packets": [
+        {
+          "edge": "p-svc",
+          "shape": "dot",
+          "color": "danger",
+          "durationMs": 500,
+          "repeat": 8,
+          "repeatGapMs": 0
+        },
+        {
+          "edge": "p-svc",
+          "startAt": 1800,
+          "shape": "dot",
+          "color": "danger",
+          "durationMs": 500,
+          "repeat": 8,
+          "repeatGapMs": 0
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a5",
+          "x": 850,
+          "y": 170,
+          "text": {
+            "tr": "senkronize dalgalar: jitter ŞART",
+            "en": "synchronized waves: jitter is MANDATORY"
+          },
+          "tone": "danger",
+          "target": "svc"
+        }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": [
+    "retry",
+    "backoff",
+    "jitter",
+    "resilience"
+  ]
+}

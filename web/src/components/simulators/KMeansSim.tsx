@@ -131,7 +131,7 @@ export default function KMeansSim({ params, onInteract }: SimulatorProps) {
   const reduced = usePrefersReducedMotion();
   const [seed, setSeed] = useState(3);
   const [k, setK] = useState(() => numParam(params, 'k', 3, 1, 8));
-  const [init, setInit] = useState<Init>(() => (strParam(params, 'init', 'random') === 'kmeans++' || strParam(params, 'init', 'random') === 'k-means++' ? 'kmeans++' : 'random'));
+  const [init, setInit] = useState<Init>(() => (strParam<string>(params, 'init', 'random') === 'kmeans++' || strParam<string>(params, 'init', 'random') === 'k-means++' ? 'kmeans++' : 'random'));
   const points = useMemo(() => makeData(seed), [seed]);
   const [centroids, setCentroids] = useState<P[]>(() => initCentroids(points, k, init, seed));
   const [labels, setLabels] = useState<number[]>([]);

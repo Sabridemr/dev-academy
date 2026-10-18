@@ -115,7 +115,7 @@ export function ScenePlayer({ scene, caption, autoPlay = false, onFirstPlay, tes
         ) : null}
       </View>
 
-      <View onLayout={onLayout} style={[styles.canvas, { backgroundColor: withAlpha(colors.bg, 0.6) }]}>
+      <View onLayout={onLayout} testID="scene-canvas-container" style={[styles.canvas, { backgroundColor: withAlpha(colors.bg, 0.6) }]}>
         <SceneCanvas scene={scene} view={view} elapsedMs={state.elapsedMs} reducedMotion={state.reducedMotion} width={width} />
       </View>
 

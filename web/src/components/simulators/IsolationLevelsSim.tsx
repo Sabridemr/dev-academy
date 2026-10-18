@@ -311,7 +311,7 @@ export default function IsolationLevelsSim({ params, onInteract }: SimulatorProp
   const { t, locale } = useI18n();
   const l = L[locale];
   const [level, setLevel] = useState<Level>(() => strParam(params, 'level', 'read-committed', LEVELS));
-  const [scenario, setScenario] = useState<ScenarioId>(() => mapScenarioParam(strParam(params, 'scenario', 'dirty-read')));
+  const [scenario, setScenario] = useState<ScenarioId>(() => mapScenarioParam(strParam<string>(params, 'scenario', 'dirty-read')));
   const [cursor, setCursor] = useState(0);
 
   const steps = SCENARIOS[scenario];

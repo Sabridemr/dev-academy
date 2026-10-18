@@ -151,7 +151,7 @@ const CHIP_TONES = ['var(--da-primary)', 'var(--da-accent)', 'var(--da-success)'
 export default function TokenizerSim({ params, onInteract }: SimulatorProps) {
   const { locale } = useI18n();
   const l = L[locale];
-  const [text, setText] = useState(() => strParam(params, 'text', 'Unbelievable! The model learns tokens. Ürünler 2024’te geliyor.'));
+  const [text, setText] = useState(() => strParam<string>(params, 'text', 'Unbelievable! The model learns tokens. Ürünler 2024’te geliyor.'));
   const [mergeCount, setMergeCount] = useState(120);
 
   // Eğitim bir kez yapılır; kaydırıcı yalnızca ilk n birleştirmeyi kullanır

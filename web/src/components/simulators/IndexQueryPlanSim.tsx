@@ -113,7 +113,7 @@ export default function IndexQueryPlanSim({ params, onInteract }: SimulatorProps
   const reduced = usePrefersReducedMotion();
   const rows = useMemo(makeRows, []);
   const tableRows = numParam(params, 'rows', SAMPLE_ROWS, 100, 1e10);
-  const queryParam = strParam(params, 'query', '');
+  const queryParam = strParam<string>(params, 'query', '');
   const [query, setQuery] = useState<QueryId>(() => (queryParam.includes('status') && queryParam.includes('customer_id') ? 'composite' : queryParam.includes('created_at') ? 'range' : 'eq'));
   const [index, setIndex] = useState<IndexId>('none');
   const [projection, setProjection] = useState<Projection>('star');

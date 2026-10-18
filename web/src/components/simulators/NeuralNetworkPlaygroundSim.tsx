@@ -34,6 +34,7 @@ const L = {
     hidden: 'Gizli katmanlar (ör. 4,4)',
     hiddenHint: '1–3 katman, katman başına 1–8 nöron',
     epoch: 'Epoch',
+    loss: 'Kayıp',
     accuracy: 'Doğruluk',
     pause: 'Duraklat',
     train: 'Eğit',
@@ -51,6 +52,7 @@ const L = {
     hidden: 'Hidden layers (e.g. 4,4)',
     hiddenHint: '1–3 layers, 1–8 neurons each',
     epoch: 'Epoch',
+    loss: 'Loss',
     accuracy: 'Accuracy',
     pause: 'Pause',
     train: 'Train',
@@ -307,7 +309,7 @@ export default function NeuralNetworkPlaygroundSim({ params, onInteract }: Simul
           <Range label={t('sim.learningRate')} value={lrExp} min={-3} max={0} step={0.05} format={(v) => Math.pow(10, v).toPrecision(2)} onChange={(v) => { onInteract(); setLrExp(v); }} />
           <div className="grid grid-cols-2 gap-2" aria-live="polite">
             <Stat label={l.epoch} value={epoch} />
-            <Stat label={t('sim.loss')} value={lastLoss !== undefined ? lastLoss.toFixed(3) : '—'} tone="primary" />
+            <Stat label={l.loss} value={lastLoss !== undefined ? lastLoss.toFixed(3) : '—'} tone="primary" />
             <Stat label={l.accuracy} value={`${(accuracy * 100).toFixed(0)}%`} tone={accuracy > 0.9 ? 'success' : accuracy > 0.7 ? 'warning' : 'danger'} />
           </div>
           <figure>
