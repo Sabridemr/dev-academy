@@ -1,0 +1,110 @@
+{
+  "id": "b-04-multi-region-dr-quiz",
+  "title": { "tr": "Multi-Region ve Disaster Recovery Quiz", "en": "Multi-Region and Disaster Recovery Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Birincil region asenkron replikasyonla ikincile veri kopyalıyor ve replication lag ortalama 8 saniye. Failover sonrası beklenen veri kaybı hangi metriği karşılar?",
+        "en": "The primary region replicates asynchronously to the secondary with an average lag of 8 seconds. The expected data loss after failover corresponds to which metric?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "RTO ≈ 8 s", "en": "RTO ≈ 8 s" } },
+        { "id": "b", "text": { "tr": "RPO ≈ 8 s", "en": "RPO ≈ 8 s" } },
+        { "id": "c", "text": { "tr": "SLA ≈ 8 s", "en": "SLA ≈ 8 s" } },
+        { "id": "d", "text": { "tr": "TTL ≈ 8 s", "en": "TTL ≈ 8 s" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "RPO (Recovery Point Objective) kaybedilebilecek veri miktarını zaman cinsinden ifade eder ve asenkron replikasyonda replication lag'e eşittir. RTO ise hizmetin geri dönme süresidir; failover otomasyonu ve DNS belirler.",
+        "en": "RPO (Recovery Point Objective) expresses the amount of data that may be lost, in time, and under async replication equals the replication lag. RTO is how long the service takes to return; failover automation and DNS determine it."
+      },
+      "difficulty": "easy",
+      "concepts": ["rpo", "replication-lag"]
+    },
+    {
+      "id": "q2",
+      "type": "order",
+      "prompt": {
+        "tr": "Aktif-pasif bir mimaride otomatik failover adımlarını doğru sıraya koyun.",
+        "en": "Put the automatic failover steps of an active-passive architecture in the correct order."
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "DNS kaydını ikincil region'un yük dengeleyicisine çevir", "en": "Switch the DNS record to the secondary region's load balancer" } },
+        { "id": "b", "text": { "tr": "Health check'ler ardışık N kez başarısız olsun (tespit)", "en": "Health checks fail N consecutive times (detection)" } },
+        { "id": "c", "text": { "tr": "Eski birincile yazma kilidi koy ve replikayı promote et", "en": "Fence writes on the old primary and promote the replica" } },
+        { "id": "d", "text": { "tr": "İkincil tarafta cache ve bağlantı havuzları ısınsın", "en": "Caches and connection pools warm up on the secondary" } }
+      ],
+      "correct": ["b", "c", "a", "d"],
+      "explanation": {
+        "tr": "Önce güvenilir tespit (tek başarısız kontrolle değil), sonra veri katmanı hazır edilir (fencing + promote), ardından trafik DNS ile yönlendirilir, en son yeni tarafın ısınması tamamlanır. DNS'i promote'tan önce çevirirseniz istemciler henüz yazamayan bir replikaya düşer.",
+        "en": "First reliable detection (not on a single failed check), then the data tier is readied (fencing + promote), then traffic is steered via DNS, and finally the new side warms up. Switching DNS before promotion sends clients to a replica that cannot accept writes yet."
+      },
+      "difficulty": "medium",
+      "concepts": ["active-passive", "dns-failover", "rto"]
+    },
+    {
+      "id": "q3",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Aktif-aktif mimaride aynı kaydın iki region'da eş zamanlı değişmesi sorununa karşı hangileri geçerli stratejilerdir? (Birden fazla seçin)",
+        "en": "Which are valid strategies against the same record being modified concurrently in two regions in an active-active setup? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Her kullanıcıyı bir 'ev' region'a atayıp yazmalarını yalnızca oradan kabul etmek", "en": "Assign each user a 'home' region and accept their writes only there" } },
+        { "id": "b", "text": { "tr": "CRDT gibi birleştirilebilir veri tipleri kullanmak", "en": "Use mergeable data types such as CRDTs" } },
+        { "id": "c", "text": { "tr": "DNS TTL'i 5 saniyeye düşürmek", "en": "Lower the DNS TTL to 5 seconds" } },
+        { "id": "d", "text": { "tr": "Bölgeler arası konsensüs (Spanner/CockroachDB tarzı) ile her yazmada çoğunluk almak", "en": "Use cross-region consensus (Spanner/CockroachDB style) to get a majority on every write" } }
+      ],
+      "correct": ["a", "b", "d"],
+      "explanation": {
+        "tr": "Ev region bölümleme çatışmayı baştan önler, CRDT çatışmayı matematiksel olarak birleştirir, konsensüs çatışmayı sıralayarak çözer (yazma gecikmesi pahasına). DNS TTL'i failover hızını etkiler, çatışmayla ilgisi yoktur.",
+        "en": "Home-region partitioning prevents conflicts up front, CRDTs merge them mathematically, consensus resolves them by ordering (at the cost of write latency). DNS TTL affects failover speed and has nothing to do with conflicts."
+      },
+      "difficulty": "medium",
+      "concepts": ["active-active", "conflict-resolution"]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Birincil region geri geldiğinde trafiği otomatik olarak hemen geri çevirmek (failback) güvenlidir çünkü ikincil zaten birincilin tam kopyasıdır.",
+        "en": "When the primary region comes back it is safe to immediately and automatically switch traffic back (failback) because the secondary is an exact copy of the primary anyway."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "Yanlış. Kesinti anında eski birincilin replike edemediği yazmalar ve failover sonrasında ikincilin aldığı yeni yazmalar vardır; iki taraf artık farklıdır. Önce çakışmalar birleştirilir, ters yönde replikasyon kurulur ve lag sıfıra yaklaşınca planlı pencerede geri dönülür. Ayrıca eski birincilin kendini hâlâ lider sanması (split-brain) engellenmelidir.",
+        "en": "False. There are writes the old primary could not replicate at outage time and new writes the secondary accepted after failover; the two sides now differ. Conflicts are merged first, reverse replication is set up, and the switch back happens in a planned window once lag nears zero. The old primary must also be prevented from believing it is still the leader (split-brain)."
+      },
+      "difficulty": "hard",
+      "concepts": ["split-brain", "active-passive"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "Bir fintech ürünü için 'RPO ≤ 1 dakika, RTO ≤ 15 dakika, bütçe sınırlı' gereksinimleri verildi. Hangi DR katmanı en uygun başlangıçtır?",
+        "en": "A fintech product requires 'RPO ≤ 1 minute, RTO ≤ 15 minutes, limited budget'. Which DR tier is the most suitable starting point?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Backup & restore (günlük S3 yedeği)", "en": "Backup & restore (daily S3 backup)" } },
+        { "id": "b", "text": { "tr": "Warm standby: sürekli replikasyon + küçültülmüş çalışan kopya", "en": "Warm standby: continuous replication + a scaled-down running copy" } },
+        { "id": "c", "text": { "tr": "Tam kapasiteli aktif-aktif üç region", "en": "Full-capacity active-active across three regions" } },
+        { "id": "d", "text": { "tr": "Tek region, çoklu AZ yeterlidir", "en": "Single region with multiple AZs is enough" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Günlük yedek RPO'yu saatlere çıkarır (a yanlış); tek region, bölgesel kesintiye karşı korumaz (d yanlış); aktif-aktif hedefleri aşar ama bütçeyi ve karmaşıklığı katlar (c gereksiz). Sürekli replikasyon dakika altı RPO, çalışan küçük kopya ise promote + DNS ile 15 dakikanın altında RTO sağlar.",
+        "en": "Daily backups push RPO to hours (a is wrong); a single region does not protect against a regional outage (d is wrong); active-active exceeds the targets but multiplies cost and complexity (c is overkill). Continuous replication gives sub-minute RPO and a running small copy achieves sub-15-minute RTO via promote + DNS."
+      },
+      "difficulty": "medium",
+      "concepts": ["dr-tiers", "rpo", "rto"]
+    }
+  ]
+}

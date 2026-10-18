@@ -1,0 +1,245 @@
+{
+  "id": "c-03-behavioral-patterns-quiz",
+  "title": {
+    "tr": "Behavioral Kalıplar Quiz",
+    "en": "Behavioral Patterns Quiz"
+  },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Strategy ile Template Method aynı problemi (değişen algoritma) çözer. Temel yapısal fark nedir?",
+        "en": "Strategy and Template Method solve the same problem (a varying algorithm). What is the key structural difference?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Strategy bileşim kullanır ve çalışma zamanında değiştirilebilir; Template Method kalıtım kullanır ve derleme zamanında sabitlenir",
+            "en": "Strategy uses composition and can change at runtime; Template Method uses inheritance and is fixed at compile time"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Template Method yalnızca fonksiyonel dillerde uygulanabilir",
+            "en": "Template Method only works in functional languages"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "Strategy birden fazla adım, Template Method tek adım içerir",
+            "en": "Strategy has multiple steps, Template Method a single step"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Aralarında fark yoktur",
+            "en": "There is no difference"
+          }
+        }
+      ],
+      "correct": [
+        "a"
+      ],
+      "explanation": {
+        "tr": "Strategy algoritmayı ayrı bir nesneye koyar ve bağlam onu referansla tutar (bileşim); Template Method algoritmanın iskeletini üst sınıfa, adımları alt sınıfa koyar (kalıtım). Bu yüzden Strategy çalışma zamanında değiştirilebilir, Template Method ise sınıf seçildiğinde sabitlenir.",
+        "en": "Strategy puts the algorithm in a separate object held by reference (composition); Template Method puts the skeleton in a superclass and steps in subclasses (inheritance). Hence Strategy can be swapped at runtime, while Template Method is fixed once the class is chosen."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "strategy",
+        "template-method"
+      ]
+    },
+    {
+      "id": "q2",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Observer kalıbını uygularken hangileri gerçek tuzaklardır? (Birden fazla seçin)",
+        "en": "Which are real pitfalls when implementing the Observer pattern? (Select all that apply)"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Aboneliği iptal etmeyen gözlemciler bellek sızıntısına yol açar",
+            "en": "Observers that never unsubscribe cause memory leaks"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Bir gözlemcinin fırlattığı istisna, yakalanmazsa diğer gözlemcilerin bildirim almasını engeller",
+            "en": "An exception thrown by one observer, if uncaught, prevents the others from being notified"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "Yayıncı her gözlemcinin somut sınıfını bilmek zorundadır",
+            "en": "The publisher must know each observer's concrete class"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Gözlemcilerin bildirim sırasına güvenen kod kırılgandır",
+            "en": "Code that relies on observer notification order is fragile"
+          }
+        }
+      ],
+      "correct": [
+        "a",
+        "b",
+        "d"
+      ],
+      "explanation": {
+        "tr": "Yayıncı yalnızca gözlemci arayüzünü bilir; somut sınıfı bilmek zorunda olmaması kalıbın amacıdır (c yanlış). Sızıntı, hata izolasyonu ve sıra bağımlılığı ise üretimde en sık karşılaşılan üç sorundur.",
+        "en": "The publisher knows only the observer interface; not knowing the concrete class is the point of the pattern (c is wrong). Leaks, error isolation and order dependence are the three most common production problems."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "observer"
+      ]
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": {
+        "tr": "Bir metin editöründe geri al/yinele, makro kaydetme ve işlemleri bir kuyruğa yazıp sonra çalıştırma özellikleri isteniyor. Hangi kalıp bu üçünü aynı anda temellendirir?",
+        "en": "A text editor needs undo/redo, macro recording and writing operations to a queue to run later. Which pattern underpins all three at once?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Observer",
+            "en": "Observer"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Command",
+            "en": "Command"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "Mediator",
+            "en": "Mediator"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "State",
+            "en": "State"
+          }
+        }
+      ],
+      "correct": [
+        "b"
+      ],
+      "explanation": {
+        "tr": "Command, isteği execute/undo metodları olan bir nesneye çevirir; nesne yığında (undo), listede (makro) ya da kuyrukta (ertelenmiş çalıştırma) saklanabilir. Diğer kalıplar isteği nesneleştirmez.",
+        "en": "Command turns a request into an object with execute/undo; the object can be kept on a stack (undo), in a list (macro) or in a queue (deferred execution). The other patterns do not reify the request."
+      },
+      "difficulty": "easy",
+      "concepts": [
+        "command"
+      ]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "State kalıbında geçiş kuralları (hangi durumdan hangisine geçilebileceği) bağlam sınıfındaki büyük bir switch ifadesinde toplanır.",
+        "en": "In the State pattern, the transition rules (which state may move to which) are collected in one big switch statement in the context class."
+      },
+      "options": [
+        {
+          "id": "t",
+          "text": {
+            "tr": "Doğru",
+            "en": "True"
+          }
+        },
+        {
+          "id": "f",
+          "text": {
+            "tr": "Yanlış",
+            "en": "False"
+          }
+        }
+      ],
+      "correct": [
+        "f"
+      ],
+      "explanation": {
+        "tr": "Yanlış. Kalıbın amacı tam tersidir: bağlam çağrıyı mevcut durum nesnesine devreder ve her durum sınıfı kendi geçerli geçişlerini bilir. Böylece yeni durum eklemek bir sınıf eklemektir, merkezi switch'i büyütmek değil.",
+        "en": "False. The pattern's purpose is the opposite: the context delegates to the current state object and each state class knows its own valid transitions. Adding a state means adding a class, not growing a central switch."
+      },
+      "difficulty": "easy",
+      "concepts": [
+        "state"
+      ]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "Bir formda 6 bileşen var ve her birinin değişimi diğer birkaçını etkiliyor; bileşenler birbirine doğrudan referans tutmaya başladı ve 15 bağımlılık oluştu. En uygun kalıp hangisidir?",
+        "en": "A form has 6 widgets and each change affects several others; widgets started holding direct references to each other and there are now 15 dependencies. Which pattern fits best?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Chain of Responsibility",
+            "en": "Chain of Responsibility"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Template Method",
+            "en": "Template Method"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "Mediator",
+            "en": "Mediator"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Strategy",
+            "en": "Strategy"
+          }
+        }
+      ],
+      "correct": [
+        "c"
+      ],
+      "explanation": {
+        "tr": "Mediator, çoktan çoğa iletişimi tek bir aracıya toplar: 15 doğrudan bağ yerine her bileşen yalnızca aracıyı bilir (6 bağ). Chain of Responsibility tek bir isteği sırayla işleyiciler arasında gezdirir; buradaki sorun istek yönlendirme değil, bileşenler arası koordinasyondur.",
+        "en": "Mediator centralizes many-to-many communication in one broker: instead of 15 direct links each widget knows only the mediator (6 links). Chain of Responsibility passes a single request along handlers; the problem here is coordination between components, not request routing."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "mediator",
+        "chain-of-responsibility"
+      ]
+    }
+  ]
+}

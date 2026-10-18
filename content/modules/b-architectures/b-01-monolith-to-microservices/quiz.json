@@ -1,0 +1,110 @@
+{
+  "id": "b-01-monolith-to-microservices-quiz",
+  "title": { "tr": "Monolith → Mikroservis Quiz", "en": "Monolith → Microservices Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Bir modüler monoliti klasik monolitten ayıran temel özellik nedir?",
+        "en": "What is the defining property that separates a modular monolith from a classic monolith?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Birden fazla süreçte çalışması", "en": "It runs in multiple processes" } },
+        { "id": "b", "text": { "tr": "Modüllerin yalnızca açık arayüzler üzerinden konuşması ve kendi tablolarına sahip olması", "en": "Modules talk only through public interfaces and own their own tables" } },
+        { "id": "c", "text": { "tr": "Her modülün ayrı bir veritabanı sunucusunda olması", "en": "Each module lives on a separate database server" } },
+        { "id": "d", "text": { "tr": "Kodun controllers/services/repositories katmanlarına bölünmesi", "en": "Code split into controllers/services/repositories layers" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Modüler monolit hâlâ tek süreç ve genellikle tek veritabanıdır (a ve c yanlış). Fark, sınırların iş alanına göre çizilmesi ve zorlanmasıdır; teknik katmanlara bölmek (d) modülerlik sağlamaz, tam tersine her katman her alana dokunur.",
+        "en": "A modular monolith is still one process and usually one database (a and c are wrong). The difference is domain-based boundaries that are enforced; splitting by technical layer (d) does not create modularity, every layer touches every domain."
+      },
+      "difficulty": "easy",
+      "concepts": ["modular-monolith"]
+    },
+    {
+      "id": "q2",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Hangileri bir 'dağıtık monolit' (distributed monolith) belirtisidir? (Birden fazla seçin)",
+        "en": "Which are symptoms of a 'distributed monolith'? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Birden fazla servisin aynı veritabanı şemasını paylaşması", "en": "Several services share the same database schema" } },
+        { "id": "b", "text": { "tr": "Bir servisi dağıtmak için diğerlerini de aynı anda dağıtma zorunluluğu", "en": "Deploying one service requires deploying the others at the same time" } },
+        { "id": "c", "text": { "tr": "Her servisin kendi CI/CD boru hattının olması", "en": "Each service has its own CI/CD pipeline" } },
+        { "id": "d", "text": { "tr": "Uzun senkron çağrı zincirleri (A→B→C→D) ve zincirleme kesintiler", "en": "Long synchronous call chains (A→B→C→D) and cascading outages" } }
+      ],
+      "correct": ["a", "b", "d"],
+      "explanation": {
+        "tr": "Paylaşılan şema, toplu dağıtım ve zincirleme senkron bağımlılık, monolitin bağlaşıklığını ağ maliyetiyle birleştirir. Servis başına bağımsız boru hattı (c) ise tam tersine sağlıklı bir mikroservis işaretidir.",
+        "en": "A shared schema, lockstep deploys and chained synchronous dependencies combine monolith coupling with network cost. An independent pipeline per service (c) is, on the contrary, a sign of healthy microservices."
+      },
+      "difficulty": "medium",
+      "concepts": ["distributed-monolith", "database-per-service"]
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": {
+        "tr": "Servis sınırı çizerken aşağıdaki kriterlerden hangisi en ZAYIF rehberdir?",
+        "en": "Which of the following is the WEAKEST guide when drawing service boundaries?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Bounded context (aynı kelimenin anlam değiştirdiği yer)", "en": "Bounded context (where the same word changes meaning)" } },
+        { "id": "b", "text": { "tr": "Veri sahipliği (tabloyu kim yazıyor)", "en": "Data ownership (who writes the table)" } },
+        { "id": "c", "text": { "tr": "Her veritabanı tablosu için bir servis", "en": "One service per database table" } },
+        { "id": "d", "text": { "tr": "Farklı değişim hızı ve ölçek profili", "en": "Different rate of change and scale profile" } }
+      ],
+      "correct": ["c"],
+      "explanation": {
+        "tr": "Varlık/tablo başına servis, iş süreçlerini parçalar ve aralarında sürekli konuşan (chatty) nano-servisler üretir. Bounded context, veri sahipliği, değişim hızı ve ölçek profili ise iş alanına dayalı sağlam kriterlerdir.",
+        "en": "One service per entity/table fragments business processes and produces chatty nano-services. Bounded context, data ownership, rate of change and scale profile are sound, domain-based criteria."
+      },
+      "difficulty": "medium",
+      "concepts": ["decomposition-criteria", "bounded-context"]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Conway Yasası'na göre, istediğiniz servis sınırlarını elde etmenin bir yolu önce ekipleri o sınırlara göre düzenlemektir.",
+        "en": "According to Conway's Law, one way to get the service boundaries you want is to first organize teams around those boundaries."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["t"],
+      "explanation": {
+        "tr": "Doğru. Sistemler organizasyonun iletişim yapısını yansıttığı için ekipleri hedef mimariye göre kurmak ('ters Conway manevrası') sınırların doğal olarak oluşmasını sağlar. Amazon'un iki pizza ekipleri bunun örneğidir.",
+        "en": "True. Because systems mirror the organization's communication structure, organizing teams around the target architecture (the 'inverse Conway maneuver') makes the boundaries emerge naturally. Amazon's two-pizza teams are the classic example."
+      },
+      "difficulty": "easy",
+      "concepts": ["conways-law"]
+    },
+    {
+      "id": "q5",
+      "type": "order",
+      "prompt": {
+        "tr": "Bir monoliti mikroservislere güvenli biçimde taşırken adımları doğru sıraya koyun.",
+        "en": "Put the steps of safely migrating a monolith to microservices in the correct order."
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Modül sınırlarını kodda çiz, doğrudan tablo erişimini yasakla", "en": "Draw module boundaries in code, forbid direct table access" } },
+        { "id": "b", "text": { "tr": "Önüne bir gateway koyup ilk modülü ayrı servise taşı, yolunu yönlendir", "en": "Put a gateway in front, extract the first module to a service, route its path" } },
+        { "id": "c", "text": { "tr": "Büyüme sancılarını ölç: dağıtım sıklığı, ekip çakışması, ölçek profili", "en": "Measure the growing pains: deploy frequency, team contention, scale profile" } },
+        { "id": "d", "text": { "tr": "Taşınan modülün tablolarını kendi veritabanına ayır", "en": "Move the extracted module's tables into its own database" } }
+      ],
+      "correct": ["c", "a", "b", "d"],
+      "explanation": {
+        "tr": "Önce gerekçe (belirtiler), sonra kod sınırları (modüler monolit), sonra Strangler Fig ile ilk servis ve en son veri ayrımı. Veriyi ayırmadan servis ayırmak dağıtık monolit üretir, ama sınır kodda netleşmeden veri ayırmak da mümkün değildir.",
+        "en": "First the justification (symptoms), then code boundaries (modular monolith), then the first service via Strangler Fig and finally data separation. Extracting services without separating data creates a distributed monolith, yet data cannot be separated before the boundary is clear in code."
+      },
+      "difficulty": "hard",
+      "concepts": ["strangler-fig", "modular-monolith", "database-per-service"]
+    }
+  ]
+}

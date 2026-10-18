@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 360" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Template Method UML sınıf diyagramı</title>
+  <desc id="desc">Soyut DataImporter sınıfının run şablon metodu sırayla open, parse, validate, save ve close adımlarını çağırır. parse ve save soyuttur; validate ve close varsayılanı olan kancalardır. CsvImporter ve JsonImporter yalnızca gereken adımları ezer.</desc>
+  <defs>
+    <marker id="m-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+    <marker id="m-open" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M 1 1 L 9 5 L 1 9" fill="none" stroke="var(--da-fg, #0f172a)" stroke-width="1.4"/>
+    </marker>
+    <marker id="m-tri" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" orient="auto-start-reverse">
+      <path d="M 1 1 L 11 6 L 1 11 z" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.3"/>
+    </marker>
+    <marker id="m-dia" viewBox="0 0 14 10" refX="1" refY="5" markerWidth="14" markerHeight="10" orient="auto-start-reverse">
+      <path d="M 1 5 L 7 1 L 13 5 L 7 9 z" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.3"/>
+    </marker>
+    <marker id="m-diaf" viewBox="0 0 14 10" refX="1" refY="5" markerWidth="14" markerHeight="10" orient="auto-start-reverse">
+      <path d="M 1 5 L 7 1 L 13 5 L 7 9 z" fill="var(--da-fg, #0f172a)" stroke="var(--da-fg, #0f172a)" stroke-width="1.3"/>
+    </marker>
+    <marker id="m-primary" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-primary, #6366f1)"/>
+    </marker>
+    <marker id="m-danger" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-danger, #ef4444)"/>
+    </marker>
+    <marker id="m-success" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-success, #10b981)"/>
+    </marker>
+    <marker id="m-accent" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-accent, #f59e0b)"/>
+    </marker>
+  </defs>
+  <rect x="230" y="30" width="340" height="147" rx="4" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.4"/>
+  <text x="400" y="48" text-anchor="middle" font-size="12" font-weight="700" font-style="italic" fill="var(--da-fg, #0f172a)">DataImporter</text>
+  <line x1="230" y1="56" x2="570" y2="56" stroke="var(--da-fg, #0f172a)" stroke-width="1"/>
+  <line x1="230" y1="79" x2="570" y2="79" stroke="var(--da-fg, #0f172a)" stroke-width="1"/>
+  <text x="236" y="95" font-size="10.5"  fill="var(--da-fg, #0f172a)">+run(path): Report      { şablon, final }</text>
+  <text x="236" y="110" font-size="10.5"  fill="var(--da-fg, #0f172a)">#open(path): Stream</text>
+  <text x="236" y="125" font-size="10.5" font-style="italic" fill="var(--da-fg, #0f172a)">#parse(stream): Row[]      { soyut }</text>
+  <text x="236" y="140" font-size="10.5"  fill="var(--da-fg, #0f172a)">#validate(rows): Row[]     { kanca, varsayılan }</text>
+  <text x="236" y="155" font-size="10.5" font-style="italic" fill="var(--da-fg, #0f172a)">#save(rows): void           { soyut }</text>
+  <text x="236" y="170" font-size="10.5"  fill="var(--da-fg, #0f172a)">#close()                        { kanca }</text>
+  <rect x="130" y="240" width="200" height="87" rx="4" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.4"/>
+  <text x="230" y="258" text-anchor="middle" font-size="12" font-weight="700"  fill="var(--da-fg, #0f172a)">CsvImporter</text>
+  <line x1="130" y1="266" x2="330" y2="266" stroke="var(--da-fg, #0f172a)" stroke-width="1"/>
+  <text x="136" y="282" font-size="10.5" fill="var(--da-fg, #0f172a)">-delimiter</text>
+  <line x1="130" y1="289" x2="330" y2="289" stroke="var(--da-fg, #0f172a)" stroke-width="1"/>
+  <text x="136" y="305" font-size="10.5"  fill="var(--da-fg, #0f172a)">#parse()</text>
+  <text x="136" y="320" font-size="10.5"  fill="var(--da-fg, #0f172a)">#save()</text>
+  <rect x="470" y="240" width="200" height="102" rx="4" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.4"/>
+  <text x="570" y="258" text-anchor="middle" font-size="12" font-weight="700"  fill="var(--da-fg, #0f172a)">JsonImporter</text>
+  <line x1="470" y1="266" x2="670" y2="266" stroke="var(--da-fg, #0f172a)" stroke-width="1"/>
+  <line x1="470" y1="289" x2="670" y2="289" stroke="var(--da-fg, #0f172a)" stroke-width="1"/>
+  <text x="476" y="305" font-size="10.5"  fill="var(--da-fg, #0f172a)">#parse()</text>
+  <text x="476" y="320" font-size="10.5"  fill="var(--da-fg, #0f172a)">#validate()  { ezildi }</text>
+  <text x="476" y="335" font-size="10.5"  fill="var(--da-fg, #0f172a)">#save()</text>
+  <path d="M 230 240 L 400 177" stroke="var(--da-fg, #0f172a)" stroke-width="1.3" fill="none" marker-end="url(#m-tri)"/>
+  <path d="M 570 240 L 400 177" stroke="var(--da-fg, #0f172a)" stroke-width="1.3" fill="none" marker-end="url(#m-tri)"/>
+  <path d="M 600 60 L 790 60 L 800 70 L 800 116 L 600 116 z" fill="var(--da-accent, #f59e0b)" fill-opacity="0.12" stroke="var(--da-accent, #f59e0b)" stroke-width="1"/>
+  <text x="608" y="76" font-size="10.5" fill="var(--da-fg, #0f172a)">İskelet üst sınıfta, adımlar</text>
+  <text x="608" y="90" font-size="10.5" fill="var(--da-fg, #0f172a)">alt sınıfta. Hollywood ilkesi:</text>
+  <text x="608" y="104" font-size="10.5" fill="var(--da-fg, #0f172a)">"Bizi arama, biz seni ararız."</text>
+</svg>

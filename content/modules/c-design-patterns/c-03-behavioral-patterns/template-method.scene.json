@@ -1,0 +1,295 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "c-03-template-method",
+  "title": {
+    "tr": "Template Method: İskelet Üstte, Adımlar Altta",
+    "en": "Template Method: Skeleton Above, Steps Below"
+  },
+  "summary": {
+    "tr": "DataImporter.run() şablonu open → parse → validate → save → close adımlarını sırayla çağırır; CsvImporter yalnızca parse ve save adımlarını ezer; validate kancası varsayılanla çalışır.",
+    "en": "The DataImporter.run() template calls open → parse → validate → save → close in order; CsvImporter overrides only parse and save; the validate hook runs with its default."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda istemci, ortada DataImporter.run şablon metodu, sağda CsvImporter alt sınıfı. İstemci run çağırır; şablon open adımını kendisi yapar, parse çağrısı alt sınıfa düşer, validate varsayılan kancayla üst sınıfta çalışır, save yine alt sınıfa düşer, close üst sınıfta çalışır.",
+      "en": "Client on the left, the DataImporter.run template method in the middle, the CsvImporter subclass on the right. The client calls run; the template does open itself, parse dispatches to the subclass, validate runs in the superclass as the default hook, save dispatches to the subclass again, close runs in the superclass."
+    }
+  },
+  "canvas": {
+    "width": 1000,
+    "height": 600
+  },
+  "nodes": [
+    {
+      "id": "client",
+      "kind": "generic",
+      "label": "ImportJob",
+      "x": 110,
+      "y": 300,
+      "w": 150,
+      "h": 70,
+      "sublabel": {
+        "tr": "run(\"sales.csv\")",
+        "en": "run(\"sales.csv\")"
+      }
+    },
+    {
+      "id": "tmpl",
+      "kind": "generic",
+      "label": "DataImporter.run()",
+      "x": 460,
+      "y": 300,
+      "w": 260,
+      "h": 80,
+      "sublabel": {
+        "tr": "open → parse → validate → save → close",
+        "en": "open → parse → validate → save → close"
+      }
+    },
+    {
+      "id": "sub",
+      "kind": "generic",
+      "label": "CsvImporter",
+      "x": 850,
+      "y": 300,
+      "w": 190,
+      "h": 80,
+      "sublabel": {
+        "tr": "parse(), save() ezildi",
+        "en": "parse(), save() overridden"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "c-t",
+      "from": "client",
+      "to": "tmpl",
+      "kind": "request",
+      "label": "run(path)"
+    },
+    {
+      "id": "t-sub",
+      "from": "tmpl",
+      "to": "sub",
+      "kind": "request",
+      "label": "this.parse() / this.save()"
+    }
+  ],
+  "steps": [
+    {
+      "id": "run",
+      "title": {
+        "tr": "1. İstemci şablonu çağırır",
+        "en": "1. The client calls the template"
+      },
+      "narration": {
+        "tr": "ImportJob importer.run(\"sales.csv\") der. run() üst sınıfta final/sealed'dır: adımların sırası alt sınıflar tarafından değiştirilemez. İlk adım open() üst sınıfta çalışır: dosya akışı açılır.",
+        "en": "ImportJob calls importer.run(\"sales.csv\"). run() is final/sealed in the superclass: subclasses cannot change the order of steps. The first step, open(), runs in the superclass: the file stream opens."
+      },
+      "durationMs": 3500,
+      "inherit": false,
+      "highlight": {
+        "nodes": [
+          "client",
+          "tmpl"
+        ],
+        "edges": [
+          "c-t"
+        ]
+      },
+      "nodeStates": {
+        "tmpl": {
+          "status": "active",
+          "badge": "open"
+        }
+      },
+      "edgeStates": {},
+      "packets": [
+        {
+          "edge": "c-t",
+          "shape": "envelope",
+          "label": "run(\"sales.csv\")",
+          "durationMs": 900
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a1",
+          "x": 460,
+          "y": 170,
+          "text": {
+            "tr": "sıra sabit, adımlar değişken",
+            "en": "order fixed, steps variable"
+          },
+          "target": "tmpl"
+        }
+      ]
+    },
+    {
+      "id": "parse",
+      "title": {
+        "tr": "2. Soyut adım alt sınıfa düşer",
+        "en": "2. The abstract step dispatches to the subclass"
+      },
+      "narration": {
+        "tr": "this.parse(stream) soyuttur; sanal dağıtım çağrıyı CsvImporter.parse()'a düşürür: ayırıcıya göre satırlar bölünür ve Row[] döner. Üst sınıf CSV'nin ne olduğunu bilmez.",
+        "en": "this.parse(stream) is abstract; virtual dispatch sends the call to CsvImporter.parse(): lines are split by delimiter and Row[] is returned. The superclass has no idea what CSV is."
+      },
+      "durationMs": 3500,
+      "highlight": {
+        "nodes": [
+          "sub"
+        ],
+        "edges": [
+          "t-sub"
+        ]
+      },
+      "nodeStates": {
+        "tmpl": {
+          "badge": "parse"
+        },
+        "sub": {
+          "status": "active",
+          "badge": "parse()"
+        }
+      },
+      "edgeStates": {},
+      "packets": [
+        {
+          "edge": "t-sub",
+          "shape": "envelope",
+          "label": "parse(stream)",
+          "durationMs": 800
+        },
+        {
+          "edge": "t-sub",
+          "startAt": 900,
+          "direction": "backward",
+          "color": "success",
+          "label": "Row[1200]",
+          "durationMs": 800
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "id": "hook",
+      "title": {
+        "tr": "3. Kanca: ezilmezse varsayılan",
+        "en": "3. Hook: default unless overridden"
+      },
+      "narration": {
+        "tr": "validate(rows) bir kancadır (hook): üst sınıfta \"boş satırları at\" varsayılanı vardır. CsvImporter ezmediği için varsayılan çalışır. JsonImporter ise şema doğrulaması eklemek için ezer. Kanca = isteğe bağlı genişleme noktası.",
+        "en": "validate(rows) is a hook: the superclass default \"drop empty rows\" applies. CsvImporter does not override it, so the default runs. JsonImporter overrides it to add schema validation. A hook = an optional extension point."
+      },
+      "durationMs": 3500,
+      "highlight": {
+        "nodes": [
+          "tmpl"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "tmpl": {
+          "badge": "validate (default)"
+        },
+        "sub": {
+          "status": "idle",
+          "badge": ""
+        }
+      },
+      "edgeStates": {},
+      "packets": [],
+      "annotations": [
+        {
+          "id": "a3",
+          "x": 460,
+          "y": 440,
+          "text": {
+            "tr": "soyut adım: zorunlu; kanca: isteğe bağlı",
+            "en": "abstract step: required; hook: optional"
+          },
+          "tone": "info",
+          "target": "tmpl"
+        }
+      ]
+    },
+    {
+      "id": "save",
+      "title": {
+        "tr": "4. Son adımlar ve kapanış",
+        "en": "4. Final steps and close"
+      },
+      "narration": {
+        "tr": "this.save(rows) yine alt sınıfa düşer (toplu INSERT). Ardından close() üst sınıfta akışı kapatır ve run() bir Report döner. Hollywood ilkesi: alt sınıf üst sınıfı çağırmaz, üst sınıf alt sınıfı çağırır.",
+        "en": "this.save(rows) dispatches to the subclass again (bulk INSERT). Then close() in the superclass closes the stream and run() returns a Report. The Hollywood principle: the subclass does not call the superclass, the superclass calls the subclass."
+      },
+      "durationMs": 4000,
+      "highlight": {
+        "nodes": [
+          "sub",
+          "client"
+        ],
+        "edges": [
+          "t-sub",
+          "c-t"
+        ]
+      },
+      "nodeStates": {
+        "tmpl": {
+          "badge": "save → close",
+          "status": "success"
+        },
+        "sub": {
+          "status": "success",
+          "badge": "save()"
+        }
+      },
+      "edgeStates": {},
+      "packets": [
+        {
+          "edge": "t-sub",
+          "shape": "envelope",
+          "label": "save(rows)",
+          "durationMs": 800
+        },
+        {
+          "edge": "t-sub",
+          "startAt": 900,
+          "direction": "backward",
+          "color": "success",
+          "durationMs": 600
+        },
+        {
+          "edge": "c-t",
+          "startAt": 1700,
+          "direction": "backward",
+          "color": "success",
+          "label": "Report{1200 ok}",
+          "durationMs": 800
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a4",
+          "x": 850,
+          "y": 440,
+          "text": {
+            "tr": "Strategy ile fark: kalıtım vs. bileşim",
+            "en": "difference from Strategy: inheritance vs. composition"
+          },
+          "tone": "warning",
+          "target": "sub"
+        }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": [
+    "template-method",
+    "behavioral"
+  ]
+}

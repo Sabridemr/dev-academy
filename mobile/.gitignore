@@ -1,0 +1,17 @@
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts.bak
+
+# Yerel native projeler (prebuild ile üretilir)
+ios/
+android/
+
+# Ortam
+.env
+.env.local
+
+# Test / Detox
+coverage/
+artifacts/

@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 500" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Creational kalıpların karşılaştırma haritası</title>
+  <desc id="desc">Beş kart: Singleton, Factory Method, Abstract Factory, Builder ve Prototype. Her kartta kalıbın çözdüğü problem, anahtar fikir ve tipik kullanım yeri yazar. Oklar ilişkileri gösterir: Factory Method genelleşerek Abstract Factory olur; Abstract Factory Prototype ile uygulanabilir; Builder ve Abstract Factory karmaşık nesne üretiminde alternatiftir; fabrikalar genellikle Singleton olarak tutulur.</desc>
+  <defs>
+    <marker id="m-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+    <marker id="m-open" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M 1 1 L 9 5 L 1 9" fill="none" stroke="var(--da-fg, #0f172a)" stroke-width="1.4"/>
+    </marker>
+    <marker id="m-tri" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" orient="auto-start-reverse">
+      <path d="M 1 1 L 11 6 L 1 11 z" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.3"/>
+    </marker>
+    <marker id="m-dia" viewBox="0 0 14 10" refX="1" refY="5" markerWidth="14" markerHeight="10" orient="auto-start-reverse">
+      <path d="M 1 5 L 7 1 L 13 5 L 7 9 z" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.3"/>
+    </marker>
+    <marker id="m-diaf" viewBox="0 0 14 10" refX="1" refY="5" markerWidth="14" markerHeight="10" orient="auto-start-reverse">
+      <path d="M 1 5 L 7 1 L 13 5 L 7 9 z" fill="var(--da-fg, #0f172a)" stroke="var(--da-fg, #0f172a)" stroke-width="1.3"/>
+    </marker>
+    <marker id="m-primary" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-primary, #6366f1)"/>
+    </marker>
+    <marker id="m-danger" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-danger, #ef4444)"/>
+    </marker>
+    <marker id="m-success" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-success, #10b981)"/>
+    </marker>
+    <marker id="m-accent" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-accent, #f59e0b)"/>
+    </marker>
+  </defs>
+  <rect x="20" y="60" width="920" height="300" rx="14" fill="var(--da-accent, #f59e0b)" fill-opacity="0.06" stroke="var(--da-accent, #f59e0b)" stroke-dasharray="6 6" stroke-width="1"/>
+  <text x="34" y="80" font-size="12" font-weight="600" fill="var(--da-accent, #f59e0b)">Soru: "Hangi sınıfın örnekleneceğini kim, ne zaman, nasıl belirler?"</text>
+  <rect x="40" y="100" width="260" height="110" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-primary, #6366f1)" stroke-width="1.5"/>
+  <rect x="40" y="100" width="260" height="26" rx="10" fill="var(--da-primary, #6366f1)" fill-opacity="0.16"/>
+  <text x="170" y="117" text-anchor="middle" font-size="12.5" font-weight="700" fill="var(--da-fg, #0f172a)">Factory Method</text>
+  <text x="50" y="144" font-size="10.5" fill="var(--da-fg, #0f172a)">Problem: üst sınıf hangi ürünü yaratacağını bilmiyor</text>
+  <text x="50" y="159" font-size="10.5" fill="var(--da-fg, #0f172a)">Fikir: üretimi sanal metoda bırak, alt sınıf ezsin</text>
+  <text x="50" y="174" font-size="10.5" fill="var(--da-muted, #64748b)">Kullanım: framework hook'ları, kanal/format seçimi</text>
+  <text x="50" y="189" font-size="10.5" fill="var(--da-muted, #64748b)">Eksen: TEK ürün, kalıtımla</text>
+  <rect x="350" y="100" width="260" height="110" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-primary, #6366f1)" stroke-width="1.5"/>
+  <rect x="350" y="100" width="260" height="26" rx="10" fill="var(--da-primary, #6366f1)" fill-opacity="0.16"/>
+  <text x="480" y="117" text-anchor="middle" font-size="12.5" font-weight="700" fill="var(--da-fg, #0f172a)">Abstract Factory</text>
+  <text x="360" y="144" font-size="10.5" fill="var(--da-fg, #0f172a)">Problem: birlikte kullanılması gereken ürün aileleri</text>
+  <text x="360" y="159" font-size="10.5" fill="var(--da-fg, #0f172a)">Fikir: aile başına bir fabrika nesnesi, bileşimle</text>
+  <text x="360" y="174" font-size="10.5" fill="var(--da-muted, #64748b)">Kullanım: tema/platform UI, DB sürücü aileleri</text>
+  <text x="360" y="189" font-size="10.5" fill="var(--da-muted, #64748b)">Eksen: ÇOK ürün, tutarlılık garantisi</text>
+  <rect x="660" y="100" width="260" height="110" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-accent, #f59e0b)" stroke-width="1.5"/>
+  <rect x="660" y="100" width="260" height="26" rx="10" fill="var(--da-accent, #f59e0b)" fill-opacity="0.16"/>
+  <text x="790" y="117" text-anchor="middle" font-size="12.5" font-weight="700" fill="var(--da-fg, #0f172a)">Builder</text>
+  <text x="670" y="144" font-size="10.5" fill="var(--da-fg, #0f172a)">Problem: 8 parametreli kurucu, çoğu isteğe bağlı</text>
+  <text x="670" y="159" font-size="10.5" fill="var(--da-fg, #0f172a)">Fikir: adım adım kur, build() tek yerde doğrulasın</text>
+  <text x="670" y="174" font-size="10.5" fill="var(--da-muted, #64748b)">Kullanım: HTTP istekleri, sorgu, konfig nesneleri</text>
+  <text x="670" y="189" font-size="10.5" fill="var(--da-muted, #64748b)">Eksen: TEK karmaşık ürün, değişmez sonuç</text>
+  <rect x="40" y="240" width="260" height="100" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-success, #10b981)" stroke-width="1.5"/>
+  <rect x="40" y="240" width="260" height="26" rx="10" fill="var(--da-success, #10b981)" fill-opacity="0.16"/>
+  <text x="170" y="257" text-anchor="middle" font-size="12.5" font-weight="700" fill="var(--da-fg, #0f172a)">Prototype</text>
+  <text x="50" y="284" font-size="10.5" fill="var(--da-fg, #0f172a)">Problem: kurulumu pahalı / sınıfı bilinmeyen nesne</text>
+  <text x="50" y="299" font-size="10.5" fill="var(--da-fg, #0f172a)">Fikir: hazır örneği clone() ile kopyala</text>
+  <text x="50" y="314" font-size="10.5" fill="var(--da-muted, #64748b)">Kullanım: belge şablonları, oyun varlıkları, test fixture</text>
+  <text x="50" y="329" font-size="10.5" fill="var(--da-muted, #64748b)">Dikkat: derin kopya</text>
+  <rect x="660" y="240" width="260" height="100" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-danger, #ef4444)" stroke-width="1.5"/>
+  <rect x="660" y="240" width="260" height="26" rx="10" fill="var(--da-danger, #ef4444)" fill-opacity="0.16"/>
+  <text x="790" y="257" text-anchor="middle" font-size="12.5" font-weight="700" fill="var(--da-fg, #0f172a)">Singleton</text>
+  <text x="670" y="284" font-size="10.5" fill="var(--da-fg, #0f172a)">Problem: gerçekten tek olması gereken kaynak</text>
+  <text x="670" y="299" font-size="10.5" fill="var(--da-fg, #0f172a)">Fikir: private kurucu + statik erişim noktası</text>
+  <text x="670" y="314" font-size="10.5" fill="var(--da-muted, #64748b)">Kullanım: config, bağlantı havuzu, logger</text>
+  <text x="670" y="329" font-size="10.5" fill="var(--da-muted, #64748b)">Dikkat: gizli bağımlılık; DI scope tercih et</text>
+  <path d="M 300 140 L 350 140" fill="none" stroke="var(--da-primary, #6366f1)" stroke-width="1.6"  marker-end="url(#m-primary)"/>
+  <text x="325" y="128" text-anchor="middle" font-size="10.5" fill="var(--da-primary, #6366f1)">genelleşir</text>
+  <path d="M 610 160 L 660 160" fill="none" stroke="var(--da-muted, #64748b)" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#m-arrow)"/>
+  <text x="635" y="148" text-anchor="middle" font-size="10.5" fill="var(--da-muted, #64748b)">alternatif</text>
+  <path d="M 300 290 L 470 215" fill="none" stroke="var(--da-success, #10b981)" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#m-success)"/>
+  <text x="360" y="238" text-anchor="middle" font-size="10.5" fill="var(--da-success, #10b981)">fabrika clone ile uygulanabilir</text>
+  <path d="M 660 290 L 490 215" fill="none" stroke="var(--da-danger, #ef4444)" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#m-danger)"/>
+  <text x="600" y="330" text-anchor="middle" font-size="10.5" fill="var(--da-danger, #ef4444)">fabrikalar çoğu zaman tek örnek</text>
+  <text x="480" y="36" text-anchor="middle" font-size="15" font-weight="700" fill="var(--da-fg, #0f172a)">Creational kalıplar: nesne üretimini çağıran koddan ayırmak</text>
+  <text x="480" y="395" text-anchor="middle" font-size="12" font-weight="700" fill="var(--da-fg, #0f172a)">Karar akışı</text>
+  <text x="480" y="418" text-anchor="middle" font-size="11" font-weight="400" fill="var(--da-fg, #0f172a)">Tek nesne mi? → Singleton (DI ile)   |   Alt sınıf karar versin → Factory Method   |   Ürün ailesi → Abstract Factory</text>
+  <text x="480" y="438" text-anchor="middle" font-size="11" font-weight="400" fill="var(--da-fg, #0f172a)">Çok parametre / adım adım → Builder   |   Pahalı kurulum, kopyalamak ucuz → Prototype</text>
+  <text x="480" y="472" text-anchor="middle" font-size="10.5" font-weight="400" fill="var(--da-muted, #64748b)">Ortak kazanç: istemci somut sınıf adını bilmez (Dependency Inversion); ortak risk: gereksiz soyutlama katmanı.</text>
+</svg>

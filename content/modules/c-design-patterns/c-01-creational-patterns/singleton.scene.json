@@ -1,0 +1,351 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "c-01-singleton",
+  "title": {
+    "tr": "Singleton: Tek Nesne, Tek Erişim Noktası",
+    "en": "Singleton: One Instance, One Access Point"
+  },
+  "summary": {
+    "tr": "İki farklı istemci getInstance() çağırır; ilk çağrı nesneyi oluşturur, ikincisi aynı nesneyi alır.",
+    "en": "Two different clients call getInstance(); the first call creates the object, the second receives the same one."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda iki istemci nesnesi, ortada ConfigService sınıfı, sağda tek bir instance kutusu. İlk istemci getInstance çağırır, sınıf instance alanı boş olduğu için nesneyi yaratır ve döner. İkinci istemci aynı çağrıyı yapar ve aynı nesnenin referansını alır. Son adımda her iki istemci aynı nesne üzerinde get çağrısı yapar.",
+      "en": "Two client objects on the left, the ConfigService class in the middle, a single instance box on the right. The first client calls getInstance, the class finds its instance field empty, creates the object and returns it. The second client makes the same call and receives a reference to the same object. In the last step both clients call get on the same object."
+    }
+  },
+  "canvas": {
+    "width": 1000,
+    "height": 600
+  },
+  "nodes": [
+    {
+      "id": "c1",
+      "kind": "generic",
+      "label": "orderService",
+      "x": 110,
+      "y": 190,
+      "w": 150,
+      "h": 64,
+      "sublabel": {
+        "tr": ":OrderService",
+        "en": ":OrderService"
+      }
+    },
+    {
+      "id": "c2",
+      "kind": "generic",
+      "label": "reportJob",
+      "x": 110,
+      "y": 410,
+      "w": 150,
+      "h": 64,
+      "sublabel": {
+        "tr": ":ReportJob",
+        "en": ":ReportJob"
+      }
+    },
+    {
+      "id": "cls",
+      "kind": "generic",
+      "label": "ConfigService",
+      "x": 480,
+      "y": 300,
+      "w": 190,
+      "h": 80,
+      "sublabel": {
+        "tr": "sınıf (statik)",
+        "en": "class (static)"
+      }
+    },
+    {
+      "id": "inst",
+      "kind": "generic",
+      "label": "instance",
+      "x": 840,
+      "y": 300,
+      "w": 170,
+      "h": 80,
+      "sublabel": {
+        "tr": "henüz yok",
+        "en": "not yet created"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "c1-cls",
+      "from": "c1",
+      "to": "cls",
+      "kind": "request",
+      "label": "getInstance()",
+      "curvature": -0.1
+    },
+    {
+      "id": "c2-cls",
+      "from": "c2",
+      "to": "cls",
+      "kind": "request",
+      "label": "getInstance()",
+      "curvature": 0.1
+    },
+    {
+      "id": "cls-inst",
+      "from": "cls",
+      "to": "inst",
+      "kind": "control",
+      "label": "new (1 kez)"
+    },
+    {
+      "id": "c1-inst",
+      "from": "c1",
+      "to": "inst",
+      "kind": "request",
+      "label": "get(\"db.url\")",
+      "curvature": -0.35,
+      "style": "dashed"
+    },
+    {
+      "id": "c2-inst",
+      "from": "c2",
+      "to": "inst",
+      "kind": "request",
+      "label": "get(\"db.url\")",
+      "curvature": 0.35,
+      "style": "dashed"
+    }
+  ],
+  "steps": [
+    {
+      "id": "first-call",
+      "title": {
+        "tr": "1. İlk getInstance()",
+        "en": "1. First getInstance()"
+      },
+      "narration": {
+        "tr": "OrderService ConfigService.getInstance() çağırır. Statik instance alanı boştur; sınıf özel kurucuyu bir kez çalıştırır, yapılandırma dosyasını okur ve nesneyi alana yazar.",
+        "en": "OrderService calls ConfigService.getInstance(). The static instance field is empty; the class runs the private constructor once, reads the config file and stores the object in the field."
+      },
+      "durationMs": 4000,
+      "inherit": false,
+      "highlight": {
+        "nodes": [
+          "c1",
+          "cls"
+        ],
+        "edges": [
+          "c1-cls",
+          "cls-inst"
+        ]
+      },
+      "nodeStates": {
+        "cls": {
+          "status": "active",
+          "badge": "instance = null"
+        },
+        "inst": {
+          "visible": false
+        }
+      },
+      "edgeStates": {
+        "c1-inst": {
+          "visible": false
+        },
+        "c2-inst": {
+          "visible": false
+        }
+      },
+      "packets": [
+        {
+          "edge": "c1-cls",
+          "shape": "envelope",
+          "label": "getInstance()",
+          "durationMs": 900
+        },
+        {
+          "edge": "cls-inst",
+          "startAt": 1000,
+          "shape": "square",
+          "label": "new ConfigService()",
+          "durationMs": 1000,
+          "color": "accent"
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a1",
+          "x": 480,
+          "y": 170,
+          "text": {
+            "tr": "if (!instance) instance = new ConfigService()",
+            "en": "if (!instance) instance = new ConfigService()"
+          },
+          "target": "cls"
+        }
+      ]
+    },
+    {
+      "id": "created",
+      "title": {
+        "tr": "2. Nesne oluştu, referans döndü",
+        "en": "2. Object created, reference returned"
+      },
+      "narration": {
+        "tr": "Nesne artık bellekte tek kopya olarak durur. getInstance() referansı OrderService'e döner. Kurucu private olduğu için kimse new ile ikinci kopya yaratamaz.",
+        "en": "The object now lives in memory as the only copy. getInstance() returns the reference to OrderService. Because the constructor is private, nobody can create a second copy with new."
+      },
+      "durationMs": 3500,
+      "highlight": {
+        "nodes": [
+          "inst"
+        ],
+        "edges": [
+          "c1-cls"
+        ]
+      },
+      "nodeStates": {
+        "inst": {
+          "visible": true,
+          "status": "success",
+          "sublabel": {
+            "tr": "@0x7f3a · tek kopya",
+            "en": "@0x7f3a · single copy"
+          }
+        },
+        "cls": {
+          "badge": "instance = @0x7f3a"
+        }
+      },
+      "edgeStates": {},
+      "packets": [
+        {
+          "edge": "c1-cls",
+          "direction": "backward",
+          "color": "success",
+          "label": "@0x7f3a",
+          "durationMs": 900
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "id": "second-call",
+      "title": {
+        "tr": "3. İkinci istemci aynı nesneyi alır",
+        "en": "3. Second client gets the same object"
+      },
+      "narration": {
+        "tr": "ReportJob da getInstance() çağırır. Alan dolu olduğu için kurucu çalışmaz; aynı referans döner. İki istemci aynı nesneyi paylaşır: yapılandırma bir kez yüklenmiş, bellekte tek kopya vardır.",
+        "en": "ReportJob also calls getInstance(). The field is set, so the constructor does not run; the same reference is returned. Both clients share one object: config loaded once, one copy in memory."
+      },
+      "durationMs": 3500,
+      "highlight": {
+        "nodes": [
+          "c2",
+          "inst"
+        ],
+        "edges": [
+          "c2-cls"
+        ]
+      },
+      "nodeStates": {},
+      "edgeStates": {},
+      "packets": [
+        {
+          "edge": "c2-cls",
+          "shape": "envelope",
+          "label": "getInstance()",
+          "durationMs": 900
+        },
+        {
+          "edge": "c2-cls",
+          "startAt": 1100,
+          "direction": "backward",
+          "color": "success",
+          "label": "@0x7f3a (aynı)",
+          "durationMs": 900
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a3",
+          "x": 840,
+          "y": 170,
+          "text": {
+            "tr": "kurucu tekrar ÇALIŞMADI",
+            "en": "constructor did NOT run again"
+          },
+          "tone": "success",
+          "target": "inst"
+        }
+      ]
+    },
+    {
+      "id": "use",
+      "title": {
+        "tr": "4. Paylaşılan kullanım ve bedeli",
+        "en": "4. Shared use and its price"
+      },
+      "narration": {
+        "tr": "Her iki istemci de aynı nesne üzerinde get(\"db.url\") çağırır. Kolaylık: global erişim. Bedel: gizli bağımlılık (imzadan görünmez), testte yerine sahte koyma zorluğu, çok iş parçacığında kurucunun yarış koşulu. Modern kodda bunu DI konteynerinin \"tek örnekli\" kaydı ile yapmak tercih edilir.",
+        "en": "Both clients call get(\"db.url\") on the same object. Convenience: global access. Cost: hidden dependency (invisible in signatures), hard to substitute in tests, constructor race under multithreading. Modern code prefers a DI container's singleton-scoped registration."
+      },
+      "durationMs": 4500,
+      "highlight": {
+        "nodes": [
+          "c1",
+          "c2",
+          "inst"
+        ],
+        "edges": [
+          "c1-inst",
+          "c2-inst"
+        ]
+      },
+      "nodeStates": {},
+      "edgeStates": {
+        "c1-inst": {
+          "visible": true,
+          "status": "active"
+        },
+        "c2-inst": {
+          "visible": true,
+          "status": "active"
+        }
+      },
+      "packets": [
+        {
+          "edge": "c1-inst",
+          "label": "get(\"db.url\")",
+          "durationMs": 800
+        },
+        {
+          "edge": "c2-inst",
+          "startAt": 400,
+          "label": "get(\"db.url\")",
+          "durationMs": 800
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a4",
+          "x": 480,
+          "y": 520,
+          "text": {
+            "tr": "gizli bağımlılık + test zorluğu → DI ile tek örnek tercih et",
+            "en": "hidden dependency + hard to test → prefer DI singleton scope"
+          },
+          "tone": "warning"
+        }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": [
+    "singleton",
+    "creational"
+  ]
+}

@@ -1,0 +1,368 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "c-03-state",
+  "title": {
+    "tr": "State: Davranış Duruma Göre Değişir",
+    "en": "State: Behavior Changes with State"
+  },
+  "summary": {
+    "tr": "Order bağlamı pay/ship/cancel çağrılarını içindeki durum nesnesine devreder; Pending → Paid → Shipped geçişleri durum sınıflarında yaşar; Shipped durumda cancel reddedilir.",
+    "en": "The Order context delegates pay/ship/cancel to its current state object; the Pending → Paid → Shipped transitions live in the state classes; cancel is rejected in Shipped."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda istemci, ortada Order bağlamı, sağda üstten alta Pending, Paid ve Shipped durum nesneleri. İstemci pay çağırır; Order bunu Pending'e devreder; Pending bağlamın durumunu Paid yapar. İstemci ship çağırır; Paid durumu Shipped yapar. İstemci cancel çağırır; Shipped durumu bunu reddeder.",
+      "en": "Client on the left, the Order context in the middle, Pending, Paid and Shipped state objects stacked on the right. The client calls pay; Order delegates to Pending; Pending sets the context state to Paid. The client calls ship; Paid sets it to Shipped. The client calls cancel; Shipped rejects it."
+    }
+  },
+  "canvas": {
+    "width": 1000,
+    "height": 600
+  },
+  "nodes": [
+    {
+      "id": "client",
+      "kind": "generic",
+      "label": "OrderApi",
+      "x": 110,
+      "y": 300,
+      "w": 150,
+      "h": 70,
+      "sublabel": {
+        "tr": "pay / ship / cancel",
+        "en": "pay / ship / cancel"
+      }
+    },
+    {
+      "id": "order",
+      "kind": "generic",
+      "label": "Order #42",
+      "x": 450,
+      "y": 300,
+      "w": 200,
+      "h": 80,
+      "sublabel": {
+        "tr": "state: Pending",
+        "en": "state: Pending"
+      }
+    },
+    {
+      "id": "pending",
+      "kind": "generic",
+      "label": "PendingState",
+      "x": 840,
+      "y": 120,
+      "w": 180,
+      "h": 60,
+      "sublabel": {
+        "tr": "pay → Paid",
+        "en": "pay → Paid"
+      }
+    },
+    {
+      "id": "paid",
+      "kind": "generic",
+      "label": "PaidState",
+      "x": 840,
+      "y": 300,
+      "w": 180,
+      "h": 60,
+      "sublabel": {
+        "tr": "ship → Shipped",
+        "en": "ship → Shipped"
+      }
+    },
+    {
+      "id": "shipped",
+      "kind": "generic",
+      "label": "ShippedState",
+      "x": 840,
+      "y": 480,
+      "w": 180,
+      "h": 60,
+      "sublabel": {
+        "tr": "cancel → hata",
+        "en": "cancel → error"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "c-o",
+      "from": "client",
+      "to": "order",
+      "kind": "request",
+      "label": "pay()"
+    },
+    {
+      "id": "o-pending",
+      "from": "order",
+      "to": "pending",
+      "kind": "request",
+      "label": "state.pay(this)",
+      "curvature": -0.1
+    },
+    {
+      "id": "o-paid",
+      "from": "order",
+      "to": "paid",
+      "kind": "request",
+      "label": "state.ship(this)"
+    },
+    {
+      "id": "o-shipped",
+      "from": "order",
+      "to": "shipped",
+      "kind": "request",
+      "label": "state.cancel(this)",
+      "curvature": 0.1
+    }
+  ],
+  "steps": [
+    {
+      "id": "pay",
+      "title": {
+        "tr": "1. pay(): Pending → Paid",
+        "en": "1. pay(): Pending → Paid"
+      },
+      "narration": {
+        "tr": "OrderApi order.pay() çağırır. Order içinde switch(status) yoktur; this.state.pay(this) der. PendingState ödemeyi işler ve order.setState(new PaidState()) yapar: geçiş kuralı durumun içindedir.",
+        "en": "OrderApi calls order.pay(). There is no switch(status) in Order; it says this.state.pay(this). PendingState processes the payment and does order.setState(new PaidState()): the transition rule lives inside the state."
+      },
+      "durationMs": 3500,
+      "inherit": false,
+      "highlight": {
+        "nodes": [
+          "client",
+          "order",
+          "pending"
+        ],
+        "edges": [
+          "c-o",
+          "o-pending"
+        ]
+      },
+      "nodeStates": {
+        "pending": {
+          "status": "active"
+        },
+        "paid": {
+          "status": "muted"
+        },
+        "shipped": {
+          "status": "muted"
+        }
+      },
+      "edgeStates": {
+        "o-paid": {
+          "status": "muted"
+        },
+        "o-shipped": {
+          "status": "muted"
+        }
+      },
+      "packets": [
+        {
+          "edge": "c-o",
+          "shape": "envelope",
+          "label": "pay()",
+          "durationMs": 800
+        },
+        {
+          "edge": "o-pending",
+          "startAt": 900,
+          "shape": "envelope",
+          "label": "state.pay(this)",
+          "durationMs": 800
+        },
+        {
+          "edge": "o-pending",
+          "startAt": 1800,
+          "direction": "backward",
+          "color": "success",
+          "label": "setState(Paid)",
+          "durationMs": 800
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a1",
+          "x": 450,
+          "y": 170,
+          "text": {
+            "tr": "Order'da switch yok: devret",
+            "en": "no switch in Order: delegate"
+          },
+          "target": "order"
+        }
+      ]
+    },
+    {
+      "id": "ship",
+      "title": {
+        "tr": "2. ship(): Paid → Shipped",
+        "en": "2. ship(): Paid → Shipped"
+      },
+      "narration": {
+        "tr": "Durum artık PaidState. ship() çağrısı ona gider; kargo oluşturulur ve durum ShippedState olur. Aynı order.ship() çağrısı Pending durumda \"önce ödeme\" hatası verirdi: aynı mesaj, farklı davranış.",
+        "en": "The state is now PaidState. ship() goes to it; a shipment is created and the state becomes ShippedState. The same order.ship() call in Pending would have raised \"pay first\": same message, different behavior."
+      },
+      "durationMs": 3500,
+      "highlight": {
+        "nodes": [
+          "paid"
+        ],
+        "edges": [
+          "c-o",
+          "o-paid"
+        ]
+      },
+      "nodeStates": {
+        "order": {
+          "sublabel": {
+            "tr": "state: Paid",
+            "en": "state: Paid"
+          }
+        },
+        "pending": {
+          "status": "idle"
+        },
+        "paid": {
+          "status": "active"
+        }
+      },
+      "edgeStates": {
+        "c-o": {
+          "label": "ship()"
+        },
+        "o-paid": {
+          "status": "active"
+        },
+        "o-pending": {
+          "status": "idle"
+        }
+      },
+      "packets": [
+        {
+          "edge": "c-o",
+          "shape": "envelope",
+          "label": "ship()",
+          "durationMs": 800
+        },
+        {
+          "edge": "o-paid",
+          "startAt": 900,
+          "shape": "envelope",
+          "label": "state.ship(this)",
+          "durationMs": 800
+        },
+        {
+          "edge": "o-paid",
+          "startAt": 1800,
+          "direction": "backward",
+          "color": "success",
+          "label": "setState(Shipped)",
+          "durationMs": 800
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "id": "cancel",
+      "title": {
+        "tr": "3. cancel(): Shipped durumda geçersiz",
+        "en": "3. cancel(): invalid in Shipped"
+      },
+      "narration": {
+        "tr": "Müşteri iptal ister. ShippedState.cancel() InvalidTransition fırlatır: kargoya verilmiş sipariş iptal edilemez, iade süreci başlatılmalı. Yeni bir durum (Returned) eklemek yeni bir sınıf demektir; diğer durumlar değişmez.",
+        "en": "The customer requests cancellation. ShippedState.cancel() throws InvalidTransition: a shipped order cannot be cancelled, a return flow must start. Adding a new state (Returned) means a new class; other states do not change."
+      },
+      "durationMs": 4000,
+      "highlight": {
+        "nodes": [
+          "shipped"
+        ],
+        "edges": [
+          "c-o",
+          "o-shipped"
+        ]
+      },
+      "nodeStates": {
+        "order": {
+          "sublabel": {
+            "tr": "state: Shipped",
+            "en": "state: Shipped"
+          }
+        },
+        "paid": {
+          "status": "idle"
+        },
+        "shipped": {
+          "status": "error",
+          "badge": "✕"
+        }
+      },
+      "edgeStates": {
+        "c-o": {
+          "label": "cancel()"
+        },
+        "o-shipped": {
+          "status": "error"
+        },
+        "o-paid": {
+          "status": "idle"
+        }
+      },
+      "packets": [
+        {
+          "edge": "c-o",
+          "shape": "envelope",
+          "label": "cancel()",
+          "durationMs": 800
+        },
+        {
+          "edge": "o-shipped",
+          "startAt": 900,
+          "shape": "envelope",
+          "durationMs": 800
+        },
+        {
+          "edge": "o-shipped",
+          "startAt": 1800,
+          "direction": "backward",
+          "color": "danger",
+          "label": "InvalidTransition",
+          "durationMs": 800
+        },
+        {
+          "edge": "c-o",
+          "startAt": 2700,
+          "direction": "backward",
+          "color": "danger",
+          "label": "409",
+          "durationMs": 700
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a3",
+          "x": 450,
+          "y": 440,
+          "text": {
+            "tr": "durum × olay tablosu sınıflara dağıldı; her sınıf kendi satırı",
+            "en": "the state × event table is spread over classes; each class owns its row"
+          },
+          "tone": "info",
+          "target": "order"
+        }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": [
+    "state",
+    "behavioral"
+  ]
+}

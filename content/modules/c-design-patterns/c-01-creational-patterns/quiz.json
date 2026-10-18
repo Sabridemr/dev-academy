@@ -1,0 +1,244 @@
+{
+  "id": "c-01-creational-patterns-quiz",
+  "title": {
+    "tr": "Creational Kalıplar Quiz",
+    "en": "Creational Patterns Quiz"
+  },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Bir UI kütüphanesinde MacButton ile WinCheckbox'ın aynı ekranda karışmasını derleme/tasarım düzeyinde engellemek istiyorsunuz. Hangi kalıp bunun için tasarlanmıştır?",
+        "en": "In a UI library you want to prevent MacButton and WinCheckbox from mixing on the same screen at the design level. Which pattern is designed for this?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Factory Method",
+            "en": "Factory Method"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Abstract Factory",
+            "en": "Abstract Factory"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "Builder",
+            "en": "Builder"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Singleton",
+            "en": "Singleton"
+          }
+        }
+      ],
+      "correct": [
+        "b"
+      ],
+      "explanation": {
+        "tr": "Abstract Factory, birlikte kullanılması gereken ürün ailelerini tek bir fabrika nesnesinden üreterek tutarlılığı garanti eder. Factory Method tek bir ürünün üretimini alt sınıfa bırakır, aile kavramı yoktur; Builder tek karmaşık nesneyi adım adım kurar.",
+        "en": "Abstract Factory guarantees consistency by producing product families that belong together from a single factory object. Factory Method delegates creation of one product to a subclass with no notion of family; Builder assembles one complex object step by step."
+      },
+      "difficulty": "easy",
+      "concepts": [
+        "abstract-factory",
+        "factory-method"
+      ]
+    },
+    {
+      "id": "q2",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Singleton kalıbının yaygın eleştirileri hangileridir? (Birden fazla seçin)",
+        "en": "Which are common criticisms of the Singleton pattern? (Select all that apply)"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Bağımlılığı metot imzalarında görünmez kılar (gizli bağımlılık)",
+            "en": "It hides the dependency from method signatures (hidden dependency)"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Birim testlerde yerine sahte (mock) koymayı zorlaştırır",
+            "en": "It makes substituting a mock in unit tests hard"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "Bellekte çok fazla kopya oluşturur",
+            "en": "It creates too many copies in memory"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Tembel başlatmada çok iş parçacıklı yarış koşulu riski taşır",
+            "en": "Lazy initialization risks a race condition under multithreading"
+          }
+        }
+      ],
+      "correct": [
+        "a",
+        "b",
+        "d"
+      ],
+      "explanation": {
+        "tr": "Singleton tam tersine tek kopya üretir (c yanlış). Asıl sorunlar global durumun gizli bağımlılık yaratması, test izolasyonunu bozması ve tembel başlatmanın eşzamanlılık koruması gerektirmesidir; bu yüzden DI konteynerinin tek örnekli kaydı tercih edilir.",
+        "en": "Singleton produces exactly one copy (c is wrong). The real problems are that global state creates hidden dependencies, breaks test isolation, and lazy initialization needs concurrency protection; hence DI singleton scope is preferred."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "singleton"
+      ]
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": {
+        "tr": "Bir HttpRequest sınıfının kurucusu 9 parametre alıyor ve çoğu isteğe bağlı; çağrılar new HttpRequest(url, null, null, 5000, null, true, ...) şeklinde. En uygun kalıp hangisidir?",
+        "en": "An HttpRequest constructor takes 9 parameters, most optional; calls look like new HttpRequest(url, null, null, 5000, null, true, ...). Which pattern fits best?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Prototype",
+            "en": "Prototype"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Factory Method",
+            "en": "Factory Method"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "Builder",
+            "en": "Builder"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Abstract Factory",
+            "en": "Abstract Factory"
+          }
+        }
+      ],
+      "correct": [
+        "c"
+      ],
+      "explanation": {
+        "tr": "\"Telescoping constructor\" problemi Builder'ın klasik motivasyonudur: her parametre adıyla ve isteğe bağlı olarak verilir, doğrulama build() içinde tek yerde yapılır ve sonuç değişmez olur. Diğer kalıplar hangi sınıfın yaratılacağıyla ilgilenir, parametre karmaşasıyla değil.",
+        "en": "The \"telescoping constructor\" problem is Builder's classic motivation: every parameter is named and optional, validation happens once in build(), and the result is immutable. The other patterns deal with which class to create, not with parameter sprawl."
+      },
+      "difficulty": "easy",
+      "concepts": [
+        "builder"
+      ]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Prototype kalıbında clone() yalnızca üst düzey alanları kopyalarsa (sığ kopya), klon üzerinde yapılan dizi/nesne değişiklikleri prototipi de etkileyebilir.",
+        "en": "In the Prototype pattern, if clone() copies only top-level fields (shallow copy), array/object changes made on the clone can also affect the prototype."
+      },
+      "options": [
+        {
+          "id": "t",
+          "text": {
+            "tr": "Doğru",
+            "en": "True"
+          }
+        },
+        {
+          "id": "f",
+          "text": {
+            "tr": "Yanlış",
+            "en": "False"
+          }
+        }
+      ],
+      "correct": [
+        "t"
+      ],
+      "explanation": {
+        "tr": "Doğru. Sığ kopyada iç diziler ve nesneler referans olarak paylaşılır; klonun styles dizisine eklenen bir öğe prototipte de görünür. Bu yüzden değişebilir iç yapılar derin kopyalanmalı, değişmez olanlar (fontlar) paylaşılabilir.",
+        "en": "True. In a shallow copy inner arrays and objects are shared by reference; an item pushed into the clone's styles array appears in the prototype too. Mutable inner structures must therefore be deep-copied, while immutable ones (fonts) can be shared."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "prototype"
+      ]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "Soyut bir Report sınıfının generate() şablon metodu içinde çağrılan createExporter() metodunun PdfReport ve CsvReport alt sınıflarınca ezilmesi hangi kalıptır?",
+        "en": "An abstract Report class's generate() template method calls createExporter(), which PdfReport and CsvReport subclasses override. Which pattern is this?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Factory Method",
+            "en": "Factory Method"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Abstract Factory",
+            "en": "Abstract Factory"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "Singleton",
+            "en": "Singleton"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Builder",
+            "en": "Builder"
+          }
+        }
+      ],
+      "correct": [
+        "a"
+      ],
+      "explanation": {
+        "tr": "Üst sınıfın algoritması sabit, hangi ürünün (exporter) yaratılacağı kararı alt sınıfa bırakılmış: Factory Method'un tanımı. Abstract Factory ayrı bir fabrika nesnesi ve ürün aileleri gerektirir; burada kalıtımla tek ürün üretiliyor.",
+        "en": "The superclass algorithm is fixed and the decision of which product (exporter) to create is left to the subclass: the definition of Factory Method. Abstract Factory needs a separate factory object and product families; here one product is created via inheritance."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "factory-method"
+      ]
+    }
+  ]
+}

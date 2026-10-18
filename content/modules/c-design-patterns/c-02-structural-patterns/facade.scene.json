@@ -1,0 +1,377 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "c-02-facade",
+  "title": {
+    "tr": "Facade: Dört Alt Sistem, Tek Çağrı",
+    "en": "Facade: Four Subsystems, One Call"
+  },
+  "summary": {
+    "tr": "Controller yalnızca CheckoutFacade.placeOrder çağırır; facade stok ayırır, ödeme alır, kargo planlar ve bildirim gönderir; hata olursa telafi eder.",
+    "en": "The controller only calls CheckoutFacade.placeOrder; the facade reserves stock, charges, schedules shipping and notifies; on failure it compensates."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda OrderController, ortada CheckoutFacade, sağda üstten alta Inventory, Payments, Shipping ve Notification alt sistemleri. Controller placeOrder çağırır; facade sırayla dört alt sistemi çağırır ve tek bir OrderId döner.",
+      "en": "OrderController on the left, CheckoutFacade in the middle, Inventory, Payments, Shipping and Notification subsystems stacked on the right. The controller calls placeOrder; the facade calls the four subsystems in order and returns a single OrderId."
+    }
+  },
+  "canvas": {
+    "width": 1000,
+    "height": 600
+  },
+  "nodes": [
+    {
+      "id": "client",
+      "kind": "generic",
+      "label": "OrderController",
+      "x": 120,
+      "y": 300,
+      "w": 170,
+      "h": 70,
+      "sublabel": {
+        "tr": "HTTP katmanı",
+        "en": "HTTP layer"
+      }
+    },
+    {
+      "id": "facade",
+      "kind": "generic",
+      "label": "CheckoutFacade",
+      "x": 460,
+      "y": 300,
+      "w": 200,
+      "h": 80,
+      "sublabel": {
+        "tr": "placeOrder(cart, card)",
+        "en": "placeOrder(cart, card)"
+      }
+    },
+    {
+      "id": "inv",
+      "kind": "generic",
+      "label": "InventoryService",
+      "x": 840,
+      "y": 90,
+      "w": 180,
+      "h": 56
+    },
+    {
+      "id": "pay",
+      "kind": "generic",
+      "label": "PaymentGateway",
+      "x": 840,
+      "y": 230,
+      "w": 180,
+      "h": 56
+    },
+    {
+      "id": "ship",
+      "kind": "generic",
+      "label": "ShippingService",
+      "x": 840,
+      "y": 370,
+      "w": 180,
+      "h": 56
+    },
+    {
+      "id": "notif",
+      "kind": "generic",
+      "label": "NotificationService",
+      "x": 840,
+      "y": 510,
+      "w": 180,
+      "h": 56
+    }
+  ],
+  "edges": [
+    {
+      "id": "c-f",
+      "from": "client",
+      "to": "facade",
+      "kind": "request",
+      "label": "placeOrder()"
+    },
+    {
+      "id": "f-inv",
+      "from": "facade",
+      "to": "inv",
+      "kind": "request",
+      "curvature": -0.1
+    },
+    {
+      "id": "f-pay",
+      "from": "facade",
+      "to": "pay",
+      "kind": "request"
+    },
+    {
+      "id": "f-ship",
+      "from": "facade",
+      "to": "ship",
+      "kind": "request"
+    },
+    {
+      "id": "f-notif",
+      "from": "facade",
+      "to": "notif",
+      "kind": "request",
+      "curvature": 0.1
+    }
+  ],
+  "steps": [
+    {
+      "id": "call",
+      "title": {
+        "tr": "1. Tek giriş noktası",
+        "en": "1. A single entry point"
+      },
+      "narration": {
+        "tr": "Controller dört servisin sırasını, parametre dönüşümlerini ve hata telafisini bilmek zorunda değildir. Yalnızca facade.placeOrder(cart, card) çağırır.",
+        "en": "The controller does not need to know the order of four services, parameter conversions or failure compensation. It only calls facade.placeOrder(cart, card)."
+      },
+      "durationMs": 3500,
+      "inherit": false,
+      "highlight": {
+        "nodes": [
+          "client",
+          "facade"
+        ],
+        "edges": [
+          "c-f"
+        ]
+      },
+      "nodeStates": {
+        "facade": {
+          "status": "active"
+        }
+      },
+      "edgeStates": {},
+      "packets": [
+        {
+          "edge": "c-f",
+          "shape": "envelope",
+          "label": "placeOrder()",
+          "durationMs": 1000
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a1",
+          "x": 120,
+          "y": 420,
+          "text": {
+            "tr": "controller 1 bağımlılık bilir, 4 değil",
+            "en": "controller knows 1 dependency, not 4"
+          },
+          "target": "client"
+        }
+      ]
+    },
+    {
+      "id": "orchestrate",
+      "title": {
+        "tr": "2. Facade alt sistemleri sırayla çağırır",
+        "en": "2. The facade calls the subsystems in order"
+      },
+      "narration": {
+        "tr": "Stok ayrılır, kart çekilir, kargo planlanır. Sıra ve parametre eşlemesi facade'ın içindedir; facade iş kuralı içermez, yalnızca koordine eder.",
+        "en": "Stock is reserved, the card is charged, shipping is scheduled. The order and parameter mapping live inside the facade; the facade holds no business rules, it only coordinates."
+      },
+      "durationMs": 4500,
+      "highlight": {
+        "nodes": [
+          "inv",
+          "pay",
+          "ship"
+        ],
+        "edges": [
+          "f-inv",
+          "f-pay",
+          "f-ship"
+        ]
+      },
+      "nodeStates": {
+        "inv": {
+          "status": "success",
+          "badge": "reserved"
+        },
+        "pay": {
+          "status": "success",
+          "badge": "charged"
+        },
+        "ship": {
+          "status": "success",
+          "badge": "scheduled"
+        }
+      },
+      "edgeStates": {},
+      "packets": [
+        {
+          "edge": "f-inv",
+          "shape": "envelope",
+          "label": "reserve()",
+          "durationMs": 800
+        },
+        {
+          "edge": "f-pay",
+          "startAt": 1000,
+          "shape": "envelope",
+          "label": "charge()",
+          "durationMs": 800
+        },
+        {
+          "edge": "f-ship",
+          "startAt": 2000,
+          "shape": "envelope",
+          "label": "schedule()",
+          "durationMs": 800
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "id": "notify",
+      "title": {
+        "tr": "3. Bildirim ve tek sonuç",
+        "en": "3. Notification and a single result"
+      },
+      "narration": {
+        "tr": "Son olarak bildirim gönderilir ve controller'a tek bir OrderId döner. Facade, alt sistemlere doğrudan erişimi yasaklamaz; yalnızca en sık senaryoyu paketler. Raporlama ekibi InventoryService'i hâlâ doğrudan kullanabilir.",
+        "en": "Finally a notification is sent and a single OrderId returns to the controller. The facade does not forbid direct access to subsystems; it just packages the most common scenario. The reporting team can still use InventoryService directly."
+      },
+      "durationMs": 3500,
+      "highlight": {
+        "nodes": [
+          "notif",
+          "client"
+        ],
+        "edges": [
+          "f-notif",
+          "c-f"
+        ]
+      },
+      "nodeStates": {
+        "notif": {
+          "status": "success"
+        }
+      },
+      "edgeStates": {},
+      "packets": [
+        {
+          "edge": "f-notif",
+          "shape": "envelope",
+          "label": "orderConfirmed()",
+          "durationMs": 800
+        },
+        {
+          "edge": "c-f",
+          "startAt": 1000,
+          "direction": "backward",
+          "color": "success",
+          "label": "OrderId",
+          "durationMs": 800
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a3",
+          "x": 460,
+          "y": 170,
+          "text": {
+            "tr": "facade koordine eder, iş kuralı barındırmaz",
+            "en": "the facade coordinates, it holds no business rules"
+          },
+          "tone": "info",
+          "target": "facade"
+        }
+      ]
+    },
+    {
+      "id": "failure",
+      "title": {
+        "tr": "4. Hata: facade telafi eder",
+        "en": "4. Failure: the facade compensates"
+      },
+      "narration": {
+        "tr": "Kargo planlama başarısız olursa facade ödemeyi iade eder ve stoğu serbest bırakır; controller yalnızca anlamlı bir hata görür. Bu akış büyürse facade bir saga orchestrator'a dönüşür (b-02).",
+        "en": "If shipping scheduling fails, the facade refunds the payment and releases the stock; the controller sees only a meaningful error. When this flow grows, the facade turns into a saga orchestrator (b-02)."
+      },
+      "durationMs": 4500,
+      "highlight": {
+        "nodes": [
+          "ship",
+          "pay",
+          "inv"
+        ],
+        "edges": [
+          "f-ship",
+          "f-pay",
+          "f-inv"
+        ]
+      },
+      "nodeStates": {
+        "ship": {
+          "status": "error",
+          "badge": "failed"
+        },
+        "pay": {
+          "status": "warning",
+          "badge": "refunded"
+        },
+        "inv": {
+          "status": "warning",
+          "badge": "released"
+        },
+        "notif": {
+          "status": "idle"
+        }
+      },
+      "edgeStates": {},
+      "packets": [
+        {
+          "edge": "f-ship",
+          "direction": "backward",
+          "color": "danger",
+          "label": "error",
+          "durationMs": 800
+        },
+        {
+          "edge": "f-pay",
+          "startAt": 900,
+          "shape": "envelope",
+          "color": "warning",
+          "label": "refund()",
+          "durationMs": 800
+        },
+        {
+          "edge": "f-inv",
+          "startAt": 1800,
+          "shape": "envelope",
+          "color": "warning",
+          "label": "release()",
+          "durationMs": 800
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a4",
+          "x": 460,
+          "y": 440,
+          "text": {
+            "tr": "telafi mantığı tek yerde",
+            "en": "compensation logic in one place"
+          },
+          "tone": "warning",
+          "target": "facade"
+        }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": [
+    "facade",
+    "structural"
+  ]
+}

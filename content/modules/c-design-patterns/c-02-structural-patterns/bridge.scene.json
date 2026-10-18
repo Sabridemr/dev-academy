@@ -1,0 +1,298 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "c-02-bridge",
+  "title": {
+    "tr": "Bridge: İki Hiyerarşiyi Bağımsız Büyütmek",
+    "en": "Bridge: Growing Two Hierarchies Independently"
+  },
+  "summary": {
+    "tr": "SalesReport (soyutlama) render sırasında elindeki Exporter (uygulama) köprüsü üzerinden heading/table/finish çağırır; exporter PdfExporter'dan HtmlExporter'a değişince rapor kodu değişmez.",
+    "en": "SalesReport (abstraction) calls heading/table/finish across its Exporter (implementation) bridge while rendering; when the exporter changes from PdfExporter to HtmlExporter the report code does not change."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda istemci, ortada SalesReport soyutlaması, sağda PdfExporter uygulaması ve altında HtmlExporter. İstemci render çağırır; SalesReport exporter üzerinden heading, table ve finish çağırır; PDF baytları döner. Son adımda exporter HtmlExporter ile değiştirilir ve aynı çağrılar HTML üretir.",
+      "en": "Client on the left, the SalesReport abstraction in the middle, the PdfExporter implementation on the right with HtmlExporter below it. The client calls render; SalesReport calls heading, table and finish through the exporter; PDF bytes return. In the last step the exporter is swapped for HtmlExporter and the same calls produce HTML."
+    }
+  },
+  "canvas": {
+    "width": 1000,
+    "height": 600
+  },
+  "nodes": [
+    {
+      "id": "client",
+      "kind": "generic",
+      "label": "ReportJob",
+      "x": 110,
+      "y": 300,
+      "w": 150,
+      "h": 70,
+      "sublabel": {
+        "tr": "Report bekler",
+        "en": "expects Report"
+      }
+    },
+    {
+      "id": "report",
+      "kind": "generic",
+      "label": "SalesReport",
+      "x": 450,
+      "y": 300,
+      "w": 200,
+      "h": 80,
+      "sublabel": {
+        "tr": "Report · exporter: Pdf",
+        "en": "Report · exporter: Pdf"
+      }
+    },
+    {
+      "id": "pdf",
+      "kind": "generic",
+      "label": "PdfExporter",
+      "x": 840,
+      "y": 170,
+      "w": 170,
+      "h": 64,
+      "sublabel": {
+        "tr": "Exporter",
+        "en": "Exporter"
+      }
+    },
+    {
+      "id": "html",
+      "kind": "generic",
+      "label": "HtmlExporter",
+      "x": 840,
+      "y": 430,
+      "w": 170,
+      "h": 64,
+      "sublabel": {
+        "tr": "Exporter",
+        "en": "Exporter"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "c-r",
+      "from": "client",
+      "to": "report",
+      "kind": "request",
+      "label": "render(data)"
+    },
+    {
+      "id": "r-pdf",
+      "from": "report",
+      "to": "pdf",
+      "kind": "request",
+      "label": "heading / table / finish",
+      "curvature": -0.1
+    },
+    {
+      "id": "r-html",
+      "from": "report",
+      "to": "html",
+      "kind": "request",
+      "label": "heading / table / finish",
+      "curvature": 0.1,
+      "style": "dashed"
+    }
+  ],
+  "steps": [
+    {
+      "id": "render",
+      "title": {
+        "tr": "1. Soyutlama NE'yi bilir",
+        "en": "1. The abstraction knows WHAT"
+      },
+      "narration": {
+        "tr": "ReportJob render(data) çağırır. SalesReport hangi bölümlerin olacağını bilir (başlık, bölge tablosu, toplam) ama bunların PDF mi HTML mi olacağını bilmez; o iş köprünün öbür ucundadır.",
+        "en": "ReportJob calls render(data). SalesReport knows which sections exist (heading, region table, total) but not whether they become PDF or HTML; that lives at the other end of the bridge."
+      },
+      "durationMs": 3500,
+      "inherit": false,
+      "highlight": {
+        "nodes": [
+          "client",
+          "report"
+        ],
+        "edges": [
+          "c-r"
+        ]
+      },
+      "nodeStates": {
+        "report": {
+          "status": "active"
+        },
+        "html": {
+          "status": "muted"
+        }
+      },
+      "edgeStates": {
+        "r-html": {
+          "status": "muted"
+        }
+      },
+      "packets": [
+        {
+          "edge": "c-r",
+          "shape": "envelope",
+          "label": "render(data)",
+          "durationMs": 900
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a1",
+          "x": 450,
+          "y": 170,
+          "text": {
+            "tr": "soyutlama: bölümler ve sıra",
+            "en": "abstraction: sections and order"
+          },
+          "target": "report"
+        }
+      ]
+    },
+    {
+      "id": "bridge",
+      "title": {
+        "tr": "2. Köprü üzerinden NASIL",
+        "en": "2. HOW, across the bridge"
+      },
+      "narration": {
+        "tr": "SalesReport sırayla exporter.heading(\"Satış Q3\"), exporter.table(rows), exporter.finish() çağırır. PdfExporter her birini PDF ilkelce komutlarına çevirir ve baytları döner.",
+        "en": "SalesReport calls exporter.heading(\"Sales Q3\"), exporter.table(rows), exporter.finish() in order. PdfExporter turns each into PDF primitives and returns the bytes."
+      },
+      "durationMs": 4000,
+      "highlight": {
+        "nodes": [
+          "pdf"
+        ],
+        "edges": [
+          "r-pdf"
+        ]
+      },
+      "nodeStates": {
+        "pdf": {
+          "status": "active"
+        }
+      },
+      "edgeStates": {},
+      "packets": [
+        {
+          "edge": "r-pdf",
+          "shape": "envelope",
+          "label": "heading()",
+          "durationMs": 700
+        },
+        {
+          "edge": "r-pdf",
+          "startAt": 800,
+          "shape": "envelope",
+          "label": "table()",
+          "durationMs": 700
+        },
+        {
+          "edge": "r-pdf",
+          "startAt": 1600,
+          "shape": "envelope",
+          "label": "finish()",
+          "durationMs": 700
+        },
+        {
+          "edge": "r-pdf",
+          "startAt": 2400,
+          "direction": "backward",
+          "color": "success",
+          "label": "PDF bytes",
+          "durationMs": 800
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "id": "swap",
+      "title": {
+        "tr": "3. Uygulamayı değiştir, soyutlamaya dokunma",
+        "en": "3. Swap the implementation, leave the abstraction alone"
+      },
+      "narration": {
+        "tr": "Aynı SalesReport'a HtmlExporter verilir; aynı üç çağrı HTML üretir. Yeni bir rapor türü (InventoryReport) ya da yeni bir format (Csv) eklemek diğer hiyerarşiyi etkilemez: N×M sınıf yerine N+M.",
+        "en": "The same SalesReport is given an HtmlExporter; the same three calls produce HTML. Adding a new report type (InventoryReport) or a new format (Csv) does not touch the other hierarchy: N+M classes instead of N×M."
+      },
+      "durationMs": 4000,
+      "highlight": {
+        "nodes": [
+          "html"
+        ],
+        "edges": [
+          "r-html"
+        ]
+      },
+      "nodeStates": {
+        "report": {
+          "sublabel": {
+            "tr": "Report · exporter: Html",
+            "en": "Report · exporter: Html"
+          }
+        },
+        "pdf": {
+          "status": "idle"
+        },
+        "html": {
+          "status": "active"
+        }
+      },
+      "edgeStates": {
+        "r-html": {
+          "status": "active"
+        }
+      },
+      "packets": [
+        {
+          "edge": "r-html",
+          "shape": "envelope",
+          "label": "heading()",
+          "durationMs": 700
+        },
+        {
+          "edge": "r-html",
+          "startAt": 800,
+          "shape": "envelope",
+          "label": "table()",
+          "durationMs": 700
+        },
+        {
+          "edge": "r-html",
+          "startAt": 1600,
+          "direction": "backward",
+          "color": "success",
+          "label": "HTML",
+          "durationMs": 800
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a3",
+          "x": 450,
+          "y": 440,
+          "text": {
+            "tr": "2 rapor × 3 format = 6 sınıf değil, 2 + 3 = 5",
+            "en": "not 2 reports × 3 formats = 6 classes, but 2 + 3 = 5"
+          },
+          "tone": "success",
+          "target": "report"
+        }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": [
+    "bridge",
+    "structural"
+  ]
+}

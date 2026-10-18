@@ -1,0 +1,110 @@
+{
+  "id": "b-02-microservice-communication-quiz",
+  "title": { "tr": "Mikroservis İletişimi Quiz", "en": "Microservice Communication Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Dört servis birbirini senkron zincirle çağırıyor (A→B→C→D) ve her biri %99,9 erişilebilir. A'nın kullanıcıya sunduğu yaklaşık erişilebilirlik nedir?",
+        "en": "Four services call each other in a synchronous chain (A→B→C→D), each 99.9% available. Roughly what availability does A offer the user?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "%99,9 — zincir en zayıf halka kadar erişilebilirdir", "en": "99.9% — the chain is as available as its weakest link" } },
+        { "id": "b", "text": { "tr": "%99,6 — olasılıklar çarpılır", "en": "99.6% — the probabilities multiply" } },
+        { "id": "c", "text": { "tr": "%99,99 — yedeklilik artar", "en": "99.99% — redundancy increases" } },
+        { "id": "d", "text": { "tr": "Hesaplanamaz; ağ gecikmesine bağlıdır", "en": "Cannot be computed; depends on network latency" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Senkron bağımlılıkta her halkanın ayakta olması gerekir: 0,999⁴ ≈ 0,996. Zincir 'en zayıf halka kadar' değil, ondan da kötüdür (a yanlış). Bu yüzden derin senkron zincirler kısaltılır ya da asenkrona çevrilir.",
+        "en": "With synchronous dependencies every link must be up: 0.999⁴ ≈ 0.996. The chain is worse than its weakest link, not equal to it (a is wrong). That is why deep synchronous chains are shortened or made asynchronous."
+      },
+      "difficulty": "medium",
+      "concepts": ["sync-vs-async", "temporal-coupling"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "Saga'daki 'telafi edici transaction' (compensating transaction) için hangisi doğrudur?",
+        "en": "Which statement about a saga's 'compensating transaction' is correct?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Veritabanı rollback'i ile aynıdır; commit edilmemiş değişiklikleri siler", "en": "It is the same as a database rollback; it discards uncommitted changes" } },
+        { "id": "b", "text": { "tr": "Zaten commit edilmiş bir adımın iş kuralına göre tersidir (ör. ödeme → iade)", "en": "It is the business-level inverse of an already committed step (e.g. charge → refund)" } },
+        { "id": "c", "text": { "tr": "Yalnızca orkestrasyon saga'larında vardır", "en": "It only exists in orchestration sagas" } },
+        { "id": "d", "text": { "tr": "Başarısız olabilir ve o zaman saga tamamen iptal edilir", "en": "It may fail, in which case the saga is simply abandoned" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Saga adımları yerel transaction olarak çoktan commit edilmiştir; geri almak için teknik rollback yoktur, iş tersini uygulayan yeni bir işlem gerekir. Telafi her iki saga türünde de vardır (c yanlış) ve başarısız olmamalıdır: başarana kadar yeniden denenir (d yanlış).",
+        "en": "Saga steps have already committed as local transactions; there is no technical rollback, a new operation applying the business inverse is needed. Compensation exists in both saga styles (c is wrong) and must not fail: it is retried until it succeeds (d is wrong)."
+      },
+      "difficulty": "easy",
+      "concepts": ["compensating-transaction", "saga"]
+    },
+    {
+      "id": "q3",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Hangi durumlar koreografi yerine orkestrasyon saga'sını tercih etmek için iyi gerekçedir? (Birden fazla seçin)",
+        "en": "Which situations are good reasons to prefer an orchestration saga over choreography? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Akışta 6+ adım, zaman aşımı ve insan onayı dallanmaları var", "en": "The flow has 6+ steps with timeout and human-approval branches" } },
+        { "id": "b", "text": { "tr": "'Bu sipariş şu an hangi adımda?' sorusuna anında cevap gerekiyor", "en": "You need an instant answer to 'which step is this order at?'" } },
+        { "id": "c", "text": { "tr": "Servislerin birbirinden hiç haberdar olmaması en yüksek öncelik", "en": "Services knowing nothing about each other is the top priority" } },
+        { "id": "d", "text": { "tr": "Servislerin olaylarını karşılıklı dinlemesi döngüsel bağımlılığa yol açmaya başladı", "en": "Services mutually subscribing to each other's events is creating cyclic dependencies" } }
+      ],
+      "correct": ["a", "b", "d"],
+      "explanation": {
+        "tr": "Çok adımlı dallanan akışlar, merkezi görünürlük ihtiyacı ve döngüsel dinleme sorunu orkestrasyonun çözdüğü problemlerdir. En gevşek bağlaşıklık (c) ise koreografinin güçlü yanıdır; orchestrator herkesi tanımak zorundadır.",
+        "en": "Multi-step branching flows, the need for central visibility and cyclic subscriptions are exactly what orchestration solves. Maximum loose coupling (c) is choreography's strength; an orchestrator must know everyone."
+      },
+      "difficulty": "medium",
+      "concepts": ["choreography", "orchestration"]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Event sourcing kullanan bir sistemde CQRS pratikte zorunludur, ama CQRS kullanan bir sistem event sourcing kullanmak zorunda değildir.",
+        "en": "A system using event sourcing practically requires CQRS, but a system using CQRS does not have to use event sourcing."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["t"],
+      "explanation": {
+        "tr": "Doğru. Olay günlüğü üzerinde doğrudan sorgu yapılamaz; durumu sorgulamak için olaylardan okuma modelleri (projeksiyon) türetmek, yani CQRS gerekir. Tersi geçerli değildir: klasik bir tablo üzerinde yazma modelini ve ayrı bir denormalize okuma modelini tutmak event sourcing olmadan da CQRS'tir.",
+        "en": "True. You cannot query an event log directly; to query state you must derive read models (projections) from events, which is CQRS. The reverse does not hold: keeping a write model on a classic table plus a separate denormalized read model is CQRS without event sourcing."
+      },
+      "difficulty": "hard",
+      "concepts": ["cqrs", "event-sourcing"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "Bir Kafka tüketicisi 'at-least-once' teslimle çalışıyor. Aynı OrderPlaced olayının iki kez işlenip stoğun iki kez düşmesini engellemenin doğru yolu nedir?",
+        "en": "A Kafka consumer runs with 'at-least-once' delivery. What is the right way to prevent the same OrderPlaced event from being processed twice and stock being decremented twice?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Teslim garantisini 'at-most-once' yapmak", "en": "Switch the guarantee to 'at-most-once'" } },
+        { "id": "b", "text": { "tr": "Tüketiciyi idempotent yapmak: işlenen mesaj id'lerini kaydedip tekrarı atlamak", "en": "Make the consumer idempotent: record processed message ids and skip duplicates" } },
+        { "id": "c", "text": { "tr": "Üreticinin olayı yalnızca bir kez göndermesini sağlamak", "en": "Ensure the producer sends the event only once" } },
+        { "id": "d", "text": { "tr": "Tüketici sayısını bire düşürmek", "en": "Reduce the number of consumers to one" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Ağda yinelenen teslim kaçınılmazdır; at-most-once (a) ise mesaj kaybını kabul etmek demektir. Üretici tarafında tek gönderim (c) tüketicinin çökmesi ve yeniden okuma durumlarını çözmez; tüketici sayısı (d) konuyla ilgisizdir. Çözüm tüketici tarafında idempotency'dir.",
+        "en": "Duplicate delivery over a network is unavoidable; at-most-once (a) means accepting message loss. Single send on the producer side (c) does not cover consumer crashes and re-reads; the consumer count (d) is irrelevant. The fix is consumer-side idempotency."
+      },
+      "difficulty": "medium",
+      "concepts": ["idempotency", "eventual-consistency"]
+    }
+  ]
+}

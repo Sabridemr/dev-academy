@@ -1,0 +1,541 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "c-01-creational-overview",
+  "title": {
+    "tr": "Nesne Üretimi: new'den Kalıplara",
+    "en": "Object Creation: From new to Patterns"
+  },
+  "summary": {
+    "tr": "İstemci somut sınıfa doğrudan bağımlıyken her değişiklik istemciyi kırar; üretim bir fabrikaya taşınınca istemci yalnızca arayüzü bilir ve uygulama değişmeden kanal değiştirilir. Son adım hangi kalıbın ne zaman kullanılacağını özetler.",
+    "en": "While the client depends directly on a concrete class, every change breaks the client; once creation moves into a factory the client knows only the interface and the channel is swapped without touching it. The last step summarizes which pattern to use when."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda istemci, ortada Notification arayüzü ve bir fabrika, sağda EmailNotification ve SmsNotification somut sınıfları. İlk adımda istemci doğrudan EmailNotification oluşturur. İkinci adımda SMS eklenince istemciye if/else girer. Üçüncü adımda fabrika araya girer ve istemci yalnızca arayüzü kullanır. Dördüncü adımda yapılandırma değişince fabrika SMS üretir, istemci değişmez. Beşinci adım beş creational kalıbın seçim rehberini açıklama kutularıyla gösterir.",
+      "en": "Client on the left, the Notification interface and a factory in the middle, the concrete EmailNotification and SmsNotification on the right. In step one the client creates EmailNotification directly. In step two, when SMS is added, an if/else enters the client. In step three a factory steps in and the client uses only the interface. In step four a config change makes the factory produce SMS while the client stays unchanged. Step five shows the selection guide for the five creational patterns with annotations."
+    }
+  },
+  "canvas": {
+    "width": 1000,
+    "height": 600
+  },
+  "nodes": [
+    {
+      "id": "client",
+      "kind": "generic",
+      "label": "OrderService",
+      "x": 120,
+      "y": 300,
+      "w": 170,
+      "h": 70,
+      "sublabel": {
+        "tr": "istemci kodu",
+        "en": "client code"
+      }
+    },
+    {
+      "id": "iface",
+      "kind": "generic",
+      "label": "Notification",
+      "x": 480,
+      "y": 140,
+      "w": 180,
+      "h": 64,
+      "sublabel": {
+        "tr": "arayüz: send()",
+        "en": "interface: send()"
+      }
+    },
+    {
+      "id": "factory",
+      "kind": "generic",
+      "label": "NotificationFactory",
+      "x": 480,
+      "y": 420,
+      "w": 200,
+      "h": 70,
+      "sublabel": {
+        "tr": "config → somut sınıf",
+        "en": "config → concrete class"
+      }
+    },
+    {
+      "id": "email",
+      "kind": "generic",
+      "label": "EmailNotification",
+      "x": 850,
+      "y": 180,
+      "w": 190,
+      "h": 64,
+      "sublabel": {
+        "tr": "somut",
+        "en": "concrete"
+      }
+    },
+    {
+      "id": "sms",
+      "kind": "generic",
+      "label": "SmsNotification",
+      "x": 850,
+      "y": 420,
+      "w": 190,
+      "h": 64,
+      "sublabel": {
+        "tr": "somut",
+        "en": "concrete"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "cl-email",
+      "from": "client",
+      "to": "email",
+      "kind": "request",
+      "label": "new EmailNotification()",
+      "curvature": -0.2
+    },
+    {
+      "id": "cl-sms",
+      "from": "client",
+      "to": "sms",
+      "kind": "request",
+      "label": "new SmsNotification()",
+      "curvature": 0.2
+    },
+    {
+      "id": "cl-iface",
+      "from": "client",
+      "to": "iface",
+      "kind": "request",
+      "label": "send()"
+    },
+    {
+      "id": "cl-fac",
+      "from": "client",
+      "to": "factory",
+      "kind": "request",
+      "label": "create()"
+    },
+    {
+      "id": "fac-email",
+      "from": "factory",
+      "to": "email",
+      "kind": "control",
+      "label": "new",
+      "style": "dashed",
+      "curvature": -0.15
+    },
+    {
+      "id": "fac-sms",
+      "from": "factory",
+      "to": "sms",
+      "kind": "control",
+      "label": "new",
+      "style": "dashed"
+    },
+    {
+      "id": "email-iface",
+      "from": "email",
+      "to": "iface",
+      "kind": "generic",
+      "label": "implements",
+      "style": "dotted"
+    },
+    {
+      "id": "sms-iface",
+      "from": "sms",
+      "to": "iface",
+      "kind": "generic",
+      "label": "implements",
+      "style": "dotted",
+      "curvature": 0.2
+    }
+  ],
+  "steps": [
+    {
+      "id": "direct",
+      "title": {
+        "tr": "1. Doğrudan new: sıkı bağlaşıklık",
+        "en": "1. Direct new: tight coupling"
+      },
+      "narration": {
+        "tr": "OrderService içinde new EmailNotification(smtp) yazılmıştır. İstemci somut sınıfı, kurucusunun parametrelerini ve SMTP ayrıntılarını bilir. Çalışır, ama her üretim kararı istemciye gömülüdür.",
+        "en": "OrderService contains new EmailNotification(smtp). The client knows the concrete class, its constructor parameters and SMTP details. It works, but every creation decision is baked into the client."
+      },
+      "durationMs": 4000,
+      "inherit": false,
+      "highlight": {
+        "nodes": [
+          "client",
+          "email"
+        ],
+        "edges": [
+          "cl-email"
+        ]
+      },
+      "nodeStates": {
+        "email": {
+          "status": "active"
+        },
+        "factory": {
+          "visible": false
+        },
+        "iface": {
+          "status": "muted"
+        }
+      },
+      "edgeStates": {
+        "cl-sms": {
+          "visible": false
+        },
+        "cl-iface": {
+          "visible": false
+        },
+        "cl-fac": {
+          "visible": false
+        },
+        "fac-email": {
+          "visible": false
+        },
+        "fac-sms": {
+          "visible": false
+        },
+        "email-iface": {
+          "visible": false
+        },
+        "sms-iface": {
+          "visible": false
+        }
+      },
+      "packets": [
+        {
+          "edge": "cl-email",
+          "shape": "square",
+          "color": "accent",
+          "label": "new Email...",
+          "durationMs": 1000
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a1",
+          "x": 120,
+          "y": 420,
+          "text": {
+            "tr": "istemci somut sınıfa bağımlı",
+            "en": "client depends on the concrete class"
+          },
+          "tone": "warning",
+          "target": "client"
+        }
+      ]
+    },
+    {
+      "id": "ifelse",
+      "title": {
+        "tr": "2. Yeni gereksinim: SMS",
+        "en": "2. New requirement: SMS"
+      },
+      "narration": {
+        "tr": "Ürün ekibi SMS ister. Şimdi OrderService içinde if (channel === \"sms\") new SmsNotification(gateway) else new EmailNotification(smtp) vardır. Üçüncü kanal gelince istemci yine değişecek; testlerde gerçek SMTP ve SMS istemcileri gerekecek.",
+        "en": "Product asks for SMS. Now OrderService contains if (channel === \"sms\") new SmsNotification(gateway) else new EmailNotification(smtp). A third channel will change the client again; tests will need real SMTP and SMS clients."
+      },
+      "durationMs": 4000,
+      "highlight": {
+        "nodes": [
+          "client",
+          "sms"
+        ],
+        "edges": [
+          "cl-sms",
+          "cl-email"
+        ]
+      },
+      "nodeStates": {
+        "client": {
+          "status": "warning",
+          "badge": "if/else"
+        },
+        "sms": {
+          "status": "active"
+        }
+      },
+      "edgeStates": {
+        "cl-sms": {
+          "visible": true,
+          "status": "active"
+        }
+      },
+      "packets": [
+        {
+          "edge": "cl-sms",
+          "shape": "square",
+          "color": "accent",
+          "label": "new Sms...",
+          "durationMs": 1000
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a2",
+          "x": 120,
+          "y": 420,
+          "text": {
+            "tr": "her yeni kanal = istemcide değişiklik",
+            "en": "every new channel = a change in the client"
+          },
+          "tone": "danger",
+          "target": "client"
+        }
+      ]
+    },
+    {
+      "id": "factory",
+      "title": {
+        "tr": "3. Üretimi bir fabrikaya taşı",
+        "en": "3. Move creation into a factory"
+      },
+      "narration": {
+        "tr": "Üretim kararı NotificationFactory'ye taşınır; istemci factory.create() çağırır ve yalnızca Notification arayüzünü görür. Somut sınıflar arayüzü uygular. if/else artık tek bir yerde, istemciden uzaktadır.",
+        "en": "The creation decision moves into NotificationFactory; the client calls factory.create() and sees only the Notification interface. Concrete classes implement the interface. The if/else now lives in one place, away from the client."
+      },
+      "durationMs": 4500,
+      "highlight": {
+        "nodes": [
+          "factory",
+          "iface"
+        ],
+        "edges": [
+          "cl-fac",
+          "cl-iface",
+          "fac-email"
+        ]
+      },
+      "nodeStates": {
+        "client": {
+          "status": "success",
+          "badge": ""
+        },
+        "factory": {
+          "visible": true,
+          "status": "active"
+        },
+        "iface": {
+          "status": "active"
+        }
+      },
+      "edgeStates": {
+        "cl-email": {
+          "visible": false
+        },
+        "cl-sms": {
+          "visible": false
+        },
+        "cl-iface": {
+          "visible": true
+        },
+        "cl-fac": {
+          "visible": true,
+          "status": "active"
+        },
+        "fac-email": {
+          "visible": true,
+          "status": "active"
+        },
+        "email-iface": {
+          "visible": true
+        },
+        "sms-iface": {
+          "visible": true
+        }
+      },
+      "packets": [
+        {
+          "edge": "cl-fac",
+          "shape": "envelope",
+          "label": "create()",
+          "durationMs": 800
+        },
+        {
+          "edge": "fac-email",
+          "startAt": 900,
+          "shape": "square",
+          "color": "accent",
+          "label": "new",
+          "durationMs": 800
+        },
+        {
+          "edge": "cl-iface",
+          "startAt": 1900,
+          "shape": "envelope",
+          "label": "send()",
+          "durationMs": 800
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a3",
+          "x": 480,
+          "y": 540,
+          "text": {
+            "tr": "karar tek yerde; istemci yalnızca arayüzü bilir",
+            "en": "decision in one place; client knows only the interface"
+          },
+          "tone": "success",
+          "target": "factory"
+        }
+      ]
+    },
+    {
+      "id": "swap",
+      "title": {
+        "tr": "4. Kanal değişti, istemci değişmedi",
+        "en": "4. Channel changed, client unchanged"
+      },
+      "narration": {
+        "tr": "Yapılandırma \"sms\" olur. Fabrika artık SmsNotification üretir; OrderService'in tek satırı bile değişmez. Testte fabrikaya sahte bir Notification döndürmek yeterlidir.",
+        "en": "Config becomes \"sms\". The factory now produces SmsNotification; not a single line of OrderService changes. In tests, making the factory return a fake Notification is enough."
+      },
+      "durationMs": 4000,
+      "highlight": {
+        "nodes": [
+          "factory",
+          "sms"
+        ],
+        "edges": [
+          "fac-sms"
+        ]
+      },
+      "nodeStates": {
+        "email": {
+          "status": "idle"
+        },
+        "sms": {
+          "status": "success"
+        },
+        "factory": {
+          "badge": "config: sms"
+        }
+      },
+      "edgeStates": {
+        "fac-email": {
+          "status": "idle"
+        },
+        "fac-sms": {
+          "visible": true,
+          "status": "active"
+        }
+      },
+      "packets": [
+        {
+          "edge": "cl-fac",
+          "shape": "envelope",
+          "label": "create()",
+          "durationMs": 800
+        },
+        {
+          "edge": "fac-sms",
+          "startAt": 900,
+          "shape": "square",
+          "color": "accent",
+          "label": "new",
+          "durationMs": 800
+        },
+        {
+          "edge": "cl-iface",
+          "startAt": 1900,
+          "shape": "envelope",
+          "label": "send()",
+          "durationMs": 800
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "id": "guide",
+      "title": {
+        "tr": "5. Hangi kalıp ne zaman?",
+        "en": "5. Which pattern when?"
+      },
+      "narration": {
+        "tr": "Alt sınıf üretime karar verecekse Factory Method; birlikte kullanılması gereken ürün aileleri varsa Abstract Factory; çok parametreli, adım adım kurulan nesne için Builder; kurulumu pahalı nesnenin kopyası için Prototype; gerçekten tek olması gereken ve paylaşılan kaynak için Singleton (tercihen DI üzerinden).",
+        "en": "Subclass decides creation: Factory Method; product families that must be used together: Abstract Factory; many parameters built step by step: Builder; copies of an expensive-to-build object: Prototype; a truly single shared resource: Singleton (preferably via DI)."
+      },
+      "durationMs": 6000,
+      "highlight": {
+        "nodes": [
+          "factory"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "factory": {
+          "badge": ""
+        }
+      },
+      "edgeStates": {},
+      "packets": [],
+      "annotations": [
+        {
+          "id": "g1",
+          "x": 300,
+          "y": 60,
+          "text": {
+            "tr": "alt sınıf karar verir → Factory Method",
+            "en": "subclass decides → Factory Method"
+          },
+          "tone": "info"
+        },
+        {
+          "id": "g2",
+          "x": 700,
+          "y": 60,
+          "text": {
+            "tr": "tutarlı ürün ailesi → Abstract Factory",
+            "en": "consistent product family → Abstract Factory"
+          },
+          "tone": "info"
+        },
+        {
+          "id": "g3",
+          "x": 300,
+          "y": 540,
+          "text": {
+            "tr": "çok parametre, adım adım → Builder",
+            "en": "many params, step by step → Builder"
+          },
+          "tone": "info"
+        },
+        {
+          "id": "g4",
+          "x": 700,
+          "y": 540,
+          "text": {
+            "tr": "pahalı kurulum, kopyala → Prototype",
+            "en": "expensive setup, copy → Prototype"
+          },
+          "tone": "info"
+        },
+        {
+          "id": "g5",
+          "x": 480,
+          "y": 300,
+          "text": {
+            "tr": "tek paylaşılan kaynak → Singleton (DI ile)",
+            "en": "single shared resource → Singleton (via DI)"
+          },
+          "tone": "warning"
+        }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": [
+    "creational",
+    "factory",
+    "overview"
+  ]
+}

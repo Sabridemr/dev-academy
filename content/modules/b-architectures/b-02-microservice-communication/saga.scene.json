@@ -1,0 +1,160 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "b-02-saga-orchestration",
+  "title": { "tr": "Orkestrasyon Saga: Komutlar ve Ters Sıralı Telafi", "en": "Orchestration Saga: Commands and Reverse-Order Compensation" },
+  "summary": {
+    "tr": "Bir saga orchestrator sırayla ReserveStock ve ChargeCard komutları gönderir; ödeme reddedilince ReleaseStock ve CancelOrder telafilerini ters sırada tetikler ve her adımı saga günlüğüne yazar.",
+    "en": "A saga orchestrator sends ReserveStock then ChargeCard commands; when payment is declined it triggers the ReleaseStock and CancelOrder compensations in reverse order, logging every step."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda müşteri, ortada Saga Orchestrator ve altında saga günlüğü veritabanı, sağda üstten alta Inventory, Payments ve Orders servisleri vardır. Orchestrator önce Inventory'ye ReserveStock komutu gönderir ve OK alır, sonra Payments'a ChargeCard gönderir ve DECLINED alır. Ardından Inventory'ye ReleaseStock, Orders'a CancelOrder telafi komutlarını gönderir ve müşteriye sonucu bildirir.",
+      "en": "Customer on the left, the Saga Orchestrator in the middle with a saga log database below it, and Inventory, Payments and Orders services stacked on the right. The orchestrator first sends ReserveStock to Inventory and gets OK, then sends ChargeCard to Payments and gets DECLINED. It then sends the ReleaseStock compensation to Inventory and CancelOrder to Orders, and reports the result to the customer."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "user", "kind": "user", "label": { "tr": "Müşteri", "en": "Customer" }, "x": 90, "y": 240 },
+    { "id": "orch", "kind": "service", "label": "Saga Orchestrator", "sublabel": { "tr": "durum makinesi", "en": "state machine" }, "x": 380, "y": 240, "w": 170, "h": 80 },
+    { "id": "log", "kind": "db", "label": "saga-log", "sublabel": { "tr": "adım durumları", "en": "step states" }, "x": 380, "y": 470, "w": 110, "h": 70 },
+    { "id": "inventory", "kind": "service", "label": "Inventory", "x": 820, "y": 90, "w": 130, "h": 64 },
+    { "id": "payments", "kind": "service", "label": "Payments", "x": 820, "y": 300, "w": 130, "h": 64 },
+    { "id": "orders", "kind": "service", "label": "Orders", "x": 820, "y": 500, "w": 130, "h": 64 }
+  ],
+  "edges": [
+    { "id": "u-orch", "from": "user", "to": "orch", "kind": "request", "label": "POST /orders" },
+    { "id": "orch-log", "from": "orch", "to": "log", "kind": "data", "style": "dotted" },
+    { "id": "orch-inv", "from": "orch", "to": "inventory", "kind": "request", "bidirectional": true, "curvature": -0.1 },
+    { "id": "orch-pay", "from": "orch", "to": "payments", "kind": "request", "bidirectional": true },
+    { "id": "orch-orders", "from": "orch", "to": "orders", "kind": "request", "bidirectional": true, "curvature": 0.1 }
+  ],
+  "steps": [
+    {
+      "id": "start",
+      "title": { "tr": "1. Saga başlar", "en": "1. Saga starts" },
+      "narration": {
+        "tr": "İstek orchestrator'a gelir. Orchestrator önce saga günlüğüne 'saga #42 başladı' yazar: süreç çökerse başka bir kopya günlükten kaldığı yeri bulur. Akışın tamamı tek bir yerde tanımlıdır.",
+        "en": "The request reaches the orchestrator. It first writes 'saga #42 started' to the saga log: if the process crashes another instance resumes from the log. The whole flow is defined in one place."
+      },
+      "durationMs": 3500,
+      "inherit": false,
+      "highlight": { "nodes": ["user", "orch", "log"], "edges": ["u-orch", "orch-log"] },
+      "nodeStates": { "orch": { "status": "active", "badge": "#42" }, "log": { "status": "active" } },
+      "packets": [
+        { "edge": "u-orch", "shape": "envelope", "durationMs": 900 },
+        { "edge": "orch-log", "startAt": 900, "shape": "square", "label": "started", "durationMs": 600 }
+      ],
+      "annotations": [
+        { "id": "a1", "x": 380, "y": 130, "text": { "tr": "steps = [reserve-stock, charge-card, confirm-order]", "en": "steps = [reserve-stock, charge-card, confirm-order]" }, "target": "orch" }
+      ]
+    },
+    {
+      "id": "reserve",
+      "title": { "tr": "2. T1: ReserveStock → OK", "en": "2. T1: ReserveStock → OK" },
+      "narration": {
+        "tr": "Orchestrator Inventory'ye ReserveStock KOMUTU gönderir (olay değil: tek alıcı, yanıt beklenir). Inventory yerel transaction'ını yapar ve reservationId döner. Günlüğe 'reserve-stock done' yazılır.",
+        "en": "The orchestrator sends a ReserveStock COMMAND to Inventory (not an event: one recipient, reply expected). Inventory runs its local transaction and returns a reservationId. The log records 'reserve-stock done'."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["inventory"], "edges": ["orch-inv"] },
+      "nodeStates": { "inventory": { "status": "success", "badge": "-1" }, "orch": { "sublabel": { "tr": "adım 1/3", "en": "step 1/3" } } },
+      "edgeStates": { "orch-inv": { "status": "active", "label": "ReserveStock" } },
+      "packets": [
+        { "edge": "orch-inv", "shape": "envelope", "label": "ReserveStock", "durationMs": 900 },
+        { "edge": "orch-inv", "startAt": 1400, "direction": "backward", "color": "success", "label": "OK res-7", "durationMs": 900 },
+        { "edge": "orch-log", "startAt": 2400, "shape": "square", "label": "done", "durationMs": 600 }
+      ]
+    },
+    {
+      "id": "charge",
+      "title": { "tr": "3. T2: ChargeCard → DECLINED", "en": "3. T2: ChargeCard → DECLINED" },
+      "narration": {
+        "tr": "Sıradaki komut ChargeCard, idempotency anahtarı olarak orderId ile gönderilir; yeniden denemede kart iki kez çekilmez. Banka reddeder. Orchestrator 'charge-card failed' yazar ve telafi moduna geçer.",
+        "en": "The next command, ChargeCard, is sent with orderId as the idempotency key; a retry will not charge the card twice. The bank declines. The orchestrator records 'charge-card failed' and switches to compensation mode."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["payments"], "edges": ["orch-pay"] },
+      "nodeStates": {
+        "payments": { "status": "error", "badge": "DECLINED" },
+        "orch": { "status": "warning", "sublabel": { "tr": "adım 2/3 başarısız", "en": "step 2/3 failed" } },
+        "inventory": { "status": "idle" }
+      },
+      "edgeStates": { "orch-inv": { "status": "idle", "label": "" }, "orch-pay": { "status": "error", "label": "ChargeCard" } },
+      "packets": [
+        { "edge": "orch-pay", "shape": "envelope", "label": "ChargeCard(key=order-42)", "durationMs": 900 },
+        { "edge": "orch-pay", "startAt": 1500, "direction": "backward", "color": "danger", "label": "DECLINED", "durationMs": 900 },
+        { "edge": "orch-log", "startAt": 2500, "shape": "square", "color": "danger", "label": "failed", "durationMs": 600 }
+      ],
+      "annotations": [
+        { "id": "a3", "x": 380, "y": 130, "text": { "tr": "done = [reserve-stock] → telafi listesi", "en": "done = [reserve-stock] → compensation list" }, "tone": "danger", "target": "orch" }
+      ]
+    },
+    {
+      "id": "compensate",
+      "title": { "tr": "4. C1: ReleaseStock (ters sıra)", "en": "4. C1: ReleaseStock (reverse order)" },
+      "narration": {
+        "tr": "Tamamlanmış adımlar ters sırada telafi edilir. Tek tamamlanan adım reserve-stock olduğu için Inventory'ye ReleaseStock gönderilir. Telafi başarısız olamaz: Inventory erişilemezse orchestrator başarana kadar yeniden dener.",
+        "en": "Completed steps are compensated in reverse order. The only completed step is reserve-stock, so ReleaseStock is sent to Inventory. Compensation must not fail: if Inventory is unreachable the orchestrator retries until it succeeds."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["inventory"], "edges": ["orch-inv"] },
+      "nodeStates": {
+        "inventory": { "status": "warning", "badge": "+1", "sublabel": { "tr": "res-7 serbest", "en": "res-7 released" } },
+        "payments": { "status": "idle" }
+      },
+      "edgeStates": { "orch-pay": { "status": "idle", "label": "" }, "orch-inv": { "status": "active", "label": { "tr": "telafi", "en": "compensate" } } },
+      "packets": [
+        { "edge": "orch-inv", "shape": "envelope", "color": "warning", "label": "ReleaseStock(res-7)", "durationMs": 900 },
+        { "edge": "orch-inv", "startAt": 1400, "direction": "backward", "color": "success", "label": "OK", "durationMs": 900 },
+        { "edge": "orch-log", "startAt": 2400, "shape": "square", "label": "compensated", "durationMs": 600 }
+      ],
+      "annotations": [
+        { "id": "a4", "x": 820, "y": 20, "text": { "tr": "telafi idempotent olmalı: iki kez gelse de stok bir kez artar", "en": "compensation must be idempotent: stock increases once even if sent twice" }, "tone": "warning", "target": "inventory" }
+      ]
+    },
+    {
+      "id": "cancel",
+      "title": { "tr": "5. Sipariş iptal, müşteriye yanıt", "en": "5. Cancel order, reply to customer" },
+      "narration": {
+        "tr": "Orchestrator Orders'a CancelOrder gönderir ve müşteriye 'ödeme reddedildi' sonucunu iletir. Saga günlüğü sonucu COMPENSATED olarak kapatır; ne yarım kalan stok, ne tahsil edilmiş para vardır.",
+        "en": "The orchestrator sends CancelOrder to Orders and returns 'payment declined' to the customer. The saga log closes the saga as COMPENSATED; no dangling reservation, no captured money."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["orders", "user"], "edges": ["orch-orders", "u-orch"] },
+      "nodeStates": {
+        "orders": { "status": "warning", "badge": "CANCELLED" },
+        "inventory": { "status": "idle" },
+        "orch": { "status": "idle", "badge": "", "sublabel": { "tr": "COMPENSATED", "en": "COMPENSATED" } }
+      },
+      "edgeStates": { "orch-inv": { "status": "idle", "label": "" }, "orch-orders": { "status": "active" } },
+      "packets": [
+        { "edge": "orch-orders", "shape": "envelope", "color": "warning", "label": "CancelOrder", "durationMs": 900 },
+        { "edge": "orch-orders", "startAt": 1300, "direction": "backward", "color": "success", "label": "OK", "durationMs": 800 },
+        { "edge": "u-orch", "startAt": 2200, "direction": "backward", "color": "danger", "label": { "tr": "402 ödeme reddedildi", "en": "402 payment declined" }, "durationMs": 900 }
+      ]
+    },
+    {
+      "id": "compare",
+      "title": { "tr": "6. Orkestrasyon ne zaman?", "en": "6. When orchestration?" },
+      "narration": {
+        "tr": "Akış tek bir sınıfta okunur, 'sipariş #42 hangi adımda?' sorusu günlükten anında cevaplanır, zaman aşımı ve insan onayı gibi dallanmalar kolay eklenir. Bedel: orchestrator herkesi tanır ve tek mantık merkezi hâline gelebilir. Temporal, Cadence, AWS Step Functions bu rolü üstlenen motorlardır.",
+        "en": "The flow reads in one class, 'which step is order #42 at?' is answered instantly from the log, and branches like timeouts or human approval are easy to add. The cost: the orchestrator knows everyone and can become a single logic hub. Temporal, Cadence and AWS Step Functions are engines that play this role."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["orch", "log"], "edges": [] },
+      "nodeStates": { "orders": { "status": "idle", "badge": "" }, "inventory": { "badge": "" }, "payments": { "badge": "" } },
+      "edgeStates": { "orch-orders": { "status": "idle" } },
+      "packets": [
+        { "edge": "orch-log", "shape": "square", "repeat": 3, "repeatGapMs": 400, "durationMs": 600 }
+      ],
+      "annotations": [
+        { "id": "a6", "x": 150, "y": 470, "text": { "tr": "artı: görünürlük, dallanma, yeniden başlatma", "en": "pro: visibility, branching, resumability" }, "tone": "success" },
+        { "id": "a7", "x": 150, "y": 540, "text": { "tr": "eksi: merkezi bağımlılık, 'akıllı' orchestrator tuzağı", "en": "con: central dependency, 'smart orchestrator' trap" }, "tone": "warning" }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["saga", "orchestration", "compensation", "idempotency"]
+}

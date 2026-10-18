@@ -1,0 +1,546 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "c-02-structural-overview",
+  "title": {
+    "tr": "Yapısal Kalıplar: Sarmalayıcının Dört Yüzü",
+    "en": "Structural Patterns: Four Faces of a Wrapper"
+  },
+  "summary": {
+    "tr": "Aynı istemci-servis çifti üzerinde sarmalayıcının rolü değişir: arayüz çevirir (Adapter), davranış ekler (Decorator), erişimi kontrol eder (Proxy), birçok alt sistemi tek kapıya indirger (Facade). Son adım Composite ve Bridge'i konumlandırır.",
+    "en": "On the same client-service pair the wrapper's role changes: it translates an interface (Adapter), adds behavior (Decorator), controls access (Proxy), reduces many subsystems to one door (Facade). The last step positions Composite and Bridge."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda istemci, ortada sarmalayıcı adlı bir düğüm, sağda servis ve üç alt sistem. Adımlar ilerledikçe sarmalayıcının adı Adapter, Decorator, Proxy ve Facade olarak değişir; her adımda istemciden sarmalayıcıya ve sarmalayıcıdan servise mesajlar akar. Son adım Composite ve Bridge için açıklama kutuları gösterir.",
+      "en": "Client on the left, a node called wrapper in the middle, the service and three subsystems on the right. As steps progress the wrapper is renamed Adapter, Decorator, Proxy and Facade; in each step messages flow from client to wrapper and wrapper to service. The last step shows annotations for Composite and Bridge."
+    }
+  },
+  "canvas": {
+    "width": 1000,
+    "height": 600
+  },
+  "nodes": [
+    {
+      "id": "client",
+      "kind": "generic",
+      "label": "Client",
+      "x": 110,
+      "y": 300,
+      "w": 150,
+      "h": 70,
+      "sublabel": {
+        "tr": "bir arayüz bekler",
+        "en": "expects an interface"
+      }
+    },
+    {
+      "id": "wrap",
+      "kind": "generic",
+      "label": "Wrapper",
+      "x": 420,
+      "y": 300,
+      "w": 190,
+      "h": 80,
+      "sublabel": {
+        "tr": "aynı ya da farklı arayüz",
+        "en": "same or different interface"
+      }
+    },
+    {
+      "id": "svc",
+      "kind": "generic",
+      "label": "Service",
+      "x": 740,
+      "y": 300,
+      "w": 160,
+      "h": 70,
+      "sublabel": {
+        "tr": "gerçek iş",
+        "en": "real work"
+      }
+    },
+    {
+      "id": "s1",
+      "kind": "generic",
+      "label": "Subsystem A",
+      "x": 930,
+      "y": 140,
+      "w": 130,
+      "h": 50
+    },
+    {
+      "id": "s2",
+      "kind": "generic",
+      "label": "Subsystem B",
+      "x": 930,
+      "y": 300,
+      "w": 130,
+      "h": 50
+    },
+    {
+      "id": "s3",
+      "kind": "generic",
+      "label": "Subsystem C",
+      "x": 930,
+      "y": 460,
+      "w": 130,
+      "h": 50
+    }
+  ],
+  "edges": [
+    {
+      "id": "c-w",
+      "from": "client",
+      "to": "wrap",
+      "kind": "request",
+      "label": "call()"
+    },
+    {
+      "id": "w-s",
+      "from": "wrap",
+      "to": "svc",
+      "kind": "request",
+      "label": "call()"
+    },
+    {
+      "id": "w-s1",
+      "from": "wrap",
+      "to": "s1",
+      "kind": "request",
+      "curvature": -0.2,
+      "style": "dashed"
+    },
+    {
+      "id": "w-s2",
+      "from": "wrap",
+      "to": "s2",
+      "kind": "request",
+      "style": "dashed"
+    },
+    {
+      "id": "w-s3",
+      "from": "wrap",
+      "to": "s3",
+      "kind": "request",
+      "curvature": 0.2,
+      "style": "dashed"
+    }
+  ],
+  "steps": [
+    {
+      "id": "adapter",
+      "title": {
+        "tr": "1. Adapter: arayüz uymuyor",
+        "en": "1. Adapter: the interface does not fit"
+      },
+      "narration": {
+        "tr": "İstemci charge(amountMinor) bekler, servis makePayment(lira) sunar. Sarmalayıcı istemcinin arayüzünü uygular ve çağrıyı servise çevirir. Amaç: UYUM. İmzalar farklıdır.",
+        "en": "The client expects charge(amountMinor), the service offers makePayment(lira). The wrapper implements the client's interface and translates the call. Goal: COMPATIBILITY. The signatures differ."
+      },
+      "durationMs": 3500,
+      "inherit": false,
+      "highlight": {
+        "nodes": [
+          "wrap"
+        ],
+        "edges": [
+          "c-w",
+          "w-s"
+        ]
+      },
+      "nodeStates": {
+        "wrap": {
+          "label": "Adapter",
+          "status": "active",
+          "sublabel": {
+            "tr": "charge() → makePayment()",
+            "en": "charge() → makePayment()"
+          }
+        },
+        "s1": {
+          "visible": false
+        },
+        "s2": {
+          "visible": false
+        },
+        "s3": {
+          "visible": false
+        }
+      },
+      "edgeStates": {
+        "w-s1": {
+          "visible": false
+        },
+        "w-s2": {
+          "visible": false
+        },
+        "w-s3": {
+          "visible": false
+        },
+        "c-w": {
+          "label": "charge(1999)"
+        },
+        "w-s": {
+          "label": "makePayment(19.99)"
+        }
+      },
+      "packets": [
+        {
+          "edge": "c-w",
+          "shape": "envelope",
+          "label": "charge(1999)",
+          "durationMs": 900
+        },
+        {
+          "edge": "w-s",
+          "startAt": 1000,
+          "shape": "envelope",
+          "label": "makePayment(19.99)",
+          "durationMs": 900
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a1",
+          "x": 420,
+          "y": 160,
+          "text": {
+            "tr": "farklı arayüz → aynı davranış",
+            "en": "different interface → same behavior"
+          },
+          "target": "wrap"
+        }
+      ]
+    },
+    {
+      "id": "decorator",
+      "title": {
+        "tr": "2. Decorator: davranış ekle",
+        "en": "2. Decorator: add behavior"
+      },
+      "narration": {
+        "tr": "Arayüz aynı; sarmalayıcı çağrıyı iletmeden önce/sonra bir şey yapar: loglar, yeniden dener, önbellekler, ölçer. Zincirlenebilir ve çalışma zamanında seçilir. Amaç: GENİŞLETME.",
+        "en": "Same interface; the wrapper does something before/after forwarding: logs, retries, caches, measures. It chains and is chosen at runtime. Goal: EXTENSION."
+      },
+      "durationMs": 3500,
+      "highlight": {
+        "nodes": [
+          "wrap"
+        ],
+        "edges": [
+          "c-w",
+          "w-s"
+        ]
+      },
+      "nodeStates": {
+        "wrap": {
+          "label": "Decorator",
+          "sublabel": {
+            "tr": "send() → log + retry → send()",
+            "en": "send() → log + retry → send()"
+          }
+        }
+      },
+      "edgeStates": {
+        "c-w": {
+          "label": "send(msg)"
+        },
+        "w-s": {
+          "label": "send(msg)"
+        }
+      },
+      "packets": [
+        {
+          "edge": "c-w",
+          "shape": "envelope",
+          "label": "send()",
+          "durationMs": 900
+        },
+        {
+          "edge": "w-s",
+          "startAt": 1000,
+          "shape": "envelope",
+          "label": "send()",
+          "durationMs": 700
+        },
+        {
+          "edge": "w-s",
+          "startAt": 1800,
+          "direction": "backward",
+          "color": "danger",
+          "label": "fail",
+          "durationMs": 600
+        },
+        {
+          "edge": "w-s",
+          "startAt": 2500,
+          "shape": "envelope",
+          "label": "send() (retry)",
+          "durationMs": 700
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a2",
+          "x": 420,
+          "y": 160,
+          "text": {
+            "tr": "aynı arayüz + eklenen davranış, zincirlenebilir",
+            "en": "same interface + added behavior, chainable"
+          },
+          "target": "wrap"
+        }
+      ]
+    },
+    {
+      "id": "proxy",
+      "title": {
+        "tr": "3. Proxy: erişimi kontrol et",
+        "en": "3. Proxy: control access"
+      },
+      "narration": {
+        "tr": "Arayüz yine aynı; ama sarmalayıcı gerçek nesnenin yerine geçer ve ona ERİŞİMİ yönetir: tembel oluşturma, yetki, önbellek, uzak çağrı. Çağrıyı iletmeyebilir bile. Amaç: KONTROL.",
+        "en": "Same interface again; but the wrapper stands in for the real object and manages ACCESS to it: lazy creation, authorization, cache, remote call. It may not even forward. Goal: CONTROL."
+      },
+      "durationMs": 3500,
+      "highlight": {
+        "nodes": [
+          "wrap"
+        ],
+        "edges": [
+          "c-w"
+        ]
+      },
+      "nodeStates": {
+        "wrap": {
+          "label": "Proxy",
+          "sublabel": {
+            "tr": "yetki yok → 403, cache hit → iletme",
+            "en": "no permission → 403, cache hit → no forward"
+          }
+        },
+        "svc": {
+          "status": "muted"
+        }
+      },
+      "edgeStates": {
+        "w-s": {
+          "status": "muted",
+          "label": ""
+        },
+        "c-w": {
+          "label": "get(id)"
+        }
+      },
+      "packets": [
+        {
+          "edge": "c-w",
+          "shape": "envelope",
+          "label": "get(id)",
+          "durationMs": 900
+        },
+        {
+          "edge": "c-w",
+          "startAt": 1000,
+          "direction": "backward",
+          "color": "danger",
+          "label": "403",
+          "durationMs": 800
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a3",
+          "x": 420,
+          "y": 160,
+          "text": {
+            "tr": "gerçek nesnenin yaşam döngüsü ve erişimi proxy'de",
+            "en": "lifecycle and access of the real object live in the proxy"
+          },
+          "target": "wrap"
+        }
+      ]
+    },
+    {
+      "id": "facade",
+      "title": {
+        "tr": "4. Facade: çok kapıyı tek kapıya indir",
+        "en": "4. Facade: reduce many doors to one"
+      },
+      "narration": {
+        "tr": "Artık arkada üç alt sistem var ve istemci hepsini doğru sırayla çağırmak zorunda. Facade basit bir metot sunar ve koordinasyonu üstlenir. Amaç: BASİTLEŞTİRME. Alt sistemler hâlâ doğrudan erişilebilir.",
+        "en": "Now there are three subsystems behind and the client would have to call all of them in the right order. The facade offers one simple method and takes over coordination. Goal: SIMPLIFICATION. The subsystems remain directly accessible."
+      },
+      "durationMs": 4500,
+      "highlight": {
+        "nodes": [
+          "wrap",
+          "s1",
+          "s2",
+          "s3"
+        ],
+        "edges": [
+          "w-s1",
+          "w-s2",
+          "w-s3"
+        ]
+      },
+      "nodeStates": {
+        "wrap": {
+          "label": "Facade",
+          "status": "active",
+          "sublabel": {
+            "tr": "placeOrder() → A, B, C",
+            "en": "placeOrder() → A, B, C"
+          }
+        },
+        "svc": {
+          "visible": false
+        },
+        "s1": {
+          "visible": true,
+          "status": "active"
+        },
+        "s2": {
+          "visible": true,
+          "status": "active"
+        },
+        "s3": {
+          "visible": true,
+          "status": "active"
+        }
+      },
+      "edgeStates": {
+        "w-s": {
+          "visible": false
+        },
+        "w-s1": {
+          "visible": true
+        },
+        "w-s2": {
+          "visible": true
+        },
+        "w-s3": {
+          "visible": true
+        },
+        "c-w": {
+          "label": "placeOrder()"
+        }
+      },
+      "packets": [
+        {
+          "edge": "c-w",
+          "shape": "envelope",
+          "label": "placeOrder()",
+          "durationMs": 800
+        },
+        {
+          "edge": "w-s1",
+          "startAt": 900,
+          "shape": "envelope",
+          "durationMs": 700
+        },
+        {
+          "edge": "w-s2",
+          "startAt": 1600,
+          "shape": "envelope",
+          "durationMs": 700
+        },
+        {
+          "edge": "w-s3",
+          "startAt": 2300,
+          "shape": "envelope",
+          "durationMs": 700
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a4",
+          "x": 420,
+          "y": 160,
+          "text": {
+            "tr": "yeni, daha basit arayüz; koordinasyon tek yerde",
+            "en": "new, simpler interface; coordination in one place"
+          },
+          "target": "wrap"
+        }
+      ]
+    },
+    {
+      "id": "others",
+      "title": {
+        "tr": "5. Composite ve Bridge",
+        "en": "5. Composite and Bridge"
+      },
+      "narration": {
+        "tr": "Composite sarmalayıcı değil, AĞAÇtır: yaprak ve dal aynı arayüzü paylaşır, istemci özyinelemeyi görmez. Bridge ise iki hiyerarşiyi (ne / nasıl) ayırır ve bileşimle bağlar; alt sınıf patlamasını önler. Seçim sorusu: arayüz uyumsuz mu (Adapter), davranış mı (Decorator), erişim mi (Proxy), karmaşıklık mı (Facade), hiyerarşi mi (Composite), iki boyut mu (Bridge)?",
+        "en": "Composite is not a wrapper but a TREE: leaf and branch share one interface and the client never sees recursion. Bridge separates two hierarchies (what / how) and joins them by composition, preventing subclass explosion. The selection question: incompatible interface (Adapter), behavior (Decorator), access (Proxy), complexity (Facade), hierarchy (Composite), two dimensions (Bridge)?"
+      },
+      "durationMs": 6000,
+      "highlight": {
+        "nodes": [],
+        "edges": []
+      },
+      "nodeStates": {
+        "wrap": {
+          "status": "idle",
+          "label": "Wrapper",
+          "sublabel": {
+            "tr": "Adapter / Decorator / Proxy / Facade",
+            "en": "Adapter / Decorator / Proxy / Facade"
+          }
+        },
+        "s1": {
+          "status": "idle"
+        },
+        "s2": {
+          "status": "idle"
+        },
+        "s3": {
+          "status": "idle"
+        }
+      },
+      "edgeStates": {},
+      "packets": [],
+      "annotations": [
+        {
+          "id": "g1",
+          "x": 260,
+          "y": 80,
+          "text": {
+            "tr": "Composite: yaprak = dal, ağaç üzerinde tek tip çağrı",
+            "en": "Composite: leaf = branch, one uniform call over a tree"
+          },
+          "tone": "info"
+        },
+        {
+          "id": "g2",
+          "x": 700,
+          "y": 80,
+          "text": {
+            "tr": "Bridge: soyutlama × uygulama, N+M sınıf",
+            "en": "Bridge: abstraction × implementation, N+M classes"
+          },
+          "tone": "info"
+        },
+        {
+          "id": "g3",
+          "x": 480,
+          "y": 540,
+          "text": {
+            "tr": "Adapter: uyum · Decorator: genişletme · Proxy: kontrol · Facade: basitleştirme",
+            "en": "Adapter: fit · Decorator: extend · Proxy: control · Facade: simplify"
+          },
+          "tone": "success"
+        }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": [
+    "structural",
+    "overview"
+  ]
+}

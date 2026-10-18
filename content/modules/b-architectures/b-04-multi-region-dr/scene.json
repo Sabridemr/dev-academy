@@ -1,0 +1,186 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "b-04-multi-region-failover",
+  "title": { "tr": "Bölge Kesintisi ve DNS Failover", "en": "Region Outage and DNS Failover" },
+  "summary": {
+    "tr": "Aktif-pasif iki region: eu-west-1 birincil, us-east-1 bekleme. Birincil çöker, health check'ler fark eder, replika promote edilir, DNS kaydı değişir, trafik ikincil region'a akar; failback ayrı bir adımdır.",
+    "en": "Two active-passive regions: eu-west-1 primary, us-east-1 standby. The primary fails, health checks notice, the replica is promoted, the DNS record changes, traffic flows to the secondary; failback is a separate step."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda kullanıcılar ve üstte bir DNS düğümü vardır. Ortada eu-west-1 region'u içinde bir yük dengeleyici, uygulama sunucuları ve birincil veritabanı; sağda us-east-1 region'u içinde aynı bileşenler ve bir okuma replikası. Normalde trafik eu-west-1'e gider ve veri us-east-1'e asenkron kopyalanır. eu-west-1 çöker; DNS health check üç kez başarısız olur; us-east-1 replikası birincil yapılır; DNS kaydı us-east-1'i gösterir; trafik oraya akar. Son adım failback'in planlı yapıldığını anlatır.",
+      "en": "Users on the left and a DNS node at the top. In the middle the eu-west-1 region with a load balancer, app servers and the primary database; on the right the us-east-1 region with the same components and a read replica. Normally traffic goes to eu-west-1 and data is replicated asynchronously to us-east-1. eu-west-1 fails; the DNS health check fails three times; the us-east-1 replica is promoted; the DNS record points to us-east-1; traffic flows there. The last step explains that failback is planned."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "users", "kind": "user", "label": { "tr": "Kullanıcılar", "en": "Users" }, "x": 90, "y": 330 },
+    { "id": "dns", "kind": "dns", "label": "Route 53 / DNS", "sublabel": "api.example.com → eu-west-1 · TTL 60 s", "x": 90, "y": 110, "w": 150, "h": 70 },
+    { "id": "eu", "kind": "region", "label": "eu-west-1 (birincil)", "x": 420, "y": 330, "w": 300, "h": 400 },
+    { "id": "eu-lb", "kind": "lb", "label": "LB", "x": 330, "y": 200, "w": 90, "h": 60, "parent": "eu" },
+    { "id": "eu-app", "kind": "service", "label": "App", "sublabel": "x6", "x": 500, "y": 200, "w": 90, "h": 60, "parent": "eu" },
+    { "id": "eu-db", "kind": "db", "label": { "tr": "DB birincil", "en": "DB primary" }, "sublabel": { "tr": "yazma + okuma", "en": "write + read" }, "x": 420, "y": 440, "w": 130, "h": 80, "parent": "eu" },
+    { "id": "us", "kind": "region", "label": "us-east-1 (bekleme)", "x": 800, "y": 330, "w": 300, "h": 400 },
+    { "id": "us-lb", "kind": "lb", "label": "LB", "x": 720, "y": 200, "w": 90, "h": 60, "parent": "us" },
+    { "id": "us-app", "kind": "service", "label": "App", "sublabel": { "tr": "x2 (küçültülmüş)", "en": "x2 (scaled down)" }, "x": 890, "y": 200, "w": 90, "h": 60, "parent": "us" },
+    { "id": "us-db", "kind": "replica", "label": { "tr": "DB replika", "en": "DB replica" }, "sublabel": { "tr": "asenkron, lag 4 s", "en": "async, lag 4 s" }, "x": 810, "y": 440, "w": 130, "h": 80, "parent": "us" }
+  ],
+  "edges": [
+    { "id": "u-dns", "from": "users", "to": "dns", "kind": "control", "style": "dotted", "label": { "tr": "çözümle", "en": "resolve" } },
+    { "id": "u-eu", "from": "users", "to": "eu-lb", "kind": "request" },
+    { "id": "u-us", "from": "users", "to": "us-lb", "kind": "request", "curvature": 0.35 },
+    { "id": "eu-lb-app", "from": "eu-lb", "to": "eu-app", "kind": "request" },
+    { "id": "eu-app-db", "from": "eu-app", "to": "eu-db", "kind": "data" },
+    { "id": "us-lb-app", "from": "us-lb", "to": "us-app", "kind": "request" },
+    { "id": "us-app-db", "from": "us-app", "to": "us-db", "kind": "data" },
+    { "id": "repl", "from": "eu-db", "to": "us-db", "kind": "replication", "style": "dashed", "label": { "tr": "asenkron replikasyon", "en": "async replication" } },
+    { "id": "hc-eu", "from": "dns", "to": "eu-lb", "kind": "control", "style": "dotted", "curvature": -0.2, "label": "health check" },
+    { "id": "hc-us", "from": "dns", "to": "us-lb", "kind": "control", "style": "dotted", "curvature": -0.3 }
+  ],
+  "steps": [
+    {
+      "id": "normal",
+      "title": { "tr": "1. Normal akış", "en": "1. Normal operation" },
+      "narration": {
+        "tr": "DNS, api.example.com'u eu-west-1 yük dengeleyicisine çözer. Tüm yazmalar ve okumalar oraya gider. us-east-1 küçültülmüş bir kopya (warm standby) olarak bekler; veritabanı asenkron replikasyonla ~4 saniye geriden gelir.",
+        "en": "DNS resolves api.example.com to the eu-west-1 load balancer. All writes and reads go there. us-east-1 waits as a scaled-down copy (warm standby); its database trails by ~4 seconds via async replication."
+      },
+      "durationMs": 4500,
+      "inherit": false,
+      "highlight": { "nodes": ["dns", "eu"], "edges": ["u-dns", "u-eu", "repl"] },
+      "nodeStates": {
+        "eu-lb": { "status": "active" }, "eu-app": { "status": "active" }, "eu-db": { "status": "active" },
+        "us-lb": { "status": "muted" }, "us-app": { "status": "muted" }, "us-db": { "status": "idle" }
+      },
+      "edgeStates": { "u-us": { "visible": false }, "repl": { "status": "active" } },
+      "packets": [
+        { "edge": "u-dns", "shape": "diamond", "durationMs": 600, "label": "A?" },
+        { "edge": "u-dns", "startAt": 600, "direction": "backward", "shape": "diamond", "durationMs": 600, "label": "eu-west-1" },
+        { "edge": "u-eu", "startAt": 1300, "shape": "envelope", "repeat": 3, "repeatGapMs": 200, "durationMs": 700 },
+        { "edge": "eu-lb-app", "startAt": 2000, "durationMs": 400, "repeat": 2, "repeatGapMs": 300 },
+        { "edge": "eu-app-db", "startAt": 2500, "durationMs": 400, "shape": "square" },
+        { "edge": "repl", "startAt": 3000, "durationMs": 1200, "shape": "square", "color": "accent" }
+      ],
+      "annotations": [
+        { "id": "a-rpo", "x": 620, "y": 560, "text": { "tr": "RPO ≈ replication lag = 4 s", "en": "RPO ≈ replication lag = 4 s" }, "tone": "info" }
+      ]
+    },
+    {
+      "id": "outage",
+      "title": { "tr": "2. eu-west-1 çöküyor", "en": "2. eu-west-1 goes down" },
+      "narration": {
+        "tr": "Bölgesel bir ağ arızası eu-west-1'i erişilemez yapar. Kullanıcı istekleri zaman aşımına uğrar. Son 4 saniyenin yazmaları us-east-1'e henüz ulaşmamıştı; bu veri risk altında.",
+        "en": "A regional network failure makes eu-west-1 unreachable. User requests time out. The last 4 seconds of writes had not reached us-east-1 yet; that data is at risk."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["eu"], "edges": ["u-eu"] },
+      "nodeStates": {
+        "eu-lb": { "status": "down", "badge": "✕" }, "eu-app": { "status": "down", "badge": "✕" }, "eu-db": { "status": "down", "badge": "✕" }
+      },
+      "edgeStates": { "u-eu": { "status": "error", "label": "timeout" }, "repl": { "status": "error", "label": { "tr": "replikasyon koptu", "en": "replication broken" } } },
+      "packets": [
+        { "edge": "u-eu", "shape": "envelope", "color": "danger", "repeat": 3, "repeatGapMs": 300, "durationMs": 800, "label": "timeout" }
+      ],
+      "annotations": [
+        { "id": "a-out", "x": 420, "y": 110, "text": { "tr": "T+0: bölgesel kesinti", "en": "T+0: regional outage" }, "tone": "danger", "target": "eu" },
+        { "id": "a-lost", "x": 620, "y": 560, "text": { "tr": "son 4 s yazma replike edilmedi", "en": "last 4 s of writes not replicated" }, "tone": "danger" }
+      ]
+    },
+    {
+      "id": "detect",
+      "title": { "tr": "3. Health check tespit ediyor", "en": "3. Health checks detect it" },
+      "narration": {
+        "tr": "DNS sağlayıcısının birden fazla noktadan gönderdiği health check'ler üst üste üç kez başarısız olur (3 × 30 s). Tek bir başarısız kontrole göre karar verilmez; yanlış alarmla failover da kesintidir.",
+        "en": "Health checks sent by the DNS provider from several vantage points fail three times in a row (3 × 30 s). No decision is made on a single failure; a false-alarm failover is an outage too."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["dns", "eu-lb"], "edges": ["hc-eu", "hc-us"] },
+      "nodeStates": { "dns": { "status": "warning", "badge": "3/3 fail" } },
+      "edgeStates": { "hc-eu": { "status": "error" }, "hc-us": { "status": "active" } },
+      "packets": [
+        { "edge": "hc-eu", "shape": "diamond", "color": "danger", "repeat": 3, "repeatGapMs": 300, "durationMs": 700 },
+        { "edge": "hc-us", "shape": "diamond", "color": "success", "startAt": 400, "repeat": 3, "repeatGapMs": 300, "durationMs": 700 }
+      ],
+      "annotations": [
+        { "id": "a-det", "x": 90, "y": 30, "text": { "tr": "T+90 s: eu-west-1 unhealthy, us-east-1 healthy", "en": "T+90 s: eu-west-1 unhealthy, us-east-1 healthy" }, "tone": "warning", "target": "dns" }
+      ]
+    },
+    {
+      "id": "promote",
+      "title": { "tr": "4. Replika promote ediliyor", "en": "4. Promote the replica" },
+      "narration": {
+        "tr": "Failover otomasyonu önce eski birincile yazma kilidi koyar (fencing: split-brain koruması), sonra us-east-1 replikasını birincil yapar ve uygulama kapasitesini 2'den 6'ya çıkarır. Bu adım RTO'nun en büyük parçasıdır.",
+        "en": "The failover automation first fences writes on the old primary (split-brain protection), then promotes the us-east-1 replica to primary and scales the app tier from 2 to 6. This step is the largest part of RTO."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["us-db", "us-app"], "edges": [] },
+      "nodeStates": {
+        "us-db": { "status": "success", "badge": "PRIMARY", "label": { "tr": "DB birincil (yeni)", "en": "DB primary (new)" }, "sublabel": { "tr": "yazma açıldı", "en": "writes enabled" } },
+        "us-app": { "status": "busy", "sublabel": { "tr": "x2 → x6 ölçekleniyor", "en": "scaling x2 → x6" }, "progress": 0.4 },
+        "us-lb": { "status": "active" },
+        "eu-db": { "badge": "FENCED", "sublabel": { "tr": "yazma yasak", "en": "writes fenced" } }
+      },
+      "edgeStates": { "repl": { "status": "muted", "label": "" }, "hc-eu": { "status": "idle" }, "hc-us": { "status": "idle" } },
+      "packets": [
+        { "edge": "us-lb-app", "durationMs": 600, "repeat": 2, "repeatGapMs": 400 },
+        { "edge": "us-app-db", "startAt": 800, "durationMs": 600, "shape": "square", "label": "smoke test" }
+      ],
+      "annotations": [
+        { "id": "a-prom", "x": 800, "y": 110, "text": { "tr": "T+3 dk: promote + ölçekleme", "en": "T+3 min: promote + scale-out" }, "tone": "info", "target": "us" }
+      ]
+    },
+    {
+      "id": "dns-switch",
+      "title": { "tr": "5. DNS failover", "en": "5. DNS failover" },
+      "narration": {
+        "tr": "DNS kaydı us-east-1 yük dengeleyicisine çevrilir. İstemciler önbelleklerindeki eski kayıt TTL (60 s) dolunca yeni adresi çözer; TTL'in kısa tutulmasının nedeni budur. Trafik us-east-1'e akmaya başlar; cache boş olduğu için ilk dakikalar yavaştır.",
+        "en": "The DNS record is switched to the us-east-1 load balancer. Clients resolve the new address once the cached record's TTL (60 s) expires; that is why TTL is kept short. Traffic starts flowing to us-east-1; the first minutes are slow because caches are cold."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["dns", "us"], "edges": ["u-dns", "u-us"] },
+      "nodeStates": {
+        "dns": { "status": "success", "badge": "", "sublabel": "api.example.com → us-east-1 · TTL 60 s" },
+        "us-app": { "status": "active", "sublabel": "x6", "progress": 1 },
+        "us-lb": { "status": "active" }
+      },
+      "edgeStates": { "u-us": { "visible": true, "status": "active" }, "u-eu": { "status": "muted", "label": "" } },
+      "packets": [
+        { "edge": "u-dns", "shape": "diamond", "durationMs": 600, "label": "A?" },
+        { "edge": "u-dns", "startAt": 600, "direction": "backward", "shape": "diamond", "durationMs": 600, "label": "us-east-1", "color": "success" },
+        { "edge": "u-us", "startAt": 1300, "shape": "envelope", "repeat": 3, "repeatGapMs": 250, "durationMs": 900 },
+        { "edge": "us-lb-app", "startAt": 2300, "durationMs": 400, "repeat": 2, "repeatGapMs": 300 },
+        { "edge": "us-app-db", "startAt": 2900, "durationMs": 400, "shape": "square" }
+      ],
+      "annotations": [
+        { "id": "a-rto", "x": 620, "y": 560, "text": { "tr": "RTO ≈ 90 s tespit + 3 dk promote + 60 s TTL ≈ 5,5 dk", "en": "RTO ≈ 90 s detect + 3 min promote + 60 s TTL ≈ 5.5 min" }, "tone": "success" }
+      ]
+    },
+    {
+      "id": "failback",
+      "title": { "tr": "6. Failback: planlı ve dikkatli", "en": "6. Failback: planned and careful" },
+      "narration": {
+        "tr": "eu-west-1 geri geldiğinde otomatik geri dönüş YAPILMAZ. Önce eski birincilin replike edemediği 4 saniyelik yazmalar incelenir ve birleştirilir, replikasyon ters yönde (us → eu) kurulur, lag sıfıra yaklaşınca planlı bir pencerede DNS geri çevrilir. Bu akış her ay tatbikatla prova edilmelidir.",
+        "en": "When eu-west-1 returns, there is NO automatic failback. First the 4 seconds of writes the old primary could not replicate are reviewed and merged, replication is set up in reverse (us → eu), and once lag nears zero DNS is switched back in a planned window. This flow must be rehearsed monthly."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["eu-db", "us-db"], "edges": ["repl"] },
+      "nodeStates": {
+        "eu-lb": { "status": "idle", "badge": "" }, "eu-app": { "status": "idle", "badge": "" },
+        "eu-db": { "status": "idle", "badge": "REPLICA", "label": { "tr": "DB replika (yeni)", "en": "DB replica (new)" }, "sublabel": { "tr": "us'ten senkronize oluyor", "en": "syncing from us" } },
+        "eu": { "label": "eu-west-1 (geri geldi)" }
+      },
+      "edgeStates": { "repl": { "status": "active", "label": { "tr": "ters replikasyon us → eu", "en": "reverse replication us → eu" } } },
+      "packets": [
+        { "edge": "repl", "direction": "backward", "shape": "square", "color": "accent", "repeat": 3, "repeatGapMs": 300, "durationMs": 900 }
+      ],
+      "annotations": [
+        { "id": "a-split", "x": 420, "y": 110, "text": { "tr": "çakışan 4 s yazma: elle/kurallı birleştirme", "en": "4 s of conflicting writes: manual/rule-based merge" }, "tone": "warning", "target": "eu" },
+        { "id": "a-drill", "x": 620, "y": 560, "text": { "tr": "tatbikat yapılmayan DR planı yoktur", "en": "a DR plan without drills does not exist" }, "tone": "info" }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["multi-region", "failover", "dns", "disaster-recovery", "rpo-rto"]
+}

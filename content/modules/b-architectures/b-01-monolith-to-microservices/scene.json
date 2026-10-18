@@ -1,0 +1,225 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "b-01-monolith-to-microservices-evolution",
+  "title": { "tr": "Monolitten Mikroservise Evrim", "en": "Evolution from Monolith to Microservices" },
+  "summary": {
+    "tr": "Tek kutu monolit, içeride modüllere ayrılır, modül sınırları zorlanır, ödeme modülü ayrı servise ve ayrı veritabanına taşınır, sonunda gateway arkasında bağımsız servisler kalır.",
+    "en": "A single-box monolith is split into internal modules, boundaries are enforced, the payments module moves to its own service and database, and finally independent services sit behind a gateway."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda kullanıcılar ve bir API gateway, ortada büyük bir monolit kutusu içinde katalog, sipariş ve ödeme modülleri, sağda tek bir veritabanı vardır. Adımlar ilerledikçe modüller arasına sınırlar çizilir, ödeme modülü kutudan çıkıp kendi veritabanına bağlanır, ardından katalog da ayrılır; son adımda her servis kendi veritabanıyla gateway arkasında bağımsız durur.",
+      "en": "Users and an API gateway on the left, a large monolith box containing catalog, orders and payments modules in the middle, and a single database on the right. As steps progress, boundaries are drawn between modules, payments leaves the box and connects to its own database, then catalog is extracted; in the final step each service stands independently behind the gateway with its own database."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "users", "kind": "user", "label": { "tr": "Kullanıcılar", "en": "Users" }, "x": 90, "y": 300 },
+    { "id": "gw", "kind": "gateway", "label": "API Gateway", "sublabel": { "tr": "yönlendirici", "en": "router" }, "x": 240, "y": 300, "w": 120, "h": 70 },
+    { "id": "mono", "kind": "group", "label": { "tr": "Monolith (tek süreç, tek dağıtım)", "en": "Monolith (one process, one deploy)" }, "x": 560, "y": 300, "w": 340, "h": 360 },
+    { "id": "catalog", "kind": "service", "label": "Catalog", "sublabel": { "tr": "ürün, fiyat", "en": "products, prices" }, "x": 470, "y": 180, "w": 120, "h": 64, "parent": "mono" },
+    { "id": "orders", "kind": "service", "label": "Orders", "sublabel": { "tr": "sepet, sipariş", "en": "cart, order" }, "x": 560, "y": 330, "w": 120, "h": 64, "parent": "mono" },
+    { "id": "payments", "kind": "service", "label": "Payments", "sublabel": { "tr": "tahsilat", "en": "charging" }, "x": 650, "y": 460, "w": 120, "h": 64, "parent": "mono" },
+    { "id": "db", "kind": "db", "label": { "tr": "Tek veritabanı", "en": "Single database" }, "sublabel": { "tr": "tüm tablolar", "en": "all tables" }, "x": 880, "y": 300, "w": 110, "h": 80 },
+    { "id": "db-pay", "kind": "db", "label": "payments-db", "x": 880, "y": 500, "w": 110, "h": 70 },
+    { "id": "db-cat", "kind": "db", "label": "catalog-db", "x": 880, "y": 100, "w": 110, "h": 70 }
+  ],
+  "edges": [
+    { "id": "u-gw", "from": "users", "to": "gw", "kind": "request", "label": "HTTPS" },
+    { "id": "gw-orders", "from": "gw", "to": "orders", "kind": "request" },
+    { "id": "gw-catalog", "from": "gw", "to": "catalog", "kind": "request", "curvature": -0.2 },
+    { "id": "gw-payments", "from": "gw", "to": "payments", "kind": "request", "curvature": 0.2 },
+    { "id": "orders-catalog", "from": "orders", "to": "catalog", "kind": "request", "label": { "tr": "fiyat sor", "en": "get price" } },
+    { "id": "orders-payments", "from": "orders", "to": "payments", "kind": "request", "label": { "tr": "tahsil et", "en": "charge" } },
+    { "id": "catalog-db", "from": "catalog", "to": "db", "kind": "data", "curvature": -0.15 },
+    { "id": "orders-db", "from": "orders", "to": "db", "kind": "data" },
+    { "id": "payments-db", "from": "payments", "to": "db", "kind": "data", "curvature": 0.15 },
+    { "id": "orders-products", "from": "orders", "to": "db", "kind": "data", "style": "dotted", "curvature": -0.35, "label": { "tr": "SELECT * FROM products", "en": "SELECT * FROM products" } },
+    { "id": "payments-dbpay", "from": "payments", "to": "db-pay", "kind": "data" },
+    { "id": "catalog-dbcat", "from": "catalog", "to": "db-cat", "kind": "data" }
+  ],
+  "steps": [
+    {
+      "id": "monolith",
+      "title": { "tr": "1. Monolith", "en": "1. Monolith" },
+      "narration": {
+        "tr": "Başlangıç: tek kod tabanı, tek süreç, tek veritabanı. Katalog, sipariş ve ödeme kodu aynı kutuda; birbirlerini fonksiyon çağrısıyla kullanır ve her tabloya doğrudan erişir. Küçük ekip için en hızlı yol budur.",
+        "en": "The start: one codebase, one process, one database. Catalog, orders and payments live in the same box, call each other as functions and read any table directly. For a small team this is the fastest route."
+      },
+      "durationMs": 4000,
+      "inherit": false,
+      "highlight": { "nodes": ["mono", "db"], "edges": ["u-gw", "gw-orders"] },
+      "nodeStates": {
+        "gw": { "label": { "tr": "Web sunucusu", "en": "Web server" }, "sublabel": { "tr": "tek giriş", "en": "single entry" } },
+        "catalog": { "status": "idle", "sublabel": { "tr": "sınır yok", "en": "no boundary" } },
+        "orders": { "status": "idle", "sublabel": { "tr": "sınır yok", "en": "no boundary" } },
+        "payments": { "status": "idle", "sublabel": { "tr": "sınır yok", "en": "no boundary" } },
+        "db-pay": { "visible": false },
+        "db-cat": { "visible": false }
+      },
+      "edgeStates": {
+        "gw-catalog": { "visible": false },
+        "gw-payments": { "visible": false },
+        "payments-dbpay": { "visible": false },
+        "catalog-dbcat": { "visible": false },
+        "orders-products": { "status": "active" }
+      },
+      "packets": [
+        { "edge": "u-gw", "shape": "envelope", "label": "POST /orders", "durationMs": 900 },
+        { "edge": "gw-orders", "startAt": 900, "durationMs": 700 },
+        { "edge": "orders-products", "startAt": 1600, "durationMs": 800, "shape": "square" },
+        { "edge": "orders-db", "startAt": 2400, "durationMs": 800, "shape": "square" }
+      ],
+      "annotations": [
+        { "id": "a-mono", "x": 560, "y": 90, "text": { "tr": "fonksiyon çağrısı: ~ns, ACID transaction, tek stack trace", "en": "function call: ~ns, ACID transactions, one stack trace" }, "tone": "success", "target": "mono" }
+      ]
+    },
+    {
+      "id": "pain",
+      "title": { "tr": "2. Büyüme sancıları", "en": "2. Growing pains" },
+      "narration": {
+        "tr": "Ekip 30 kişi oldu. Build 40 dakika, dağıtım günde bir ve herkes birbirini bekliyor. Orders modülü products tablosunu doğrudan okuduğu için katalog ekibi şemayı değiştiremiyor. Ödemedeki bir bellek sızıntısı tüm siteyi düşürüyor.",
+        "en": "The team is now 30 people. Builds take 40 minutes, there is one deploy per day and everyone waits for everyone. Because orders reads the products table directly, the catalog team cannot change the schema. A memory leak in payments takes down the whole site."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["mono", "payments"], "edges": ["orders-products"] },
+      "nodeStates": {
+        "mono": { "status": "warning", "badge": "build 40 min" },
+        "payments": { "status": "error", "badge": "OOM" },
+        "orders": { "status": "down", "sublabel": { "tr": "aynı süreç çöktü", "en": "same process crashed" } },
+        "catalog": { "status": "down", "sublabel": { "tr": "aynı süreç çöktü", "en": "same process crashed" } }
+      },
+      "edgeStates": { "orders-products": { "status": "error" } },
+      "packets": [
+        { "edge": "u-gw", "shape": "envelope", "color": "danger", "label": "503", "repeat": 3, "repeatGapMs": 300, "durationMs": 800 }
+      ],
+      "annotations": [
+        { "id": "a-blast", "x": 560, "y": 90, "text": { "tr": "tek hata alanı: bir modül çökünce hepsi çöker", "en": "single blast radius: one module crashes, all crash" }, "tone": "danger", "target": "mono" },
+        { "id": "a-schema", "x": 760, "y": 240, "text": { "tr": "paylaşılan şema = kimse değiştiremez", "en": "shared schema = nobody can change it" }, "tone": "warning", "target": "db" }
+      ]
+    },
+    {
+      "id": "modular",
+      "title": { "tr": "3. Modüler monolith", "en": "3. Modular monolith" },
+      "narration": {
+        "tr": "Hâlâ tek dağıtım birimi, ama kod iş alanına göre modüllere ayrıldı. Her modülün dışa açık bir facade'ı var; orders artık products tablosunu değil, catalog facade'ını çağırır. Doğrudan tablo erişimi lint kuralıyla yasaklandı.",
+        "en": "Still one deployable, but the code is now split into modules by business domain. Each module exposes a facade; orders calls the catalog facade instead of the products table. Direct table access is banned by a lint rule."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["catalog", "orders", "payments"], "edges": ["orders-catalog", "orders-payments"] },
+      "nodeStates": {
+        "mono": { "status": "active", "badge": "", "label": { "tr": "Modüler monolith (tek dağıtım)", "en": "Modular monolith (one deploy)" } },
+        "catalog": { "status": "active", "badge": "facade", "sublabel": { "tr": "products tablosunun sahibi", "en": "owns products table" } },
+        "orders": { "status": "active", "badge": "facade", "sublabel": { "tr": "orders tablosunun sahibi", "en": "owns orders table" } },
+        "payments": { "status": "active", "badge": "facade", "sublabel": { "tr": "payments tablosunun sahibi", "en": "owns payments table" } }
+      },
+      "edgeStates": {
+        "orders-products": { "status": "muted", "label": { "tr": "yasak (lint)", "en": "forbidden (lint)" } },
+        "orders-catalog": { "status": "active" },
+        "orders-payments": { "status": "active" }
+      },
+      "packets": [
+        { "edge": "gw-orders", "durationMs": 700 },
+        { "edge": "orders-catalog", "startAt": 700, "durationMs": 700, "label": "getPrice()" },
+        { "edge": "orders-payments", "startAt": 1500, "durationMs": 700, "label": "charge()" },
+        { "edge": "orders-db", "startAt": 2300, "durationMs": 700, "shape": "square" }
+      ],
+      "annotations": [
+        { "id": "a-mod", "x": 560, "y": 90, "text": { "tr": "sınır önce kodda: public API + veri sahipliği", "en": "boundary first in code: public API + data ownership" }, "tone": "info", "target": "mono" }
+      ]
+    },
+    {
+      "id": "extract-payments",
+      "title": { "tr": "4. İlk servis ayrılıyor: Payments", "en": "4. First service extracted: Payments" },
+      "narration": {
+        "tr": "PCI-DSS uyumu ve farklı dağıtım ritmi Payments'ı ilk aday yapar. Modül ayrı sürece taşınır, kendi veritabanını alır. Orders'ın CatalogPort gibi bir PaymentPort'u olduğu için iş mantığı değişmez; yalnızca süreç içi adaptör HTTP adaptörüne dönüşür.",
+        "en": "PCI-DSS compliance and a different deploy cadence make Payments the first candidate. The module moves to its own process and gets its own database. Because orders already has a PaymentPort, business logic does not change; only the in-process adapter becomes an HTTP adapter."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["payments", "db-pay"], "edges": ["orders-payments", "payments-dbpay", "gw-payments"] },
+      "nodeStates": {
+        "mono": { "label": { "tr": "Monolith (küçülüyor)", "en": "Monolith (shrinking)" } },
+        "payments": { "status": "success", "badge": "SVC", "sublabel": { "tr": "ayrı süreç + DB", "en": "own process + DB" } },
+        "db-pay": { "visible": true, "status": "success" },
+        "db": { "sublabel": { "tr": "payments tabloları taşındı", "en": "payments tables migrated" } }
+      },
+      "edgeStates": {
+        "payments-db": { "status": "muted", "visible": false },
+        "payments-dbpay": { "visible": true, "status": "active" },
+        "gw-payments": { "visible": true },
+        "orders-payments": { "label": { "tr": "HTTP + timeout", "en": "HTTP + timeout" } }
+      },
+      "packets": [
+        { "edge": "orders-payments", "durationMs": 900, "shape": "envelope", "label": "POST /charges" },
+        { "edge": "payments-dbpay", "startAt": 900, "durationMs": 700, "shape": "square" },
+        { "edge": "orders-payments", "startAt": 1700, "durationMs": 900, "direction": "backward", "color": "success", "label": "201" }
+      ],
+      "annotations": [
+        { "id": "a-net", "x": 760, "y": 560, "text": { "tr": "artık ağ çağrısı: gecikme, zaman aşımı, kısmi hata", "en": "now a network call: latency, timeout, partial failure" }, "tone": "warning", "target": "payments" }
+      ]
+    },
+    {
+      "id": "extract-catalog",
+      "title": { "tr": "5. Strangler Fig devam ediyor", "en": "5. Strangler Fig continues" },
+      "narration": {
+        "tr": "Okuma ağırlıklı ve çok replika isteyen Catalog da ayrılır. Gateway /products yollarını yeni servise, kalanları monolite yönlendirir. Her geçişten sonra monolit biraz daha küçülür; büyük patlama yok.",
+        "en": "Catalog, read-heavy and in need of many replicas, is extracted next. The gateway routes /products to the new service and everything else to the monolith. After each move the monolith shrinks a little; no big bang."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["gw", "catalog", "db-cat"], "edges": ["gw-catalog", "catalog-dbcat"] },
+      "nodeStates": {
+        "gw": { "label": "API Gateway", "sublabel": { "tr": "/products → catalog", "en": "/products → catalog" }, "status": "active" },
+        "catalog": { "status": "success", "badge": "x12", "sublabel": { "tr": "bağımsız ölçek", "en": "independent scale" } },
+        "db-cat": { "visible": true, "status": "success" },
+        "db": { "label": "orders-db", "sublabel": { "tr": "yalnızca orders tabloları", "en": "only orders tables" } }
+      },
+      "edgeStates": {
+        "catalog-db": { "visible": false },
+        "catalog-dbcat": { "visible": true, "status": "active" },
+        "gw-catalog": { "visible": true, "status": "active" },
+        "orders-products": { "visible": false }
+      },
+      "packets": [
+        { "edge": "u-gw", "shape": "envelope", "label": "GET /products", "durationMs": 800 },
+        { "edge": "gw-catalog", "startAt": 800, "durationMs": 800 },
+        { "edge": "catalog-dbcat", "startAt": 1600, "durationMs": 600, "shape": "square" },
+        { "edge": "u-gw", "shape": "envelope", "label": "POST /orders", "startAt": 1200, "durationMs": 800 },
+        { "edge": "gw-orders", "startAt": 2000, "durationMs": 800 }
+      ],
+      "annotations": [
+        { "id": "a-strangler", "x": 240, "y": 420, "text": { "tr": "Strangler Fig: yol yol taşı, geri dönüş her zaman mümkün", "en": "Strangler Fig: migrate route by route, rollback always possible" }, "tone": "info", "target": "gw" }
+      ]
+    },
+    {
+      "id": "microservices",
+      "title": { "tr": "6. Mikroservisler", "en": "6. Microservices" },
+      "narration": {
+        "tr": "Son durum: her servis kendi ekibine, dağıtım boru hattına, veritabanına ve ölçeğine sahip. Karşılığında dağıtık izleme, saga ile tutarlılık, circuit breaker ve sözleşme versiyonlama gerekiyor. Bu maliyeti ancak büyüme sancıları gerçekten yaşanıyorsa ödemeye değer.",
+        "en": "Final state: every service owns its team, pipeline, database and scale. In exchange you need distributed tracing, sagas for consistency, circuit breakers and contract versioning. That cost is only worth paying when the growing pains are real."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["catalog", "orders", "payments", "db", "db-pay", "db-cat"], "edges": [] },
+      "nodeStates": {
+        "mono": { "visible": false },
+        "orders": { "status": "success", "badge": "SVC", "sublabel": { "tr": "Orders ekibi", "en": "Orders team" } },
+        "catalog": { "sublabel": { "tr": "Catalog ekibi", "en": "Catalog team" }, "badge": "" },
+        "payments": { "sublabel": { "tr": "Payments ekibi", "en": "Payments team" }, "badge": "" }
+      },
+      "packets": [
+        { "edge": "gw-catalog", "durationMs": 700 },
+        { "edge": "gw-orders", "startAt": 300, "durationMs": 700 },
+        { "edge": "gw-payments", "startAt": 600, "durationMs": 700 },
+        { "edge": "orders-catalog", "startAt": 1100, "durationMs": 700, "shape": "envelope" },
+        { "edge": "orders-payments", "startAt": 1900, "durationMs": 700, "shape": "envelope" }
+      ],
+      "annotations": [
+        { "id": "a-final", "x": 560, "y": 70, "text": { "tr": "database-per-service: veri sınırı = servis sınırı", "en": "database-per-service: data boundary = service boundary" }, "tone": "success" },
+        { "id": "a-cost", "x": 560, "y": 560, "text": { "tr": "yeni maliyet: tracing, saga, circuit breaker, API versiyonlama", "en": "new cost: tracing, sagas, circuit breakers, API versioning" }, "tone": "warning" }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["monolith", "modular-monolith", "microservices", "strangler-fig"]
+}

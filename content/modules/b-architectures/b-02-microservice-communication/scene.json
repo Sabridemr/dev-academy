@@ -1,0 +1,182 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "b-02-saga-choreography",
+  "title": { "tr": "Koreografi Saga: Olay Zinciri ve Telafi", "en": "Choreography Saga: Event Chain and Compensation" },
+  "summary": {
+    "tr": "Sipariş olayı yayınlanır, stok ayrılır, ödeme reddedilir; her servis PaymentFailed olayını dinleyip kendi telafisini yapar. Merkezi koordinatör yoktur.",
+    "en": "An order event is published, stock is reserved, payment is declined; every service listens to PaymentFailed and performs its own compensation. There is no central coordinator."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda kullanıcı, ortada Orders servisi ve bir olay broker'ı, sağda üstte Inventory, altta Payments servisleri vardır. Orders OrderPlaced olayını broker'a yayınlar; Inventory bunu alıp stoğu ayırır ve StockReserved yayınlar; Payments bunu alıp kartı çeker ama ret alır ve PaymentFailed yayınlar. Inventory stoğu serbest bırakır, Orders siparişi iptal eder ve kullanıcıya bildirir.",
+      "en": "User on the left, the Orders service and an event broker in the middle, Inventory top right and Payments bottom right. Orders publishes OrderPlaced to the broker; Inventory consumes it, reserves stock and publishes StockReserved; Payments consumes that, attempts the charge, gets declined and publishes PaymentFailed. Inventory releases the stock, Orders cancels the order and notifies the user."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "user", "kind": "user", "label": { "tr": "Müşteri", "en": "Customer" }, "x": 90, "y": 300 },
+    { "id": "orders", "kind": "service", "label": "Orders", "sublabel": { "tr": "sipariş durumu", "en": "order state" }, "x": 300, "y": 300, "w": 130, "h": 70 },
+    { "id": "broker", "kind": "queue", "label": "Event Broker", "sublabel": "Kafka / RabbitMQ", "x": 560, "y": 300, "w": 160, "h": 70 },
+    { "id": "inventory", "kind": "service", "label": "Inventory", "sublabel": { "tr": "stok", "en": "stock" }, "x": 840, "y": 130, "w": 130, "h": 70 },
+    { "id": "payments", "kind": "service", "label": "Payments", "sublabel": { "tr": "kart çekimi", "en": "card charge" }, "x": 840, "y": 470, "w": 130, "h": 70 },
+    { "id": "odb", "kind": "db", "label": "orders-db", "x": 300, "y": 500, "w": 100, "h": 60 }
+  ],
+  "edges": [
+    { "id": "u-orders", "from": "user", "to": "orders", "kind": "request", "label": "POST /orders" },
+    { "id": "orders-odb", "from": "orders", "to": "odb", "kind": "data" },
+    { "id": "orders-broker", "from": "orders", "to": "broker", "kind": "event", "curvature": -0.25, "label": { "tr": "yayınla", "en": "publish" } },
+    { "id": "broker-orders", "from": "broker", "to": "orders", "kind": "event", "curvature": -0.25, "style": "dashed", "label": { "tr": "dinle", "en": "subscribe" } },
+    { "id": "broker-inv", "from": "broker", "to": "inventory", "kind": "event", "curvature": -0.2, "style": "dashed" },
+    { "id": "inv-broker", "from": "inventory", "to": "broker", "kind": "event", "curvature": -0.2 },
+    { "id": "broker-pay", "from": "broker", "to": "payments", "kind": "event", "curvature": 0.2, "style": "dashed" },
+    { "id": "pay-broker", "from": "payments", "to": "broker", "kind": "event", "curvature": 0.2 }
+  ],
+  "steps": [
+    {
+      "id": "order-placed",
+      "title": { "tr": "1. OrderPlaced", "en": "1. OrderPlaced" },
+      "narration": {
+        "tr": "Müşteri sipariş verir. Orders siparişi PENDING durumunda kendi veritabanına yazar ve OrderPlaced olayını yayınlar. Kimin dinlediğini bilmez; HTTP 202 ile 'alındı' der.",
+        "en": "The customer places an order. Orders writes it as PENDING to its own database and publishes OrderPlaced. It does not know who listens; it replies HTTP 202 'accepted'."
+      },
+      "durationMs": 4000,
+      "inherit": false,
+      "highlight": { "nodes": ["user", "orders", "broker"], "edges": ["u-orders", "orders-broker"] },
+      "nodeStates": {
+        "orders": { "status": "active", "badge": "PENDING" },
+        "broker": { "status": "active", "counter": 1 }
+      },
+      "packets": [
+        { "edge": "u-orders", "shape": "envelope", "durationMs": 800 },
+        { "edge": "orders-odb", "startAt": 800, "durationMs": 500, "shape": "square", "label": "INSERT" },
+        { "edge": "orders-broker", "startAt": 1300, "durationMs": 900, "shape": "envelope", "label": "OrderPlaced" },
+        { "edge": "u-orders", "startAt": 2200, "durationMs": 700, "direction": "backward", "color": "success", "label": "202" }
+      ],
+      "annotations": [
+        { "id": "a1", "x": 560, "y": 400, "text": { "tr": "olay geçmiş zamandır: 'oldu', 'yap' değil", "en": "an event is past tense: 'happened', not 'do'" }, "target": "broker" }
+      ]
+    },
+    {
+      "id": "stock-reserved",
+      "title": { "tr": "2. Inventory dinler → StockReserved", "en": "2. Inventory consumes → StockReserved" },
+      "narration": {
+        "tr": "Inventory, OrderPlaced'i tüketir, stoğu ayırır (yerel transaction T2) ve StockReserved olayını yayınlar. Aynı olay iki kez gelirse mesaj id'sine bakarak ikinciyi atlar: idempotency.",
+        "en": "Inventory consumes OrderPlaced, reserves stock (local transaction T2) and publishes StockReserved. If the same event arrives twice it skips the second by message id: idempotency."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["inventory"], "edges": ["broker-inv", "inv-broker"] },
+      "nodeStates": {
+        "inventory": { "status": "active", "badge": "-1", "sublabel": { "tr": "stok ayrıldı", "en": "stock reserved" } },
+        "broker": { "counter": 2 }
+      },
+      "edgeStates": { "broker-inv": { "status": "active" }, "inv-broker": { "status": "active" } },
+      "packets": [
+        { "edge": "broker-inv", "shape": "envelope", "label": "OrderPlaced", "durationMs": 900 },
+        { "edge": "inv-broker", "startAt": 1800, "shape": "envelope", "label": "StockReserved", "durationMs": 900 }
+      ],
+      "annotations": [
+        { "id": "a2", "x": 840, "y": 50, "text": { "tr": "işlenen mesaj id'leri tabloda: tekrar gelirse atla", "en": "processed message ids in a table: skip on redelivery" }, "tone": "info", "target": "inventory" }
+      ]
+    },
+    {
+      "id": "payment-failed",
+      "title": { "tr": "3. Payments dinler → kart reddedildi", "en": "3. Payments consumes → card declined" },
+      "narration": {
+        "tr": "Payments, StockReserved'i tüketir ve kartı çekmeye çalışır. Banka reddeder. Payments bir hata fırlatmaz; bunu da bir olay olarak yayınlar: PaymentFailed.",
+        "en": "Payments consumes StockReserved and tries to charge the card. The bank declines. Payments does not throw; it publishes this as an event too: PaymentFailed."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["payments"], "edges": ["broker-pay", "pay-broker"] },
+      "nodeStates": {
+        "payments": { "status": "error", "badge": "DECLINED" },
+        "inventory": { "status": "idle" },
+        "broker": { "counter": 3 }
+      },
+      "edgeStates": {
+        "broker-inv": { "status": "idle" },
+        "inv-broker": { "status": "idle" },
+        "broker-pay": { "status": "active" },
+        "pay-broker": { "status": "error" }
+      },
+      "packets": [
+        { "edge": "broker-pay", "shape": "envelope", "label": "StockReserved", "durationMs": 900 },
+        { "edge": "pay-broker", "startAt": 2000, "shape": "envelope", "color": "danger", "label": "PaymentFailed", "durationMs": 900 }
+      ],
+      "annotations": [
+        { "id": "a3", "x": 840, "y": 560, "text": { "tr": "T3 başarısız → telafi zinciri başlıyor", "en": "T3 failed → compensation chain begins" }, "tone": "danger", "target": "payments" }
+      ]
+    },
+    {
+      "id": "compensate-inventory",
+      "title": { "tr": "4. Telafi C2: stok serbest", "en": "4. Compensation C2: release stock" },
+      "narration": {
+        "tr": "Inventory, PaymentFailed'i de dinler. Ayırdığı stoğu serbest bırakır. Bu bir rollback değildir: T2 zaten commit edilmişti; C2, iş kuralına göre onun tersidir.",
+        "en": "Inventory also listens to PaymentFailed. It releases the stock it reserved. This is not a rollback: T2 was already committed; C2 is its business-level inverse."
+      },
+      "durationMs": 3500,
+      "highlight": { "nodes": ["inventory"], "edges": ["broker-inv"] },
+      "nodeStates": {
+        "inventory": { "status": "warning", "badge": "+1", "sublabel": { "tr": "stok serbest (C2)", "en": "stock released (C2)" } },
+        "payments": { "status": "idle" }
+      },
+      "edgeStates": { "broker-pay": { "status": "idle" }, "pay-broker": { "status": "idle" }, "broker-inv": { "status": "active" } },
+      "packets": [
+        { "edge": "broker-inv", "shape": "envelope", "color": "danger", "label": "PaymentFailed", "durationMs": 900 }
+      ],
+      "annotations": [
+        { "id": "a4", "x": 840, "y": 50, "text": { "tr": "telafi ≠ rollback: commit edilmişin iş tersi", "en": "compensation ≠ rollback: business inverse of a commit" }, "tone": "warning", "target": "inventory" }
+      ]
+    },
+    {
+      "id": "compensate-orders",
+      "title": { "tr": "5. Telafi C1: sipariş iptal", "en": "5. Compensation C1: cancel order" },
+      "narration": {
+        "tr": "Orders da PaymentFailed'i dinler, siparişi CANCELLED yapar ve müşteriye bildirim gönderir. Müşteri kısa bir süre PENDING görmüştü: saga'da izolasyon yoktur.",
+        "en": "Orders also listens to PaymentFailed, marks the order CANCELLED and notifies the customer. For a moment the customer saw PENDING: sagas have no isolation."
+      },
+      "durationMs": 3500,
+      "highlight": { "nodes": ["orders", "user"], "edges": ["broker-orders", "orders-odb"] },
+      "nodeStates": {
+        "orders": { "status": "warning", "badge": "CANCELLED" },
+        "inventory": { "status": "idle" }
+      },
+      "edgeStates": { "broker-inv": { "status": "idle" }, "broker-orders": { "status": "active" } },
+      "packets": [
+        { "edge": "broker-orders", "shape": "envelope", "color": "danger", "label": "PaymentFailed", "durationMs": 900 },
+        { "edge": "orders-odb", "startAt": 900, "durationMs": 500, "shape": "square", "label": "UPDATE" },
+        { "edge": "u-orders", "startAt": 1500, "durationMs": 800, "direction": "backward", "color": "warning", "label": { "tr": "e-posta: ödeme reddedildi", "en": "email: payment declined" } }
+      ]
+    },
+    {
+      "id": "takeaway",
+      "title": { "tr": "6. Koordinatör yok: artı ve eksi", "en": "6. No coordinator: pros and cons" },
+      "narration": {
+        "tr": "Hiçbir servis diğerini bilmiyor; yeni bir tüketici (sadakat puanı) eklemek üreticiye dokunmaz. Ama 'bu sipariş şu an hangi adımda?' sorusunun cevabı dört servise dağılmıştır ve Orders'ın Inventory'nin, Inventory'nin Payments'ın olayını dinlemesi döngüsel bağımlılığa kayabilir. 5+ adımda orkestrasyona geçin.",
+        "en": "No service knows the others; adding a new consumer (loyalty points) does not touch the producer. But 'which step is this order at?' is scattered across four services, and Orders listening to Inventory, Inventory listening to Payments can drift into cyclic coupling. Beyond 5 steps, switch to orchestration."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["broker"], "edges": ["orders-broker", "broker-inv", "inv-broker", "broker-pay", "pay-broker", "broker-orders"] },
+      "nodeStates": {
+        "orders": { "status": "idle", "badge": "" },
+        "inventory": { "status": "idle", "badge": "" },
+        "payments": { "status": "idle", "badge": "" },
+        "broker": { "status": "active" }
+      },
+      "edgeStates": { "broker-orders": { "status": "idle" } },
+      "packets": [
+        { "edge": "orders-broker", "shape": "envelope", "durationMs": 700 },
+        { "edge": "broker-inv", "shape": "envelope", "startAt": 700, "durationMs": 700 },
+        { "edge": "inv-broker", "shape": "envelope", "startAt": 1400, "durationMs": 700 },
+        { "edge": "broker-pay", "shape": "envelope", "startAt": 2100, "durationMs": 700 }
+      ],
+      "annotations": [
+        { "id": "a6", "x": 560, "y": 80, "text": { "tr": "artı: gevşek bağlaşıklık, kolay genişleme", "en": "pro: loose coupling, easy extension" }, "tone": "success", "target": "broker" },
+        { "id": "a7", "x": 560, "y": 470, "text": { "tr": "eksi: durum dağınık, döngüsel dinleme riski", "en": "con: scattered state, cyclic subscription risk" }, "tone": "warning", "target": "broker" }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["saga", "choreography", "event-driven", "compensation"]
+}
