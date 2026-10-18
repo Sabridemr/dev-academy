@@ -114,8 +114,8 @@ CAP yalnızca bölünme anını anlatır; oysa sistemler zamanın %99.99'unda b�
 
 Pratik kural: **para, envanter, kimlik → güçlü; sayaç, akış, öneri → eventual.** Aynı sistemin farklı tabloları farklı model kullanabilir.
 
-:::interactive{type="cap-theorem" replicas=3 mode="cp" partition=false quorum=2}
-"Bölünme oluştur" düğmesine basıp CP ve AP modlarında aynı yazma isteğinin akıbetini karşılaştırın. Quorum değerini değiştirerek kaç replikanın onayı olmadan yazmanın kabul edilmediğini gözlemleyin; AP modunda bölünme kapandığında çakışan değerlerin nasıl uzlaştırıldığını (last-write-wins) izleyin.
+:::interactive{type="cap-theorem" replicas=3 mode="cp" partition=false}
+"Ağı böl" düğmesine basıp CP ve AP modlarında aynı yazma isteğinin akıbetini karşılaştırın: CP'de azınlık tarafında kalan N1 yazmayı ve okumayı reddeder, AP'de kabul eder ama diğer taraf bayat okur. Replika sayısını 2'den 5'e değiştirerek çoğunluk (quorum) eşiğinin ve azınlıkta kalan düğüm sayısının nasıl değiştiğini gözlemleyin; AP modunda iki tarafa da yazdıktan sonra "Bölünmeyi onar" ile çakışan değerlerin nasıl uzlaştırıldığını (last-write-wins) günlükte izleyin.
 :::
 
 :::code{lang="ts" title="Yüzdelik hesaplama ve quorum tabanlı yazma kararı"}

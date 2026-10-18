@@ -158,7 +158,7 @@ Sec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=
 **Server-Sent Events (SSE)** dördüncü bir seçenektir: tek yönlü (sunucu → istemci), düz HTTP üstünde, otomatik yeniden bağlanma ile. Bildirim akışı gibi istemcinin nadiren konuştuğu senaryolarda WebSocket'ten daha basittir.
 
 :::interactive{type="request-journey" stages="dns,tcp,tls,http,websocket" rttMs=40 http3=false}
-RTT değerini değiştirip ilk byte'a kadar geçen süreyi izleyin. HTTP/3'ü açarak TCP + TLS el sıkışmalarının tek adıma indiğini, "tekrar ziyaret" seçeneğiyle DNS ve TLS cache'lerinin etkisini karşılaştırın. WebSocket aşamasında sunucunun kendiliğinden mesaj gönderebildiğine dikkat edin.
+RTT değerini değiştirip ilk byte'a kadar geçen sürenin nasıl katlandığını izleyin: DNS, TCP, TLS ve HTTP adımlarının her biri en az bir gidiş-dönüş ister. "HTTP/3 (QUIC)" kutusunu işaretleyin: TCP ve TLS el sıkışmaları tek adıma iner ve toplam bir RTT kısalır. "DNS önbellekte" kutusuyla tekrar ziyaretin etkisini karşılaştırın. WebSocket aşamasının yalnızca bir yükseltme (upgrade) maliyeti olduğuna dikkat edin; bağlantı sonrasında açık kalır ve mesajlar yeni el sıkışma gerektirmez.
 :::
 
 :::code{lang="ts" title="Node.js ile DNS çözümleme, HTTPS isteği ve WebSocket yükseltmesi"}

@@ -12,7 +12,7 @@
       },
       "options": [
         { "id": "a", "text": { "tr": "%99,9 — zincir en zayıf halka kadar erişilebilirdir", "en": "99.9% — the chain is as available as its weakest link" } },
-        { "id": "b", "text": { "tr": "%99,6 — olasılıklar çarpılır", "en": "99.6% — the probabilities multiply" } },
+        { "id": "b", "text": { "tr": "%99,6 — dört olasılık çarpılır (0,999⁴)", "en": "99.6% — the four probabilities multiply (0.999⁴)" } },
         { "id": "c", "text": { "tr": "%99,99 — yedeklilik artar", "en": "99.99% — redundancy increases" } },
         { "id": "d", "text": { "tr": "Hesaplanamaz; ağ gecikmesine bağlıdır", "en": "Cannot be computed; depends on network latency" } }
       ],
@@ -33,14 +33,14 @@
       },
       "options": [
         { "id": "a", "text": { "tr": "Veritabanı rollback'i ile aynıdır; commit edilmemiş değişiklikleri siler", "en": "It is the same as a database rollback; it discards uncommitted changes" } },
-        { "id": "b", "text": { "tr": "Zaten commit edilmiş bir adımın iş kuralına göre tersidir (ör. ödeme → iade)", "en": "It is the business-level inverse of an already committed step (e.g. charge → refund)" } },
-        { "id": "c", "text": { "tr": "Yalnızca orkestrasyon saga'larında vardır", "en": "It only exists in orchestration sagas" } },
-        { "id": "d", "text": { "tr": "Başarısız olabilir ve o zaman saga tamamen iptal edilir", "en": "It may fail, in which case the saga is simply abandoned" } }
+        { "id": "b", "text": { "tr": "Yalnızca orkestrasyon saga'larında vardır; koreografide her servis kendi rollback'ini yapar", "en": "It only exists in orchestration sagas; in choreography each service does its own rollback" } },
+        { "id": "c", "text": { "tr": "Zaten commit edilmiş bir adımın iş kuralına göre tersidir (ör. ödeme → iade)", "en": "It is the business-level inverse of an already committed step (e.g. charge → refund)" } },
+        { "id": "d", "text": { "tr": "Başarısız olursa saga terk edilir; kalan adımlar DLQ'ya yazılıp elle temizlenir", "en": "If it fails the saga is abandoned; the remaining steps are written to a DLQ and cleaned up by hand" } }
       ],
-      "correct": ["b"],
+      "correct": ["c"],
       "explanation": {
-        "tr": "Saga adımları yerel transaction olarak çoktan commit edilmiştir; geri almak için teknik rollback yoktur, iş tersini uygulayan yeni bir işlem gerekir. Telafi her iki saga türünde de vardır (c yanlış) ve başarısız olmamalıdır: başarana kadar yeniden denenir (d yanlış).",
-        "en": "Saga steps have already committed as local transactions; there is no technical rollback, a new operation applying the business inverse is needed. Compensation exists in both saga styles (c is wrong) and must not fail: it is retried until it succeeds (d is wrong)."
+        "tr": "Saga adımları yerel transaction olarak çoktan commit edilmiştir; geri almak için teknik rollback yoktur (a yanlış), iş tersini uygulayan yeni bir işlem gerekir. Telafi her iki saga türünde de vardır; koreografide de servisler PaymentFailed gibi olayları dinleyip kendi telafisini yapar, bu da rollback değil iş tersidir (b yanlış). Telafi başarısız olmamalıdır: idempotent tasarlanır ve başarana kadar yeniden denenir, saga terk edilmez (d yanlış).",
+        "en": "Saga steps have already committed as local transactions; there is no technical rollback (a is wrong), a new operation applying the business inverse is needed. Compensation exists in both saga styles; in choreography services also listen to events like PaymentFailed and run their own compensation, which is a business inverse, not a rollback (b is wrong). Compensation must not fail: it is designed to be idempotent and retried until it succeeds, the saga is not abandoned (d is wrong)."
       },
       "difficulty": "easy",
       "concepts": ["compensating-transaction", "saga"]
@@ -93,15 +93,15 @@
         "en": "A Kafka consumer runs with 'at-least-once' delivery. What is the right way to prevent the same OrderPlaced event from being processed twice and stock being decremented twice?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "Teslim garantisini 'at-most-once' yapmak", "en": "Switch the guarantee to 'at-most-once'" } },
-        { "id": "b", "text": { "tr": "Tüketiciyi idempotent yapmak: işlenen mesaj id'lerini kaydedip tekrarı atlamak", "en": "Make the consumer idempotent: record processed message ids and skip duplicates" } },
-        { "id": "c", "text": { "tr": "Üreticinin olayı yalnızca bir kez göndermesini sağlamak", "en": "Ensure the producer sends the event only once" } },
-        { "id": "d", "text": { "tr": "Tüketici sayısını bire düşürmek", "en": "Reduce the number of consumers to one" } }
+        { "id": "a", "text": { "tr": "Teslim garantisini at-most-once'a çevirmek: offset işlemeden önce commit edilir", "en": "Switch the guarantee to at-most-once: commit the offset before processing" } },
+        { "id": "b", "text": { "tr": "Üreticide idempotent producer açmak (enable.idempotence=true); broker tekrarı eler", "en": "Turn on the idempotent producer (enable.idempotence=true); the broker filters duplicates" } },
+        { "id": "c", "text": { "tr": "Consumer group'ta tek tüketici bırakmak; partition tek kişide olunca tekrar teslim olmaz", "en": "Keep a single consumer in the group; with one owner per partition there is no redelivery" } },
+        { "id": "d", "text": { "tr": "Tüketiciyi idempotent yapmak: işlenen mesaj id'lerini kaydedip tekrarı atlamak", "en": "Make the consumer idempotent: record processed message ids and skip duplicates" } }
       ],
-      "correct": ["b"],
+      "correct": ["d"],
       "explanation": {
-        "tr": "Ağda yinelenen teslim kaçınılmazdır; at-most-once (a) ise mesaj kaybını kabul etmek demektir. Üretici tarafında tek gönderim (c) tüketicinin çökmesi ve yeniden okuma durumlarını çözmez; tüketici sayısı (d) konuyla ilgisizdir. Çözüm tüketici tarafında idempotency'dir.",
-        "en": "Duplicate delivery over a network is unavoidable; at-most-once (a) means accepting message loss. Single send on the producer side (c) does not cover consumer crashes and re-reads; the consumer count (d) is irrelevant. The fix is consumer-side idempotency."
+        "tr": "Ağda yinelenen teslim kaçınılmazdır; at-most-once mesaj kaybını kabul etmek demektir (a). Idempotent producer yalnızca üretici retry'ının broker'da çift kayıt oluşturmasını önler; tüketici çöküp commit edilmemiş offset'ten yeniden okuyunca aynı olay yine iki kez işlenir (b). Tek tüketici de aynı çökme/rebalance senaryosunu yaşar ve üstelik paralelliği öldürür (c). Çözüm tüketici tarafında idempotency'dir.",
+        "en": "Duplicate delivery over a network is unavoidable; at-most-once means accepting message loss (a). The idempotent producer only prevents a producer retry from creating a duplicate record on the broker; when the consumer crashes and re-reads from an uncommitted offset the same event is still processed twice (b). A single consumer suffers the same crash/rebalance scenario and kills parallelism as well (c). The fix is consumer-side idempotency."
       },
       "difficulty": "medium",
       "concepts": ["idempotency", "eventual-consistency"]

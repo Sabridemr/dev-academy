@@ -88,8 +88,8 @@ CDN yalnızca statik dosya için değildir:
 
 Edge'in sınırı: durum. Origin veritabanınız tek bölgedeyse, edge fonksiyonu her veri ihtiyacında yine o bölgeye gider ve kazanım erir. Edge'de **okuma ağırlıklı, nadiren değişen, kullanıcıya yakın olması değerli** işler kazanır.
 
-:::interactive{type="cache" layer="cdn" pops=3 ttlSec=60 originLatencyMs=150 popLatencyMs=10 staleWhileRevalidate=true}
-Farklı bölgelerden aynı dosyayı isteyin: ilk istek miss (150 ms), sonrakiler hit (10 ms). TTL'i kısaltıp hit oranının nasıl düştüğünü, origin shield'ı açınca aynı anda gelen miss'lerin tek origin isteğine nasıl birleştiğini izleyin. "Purge" ile cache'i temizleyip origin'e gelen istek dalgasını, stale-while-revalidate ile kullanıcıya eski kopyanın anında gittiğini karşılaştırın.
+:::interactive{type="cache" policy="lru" capacity=4 ttlSec=20}
+Cache slotlarını bir edge PoP, alttaki veritabanını origin olarak düşünün. Aynı anahtarı (ör. A) art arda okuyun: ilk istek miss olup origin'e iner, sonrakiler hit ile edge'den döner. Slotun altındaki TTL çubuğunun tükenmesini bekleyip tekrar okuyun: süresi dolan kopya yeniden origin'e gider. TTL kaydırıcısını kısaltıp "Rastgele 10 okuma" ile hit oranının nasıl düştüğünü, kapasiteyi küçültünce LRU'nun hangi dosyayı tahliye ettiğini izleyin; "Sıfırla" bir purge gibi tüm cache'i boşaltır ve ardından gelen her okuma origin'e düşer.
 :::
 
 :::code{lang="ts" title="Origin tarafında doğru Cache-Control + edge fonksiyonunda A/B yönlendirme ve görsel boyutlandırma"}

@@ -13,8 +13,8 @@
       "options": [
         { "id": "a", "text": { "tr": "Metrikler (p99 gecikme grafiği)", "en": "Metrics (p99 latency graph)" } },
         { "id": "b", "text": { "tr": "Dağıtık trace (span şelalesi)", "en": "Distributed trace (span waterfall)" } },
-        { "id": "c", "text": { "tr": "CPU kullanım panosu", "en": "CPU utilization dashboard" } },
-        { "id": "d", "text": { "tr": "Erişim logları toplamı", "en": "Aggregated access logs" } }
+        { "id": "c", "text": { "tr": "Servis başına CPU kullanım panosu", "en": "Per-service CPU utilization dashboard" } },
+        { "id": "d", "text": { "tr": "Erişim loglarının toplamı", "en": "Aggregated access logs" } }
       ],
       "correct": ["b"],
       "explanation": {
@@ -34,13 +34,13 @@
       "options": [
         { "id": "a", "text": { "tr": "X-Request-ID", "en": "X-Request-ID" } },
         { "id": "b", "text": { "tr": "traceparent", "en": "traceparent" } },
-        { "id": "c", "text": { "tr": "Authorization", "en": "Authorization" } },
-        { "id": "d", "text": { "tr": "Cache-Control", "en": "Cache-Control" } }
+        { "id": "c", "text": { "tr": "X-B3-TraceId", "en": "X-B3-TraceId" } },
+        { "id": "d", "text": { "tr": "X-Correlation-ID", "en": "X-Correlation-ID" } }
       ],
       "correct": ["b"],
       "explanation": {
-        "tr": "traceparent: 00-<trace-id>-<parent-span-id>-<flags> biçimindedir ve OpenTelemetry dahil tüm modern araçların ortak dilidir. X-Request-ID yaygın ama standart dışı ve tek değerlidir (parent span ve örnekleme bayrağı taşımaz).",
-        "en": "traceparent has the form 00-<trace-id>-<parent-span-id>-<flags> and is the common language of all modern tooling including OpenTelemetry. X-Request-ID is common but non-standard and single-valued (no parent span or sampling flag)."
+        "tr": "traceparent: 00-<trace-id>-<parent-span-id>-<flags> biçimindedir ve OpenTelemetry dahil tüm modern araçların ortak dilidir. X-Request-ID ve X-Correlation-ID yaygın ama standart dışı ve tek değerlidir (parent span ve örnekleme bayrağı taşımaz); X-B3-TraceId Zipkin'in eski, W3C öncesi başlık ailesidir.",
+        "en": "traceparent has the form 00-<trace-id>-<parent-span-id>-<flags> and is the common language of all modern tooling including OpenTelemetry. X-Request-ID and X-Correlation-ID are common but non-standard and single-valued (no parent span or sampling flag); X-B3-TraceId is Zipkin's older, pre-W3C header family."
       },
       "difficulty": "easy",
       "concepts": ["trace-context", "span"]
@@ -93,15 +93,15 @@
         "en": "Which of these is the best thing to base on-call paging alerts on?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "Herhangi bir sunucuda CPU > %85", "en": "CPU > 85% on any server" } },
-        { "id": "b", "text": { "tr": "SLO hata bütçesinin tükenme hızı (burn rate): kullanıcıya yansıyan hata/gecikme", "en": "SLO error budget burn rate: user-facing errors/latency" } },
-        { "id": "c", "text": { "tr": "Log satırı sayısının artması", "en": "An increase in the number of log lines" } },
-        { "id": "d", "text": { "tr": "Replication lag'in 100 ms'yi aşması", "en": "Replication lag exceeding 100 ms" } }
+        { "id": "a", "text": { "tr": "Herhangi bir sunucuda CPU kullanımının 5 dakika boyunca %85'in üzerinde kalması", "en": "CPU utilization staying above 85% for 5 minutes on any server" } },
+        { "id": "b", "text": { "tr": "ERROR seviyeli log satırı sayısının son 10 dakikada bir önceki saate göre iki katına çıkması", "en": "The count of ERROR-level log lines doubling in the last 10 minutes compared with the previous hour" } },
+        { "id": "c", "text": { "tr": "Birincil veritabanının replication lag'inin 100 ms eşiğini 1 dakika boyunca aşması", "en": "The primary database's replication lag staying above the 100 ms threshold for 1 minute" } },
+        { "id": "d", "text": { "tr": "SLO hata bütçesinin tükenme hızı (burn rate): kullanıcıya yansıyan hata ve gecikme", "en": "SLO error budget burn rate: user-facing errors and latency" } }
       ],
-      "correct": ["b"],
+      "correct": ["d"],
       "explanation": {
-        "tr": "Alarmlar belirtiye (kullanıcının gördüğü hata ve gecikme) bağlanmalıdır; SLO burn rate bunu nicelleştirir ve her sayfalamayı eyleme bağlar. CPU, log hacmi ve replication lag sebep metrikleridir: tanı sırasında bakılır, kullanıcıyı etkilemiyorsa gece kimseyi uyandırmamalıdır.",
-        "en": "Alerts should be tied to symptoms (the errors and latency users see); SLO burn rate quantifies that and makes every page actionable. CPU, log volume and replication lag are cause metrics: consulted during diagnosis, but they should not wake anyone up if users are unaffected."
+        "tr": "Alarmlar belirtiye (kullanıcının gördüğü hata ve gecikme) bağlanmalıdır; SLO burn rate bunu nicelleştirir ve her sayfalamayı eyleme bağlar. CPU ve replication lag sebep metrikleridir: tanı sırasında bakılır, kullanıcıyı etkilemiyorsa gece kimseyi uyandırmamalıdır (a, c). ERROR log sayısı belirtiye daha yakın görünür ama hacmi trafikle değişir, SLO'ya bağlı değildir ve retry ile başarılı biten bir çağrı bile ERROR satırı üretebilir (b).",
+        "en": "Alerts should be tied to symptoms (the errors and latency users see); SLO burn rate quantifies that and makes every page actionable. CPU and replication lag are cause metrics: consulted during diagnosis, but they should not wake anyone up if users are unaffected (a, c). ERROR log counts look closer to a symptom, but their volume moves with traffic, they are not tied to the SLO, and even a call that succeeds after a retry can emit an ERROR line (b)."
       },
       "difficulty": "hard",
       "concepts": ["slo-alerting", "observability"]

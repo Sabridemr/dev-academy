@@ -55,13 +55,13 @@
       "options": [
         { "id": "a", "text": { "tr": "Her kullanıcıyı bir 'ev' region'a atayıp yazmalarını yalnızca oradan kabul etmek", "en": "Assign each user a 'home' region and accept their writes only there" } },
         { "id": "b", "text": { "tr": "CRDT gibi birleştirilebilir veri tipleri kullanmak", "en": "Use mergeable data types such as CRDTs" } },
-        { "id": "c", "text": { "tr": "DNS TTL'i 5 saniyeye düşürmek", "en": "Lower the DNS TTL to 5 seconds" } },
+        { "id": "c", "text": { "tr": "DNS TTL'i 5 saniyeye düşürüp istemcilerin hep aynı region'a gitmesini sağlamak", "en": "Lower the DNS TTL to 5 seconds so that clients always reach the same region" } },
         { "id": "d", "text": { "tr": "Bölgeler arası konsensüs (Spanner/CockroachDB tarzı) ile her yazmada çoğunluk almak", "en": "Use cross-region consensus (Spanner/CockroachDB style) to get a majority on every write" } }
       ],
       "correct": ["a", "b", "d"],
       "explanation": {
-        "tr": "Ev region bölümleme çatışmayı baştan önler, CRDT çatışmayı matematiksel olarak birleştirir, konsensüs çatışmayı sıralayarak çözer (yazma gecikmesi pahasına). DNS TTL'i failover hızını etkiler, çatışmayla ilgisi yoktur.",
-        "en": "Home-region partitioning prevents conflicts up front, CRDTs merge them mathematically, consensus resolves them by ordering (at the cost of write latency). DNS TTL affects failover speed and has nothing to do with conflicts."
+        "tr": "Ev region bölümleme çatışmayı baştan önler, CRDT çatışmayı matematiksel olarak birleştirir, konsensüs çatışmayı sıralayarak çözer (yazma gecikmesi pahasına). DNS TTL'i failover hızını etkiler; istemcileri bir region'a bağlamaz ve çatışmayla ilgisi yoktur (c yanlış).",
+        "en": "Home-region partitioning prevents conflicts up front, CRDTs merge them mathematically, consensus resolves them by ordering (at the cost of write latency). DNS TTL affects failover speed; it does not pin clients to a region and has nothing to do with conflicts (c is wrong)."
       },
       "difficulty": "medium",
       "concepts": ["active-active", "conflict-resolution"]
@@ -93,15 +93,15 @@
         "en": "A fintech product requires 'RPO ≤ 1 minute, RTO ≤ 15 minutes, limited budget'. Which DR tier is the most suitable starting point?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "Backup & restore (günlük S3 yedeği)", "en": "Backup & restore (daily S3 backup)" } },
-        { "id": "b", "text": { "tr": "Warm standby: sürekli replikasyon + küçültülmüş çalışan kopya", "en": "Warm standby: continuous replication + a scaled-down running copy" } },
-        { "id": "c", "text": { "tr": "Tam kapasiteli aktif-aktif üç region", "en": "Full-capacity active-active across three regions" } },
-        { "id": "d", "text": { "tr": "Tek region, çoklu AZ yeterlidir", "en": "Single region with multiple AZs is enough" } }
+        { "id": "a", "text": { "tr": "Backup & restore: günlük S3 yedeği ve çapraz region kopyası", "en": "Backup & restore: daily S3 backup with a cross-region copy" } },
+        { "id": "b", "text": { "tr": "Tek region, çoklu AZ ve AZ'ler arası senkron replikasyon yeterlidir", "en": "A single region with multiple AZs and synchronous cross-AZ replication is enough" } },
+        { "id": "c", "text": { "tr": "Tam kapasiteli aktif-aktif üç region, global konsensüslü veritabanı", "en": "Full-capacity active-active across three regions with a globally consensus-based database" } },
+        { "id": "d", "text": { "tr": "Warm standby: sürekli replikasyon + küçültülmüş çalışan kopya", "en": "Warm standby: continuous replication + a scaled-down running copy" } }
       ],
-      "correct": ["b"],
+      "correct": ["d"],
       "explanation": {
-        "tr": "Günlük yedek RPO'yu saatlere çıkarır (a yanlış); tek region, bölgesel kesintiye karşı korumaz (d yanlış); aktif-aktif hedefleri aşar ama bütçeyi ve karmaşıklığı katlar (c gereksiz). Sürekli replikasyon dakika altı RPO, çalışan küçük kopya ise promote + DNS ile 15 dakikanın altında RTO sağlar.",
-        "en": "Daily backups push RPO to hours (a is wrong); a single region does not protect against a regional outage (d is wrong); active-active exceeds the targets but multiplies cost and complexity (c is overkill). Continuous replication gives sub-minute RPO and a running small copy achieves sub-15-minute RTO via promote + DNS."
+        "tr": "Günlük yedek, çapraz region kopyası olsa bile RPO'yu saatlere çıkarır (a yanlış); tek region, AZ'ler arası senkron olsa da bölgesel kesintiye karşı korumaz (b yanlış); aktif-aktif hedefleri aşar ama bütçeyi ve karmaşıklığı katlar (c gereksiz). Sürekli replikasyon dakika altı RPO, çalışan küçük kopya ise promote + DNS ile 15 dakikanın altında RTO sağlar.",
+        "en": "A daily backup, even with a cross-region copy, pushes RPO to hours (a is wrong); a single region, even with synchronous cross-AZ replication, does not protect against a regional outage (b is wrong); active-active exceeds the targets but multiplies cost and complexity (c is overkill). Continuous replication gives sub-minute RPO and a running small copy achieves sub-15-minute RTO via promote + DNS."
       },
       "difficulty": "medium",
       "concepts": ["dr-tiers", "rpo", "rto"]

@@ -11,15 +11,15 @@
         "en": "What is the defining property that separates a modular monolith from a classic monolith?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "Birden fazla süreçte çalışması", "en": "It runs in multiple processes" } },
-        { "id": "b", "text": { "tr": "Modüllerin yalnızca açık arayüzler üzerinden konuşması ve kendi tablolarına sahip olması", "en": "Modules talk only through public interfaces and own their own tables" } },
-        { "id": "c", "text": { "tr": "Her modülün ayrı bir veritabanı sunucusunda olması", "en": "Each module lives on a separate database server" } },
-        { "id": "d", "text": { "tr": "Kodun controllers/services/repositories katmanlarına bölünmesi", "en": "Code split into controllers/services/repositories layers" } }
+        { "id": "a", "text": { "tr": "Her modülün ayrı bir süreçte çalışıp diğerleriyle süreç içi event bus yerine ağ üzerinden konuşması", "en": "Each module runs in its own process and talks to the others over the network instead of an in-process event bus" } },
+        { "id": "b", "text": { "tr": "Kodun controllers/services/repositories katmanlarına bölünüp her katmanın ayrı paket olması", "en": "Code split into controllers/services/repositories layers, each layer being its own package" } },
+        { "id": "c", "text": { "tr": "Her modülün kendi veritabanı sunucusuna sahip olması ve bağımsız dağıtılabilmesi", "en": "Each module has its own database server and can be deployed independently" } },
+        { "id": "d", "text": { "tr": "Modüllerin yalnızca açık arayüzlerden konuşması ve kendi tablolarının sahibi olması", "en": "Modules talk only through public interfaces and own their own tables" } }
       ],
-      "correct": ["b"],
+      "correct": ["d"],
       "explanation": {
-        "tr": "Modüler monolit hâlâ tek süreç ve genellikle tek veritabanıdır (a ve c yanlış). Fark, sınırların iş alanına göre çizilmesi ve zorlanmasıdır; teknik katmanlara bölmek (d) modülerlik sağlamaz, tam tersine her katman her alana dokunur.",
-        "en": "A modular monolith is still one process and usually one database (a and c are wrong). The difference is domain-based boundaries that are enforced; splitting by technical layer (d) does not create modularity, every layer touches every domain."
+        "tr": "Modüler monolit hâlâ tek süreç ve genellikle tek veritabanıdır; ayrı süreç ve ağ çağrısı (a) ile ayrı veritabanı sunucusu ve bağımsız dağıtım (c) mikroservisin tanımıdır. Fark, sınırların iş alanına göre çizilmesi ve zorlanmasıdır; teknik katmanlara bölmek (b) modülerlik sağlamaz, tam tersine her katman her alana dokunur.",
+        "en": "A modular monolith is still one process and usually one database; separate processes with network calls (a) and separate database servers with independent deploys (c) are the definition of microservices. The difference is domain-based boundaries that are enforced; splitting by technical layer (b) does not create modularity, every layer touches every domain."
       },
       "difficulty": "easy",
       "concepts": ["modular-monolith"]
@@ -34,13 +34,13 @@
       "options": [
         { "id": "a", "text": { "tr": "Birden fazla servisin aynı veritabanı şemasını paylaşması", "en": "Several services share the same database schema" } },
         { "id": "b", "text": { "tr": "Bir servisi dağıtmak için diğerlerini de aynı anda dağıtma zorunluluğu", "en": "Deploying one service requires deploying the others at the same time" } },
-        { "id": "c", "text": { "tr": "Her servisin kendi CI/CD boru hattının olması", "en": "Each service has its own CI/CD pipeline" } },
+        { "id": "c", "text": { "tr": "Her servisin kendi bağımsız CI/CD boru hattı ve dağıtım takviminin olması", "en": "Each service has its own independent CI/CD pipeline and release schedule" } },
         { "id": "d", "text": { "tr": "Uzun senkron çağrı zincirleri (A→B→C→D) ve zincirleme kesintiler", "en": "Long synchronous call chains (A→B→C→D) and cascading outages" } }
       ],
       "correct": ["a", "b", "d"],
       "explanation": {
-        "tr": "Paylaşılan şema, toplu dağıtım ve zincirleme senkron bağımlılık, monolitin bağlaşıklığını ağ maliyetiyle birleştirir. Servis başına bağımsız boru hattı (c) ise tam tersine sağlıklı bir mikroservis işaretidir.",
-        "en": "A shared schema, lockstep deploys and chained synchronous dependencies combine monolith coupling with network cost. An independent pipeline per service (c) is, on the contrary, a sign of healthy microservices."
+        "tr": "Paylaşılan şema, toplu dağıtım ve zincirleme senkron bağımlılık, monolitin bağlaşıklığını ağ maliyetiyle birleştirir. Servis başına bağımsız boru hattı ve takvim (c) ise tam tersine sağlıklı bir mikroservis işaretidir.",
+        "en": "A shared schema, lockstep deploys and chained synchronous dependencies combine monolith coupling with network cost. An independent pipeline and schedule per service (c) is, on the contrary, a sign of healthy microservices."
       },
       "difficulty": "medium",
       "concepts": ["distributed-monolith", "database-per-service"]

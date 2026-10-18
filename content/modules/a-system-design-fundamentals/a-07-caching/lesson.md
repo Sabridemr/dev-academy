@@ -102,7 +102,7 @@ Kapasitesi 3 olan LRU cache: A, B, C dolar; A'ya tekrar erişilince "en yeni" ol
 :::
 
 :::interactive{type="cache" policy="lru" capacity=4 writePolicy="cache-aside" ttlMs=0}
-Anahtarları okuyun ve yazın; isabet oranını izleyin. Politikayı LFU'ya çevirip aynı erişim dizisini tekrarlayın: hangi anahtar tahliye ediliyor? Yazma politikasını write-back yapıp "flush" etmeden önce cache'i düşürürseniz ne kaybolur?
+Anahtarları okuyun ve yazın; isabet oranını izleyin. Politikayı LFU'ya çevirip aynı erişim dizisini tekrarlayın: hangi anahtar tahliye ediliyor? Yazma politikasını write-back yapıp birkaç anahtara yazın: slotlar "kirli" işaretlenir ve veritabanı kutularında "≠ cache" uyarısı belirir — "Flush" etmeden cache düşerse kaybolacak veri tam olarak budur. Flush'a basıp DB yazma sayacının tek seferde arttığını görün.
 :::
 
 ## Üç klasik tuzak

@@ -33,7 +33,7 @@
       },
       "options": [
         { "id": "a", "text": { "tr": "Dosyaya max-age=0 verip her PoP'u ETag ile koşullu istek yapmaya zorlamak", "en": "Give the file max-age=0 and force every PoP to make a conditional request with ETag" } },
-        { "id": "b", "text": { "tr": "Origin shield / tiered cache ile request coalescing", "en": "Origin shield / tiered cache with request coalescing" } },
+        { "id": "b", "text": { "tr": "Origin shield / tiered cache ile request coalescing yapmak", "en": "Doing request coalescing with an origin shield / tiered cache" } },
         { "id": "c", "text": { "tr": "GeoDNS ile PoP'ları bölgelere ayırıp miss'leri zamana yaymak", "en": "Split PoPs into regions with GeoDNS and spread the misses over time" } },
         { "id": "d", "text": { "tr": "Cache-Control: private ile dosyayı yalnızca tarayıcıda saklatmak", "en": "Store the file only in the browser with Cache-Control: private" } }
       ],

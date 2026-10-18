@@ -93,7 +93,7 @@ tahmin = mevcut_sayaç + önceki_sayaç × (1 − pencere_içinde_geçen_oran)
 | **Sliding window counter** | Çok az | Yaklaşık (çok iyi) | 2 sayaç | Düzgün | Yüksek hacimli genel limit (CDN/gateway) |
 
 :::interactive{type="rate-limiter" algorithm="token-bucket" capacity=10 refillPerSec=5 windowMs=1000 limit=10}
-Aynı istek dizisini dört algoritmaya gönderin. Önce yavaş, sonra bir anda 15 istek: token bucket kaçını kabul ediyor, leaky bucket kaçını kuyruğa alıyor? Fixed window'da istekleri pencere sınırının hemen önüne ve arkasına yığın; sliding window aynı deseni nasıl yakalıyor?
+Aynı istek desenini beş algoritmaya da gönderin. Önce tek tek yavaş istekler, sonra "10 istek gönder" düğmesine iki kez basarak ani bir patlama: token bucket kaçını kabul ediyor, leaky bucket kaçını kuyruğa alıyor? Fixed window'da zaman çizelgesindeki pencere çizgisinin hemen öncesine ve sonrasına patlama yığın (2× etkisi); sliding window log ve counter aynı deseni nasıl yakalıyor?
 :::
 
 ## Dağıtık rate limiter: Redis + Lua

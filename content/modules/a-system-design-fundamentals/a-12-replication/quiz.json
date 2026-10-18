@@ -72,15 +72,15 @@
         "en": "What is the fundamental difficulty of multi-leader (master-master) replication?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "Okuma ölçeklenemez", "en": "Reads cannot scale" } },
-        { "id": "b", "text": { "tr": "Aynı kaydın iki liderde eşzamanlı güncellenmesiyle oluşan yazma çakışmaları ve bunların çözümü", "en": "Write conflicts from concurrent updates of the same record on two leaders, and how to resolve them" } },
-        { "id": "c", "text": { "tr": "Yalnızca tek bir bölgede çalışabilmesi", "en": "It can only run in a single region" } },
-        { "id": "d", "text": { "tr": "Lider seçimi gerektirmesi", "en": "It requires leader election" } }
+        { "id": "a", "text": { "tr": "Her yazmanın tüm liderlerden senkron onay beklemesi; bölgeler arası gecikme yazma yoluna girer", "en": "Every write waits for synchronous acks from all leaders; cross-region latency enters the write path" } },
+        { "id": "b", "text": { "tr": "Okumaların yalnızca kullanıcının 'ev' liderinden yapılabilmesi; diğer bölgelerden okuma ölçeklenemez", "en": "Reads can only be served by the user's 'home' leader; reads from other regions cannot scale" } },
+        { "id": "c", "text": { "tr": "Aynı kaydın iki liderde eşzamanlı güncellenmesiyle oluşan yazma çakışmalarının çözümü", "en": "Resolving write conflicts from concurrent updates of the same record on two leaders" } },
+        { "id": "d", "text": { "tr": "Liderler arasında sürekli Raft seçimi gerektirmesi; her term değişiminde yazmaların durması", "en": "It requires constant Raft elections between leaders; writes stop at every term change" } }
       ],
-      "correct": ["b"],
+      "correct": ["c"],
       "explanation": {
-        "tr": "Birden çok yazma noktası olunca aynı veri farklı yerlerde farklı değerlere güncellenebilir; LWW (veri kaybeder), sibling saklama, CRDT ya da çakışmadan kaçınma gerekir. Multi-leader özellikle çok bölgeli kullanım içindir (c yanlış) ve lider seçimi zorunlu değildir (d).",
-        "en": "With several write points the same data can be updated to different values in different places; you need LWW (loses data), sibling storage, CRDTs or conflict avoidance. Multi-leader is specifically for multi-region use (c is false) and does not require leader election (d)."
+        "tr": "Birden çok yazma noktası olunca aynı veri farklı yerlerde farklı değerlere güncellenebilir; LWW (veri kaybeder), sibling saklama, CRDT ya da çakışmadan kaçınma gerekir. Multi-leader'da liderler arası replikasyon asenkrondur ve bölgeler arası gecikme yazma yoluna girmez — bu zaten modelin varlık nedenidir (a yanlış). Okumalar her bölgenin kendi liderinden yapılır (b yanlış) ve lider seçimi gerekmez; her bölgenin lideri sabittir (d yanlış).",
+        "en": "With several write points the same data can be updated to different values in different places; you need LWW (loses data), sibling storage, CRDTs or conflict avoidance. In multi-leader, replication between leaders is asynchronous and cross-region latency stays out of the write path — that is the whole reason the model exists (a is wrong). Reads are served by each region's own leader (b is wrong) and no election is needed; each region's leader is fixed (d is wrong)."
       },
       "difficulty": "medium",
       "concepts": ["multi-leader", "write-conflict"]
@@ -93,15 +93,15 @@
         "en": "Right after updating their profile a user refreshes the page and sees the old value because the read is served from a follower. What is the most appropriate fix?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "Tüm okumaları her zaman liderden yapmak", "en": "Always serve all reads from the leader" } },
-        { "id": "b", "text": { "tr": "Kullanıcının kendi değiştirdiği veriyi kısa bir süre liderden okumak (read-your-writes), diğer okumaları takipçilerde bırakmak", "en": "Read the user's own recently written data from the leader for a short while (read-your-writes) and keep other reads on followers" } },
-        { "id": "c", "text": { "tr": "Replikasyonu tamamen kapatmak", "en": "Turn replication off entirely" } },
-        { "id": "d", "text": { "tr": "Kullanıcıya birkaç saniye beklemesini söylemek", "en": "Tell the user to wait a few seconds" } }
+        { "id": "a", "text": { "tr": "Kullanıcının kendi yazdığını kısa süre liderden okutmak (read-your-writes); diğer okumalar takipçide kalır", "en": "Serve the user's own writes from the leader for a short while (read-your-writes); other reads stay on followers" } },
+        { "id": "b", "text": { "tr": "Tüm okumaları lidere almak; takipçiler yalnızca failover için sıcak yedek olarak tutulur", "en": "Serve all reads from the leader; keep followers only as hot standbys for failover" } },
+        { "id": "c", "text": { "tr": "Replikasyonu senkrona çevirmek; her yazma tüm takipçiler onaylayana kadar bekler ve lag sıfırlanır", "en": "Switch replication to synchronous; every write waits for all followers to ack and lag drops to zero" } },
+        { "id": "d", "text": { "tr": "Kullanıcıyı hep aynı takipçiye yönlendirmek (monotonic reads); takipçi yetişince yeni değer görünür", "en": "Pin the user to the same follower (monotonic reads); the new value appears once that follower catches up" } }
       ],
-      "correct": ["b"],
+      "correct": ["a"],
       "explanation": {
-        "tr": "Read-your-writes tutarlılığı tam olarak bu sorunu hedefler ve okuma ölçeklemesini korur. Tüm okumaları lidere almak (a) takipçilerin amacını yok eder; (c) ve (d) çözüm değildir.",
-        "en": "Read-your-writes consistency targets exactly this problem while preserving read scaling. Moving all reads to the leader (a) defeats the purpose of followers; (c) and (d) are not solutions."
+        "tr": "Read-your-writes tutarlılığı tam olarak bu sorunu hedefler ve okuma ölçeklemesini korur. Tüm okumaları lidere almak takipçilerin amacını yok eder (b). Senkron replikasyon lag'i kaldırır ama her yazmayı en yavaş takipçi kadar yavaşlatır ve bir takipçi düşünce yazmayı durdurur; bir profil sayfası için orantısız bir bedeldir (c). Monotonic reads zamanın geri gitmesini önler ama kullanıcı yeni değeri henüz hiç görmediği için bu senaryoyu çözmez (d).",
+        "en": "Read-your-writes consistency targets exactly this problem while preserving read scaling. Moving all reads to the leader defeats the purpose of followers (b). Synchronous replication removes lag but slows every write to the slowest follower and halts writes when a follower dies; a disproportionate price for a profile page (c). Monotonic reads prevents time from going backwards, but the user has not seen the new value at all yet, so it does not solve this scenario (d)."
       },
       "difficulty": "medium",
       "concepts": ["replication-lag", "read-your-writes"]

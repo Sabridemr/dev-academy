@@ -11,7 +11,7 @@
         "en": "Which algorithm fits best for an API that wants to allow short bursts while capping the long-term average rate?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "Fixed window counter", "en": "Fixed window counter" } },
+        { "id": "a", "text": { "tr": "Fixed window", "en": "Fixed window" } },
         { "id": "b", "text": { "tr": "Token bucket", "en": "Token bucket" } },
         { "id": "c", "text": { "tr": "Leaky bucket", "en": "Leaky bucket" } },
         { "id": "d", "text": { "tr": "Sliding window log", "en": "Sliding window log" } }

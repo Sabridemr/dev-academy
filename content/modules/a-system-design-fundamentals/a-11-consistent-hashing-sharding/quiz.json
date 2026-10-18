@@ -35,7 +35,7 @@
         { "id": "a", "text": { "tr": "Halkada anahtara her iki yönde de en yakın olan düğüm (mesafeler karşılaştırılır)", "en": "The node nearest to the key on the ring in either direction (distances are compared)" } },
         { "id": "b", "text": { "tr": "Düğümlerin halkaya yerleşim sırasına göre round-robin; her yeni anahtar bir sonraki düğüme gider", "en": "Round-robin in the order nodes were placed on the ring; each new key goes to the next node" } },
         { "id": "c", "text": { "tr": "hash(key) mod (fiziksel düğüm sayısı × sanal düğüm sayısı) ile bulunan nokta", "en": "The point found by hash(key) mod (physical node count × virtual node count)" } },
-        { "id": "d", "text": { "tr": "Anahtarın konumundan saat yönünde ilerlerken karşılaşılan ilk düğüm", "en": "The first node encountered walking clockwise from the key's position" } }
+        { "id": "d", "text": { "tr": "Anahtarın halkadaki konumundan saat yönünde ilerlerken karşılaşılan ilk düğüm", "en": "The first node encountered walking clockwise from the key's position on the ring" } }
       ],
       "correct": ["d"],
       "explanation": {

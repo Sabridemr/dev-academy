@@ -99,8 +99,8 @@ Ayrıca payload şifreli değildir (yalnızca imzalıdır); içine hassas veri k
 Aynı kullanıcı, üç dünya: sticky session'da S1 düşünce oturum kaybı; Redis ile herhangi bir sunucu; JWT ile hiç depo sorgusu yok ama iptal gecikmeli.
 :::
 
-:::interactive{type="load-balancer" algorithm="round-robin" servers=3 sticky=true sessionStore="memory"}
-Sticky açıkken aynı renkteki kullanıcının hep aynı sunucuya gittiğini ve dağılımın bozulduğunu izleyin; bir sunucuyu düşürüp o sunucudaki oturumların kaybolduğunu görün. Sonra sessionStore'u "redis" yapıp sticky'yi kapatın: istekler serbestçe dağılır ve sunucu düşse bile oturum sürer.
+:::interactive{type="load-balancer" algorithm="round-robin" servers=3 sticky=true}
+Sticky session açıkken birkaç istek gönderip karar günlüğüne bakın: aynı istemci IP'si hep aynı sunucuya ("Sticky session → s2") gidiyor ve dengesizlik göstergesi yükseliyor. O sunucuyu güç düğmesiyle düşürün: yapışkan eşleme geçersiz kalır, istemci başka bir sunucuya taşınır — sunucu belleğindeki oturum da onunla birlikte kaybolur. Sonra sticky'yi kapatın: istekler serbestçe dağılır; oturum Redis gibi dış bir depoda tutulduğunda tam olarak bu serbestlik mümkün olur ve sunucu düşse bile oturum sürer.
 :::
 
 ## Durumu dışarı taşımanın diğer yüzleri
