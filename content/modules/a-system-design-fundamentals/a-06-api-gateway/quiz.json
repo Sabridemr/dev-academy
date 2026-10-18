@@ -32,15 +32,15 @@
         "en": "What happens while a circuit breaker is in the 'open' state?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "İstekler hedef servise normal şekilde gider ve hata oranı sayılır", "en": "Requests go to the target service normally and the error rate is counted" } },
-        { "id": "b", "text": { "tr": "İstekler hedef servise hiç gönderilmez; anında hata ya da fallback döner", "en": "Requests are not sent to the target service at all; an error or fallback is returned immediately" } },
-        { "id": "c", "text": { "tr": "Her istek üç kez yeniden denenir", "en": "Every request is retried three times" } },
-        { "id": "d", "text": { "tr": "Gateway tüm servislere gelen trafiği durdurur", "en": "The gateway stops traffic to all services" } }
+        { "id": "a", "text": { "tr": "İstekler servise gider; hata oranı kayan pencerede sayılır ve eşikle karşılaştırılır", "en": "Requests go to the service; the error rate is counted in a sliding window and compared with the threshold" } },
+        { "id": "b", "text": { "tr": "Her istek exponential backoff + jitter ile üç kez yeniden denenir, sonra 503 döner", "en": "Every request is retried three times with exponential backoff + jitter, then a 503 is returned" } },
+        { "id": "c", "text": { "tr": "Yalnızca birkaç deneme isteği servise geçirilir; başarılı olursa devre yeniden kapanır", "en": "Only a few trial requests are let through to the service; if they succeed the circuit closes again" } },
+        { "id": "d", "text": { "tr": "İstekler hedef servise hiç gönderilmez; anında hata ya da fallback döner", "en": "Requests are not sent to the target service at all; an error or fallback is returned immediately" } }
       ],
-      "correct": ["b"],
+      "correct": ["d"],
       "explanation": {
-        "tr": "Open durumu 'fast-fail' demektir: hasta servise yük bindirmeden ve gateway'in havuzunu bekleyen isteklerle doldurmadan anında yanıt verilir. (a) closed durumunu tanımlar; retry yapmak (c) hasta servisi daha da boğar; devre hedef servis başına tutulduğundan diğer servisler etkilenmez (d yanlış).",
-        "en": "Open means 'fast-fail': respond immediately without loading the sick service or filling the gateway's pool with waiting requests. (a) describes the closed state; retrying (c) would choke the sick service further; since the circuit is kept per target service, other services are unaffected (d is wrong)."
+        "tr": "Open durumu 'fast-fail' demektir: hasta servise yük bindirmeden ve gateway'in havuzunu bekleyen isteklerle doldurmadan anında yanıt verilir. (a) closed durumunu, (c) ise bekleme süresi dolduktan sonraki half-open durumunu tanımlar. Devre açıkken retry yapmak hasta servisi daha da boğar; backoff + jitter retry'ı disipline eder ama open durumunun davranışı değildir (b yanlış).",
+        "en": "Open means 'fast-fail': respond immediately without loading the sick service or filling the gateway's pool with waiting requests. (a) describes the closed state and (c) the half-open state that follows the wait period. Retrying while the circuit is open would choke the sick service further; backoff + jitter disciplines retries but is not what the open state does (b is wrong)."
       },
       "difficulty": "easy",
       "concepts": ["circuit-breaker"]
@@ -74,15 +74,15 @@
         "en": "You want mTLS, retries and tracing on service-to-service (east-west) traffic without writing code in every service. Which component is designed for this?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "API Gateway", "en": "API Gateway" } },
-        { "id": "b", "text": { "tr": "Reverse proxy (NGINX) tek örnek", "en": "A single reverse proxy (NGINX) instance" } },
-        { "id": "c", "text": { "tr": "Service mesh (sidecar proxy'ler + kontrol düzlemi)", "en": "Service mesh (sidecar proxies + control plane)" } },
-        { "id": "d", "text": { "tr": "DNS round-robin", "en": "DNS round-robin" } }
+        { "id": "a", "text": { "tr": "Service mesh (sidecar proxy'ler + kontrol düzlemi)", "en": "Service mesh (sidecar proxies + control plane)" } },
+        { "id": "b", "text": { "tr": "API Gateway (kuzey-güney trafiğin tek giriş noktası)", "en": "API Gateway (the single entry point for north-south traffic)" } },
+        { "id": "c", "text": { "tr": "İç trafiği merkezi bir reverse proxy'den (NGINX) geçirmek", "en": "Passing internal traffic through a central reverse proxy (NGINX)" } },
+        { "id": "d", "text": { "tr": "Servis adreslerini DNS round-robin ile dağıtmak", "en": "Distributing service addresses with DNS round-robin" } }
       ],
-      "correct": ["c"],
+      "correct": ["a"],
       "explanation": {
-        "tr": "Service mesh her servisin yanına bir sidecar proxy koyar ve servisler arası trafiği oradan geçirir; mTLS, retry, circuit breaker ve tracing kodsuz gelir. API Gateway dış (kuzey-güney) trafiğin kapısıdır; iç trafiği yönetmek için tasarlanmamıştır. Tek bir reverse proxy iç trafiği merkezileştirir ve SPOF olur; DNS round-robin yalnızca adres dağıtır.",
-        "en": "A service mesh places a sidecar proxy next to every service and routes inter-service traffic through it; mTLS, retries, circuit breakers and tracing come without code. The API Gateway is the door for external (north-south) traffic and is not designed to manage internal traffic. A single reverse proxy would centralise internal traffic and become a SPOF; DNS round-robin merely distributes addresses."
+        "tr": "Service mesh her servisin yanına bir sidecar proxy koyar ve servisler arası trafiği oradan geçirir; mTLS, retry, circuit breaker ve tracing kodsuz gelir. API Gateway dış (kuzey-güney) trafiğin kapısıdır; iç trafiği yönetmek için tasarlanmamıştır (b yanlış). Tek bir merkezi reverse proxy iç trafiği tek noktada toplar, SPOF olur ve mTLS kimliğini servis başına veremez (c yanlış); DNS round-robin yalnızca adres dağıtır, retry ya da şifreleme yapmaz (d yanlış).",
+        "en": "A service mesh places a sidecar proxy next to every service and routes inter-service traffic through it; mTLS, retries, circuit breakers and tracing come without code. The API Gateway is the door for external (north-south) traffic and is not designed to manage internal traffic (b is wrong). A single central reverse proxy funnels internal traffic through one point, becomes a SPOF and cannot give per-service mTLS identity (c is wrong); DNS round-robin merely distributes addresses and does no retries or encryption (d is wrong)."
       },
       "difficulty": "medium",
       "concepts": ["service-mesh", "reverse-proxy", "api-gateway"]

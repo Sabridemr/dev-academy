@@ -11,15 +11,15 @@
         "en": "A rider stands very close to the edge of a geohash cell; a driver 80 m away is in the neighbouring cell. What happens if only the rider's cell is queried, and what is the fix?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "Sürücü bulunur; geohash komşuluğu otomatik içerir", "en": "The driver is found; geohash includes neighbours automatically" } },
-        { "id": "b", "text": { "tr": "Sürücü kaçırılır; merkez hücreyle birlikte komşu hücreler de (kRing / 8 komşu) sorgulanmalıdır", "en": "The driver is missed; neighbouring cells (kRing / 8 neighbours) must be queried along with the centre cell" } },
-        { "id": "c", "text": { "tr": "Sürücü kaçırılır; çözüm daha kaba (büyük) bir hücre kullanmaktır", "en": "The driver is missed; the fix is to use a coarser (bigger) cell" } },
-        { "id": "d", "text": { "tr": "Sürücü kaçırılır; çözüm veritabanına B-tree indeksi eklemektir", "en": "The driver is missed; the fix is adding a B-tree index to the database" } }
+        { "id": "a", "text": { "tr": "Sürücü bulunur; geohash'te aynı ön eki paylaşan hücreler komşudur, sorgu ön ek eşleşmesiyle komşuları zaten kapsar", "en": "The driver is found; in geohash, cells sharing a prefix are neighbours, so a prefix match already covers them" } },
+        { "id": "b", "text": { "tr": "Sürücü kaçırılır; çözüm hücre çözünürlüğünü bir kademe kabalaştırarak (daha büyük hücre) sınırı uzağa itmektir", "en": "The driver is missed; the fix is coarsening the cell resolution one level (a bigger cell) to push the edge farther away" } },
+        { "id": "c", "text": { "tr": "Sürücü kaçırılır; çözüm sorguyu quadtree'ye taşımaktır, çünkü uyarlanabilir hücrelerde sınır problemi oluşmaz", "en": "The driver is missed; the fix is moving the query to a quadtree, since adaptive cells have no boundary problem" } },
+        { "id": "d", "text": { "tr": "Sürücü kaçırılır; merkez hücreyle birlikte komşu hücreler de (kRing / 8 komşu) sorgulanmalıdır", "en": "The driver is missed; neighbouring cells (kRing / 8 neighbours) must be queried along with the centre cell" } }
       ],
-      "correct": ["b"],
+      "correct": ["d"],
       "explanation": {
-        "tr": "Hücre sınırı problemi coğrafi indekslemenin klasik tuzağıdır. Komşu hücreleri de sorgulamak standart çözümdür. Daha büyük hücre problemi yalnızca öteler (yine bir sınır vardır) ve aday kümesini şişirir; B-tree iki boyutlu yakınlık sorgusunu çözmez.",
-        "en": "The cell boundary problem is the classic trap of geo indexing. Querying neighbouring cells too is the standard fix. A bigger cell merely moves the problem (there is still an edge) and bloats the candidate set; a B-tree does not solve two-dimensional proximity queries."
+        "tr": "Hücre sınırı problemi coğrafi indekslemenin klasik tuzağıdır; komşu hücreleri de sorgulamak standart çözümdür. Ortak ön ek kapsayan hücreyi gösterir ama sınırın iki yanındaki komşular farklı ön ek alabilir. Daha büyük hücre problemi yalnızca öteler ve aday kümesini şişirir; quadtree'de de yapraklar arasında sınır vardır — hangi indeks olursa olsun komşu sorgusu gerekir.",
+        "en": "The cell boundary problem is the classic trap of geo indexing; querying neighbouring cells too is the standard fix. A shared prefix denotes the enclosing cell, but neighbours on either side of a boundary can have different prefixes. A bigger cell merely moves the problem and bloats the candidate set; a quadtree also has boundaries between leaves — whatever the index, a neighbour query is needed."
       },
       "difficulty": "medium",
       "concepts": ["geohash", "h3-hexagons"]
@@ -32,15 +32,15 @@
         "en": "What is Uber's main reason for using hexagons (H3) instead of a square grid?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "Altıgenler daha az bellek kaplar", "en": "Hexagons use less memory" } },
-        { "id": "b", "text": { "tr": "Altıgende tüm komşular merkeze eşit uzaklıktadır; karede köşegen komşu daha uzaktır, bu da yakınlık ve bölge hesaplarını çarpıtır", "en": "In a hexagon all neighbours are equidistant from the centre; in a square the diagonal neighbour is farther, which distorts proximity and area calculations" } },
-        { "id": "c", "text": { "tr": "Altıgenler string olarak saklanabilir, kareler saklanamaz", "en": "Hexagons can be stored as strings, squares cannot" } },
-        { "id": "d", "text": { "tr": "Altıgen ızgara tam hiyerarşiktir, kare ızgara değildir", "en": "The hexagonal grid is perfectly hierarchical, the square grid is not" } }
+        { "id": "a", "text": { "tr": "Altıgende tüm komşular merkeze eşit uzaklıktadır; karede köşegen komşu daha uzaktır ve yakınlık hesaplarını çarpıtır", "en": "In a hexagon all neighbours are equidistant from the centre; in a square the diagonal neighbour is farther and distorts proximity calculations" } },
+        { "id": "b", "text": { "tr": "Altıgen ızgara tam hiyerarşiktir: üst çözünürlük hücresi alt hücreleri tam kapsar, karede bu bölünme yalnızca yaklaşıktır", "en": "The hexagonal grid is perfectly hierarchical: a parent cell fully contains its children, while in a square grid the subdivision is only approximate" } },
+        { "id": "c", "text": { "tr": "Altıgenlerde komşu sorgusu gerekmez; her hücre kenar paylaştığı 6 komşuyu zaten kapsadığı için sınır problemi yoktur", "en": "Hexagons need no neighbour query; each cell already covers the 6 neighbours it shares edges with, so there is no boundary problem" } },
+        { "id": "d", "text": { "tr": "Altıgen hücrelerin 64-bit tamsayı id'si geohash string'inden daha az bellek kaplar; milyonlarca sürücüde bu belirleyicidir", "en": "A hexagon's 64-bit integer id uses less memory than a geohash string; with millions of drivers this is decisive" } }
       ],
-      "correct": ["b"],
+      "correct": ["a"],
       "explanation": {
-        "tr": "Altıgenin altı komşusu da eşit uzaklıktadır; karede köşegen komşu kenar komşudan %41 uzaktır. Bu, kRing sorgularını, surge bölgelerini ve yoğunluk hesaplarını daha adil yapar. Bellek farkı önemsizdir; geohash de string'dir; tam hiyerarşi aslında karelerin güçlü yanıdır, H3'te hiyerarşi yaklaşıktır.",
-        "en": "All six neighbours of a hexagon are equidistant; in a square the diagonal neighbour is 41% farther than the edge neighbour. That makes kRing queries, surge zones and density calculations fairer. Memory differences are negligible; geohash is a string too; perfect hierarchy is actually a strength of squares, H3's hierarchy is approximate."
+        "tr": "Altıgenin altı komşusu da eşit uzaklıktadır; karede köşegen komşu kenar komşudan %41 uzaktır. Bu, kRing sorgularını, surge bölgelerini ve yoğunluk hesaplarını daha adil yapar. Tam hiyerarşi aslında karelerin güçlü yanıdır, H3'te hiyerarşi yaklaşıktır; 64-bit id ile string arasındaki bellek farkı önemsizdir; altıgende de sınır vardır, komşular yine kRing ile sorgulanır.",
+        "en": "All six neighbours of a hexagon are equidistant; in a square the diagonal neighbour is 41% farther than the edge neighbour. That makes kRing queries, surge zones and density calculations fairer. Perfect hierarchy is actually a strength of squares, H3's hierarchy is approximate; the memory difference between a 64-bit id and a string is negligible; hexagons have boundaries too, neighbours are still queried with kRing."
       },
       "difficulty": "hard",
       "concepts": ["h3-hexagons", "quadtree"]
@@ -93,15 +93,15 @@
         "en": "When two riders request at the same moment, what prevents the same driver being offered to both?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "Surge çarpanı", "en": "The surge multiplier" } },
-        { "id": "b", "text": { "tr": "Sürücü durumunun IDLE → OFFERED geçişinin atomik compare-and-set ile yapılması ve tek teklif kuralı", "en": "An atomic compare-and-set on the driver's IDLE → OFFERED transition and a single-offer rule" } },
-        { "id": "c", "text": { "tr": "Konum güncellemelerinin 4 saniyede bir gelmesi", "en": "Location updates arriving every 4 seconds" } },
-        { "id": "d", "text": { "tr": "Komşu hücrelerin sorgulanması", "en": "Querying neighbouring cells" } }
+        { "id": "a", "text": { "tr": "Konum güncellemelerinin Kafka'da `driverId` anahtarıyla bölümlenmesi; aynı sürücünün olayları sırayla işlenir", "en": "Partitioning location updates in Kafka by `driverId`; the same driver's events are processed in order" } },
+        { "id": "b", "text": { "tr": "Teklif gönderilince sürücünün hücre set'inden `SREM` ile çıkarılması; ikinci sorgu onu aday listesinde görmez", "en": "Removing the driver from the cell set with `SREM` once an offer is sent; the second query no longer sees him among candidates" } },
+        { "id": "c", "text": { "tr": "Sürücü durumunun IDLE → OFFERED geçişinin atomik compare-and-set ile yapılması ve tek teklif kuralı", "en": "An atomic compare-and-set on the driver's IDLE → OFFERED transition and a single-offer rule" } },
+        { "id": "d", "text": { "tr": "Her sürücünün önce kuş uçuşu mesafeyle en yakın yolcuya atanması; iki istek farklı en-yakın sürücü bulur", "en": "Assigning each driver to the nearest rider by straight-line distance first; the two requests find different nearest drivers" } }
       ],
-      "correct": ["b"],
+      "correct": ["c"],
       "explanation": {
-        "tr": "Çift atama bir yarış koşuludur; çözümü atomik durum geçişidir (Redis WATCH/MULTI veya Lua ile CAS). Geçişi kazanan istek teklifi gönderir, diğeri sıradaki adaya geçer; zamanlayıcı dolunca durum geri IDLE olur. Surge, güncelleme aralığı ve komşu sorgusu bu problemle ilgisizdir.",
-        "en": "Double assignment is a race condition; the fix is an atomic state transition (CAS via Redis WATCH/MULTI or Lua). The request that wins the transition sends the offer, the other moves to the next candidate; when the timer expires the state reverts to IDLE. Surge, update interval and neighbour queries are unrelated."
+        "tr": "Çift atama bir yarış koşuludur; çözümü atomik durum geçişidir (Redis WATCH/MULTI veya Lua ile CAS). Geçişi kazanan istek teklifi gönderir, diğeri sıradaki adaya geçer; zamanlayıcı dolunca durum geri IDLE olur. Kafka bölümlemesi yalnızca konum olaylarının sırasını korur; set'ten çıkarmak sorgu ile çıkarma arasındaki boşlukta iki isteğin aynı sürücüyü görmesini engellemez; en yakın yolcu kuralı iki yolcunun aynı sürücüyü seçmesine engel değildir.",
+        "en": "Double assignment is a race condition; the fix is an atomic state transition (CAS via Redis WATCH/MULTI or Lua). The request that wins the transition sends the offer, the other moves to the next candidate; when the timer expires the state reverts to IDLE. Kafka partitioning only preserves the order of location events; removing from the set does not stop two requests seeing the same driver in the gap between query and removal; a nearest-rider rule does not prevent two riders picking the same driver."
       },
       "difficulty": "medium",
       "concepts": ["driver-matching"]

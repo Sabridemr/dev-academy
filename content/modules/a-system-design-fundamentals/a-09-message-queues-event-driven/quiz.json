@@ -11,15 +11,15 @@
         "en": "In Kafka, what is the simplest way to guarantee that events of the same order (OrderCreated → OrderPaid → OrderShipped) are processed in order?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "Topic'i tek partition'a indirmek", "en": "Reduce the topic to a single partition" } },
-        { "id": "b", "text": { "tr": "Mesajları orderId anahtarıyla göndermek; aynı anahtar aynı partition'a düşer", "en": "Send messages keyed by orderId; the same key lands in the same partition" } },
-        { "id": "c", "text": { "tr": "Tüketici tarafında zaman damgasına göre yeniden sıralamak", "en": "Re-sort by timestamp on the consumer side" } },
-        { "id": "d", "text": { "tr": "Her olay türü için ayrı topic açmak", "en": "Open a separate topic per event type" } }
+        { "id": "a", "text": { "tr": "Mesajları orderId anahtarıyla göndermek; aynı anahtar aynı partition'a düşer", "en": "Send messages keyed by orderId; the same key lands in the same partition" } },
+        { "id": "b", "text": { "tr": "Topic'i tek partition'a indirip consumer group'ta tek bir tüketici bırakmak", "en": "Reduce the topic to a single partition and keep a single consumer in the group" } },
+        { "id": "c", "text": { "tr": "Her olay türü (Created/Paid/Shipped) için ayrı topic açıp tüketicide birleştirmek", "en": "Open a separate topic per event type (Created/Paid/Shipped) and merge them in the consumer" } },
+        { "id": "d", "text": { "tr": "Tüketicide olayları zaman damgasına göre yeniden sıralayıp kısa bir pencere beklemek", "en": "Re-sort events by timestamp in the consumer and wait for a short window" } }
       ],
-      "correct": ["b"],
+      "correct": ["a"],
       "explanation": {
-        "tr": "Kafka sıralamayı partition içinde garanti eder; orderId anahtarı aynı siparişi hep aynı partition'a yollar. Tek partition (a) da çalışır ama paralelliği öldürür; ayrı topic'ler (d) sıralamayı tamamen bozar; tüketicide sıralama (c) kırılgandır ve geç gelen olayları bekleyemez.",
-        "en": "Kafka guarantees ordering within a partition; keying by orderId sends one order to the same partition every time. A single partition (a) works but kills parallelism; separate topics (d) destroy ordering entirely; re-sorting in the consumer (c) is fragile and cannot wait for late events."
+        "tr": "Kafka sıralamayı partition içinde garanti eder; orderId anahtarı aynı siparişi hep aynı partition'a yollar. Tek partition (b) da çalışır ama paralelliği öldürür ve 'en basit' değil, en pahalı yoldur; ayrı topic'ler (c) sıralamayı tamamen bozar çünkü topic'ler arası sıra garantisi yoktur; tüketicide pencere ile sıralama (d) kırılgandır ve pencereden geç gelen olayı yakalayamaz.",
+        "en": "Kafka guarantees ordering within a partition; keying by orderId sends one order to the same partition every time. A single partition (b) works but kills parallelism and is the most expensive route, not the simplest; separate topics (c) destroy ordering entirely because there is no cross-topic order guarantee; windowed re-sorting in the consumer (d) is fragile and misses any event that arrives after the window."
       },
       "difficulty": "easy",
       "concepts": ["topic-partition", "consumer-group"]
@@ -72,15 +72,15 @@
         "en": "What is a dead-letter queue (DLQ) for?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "Tüketicinin tüm mesajlarını yedeklemek için ikinci bir kopya tutar", "en": "It keeps a second copy of every message as a backup for the consumer" } },
-        { "id": "b", "text": { "tr": "Deneme sınırı aşılan mesajları ana akıştan çıkarıp inceleme ve yeniden oynatma için ayrı tutar; böylece ana kuyruk tıkanmaz", "en": "It removes messages that exhausted their retries from the main flow and keeps them for inspection and replay, so the main queue is not blocked" } },
-        { "id": "c", "text": { "tr": "Başarısız mesajları kalıcı olarak siler", "en": "It permanently deletes failed messages" } },
-        { "id": "d", "text": { "tr": "Mesajları önceliğe göre sıralar", "en": "It orders messages by priority" } }
+        { "id": "a", "text": { "tr": "Başarısız mesajları exponential backoff ile artan gecikmelerle yeniden dener; retry topic zincirinin ilk halkasıdır", "en": "It retries failed messages with growing exponential-backoff delays; it is the first link in the retry topic chain" } },
+        { "id": "b", "text": { "tr": "Tüketici offset'ini commit etmeden önce her mesajın bir kopyasını saklar; rebalance sırasında kayıp olmaz", "en": "It stores a copy of every message before the consumer commits its offset, so nothing is lost during a rebalance" } },
+        { "id": "c", "text": { "tr": "Deneme sınırı aşılan mesajları ana akıştan çıkarıp inceleme ve replay için ayrı tutar; ana kuyruk tıkanmaz", "en": "It removes messages that exhausted their retries from the main flow and keeps them for inspection and replay; the main queue is not blocked" } },
+        { "id": "d", "text": { "tr": "At-least-once teslimde tekrar gelen mesajları tespit edip atar; işlenmiş idempotency anahtarlarını saklar", "en": "It detects and drops redelivered messages under at-least-once delivery; it stores the processed idempotency keys" } }
       ],
-      "correct": ["b"],
+      "correct": ["c"],
       "explanation": {
-        "tr": "DLQ, zehirli ya da geçici olarak işlenemeyen mesajların sağlıklı mesajları bekletmesini (head-of-line blocking) önler. Silmez (c), yedek değildir (a) ve öncelikle ilgisi yoktur (d). Alarm ve replay aracı olmadan DLQ eksik sayılır.",
-        "en": "A DLQ stops poison or temporarily unprocessable messages from holding up healthy ones (head-of-line blocking). It does not delete (c), is not a backup (a) and has nothing to do with priority (d). Without alerting and a replay tool a DLQ is incomplete."
+        "tr": "DLQ, zehirli ya da geçici olarak işlenemeyen mesajların sağlıklı mesajları bekletmesini (head-of-line blocking) önler. Retry topic'leri zincirin başıdır, DLQ sonudur; DLQ kendisi yeniden denemez (a). Rebalance'ta kayıp olmaması offset'in işlemden sonra commit edilmesiyle sağlanır, DLQ ile değil (b); tekrarları ayıklamak ise tüketicinin idempotency deposunun (Redis SET NX, unique index) işidir (d). Alarm ve replay aracı olmadan DLQ eksik sayılır.",
+        "en": "A DLQ stops poison or temporarily unprocessable messages from holding up healthy ones (head-of-line blocking). Retry topics are the start of the chain, the DLQ is its end; the DLQ itself does not retry (a). Surviving a rebalance comes from committing the offset after processing, not from a DLQ (b); filtering duplicates is the job of the consumer's idempotency store (Redis SET NX, unique index) (d). Without alerting and a replay tool a DLQ is incomplete."
       },
       "difficulty": "medium",
       "concepts": ["dead-letter-queue", "retry-backoff"]
@@ -93,15 +93,15 @@
         "en": "Click events will be consumed by a real-time recommendation service, by analytics, and by a new fraud service to be built 7 days from now; the fraud team wants to reprocess the past 7 days too. Which system fits best?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "RabbitMQ work queue — mesajlar ack'lenince silinir", "en": "RabbitMQ work queue — messages are deleted once acked" } },
-        { "id": "b", "text": { "tr": "SQS standard queue", "en": "SQS standard queue" } },
-        { "id": "c", "text": { "tr": "Kafka — mesajlar retention süresince log'da kalır, her consumer group kendi offset'inden okur ve geriye sarabilir", "en": "Kafka — messages stay in the log for the retention period, every consumer group reads from its own offset and can rewind" } },
-        { "id": "d", "text": { "tr": "Senkron HTTP webhook'ları", "en": "Synchronous HTTP webhooks" } }
+        { "id": "a", "text": { "tr": "RabbitMQ fanout exchange — her aboneye ayrı kuyruk bağlanır; mesaj ack'lenince kuyruktan silinir", "en": "RabbitMQ fanout exchange — a separate queue is bound per subscriber; a message is deleted from the queue once acked" } },
+        { "id": "b", "text": { "tr": "Kafka — mesajlar retention boyunca log'da kalır; her consumer group kendi offset'inden okur ve geri sarabilir", "en": "Kafka — messages stay in the log for the retention period; every consumer group reads from its own offset and can rewind" } },
+        { "id": "c", "text": { "tr": "SQS standard + SNS fan-out — her tüketiciye ayrı kuyruk; 14 günlük retention geçmişi saklar", "en": "SQS standard + SNS fan-out — a separate queue per consumer; the 14-day retention keeps the history" } },
+        { "id": "d", "text": { "tr": "Senkron HTTP webhook'ları — olay her tüketici endpoint'ine anında POST edilir, 7 gün yeniden denenir", "en": "Synchronous HTTP webhooks — the event is POSTed to every consumer endpoint instantly and retried for 7 days" } }
       ],
-      "correct": ["c"],
+      "correct": ["b"],
       "explanation": {
-        "tr": "Birden çok bağımsız tüketici ve geçmişi yeniden oynatma ihtiyacı Kafka'nın commit log modelinin tam karşılığıdır. RabbitMQ ve SQS mesajı tüketilince siler; yeni bir tüketici geçmişi göremez. Webhook'lar ise tüketici yoksa olayı kaybeder.",
-        "en": "Multiple independent consumers plus the need to replay history is exactly what Kafka's commit log model offers. RabbitMQ and SQS delete a message once consumed; a new consumer cannot see the past. Webhooks lose the event if no consumer exists."
+        "tr": "Birden çok bağımsız tüketici ve geçmişi yeniden oynatma ihtiyacı Kafka'nın commit log modelinin tam karşılığıdır. RabbitMQ fanout aboneleri çoğaltır ama ack'lenen mesaj gider; 7 gün sonra bağlanan kuyruk geçmişi göremez (a). SNS yalnızca yayın anında var olan aboneliklere teslim eder; SQS retention'ı o kuyruğa düşmüş mesajlar içindir, sonradan açılan kuyruk geçmişi almaz (c). Webhook'lar hedef endpoint henüz yoksa olayı teslim edemez (d).",
+        "en": "Multiple independent consumers plus the need to replay history is exactly what Kafka's commit log model offers. RabbitMQ fanout multiplies subscribers, but an acked message is gone; a queue bound 7 days later cannot see the past (a). SNS delivers only to subscriptions that exist at publish time; SQS retention applies to messages that already landed in that queue, a queue created later receives no history (c). Webhooks cannot deliver to an endpoint that does not exist yet (d)."
       },
       "difficulty": "hard",
       "concepts": ["kafka-vs-rabbitmq", "pub-sub"]

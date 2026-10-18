@@ -70,7 +70,7 @@ export default function RateLimiterSim({ params, onInteract }: SimulatorProps) {
     algorithm: strParam(params, 'algorithm', 'token-bucket', ALGOS as RateLimitAlgorithm[]),
     limit: numParam(params, 'capacity', numParam(params, 'limit', 10, 1, 50), 1, 50),
     windowMs: numParam(params, 'windowMs', 1000, 200, 5000),
-    ratePerSec: numParam(params, 'refillPerSec', numParam(params, 'rate', 5, 0.5, 50), 0.5, 50),
+    ratePerSec: numParam(params, 'refillPerSec', numParam(params, 'refillPerSecond', numParam(params, 'rate', 5, 0.5, 50), 0.5, 50), 0.5, 50),
   }));
   const limiterRef = useRef<RateLimiterState>(createRateLimiter(config, Date.now()));
   const [limiter, setLimiter] = useState<RateLimiterState>(limiterRef.current);

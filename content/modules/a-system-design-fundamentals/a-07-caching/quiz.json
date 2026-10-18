@@ -11,15 +11,15 @@
         "en": "In the cache-aside pattern, what happens when a read request misses the cache?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "Cache sunucusu kendisi veritabanına gidip veriyi getirir", "en": "The cache server itself fetches the data from the database" } },
-        { "id": "b", "text": { "tr": "Uygulama veritabanından okur, sonucu cache'e yazar ve kullanıcıya döner", "en": "The application reads from the database, writes the result into the cache and responds" } },
-        { "id": "c", "text": { "tr": "İstek hata ile reddedilir, kullanıcı tekrar dener", "en": "The request is rejected with an error and the user retries" } },
-        { "id": "d", "text": { "tr": "Uygulama veritabanından okur ama cache'e yazmaz", "en": "The application reads from the database but never writes to the cache" } }
+        { "id": "a", "text": { "tr": "Cache sunucusu loader ile veritabanına kendisi gider ve girdiyi doldurur", "en": "The cache server itself goes to the database via a loader and fills the entry" } },
+        { "id": "b", "text": { "tr": "Uygulama veritabanından okur ve döner; cache girdisi ancak ilk yazmada dolar", "en": "The application reads from the database and responds; the cache entry is filled only on the first write" } },
+        { "id": "c", "text": { "tr": "Uygulama veritabanından okur, sonucu cache'e yazar ve kullanıcıya döner", "en": "The application reads from the database, writes the result into the cache and responds" } },
+        { "id": "d", "text": { "tr": "Uygulama veritabanına gitmeden bayat değeri sunar ve arka planda yeniler", "en": "The application serves the stale value without going to the database and refreshes in the background" } }
       ],
-      "correct": ["b"],
+      "correct": ["c"],
       "explanation": {
-        "tr": "Cache-aside'da mantık uygulamadadır: miss'te uygulama DB'den okur ve cache'i doldurur ki bir sonraki istek hit olsun. (a) read-through'u tanımlar; (d) cache'in hiç dolmamasına yol açar.",
-        "en": "In cache-aside the logic lives in the application: on a miss it reads the DB and populates the cache so the next request hits. (a) describes read-through; (d) would leave the cache permanently empty."
+        "tr": "Cache-aside'da mantık uygulamadadır: miss'te uygulama DB'den okur ve cache'i doldurur ki bir sonraki istek hit olsun. (a) read-through'u tanımlar — davranış aynı, sorumluluk cache tarafında. (b) cache'in yalnızca yazma anında dolmasıdır (write-through); okunan ama hiç yazılmayan veri cache'e asla girmez. (d) stale-while-revalidate'tir ama miss'te sunulacak bir bayat değer yoktur.",
+        "en": "In cache-aside the logic lives in the application: on a miss it reads the DB and populates the cache so the next request hits. (a) describes read-through — same behaviour, responsibility on the cache side. (b) fills the cache only at write time (write-through); data that is read but never written would never enter the cache. (d) is stale-while-revalidate, but on a miss there is no stale value to serve."
       },
       "difficulty": "easy",
       "concepts": ["cache-aside", "read-through"]
@@ -34,13 +34,13 @@
       "options": [
         { "id": "a", "text": { "tr": "Yazma gecikmesi çok düşüktür çünkü yalnızca cache'e yazılır", "en": "Write latency is very low because only the cache is written" } },
         { "id": "b", "text": { "tr": "Cache düşerse henüz DB'ye aktarılmamış (dirty) yazmalar kaybolabilir", "en": "If the cache crashes, dirty writes not yet flushed to the DB can be lost" } },
-        { "id": "c", "text": { "tr": "Cache ile veritabanı her an birebir aynıdır", "en": "The cache and the database are identical at every instant" } },
+        { "id": "c", "text": { "tr": "Cache ile veritabanı her an birebir aynıdır çünkü yazma iki depoya senkron gider", "en": "The cache and the database are identical at every instant because writes go to both stores synchronously" } },
         { "id": "d", "text": { "tr": "Beğeni/görüntülenme sayaçları gibi kayba tahammüllü veriler için uygundur", "en": "It suits loss-tolerant data such as like/view counters" } }
       ],
       "correct": ["a", "b", "d"],
       "explanation": {
-        "tr": "Write-back yazmayı hızlandırır ama DB'ye aktarım asenkron olduğu için cache ile DB bir süre farklıdır (c yanlış) ve çökme anında dirty veriler kaybolabilir. Bu yüzden kayıpla yaşanabilen sayaçlar için tercih edilir; sipariş kayıtları için değil.",
-        "en": "Write-back speeds up writes, but because the flush to the DB is asynchronous the cache and DB diverge for a while (c is false) and dirty data can be lost on a crash. That is why it is chosen for loss-tolerant counters, not for order records."
+        "tr": "Write-back yazmayı hızlandırır ama DB'ye aktarım asenkron olduğu için cache ile DB bir süre farklıdır ve çökme anında dirty veriler kaybolabilir. Senkron çift yazma write-through'un tanımıdır, write-back'in değil (c yanlış). Bu yüzden kayıpla yaşanabilen sayaçlar için tercih edilir; sipariş kayıtları için değil.",
+        "en": "Write-back speeds up writes, but because the flush to the DB is asynchronous the cache and DB diverge for a while and dirty data can be lost on a crash. Synchronous dual writes are the definition of write-through, not write-back (c is false). That is why it is chosen for loss-tolerant counters, not for order records."
       },
       "difficulty": "medium",
       "concepts": ["write-back", "write-through"]
@@ -96,15 +96,15 @@
         "en": "The moment a very popular key's TTL expires, thousands of requests miss simultaneously and pile onto the database. What is this problem called and what is the most direct fix?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "Cache penetration — Bloom filtresi eklemek", "en": "Cache penetration — add a Bloom filter" } },
-        { "id": "b", "text": { "tr": "Thundering herd (cache stampede) — tek bir isteğin DB'ye gitmesine izin verip diğerlerini bekletmek (single-flight) ya da bayat değeri sunarken arka planda yenilemek", "en": "Thundering herd (cache stampede) — let one request go to the DB while others wait (single-flight), or serve stale while revalidating" } },
-        { "id": "c", "text": { "tr": "Hot key — TTL'i tamamen kaldırmak", "en": "Hot key — remove the TTL entirely" } },
-        { "id": "d", "text": { "tr": "Write-back kaybı — write-through'a geçmek", "en": "Write-back loss — switch to write-through" } }
+        { "id": "a", "text": { "tr": "Cache penetration — var olmayan anahtarları DB'ye sormadan reddetmek için Bloom filtresi eklemek", "en": "Cache penetration — add a Bloom filter to reject non-existent keys without asking the DB" } },
+        { "id": "b", "text": { "tr": "Hot key — anahtarı user:1:0..9 gibi N kopyaya bölüp okumaları rastgele bir kopyaya dağıtmak", "en": "Hot key — split the key into N copies such as user:1:0..9 and spread reads across a random copy" } },
+        { "id": "c", "text": { "tr": "Senkron son kullanma — TTL'i tamamen kaldırıp girdileri yalnızca olay tabanlı purge ile silmek", "en": "Synchronised expiry — remove the TTL entirely and delete entries only via event-based purge" } },
+        { "id": "d", "text": { "tr": "Thundering herd (cache stampede) — single-flight ile tek isteği DB'ye gönderip diğerlerini bekletmek", "en": "Thundering herd (cache stampede) — send one request to the DB with single-flight and make the others wait" } }
       ],
-      "correct": ["b"],
+      "correct": ["d"],
       "explanation": {
-        "tr": "Eşzamanlı miss dalgası cache stampede/thundering herd'dür; single-flight, stale-while-revalidate veya erken yenileme ile çözülür. Penetration var olmayan anahtarlarla, hot key ise tek anahtara yoğunlaşan trafikle ilgilidir; TTL'i kaldırmak bayatlık problemini doğurur.",
-        "en": "A wave of simultaneous misses is a cache stampede/thundering herd; it is solved with single-flight, stale-while-revalidate or early refresh. Penetration concerns non-existent keys, hot keys concern traffic concentrated on one key; removing the TTL creates a staleness problem."
+        "tr": "Eşzamanlı miss dalgası cache stampede/thundering herd'dür; single-flight, stale-while-revalidate veya erken yenileme ile çözülür. Penetration var olmayan anahtarlarla ilgilidir (a). Hot key, TTL'den bağımsız olarak tek anahtara sürekli yığılan trafiktir; anahtarı kopyalamak Redis düğüm yükünü dağıtır ama miss dalgasını DB'den uzak tutmaz (b). TTL'i kaldırmak ise bayatlık problemini doğurur (c).",
+        "en": "A wave of simultaneous misses is a cache stampede/thundering herd; it is solved with single-flight, stale-while-revalidate or early refresh. Penetration concerns non-existent keys (a). A hot key is traffic constantly piling onto one key regardless of TTL; replicating the key spreads load across Redis nodes but does not keep the miss wave away from the DB (b). Removing the TTL creates a staleness problem (c)."
       },
       "difficulty": "hard",
       "concepts": ["thundering-herd", "ttl", "cache-invalidation"]

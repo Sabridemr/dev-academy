@@ -11,15 +11,15 @@
         "en": "Which approach most correctly prevents the last unit of a product being sold to two customers at once (oversell)?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "Önce SELECT ile stoğu oku, 0'dan büyükse UPDATE ile düş", "en": "SELECT the stock first, then UPDATE if it is greater than 0" } },
-        { "id": "b", "text": { "tr": "Tek bir koşullu UPDATE: `SET available = available - 1 WHERE available >= 1`; etkilenen satır 0 ise stok yok", "en": "A single conditional UPDATE: `SET available = available - 1 WHERE available >= 1`; 0 rows affected means out of stock" } },
-        { "id": "c", "text": { "tr": "Stoğu Redis'e taşıyıp TTL vermek", "en": "Move stock to Redis and set a TTL" } },
-        { "id": "d", "text": { "tr": "Stoğu CDN'de önbelleğe almak", "en": "Cache the stock on the CDN" } }
+        { "id": "a", "text": { "tr": "Stoğu Redis'te `GET` ile okuyup sıfırdan büyükse `DECR` ile düşmek; bellek içi işlem olduğu için yarış oluşmaz", "en": "Read the stock in Redis with `GET` and `DECR` it if above zero; being in-memory, no race can occur" } },
+        { "id": "b", "text": { "tr": "Transaction içinde önce SELECT ile stoğu oku, 0'dan büyükse aynı transaction'da UPDATE ile düş; commit yarışı çözer", "en": "Inside a transaction, SELECT the stock first and UPDATE it in the same transaction if above 0; the commit resolves the race" } },
+        { "id": "c", "text": { "tr": "Ürün sayfasındaki stok sayısını kısa TTL ile cache'leyip stok 0 görünen ürünlerde 'Satın al' düğmesini kapatmak", "en": "Cache the stock count on the product page with a short TTL and disable the 'Buy' button when stock shows 0" } },
+        { "id": "d", "text": { "tr": "Tek koşullu UPDATE: `SET available = available - 1 WHERE available >= 1`; etkilenen satır 0 ise stok yok", "en": "A single conditional UPDATE: `SET available = available - 1 WHERE available >= 1`; 0 rows affected means out of stock" } }
       ],
-      "correct": ["b"],
+      "correct": ["d"],
       "explanation": {
-        "tr": "Ayrı SELECT + UPDATE arasında başka bir istek araya girebilir (check-then-act yarışı). Koşullu UPDATE kontrol ve düşürmeyi tek atomik işlemde yapar. Redis TTL veya CDN cache tutarlılık problemini çözmez, yalnızca okuma performansını etkiler.",
-        "en": "Another request can slip between a separate SELECT and UPDATE (check-then-act race). A conditional UPDATE performs the check and decrement in one atomic operation. A Redis TTL or CDN cache does not solve the consistency problem; it only affects read performance."
+        "tr": "Ayrı SELECT + UPDATE arasına — transaction içinde olsa bile, satır kilidi alınmadıkça — başka bir istek girebilir (check-then-act yarışı); Redis'te GET + DECR de iki ayrı komuttur ve aynı yarışı taşır. Koşullu UPDATE kontrol ve düşürmeyi tek atomik işlemde yapar. Düğmeyi kapatmak yalnızca arayüz önlemidir; aynı anda gelen iki checkout'u engellemez.",
+        "en": "Another request can slip between a separate SELECT and UPDATE — even inside a transaction, unless a row lock is taken (check-then-act race); GET + DECR in Redis are also two separate commands with the same race. A conditional UPDATE performs the check and decrement in one atomic operation. Disabling the button is only a UI measure; it does not stop two simultaneous checkouts."
       },
       "difficulty": "medium",
       "concepts": ["inventory-reservation"]
@@ -33,9 +33,9 @@
       },
       "options": [
         { "id": "a", "text": { "tr": "Arama indeksi (yeni ürün 1–2 sn sonra görünür)", "en": "The search index (a new product appears after 1–2 s)" } },
-        { "id": "b", "text": { "tr": "Ödeme çekimi (capture)", "en": "Payment capture" } },
+        { "id": "b", "text": { "tr": "Ödeme çekimi (capture) adımı", "en": "The payment capture step" } },
         { "id": "c", "text": { "tr": "Öneri listeleri", "en": "Recommendation lists" } },
-        { "id": "d", "text": { "tr": "Envanter düşümü", "en": "Inventory decrement" } },
+        { "id": "d", "text": { "tr": "Envanter düşümü (rezervasyon)", "en": "Inventory decrement (reservation)" } },
         { "id": "e", "text": { "tr": "Ürün yorum sayısı", "en": "Product review count" } }
       ],
       "correct": ["a", "c", "e"],
@@ -54,15 +54,15 @@
         "en": "The user's browser timed out and re-sent the checkout request. Which mechanism prevents a duplicate order and a double charge?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "Sticky session", "en": "Sticky sessions" } },
-        { "id": "b", "text": { "tr": "İstemcinin ürettiği idempotency anahtarının hem sipariş servisinde hem PSP çağrısında kullanılması", "en": "A client-generated idempotency key used both in the order service and in the PSP call" } },
-        { "id": "c", "text": { "tr": "Rate limiting", "en": "Rate limiting" } },
-        { "id": "d", "text": { "tr": "Veritabanını read replica'dan okumak", "en": "Reading from a database read replica" } }
+        { "id": "a", "text": { "tr": "Sipariş tablosunda `user_id + sepet toplamı` üzerinde benzersiz indeks tutmak; ikinci INSERT ihlalle düşer", "en": "Keeping a unique index on `user_id + cart total` in the orders table; the second INSERT fails on the violation" } },
+        { "id": "b", "text": { "tr": "Checkout uç noktasına kullanıcı başına kısa pencereli rate limit koymak; ikinci istek 429 ile reddedilir", "en": "Putting a short-window per-user rate limit on the checkout endpoint; the second request is rejected with 429" } },
+        { "id": "c", "text": { "tr": "İstemcinin ürettiği idempotency anahtarının sipariş servisinde ve PSP çağrısında birlikte kullanılması", "en": "A client-generated idempotency key used in both the order service and the PSP call" } },
+        { "id": "d", "text": { "tr": "Sticky session ile aynı kullanıcının isteklerini hep aynı uygulama sunucusuna yönlendirmek; sunucu ikinci isteği tanır", "en": "Routing the same user's requests to the same app server with sticky sessions; the server recognises the second request" } }
       ],
-      "correct": ["b"],
+      "correct": ["c"],
       "explanation": {
-        "tr": "Idempotency anahtarı aynı mantıksal işlemin ikinci kez uygulanmasını engeller ve ilk sonucu döndürür. Sticky session yalnızca aynı sunucuya yönlendirir; rate limiting ikinci isteği belki engeller ama garanti vermez; replica okuma konuyla ilgisizdir.",
-        "en": "The idempotency key prevents the same logical operation being applied twice and returns the first result. Sticky sessions only route to the same server; rate limiting might block the second request but gives no guarantee; replica reads are unrelated."
+        "tr": "Idempotency anahtarı aynı mantıksal işlemin ikinci kez uygulanmasını engeller ve ilk sonucu döndürür; PSP'ye de iletildiği için çekim tekrarlanmaz. Sticky session yalnızca aynı sunucuya yönlendirir, isteği tanımaz; rate limit ikinci isteği belki engeller ama garanti vermez; `user_id + tutar` benzersiz indeksi meşru tekrar siparişleri de engeller ve PSP'deki çift çekime dokunmaz.",
+        "en": "The idempotency key prevents the same logical operation being applied twice and returns the first result; since it is forwarded to the PSP, the charge is not repeated either. Sticky sessions only route to the same server, they do not recognise the request; a rate limit might block the second request but gives no guarantee; a unique index on `user_id + amount` also blocks legitimate repeat orders and does nothing about the double charge at the PSP."
       },
       "difficulty": "easy",
       "concepts": ["payment-idempotency", "order-saga"]
@@ -94,15 +94,15 @@
         "en": "Why did Amazon prefer an always-writeable (AP) key-value store for the shopping cart instead of a strongly consistent relational database?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "Sepet verisi çok büyük olduğu için", "en": "Because cart data is very large" } },
-        { "id": "b", "text": { "tr": "Sepete ekleme işleminin ağ bölünmesinde bile asla reddedilmemesi gerektiği; çakışmalar birleştirme ile çözülebildiği için", "en": "Because adding to the cart must never be rejected even during a network partition, and conflicts can be resolved by merging" } },
-        { "id": "c", "text": { "tr": "İlişkisel veritabanları JSON saklayamadığı için", "en": "Because relational databases cannot store JSON" } },
-        { "id": "d", "text": { "tr": "Sepetin ödeme ile aynı transaction'da olması gerektiği için", "en": "Because the cart must be in the same transaction as payment" } }
+        { "id": "a", "text": { "tr": "Sepete ekleme ağ bölünmesinde bile reddedilmemeli; çakışan sürümler birleştirilerek (union) çözülebildiği için", "en": "Adding to the cart must never be rejected even during a network partition, and conflicting versions can be resolved by merging (union)" } },
+        { "id": "b", "text": { "tr": "Sepet verisi kullanıcı başına çok büyüdüğü ve ilişkisel şemaya sığmadığı için yatay bölümlenebilen bir depo gerektiği için", "en": "Because cart data grew too large per user to fit a relational schema and required a horizontally partitioned store" } },
+        { "id": "c", "text": { "tr": "Sepet ile ödeme aynı transaction'da işlendiğinden, checkout p99'unu korumak için düşük gecikmeli key-value erişimi şart olduğu için", "en": "Because cart and payment are processed in the same transaction, low-latency key-value access was required to protect checkout p99" } },
+        { "id": "d", "text": { "tr": "İlişkisel veritabanları o dönemde JSON/belge saklayamadığı ve sepet şeması sık değiştiği için şemasız depo zorunlu olduğu için", "en": "Because relational databases could not store JSON/documents at the time and the cart schema changed often, a schemaless store was mandatory" } }
       ],
-      "correct": ["b"],
+      "correct": ["a"],
       "explanation": {
-        "tr": "Dynamo makalesinin temel motivasyonu erişilebilirlikti: bir yazma reddedilirse satış kaybedilir. İki cihazdan gelen çakışan sepetler 'birleştirme' ile çözülebildiği için güçlü tutarlılık gerekmez. Veri boyutu küçüktür, ilişkisel DB'ler JSON saklayabilir ve sepet ödemeyle aynı transaction'da değildir.",
-        "en": "The Dynamo paper's core motivation was availability: a rejected write is a lost sale. Conflicting carts from two devices can be resolved by merging, so strong consistency is unnecessary. The data is small, relational DBs can store JSON, and the cart is not in the same transaction as payment."
+        "tr": "Dynamo makalesinin temel motivasyonu erişilebilirlikti: reddedilen bir yazma kaybedilen satıştır. İki cihazdan gelen çakışan sepetler birleştirilebildiği için güçlü tutarlılık gerekmez. Sepet verisi küçüktür; sepet ödemeyle aynı transaction'da değildir (saga ayrı çalışır); ilişkisel DB'ler de JSON saklayabilir — gerekçe şema değil erişilebilirliktir.",
+        "en": "The Dynamo paper's core motivation was availability: a rejected write is a lost sale. Conflicting carts from two devices can be merged, so strong consistency is unnecessary. Cart data is small; the cart is not in the same transaction as payment (the saga runs separately); relational DBs can store JSON too — the reason is availability, not schema."
       },
       "difficulty": "hard",
       "concepts": ["shopping-cart"]

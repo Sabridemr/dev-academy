@@ -5,7 +5,7 @@ import { AlertTriangle, Pause, Play, RotateCcw, StepForward } from 'lucide-react
 import {
   closedFormSolution,
   generateLinearData,
-  gradientStep,
+  gradients,
   mseLoss,
   sampleLossSurface,
   type DataPoint,
@@ -17,7 +17,51 @@ import { Range, Select, SimShell, Stat } from './ui';
 import { numParam, strParam, type SimulatorProps } from './types';
 
 type Surface = 'bowl' | 'valley';
+type Optimizer = 'sgd' | 'momentum' | 'adam';
+const OPTIMIZERS: Optimizer[] = ['sgd', 'momentum', 'adam'];
 const MAX_STEPS = 400;
+/** Momentum ve Adam'ın standart katsayıları */
+const BETA = 0.9;
+const BETA2 = 0.999;
+const EPS = 1e-8;
+
+/** Optimizer'ın adımlar arasında taşıdığı durum (hız / momentler) */
+interface OptState {
+  vw: number;
+  vb: number;
+  sw: number;
+  sb: number;
+}
+const freshOptState = (): OptState => ({ vw: 0, vb: 0, sw: 0, sb: 0 });
+
+/**
+ * Tek optimizasyon adımı. Kayıp yüzeyi lineer regresyon MSE'si olduğu için dışbükeydir;
+ * fark, dar vadide SGD'nin zikzak çizmesi, momentum'un sığ eksende hızlanması ve
+ * Adam'ın adımı eksen başına ölçeklemesidir.
+ */
+function optimizerStep(data: DataPoint[], last: GdStep, lr: number, optimizer: Optimizer, o: OptState): GdStep {
+  const { gradW, gradB } = gradients(data, last.params);
+  const t = last.iteration + 1;
+  let dw = gradW;
+  let db = gradB;
+  if (optimizer === 'momentum') {
+    o.vw = BETA * o.vw + gradW;
+    o.vb = BETA * o.vb + gradB;
+    dw = o.vw;
+    db = o.vb;
+  } else if (optimizer === 'adam') {
+    o.vw = BETA * o.vw + (1 - BETA) * gradW;
+    o.vb = BETA * o.vb + (1 - BETA) * gradB;
+    o.sw = BETA2 * o.sw + (1 - BETA2) * gradW * gradW;
+    o.sb = BETA2 * o.sb + (1 - BETA2) * gradB * gradB;
+    const c1 = 1 - Math.pow(BETA, t);
+    const c2 = 1 - Math.pow(BETA2, t);
+    dw = o.vw / c1 / (Math.sqrt(o.sw / c2) + EPS);
+    db = o.vb / c1 / (Math.sqrt(o.sb / c2) + EPS);
+  }
+  const params = { w: last.params.w - lr * dw, b: last.params.b - lr * db };
+  return { iteration: t, params, loss: mseLoss(data, params), gradW, gradB };
+}
 const W_RANGE: [number, number] = [-4, 6];
 const B_RANGE: [number, number] = [-8, 10];
 const RES = 32;
@@ -31,6 +75,8 @@ const L = {
     dataset: 'Veri seti',
     bowl: 'Kase (x merkezli)',
     valley: 'Dar vadi (x kaydırılmış)',
+    optimizer: 'Optimizer',
+    optimizers: { sgd: 'SGD (düz)', momentum: 'Momentum (β=0.9)', adam: 'Adam' } satisfies Record<Optimizer, string>,
     diverged: 'Iraksama! Öğrenme oranı çok büyük; kayıp patladı. Oranı düşürüp sıfırla.',
     optimum: 'OLS optimum',
     pause: 'Duraklat',
@@ -45,6 +91,8 @@ const L = {
     dataset: 'Dataset',
     bowl: 'Bowl (centered x)',
     valley: 'Narrow valley (shifted x)',
+    optimizer: 'Optimizer',
+    optimizers: { sgd: 'SGD (plain)', momentum: 'Momentum (β=0.9)', adam: 'Adam' } satisfies Record<Optimizer, string>,
     diverged: 'Diverged! Learning rate too large; the loss exploded. Lower it and reset.',
     optimum: 'OLS optimum',
     pause: 'Pause',
@@ -69,9 +117,11 @@ export default function GradientDescentSim({ params, onInteract }: SimulatorProp
   const [start, setStart] = useState<RegressionParams>(() => ({ w: numParam(params, 'startX', -3, -4, 6), b: -6 }));
   const [lrExp, setLrExp] = useState(() => Math.log10(numParam(params, 'learningRate', 0.02, 0.0001, 1)));
   const lr = Math.pow(10, lrExp);
+  const [optimizer, setOptimizer] = useState<Optimizer>(() => strParam(params, 'optimizer', 'sgd', OPTIMIZERS));
   const [steps, setSteps] = useState<GdStep[]>(() => [{ iteration: 0, params: start, loss: mseLoss(data, start), gradW: 0, gradB: 0 }]);
   const [running, setRunning] = useState(false);
   const stepsRef = useRef(steps);
+  const optRef = useRef<OptState>(freshOptState());
   const clipId = `gd-${useId().replace(/:/g, '')}`;
   stepsRef.current = steps;
 
@@ -83,20 +133,25 @@ export default function GradientDescentSim({ params, onInteract }: SimulatorProp
 
   const reset = useCallback((p: RegressionParams = start, d: DataPoint[] = data) => {
     setRunning(false);
-    setSteps([{ iteration: 0, params: p, loss: mseLoss(d, p), gradW: 0, gradB: 0 }]);
+    optRef.current = freshOptState();
+    const first = [{ iteration: 0, params: p, loss: mseLoss(d, p), gradW: 0, gradB: 0 }];
+    stepsRef.current = first;
+    setSteps(first);
   }, [start, data]);
 
+  // Adımlar updater dışında hesaplanır: optimizer durumu (momentum/Adam) ref'te tutulur ve
+  // StrictMode'un updater'ı iki kez çağırması bu durumu bozmamalıdır.
   const doStep = useCallback((n = 1) => {
-    setSteps((prev) => {
-      let out = prev;
-      for (let i = 0; i < n; i++) {
-        const last = out[out.length - 1];
-        if (!Number.isFinite(last.loss) || last.loss > 1e6) break;
-        out = [...out, gradientStep(data, last.params, lr, last.iteration)];
-      }
-      return out.length > MAX_STEPS ? [out[0], ...out.slice(out.length - MAX_STEPS + 1)] : out;
-    });
-  }, [data, lr]);
+    let out = stepsRef.current;
+    for (let i = 0; i < n; i++) {
+      const last = out[out.length - 1];
+      if (!Number.isFinite(last.loss) || last.loss > 1e6) break;
+      out = [...out, optimizerStep(data, last, lr, optimizer, optRef.current)];
+    }
+    if (out.length > MAX_STEPS) out = [out[0], ...out.slice(out.length - MAX_STEPS + 1)];
+    stepsRef.current = out;
+    setSteps(out);
+  }, [data, lr, optimizer]);
 
   useEffect(() => {
     if (!running) return;
@@ -184,6 +239,12 @@ export default function GradientDescentSim({ params, onInteract }: SimulatorProp
             value={surface}
             options={[{ id: 'bowl', label: l.bowl }, { id: 'valley', label: l.valley }]}
             onChange={(v) => { onInteract(); setSurface(v); reset(start, makeData(v)); }}
+          />
+          <Select
+            label={l.optimizer}
+            value={optimizer}
+            options={OPTIMIZERS.map((o) => ({ id: o, label: l.optimizers[o] }))}
+            onChange={(v) => { onInteract(); setOptimizer(v); reset(); }}
           />
           <div className="grid grid-cols-2 gap-2">
             <Stat label={t('sim.iteration')} value={current.iteration} />

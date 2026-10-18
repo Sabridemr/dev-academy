@@ -5,8 +5,8 @@ import { motion } from 'framer-motion';
 import { Send, Zap } from 'lucide-react';
 import { useI18n } from '@/i18n';
 import { usePrefersReducedMotion } from '@/lib/hooks';
-import { Range, SimShell, Stat } from './ui';
-import { numParam, strParam, type SimulatorProps } from './types';
+import { Range, Select, SimShell, Stat } from './ui';
+import { boolParam, numParam, strParam, type SimulatorProps } from './types';
 
 type HopKind = 'client' | 'dns' | 'cdn' | 'lb' | 'gateway' | 'service' | 'cache' | 'db' | 'net' | 'generic';
 
@@ -19,11 +19,23 @@ interface Hop {
 }
 
 const DEFAULT_LAYERS = ['user', 'dns', 'cdn', 'lb', 'gateway', 'service', 'cache', 'db'];
+/** Soğuk başlangıç: lambda katmanına eklenen süre (ms) */
+const COLD_START_MS = 770;
+
+/** "ad:ms" biçimini ayırır: `ranking:30` → { id: 'ranking', ms: 30 } */
+function splitSpec(spec: string): { id: string; ms?: number } {
+  const i = spec.lastIndexOf(':');
+  if (i > 0) {
+    const ms = Number(spec.slice(i + 1));
+    if (Number.isFinite(ms)) return { id: spec.slice(0, i), ms };
+  }
+  return { id: spec };
+}
 
 /** Ders parametresindeki serbest katman adını bilinen bir türe eşler */
 function classify(name: string): { kind: HopKind; ms: number } {
   const n = name.toLowerCase();
-  if (/^(user|client|browser)/.test(n)) return { kind: 'client', ms: 2 };
+  if (/^(user|client|browser|sender)/.test(n)) return { kind: 'client', ms: 2 };
   if (n.includes('dns')) return { kind: 'dns', ms: 40 };
   if (n.includes('cdn') || n.includes('edge')) return { kind: 'cdn', ms: 15 };
   if (n === 'lb' || n.includes('load')) return { kind: 'lb', ms: 2 };
@@ -55,6 +67,13 @@ const L = {
     served: (s: string) => `Yanıt “${s}” katmanından döndü`,
     failed: (s: string) => `İstek “${s}” katmanında 5xx ile başarısız oldu`,
     slow: 'yavaş',
+    http3: 'HTTP/3 (QUIC): TCP + TLS tek el sıkışma',
+    slowLayer: (ms: number) => `Yavaş katman (+${ms} ms)`,
+    none: 'yok',
+    coldStart: 'Cold start (soğuk başlangıç)',
+    budget: 'Gecikme bütçesi',
+    overBudget: (ms: number) => `Bütçe aşıldı (${ms} ms) → fallback yanıt döner`,
+    inBudget: 'Bütçe içinde',
     hint: 'Kısa devre: CDN veya cache hit olduğunda istek arka katmanlara hiç gitmez — en ucuz istek, hiç yapılmayan istektir.',
   },
   en: {
@@ -75,6 +94,13 @@ const L = {
     served: (s: string) => `Response served by “${s}”`,
     failed: (s: string) => `Request failed with 5xx at “${s}”`,
     slow: 'slow',
+    http3: 'HTTP/3 (QUIC): TCP + TLS in one handshake',
+    slowLayer: (ms: number) => `Slow layer (+${ms} ms)`,
+    none: 'none',
+    coldStart: 'Cold start',
+    budget: 'Latency budget',
+    overBudget: (ms: number) => `Over budget (${ms} ms) → fallback response`,
+    inBudget: 'Within budget',
     hint: 'Short-circuit: on a CDN or cache hit the request never reaches the back layers — the cheapest request is the one you never make.',
   },
 };
@@ -92,23 +118,36 @@ export default function RequestJourneySim({ params, onInteract }: SimulatorProps
   const reduced = usePrefersReducedMotion();
   const raw = ['layers', 'path', 'stages', 'services'].map((k) => params[k]).find((v): v is string => typeof v === 'string' && v.trim().length > 0);
   const names = raw ? raw.split(',').map((s) => s.trim()).filter(Boolean).slice(0, 10) : DEFAULT_LAYERS;
-  const withClient = classify(names[0]).kind === 'client' ? names : ['user', ...names];
-  const slowService = strParam<string>(params, 'slowService', '');
+  const withClient = classify(splitSpec(names[0]).id).kind === 'client' ? names : ['user', ...names];
+  // slowService parametresi verilmişse yavaş katman seçilebilir hâle gelir ("none" → başlangıçta yok)
+  const slowSelectable = params.slowService !== undefined;
+  const slowPenalty = numParam(params, 'slowPenaltyMs', 300, 1, 5000);
+  const [slowService, setSlowService] = useState(() => {
+    const s = strParam<string>(params, 'slowService', '');
+    return s === 'none' ? '' : s;
+  });
   const failureStage = strParam<string>(params, 'failureStage', '');
+  // showColdStart: lambda katmanı için cold start anahtarı (provisioned concurrency = kapalı)
+  const coldToggle = boolParam(params, 'showColdStart', false);
+  const [coldStart, setColdStart] = useState(coldToggle);
+  const budget = numParam(params, 'budgetMs', 0, 0, 60_000);
   const layersKey = withClient.join(',');
   const hops: Hop[] = useMemo(
     () =>
-      layersKey.split(',').map((n) => {
-        const c = classify(n);
-        return { id: n, label: n, kind: c.kind, ms: c.ms + (n === slowService ? 300 : 0) };
+      layersKey.split(',').map((spec) => {
+        const { id, ms: override } = splitSpec(spec);
+        const c = classify(id);
+        const lambdaCold = coldToggle && coldStart && id.toLowerCase().includes('lambda') && !id.toLowerCase().includes('lambda-cold');
+        return { id, label: id, kind: c.kind, ms: (override ?? c.ms) + (id === slowService ? slowPenalty : 0) + (lambdaCold ? COLD_START_MS : 0) };
       }),
-    [layersKey, slowService],
+    [layersKey, slowService, slowPenalty, coldToggle, coldStart],
   );
 
   const [dnsCached, setDnsCached] = useState(false);
   const [cdnHit, setCdnHit] = useState(false);
   const [cacheHit, setCacheHit] = useState(false);
   const [injectFail, setInjectFail] = useState(false);
+  const [http3, setHttp3] = useState(() => boolParam(params, 'http3', false));
   const [hitRate, setHitRate] = useState(() => numParam(params, 'cacheHitRate', 70, 0, 100));
   const [rtt, setRtt] = useState(() => numParam(params, 'rttMs', 20, 1, 300));
   const [journey, setJourney] = useState<Journey | null>(null);
@@ -128,6 +167,7 @@ export default function RequestJourneySim({ params, onInteract }: SimulatorProps
       let ms = h.ms;
       if (h.kind === 'dns' && opts.dns) ms = 1;
       if (h.kind === 'net') ms = rtt; // tcp/tls/http el sıkışmaları birer RTT
+      if (h.kind === 'net' && http3 && h.id.toLowerCase() === 'tcp') ms = 0; // QUIC: taşıma + TLS 1.3 tek RTT'de (tls adımında sayılır)
       // Katmana ulaşmak için ağ gecikmesi: istemciden ilk sıçrama uzun, iç ağ kısa
       const hopNet = i === 0 ? 0 : i === 1 ? rtt / 2 : 1;
       visited.push({ hop: h, ms: ms + hopNet });
@@ -176,8 +216,10 @@ export default function RequestJourneySim({ params, onInteract }: SimulatorProps
   const hx = (i: number) => 10 + (i * (580 - boxW)) / Math.max(1, n - 1);
   const done = journey && cursor >= journey.visited.length;
   const hasKind = (k: HopKind) => hops.some((h) => h.kind === k);
+  const hasHop = (id: string) => hops.some((h) => h.id.toLowerCase() === id);
   const kindColor = (k: HopKind) => (k === 'cdn' || k === 'cache' ? 'var(--da-success)' : k === 'db' ? 'var(--da-accent)' : k === 'client' ? 'var(--da-muted)' : 'var(--da-primary)');
   const maxMs = journey ? Math.max(...journey.visited.map((v) => v.ms), 1) : 1;
+  const overBudget = budget > 0 && journey && done && !journey.failed && journey.total > budget;
 
   return (
     <SimShell
@@ -214,14 +256,38 @@ export default function RequestJourneySim({ params, onInteract }: SimulatorProps
               <input type="checkbox" checked={injectFail} onChange={(e) => { onInteract(); setInjectFail(e.target.checked); }} /> {l.fail(failureStage)}
             </label>
           )}
+          {hasHop('tcp') && hasHop('tls') && (
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={http3} onChange={(e) => { onInteract(); setHttp3(e.target.checked); }} /> {l.http3}
+            </label>
+          )}
+          {coldToggle && hops.some((h) => h.id.toLowerCase().includes('lambda')) && (
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={coldStart} onChange={(e) => { onInteract(); setColdStart(e.target.checked); }} /> {l.coldStart}
+            </label>
+          )}
+          {slowSelectable && (
+            <Select
+              label={l.slowLayer(slowPenalty)}
+              value={slowService}
+              options={[{ id: '', label: l.none }, ...hops.filter((h) => h.kind !== 'client').map((h) => ({ id: h.id, label: h.id }))]}
+              onChange={(v) => { onInteract(); setSlowService(v); }}
+            />
+          )}
           <Range label={l.rtt} value={rtt} min={1} max={200} onChange={(v) => { onInteract(); setRtt(v); }} />
           {hasKind('cache') && <Range label={l.hitRate} value={hitRate} min={0} max={100} step={5} format={(v) => `${v}%`} onChange={setHitRate} />}
           <div className="grid grid-cols-2 gap-2" aria-live="polite">
-            <Stat label={l.total} value={journey && done ? `${Math.round(journey.total)} ms` : '—'} tone={journey?.failed ? 'danger' : 'primary'} />
+            <Stat label={l.total} value={journey && done ? `${Math.round(journey.total)} ms` : '—'} tone={journey?.failed || overBudget ? 'danger' : 'primary'} />
             <Stat label={l.hops} value={journey ? `${journey.visited.length}/${n}` : '—'} />
+            {budget > 0 && <Stat label={l.budget} value={`${budget} ms`} tone={overBudget ? 'danger' : 'success'} />}
             {batch && <Stat label={l.avg} value={`${Math.round(batch.avg)} ms`} />}
-            {batch && <Stat label={l.p95} value={`${Math.round(batch.p95)} ms`} tone="warning" />}
+            {batch && <Stat label={l.p95} value={`${Math.round(batch.p95)} ms`} tone={budget > 0 && batch.p95 > budget ? 'danger' : 'warning'} />}
           </div>
+          {budget > 0 && journey && done && !journey.failed && (
+            <p className={`text-xs ${overBudget ? 'text-danger' : 'text-success'}`} role="status">
+              {overBudget ? l.overBudget(Math.round(journey.total)) : l.inBudget}
+            </p>
+          )}
           <p className="text-xs text-muted">{l.hint}</p>
         </>
       }

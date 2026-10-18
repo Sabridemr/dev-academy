@@ -11,15 +11,15 @@
         "en": "Where is the adaptive bitrate (ABR) decision — which quality to request for the next segment — typically made?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "CDN edge sunucusunda", "en": "On the CDN edge server" } },
-        { "id": "b", "text": { "tr": "Playback API sunucusunda", "en": "On the playback API server" } },
-        { "id": "c", "text": { "tr": "İstemcideki oynatıcıda, ölçülen hız ve tampon doluluğuna göre", "en": "In the client player, based on measured throughput and buffer level" } },
-        { "id": "d", "text": { "tr": "Transcoding işçisinde", "en": "In the transcoding worker" } }
+        { "id": "a", "text": { "tr": "Playback API sunucusunda, cihaz profili ve abonelik planına göre", "en": "On the playback API server, based on device profile and subscription plan" } },
+        { "id": "b", "text": { "tr": "İstemcideki oynatıcıda, ölçülen hız ve tampon doluluğuna göre", "en": "In the client player, based on measured throughput and buffer level" } },
+        { "id": "c", "text": { "tr": "Transcoding işçisinde, merdiven üretilirken hedef cihaz sınıfına göre", "en": "In the transcoding worker, based on the target device class while producing the ladder" } },
+        { "id": "d", "text": { "tr": "CDN edge sunucusunda, edge'in gördüğü anlık bağlantı hızına göre", "en": "On the CDN edge server, based on the instantaneous connection speed the edge observes" } }
       ],
-      "correct": ["c"],
+      "correct": ["b"],
       "explanation": {
-        "tr": "ABR istemcide çalışır: oynatıcı son segmentlerin indirme hızını ve tamponu bilir, sunucu bilmez. Bu sayede sunucu ve CDN durumsuz kalır ve sonsuz ölçeklenir. Transcoding işçisi yalnızca kademeleri üretir; hangi kademenin seçileceğine karışmaz.",
-        "en": "ABR runs on the client: the player knows recent download speeds and its buffer, the server does not. This keeps the server and CDN stateless and infinitely scalable. The transcoding worker only produces the renditions; it has no say in which one is chosen."
+        "tr": "ABR istemcide çalışır: yalnızca oynatıcı son segmentlerin indirme hızını ve tamponunu bilir. Edge isteği servis eder ama oynatıcının tamponunu göremez; playback API yalnızca manifest ve lisans verir, segment seçmez; transcoding işçisi kademeleri üretir, hangisinin seçileceğine karışmaz. Bu sayede sunucu ve CDN durumsuz kalır ve sonsuz ölçeklenir.",
+        "en": "ABR runs on the client: only the player knows recent download speeds and its buffer. The edge serves the request but cannot see the player's buffer; the playback API only hands out the manifest and licence, it does not pick segments; the transcoding worker produces the renditions and has no say in which one is chosen. This keeps the server and CDN stateless and infinitely scalable."
       },
       "difficulty": "easy",
       "concepts": ["adaptive-bitrate"]
@@ -32,15 +32,15 @@
         "en": "The moment a new episode is released, thousands of CDN edges request the same segment. Which structure most directly prevents the origin from collapsing?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "Origin shield katmanı ve istek birleştirme (request coalescing)", "en": "An origin shield layer with request coalescing" } },
-        { "id": "b", "text": { "tr": "Veritabanına read replica eklemek", "en": "Adding a database read replica" } },
-        { "id": "c", "text": { "tr": "Daha yüksek bitrate kademeleri üretmek", "en": "Producing higher bitrate renditions" } },
-        { "id": "d", "text": { "tr": "Presigned URL kullanmak", "en": "Using presigned URLs" } }
+        { "id": "a", "text": { "tr": "Metadata veritabanına read replica ekleyip manifest sorgularını dağıtmak", "en": "Adding read replicas to the metadata database and spreading manifest queries" } },
+        { "id": "b", "text": { "tr": "Lansmanda önce yalnızca düşük kademeleri sunmak (progressive readiness)", "en": "Serving only the low renditions first at launch (progressive readiness)" } },
+        { "id": "c", "text": { "tr": "Edge'lere object storage'dan doğrudan okuma veren presigned URL'ler dağıtmak", "en": "Handing edges presigned URLs that read straight from object storage" } },
+        { "id": "d", "text": { "tr": "Origin shield katmanı ve istek birleştirme (request coalescing)", "en": "An origin shield layer with request coalescing" } }
       ],
-      "correct": ["a"],
+      "correct": ["d"],
       "explanation": {
-        "tr": "Shield, edge'ler ile origin arasına girerek aynı nesne için yalnızca bir origin isteği üretir; prepositioning bunu daha da ileri taşır. Read replica metadata sorgularını ölçekler ama segment baytlarını değil; yüksek bitrate problemi büyütür; presigned URL upload tarafının çözümüdür.",
-        "en": "The shield sits between edges and origin and produces only one origin request per object; prepositioning takes this further. A read replica scales metadata queries, not segment bytes; higher bitrates make the problem bigger; presigned URLs solve the upload side."
+        "tr": "Shield, edge'ler ile origin arasına girerek aynı nesne için yalnızca bir origin isteği üretir; prepositioning bunu daha da ileri taşır. Read replica metadata sorgularını ölçekler, segment baytlarını değil; presigned URL upload tarafının çözümüdür ve origin'e giden istek sayısını azaltmaz; progressive readiness transcoding kuyruğunu rahatlatır, edge fırtınasını değil.",
+        "en": "The shield sits between edges and origin and produces only one origin request per object; prepositioning takes this further. A read replica scales metadata queries, not segment bytes; presigned URLs solve the upload side and do not reduce the number of requests hitting the origin; progressive readiness relieves the transcoding queue, not the edge storm."
       },
       "difficulty": "medium",
       "concepts": ["cdn-prepositioning"]
@@ -93,15 +93,15 @@
         "en": "Which technique shortens the transcoding time of a 2-hour film the most?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "Daha büyük tek bir sunucu kullanmak", "en": "Using a single bigger server" } },
-        { "id": "b", "text": { "tr": "Filmi birkaç saniyelik segmentlere bölüp segmentleri yüzlerce işçide paralel kodlamak", "en": "Splitting the film into few-second segments and encoding them in parallel on hundreds of workers" } },
-        { "id": "c", "text": { "tr": "Yalnızca 1080p kademesini üretmek", "en": "Producing only the 1080p rendition" } },
-        { "id": "d", "text": { "tr": "Transcoding'i CDN edge'de yapmak", "en": "Doing transcoding on the CDN edge" } }
+        { "id": "a", "text": { "tr": "Filmi birkaç saniyelik segmentlere bölüp yüzlerce işçide paralel kodlamak", "en": "Splitting the film into few-second segments and encoding them in parallel on hundreds of workers" } },
+        { "id": "b", "text": { "tr": "Önce yalnızca 360p kademesini üretip yayınlamak, kalan kademeleri sonraya bırakmak", "en": "Producing and publishing only the 360p rendition first, leaving the remaining renditions for later" } },
+        { "id": "c", "text": { "tr": "Spot/preemptible işçi havuzunu büyütüp kuyruktaki işleri daha hızlı sıraya almak", "en": "Growing the spot/preemptible worker pool so queued jobs get scheduled faster" } },
+        { "id": "d", "text": { "tr": "GPU'lu tek bir büyük sunucuda tüm merdiveni sırayla kodlamak (dikey ölçekleme)", "en": "Encoding the whole ladder sequentially on a single big GPU server (vertical scaling)" } }
       ],
-      "correct": ["b"],
+      "correct": ["a"],
       "explanation": {
-        "tr": "Video kodlama segment sınırlarında bağımsızdır; bu yüzden iş yatay olarak dağıtılabilir ve süre işçi sayısıyla neredeyse doğrusal düşer. Tek büyük sunucu dikey sınırlara takılır; kademe sayısını azaltmak kullanıcı deneyimini bozar; edge'ler CPU açısından bu iş için tasarlanmamıştır.",
-        "en": "Video encoding is independent across segment boundaries, so the work scales out horizontally and time drops almost linearly with worker count. A single big server hits vertical limits; fewer renditions hurt user experience; edges are not designed for this CPU load."
+        "tr": "Video kodlama segment sınırlarında bağımsızdır; iş yatay dağıtılır ve süre işçi sayısıyla neredeyse doğrusal düşer. Tek büyük sunucu, GPU'lu bile olsa, dikey sınıra takılır. Önce 360p yayınlamak (progressive readiness) ilk yayına çıkma süresini kısaltır, toplam kodlama süresini değil; işçi havuzunu büyütmek kuyrukta bekleme süresini azaltır, tek bir filmin kodlanma süresini kısaltmaz.",
+        "en": "Video encoding is independent across segment boundaries, so the work scales out horizontally and time drops almost linearly with worker count. A single big server, even with a GPU, hits the vertical limit. Publishing 360p first (progressive readiness) shortens time to first publish, not total encoding time; a bigger worker pool cuts queue waiting time, not the encoding time of one film."
       },
       "difficulty": "medium",
       "concepts": ["transcoding-pipeline", "bitrate-ladder"]
