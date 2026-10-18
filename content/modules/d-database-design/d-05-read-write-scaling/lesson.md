@@ -161,7 +161,7 @@ Replika yazmayı ölçeklemez; tüm yazmalar hâlâ tek birincile gider. Veri ya
 | **Directory** | Ayrı bir arama tablosu: `tenant → shard` | Tam kontrol, kolay taşıma | Dizin tek hata noktası; ek sorgu |
 | **Geo** | Kullanıcının bölgesine göre | Veri yerelliği, mevzuat (GDPR) | Taşınan kullanıcı, bölgeler arası sorgu |
 
-:::interactive{type="consistent-hashing" nodes=4 virtualNodes=100 keys=200 showMigration=true}
+:::interactive{type="consistent-hashing" nodes=4 virtualNodes=100 keys=200}
 Dört shard'lı halkada anahtar dağılımını izleyin. Önce sanal düğüm sayısını 1'e düşürüp dağılımın nasıl bozulduğunu görün; sonra 100'e çıkarın. Bir shard ekleyin ve taşınan anahtar oranını mod-N hash ile karşılaştırın (beklenen: yaklaşık 1/5'e karşı yaklaşık 4/5).
 :::
 

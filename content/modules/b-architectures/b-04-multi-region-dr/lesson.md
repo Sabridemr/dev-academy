@@ -73,8 +73,8 @@ Her region trafik alır ve yazar; veri çift yönlü replike edilir. Kullanıcı
 - **Çatışma çözümü (LWW, CRDT)**: Son yazan kazanır (last-writer-wins; saat kaymasıyla veri kaybedebilir) ya da matematiksel olarak birleştirilebilir veri tipleri (sayaçlar, kümeler). DynamoDB Global Tables LWW kullanır.
 - **Global konsensüs**: Spanner, CockroachDB gibi sistemler her yazmada bölgeler arası Paxos/Raft çoğunluğu alır: tutarlılık güçlü, yazma gecikmesi bölgeler arası RTT kadar.
 
-:::interactive{type="replication-quorum" nodes=5 regions=2 writeQuorum=3 readQuorum=3 latencyMs=90 showPartition=true}
-Beş replikayı iki region'a dağıtın (3+2). W ve R değerlerini değiştirin: W+R > N olduğunda okumalar her zaman son yazmayı görür mü? Region'lar arasındaki bağlantıyı kesin (partition) ve azınlık tarafının yazma kabul edemediğini, çoğunluk tarafının devam ettiğini izleyin. Asenkron moda geçip RPO'nun nasıl sıfırdan büyüdüğünü ölçün.
+:::interactive{type="replication-quorum" nodes=5 regions=2 writeQuorum=3 readQuorum=3 latencyMs=90}
+Beş replikanın üçü yerel, ikisi (R4, R5) 90 ms uzaklıktaki ikinci region'da. W ve R değerlerini değiştirin: W + R > N olduğunda okumalar her zaman son yazmayı görüyor mu? Yazma gecikmesine bakın: W=3'te onay bazen yalnızca yerel replikalardan (hızlı), bazen uzak bir replikadan (yavaş) gelir; W=4 ise mutlaka uzak region'ı bekler. Region'lar arası bağlantının kopmasını canlandırmak için R4 ve R5'e tıklayıp düşürün: çoğunluk tarafı (3 replika) W=3 ile devam eder; şimdi bunun yerine yerel üçten ikisini düşürün — azınlıkta kalan taraf yazma kabul edemez. Son olarak W=1 yapıp (asenkron replikasyona en yakın ayar) yazar yazmaz okuyun: bayat okumalar, RPO'nun sıfırdan büyüdüğünün göstergesidir.
 :::
 
 | | Aktif-pasif | Aktif-aktif |

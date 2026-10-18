@@ -98,8 +98,8 @@ Conway Yasası: *bir organizasyon, kendi iletişim yapısının kopyası olan si
 
 Büyük patlama (big bang) yeniden yazımı neredeyse hiç işe yaramaz. Bunun yerine **Strangler Fig** kalıbı kullanılır: monolitin önüne bir yönlendirici (API gateway) konur, bir yetenek yeni servise taşınır, gateway o yolu yeni servise yönlendirir; monolit kuruyana kadar bu tekrarlanır. Detayını dağıtık kalıplar dersinde (c-04) göreceğiz. Aşağıdaki kod, bir modüler monolit içinde sınırların nasıl korunduğunu ve bir modülün ayrı servise taşınmasının neden "sadece adaptör değişikliği" olduğunu gösterir.
 
-:::interactive{type="request-journey" scenario="monolith-vs-microservices" stages="gateway,orders,catalog,payments,db" compare=true}
-Aynı "sipariş ver" isteğini bir monolitte (süreç içi çağrılar) ve mikroservis mimarisinde (ağ çağrıları) adım adım izleyin. Her durağın gecikmesini ve hata olasılığını değiştirerek toplam p99 gecikmenin ve başarı oranının nasıl değiştiğini karşılaştırın.
+:::interactive{type="request-journey" stages="gateway,orders,catalog,payments,db" failureStage="payments"}
+Aynı "sipariş ver" isteğini gateway → orders → catalog → payments → db duraklarında izleyin. Şelalede her durağın kendi işlem süresine ve araya giren ağ sıçramasına bakın: monolitte orders, catalog ve payments tek süreçte çalışır ve bu sıçramaların maliyeti sıfırdır; mikroservislerde her biri serileştirme ve ağ bedeli olan bir çağrıdır. "Hata enjekte et: payments" kutusuyla tek bir servisin düşmesinin tüm isteği nasıl başarısız kıldığını görün ve "20 istek" ile p95'i karşılaştırın — mikroservislerde başarı oranı, zincirdeki servislerin başarı oranlarının çarpımıdır.
 :::
 
 :::code{lang="ts" title="Modüler monolitte modül sınırı: port + süreç içi adaptör → HTTP adaptörü"}

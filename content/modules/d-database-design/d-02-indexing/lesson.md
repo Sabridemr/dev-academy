@@ -110,8 +110,8 @@ Okurken dikkat edilecek üç şey:
 2. **rows tahmini vs. actual rows**: 100 kat fark varsa istatistikler bayattır → `ANALYZE orders`.
 3. **Buffers**: okunan sayfa sayısı; gerçek I/O maliyetinin en dürüst göstergesi.
 
-:::interactive{type="index-query-plan" table="orders" rows=1000000 columns="customer_id,status,created_at,total_amount" query="customer_id = 4821 AND status = 'paid'"}
-Sorguyu ve indeks tanımını değiştirin: önce indekssiz planı inceleyin, sonra (customer_id), (status, customer_id) ve (customer_id, status) indekslerini sırayla deneyip tahmini maliyetin ve okunan sayfa sayısının nasıl değiştiğini karşılaştırın. created_at aralığını ortaya koyduğunuzda en-soldaki önek kuralının etkisini gözlemleyin.
+:::interactive{type="index-query-plan" rows=1000000 query="customer_id = 42 AND status = 'paid'"}
+Sorguyu ve indeksi değiştirin: önce indekssiz planı (Seq Scan) inceleyin, sonra (customer_id), (status, customer_id) ve (customer_id, status) indekslerini sırayla deneyip tahmini maliyetin ve incelenen satır sayısının nasıl değiştiğini karşılaştırın. Sorguyu "Eşitlik: customer_id = 42" yapın: (status, customer_id) indeksi neden kullanılmıyor? "İkinci kolon: status = paid" sorgusunda ise (customer_id, status) işe yaramaz — en-soldaki önek kuralı. "Aralık: created_at" sorgusunda B-tree (created_at) ile aralık taramasını, "Yalnızca indeksli kolonlar" seçeneğiyle de Index Only Scan'i gözlemleyin.
 :::
 
 ## Seçicilik: planlayıcı neden bazen indeksi kullanmaz?

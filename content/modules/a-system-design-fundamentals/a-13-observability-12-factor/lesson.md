@@ -77,8 +77,8 @@ Her servis bu başlığı alır, aynı trace-id'yi korur, kendi span'ini açar v
 Gateway trace-id üretir; traceparent başlığı order, inventory ve payment servislerine taşınır; payment'taki yavaş span p99 ihlalinin kaynağını gösterir; span'ler collector'da birleşir ve aynı trace_id log ile metriği birbirine bağlar.
 :::
 
-:::interactive{type="request-journey" services="gateway,order-service,inventory-service,payment-service" showTrace=true slowService="payment-service"}
-İstek gönderin ve her servisin span'ini şelale görünümünde izleyin. Yavaş servisi değiştirin: toplam gecikme nasıl bölünüyor? traceparent başlığını bir servisten kaldırın (propagation'ı kapatın) ve trace'in nerede koptuğunu görün.
+:::interactive{type="request-journey" services="gateway,order-service,inventory-service,payment-service" slowService="payment-service"}
+İstek gönderin ve her servisin span'ini şelale görünümünde izleyin. "Yavaş katman" seçimini değiştirin: toplam gecikme servisler arasında nasıl bölünüyor, p99 ihlalinin kaynağı hangi span? Şelalede her span'in bir öncekinin bitişinden başladığına dikkat edin: span'leri aynı zaman çizgisine dizen şey traceparent başlığıdır; bir servis bu başlığı iletmeseydi trace o noktada kopar, sonraki span'ler ayrı bir trace olarak görünürdü.
 :::
 
 :::code{lang="ts" title="W3C trace context yayılımı + yapısal log (Express middleware)"}

@@ -39,8 +39,8 @@ Aşağıdaki animasyon aynı istemci–servis çifti üzerinde sarmalayıcının
 Aynı sarmalayıcı: arayüz çevirir (Adapter), davranış ekler (Decorator), erişimi kontrol eder (Proxy), çok kapıyı tek kapıya indirir (Facade).
 :::
 
-:::interactive{type="request-journey" scenario="wrapper-chain" stages="controller,logging-decorator,retry-decorator,caching-proxy,adapter,legacy-sdk" showLayers=true}
-Bir isteğin altı katmanlı sarmalayıcı zincirinden geçişini izleyin. Katmanların sırasını sürükleyerek değiştirin: cache proxy'sini retry'ın dışına alınca ne olur? Logging'i en içe koyunca ölçülen süre nasıl değişir? Her katmanı tek tek kapatıp isteğin davranışını karşılaştırın.
+:::interactive{type="request-journey" stages="controller,logging-decorator,retry-decorator,caching-proxy,adapter,legacy-sdk" failureStage="legacy-sdk"}
+Bir isteğin altı katmanlı sarmalayıcı zincirinden geçişini izleyin. "Cache hit" kutusunu işaretleyip tekrar gönderin: caching-proxy isteği kısa devre yapar, adapter ve legacy-sdk hiç çağrılmaz — Proxy'nin işi budur. "Hata enjekte et: legacy-sdk" ile eski SDK'yı düşürün: hata adapter'dan dışarı, retry ve logging sarmalayıcılarından geçerek controller'a taşınır; retry-decorator'ın cache'in dışında durması, cache miss'lerin de yeniden denenmesi anlamına gelir. "20 istek" ile farklı cache hit oranlarında ortalama ve p95'i karşılaştırın.
 :::
 
 ---

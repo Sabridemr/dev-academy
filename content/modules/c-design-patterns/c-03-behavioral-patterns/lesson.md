@@ -40,8 +40,8 @@ Tek bir "sipariş ver" isteği bu kalıpların beşinden geçebilir. Önce büt�
 Middleware zinciri → komut nesnesi → fiyat stratejisi → durum geçişi → olay yayını: bir istek, beş davranışsal kalıp.
 :::
 
-:::interactive{type="request-journey" scenario="behavioral-pipeline" stages="auth-handler,ratelimit-handler,validation-handler,command-bus,order-state,pricing-strategy,event-bus" editableChain=true}
-Zincirdeki halkaların sırasını değiştirin, bir halkayı kaldırın, fiyat stratejisini değiştirin ve siparişi farklı durumlarda (Pending/Paid/Shipped) yakalayıp aynı isteğin nasıl farklı davrandığını izleyin. Gözlemci ekleyip yayıncı kodunun değişmediğini doğrulayın.
+:::interactive{type="request-journey" stages="auth-handler,ratelimit-handler,validation-handler,command-bus,order-state,pricing-strategy,event-bus" failureStage="validation-handler"}
+İsteği gönderip zincirdeki halkaları sırayla izleyin: üç handler (auth, rate limit, validation) → komut veri yolu → sipariş durumu → fiyat stratejisi → olay yayını. "Hata enjekte et: validation-handler" kutusunu işaretleyip tekrar gönderin: zincir o halkada kesilir, komut hiç çalışmaz ve hiçbir olay yayınlanmaz — Chain of Responsibility'nin "halkayı kaldır ya da sırasını değiştir" esnekliği, her halkanın sonrakini bilmeden karar vermesinden gelir. Şelalede her halkanın maliyetine bakın: ucuz ve sık eleyen halkaların (auth, rate limit) zincirin başında durması boşuna değildir.
 :::
 
 ---

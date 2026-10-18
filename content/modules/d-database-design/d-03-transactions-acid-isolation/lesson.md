@@ -58,8 +58,8 @@ Tam yalıtım (her işlem sırayla çalışıyormuş gibi) pahalıdır; bu yüzd
 
 Modern motorlar çoğu izolasyonu **MVCC (Multi-Version Concurrency Control)** ile sağlar: her yazma satırın yeni bir sürümünü oluşturur; okuyucular işlemin başladığı andaki sürümü görür. Böylece **okuyucular yazanları, yazanlar okuyucuları engellemez**. Yazan-yazan çakışmasında ise kilit devreye girer.
 
-:::interactive{type="isolation-levels" level="read-committed" scenario="bank-transfer" transactions=2}
-Soldaki ve sağdaki transaction'ı adım adım ilerletin. Önce Read Committed'da non-repeatable read'i üretin; Repeatable Read'e geçip aynı adımların neden farklı sonuç verdiğini görün. Son olarak Serializable'da "nöbetçi doktor" senaryosunu çalıştırın ve hangi işlemin serialization failure ile iptal edildiğini inceleyin.
+:::interactive{type="isolation-levels" level="read-committed" scenario="non-repeatable-read"}
+Soldaki (T1) ve sağdaki (T2) transaction'ı "Sonraki adım" ile ilerletin. Önce Read Committed'da tekrarlanamayan okumayı üretin; izolasyon seviyesini Repeatable Read yapıp aynı adımların neden farklı sonuç verdiğini görün. Senaryoyu "Kayıp güncelleme (banka transferi)" yapın: Read Committed'da T1'in güncellemesi kaybolur; Serializable'da aynı adımları oynatıp hangi işlemin serileştirme hatasıyla iptal edildiğini inceleyin. Son olarak "Kilitlenme" senaryosunda veritabanının kurbanı nasıl seçtiğine bakın.
 :::
 
 ## Kilitler ve deadlock

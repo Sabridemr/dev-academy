@@ -37,8 +37,8 @@ Bir uzak çağrıda katman sırası: Bulkhead → Circuit Breaker → Retry → 
 OrderService'in tek bir ödeme çağrısı: bulkhead izni, breaker kararı, jitter'lı retry, sidecar'a taşıma, outbox ile olay yayını ve strangler fig bağlamı.
 :::
 
-:::interactive{type="rate-limiter" algorithm="token-bucket" capacity=100 refillPerSecond=50 clients=200 retryMode="exponential-jitter" showThunderingHerd=true}
-Servisin önünde bir token bucket var. 200 istemciyi aynı anda hata aldırın ve yeniden deneme modunu değiştirin: sabit aralık, üstel geri çekilme (jitter yok) ve full jitter. Her modda kovanın doluluk eğrisini, reddedilen istek sayısını ve toparlanma süresini karşılaştırın; "thundering herd" dalgalarını jitter'ın nasıl dağıttığını görün.
+:::interactive{type="rate-limiter" algorithm="token-bucket" capacity=30 refillPerSec=5}
+Servisin önünde kapasitesi 30, dolum hızı 5/sn olan bir token bucket var. "10 istek gönder" düğmesine art arda basarak kovayı boşaltın: ilk 30 istek geçer, sonrakiler reddedilir. Şimdi otomatik trafiği dolum hızının üstüne (ör. 20 istek/sn) çıkarın: kabul oranı dolum hızına kilitlenir — aynı anda yeniden deneyen 200 istemci tam bu duvara çarpar ve her denemede yeniden reddedilir (thundering herd). Trafiği dolum hızının altına indirip kovanın toparlanma süresini gözlemleyin; üstel geri çekilme ve jitter'ın amacı, yeniden denemeleri bu toparlanma aralığına yaymaktır.
 :::
 
 ---

@@ -308,8 +308,8 @@ CREATE TABLE messages (
 
 Tasarım kararları: sıralama için `seq` kullanılır, `sent_at` değil — istemci saatleri güvenilmez ve aynı milisaniyede iki mesaj gelebilir; `seq`, `UPDATE conversations SET last_seq = last_seq + 1 RETURNING last_seq` ile atomik üretilir. Okundu bilgisi "katılımcı, en son hangi seq'i okudu" olarak tek sayıdır; `unread = last_seq - last_read_seq` ücretsiz hesaplanır. Mesaj gövdesi uçtan uca şifreliyse sunucu yalnızca şifreli blob tutar. Ölçek büyüyünce `messages` tablosu birebir aynı anahtarlarla Cassandra'ya taşınır: partition key `conversation_id`, clustering key `seq`.
 
-:::interactive{type="er-diagram" tables="users,conversations,participants,messages,message_receipts" mode="explore" preset="messaging" showCardinality=true}
-Mesajlaşma şemasını inceleyin: participants tablosundaki last_read_seq sütununu kaldırıp yerine message_receipts (message_id, user_id, read_at) tablosu ekleyin ve aracın hesapladığı satır sayısını (mesaj × katılımcı) karşılaştırın. Sonra e-ticaret ön ayarına geçip inventory.reserved sütununu silin; hangi iş kuralının korumasız kaldığını görün.
+:::interactive{type="er-diagram" tables="users,conversations,participants,messages,message_receipts" preset="messaging" showCardinality=true}
+Mesajlaşma şemasını inceleyin: message_receipts (message_id, user_id, read_at) her mesaj × her katılımcı için bir satır üretir — 50 kişilik bir grupta 1000 mesaj 50 000 satır demektir. participants tablosuna tıklayıp last_read_seq (BIGINT) alanı ekleyin ve DDL'e bakın: aynı "okundu" bilgisi artık katılımcı başına tek sayıdır; yukarıdaki tasarımın last_read_seq'i tercih etmesinin nedeni budur. Sonra "E-ticaret" ön ayarına geçin: products → order_items ilişkisinin etiketine tıklayıp kardinaliteyi N-M'ye çevirin ve DDL'de ara tablonun nasıl ortaya çıktığını görün; quantity gibi ilişkiye ait alanların neden bu ara tabloda yaşaması gerektiğini düşünün.
 :::
 
 :::callout{tone="warning" title="Üç şemanın ortak hatası: zamanı kimlik sanmak"}

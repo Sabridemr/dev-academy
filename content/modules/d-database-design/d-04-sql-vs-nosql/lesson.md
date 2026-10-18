@@ -129,8 +129,8 @@ Varsayılan cevap ilişkisel veritabanıdır; ağacın diğer dalları ancak öl
 
 NoSQL sistemlerin çoğu, ağ bölünmesinde **erişilebilirliği** seçecek şekilde tasarlanmıştır (AP): Cassandra ve DynamoDB okuma/yazma başına tutarlılık seviyesi seçtirir (`ONE`, `QUORUM`, `ALL`). İlişkisel tek-lider sistemler ise bölünmede **tutarlılığı** korur (CP) ve lider ulaşılamazsa yazmayı reddeder. Pratikte asıl ayar düğmesi "bir okumanın en son yazmayı görmesi şart mı?" sorusudur; buna "evet" diyorsanız quorum (W + R > N) ya da tek lider gerekir.
 
-:::interactive{type="cap-theorem" nodes=3 partition=false consistency="quorum" writeQuorum=2 readQuorum=2}
-Üç replikalı bir kümede ağ bölünmesini açın. Önce W=1, R=1 ile yazıp okuyun ve bayat okumayı yakalayın; sonra W=2, R=2 (quorum) ile aynı senaryoyu çalıştırın. Bölünme sırasında hangi tarafın yazmayı reddettiğini ve bunun CP/AP eksenindeki karşılığını gözlemleyin.
+:::interactive{type="cap-theorem" nodes=3 partition=false mode="ap"}
+Üç replikalı kümede "Ağı böl" ile bölünmeyi açın. Önce AP modunda azınlık tarafındaki N1'e yazın, sonra çoğunluk tarafındaki N2'den okuyun: bayat okuma — Cassandra'nın ONE seviyesinin bedeli budur. CP moduna geçip aynı senaryoyu çalıştırın: N1 çoğunluğa ulaşamadığı için yazmayı ve okumayı reddeder, çoğunluk tarafı devam eder — QUORUM (W + R > N) ya da tek liderin davranışı. "Bölünmeyi onar" ile çakışmanın last-write-wins ile nasıl çözüldüğünü günlükte izleyin.
 :::
 
 :::callout{tone="warning" title="NoSQL = şemasız değildir"}

@@ -62,8 +62,8 @@ A, B'yi; B, C'yi; C, D'yi senkron çağırıyorsa ve her servis %99,9 erişilebi
 
 Olaylar servisleri en gevşek bağlar: yeni bir tüketici (ör. sadakat puanı servisi) eklemek için üreticiye dokunulmaz. Bedeli, **nihai tutarlılık** ve **en az bir kez teslim**'dir: aynı olay iki kez gelebilir, bu yüzden tüketiciler **idempotent** olmalıdır (mesaj id'sini işlenenler tablosunda tutmak en yaygın yöntem).
 
-:::interactive{type="message-queue" producers=2 consumers=3 pattern="pub-sub" delivery="at-least-once" failureRate=0.1 showDeadLetter=true}
-Üreticiler sipariş olayları yayınlasın. Tüketici sayısını azaltıp kuyruk derinliğinin nasıl büyüdüğünü, hata oranını yükseltip yeniden teslimlerin (redelivery) ve dead-letter kuyruğunun nasıl dolduğunu izleyin. "at-least-once" modunda aynı mesajın iki kez işlendiğini yakalayın.
+:::interactive{type="message-queue" producers=2 consumers=3 failureRate=0.1 maxRetries=3}
+"Başlat" ile üreticiler sipariş olayları yayınlasın. Tüketici sayısını azaltıp kuyruk gecikmesinin (lag) nasıl büyüdüğünü, hata oranını yükseltip yeniden teslimlerin (redelivery) ve dead-letter kuyruğunun nasıl dolduğunu izleyin. En az bir kez teslimin bedelini "Çift işleme" sayacında yakalayın: iş yapılıp ACK kaybolunca aynı mesaj ikinci kez işlenir. "Idempotent tüketici" kutusunu işaretleyip tekrarların mesaj id'si ile ayıklandığını görün.
 :::
 
 ## Saga: dağıtık transaction'ın yerine geçen şey

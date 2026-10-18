@@ -53,7 +53,7 @@ Varsayımlar: 1.5 Mia DAU; kullanıcı başına günde ~70 mesaj gönderimi ve ~
 Ders: depolama ve bant genişliği ucuz; pahalı olan **durum** (hangi kullanıcı hangi sunucuda, hangi mesaj hangi aşamada) ve bunu kayıpsız tutmaktır.
 
 :::interactive{type="capacity-estimator" dau=1500000000 readsPerUserPerDay=100 writesPerUserPerDay=70 avgWriteSizeBytes=200 avgReadSizeBytes=200 peakMultiplier=4 hotDataRatio=0.1 replicationFactor=3}
-Egress ve depolama sayılarının video vakasına göre ne kadar küçük olduğuna dikkat edin. Sonra tepe çarpanını 1'den 5'e çekin: yılbaşı gecesi mesaj hızı bir yönlendirici sunucunun (~50 K mesaj/s) kaç katı? Bu hesap, bağlantı ve yönlendirme katmanının neden ayrı ölçeklendiğini gösterir.
+Egress ve depolama sayılarının video vakasına göre ne kadar küçük olduğuna dikkat edin. Sonra tepe çarpanını 1'den 5'e çekin ve "Tepe yazma QPS" değerine bakın: yılbaşı gecesi mesaj hızı, bir yönlendirici sunucunun ~50 K mesaj/s kapasitesinin kaç katı? Bu hesap, bağlantı ve yönlendirme katmanının neden ayrı ölçeklendiğini gösterir.
 :::
 
 ## 3. Yüksek seviye mimari

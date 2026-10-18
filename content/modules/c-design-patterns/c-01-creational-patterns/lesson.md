@@ -40,8 +40,8 @@ Aşağıdaki animasyon, bir servisin doğrudan `new` ile başlayıp fabrikaya ge
 Doğrudan `new` → `if/else` şişmesi → fabrika → istemciye dokunmadan kanal değiştirme → hangi kalıp ne zaman.
 :::
 
-:::interactive{type="request-journey" scenario="creational-pipeline" stages="controller,factory,builder,singleton-config,repository" showObjectGraph=true}
-Bir "bildirim gönder" isteğinin nesne grafiğini izleyin: controller fabrikadan ürün ister, ürün builder ile kurulan bir istek nesnesi kullanır, yapılandırma tek örnekten (singleton) okunur. Her durakta "somut sınıfı kim biliyor?" sorusunu açıp bağımlılık yönünü görün; fabrikayı sahte (mock) ile değiştirip test modunu deneyin.
+:::interactive{type="request-journey" stages="controller,factory,builder,singleton-config,repository" failureStage="repository"}
+Bir "bildirim gönder" isteğinin controller → factory → builder → singleton-config → repository duraklarından geçişini izleyin: controller fabrikadan ürün ister, ürün builder ile kurulan bir istek nesnesi kullanır, yapılandırma tek örnekten (singleton) okunur. Şelalede nesne kurulumu yapan durakların (factory, builder, singleton-config) G/Ç yapan repository'ye göre ne kadar ucuz olduğuna bakın. "Hata enjekte et: repository" kutusunu işaretleyip tekrar gönderin: somut depoyu yalnızca fabrika bildiği için hata controller'a sızmadan tek bir noktada yakalanır — testte fabrikayı sahte (mock) ile değiştirmenin kolaylığı da aynı bağımlılık yönünden gelir.
 :::
 
 ---

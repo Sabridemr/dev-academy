@@ -73,8 +73,8 @@ Her hücrede tek bir değer olmalı; "product_ids = 12, 15, 33" gibi listeler ya
 | 3NF | Anahtar olmayan sütunlar arası bağımlılık yok | Müşteri şehrinin sipariş tablosunda durması |
 | BCNF | Her belirleyici aday anahtar | Anahtar olmayan sütunun anahtarın parçasını belirlemesi |
 
-:::interactive{type="er-diagram" tables="customers,orders,order_items,products" mode="design" showCardinality=true}
-Dört tabloyu sürükleyin, aralarına ilişki çizin ve kardinaliteyi ayarlayın. Sonra "normalize" düğmesiyle aracın tespit ettiği kısmi/geçişli bağımlılıkları inceleyin; order_items tablosuna product_name eklediğinizde aracın neden uyardığını görün.
+:::interactive{type="er-diagram" tables="customers,orders,order_items,products" showCardinality=true}
+Dört tabloyu sürükleyin, bir tablonun sağ tutamacından diğerinin sol tutamacına çekerek ilişki kurun ve ilişki etiketine tıklayarak kardinaliteyi (1-1 → 1-N → N-M) değiştirin; her değişiklikte üretilen SQL DDL'de FK kolonunun ya da N-M için ara tablonun nasıl belirdiğine bakın. Sonra order_items tablosuna tıklayıp product_name alanı ekleyin: aynı bilgi artık hem products'ta hem order_items'ta — DDL bunu engellemez; bu geçişli bağımlılığı fark edip alanı products'ta bırakmak, normalizasyonun sizden istediği karardır.
 :::
 
 ## ER diyagramı nasıl okunur ve çizilir?

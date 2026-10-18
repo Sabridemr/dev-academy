@@ -199,8 +199,8 @@ Taktik tarafta **aggregate**, tutarlılık sınırıdır: bir transaction'da de�
 Context map: aynı kelime, üç farklı model. Oklar yukarı akış (upstream) → aşağı akış (downstream) yönünü gösterir.
 :::
 
-:::interactive{type="request-journey" scenario="bff-serverless" stages="client,bff,lambda-cold,lambda-warm,service,db" showColdStart=true}
-Bir mobil isteğinin yolculuğunu izleyin: BFF üç servisi paralel çağırır; servislerden biri serverless ve cold start yaşıyor. Provisioned concurrency'yi açıp kapatarak, paket boyutunu ve runtime'ı değiştirerek p50/p99 gecikme farkını gözlemleyin.
+:::interactive{type="request-journey" stages="client,bff,lambda,service,db" showColdStart=true}
+Bir mobil isteğinin yolculuğunu izleyin: BFF, serverless bir fonksiyonu (lambda) ve arkasındaki servisi çağırır. "Cold start" kutusu açıkken isteği gönderin: lambda durağı tek başına toplamın büyük kısmını yutar. Kutuyu kapatın — provisioned concurrency ile fonksiyonu sıcak tutmanın karşılığı budur — ve aynı isteği tekrar gönderip farkı karşılaştırın. "20 istek" ile ortalama ve p95'i her iki durumda not edin: soğuk başlangıç, ortalamadan çok p99'u bozar.
 :::
 
 :::realworld{company="Netflix"}
