@@ -11,15 +11,15 @@
         "en": "In a payments system, what is the main reason to use an append-only double-entry ledger instead of UPDATE-ing a balance column?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "Daha az disk kullanır", "en": "It uses less disk" } },
-        { "id": "b", "text": { "tr": "Her kuruşun geçmişi kanıtlanabilir; hatalar silinerek değil ters kayıtla düzeltilir", "en": "Every cent's history is provable; mistakes are corrected with reversing entries, not deletions" } },
-        { "id": "c", "text": { "tr": "Bakiye sorgusu daha hızlıdır", "en": "Balance queries are faster" } },
-        { "id": "d", "text": { "tr": "Transaction'a gerek kalmaz", "en": "Transactions are no longer needed" } }
+        { "id": "a", "text": { "tr": "Yalnızca INSERT yapıldığı için indeks bakımı ve disk kullanımı azalır", "en": "Because only INSERTs happen, index maintenance and disk usage shrink" } },
+        { "id": "b", "text": { "tr": "Bakiye sorgusu SUM yerine tek satır okumaya indiği için her zaman daha hızlıdır", "en": "Balance queries are always faster because they drop from a SUM to a single-row read" } },
+        { "id": "c", "text": { "tr": "Her kuruşun geçmişi kanıtlanabilir; hatalar silinerek değil ters kayıtla düzeltilir", "en": "Every cent's history is provable; mistakes are corrected with reversing entries, not deletions" } },
+        { "id": "d", "text": { "tr": "Borç ve alacak ayrı satırlar olduğu için ikisini tek transaction'a sarmak gerekmez", "en": "Because debit and credit are separate rows, wrapping them in one transaction is unnecessary" } }
       ],
-      "correct": ["b"],
+      "correct": ["c"],
       "explanation": {
-        "tr": "Append-only defter denetlenebilirlik ve mutabakat içindir: bakiye her zaman kayıtlardan yeniden türetilebilir ve hiçbir hareket kaybolmaz. Disk kullanımı artar, bakiye sorgusu (SUM) yavaşlar — bu yüzden snapshot/materialized view eklenir — ve borç/alacak çifti yine tek transaction içinde yazılmalıdır.",
-        "en": "An append-only ledger is for auditability and reconciliation: the balance can always be re-derived from entries and no movement is ever lost. Disk usage grows, balance queries (SUM) get slower — hence snapshots or materialized views — and the debit/credit pair must still be written inside one transaction."
+        "tr": "Append-only defter denetlenebilirlik ve mutabakat içindir: bakiye her zaman kayıtlardan yeniden türetilebilir ve hiçbir hareket kaybolmaz. Tam tersine disk ve indeks büyür (a), bakiye tek satır değil SUM olur ve yavaşlar — bu yüzden snapshot/materialized view eklenir (b) — ve borç/alacak çifti yine tek transaction içinde yazılmalıdır, yoksa defter dengesiz kalır (d).",
+        "en": "An append-only ledger is for auditability and reconciliation: the balance can always be re-derived from entries and no movement is ever lost. On the contrary, disk and indexes grow (a), the balance becomes a SUM rather than a single row and gets slower — hence snapshots or materialized views (b) — and the debit/credit pair must still be written inside one transaction or the ledger goes out of balance (d)."
       },
       "difficulty": "medium",
       "concepts": ["double-entry-ledger", "append-only"]
@@ -33,7 +33,7 @@
       },
       "options": [
         { "id": "a", "text": { "tr": "inventory satırlarını product_id sırasıyla FOR UPDATE ile kilitlemek", "en": "Lock inventory rows with FOR UPDATE in product_id order" } },
-        { "id": "b", "text": { "tr": "Ödeme sağlayıcısına HTTP isteği göndermek", "en": "Send the HTTP request to the payment provider" } },
+        { "id": "b", "text": { "tr": "Ödeme sağlayıcısına HTTP isteği gönderip yanıtını beklemek", "en": "Send the HTTP request to the payment provider and wait for its response" } },
         { "id": "c", "text": { "tr": "outbox tablosuna order.created olayı eklemek", "en": "Insert an order.created event into the outbox table" } },
         { "id": "d", "text": { "tr": "Idempotency anahtarını order_requests tablosuna yazmak", "en": "Write the idempotency key into order_requests" } }
       ],
@@ -53,15 +53,15 @@
         "en": "In the messaging schema, why is a per-conversation seq counter used to order messages instead of sent_at?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "Zaman damgası daha fazla yer kaplar", "en": "Timestamps take more space" } },
-        { "id": "b", "text": { "tr": "İstemci/sunucu saatleri kayabilir ve aynı milisaniyede birden fazla mesaj gelebilir; seq monoton ve benzersizdir", "en": "Client/server clocks can drift and several messages can arrive in the same millisecond; seq is monotonic and unique" } },
-        { "id": "c", "text": { "tr": "seq şifrelenebilir, sent_at şifrelenemez", "en": "seq can be encrypted, sent_at cannot" } },
-        { "id": "d", "text": { "tr": "Cassandra zaman damgasını desteklemez", "en": "Cassandra does not support timestamps" } }
+        { "id": "a", "text": { "tr": "Saatler kayabilir ve aynı milisaniyede birden çok mesaj gelebilir; seq monoton ve benzersizdir", "en": "Clocks can drift and several messages can arrive in the same millisecond; seq is monotonic and unique" } },
+        { "id": "b", "text": { "tr": "timestamptz 8 bayt, seq ise 4 bayt tutar; milyarlarca mesajda bu fark partition boyutunu belirler", "en": "timestamptz takes 8 bytes and seq 4; across billions of messages that gap decides partition size" } },
+        { "id": "c", "text": { "tr": "sent_at uçtan uca şifrelenemez; seq şifreli blob dışında kaldığı için sunucu yine sıralayabilir", "en": "sent_at cannot be end-to-end encrypted; seq stays outside the encrypted blob so the server can still order" } },
+        { "id": "d", "text": { "tr": "Cassandra'ya taşınırken clustering key timestamp olamaz; sayısal bir seq zorunludur", "en": "When moving to Cassandra the clustering key cannot be a timestamp; a numeric seq is mandatory" } }
       ],
-      "correct": ["b"],
+      "correct": ["a"],
       "explanation": {
-        "tr": "Zaman damgası bilgidir, kimlik ya da sıra garantisi değildir: saat kayması sırayı bozar, çakışma benzersizliği bozar. Konuşma başına atomik artan seq hem sıralamayı hem de 'okunmamış = last_seq − last_read_seq' hesabını güvenilir kılar. Yer, şifreleme ve Cassandra desteği gerekçe değildir.",
-        "en": "A timestamp is information, not an identity or an ordering guarantee: clock drift breaks order, collisions break uniqueness. An atomically increasing per-conversation seq makes both ordering and 'unread = last_seq − last_read_seq' reliable. Space, encryption and Cassandra support are not the reason."
+        "tr": "Zaman damgası bilgidir, kimlik ya da sıra garantisi değildir: saat kayması sırayı bozar, çakışma benzersizliği bozar. Konuşma başına atomik artan seq hem sıralamayı hem de 'okunmamış = last_seq − last_read_seq' hesabını güvenilir kılar. seq de bigint'tir (8 bayt), sent_at da seq gibi şifresiz meta veridir ve Cassandra timestamp'i clustering key olarak destekler; bunlar gerekçe değildir.",
+        "en": "A timestamp is information, not an identity or an ordering guarantee: clock drift breaks order, collisions break uniqueness. An atomically increasing per-conversation seq makes both ordering and 'unread = last_seq − last_read_seq' reliable. seq is a bigint too (8 bytes), sent_at is unencrypted metadata just like seq, and Cassandra does support timestamps as clustering keys; none of those is the reason."
       },
       "difficulty": "easy",
       "concepts": ["conversation-model"]

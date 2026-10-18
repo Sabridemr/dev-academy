@@ -13,10 +13,10 @@
       "options": [
         { "id": "a", "text": { "tr": "Key-value", "en": "Key-value" } },
         { "id": "b", "text": { "tr": "Wide-column", "en": "Wide-column" } },
-        { "id": "c", "text": { "tr": "Graph", "en": "Graph" } },
-        { "id": "d", "text": { "tr": "Time-series", "en": "Time-series" } }
+        { "id": "c", "text": { "tr": "Time-series", "en": "Time-series" } },
+        { "id": "d", "text": { "tr": "Graph", "en": "Graph" } }
       ],
-      "correct": ["c"],
+      "correct": ["d"],
       "explanation": {
         "tr": "Bu üç atlamalı bir ilişki gezintisidir; graf veritabanı ilişkileri işaretçi olarak sakladığı için (index-free adjacency) atlama sayısıyla orantılı çalışır. Key-value'da yalnızca anahtarla erişilir, wide-column partition key ister, time-series zaman damgalı ölçümler içindir.",
         "en": "This is a three-hop relationship traversal; a graph database stores relationships as pointers (index-free adjacency) so cost scales with the number of hops. Key-value only offers key access, wide-column requires a partition key, and time-series is for timestamped measurements."
@@ -53,12 +53,12 @@
         "en": "In Cassandra's timeline_by_user(user_id, posted_at, post_id) with partition key user_id, which query does NOT run efficiently on this table?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "Belirli bir kullanıcının son 50 gönderisi", "en": "A given user's latest 50 posts" } },
-        { "id": "b", "text": { "tr": "Belirli bir kullanıcının belirli tarih aralığındaki gönderileri", "en": "A given user's posts within a date range" } },
-        { "id": "c", "text": { "tr": "Tüm kullanıcılar arasında son 1 saatte atılan gönderiler", "en": "Posts from all users in the last hour" } },
+        { "id": "a", "text": { "tr": "Tüm kullanıcılar arasında son 1 saatte atılan gönderiler", "en": "Posts from all users in the last hour" } },
+        { "id": "b", "text": { "tr": "Belirli bir kullanıcının son 50 gönderisi", "en": "A given user's latest 50 posts" } },
+        { "id": "c", "text": { "tr": "Belirli bir kullanıcının belirli tarih aralığındaki gönderileri", "en": "A given user's posts within a date range" } },
         { "id": "d", "text": { "tr": "Belirli bir kullanıcının en eski gönderisi", "en": "A given user's oldest post" } }
       ],
-      "correct": ["c"],
+      "correct": ["a"],
       "explanation": {
         "tr": "Wide-column depolarda her sorgu partition key ile başlamalıdır; 'tüm kullanıcılar' demek tüm partition'ları taramak demektir (ALLOW FILTERING ile bile üretimde kabul edilemez). Bu sorgu için zaman dilimini partition key yapan ayrı bir tablo (posts_by_hour) tasarlanır: sorgu başına tablo.",
         "en": "In wide-column stores every query must start with the partition key; 'all users' means scanning every partition (unacceptable in production even with ALLOW FILTERING). That query needs a separate table whose partition key is the time bucket (posts_by_hour): one table per query."

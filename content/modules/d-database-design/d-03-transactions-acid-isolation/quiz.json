@@ -11,15 +11,15 @@
         "en": "T1 reads a row (balance 500), T2 sets it to 400 and commits, T1 reads the same row again and sees 400. What is this anomaly called?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "Dirty read", "en": "Dirty read" } },
-        { "id": "b", "text": { "tr": "Non-repeatable read", "en": "Non-repeatable read" } },
-        { "id": "c", "text": { "tr": "Phantom read", "en": "Phantom read" } },
-        { "id": "d", "text": { "tr": "Lost update", "en": "Lost update" } }
+        { "id": "a", "text": { "tr": "Non-repeatable read (tekrarsız okuma)", "en": "Non-repeatable read" } },
+        { "id": "b", "text": { "tr": "Phantom read (hayalet okuma)", "en": "Phantom read" } },
+        { "id": "c", "text": { "tr": "Lost update (kayıp güncelleme)", "en": "Lost update" } },
+        { "id": "d", "text": { "tr": "Write skew (yazma çarpıklığı)", "en": "Write skew" } }
       ],
-      "correct": ["b"],
+      "correct": ["a"],
       "explanation": {
-        "tr": "Aynı satırın iki okuması arasında commit edilmiş bir değişiklik görülüyor: non-repeatable read. Dirty read için T2'nin henüz commit etmemiş olması gerekirdi; phantom read satır kümesinin (yeni satır) değişmesidir; lost update ise T1'in de yazıp T2'nin yazdığını ezmesidir.",
-        "en": "A committed change is seen between two reads of the same row: non-repeatable read. A dirty read would require T2 not to have committed yet; a phantom read is a change in the set of rows (new rows); a lost update would require T1 to write and overwrite T2's write."
+        "tr": "Aynı satırın iki okuması arasında commit edilmiş bir değişiklik görülüyor: non-repeatable read. Phantom read satır kümesinin (yeni satır) değişmesidir; lost update T1'in de yazıp T2'nin yazdığını ezmesini gerektirir; write skew ise iki işlemin ayrı satırlara yazıp ortak bir kuralı bozmasıdır. Dirty read olması için T2'nin henüz commit etmemiş olması gerekirdi.",
+        "en": "A committed change is seen between two reads of the same row: non-repeatable read. A phantom read is a change in the set of rows (new rows); a lost update would require T1 to write and overwrite T2's write; write skew is two transactions writing different rows and breaking a shared rule. A dirty read would require T2 not to have committed yet."
       },
       "difficulty": "easy",
       "concepts": ["non-repeatable-read", "isolation-level"]
@@ -93,15 +93,15 @@
         "en": "In a cart update flow where conflicts are rare, what is the lightest method to prevent lost updates?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "Her okumada SELECT ... FOR UPDATE ile satırı kilitlemek", "en": "Lock the row with SELECT ... FOR UPDATE on every read" } },
-        { "id": "b", "text": { "tr": "version sütunu ile optimistic locking: UPDATE ... WHERE id = $1 AND version = $2", "en": "Optimistic locking with a version column: UPDATE ... WHERE id = $1 AND version = $2" } },
-        { "id": "c", "text": { "tr": "Tüm tabloyu LOCK TABLE ile kilitlemek", "en": "Lock the whole table with LOCK TABLE" } },
-        { "id": "d", "text": { "tr": "İzolasyon seviyesini Read Uncommitted'a düşürmek", "en": "Lower the isolation level to Read Uncommitted" } }
+        { "id": "a", "text": { "tr": "Her okumada SELECT ... FOR UPDATE NOWAIT ile satırı kilitlemek", "en": "Lock the row with SELECT ... FOR UPDATE NOWAIT on every read" } },
+        { "id": "b", "text": { "tr": "Sepet tablosunu LOCK TABLE ... IN EXCLUSIVE MODE ile kilitlemek", "en": "Lock the cart table with LOCK TABLE ... IN EXCLUSIVE MODE" } },
+        { "id": "c", "text": { "tr": "İzolasyonu Read Uncommitted'a düşürüp okuma-yazma aralığını kısaltmak", "en": "Lower isolation to Read Uncommitted and shorten the read-write gap" } },
+        { "id": "d", "text": { "tr": "version ile optimistic locking: UPDATE ... WHERE id = $1 AND version = $2", "en": "Optimistic locking with version: UPDATE ... WHERE id = $1 AND version = $2" } }
       ],
-      "correct": ["b"],
+      "correct": ["d"],
       "explanation": {
-        "tr": "Optimistic locking çakışma yokken hiçbir kilit maliyeti ödemez; çakışma olursa etkilenen satır sayısı 0 döner ve uygulama yeniden okuyup dener. FOR UPDATE ve tablo kilidi seyrek çakışma için gereksiz bekleme yaratır; izolasyonu düşürmek ise sorunu çözmez, artırır.",
-        "en": "Optimistic locking pays no locking cost when there is no conflict; on conflict the affected row count is 0 and the application re-reads and retries. FOR UPDATE and table locks create needless waiting for rare conflicts; lowering isolation makes the problem worse, not better."
+        "tr": "Optimistic locking çakışma yokken hiçbir kilit maliyeti ödemez; çakışma olursa etkilenen satır sayısı 0 döner ve uygulama yeniden okuyup dener. FOR UPDATE (NOWAIT olsa da) ve tablo kilidi seyrek çakışma için gereksiz bekleme ya da hata üretir; izolasyonu düşürmek lost update'i önlemez, PostgreSQL'de Read Uncommitted zaten Read Committed gibi davranır.",
+        "en": "Optimistic locking pays no locking cost when there is no conflict; on conflict the affected row count is 0 and the application re-reads and retries. FOR UPDATE (even with NOWAIT) and table locks create needless waiting or errors for rare conflicts; lowering isolation does not prevent lost updates, and in PostgreSQL Read Uncommitted behaves like Read Committed anyway."
       },
       "difficulty": "medium",
       "concepts": ["lost-update", "optimistic-locking"]

@@ -33,7 +33,7 @@
       },
       "options": [
         { "id": "a", "text": { "tr": "Aralık sorgusu (BETWEEN, <, >)", "en": "Range queries (BETWEEN, <, >)" } },
-        { "id": "b", "text": { "tr": "Eşitlik sorgusu (=)", "en": "Equality queries (=)" } },
+        { "id": "b", "text": { "tr": "Eşitlik sorgusu (= ve IN listesi)", "en": "Equality queries (= and IN lists)" } },
         { "id": "c", "text": { "tr": "ORDER BY için sıralı okuma", "en": "Ordered reads for ORDER BY" } },
         { "id": "d", "text": { "tr": "Önek araması (LIKE 'ab%')", "en": "Prefix search (LIKE 'ab%')" } }
       ],
@@ -72,15 +72,15 @@
         "en": "In EXPLAIN ANALYZE output you see an estimate of 'rows=12' but 'actual rows=48000'. What should you do first?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "Tabloya daha fazla indeks eklemek", "en": "Add more indexes to the table" } },
-        { "id": "b", "text": { "tr": "ANALYZE ile tablo istatistiklerini güncellemek", "en": "Refresh table statistics with ANALYZE" } },
-        { "id": "c", "text": { "tr": "Sorguyu hash indeksle yeniden yazmak", "en": "Rewrite the query to use a hash index" } },
-        { "id": "d", "text": { "tr": "work_mem değerini artırmak", "en": "Increase work_mem" } }
+        { "id": "a", "text": { "tr": "Sorgudaki sütunlara yeni bir composite indeks eklemek", "en": "Add a new composite index on the query's columns" } },
+        { "id": "b", "text": { "tr": "Sorguyu hash indeks kullanacak şekilde yeniden yazmak", "en": "Rewrite the query so it uses a hash index" } },
+        { "id": "c", "text": { "tr": "work_mem ve shared_buffers değerlerini artırmak", "en": "Increase work_mem and shared_buffers" } },
+        { "id": "d", "text": { "tr": "ANALYZE ile tablo istatistiklerini güncellemek", "en": "Refresh table statistics with ANALYZE" } }
       ],
-      "correct": ["b"],
+      "correct": ["d"],
       "explanation": {
-        "tr": "Tahmin ile gerçek arasında binlerce kat fark, planlayıcının bayat istatistiklerle karar verdiğini gösterir; önce ANALYZE çalıştırılır ve plan yeniden incelenir. Yeni indeks ya da bellek ayarı, yanlış tahminle yanlış plan seçilmeye devam ettiği sürece sorunu çözmez.",
-        "en": "A thousand-fold gap between estimate and actual means the planner decided with stale statistics; run ANALYZE first and re-examine the plan. New indexes or memory settings will not help while the planner keeps choosing a wrong plan from wrong estimates."
+        "tr": "Tahmin ile gerçek arasında binlerce kat fark, planlayıcının bayat istatistiklerle karar verdiğini gösterir; önce ANALYZE çalıştırılır ve plan yeniden incelenir. Yeni composite indeks, hash indeks ya da bellek ayarı, yanlış tahminle yanlış plan seçilmeye devam ettiği sürece sorunu çözmez; 48 bin satır için doğru plan zaten Seq Scan olabilir.",
+        "en": "A thousand-fold gap between estimate and actual means the planner decided with stale statistics; run ANALYZE first and re-examine the plan. A new composite index, a hash index or memory settings will not help while the planner keeps choosing a wrong plan from wrong estimates; for 48,000 rows the right plan may well be a Seq Scan anyway."
       },
       "difficulty": "hard",
       "concepts": ["explain", "query-plan"]
@@ -93,15 +93,15 @@
         "en": "Which index definition lets SELECT total_amount FROM orders WHERE customer_id = 7 AND status = 'paid' avoid touching the heap at all?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "CREATE INDEX ON orders (customer_id)", "en": "CREATE INDEX ON orders (customer_id)" } },
-        { "id": "b", "text": { "tr": "CREATE INDEX ON orders (total_amount)", "en": "CREATE INDEX ON orders (total_amount)" } },
-        { "id": "c", "text": { "tr": "CREATE INDEX ON orders (customer_id, status) INCLUDE (total_amount)", "en": "CREATE INDEX ON orders (customer_id, status) INCLUDE (total_amount)" } },
-        { "id": "d", "text": { "tr": "CREATE INDEX ON orders USING hash (status)", "en": "CREATE INDEX ON orders USING hash (status)" } }
+        { "id": "a", "text": { "tr": "CREATE INDEX ON orders (customer_id, status, created_at)", "en": "CREATE INDEX ON orders (customer_id, status, created_at)" } },
+        { "id": "b", "text": { "tr": "CREATE INDEX ON orders (customer_id, status) INCLUDE (total_amount)", "en": "CREATE INDEX ON orders (customer_id, status) INCLUDE (total_amount)" } },
+        { "id": "c", "text": { "tr": "CREATE INDEX ON orders (status, customer_id) WHERE status = 'paid'", "en": "CREATE INDEX ON orders (status, customer_id) WHERE status = 'paid'" } },
+        { "id": "d", "text": { "tr": "CREATE INDEX ON orders USING hash (customer_id) INCLUDE (total_amount)", "en": "CREATE INDEX ON orders USING hash (customer_id) INCLUDE (total_amount)" } }
       ],
-      "correct": ["c"],
+      "correct": ["b"],
       "explanation": {
-        "tr": "Index Only Scan için sorgunun hem filtre hem de SELECT sütunları indekste bulunmalıdır. (customer_id, status) filtreyi karşılar, INCLUDE (total_amount) ise sonucu indekste taşır; böylece heap okuması sıfırlanır (covering index). Diğer seçenekler ya filtreyi tam karşılamaz ya da seçilen sütunu içermez.",
-        "en": "An Index Only Scan needs both the filter columns and the selected columns inside the index. (customer_id, status) covers the filter and INCLUDE (total_amount) carries the result, so heap reads drop to zero (covering index). The other options either miss part of the filter or the selected column."
+        "tr": "Index Only Scan için sorgunun hem filtre hem de SELECT sütunları indekste bulunmalıdır. (customer_id, status) filtreyi karşılar, INCLUDE (total_amount) ise sonucu indekste taşır; böylece heap okuması sıfırlanır (covering index). a ve c filtreyi karşılar ama total_amount içermediği için her satır için heap'e gider; hash indeks INCLUDE desteklemez ve status'u da kapsamaz (d).",
+        "en": "An Index Only Scan needs both the filter columns and the selected columns inside the index. (customer_id, status) covers the filter and INCLUDE (total_amount) carries the result, so heap reads drop to zero (covering index). a and c satisfy the filter but lack total_amount, so every row still goes to the heap; a hash index supports neither INCLUDE nor the status predicate (d)."
       },
       "difficulty": "medium",
       "concepts": ["covering-index", "composite-index"]

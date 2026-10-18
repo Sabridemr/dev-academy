@@ -11,15 +11,15 @@
         "en": "Right after updating their profile, a user refreshes the page and sees the old value. What is the most likely cause?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "Yazma başarısız olmuş ancak hata gösterilmemiştir", "en": "The write failed but no error was shown" } },
-        { "id": "b", "text": { "tr": "Okuma, henüz WAL'ı uygulamamış asenkron bir read replica'dan yapılmıştır", "en": "The read was served by an asynchronous read replica that had not yet replayed the WAL" } },
-        { "id": "c", "text": { "tr": "Birincil veritabanı deadlock'a girmiştir", "en": "The primary database hit a deadlock" } },
-        { "id": "d", "text": { "tr": "Connection pool dolmuştur", "en": "The connection pool was exhausted" } }
+        { "id": "a", "text": { "tr": "Yazma, connection pool kuyruğunda zaman aşımına uğramış ve birincile hiç ulaşmamıştır", "en": "The write timed out in the connection pool queue and never reached the primary" } },
+        { "id": "b", "text": { "tr": "Birincil aynı satırda deadlock tespit etmiş ve kullanıcının işlemini sessizce geri almıştır", "en": "The primary detected a deadlock on that row and silently rolled the user's transaction back" } },
+        { "id": "c", "text": { "tr": "Senkron replika onay vermediği için commit askıda kalmış, eski sürüm okunmuştur", "en": "The commit was left hanging because the synchronous replica did not acknowledge, so the old version was read" } },
+        { "id": "d", "text": { "tr": "Okuma, WAL'ı henüz uygulamamış asenkron bir read replica'dan yapılmıştır", "en": "The read was served by an asynchronous read replica that had not yet replayed the WAL" } }
       ],
-      "correct": ["b"],
+      "correct": ["d"],
       "explanation": {
-        "tr": "Bu klasik replication lag / read-your-writes ihlalidir: yazma birincile gitti ve başarılı oldu, okuma ise geride kalan replikadan geldi. Çözüm yazma sonrası birincile yapışma ya da LSN bekleme. Deadlock ya da dolu havuz hata/zaman aşımı üretir, eski değer göstermez.",
-        "en": "This is the classic replication lag / read-your-writes violation: the write went to the primary and succeeded, the read came from a lagging replica. The fix is sticking to the primary after a write or waiting for the LSN. A deadlock or exhausted pool would produce errors or timeouts, not an old value."
+        "tr": "Bu klasik replication lag / read-your-writes ihlalidir: yazma birincile gitti ve başarılı oldu, okuma ise geride kalan replikadan geldi. Çözüm yazma sonrası birincile yapışma ya da LSN bekleme. Havuz zaman aşımı ve deadlock iptali kullanıcıya hata döndürür, sessizce eski değer göstermez; senkron replikada commit askıdaysa yazma zaten 'başarılı' dönmemiştir.",
+        "en": "This is the classic replication lag / read-your-writes violation: the write went to the primary and succeeded, the read came from a lagging replica. The fix is sticking to the primary after a write or waiting for the LSN. A pool timeout or a deadlock abort returns an error to the user instead of silently showing an old value; with a synchronous replica, a hanging commit means the write never reported success in the first place."
       },
       "difficulty": "easy",
       "concepts": ["replication-lag", "read-your-writes"]

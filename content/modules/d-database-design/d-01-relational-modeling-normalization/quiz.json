@@ -11,15 +11,15 @@
         "en": "In order_items(order_id, product_id, qty, product_name), product_name depends only on product_id. Which normal form does this violate?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "1NF — hücre atomik değil", "en": "1NF — the cell is not atomic" } },
-        { "id": "b", "text": { "tr": "2NF — bileşik anahtarın parçasına kısmi bağımlılık", "en": "2NF — partial dependency on part of the composite key" } },
-        { "id": "c", "text": { "tr": "3NF — anahtar olmayan sütunlar arası geçişli bağımlılık", "en": "3NF — transitive dependency between non-key columns" } },
-        { "id": "d", "text": { "tr": "Hiçbiri; tablo zaten BCNF'dir", "en": "None; the table is already in BCNF" } }
+        { "id": "a", "text": { "tr": "3NF — anahtar olmayan sütunlar arası geçişli bağımlılık", "en": "3NF — transitive dependency between non-key columns" } },
+        { "id": "b", "text": { "tr": "BCNF — belirleyici (determinant) aday anahtar değil", "en": "BCNF — a determinant that is not a candidate key" } },
+        { "id": "c", "text": { "tr": "1NF — hücrede tekrar eden grup / atomik olmayan değer", "en": "1NF — a repeating group / non-atomic value in the cell" } },
+        { "id": "d", "text": { "tr": "2NF — bileşik anahtarın parçasına kısmi bağımlılık", "en": "2NF — partial dependency on part of the composite key" } }
       ],
-      "correct": ["b"],
+      "correct": ["d"],
       "explanation": {
-        "tr": "Anahtar (order_id, product_id) bileşiktir ve product_name anahtarın yalnızca bir parçasına bağlıdır; bu kısmi bağımlılıktır ve 2NF'yi ihlal eder. 1NF ihlali için hücrede liste olmalıydı; 3NF ihlali için anahtar olmayan bir sütunun başka bir anahtar olmayan sütunu belirlemesi gerekirdi.",
-        "en": "The key (order_id, product_id) is composite and product_name depends on only part of it; that is a partial dependency and violates 2NF. A 1NF violation would need a list inside a cell; a 3NF violation would need a non-key column determining another non-key column."
+        "tr": "Anahtar (order_id, product_id) bileşiktir ve product_name anahtarın yalnızca bir parçasına bağlıdır; bu kısmi bağımlılıktır ve 2NF'yi ihlal eder. 1NF ihlali için hücrede liste olmalıydı; 3NF ihlali için anahtar olmayan bir sütunun başka bir anahtar olmayan sütunu belirlemesi gerekirdi; BCNF ihlali ise anahtar olmayan bir belirleyicinin anahtarın parçasını belirlemesidir, burada o da yok.",
+        "en": "The key (order_id, product_id) is composite and product_name depends on only part of it; that is a partial dependency and violates 2NF. A 1NF violation would need a list inside a cell; a 3NF violation would need a non-key column determining another non-key column; a BCNF violation would need a non-key determinant that determines part of the key, which is absent here too."
       },
       "difficulty": "medium",
       "concepts": ["2nf", "functional-dependency"]
@@ -35,7 +35,7 @@
         { "id": "a", "text": { "tr": "Update anomaly: aynı müşteri şehri birçok satırda tekrarlanır, biri eski kalabilir", "en": "Update anomaly: the same customer city repeats in many rows and one may go stale" } },
         { "id": "b", "text": { "tr": "Insert anomaly: hiç satılmamış ürün eklenemez", "en": "Insert anomaly: an unsold product cannot be added" } },
         { "id": "c", "text": { "tr": "Delete anomaly: son sipariş silinince müşteri de kaybolur", "en": "Delete anomaly: deleting the last order loses the customer too" } },
-        { "id": "d", "text": { "tr": "Join anomaly: sorgular çok fazla JOIN gerektirir", "en": "Join anomaly: queries require too many JOINs" } }
+        { "id": "d", "text": { "tr": "Join anomaly: her okuma sorgusu çok fazla JOIN gerektirir ve plan şişer", "en": "Join anomaly: every read query needs too many JOINs and the plan bloats" } }
       ],
       "correct": ["a", "b", "c"],
       "explanation": {
@@ -72,15 +72,15 @@
         "en": "A student can take many courses and a course can have many students. How do you model this in a relational schema?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "students tablosuna course_ids dizi sütunu eklerim", "en": "Add a course_ids array column to students" } },
-        { "id": "b", "text": { "tr": "courses tablosuna student_id yabancı anahtarı eklerim", "en": "Add a student_id foreign key to courses" } },
-        { "id": "c", "text": { "tr": "enrollments(student_id, course_id, enrolled_at) ara tablosu oluştururum", "en": "Create an enrollments(student_id, course_id, enrolled_at) junction table" } },
-        { "id": "d", "text": { "tr": "Her ders için ayrı students_<course> tablosu açarım", "en": "Create a separate students_<course> table per course" } }
+        { "id": "a", "text": { "tr": "enrollments(student_id, course_id) ara tablosu oluştururum", "en": "Create an enrollments(student_id, course_id) junction table" } },
+        { "id": "b", "text": { "tr": "students tablosuna course_ids dizi (int[]) sütunu ekler, GIN ile indekslerim", "en": "Add a course_ids array (int[]) column to students and index it with GIN" } },
+        { "id": "c", "text": { "tr": "courses tablosuna NOT NULL bir student_id yabancı anahtarı eklerim", "en": "Add a NOT NULL student_id foreign key to courses" } },
+        { "id": "d", "text": { "tr": "Her ders için ayrı students_<course> tablosu açar, UNION ile birleştiririm", "en": "Create a separate students_<course> table per course and combine them with UNION" } }
       ],
-      "correct": ["c"],
+      "correct": ["a"],
       "explanation": {
-        "tr": "N-M ilişkiler yalnızca ara (junction) tabloyla modellenir; ara tablo çoğu zaman kendi özniteliklerini (kayıt tarihi, not) taşır. Dizi sütunu 1NF'yi bozar, courses'a student_id koymak ilişkiyi 1-N'e düşürür, ders başına tablo ise şemayı veriye bağımlı hâle getirir.",
-        "en": "N-M relationships are modeled only with a junction table, which usually carries its own attributes (enrollment date, grade). An array column breaks 1NF, a student_id on courses reduces the relationship to 1-N, and a table per course makes the schema depend on the data."
+        "tr": "N-M ilişkiler yalnızca ara (junction) tabloyla modellenir; ara tablo çoğu zaman kendi özniteliklerini (kayıt tarihi, not) taşır. Dizi sütunu GIN ile indekslense de 1NF'yi bozar ve yabancı anahtar kısıtı alamaz; courses'a student_id koymak ilişkiyi 1-N'e düşürür; ders başına tablo ise şemayı veriye bağımlı hâle getirir ve UNION'la sorgulanamaz hâle gelir.",
+        "en": "N-M relationships are modeled only with a junction table, which usually carries its own attributes (enrollment date, grade). An array column breaks 1NF even with a GIN index and cannot carry a foreign key constraint; a student_id on courses reduces the relationship to 1-N; a table per course makes the schema depend on the data and becomes unqueryable even with UNION."
       },
       "difficulty": "easy",
       "concepts": ["er-diagram", "cardinality", "foreign-key"]

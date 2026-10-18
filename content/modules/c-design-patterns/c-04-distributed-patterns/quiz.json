@@ -168,29 +168,29 @@
         {
           "id": "a",
           "text": {
-            "tr": "Önce Kafka'ya yayınla, sonra veritabanına yaz",
-            "en": "Publish to Kafka first, then write to the database"
+            "tr": "Önce Kafka'ya yayınla, sonra veritabanına yaz; tüketici siparişi bulamazsa olayı yok saysın",
+            "en": "Publish to Kafka first, then write to the database; consumers ignore the event if the order is missing"
           }
         },
         {
           "id": "b",
           "text": {
-            "tr": "Yayınlamayı 3 kez yeniden dene",
-            "en": "Retry the publish 3 times"
+            "tr": "Yayınlamayı idempotency anahtarıyla üstel geri çekilerek 3 kez dene, sonra DLQ'ya gönder",
+            "en": "Retry the publish 3 times with exponential backoff and an idempotency key, then send it to a DLQ"
           }
         },
         {
           "id": "c",
           "text": {
-            "tr": "Olayı aynı veritabanı transaction'ında bir outbox tablosuna yaz; ayrı bir relay/CDC onu Kafka'ya taşısın",
-            "en": "Write the event to an outbox table in the same database transaction; let a separate relay/CDC move it to Kafka"
+            "tr": "Olayı aynı veritabanı transaction'ında outbox tablosuna yaz; ayrı bir relay/CDC onu Kafka'ya taşısın",
+            "en": "Write the event to an outbox table in the same database transaction; a separate relay/CDC moves it to Kafka"
           }
         },
         {
           "id": "d",
           "text": {
-            "tr": "Veritabanı ve Kafka arasında iki fazlı commit kullan",
-            "en": "Use two-phase commit between the database and Kafka"
+            "tr": "Veritabanı ile Kafka'yı XA koordinatörlü iki fazlı commit ile tek dağıtık transaction'a al",
+            "en": "Put the database and Kafka in one distributed transaction with XA two-phase commit"
           }
         }
       ],
@@ -198,8 +198,8 @@
         "c"
       ],
       "explanation": {
-        "tr": "Çift yazımın sırasını değiştirmek sorunu taşır (olay var, sipariş yok). Retry çökme anında çalışamaz. Kafka 2PC desteklemez ve 2PC zaten kaçınılan bir yaklaşımdır. Outbox, yerel ACID ile iki yazımı atomik yapar; relay en az bir kez teslim sağlar, tüketici idempotent olur.",
-        "en": "Swapping the dual-write order just moves the problem (event without order). Retry cannot run at the moment of the crash. Kafka does not support 2PC, and 2PC is avoided anyway. The outbox makes both writes atomic via local ACID; the relay gives at-least-once delivery and the consumer is idempotent."
+        "tr": "Çift yazımın sırasını değiştirmek sorunu taşır: olay var, sipariş yok (a). Retry ve DLQ çökme anında çalışamaz; süreç gitmiştir (b). Kafka XA/2PC desteklemez ve 2PC zaten kaçınılan bir yaklaşımdır (d). Outbox, yerel ACID ile iki yazımı atomik yapar; relay en az bir kez teslim sağlar, tüketici idempotent olur.",
+        "en": "Swapping the dual-write order just moves the problem: event without order (a). Retry and DLQ cannot run at the moment of the crash; the process is gone (b). Kafka does not support XA/2PC, and 2PC is avoided anyway (d). The outbox makes both writes atomic via local ACID; the relay gives at-least-once delivery and the consumer is idempotent."
       },
       "difficulty": "medium",
       "concepts": [
