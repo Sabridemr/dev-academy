@@ -1,0 +1,110 @@
+{
+  "id": "f-08-devacademy-architecture-quiz",
+  "title": { "tr": "DevAcademy Mimarisi Quiz", "en": "DevAcademy Architecture Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Web ve mobil uygulamanın aynı animasyon sahnesini birebir aynı adımlarla oynatmasını sağlayan şey nedir?",
+        "en": "What makes the web and mobile apps play the same animation scene with exactly the same steps?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Her platformda animasyonun elle yeniden kodlanması", "en": "Re-coding the animation by hand on each platform" } },
+        { "id": "b", "text": { "tr": "Ortak paketteki sahne şeması ve saf oynatıcı/durum fonksiyonları", "en": "The scene schema and pure player/state functions in the shared package" } },
+        { "id": "c", "text": { "tr": "Animasyonun video olarak kaydedilmesi", "en": "Recording the animation as a video" } },
+        { "id": "d", "text": { "tr": "Sunucunun her kareyi istemciye göndermesi", "en": "The server streaming every frame to the client" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Sahne deklaratif JSON'dur; hangi adımda neyin vurgulanacağını iki platform da aynı `playerReducer`, `resolveStepView` ve `computePackets` fonksiyonlarıyla hesaplar. Yalnızca çizim katmanı platforma özgüdür.",
+        "en": "The scene is declarative JSON; both platforms compute what is highlighted at each step with the same `playerReducer`, `resolveStepView` and `computePackets` functions. Only the rendering layer is platform specific."
+      },
+      "difficulty": "easy",
+      "concepts": ["shared-schema"]
+    },
+    {
+      "id": "q2",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Bir dersin yayınlanmış içeriği hangi katmanlarda önbelleğe alınır? (Birden fazla seçin)",
+        "en": "In which layers is a lesson's published content cached? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Redis (sunucu tarafı)", "en": "Redis (server side)" } },
+        { "id": "b", "text": { "tr": "Tarayıcı cache'i (ETag + 304)", "en": "Browser cache (ETag + 304)" } },
+        { "id": "c", "text": { "tr": "Mobilde SQLite (offline paket)", "en": "SQLite on mobile (offline bundle)" } },
+        { "id": "d", "text": { "tr": "Refresh token tablosu", "en": "The refresh token table" } }
+      ],
+      "correct": ["a", "b", "c"],
+      "explanation": {
+        "tr": "İçerik okuma ağırlıklıdır: Redis'te, tarayıcıda (ETag ile doğrulanarak) ve mobilde SQLite'ta tutulur. Refresh token tablosu kimlik doğrulamayla ilgilidir, içerik cache'i değildir.",
+        "en": "Content is read-heavy: it is kept in Redis, in the browser (revalidated with ETags) and in SQLite on mobile. The refresh token table belongs to authentication, not content caching."
+      },
+      "difficulty": "medium",
+      "concepts": ["etag", "offline-sync"]
+    },
+    {
+      "id": "q3",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Admin panelinde bir dersi düzenlemek, yayındaki sürümü anında değiştirir.",
+        "en": "Editing a lesson in the admin panel immediately changes the published version."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "Yanlış. Düzenlemeler bir taslak sürüme yazılır; yalnızca 'Yayınla' denildiğinde taslak yayına alınır ve eski sürüm arşivlenir. Öğrenciler yarım düzenlemeleri görmez.",
+        "en": "False. Edits go into a draft version; only on 'Publish' does the draft go live and the old version get archived. Learners never see half-finished edits."
+      },
+      "difficulty": "easy",
+      "concepts": ["versioned-content"]
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": {
+        "tr": "Seed scripti neden içerik değişmediğinde yeni bir ders sürümü oluşturmaz?",
+        "en": "Why does the seed script not create a new lesson version when content has not changed?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Veritabanı aynı satırı iki kez yazmaya izin vermediği için", "en": "Because the database does not allow writing the same row twice" } },
+        { "id": "b", "text": { "tr": "İdempotent olsun diye: içerik kanonik JSON özetiyle karşılaştırılır, aynıysa atlanır", "en": "To be idempotent: content is compared by a canonical JSON hash and skipped if equal" } },
+        { "id": "c", "text": { "tr": "Seed yalnızca ilk kurulumda çalıştığı için", "en": "Because seed only runs on first install" } },
+        { "id": "d", "text": { "tr": "Redis'te zaten olduğu için", "en": "Because it is already in Redis" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Seed her dağıtımda güvenle tekrar çalıştırılabilmelidir. Anahtar sırası ve boş alanlar normalize edilerek hesaplanan özet aynıysa yeni sürüm açılmaz; böylece sürüm geçmişi gereksiz kayıtlarla dolmaz.",
+        "en": "Seed must be safe to re-run on every deploy. If the hash, computed after normalizing key order and empty fields, is unchanged, no new version is created, so version history is not filled with noise."
+      },
+      "difficulty": "medium",
+      "concepts": ["content-pipeline"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "API'yi birden fazla replikaya ölçeklediğimizde WebSocket bildirimleri için ne eklenmelidir?",
+        "en": "When scaling the API to multiple replicas, what must be added for WebSocket notifications?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Hiçbir şey; WebSocket bağlantıları stateless'tır", "en": "Nothing; WebSocket connections are stateless" } },
+        { "id": "b", "text": { "tr": "Replikalar arası olay dağıtımı için socket.io Redis adapter (pub/sub)", "en": "A socket.io Redis adapter (pub/sub) to fan events out across replicas" } },
+        { "id": "c", "text": { "tr": "Daha büyük bir veritabanı", "en": "A bigger database" } },
+        { "id": "d", "text": { "tr": "CDN önbelleği", "en": "A CDN cache" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Bir kullanıcının soketi A replikasına bağlıyken ilerleme güncellemesi B replikasında işlenebilir. Redis pub/sub adapter olayı tüm replikalara dağıtır ve doğru soket bulunur. WebSocket bağlantıları stateful'dur.",
+        "en": "A user's socket may be connected to replica A while the progress update is processed on replica B. The Redis pub/sub adapter fans the event out to all replicas so the right socket gets it. WebSocket connections are stateful."
+      },
+      "difficulty": "hard",
+      "concepts": ["monorepo"]
+    }
+  ]
+}
