@@ -1,0 +1,53 @@
+import { Injectable, NotFoundException } from '@nestjs/common';
+import type { RegisterPushTokenDto, UpdateProfileDto, UserProfile } from '@devacademy/shared';
+import { PrismaService } from '../../common/prisma/prisma.service';
+import { toProfile } from '../auth/auth.service';
+
+@Injectable()
+export class UsersService {
+  constructor(private readonly prisma: PrismaService) {}
+
+  async getProfile(userId: string): Promise<UserProfile & { reminderHour: number | null; timezone: string }> {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user || user.deletedAt) throw new NotFoundException('Kullanıcı bulunamadı');
+    return { ...toProfile(user), reminderHour: user.reminderHour, timezone: user.timezone };
+  }
+
+  async updateProfile(userId: string, dto: UpdateProfileDto) {
+    if (dto.selectedPathId) {
+      const path = await this.prisma.learningPath.findUnique({ where: { id: dto.selectedPathId } });
+      if (!path) throw new NotFoundException('Öğrenme yolu bulunamadı');
+    }
+    const user = await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        displayName: dto.displayName,
+        avatarUrl: dto.avatarUrl,
+        locale: dto.locale,
+        selectedPathId: dto.selectedPathId,
+        reminderHour: dto.reminderHour,
+        timezone: dto.timezone,
+      },
+    });
+    return { ...toProfile(user), reminderHour: user.reminderHour, timezone: user.timezone };
+  }
+
+  async softDelete(userId: string): Promise<void> {
+    await this.prisma.$transaction([
+      this.prisma.refreshToken.updateMany({ where: { userId, revokedAt: null }, data: { revokedAt: new Date() } }),
+      this.prisma.pushToken.deleteMany({ where: { userId } }),
+      this.prisma.user.update({
+        where: { id: userId },
+        data: { deletedAt: new Date(), email: `deleted_${userId}@users.devacademy.local`, displayName: 'Silinmiş kullanıcı', avatarUrl: null, passwordHash: null },
+      }),
+    ]);
+  }
+
+  async registerPushToken(userId: string, dto: RegisterPushTokenDto): Promise<void> {
+    await this.prisma.pushToken.upsert({
+      where: { token: dto.token },
+      update: { userId, platform: dto.platform, deviceName: dto.deviceName, lastSeenAt: new Date() },
+      create: { userId, token: dto.token, platform: dto.platform, deviceName: dto.deviceName },
+    });
+  }
+}

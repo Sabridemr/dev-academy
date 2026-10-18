@@ -28,7 +28,20 @@
       "import": "./dist/simulators/index.js",
       "require": "./dist/simulators/index.cjs"
     },
+    "./node": {
+      "types": "./dist/node/index.d.ts",
+      "import": "./dist/node/index.js",
+      "require": "./dist/node/index.cjs"
+    },
     "./package.json": "./package.json"
+  },
+  "typesVersions": {
+    "*": {
+      "scene": ["./dist/scene/index.d.ts"],
+      "content": ["./dist/content/index.d.ts"],
+      "simulators": ["./dist/simulators/index.d.ts"],
+      "node": ["./dist/node/index.d.ts"]
+    }
   },
   "files": ["dist", "examples", "schema"],
   "scripts": {

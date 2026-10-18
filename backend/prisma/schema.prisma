@@ -1,0 +1,438 @@
+// DevAcademy veri modeli
+// Kullanıcı, içerik (sürümlü), quiz, ilerleme, oyunlaştırma ve bildirim varlıkları.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/* ============================== Kullanıcı ============================== */
+
+enum UserRole {
+  student
+  editor
+  admin
+}
+
+enum Locale {
+  tr
+  en
+}
+
+model User {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  passwordHash   String?   // OAuth ile gelen kullanıcılarda null
+  displayName    String
+  avatarUrl      String?
+  role           UserRole  @default(student)
+  locale         Locale    @default(tr)
+  timezone       String    @default("Europe/Istanbul")
+  /// Günlük hatırlatma saati (yerel saat, 0-23); null ise kapalı
+  reminderHour   Int?
+  selectedPathId String?
+  selectedPath   LearningPath? @relation(fields: [selectedPathId], references: [id], onDelete: SetNull)
+
+  // Seri (streak)
+  currentStreak    Int     @default(0)
+  longestStreak    Int     @default(0)
+  lastActivityDate String? // YYYY-MM-DD (kullanıcının saat diliminde)
+
+  emailVerifiedAt DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  deletedAt       DateTime?
+
+  refreshTokens        RefreshToken[]
+  oauthAccounts        OAuthAccount[]
+  pushTokens           PushToken[]
+  progress             Progress[]
+  attempts             Attempt[]
+  bookmarks            Bookmark[]
+  notes                Note[]
+  badges               UserBadge[]
+  reviewCards          ReviewCard[]
+  interactiveSessions  InteractiveSession[]
+  authoredVersions     LessonVersion[]      @relation("VersionAuthor")
+  authoredScenes       AnimationScene[]     @relation("SceneAuthor")
+
+  @@index([selectedPathId])
+}
+
+model RefreshToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// Token'ın SHA-256 özeti (ham token saklanmaz)
+  tokenHash String    @unique
+  /// Aynı cihaz zincirini takip etmek için (rotasyon)
+  family    String
+  userAgent String?
+  ip        String?
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@index([family])
+}
+
+enum OAuthProvider {
+  google
+  apple
+}
+
+model OAuthAccount {
+  id             String        @id @default(cuid())
+  userId         String
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider       OAuthProvider
+  providerUserId String
+  email          String?
+  createdAt      DateTime      @default(now())
+
+  @@unique([provider, providerUserId])
+  @@index([userId])
+}
+
+enum PushPlatform {
+  ios
+  android
+  web
+}
+
+model PushToken {
+  id         String       @id @default(cuid())
+  userId     String
+  user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token      String       @unique
+  platform   PushPlatform
+  deviceName String?
+  lastSeenAt DateTime     @default(now())
+  createdAt  DateTime     @default(now())
+
+  @@index([userId])
+}
+
+/* =============================== İçerik ================================ */
+
+model LearningPath {
+  id          String   @id
+  slug        String   @unique
+  title       Json     // LocalizedString
+  description Json
+  icon        String   @default("route")
+  order       Int      @default(0)
+  items       LearningPathItem[]
+  users       User[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model LearningPathItem {
+  id       String       @id @default(cuid())
+  pathId   String
+  path     LearningPath @relation(fields: [pathId], references: [id], onDelete: Cascade)
+  order    Int
+  moduleId String
+  module   Module       @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  /// null ise modülün tamamı; dolu ise yalnızca o ders
+  lessonId String?
+  lesson   Lesson?      @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@index([pathId, order])
+}
+
+model Module {
+  id          String   @id
+  slug        String   @unique
+  code        String
+  order       Int
+  title       Json
+  description Json
+  icon        String   @default("book")
+  color       String   @default("#6366f1")
+  lessons     Lesson[]
+  pathItems   LearningPathItem[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+enum LessonLevel {
+  beginner
+  intermediate
+  advanced
+}
+
+/// Dersin kimliği; içerik LessonVersion'da sürümlüdür.
+model Lesson {
+  id                 String         @id
+  slug               String
+  moduleId           String
+  module             Module         @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  order              Int
+  /// Yayındaki sürüm (null ise ders hiç yayınlanmamış)
+  publishedVersionId String?        @unique
+  publishedVersion   LessonVersion? @relation("PublishedVersion", fields: [publishedVersionId], references: [id], onDelete: SetNull)
+  /// Arama indeksi için düz metin (yayındaki sürümden türetilir)
+  searchText         String         @default("")
+  versions           LessonVersion[]
+  scenes             AnimationScene[]
+  quizzes            Quiz[]
+  progress           Progress[]
+  bookmarks          Bookmark[]
+  notes              Note[]
+  reviewCards        ReviewCard[]
+  pathItems          LearningPathItem[]
+  interactiveSessions InteractiveSession[]
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+
+  @@unique([moduleId, slug])
+  @@index([moduleId, order])
+}
+
+enum VersionStatus {
+  draft
+  published
+  archived
+}
+
+model LessonVersion {
+  id              String        @id @default(cuid())
+  lessonId        String
+  lesson          Lesson        @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  version         Int
+  status          VersionStatus @default(draft)
+  title           Json
+  summary         Json
+  durationMinutes Int           @default(15)
+  level           LessonLevel   @default(beginner)
+  tags            String[]      @default([])
+  prerequisites   String[]      @default([])
+  concepts        String[]      @default([])
+  /// LessonBlock[] (shared şema)
+  blocks          Json
+  authorId        String?
+  author          User?         @relation("VersionAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  publishedAt     DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  publishedFor    Lesson?       @relation("PublishedVersion")
+
+  @@unique([lessonId, version])
+  @@index([lessonId, status])
+}
+
+model AnimationScene {
+  id        String        @id
+  lessonId  String?
+  lesson    Lesson?       @relation(fields: [lessonId], references: [id], onDelete: SetNull)
+  version   Int           @default(1)
+  status    VersionStatus @default(published)
+  title     Json
+  /// AnimationScene JSON (shared şema ile doğrulanmış)
+  data      Json
+  /// Ders klasöründeki dosya adı (seed eşlemesi için)
+  sourceFile String?
+  authorId  String?
+  author    User?         @relation("SceneAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@index([lessonId])
+}
+
+/* ================================ Quiz ================================= */
+
+model Quiz {
+  id        String     @id
+  lessonId  String
+  lesson    Lesson     @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  title     Json
+  passScore Int        @default(70)
+  status    VersionStatus @default(published)
+  questions Question[]
+  attempts  Attempt[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@index([lessonId])
+}
+
+enum QuestionType {
+  single
+  multiple
+  truefalse
+  order
+}
+
+enum Difficulty {
+  easy
+  medium
+  hard
+}
+
+model Question {
+  id          String       @id @default(cuid())
+  quizId      String
+  quiz        Quiz         @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  /// quiz.json içindeki yerel kimlik (q1, q2 ...)
+  key         String
+  order       Int
+  type        QuestionType @default(single)
+  prompt      Json
+  /// { id, text }[]
+  options     Json
+  correct     String[]
+  explanation Json
+  difficulty  Difficulty   @default(medium)
+  concepts    String[]     @default([])
+  answers     AttemptAnswer[]
+  reviewCards ReviewCard[]
+
+  @@unique([quizId, key])
+  @@index([quizId, order])
+}
+
+model Attempt {
+  id           String          @id @default(cuid())
+  userId       String
+  user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  quizId       String
+  quiz         Quiz            @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  score        Int
+  passed       Boolean
+  correctCount Int
+  totalCount   Int
+  durationMs   Int?
+  answers      AttemptAnswer[]
+  createdAt    DateTime        @default(now())
+
+  @@index([userId, quizId])
+  @@index([userId, createdAt])
+}
+
+model AttemptAnswer {
+  id         String   @id @default(cuid())
+  attemptId  String
+  attempt    Attempt  @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  selected   String[]
+  correct    Boolean
+
+  @@index([attemptId])
+}
+
+/* ============================== İlerleme =============================== */
+
+enum ProgressStatus {
+  not_started
+  in_progress
+  completed
+}
+
+model Progress {
+  id           String         @id @default(cuid())
+  userId       String
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lessonId     String
+  lesson       Lesson         @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  status       ProgressStatus @default(in_progress)
+  percent      Int            @default(0)
+  lastBlockId  String?
+  secondsSpent Int            @default(0)
+  completedAt  DateTime?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@unique([userId, lessonId])
+  @@index([userId, status])
+}
+
+/// Aralıklı tekrar (SM-2) kartı: yanlış cevaplanan sorular/kavramlar
+model ReviewCard {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  questionId   String
+  question     Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  lessonId     String
+  lesson       Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  concept      String
+  intervalDays Int      @default(0)
+  easeFactor   Float    @default(2.5)
+  repetitions  Int      @default(0)
+  dueAt        DateTime
+  lastReviewed DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([userId, questionId])
+  @@index([userId, dueAt])
+}
+
+model InteractiveSession {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lessonId    String?
+  lesson      Lesson?  @relation(fields: [lessonId], references: [id], onDelete: SetNull)
+  interactive String
+  params      Json?
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+}
+
+model Badge {
+  id          String      @id @default(cuid())
+  slug        String      @unique
+  title       Json
+  description Json
+  icon        String
+  users       UserBadge[]
+}
+
+model UserBadge {
+  id       String   @id @default(cuid())
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badgeId  String
+  badge    Badge    @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+  earnedAt DateTime @default(now())
+
+  @@unique([userId, badgeId])
+}
+
+model Bookmark {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lessonId  String
+  lesson    Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  blockId   String?
+  createdAt DateTime @default(now())
+
+  @@unique([userId, lessonId, blockId])
+  @@index([userId])
+}
+
+model Note {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lessonId  String
+  lesson    Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  blockId   String?
+  body      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, lessonId])
+}

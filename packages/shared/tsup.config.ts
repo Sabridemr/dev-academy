@@ -7,6 +7,7 @@ export default defineConfig({
     'scene/index': 'src/scene/index.ts',
     'content/index': 'src/content/index.ts',
     'simulators/index': 'src/simulators/index.ts',
+    'node/index': 'src/node/index.ts',
   },
   format: ['esm', 'cjs'],
   dts: true,

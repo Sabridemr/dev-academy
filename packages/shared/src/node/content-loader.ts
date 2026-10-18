@@ -24,11 +24,11 @@ import {
   type LessonDocument,
   type ModuleManifest,
   type Quiz,
-} from '../src/content/schema';
-import { parseLessonMarkdown, LessonParseError } from '../src/content/parser';
-import { validateScene } from '../src/scene/validate';
-import type { AnimationScene } from '../src/scene/schema';
-import { CURRICULUM } from '../src/content/curriculum';
+} from '../content/schema';
+import { parseLessonMarkdown, LessonParseError } from '../content/parser';
+import { validateScene } from '../scene/validate';
+import type { AnimationScene } from '../scene/schema';
+import { CURRICULUM } from '../content/curriculum';
 
 export interface LoadedScene {
   /** Ders klasörüne göre dosya adı (ör. "scene.json") */

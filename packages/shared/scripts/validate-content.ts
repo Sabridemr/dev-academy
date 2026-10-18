@@ -7,7 +7,7 @@
  *   --strict   uyarıları da hata say
  *   --json     makine okunur çıktı
  */
-import { loadContent, coverageReport, findContentRoot } from './content-loader';
+import { loadContent, coverageReport, findContentRoot } from '../src/node/content-loader';
 
 const args = new Set(process.argv.slice(2));
 const strict = args.has('--strict');
