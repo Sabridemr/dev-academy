@@ -66,38 +66,38 @@
         {
           "id": "a",
           "text": {
-            "tr": "Proxy farklı bir arayüz sunar",
-            "en": "A proxy exposes a different interface"
+            "tr": "Decorator davranış ekler ve zinciri istemci kurar; Proxy erişimi ve yaşam döngüsünü yönetir, çağrıyı iletmeyebilir",
+            "en": "A decorator adds behavior and the client builds the chain; a proxy manages access and lifecycle and may not forward the call"
           }
         },
         {
           "id": "b",
           "text": {
-            "tr": "Decorator davranış ekler ve istemci zinciri kurar; Proxy gerçek nesneye erişimi ve yaşam döngüsünü yönetir, çağrıyı iletmeyebilir",
-            "en": "A decorator adds behavior and the client composes the chain; a proxy manages access to and the lifecycle of the real object and may not forward at all"
+            "tr": "Proxy sarılan nesneden farklı bir arayüz sunar; Decorator aynı arayüzü koruduğu için yalnızca o zincirlenebilir",
+            "en": "A proxy exposes a different interface than the wrapped object; only a decorator can be chained because it keeps the same interface"
           }
         },
         {
           "id": "c",
           "text": {
-            "tr": "Decorator yalnızca kalıtımla uygulanır",
-            "en": "A decorator can only be implemented with inheritance"
+            "tr": "Decorator kalıtımla, Proxy bileşimle uygulanır; bu yüzden Decorator çalışma zamanında takılıp çıkarılamaz",
+            "en": "A decorator is implemented with inheritance and a proxy with composition, so a decorator cannot be attached or removed at runtime"
           }
         },
         {
           "id": "d",
           "text": {
-            "tr": "Aralarında fark yoktur",
-            "en": "There is no difference"
+            "tr": "Proxy yalnızca uzak çağrılar (gRPC stub) içindir; cache, yetki ve tembel yükleme Decorator'ın sorumluluğudur",
+            "en": "A proxy is only for remote calls (gRPC stubs); caching, authorization and lazy loading are the decorator's responsibility"
           }
         }
       ],
       "correct": [
-        "b"
+        "a"
       ],
       "explanation": {
-        "tr": "İkisi de aynı arayüzü uygular (a yanlış) ve bileşim kullanır (c yanlış). Niyet farklıdır: Decorator genişletir ve genellikle dışarıdan zincirlenir; Proxy kontrol eder (yetki, tembel oluşturma, cache, uzak çağrı), gerçek nesneyi kendisi yaratabilir ve çağrıyı reddedebilir.",
-        "en": "Both implement the same interface (a is wrong) and use composition (c is wrong). The intent differs: Decorator extends and is usually chained from outside; Proxy controls (authorization, lazy creation, cache, remote call), may create the real object itself and may reject the call."
+        "tr": "İkisi de aynı arayüzü uygular (b yanlış) ve bileşimle kurulur (c yanlış). Cache, yetki ve tembel yükleme birer proxy türüdür, uzak çağrı yalnızca biridir (d yanlış). Niyet farklıdır: Decorator genişletir ve dışarıdan zincirlenir; Proxy kontrol eder, gerçek nesneyi kendisi yaratabilir ve çağrıyı reddedebilir.",
+        "en": "Both implement the same interface (b is wrong) and are built with composition (c is wrong). Caching, protection and virtual proxies are proxy kinds; remote is only one of them (d is wrong). The intent differs: Decorator extends and is chained from outside; Proxy controls, may create the real object itself and may reject the call."
       },
       "difficulty": "medium",
       "concepts": [
@@ -123,8 +123,8 @@
         {
           "id": "b",
           "text": {
-            "tr": "Alt sistemlere doğrudan erişimi yasaklar",
-            "en": "It forbids direct access to the subsystems"
+            "tr": "Alt sistemlere doğrudan erişimi yasaklar; istemci yalnızca facade üzerinden geçebilir",
+            "en": "It forbids direct access to the subsystems; clients may only go through the facade"
           }
         },
         {
@@ -137,8 +137,8 @@
         {
           "id": "d",
           "text": {
-            "tr": "İş kurallarını barındırmak için doğru yerdir",
-            "en": "It is the right place to hold business rules"
+            "tr": "İndirim hesabı gibi iş kurallarını barındırmak için doğru yerdir",
+            "en": "It is the right place to hold business rules such as discount calculation"
           }
         }
       ],

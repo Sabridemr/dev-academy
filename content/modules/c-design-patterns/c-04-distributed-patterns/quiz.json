@@ -17,38 +17,38 @@
         {
           "id": "a",
           "text": {
-            "tr": "Çağrı normal şekilde iletilir ve sonucu sayılır",
-            "en": "The call is forwarded normally and its result is counted"
+            "tr": "Çağrı ağa çıkmadan anında reddedilir; varsa fallback çalışır",
+            "en": "The call is rejected instantly without touching the network; the fallback runs, if any"
           }
         },
         {
           "id": "b",
           "text": {
-            "tr": "Çağrı ağa çıkmadan anında reddedilir ve varsa fallback çalışır",
-            "en": "The call is rejected instantly without touching the network and the fallback runs, if any"
+            "tr": "Çağrı iletilir ve sonucu kayan penceredeki hata oranına eklenir",
+            "en": "The call is forwarded and its result is added to the sliding-window failure rate"
           }
         },
         {
           "id": "c",
           "text": {
-            "tr": "Çağrı üstel geri çekilmeyle yeniden denenir",
-            "en": "The call is retried with exponential backoff"
+            "tr": "Çağrı sınırlı bir deneme olarak geçirilir; başarılıysa breaker kapanır",
+            "en": "The call is let through as a limited probe; if it succeeds the breaker closes"
           }
         },
         {
           "id": "d",
           "text": {
-            "tr": "Çağrı kuyruğa alınıp breaker kapanınca iletilir",
-            "en": "The call is queued and forwarded when the breaker closes"
+            "tr": "Çağrı openForMs boyunca jitter'lı üstel geri çekilmeyle yeniden denenir",
+            "en": "The call is retried with jittered exponential backoff for openForMs"
           }
         }
       ],
       "correct": [
-        "b"
+        "a"
       ],
       "explanation": {
-        "tr": "OPEN durumun amacı hasta servise hiç trafik göndermemek ve çağıranın kaynaklarını (iş parçacığı, bağlantı) hızlı hata ile korumaktır. Retry (c) breaker açıkken yapılmaz; kuyruğa alma (d) ancak uygulamanın kendi fallback kararı olabilir, breaker'ın davranışı değildir.",
-        "en": "The purpose of OPEN is to send no traffic at all to the sick service and to protect the caller's resources (threads, connections) by failing fast. Retry (c) is not performed while open; queuing (d) may be the application's own fallback decision, not the breaker's behavior."
+        "tr": "OPEN durumun amacı hasta servise hiç trafik göndermemek ve çağıranın kaynaklarını (iş parçacığı, bağlantı) hızlı hata ile korumaktır. Sonuçları sayarak iletmek CLOSED'un (b), sınırlı deneme çağrısı geçirmek HALF-OPEN'ın (c) davranışıdır; breaker açıkken retry yapılmaz (d).",
+        "en": "The purpose of OPEN is to send no traffic at all to the sick service and to protect the caller's resources (threads, connections) by failing fast. Forwarding and counting results is CLOSED behavior (b), letting a limited probe through is HALF-OPEN behavior (c); no retry is performed while the breaker is open (d)."
       },
       "difficulty": "easy",
       "concepts": [
@@ -118,38 +118,38 @@
         {
           "id": "a",
           "text": {
-            "tr": "Toplam bekleme süresini kısaltmak",
-            "en": "To shorten the total wait time"
+            "tr": "Bekleme süresini min(cap, base·2ⁿ) üst sınırında tutarak toplam süre bütçesini korumak",
+            "en": "To keep the delay under the min(cap, base·2ⁿ) ceiling and protect the total time budget"
           }
         },
         {
           "id": "b",
           "text": {
-            "tr": "Aynı anda hata alan istemcilerin aynı anda yeniden denemesini (thundering herd) önlemek",
-            "en": "To prevent clients that failed together from retrying together (thundering herd)"
+            "tr": "Retry bütçesini (toplam trafiğin %10'u) aşmadan daha fazla deneme sığdırabilmek",
+            "en": "To fit more attempts without exceeding the retry budget (10% of total traffic)"
           }
         },
         {
           "id": "c",
           "text": {
-            "tr": "Yeniden deneme sayısını artırmak",
-            "en": "To increase the number of retries"
+            "tr": "Retry-After başlığı olmayan yanıtlarda kalıcı hatayı geçici hatadan ayırmak",
+            "en": "To tell permanent errors from transient ones on responses without a Retry-After header"
           }
         },
         {
           "id": "d",
           "text": {
-            "tr": "Kalıcı hataları geçici hatalardan ayırmak",
-            "en": "To distinguish permanent errors from transient ones"
+            "tr": "Aynı anda hata alan istemcilerin aynı anda geri dönmesini (thundering herd) önlemek",
+            "en": "To prevent clients that failed together from coming back together (thundering herd)"
           }
         }
       ],
       "correct": [
-        "b"
+        "d"
       ],
       "explanation": {
-        "tr": "Jitter olmadan base·2ⁿ formülü tüm istemcilere aynı bekleme süresini verir; hepsi aynı milisaniyede geri döner ve toparlanan servisi dalga dalga tekrar düşürür. Rastgelelik denemeleri zamana yayar. Süreyi kısaltmak ya da sayıyı artırmak amaç değildir; hata sınıflandırması ayrı bir karardır.",
-        "en": "Without jitter the base·2ⁿ formula gives every client the same delay; they all return in the same millisecond and knock the recovering service over in waves. Randomness spreads attempts over time. Shortening the wait or adding attempts is not the goal; error classification is a separate decision."
+        "tr": "Jitter olmadan base·2ⁿ formülü tüm istemcilere aynı bekleme süresini verir; hepsi aynı milisaniyede geri döner ve toparlanan servisi dalga dalga tekrar düşürür. Rastgelelik denemeleri zamana yayar. Üst sınırı cap belirler (a), deneme sayısını retry bütçesi sınırlar (b), hata sınıflandırması ise jitter'dan bağımsız ayrı bir karardır (c).",
+        "en": "Without jitter the base·2ⁿ formula gives every client the same delay; they all return in the same millisecond and knock the recovering service over in waves. Randomness spreads attempts over time. The ceiling is set by cap (a), the number of attempts by the retry budget (b), and error classification is a separate decision independent of jitter (c)."
       },
       "difficulty": "easy",
       "concepts": [

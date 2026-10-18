@@ -11,15 +11,15 @@
         "en": "Which is a natural consequence of vertical scaling (scale up)?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "Uygulamanın stateless hâle getirilmesi gerekir", "en": "The application must be made stateless" } },
-        { "id": "b", "text": { "tr": "Tek hata noktası (SPOF) devam eder ve bir donanım tavanı vardır", "en": "The single point of failure remains and there is a hardware ceiling" } },
-        { "id": "c", "text": { "tr": "Bir load balancer zorunlu olur", "en": "A load balancer becomes mandatory" } },
-        { "id": "d", "text": { "tr": "Veri tutarlılığı zorlaşır", "en": "Data consistency becomes harder" } }
+        { "id": "a", "text": { "tr": "SPOF sürer ve satın alınabilecek en büyük donanımda tavan yapar", "en": "The SPOF remains and it hits a ceiling at the largest hardware you can buy" } },
+        { "id": "b", "text": { "tr": "Yükseltmeler rolling deployment ile sıfır downtime olarak yapılabilir", "en": "Upgrades can be done with zero downtime via rolling deployment" } },
+        { "id": "c", "text": { "tr": "Maliyet eğrisi eklenen çekirdek sayısıyla yaklaşık doğrusal artar", "en": "The cost curve grows roughly linearly with the number of cores added" } },
+        { "id": "d", "text": { "tr": "Oturum bilgisi paylaşımlı bir depoya (Redis, JWT) taşınmak zorundadır", "en": "Session state must be moved to a shared store (Redis, JWT)" } }
       ],
-      "correct": ["b"],
+      "correct": ["a"],
       "explanation": {
-        "tr": "Dikey ölçekleme tek makineyi büyütür: kod değişmez, tutarlılık kolaydır ve load balancer gerekmez (a, c, d yatay ölçeklemenin sonuçlarıdır). Ancak makine ne kadar büyürse büyüsün tek başınadır (SPOF) ve satın alınabilecek en büyük donanımda tavan yapar.",
-        "en": "Scaling up grows a single machine: no code change, easy consistency, no load balancer needed (a, c and d are consequences of scaling out). But however big it gets it is still alone (SPOF) and it hits a ceiling at the largest hardware you can buy."
+        "tr": "Dikey ölçekleme tek makineyi büyütür: kod değişmez, oturum yerinde kalabilir (d yatay ölçeklemenin ön koşuludur). Tek makinenin yükseltilmesi genellikle yeniden başlatma gerektirir; rolling deployment birden fazla replikanın ayrıcalığıdır (b yanlış). Maliyet eğrisi doğrusal değil üsteldir; premium donanım iki kat çekirdeğe iki kattan fazla ücret ister (c yanlış). Makine ne kadar büyürse büyüsün tek başınadır ve en büyük donanımda tavan yapar.",
+        "en": "Scaling up grows a single machine: no code change, session state can stay where it is (d is a prerequisite of scaling out). Upgrading a single machine usually needs a restart; rolling deployment is a privilege of having several replicas (b is wrong). The cost curve is exponential, not linear; premium hardware charges more than double for double the cores (c is wrong). However big it gets, the machine is still alone and hits a ceiling at the largest hardware available."
       },
       "difficulty": "easy",
       "concepts": ["vertical-scaling", "single-point-of-failure"]
@@ -53,15 +53,15 @@
         "en": "Why is the target CPU in an autoscaling policy usually set around 50–65% rather than 90%?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "Bulut sağlayıcılar %90 üstüne izin vermez", "en": "Cloud providers do not allow more than 90%" } },
-        { "id": "b", "text": { "tr": "Yüksek dolulukta kuyruk gecikmesi üstel artar ve yeni sunucunun açılması dakikalar sürer; aradaki süre için pay gerekir", "en": "At high utilisation queueing latency grows exponentially and a new server takes minutes to start; headroom is needed for that gap" } },
-        { "id": "c", "text": { "tr": "CPU metriği %65'ten sonra ölçülemez", "en": "The CPU metric cannot be measured beyond 65%" } },
-        { "id": "d", "text": { "tr": "Daha düşük hedef her zaman daha ucuzdur", "en": "A lower target is always cheaper" } }
+        { "id": "a", "text": { "tr": "Cooldown süresince metrik toplanamadığından, %90 hedef ölçekleme kararını her zaman bir tur geciktirir", "en": "Because no metrics are collected during cooldown, a 90% target always delays the scaling decision by one cycle" } },
+        { "id": "b", "text": { "tr": "Düşük hedef boşta kapasite tutulmasını önlediği için toplam bulut maliyetini her durumda düşürür", "en": "A lower target prevents idle capacity from being held, so it always lowers the total cloud bill" } },
+        { "id": "c", "text": { "tr": "CPU ortalaması %65'in üzerinde JIT ısınması ve cache doldurma yüzünden güvenilir biçimde ölçülemez", "en": "Above 65% the CPU average cannot be measured reliably because of JIT warm-up and cache filling" } },
+        { "id": "d", "text": { "tr": "Yüksek dolulukta kuyruk gecikmesi üstel artar; yeni sunucu açılana kadar geçen dakikalar için pay gerekir", "en": "Queueing latency grows exponentially at high utilisation; headroom is needed for the minutes until a new server is up" } }
       ],
-      "correct": ["b"],
+      "correct": ["d"],
       "explanation": {
-        "tr": "Hedef, iki gerçeğin bileşimidir: %80 üzeri dolulukta gecikme patlar ve yeni kapasite anında gelmez (imaj açılışı, ısınma, health check). %60 hedef, trafik artışı ile yeni replikanın hizmete girmesi arasındaki 1–3 dakikayı güvenle geçirmek içindir. Düşük hedef daha pahalıdır (d yanlış), çünkü daha fazla boş kapasite tutarsınız.",
-        "en": "The target combines two facts: latency explodes above ~80% utilisation, and new capacity is not instant (image boot, warm-up, health checks). A 60% target safely covers the 1–3 minutes between a traffic rise and the new replica entering service. A lower target is more expensive (d is wrong) because you hold more idle capacity."
+        "tr": "Hedef, iki gerçeğin bileşimidir: %80 üzeri dolulukta kuyruk gecikmesi patlar ve yeni kapasite anında gelmez (imaj açılışı, ısınma, health check); %60 hedef aradaki 1–3 dakikayı güvenle geçirmek içindir. Cooldown metrik toplamayı durdurmaz, yalnızca art arda kararları engeller (a yanlış); düşük hedef daha fazla boş kapasite demektir, yani daha pahalıdır (b yanlış); CPU metriği her seviyede ölçülür, soğuk başlangıç ölçümü değil yeni replikanın ilk dakikalardaki verimini etkiler (c yanlış).",
+        "en": "The target combines two facts: latency explodes above ~80% utilisation, and new capacity is not instant (image boot, warm-up, health checks); a 60% target safely covers the 1–3 minutes in between. Cooldown does not stop metric collection, it only prevents back-to-back decisions (a is wrong); a lower target means more idle capacity, i.e. more cost (b is wrong); CPU is measured at every level, and cold start affects the new replica's throughput in its first minutes, not the measurement (c is wrong)."
       },
       "difficulty": "medium",
       "concepts": ["autoscaling", "capacity-planning"]

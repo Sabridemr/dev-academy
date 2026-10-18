@@ -24,31 +24,31 @@
         {
           "id": "b",
           "text": {
-            "tr": "Abstract Factory",
-            "en": "Abstract Factory"
+            "tr": "Builder + Director",
+            "en": "Builder + Director"
           }
         },
         {
           "id": "c",
           "text": {
-            "tr": "Builder",
-            "en": "Builder"
+            "tr": "Prototype registry",
+            "en": "Prototype registry"
           }
         },
         {
           "id": "d",
           "text": {
-            "tr": "Singleton",
-            "en": "Singleton"
+            "tr": "Abstract Factory",
+            "en": "Abstract Factory"
           }
         }
       ],
       "correct": [
-        "b"
+        "d"
       ],
       "explanation": {
-        "tr": "Abstract Factory, birlikte kullanılması gereken ürün ailelerini tek bir fabrika nesnesinden üreterek tutarlılığı garanti eder. Factory Method tek bir ürünün üretimini alt sınıfa bırakır, aile kavramı yoktur; Builder tek karmaşık nesneyi adım adım kurar.",
-        "en": "Abstract Factory guarantees consistency by producing product families that belong together from a single factory object. Factory Method delegates creation of one product to a subclass with no notion of family; Builder assembles one complex object step by step."
+        "tr": "Abstract Factory, birlikte kullanılması gereken ürün ailelerini tek bir fabrika nesnesinden üreterek tutarlılığı garanti eder. Factory Method kalıtımla tek ürün üretir, aile kavramı yoktur; Builder ve Director tek karmaşık nesneyi adım adım kurar; Prototype registry anahtarla klon döner ama Mac ve Win klonlarının karışmasını engellemez.",
+        "en": "Abstract Factory guarantees consistency by producing product families that belong together from a single factory object. Factory Method creates one product via inheritance with no notion of family; Builder and Director assemble one complex object step by step; a Prototype registry returns clones by key but does nothing to stop Mac and Win clones from mixing."
       },
       "difficulty": "easy",
       "concepts": [
@@ -81,8 +81,8 @@
         {
           "id": "c",
           "text": {
-            "tr": "Bellekte çok fazla kopya oluşturur",
-            "en": "It creates too many copies in memory"
+            "tr": "Holder idiom kullanılsa bile JVM'de getInstance() için açık kilit gerekir",
+            "en": "Even with the holder idiom, getInstance() needs an explicit lock on the JVM"
           }
         },
         {
@@ -99,8 +99,8 @@
         "d"
       ],
       "explanation": {
-        "tr": "Singleton tam tersine tek kopya üretir (c yanlış). Asıl sorunlar global durumun gizli bağımlılık yaratması, test izolasyonunu bozması ve tembel başlatmanın eşzamanlılık koruması gerektirmesidir; bu yüzden DI konteynerinin tek örnekli kaydı tercih edilir.",
-        "en": "Singleton produces exactly one copy (c is wrong). The real problems are that global state creates hidden dependencies, breaks test isolation, and lazy initialization needs concurrency protection; hence DI singleton scope is preferred."
+        "tr": "Holder idiom'da JVM sınıf yüklemesi zaten tembel ve iş parçacığı güvenlidir, kilit gerekmez (c yanlış). Asıl sorunlar global durumun gizli bağımlılık yaratması, test izolasyonunu bozması ve tembel başlatmanın eşzamanlılık koruması gerektirmesidir; bu yüzden DI konteynerinin tek örnekli kaydı tercih edilir.",
+        "en": "With the holder idiom JVM class loading is already lazy and thread-safe, no lock is needed (c is wrong). The real problems are that global state creates hidden dependencies, breaks test isolation, and lazy initialization needs concurrency protection; hence DI singleton scope is preferred."
       },
       "difficulty": "medium",
       "concepts": [

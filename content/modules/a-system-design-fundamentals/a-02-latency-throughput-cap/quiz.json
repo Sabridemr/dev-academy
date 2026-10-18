@@ -11,15 +11,15 @@
         "en": "An API has an average response time of 40 ms and a p99 of 2.5 seconds. What does this mean?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "Sistem hızlı; p99 önemsiz bir istatistiktir", "en": "The system is fast; p99 is an unimportant statistic" } },
-        { "id": "b", "text": { "tr": "İsteklerin %1'i 2,5 saniye veya daha uzun sürüyor; ortalama bu kuyruğu gizliyor", "en": "1% of requests take 2.5 seconds or longer; the average hides this tail" } },
-        { "id": "c", "text": { "tr": "İsteklerin %99'u 2,5 saniye sürüyor", "en": "99% of requests take 2.5 seconds" } },
-        { "id": "d", "text": { "tr": "Ölçüm hatalı; p99 ortalamadan büyük olamaz", "en": "The measurement is wrong; p99 cannot exceed the average" } }
+        { "id": "a", "text": { "tr": "İsteklerin %99'u en fazla 40 ms, yalnızca %1'i tam olarak 2,5 saniye sürüyor", "en": "99% of requests take at most 40 ms and only 1% take exactly 2.5 seconds" } },
+        { "id": "b", "text": { "tr": "Dağılım simetrik olduğundan medyan (p50) da yaklaşık 1,2 saniye civarındadır", "en": "Since the distribution is symmetric, the median (p50) is also around 1.2 seconds" } },
+        { "id": "c", "text": { "tr": "Ortalama ile p99 farklı zaman pencerelerinden gelmiş olmalı; aynı pencerede p99 ortalamayı aşamaz", "en": "The average and p99 must come from different time windows; within one window p99 cannot exceed the average" } },
+        { "id": "d", "text": { "tr": "İsteklerin %1'i 2,5 saniye veya daha uzun sürüyor; ortalama bu kuyruğu gizliyor", "en": "1% of requests take 2.5 seconds or longer; the average hides this tail" } }
       ],
-      "correct": ["b"],
+      "correct": ["d"],
       "explanation": {
-        "tr": "p99, isteklerin %99'unun altında kaldığı değerdir; yani %1'i bundan yavaştır. Ortalama, çoğunluğun hızlı olmasıyla bu kuyruğu maskeler. Çok sayıda bağımlı servisi olan bir sayfada bu %1, kullanıcıların çoğunluğunu etkileyebilir (tail latency amplification).",
-        "en": "p99 is the value below which 99% of requests fall; the other 1% are slower than that. The average masks this tail because most requests are fast. On a page with many dependent services that 1% can affect most users (tail latency amplification)."
+        "tr": "p99, isteklerin %99'unun altında kaldığı değerdir; yani %1'i bundan yavaştır ve ortalama, çoğunluk hızlı olduğu için bu kuyruğu maskeler. Ortalamanın 40 ms olması %99'un 40 ms altında kaldığı anlamına gelmez (a yanlış); gecikme dağılımları simetrik değil sağa çarpıktır (b yanlış) ve p99'un ortalamayı kat kat aşması aynı pencerede tamamen normaldir (c yanlış). Çok bağımlılıklı bir sayfada bu %1, kullanıcıların çoğunu etkileyebilir (tail latency amplification).",
+        "en": "p99 is the value below which 99% of requests fall; the other 1% are slower and the average masks this tail because most requests are fast. An average of 40 ms does not mean 99% stay under 40 ms (a is wrong); latency distributions are right-skewed, not symmetric (b is wrong); and a p99 many times larger than the average is perfectly normal within one window (c is wrong). On a page with many dependencies that 1% can affect most users (tail latency amplification)."
       },
       "difficulty": "easy",
       "concepts": ["percentiles", "tail-latency"]
@@ -32,15 +32,15 @@
         "en": "For a service with a 99.9% SLO, roughly how large is the 30-day error budget?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "4 dakika", "en": "4 minutes" } },
-        { "id": "b", "text": { "tr": "43 dakika", "en": "43 minutes" } },
-        { "id": "c", "text": { "tr": "7 saat", "en": "7 hours" } },
+        { "id": "a", "text": { "tr": "4,3 dakika", "en": "4.3 minutes" } },
+        { "id": "b", "text": { "tr": "7,2 saat", "en": "7.2 hours" } },
+        { "id": "c", "text": { "tr": "43 dakika", "en": "43 minutes" } },
         { "id": "d", "text": { "tr": "3,6 gün", "en": "3.6 days" } }
       ],
-      "correct": ["b"],
+      "correct": ["c"],
       "explanation": {
-        "tr": "30 gün = 43.200 dakika; %0,1'i 43,2 dakikadır. 4 dakika %99.99'un, 7 saat %99'un, 3,6 gün ise yıllık %99'un bütçesidir. Her ek 'dokuz' bütçeyi 10'a böler ve insan müdahalesine zaman bırakmaz.",
-        "en": "30 days = 43,200 minutes; 0.1% of that is 43.2 minutes. 4 minutes is the budget for 99.99%, 7 hours for 99%, and 3.6 days is the yearly budget for 99%. Each extra 'nine' divides the budget by ten and leaves no time for human intervention."
+        "tr": "30 gün = 43.200 dakika; %0,1'i 43,2 dakikadır. 4,3 dakika %99.99'un, 7,2 saat %99'un aylık bütçesidir; 3,6 gün ise %99'un yıllık bütçesidir. Her ek 'dokuz' bütçeyi 10'a böler ve insan müdahalesine zaman bırakmaz.",
+        "en": "30 days = 43,200 minutes; 0.1% of that is 43.2 minutes. 4.3 minutes is the monthly budget for 99.99%, 7.2 hours for 99%, and 3.6 days is the yearly budget for 99%. Each extra 'nine' divides the budget by ten and leaves no time for human intervention."
       },
       "difficulty": "medium",
       "concepts": ["sla-slo-sli", "error-budget"]
@@ -55,13 +55,13 @@
       "options": [
         { "id": "a", "text": { "tr": "Ağ bölünmesi tasarımcının seçimi değildir; dağıtık sistemlerde kaçınılmazdır", "en": "A network partition is not the designer's choice; it is unavoidable in distributed systems" } },
         { "id": "b", "text": { "tr": "CP bir sistem bölünme sırasında azınlık tarafta yazmayı reddedebilir", "en": "A CP system may reject writes on the minority side during a partition" } },
-        { "id": "c", "text": { "tr": "AP bir sistem bölünme sırasında asla eski veri döndürmez", "en": "An AP system never returns stale data during a partition" } },
+        { "id": "c", "text": { "tr": "AP bir sistem bölünme sırasında her iki tarafta yazmayı kabul eder ama asla eski veri döndürmez", "en": "An AP system accepts writes on both sides during a partition but never returns stale data" } },
         { "id": "d", "text": { "tr": "CAP, bölünme olmadığı zamanlardaki gecikme-tutarlılık takasını açıklamaz; bunun için PACELC gerekir", "en": "CAP does not describe the latency-consistency trade-off when there is no partition; PACELC covers that" } }
       ],
       "correct": ["a", "b", "d"],
       "explanation": {
-        "tr": "AP sistemler erişilebilirliği korumak için bölünme sırasında eski ya da çelişkili veri döndürebilir; c bu yüzden yanlıştır. P'den vazgeçilemez (a), CP azınlıkta hata döner (b) ve CAP yalnızca bölünme anını tanımlar; normal zamanlardaki L/C takası PACELC'in konusudur (d).",
-        "en": "AP systems may return stale or conflicting data during a partition in order to stay available, so c is wrong. P cannot be given up (a), CP returns errors on the minority side (b), and CAP only describes the moment of partition; the everyday L/C trade-off belongs to PACELC (d)."
+        "tr": "AP sistemler erişilebilirliği korumak için bölünme sırasında her iki tarafta yazmayı kabul eder, ama bunun bedeli tam da eski ya da çelişkili veri döndürebilmektir; c bu yüzden yanlıştır. P'den vazgeçilemez (a), CP azınlıkta hata döner (b) ve CAP yalnızca bölünme anını tanımlar; normal zamanlardaki L/C takası PACELC'in konusudur (d).",
+        "en": "AP systems accept writes on both sides of a partition in order to stay available, but the price of that is precisely that they may return stale or conflicting data, so c is wrong. P cannot be given up (a), CP returns errors on the minority side (b), and CAP only describes the moment of partition; the everyday L/C trade-off belongs to PACELC (d)."
       },
       "difficulty": "medium",
       "concepts": ["cap-theorem", "network-partition", "cp-vs-ap", "pacelc"]
@@ -93,15 +93,15 @@
         "en": "Right after changing their profile photo, a user refreshes the page and sees the old photo; a few seconds later the new one appears. Which consistency guarantee is missing?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "Read-your-writes (kendi yazdığını okuma)", "en": "Read-your-writes" } },
-        { "id": "b", "text": { "tr": "Eventual consistency", "en": "Eventual consistency" } },
-        { "id": "c", "text": { "tr": "Partition tolerance", "en": "Partition tolerance" } },
-        { "id": "d", "text": { "tr": "Linearizability tüm kullanıcılar için zaten sağlanıyor", "en": "Linearizability is already provided for all users" } }
+        { "id": "a", "text": { "tr": "Eventual consistency (nihai tutarlılık)", "en": "Eventual consistency" } },
+        { "id": "b", "text": { "tr": "Read-your-writes (kendi yazdığını okuma)", "en": "Read-your-writes" } },
+        { "id": "c", "text": { "tr": "Monotonic reads (geriye gitmeyen okuma)", "en": "Monotonic reads" } },
+        { "id": "d", "text": { "tr": "Partition tolerance (bölünme toleransı)", "en": "Partition tolerance" } }
       ],
-      "correct": ["a"],
+      "correct": ["b"],
       "explanation": {
-        "tr": "Kullanıcının kendi yazmasını hemen görememesi read-your-writes garantisinin eksikliğidir; sistem eventual consistency sağlıyor (b doğru bir tespit ama eksik olan garanti değil). Tipik çözüm: yazmadan sonra kısa süre kullanıcıyı lider replikadan okutmak ya da aynı replikaya yapıştırmak. Partition tolerance bu senaryoyla ilgisizdir; linearizable bir sistemde bu sorun zaten yaşanmazdı.",
-        "en": "Not seeing your own write immediately is the absence of the read-your-writes guarantee; the system does provide eventual consistency (b is a true observation but not the missing guarantee). The typical fix: read from the leader for a short while after a write, or pin the user to the same replica. Partition tolerance is unrelated here; a linearizable system would not show this problem at all."
+        "tr": "Kullanıcının kendi yazmasını hemen görememesi read-your-writes garantisinin eksikliğidir; sistem eventual consistency sağlıyor (a doğru bir tespit ama eksik olan garanti değil). Monotonic reads, bir kez görülen yeni verinin sonradan eskisiyle değişmemesini garanti eder; burada kullanıcı yeni veriyi henüz hiç görmedi (c yanlış). Partition tolerance bu senaryoyla ilgisizdir (d yanlış). Tipik çözüm: yazmadan sonra kısa süre kullanıcıyı lider replikadan okutmak ya da aynı replikaya yapıştırmak.",
+        "en": "Not seeing your own write immediately is the absence of the read-your-writes guarantee; the system does provide eventual consistency (a is a true observation but not the missing guarantee). Monotonic reads guarantees that once newer data has been seen it is never replaced by older data; here the user has not seen the new data yet at all (c is wrong). Partition tolerance is unrelated here (d is wrong). The typical fix: read from the leader for a short while after a write, or pin the user to the same replica."
       },
       "difficulty": "medium",
       "concepts": ["consistency-models", "eventual-consistency"]

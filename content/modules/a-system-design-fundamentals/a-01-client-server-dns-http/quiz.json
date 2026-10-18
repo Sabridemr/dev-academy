@@ -32,15 +32,15 @@
         "en": "Why do DNS queries use UDP rather than TCP by default?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "UDP şifreli olduğu için", "en": "Because UDP is encrypted" } },
-        { "id": "b", "text": { "tr": "Tek paketlik soru-cevap için bağlantı kurma maliyeti (el sıkışma) gereksiz olduğundan", "en": "Because the connection setup cost (handshake) is wasted on a single-packet question and answer" } },
-        { "id": "c", "text": { "tr": "TCP yalnızca web trafiği için ayrıldığından", "en": "Because TCP is reserved for web traffic only" } },
-        { "id": "d", "text": { "tr": "UDP paket kaybını otomatik düzelttiği için", "en": "Because UDP automatically repairs packet loss" } }
+        { "id": "a", "text": { "tr": "UDP, kayıp paketi TCP'den daha az ek yükle yeniden gönderdiği için", "en": "Because UDP retransmits a lost packet with less overhead than TCP" } },
+        { "id": "b", "text": { "tr": "53. port yalnızca UDP'ye ayrıldığı, TCP'nin bu porttan konuşamadığı için", "en": "Because port 53 is reserved for UDP and TCP cannot speak on that port" } },
+        { "id": "c", "text": { "tr": "Tek paketlik soru-cevapta el sıkışma maliyeti gereksiz olduğundan", "en": "Because the handshake cost is wasted on a single-packet question and answer" } },
+        { "id": "d", "text": { "tr": "DNSSEC imzalı büyük yanıtlar yalnızca UDP datagramına sığabildiği için", "en": "Because large DNSSEC-signed answers only fit inside a UDP datagram" } }
       ],
-      "correct": ["b"],
+      "correct": ["c"],
       "explanation": {
-        "tr": "DNS küçük bir soru ve küçük bir cevaptır; TCP el sıkışması için bir RTT harcamak cevabın kendisinden pahalıya gelir. UDP şifreli değildir (a yanlış), TCP her tür trafikte kullanılır (c yanlış) ve UDP kayıp paketi düzeltmez — resolver sorguyu tekrar gönderir (d yanlış).",
-        "en": "DNS is a small question and a small answer; spending one RTT on a TCP handshake costs more than the answer itself. UDP is not encrypted (a is wrong), TCP is used for all kinds of traffic (c is wrong) and UDP does not repair lost packets — the resolver simply retries (d is wrong)."
+        "tr": "DNS küçük bir soru ve küçük bir cevaptır; TCP el sıkışması için bir RTT harcamak cevabın kendisinden pahalıya gelir. UDP kayıp paketi yeniden göndermez, resolver sorguyu tekrarlar (a yanlış); DNS gerektiğinde aynı 53. porttan TCP'ye düşer (b yanlış); DNSSEC'li büyük yanıtlar tam tersine UDP'ye sığmadığı için TCP'ye geçilir (d yanlış).",
+        "en": "DNS is a small question and a small answer; spending one RTT on a TCP handshake costs more than the answer itself. UDP does not retransmit lost packets — the resolver simply retries (a is wrong); DNS falls back to TCP on the very same port 53 when needed (b is wrong); and large DNSSEC answers are exactly the case where UDP is too small and TCP is used instead (d is wrong)."
       },
       "difficulty": "medium",
       "concepts": ["dns-resolution", "tcp-vs-udp"]
@@ -93,12 +93,12 @@
         "en": "In a notification feed only the server sends data to the client; the client almost never speaks. Which is the most suitable and simplest option?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "Her saniye GET ile polling", "en": "Polling with GET every second" } },
-        { "id": "b", "text": { "tr": "Server-Sent Events (SSE)", "en": "Server-Sent Events (SSE)" } },
-        { "id": "c", "text": { "tr": "WebSocket", "en": "WebSocket" } },
+        { "id": "a", "text": { "tr": "Server-Sent Events (SSE) akışı", "en": "A Server-Sent Events (SSE) stream" } },
+        { "id": "b", "text": { "tr": "Her saniye GET ile polling", "en": "Polling with GET every second" } },
+        { "id": "c", "text": { "tr": "WebSocket üzerinden çift yönlü kanal", "en": "A full-duplex channel over WebSocket" } },
         { "id": "d", "text": { "tr": "Her bildirim için yeni bir TCP bağlantısı", "en": "A new TCP connection per notification" } }
       ],
-      "correct": ["b"],
+      "correct": ["a"],
       "explanation": {
         "tr": "SSE tek yönlü (sunucu → istemci) bir HTTP akışıdır, otomatik yeniden bağlanır ve proxy/CDN'lerle uyumludur; tek yönlü senaryo için WebSocket'in çift yönlü karmaşıklığına gerek yoktur. Polling israf eder, her bildirim için yeni TCP bağlantısı ise el sıkışma maliyetini her seferinde öder.",
         "en": "SSE is a one-way (server → client) HTTP stream that reconnects automatically and works well with proxies/CDNs; a one-way scenario does not need WebSocket's full-duplex complexity. Polling is wasteful, and a new TCP connection per notification pays the handshake cost every time."

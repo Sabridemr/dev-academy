@@ -17,38 +17,38 @@
         {
           "id": "a",
           "text": {
-            "tr": "Strategy bileşim kullanır ve çalışma zamanında değiştirilebilir; Template Method kalıtım kullanır ve derleme zamanında sabitlenir",
-            "en": "Strategy uses composition and can change at runtime; Template Method uses inheritance and is fixed at compile time"
+            "tr": "Template Method algoritmayı ayrı bir nesneye koyar ve bağlam onu referansla tutar; Strategy iskeleti üst sınıfta sabitler",
+            "en": "Template Method puts the algorithm in a separate object held by reference; Strategy fixes the skeleton in a superclass"
           }
         },
         {
           "id": "b",
           "text": {
-            "tr": "Template Method yalnızca fonksiyonel dillerde uygulanabilir",
-            "en": "Template Method only works in functional languages"
+            "tr": "Strategy tek adımlık algoritmalar içindir; birden fazla adımı olan akışlar için Template Method zorunludur",
+            "en": "Strategy is for single-step algorithms; flows with several steps require Template Method"
           }
         },
         {
           "id": "c",
           "text": {
-            "tr": "Strategy birden fazla adım, Template Method tek adım içerir",
-            "en": "Strategy has multiple steps, Template Method a single step"
+            "tr": "Strategy'de stratejiler birbirini bilir ve geçişi stratejinin kendisi yapar; Template Method'da geçişi bağlam yapar",
+            "en": "In Strategy the strategies know each other and switch themselves; in Template Method the context does the switching"
           }
         },
         {
           "id": "d",
           "text": {
-            "tr": "Aralarında fark yoktur",
-            "en": "There is no difference"
+            "tr": "Strategy bileşim kullanır ve çalışma zamanında değiştirilebilir; Template Method kalıtım kullanır ve sınıf seçilince sabitlenir",
+            "en": "Strategy uses composition and can be swapped at runtime; Template Method uses inheritance and is fixed once the class is chosen"
           }
         }
       ],
       "correct": [
-        "a"
+        "d"
       ],
       "explanation": {
-        "tr": "Strategy algoritmayı ayrı bir nesneye koyar ve bağlam onu referansla tutar (bileşim); Template Method algoritmanın iskeletini üst sınıfa, adımları alt sınıfa koyar (kalıtım). Bu yüzden Strategy çalışma zamanında değiştirilebilir, Template Method ise sınıf seçildiğinde sabitlenir.",
-        "en": "Strategy puts the algorithm in a separate object held by reference (composition); Template Method puts the skeleton in a superclass and steps in subclasses (inheritance). Hence Strategy can be swapped at runtime, while Template Method is fixed once the class is chosen."
+        "tr": "Strategy algoritmayı ayrı bir nesneye koyar ve bağlam onu referansla tutar (bileşim); Template Method iskeleti üst sınıfa, adımları alt sınıfa koyar (kalıtım). a bu rolleri ters çevirir; adım sayısı ayırt edici değildir (b yanlış); stratejilerin birbirini bilip geçişi kendilerinin yapması State kalıbının özelliğidir (c yanlış).",
+        "en": "Strategy puts the algorithm in a separate object held by reference (composition); Template Method puts the skeleton in a superclass and the steps in subclasses (inheritance). a swaps those roles; the number of steps is not what distinguishes them (b is wrong); strategies knowing each other and switching themselves is a trait of the State pattern (c is wrong)."
       },
       "difficulty": "medium",
       "concepts": [
@@ -81,8 +81,8 @@
         {
           "id": "c",
           "text": {
-            "tr": "Yayıncı her gözlemcinin somut sınıfını bilmek zorundadır",
-            "en": "The publisher must know each observer's concrete class"
+            "tr": "Yayıncı her gözlemcinin somut sınıfını bilmek zorundadır; aksi hâlde doğru update() çağrılamaz",
+            "en": "The publisher must know each observer's concrete class; otherwise the right update() cannot be called"
           }
         },
         {
