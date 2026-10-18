@@ -7,7 +7,16 @@ export type Strategy = 'rolling' | 'blue-green' | 'canary';
 export type StageStatus = 'idle' | 'running' | 'success' | 'failed' | 'skipped' | 'rolledback';
 export type PipelineOutcome = 'ok' | 'failed' | 'rolledback' | null;
 
-export const DEFAULT_STAGES = ['commit', 'build', 'test', 'lint', 'image-push', 'staging', 'canary', 'prod'];
+export const DEFAULT_STAGES = [
+  'commit',
+  'build',
+  'test',
+  'lint',
+  'image-push',
+  'staging',
+  'canary',
+  'prod',
+];
 export const STRATEGIES: Strategy[] = ['rolling', 'blue-green', 'canary'];
 /** Canary hata eşiği (%) */
 export const CANARY_THRESHOLD = 2;
@@ -53,14 +62,29 @@ export function parseStages(params: Record<string, unknown>): string[] {
 
 /** failureStage parametresi geçerliyse o, değilse "test" içeren ilk aşama */
 export function defaultFailStage(stages: string[], failureParam: string): string {
-  return stages.includes(failureParam) ? failureParam : (stages.find((s) => s.includes('test')) ?? stages[1] ?? stages[0]);
+  return stages.includes(failureParam)
+    ? failureParam
+    : (stages.find((s) => s.includes('test')) ?? stages[1] ?? stages[0]);
 }
 
 export function createPipelineState(stageCount: number, running = false): PipelineState {
-  return { stage: 0, tick: 0, attempt: 0, status: Array.from({ length: stageCount }, () => 'idle'), deployProgress: 0, elapsed: 0, outcome: null, running };
+  return {
+    stage: 0,
+    tick: 0,
+    attempt: 0,
+    status: Array.from({ length: stageCount }, () => 'idle'),
+    deployProgress: 0,
+    elapsed: 0,
+    outcome: null,
+    running,
+  };
 }
 
-export function pipelineTick(prev: PipelineState, stages: string[], cfg: PipelineConfig): { state: PipelineState; logs: PipelineLog[] } {
+export function pipelineTick(
+  prev: PipelineState,
+  stages: string[],
+  cfg: PipelineConfig,
+): { state: PipelineState; logs: PipelineLog[] } {
   if (!prev.running) return { state: prev, logs: [] };
   const logs: PipelineLog[] = [];
   const s: PipelineState = { ...prev, status: prev.status.slice(), elapsed: prev.elapsed + 1 };
@@ -80,7 +104,9 @@ export function pipelineTick(prev: PipelineState, stages: string[], cfg: Pipelin
   if (isDeploy) s.deployProgress = Math.min(1, s.tick / DEPLOY_TICKS);
 
   // Canary analizi: canary aşamasında ya da canary stratejisiyle son aşamanın ortasında
-  const canaryCheck = (isCanaryStage(name) && s.tick === needed) || (isDeploy && cfg.strategy === 'canary' && !stages.some(isCanaryStage) && s.tick === 2);
+  const canaryCheck =
+    (isCanaryStage(name) && s.tick === needed) ||
+    (isDeploy && cfg.strategy === 'canary' && !stages.some(isCanaryStage) && s.tick === 2);
   if (canaryCheck && cfg.canaryErr > CANARY_THRESHOLD) {
     markFrom('rolledback');
     s.deployProgress = 0;
@@ -108,7 +134,10 @@ export function pipelineTick(prev: PipelineState, stages: string[], cfg: Pipelin
 }
 
 /** Üretim filosunun görünümü: örnek sürümleri ve v2 trafiği (%) */
-export function fleetView(state: PipelineState, strategy: Strategy): { versions: (1 | 2)[]; v2Traffic: number; progress: number } {
+export function fleetView(
+  state: PipelineState,
+  strategy: Strategy,
+): { versions: (1 | 2)[]; v2Traffic: number; progress: number } {
   const rolledBack = state.outcome === 'rolledback';
   const p = state.status[state.status.length - 1] === 'success' ? 1 : state.deployProgress;
   const versions = Array.from({ length: INSTANCES }, (_, i): 1 | 2 => {

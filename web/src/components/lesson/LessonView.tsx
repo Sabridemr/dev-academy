@@ -2,7 +2,16 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { Bookmark, BookmarkCheck, CheckCircle2, ChevronLeft, ChevronRight, Clock, NotebookPen, Trash2 } from 'lucide-react';
+import {
+  Bookmark,
+  BookmarkCheck,
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  NotebookPen,
+  Trash2,
+} from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import type { LessonDetail } from '@devacademy/shared';
 import { useI18n } from '@/i18n';
@@ -41,7 +50,8 @@ export function LessonView({ initial }: { initial: LessonDetail }) {
     const els = document.querySelectorAll<HTMLElement>('[data-block-id]');
     const observer = new IntersectionObserver(
       (entries) => {
-        for (const e of entries) if (e.isIntersecting) seen.current.add(e.target.getAttribute('data-block-id')!);
+        for (const e of entries)
+          if (e.isIntersecting) seen.current.add(e.target.getAttribute('data-block-id')!);
         const p = Math.round((seen.current.size / Math.max(1, lesson.blocks.length)) * 100);
         setPercent((cur) => Math.max(cur, Math.min(p, 95))); // %100'ü yalnızca "tamamla" ya da quiz verir
       },
@@ -74,7 +84,12 @@ export function LessonView({ initial }: { initial: LessonDetail }) {
     // (sendBeacon Authorization başlığı taşıyamadığı için kullanılmaz)
     const flushOnLeave = () => {
       const dto = build();
-      if (dto) void api(`/progress/lessons/${lesson.id}`, { method: 'PUT', body: dto, keepalive: true }).catch(() => undefined);
+      if (dto)
+        void api(`/progress/lessons/${lesson.id}`, {
+          method: 'PUT',
+          body: dto,
+          keepalive: true,
+        }).catch(() => undefined);
     };
     const onVisibility = () => {
       if (document.visibilityState === 'hidden') flushOnLeave();
@@ -92,7 +107,11 @@ export function LessonView({ initial }: { initial: LessonDetail }) {
 
   const markComplete = () => {
     setPercent(100);
-    progress.mutate({ percent: 100, completed: true, secondsSpent: Math.round((Date.now() - startedAt.current) / 1000) });
+    progress.mutate({
+      percent: 100,
+      completed: true,
+      secondsSpent: Math.round((Date.now() - startedAt.current) / 1000),
+    });
     startedAt.current = Date.now();
   };
 
@@ -100,7 +119,10 @@ export function LessonView({ initial }: { initial: LessonDetail }) {
     () =>
       lesson.blocks.flatMap((b) => {
         if (b.type !== 'text') return [];
-        return Array.from(b.markdown.matchAll(/^##\s+(.+)$/gm)).map((m) => ({ id: slugify(m[1]), title: m[1] }));
+        return Array.from(b.markdown.matchAll(/^##\s+(.+)$/gm)).map((m) => ({
+          id: slugify(m[1]),
+          title: m[1],
+        }));
       }),
     [lesson.blocks],
   );
@@ -124,7 +146,9 @@ export function LessonView({ initial }: { initial: LessonDetail }) {
             <span className="chip">
               <Clock size={12} /> {t('module.minutes', { count: lesson.durationMinutes })}
             </span>
-            <span className="chip">{t(`module.level.${lesson.level}` as 'module.level.beginner')}</span>
+            <span className="chip">
+              {t(`module.level.${lesson.level}` as 'module.level.beginner')}
+            </span>
             {lesson.tags.slice(0, 4).map((tag) => (
               <span key={tag} className="chip">
                 #{tag}
@@ -150,8 +174,14 @@ export function LessonView({ initial }: { initial: LessonDetail }) {
             <span />
           )}
           {authed && (
-            <button type="button" className={cn(completed ? 'btn-ghost text-success' : 'btn-primary')} onClick={markComplete} disabled={completed}>
-              <CheckCircle2 size={16} /> {completed ? t('lesson.completed') : t('lesson.markComplete')}
+            <button
+              type="button"
+              className={cn(completed ? 'btn-ghost text-success' : 'btn-primary')}
+              onClick={markComplete}
+              disabled={completed}
+            >
+              <CheckCircle2 size={16} />{' '}
+              {completed ? t('lesson.completed') : t('lesson.markComplete')}
             </button>
           )}
           {lesson.next ? (
@@ -168,8 +198,17 @@ export function LessonView({ initial }: { initial: LessonDetail }) {
         {authed && (
           <div className="card p-4">
             <p className="label">{t('lesson.progress')}</p>
-            <div className="h-2 overflow-hidden rounded-full bg-elevated" role="progressbar" aria-valuenow={percent} aria-valuemin={0} aria-valuemax={100}>
-              <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${percent}%` }} />
+            <div
+              className="h-2 overflow-hidden rounded-full bg-elevated"
+              role="progressbar"
+              aria-valuenow={percent}
+              aria-valuemin={0}
+              aria-valuemax={100}
+            >
+              <div
+                className="h-full rounded-full bg-primary transition-all"
+                style={{ width: `${percent}%` }}
+              />
             </div>
             <p className="mt-1 text-right text-xs text-muted">%{percent}</p>
           </div>
@@ -220,7 +259,12 @@ function LessonTools({ lessonId }: { lessonId: string }) {
 
   return (
     <div className="card space-y-3 p-4">
-      <button type="button" className="btn-ghost w-full" onClick={toggleBookmark} aria-pressed={Boolean(bookmark)}>
+      <button
+        type="button"
+        className="btn-ghost w-full"
+        onClick={toggleBookmark}
+        aria-pressed={Boolean(bookmark)}
+      >
         {bookmark ? <BookmarkCheck size={16} className="text-primary" /> : <Bookmark size={16} />}
         {bookmark ? t('lesson.bookmarked') : t('lesson.bookmark')}
       </button>
@@ -228,15 +272,30 @@ function LessonTools({ lessonId }: { lessonId: string }) {
         <p className="label flex items-center gap-1">
           <NotebookPen size={12} /> {t('lesson.notes')}
         </p>
-        <textarea className="input min-h-[80px]" value={draft} onChange={(e) => setDraft(e.target.value)} placeholder={t('lesson.notePlaceholder')} maxLength={5000} />
-        <button type="button" className="btn-primary mt-2 w-full" onClick={saveNote} disabled={!draft.trim()}>
+        <textarea
+          className="input min-h-[80px]"
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          placeholder={t('lesson.notePlaceholder')}
+          maxLength={5000}
+        />
+        <button
+          type="button"
+          className="btn-primary mt-2 w-full"
+          onClick={saveNote}
+          disabled={!draft.trim()}
+        >
           {t('lesson.saveNote')}
         </button>
         <ul className="mt-3 space-y-2">
           {notes?.map((n) => (
             <li key={n.id} className="group rounded-lg bg-elevated/60 p-2 text-sm">
               <p className="whitespace-pre-wrap">{n.body}</p>
-              <button type="button" className="mt-1 inline-flex items-center gap-1 text-xs text-muted hover:text-danger" onClick={() => deleteNote(n.id)}>
+              <button
+                type="button"
+                className="mt-1 inline-flex items-center gap-1 text-xs text-muted hover:text-danger"
+                onClick={() => deleteNote(n.id)}
+              >
                 <Trash2 size={12} /> {t('library.delete')}
               </button>
             </li>

@@ -22,10 +22,16 @@ export type TranslateParams = Record<string, string | number>;
 export function translate(messages: Messages, key: string, params?: TranslateParams): string {
   const value = key
     .split('.')
-    .reduce<unknown>((acc, part) => (acc && typeof acc === 'object' ? (acc as Record<string, unknown>)[part] : undefined), messages);
+    .reduce<unknown>(
+      (acc, part) =>
+        acc && typeof acc === 'object' ? (acc as Record<string, unknown>)[part] : undefined,
+      messages,
+    );
   if (typeof value !== 'string') return key;
   if (!params) return value;
-  return value.replace(/\{(\w+)\}/g, (_, name: string) => (params[name] !== undefined ? String(params[name]) : `{${name}}`));
+  return value.replace(/\{(\w+)\}/g, (_, name: string) =>
+    params[name] !== undefined ? String(params[name]) : `{${name}}`,
+  );
 }
 
 /** React dışı kod (bildirim metinleri vb.) için anlık çeviri */
@@ -45,7 +51,16 @@ export function useI18n(): I18n {
   const locale = useSettings((s) => s.locale);
   const setLocale = useSettings((s) => s.setLocale);
   const messages = MESSAGES[locale];
-  const t = useCallback((key: MessageKey, params?: TranslateParams) => translate(messages, key, params), [messages]);
-  const tl = useCallback((value: LocalizedString | undefined | null) => tLocalized(value, locale), [locale]);
-  return useMemo(() => ({ locale, messages, setLocale, t, tl }), [locale, messages, setLocale, t, tl]);
+  const t = useCallback(
+    (key: MessageKey, params?: TranslateParams) => translate(messages, key, params),
+    [messages],
+  );
+  const tl = useCallback(
+    (value: LocalizedString | undefined | null) => tLocalized(value, locale),
+    [locale],
+  );
+  return useMemo(
+    () => ({ locale, messages, setLocale, t, tl }),
+    [locale, messages, setLocale, t, tl],
+  );
 }

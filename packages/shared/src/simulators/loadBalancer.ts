@@ -4,7 +4,8 @@
  * Web ve mobil bileşenler bu fonksiyonları çağırır; UI yalnızca sonucu çizer.
  */
 
-export type LbAlgorithm = 'round-robin' | 'weighted-round-robin' | 'least-connections' | 'ip-hash' | 'random';
+export type LbAlgorithm =
+  'round-robin' | 'weighted-round-robin' | 'least-connections' | 'ip-hash' | 'random';
 
 export interface LbServer {
   id: string;
@@ -46,11 +47,25 @@ export interface LbDecision {
 }
 
 export function createServer(id: string, overrides: Partial<LbServer> = {}): LbServer {
-  return { id, weight: 1, healthy: true, activeConnections: 0, served: 0, latencyMs: 50, ...overrides };
+  return {
+    id,
+    weight: 1,
+    healthy: true,
+    activeConnections: 0,
+    served: 0,
+    latencyMs: 50,
+    ...overrides,
+  };
 }
 
-export function createLbState(algorithm: LbAlgorithm, serverCount = 3, stickySessions = false): LbState {
-  const servers = Array.from({ length: serverCount }, (_, i) => createServer(`s${i + 1}`, { weight: i + 1 <= 1 ? 3 : 1 }));
+export function createLbState(
+  algorithm: LbAlgorithm,
+  serverCount = 3,
+  stickySessions = false,
+): LbState {
+  const servers = Array.from({ length: serverCount }, (_, i) =>
+    createServer(`s${i + 1}`, { weight: i + 1 <= 1 ? 3 : 1 }),
+  );
   return {
     algorithm,
     servers,
@@ -79,7 +94,11 @@ function healthyServers(state: LbState): LbServer[] {
 }
 
 /** Bir isteği uygun sunucuya atar ve yeni durumu döner (immutable). */
-export function routeRequest(state: LbState, request: LbRequest, rng: () => number = Math.random): LbState {
+export function routeRequest(
+  state: LbState,
+  request: LbRequest,
+  rng: () => number = Math.random,
+): LbState {
   const healthy = healthyServers(state);
   const next: LbState = {
     ...state,
@@ -92,7 +111,12 @@ export function routeRequest(state: LbState, request: LbRequest, rng: () => numb
 
   if (healthy.length === 0) {
     next.rejected += 1;
-    next.log.push({ requestId: request.id, serverId: null, reason: 'Sağlıklı sunucu yok (503)', clientIp: request.clientIp });
+    next.log.push({
+      requestId: request.id,
+      serverId: null,
+      reason: 'Sağlıklı sunucu yok (503)',
+      clientIp: request.clientIp,
+    });
     return next;
   }
 
@@ -172,11 +196,19 @@ export function completeRequest(state: LbState, serverId: string): LbState {
 }
 
 export function setServerHealth(state: LbState, serverId: string, healthy: boolean): LbState {
-  return { ...state, servers: state.servers.map((s) => (s.id === serverId ? { ...s, healthy } : s)) };
+  return {
+    ...state,
+    servers: state.servers.map((s) => (s.id === serverId ? { ...s, healthy } : s)),
+  };
 }
 
 export function setServerWeight(state: LbState, serverId: string, weight: number): LbState {
-  return { ...state, servers: state.servers.map((s) => (s.id === serverId ? { ...s, weight: Math.max(1, weight) } : s)) };
+  return {
+    ...state,
+    servers: state.servers.map((s) =>
+      s.id === serverId ? { ...s, weight: Math.max(1, weight) } : s,
+    ),
+  };
 }
 
 export function addServer(state: LbState): LbState {
@@ -191,25 +223,35 @@ export function addServer(state: LbState): LbState {
 export function removeServer(state: LbState): LbState {
   if (state.servers.length <= 1) return state;
   const removed = state.servers[state.servers.length - 1];
-  const stickyTable = Object.fromEntries(Object.entries(state.stickyTable).filter(([, v]) => v !== removed.id));
+  const stickyTable = Object.fromEntries(
+    Object.entries(state.stickyTable).filter(([, v]) => v !== removed.id),
+  );
   return { ...state, servers: state.servers.slice(0, -1), stickyTable };
 }
 
 /** Dağılım istatistikleri: yüzde ve standart sapma (dengesizlik göstergesi) */
-export function distributionStats(state: LbState): { perServer: Record<string, number>; stdDev: number } {
+export function distributionStats(state: LbState): {
+  perServer: Record<string, number>;
+  stdDev: number;
+} {
   const total = state.servers.reduce((a, s) => a + s.served, 0);
   if (total === 0) {
     return { perServer: Object.fromEntries(state.servers.map((s) => [s.id, 0])), stdDev: 0 };
   }
   const perServer = Object.fromEntries(state.servers.map((s) => [s.id, (s.served / total) * 100]));
   const mean = 100 / (state.servers.length || 1);
-  const variance = state.servers.reduce((a, s) => a + Math.pow(perServer[s.id] - mean, 2), 0) / (state.servers.length || 1);
+  const variance =
+    state.servers.reduce((a, s) => a + Math.pow(perServer[s.id] - mean, 2), 0) /
+    (state.servers.length || 1);
   return { perServer, stdDev: Math.sqrt(variance) };
 }
 
 export const LB_ALGORITHMS: { id: LbAlgorithm; label: { tr: string; en: string } }[] = [
   { id: 'round-robin', label: { tr: 'Round Robin', en: 'Round Robin' } },
-  { id: 'weighted-round-robin', label: { tr: 'Ağırlıklı Round Robin', en: 'Weighted Round Robin' } },
+  {
+    id: 'weighted-round-robin',
+    label: { tr: 'Ağırlıklı Round Robin', en: 'Weighted Round Robin' },
+  },
   { id: 'least-connections', label: { tr: 'En Az Bağlantı', en: 'Least Connections' } },
   { id: 'ip-hash', label: { tr: 'IP Hash', en: 'IP Hash' } },
   { id: 'random', label: { tr: 'Rastgele', en: 'Random' } },

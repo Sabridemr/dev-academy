@@ -13,9 +13,27 @@ const quiz: QuizPublic = {
   lessonId: 'l1',
   title: { tr: 'Quiz' },
   passScore: 70,
-  questions: [{ id: 'q1', type: 'single', prompt: { tr: 'Soru' }, options: [{ id: 'a', text: { tr: 'A' } }], difficulty: 'easy', concepts: [] }],
+  questions: [
+    {
+      id: 'q1',
+      type: 'single',
+      prompt: { tr: 'Soru' },
+      options: [{ id: 'a', text: { tr: 'A' } }],
+      difficulty: 'easy',
+      concepts: [],
+    },
+  ],
 };
-const passed = { attemptId: 'at1', quizId: 'quiz-1', score: 100, passed: true, correctCount: 1, totalCount: 1, results: [], newBadges: [] } as AttemptResult;
+const passed = {
+  attemptId: 'at1',
+  quizId: 'quiz-1',
+  score: 100,
+  passed: true,
+  correctCount: 1,
+  totalCount: 1,
+  results: [],
+  newBadges: [],
+} as AttemptResult;
 
 afterEach(() => {
   clearQueues();

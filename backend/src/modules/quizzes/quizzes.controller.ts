@@ -35,9 +35,15 @@ export class QuizzesController {
   }
 
   @Post(':quizId/attempts')
-  @ApiOperation({ summary: 'Quiz cevaplarını gönder; puan, açıklamalar ve kazanılan rozetler döner' })
+  @ApiOperation({
+    summary: 'Quiz cevaplarını gönder; puan, açıklamalar ve kazanılan rozetler döner',
+  })
   @ApiZodBody(SubmitAttemptSchema)
-  submit(@CurrentUser() user: AuthUser, @Param('quizId') quizId: string, @Body(zodBody(SubmitAttemptSchema)) dto: SubmitAttemptDto): Promise<AttemptResult> {
+  submit(
+    @CurrentUser() user: AuthUser,
+    @Param('quizId') quizId: string,
+    @Body(zodBody(SubmitAttemptSchema)) dto: SubmitAttemptDto,
+  ): Promise<AttemptResult> {
     return this.quizzes.submit(user.id, quizId, dto);
   }
 }

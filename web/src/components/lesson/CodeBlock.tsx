@@ -12,7 +12,24 @@ interface Variant {
   title?: LocalizedString;
 }
 
-const LANGUAGE_LABELS: Record<string, string> = { ts: 'TypeScript', typescript: 'TypeScript', js: 'JavaScript', py: 'Python', python: 'Python', java: 'Java', go: 'Go', sql: 'SQL', yaml: 'YAML', yml: 'YAML', bash: 'Bash', sh: 'Shell', hcl: 'Terraform', json: 'JSON', kotlin: 'Kotlin', rust: 'Rust' };
+const LANGUAGE_LABELS: Record<string, string> = {
+  ts: 'TypeScript',
+  typescript: 'TypeScript',
+  js: 'JavaScript',
+  py: 'Python',
+  python: 'Python',
+  java: 'Java',
+  go: 'Go',
+  sql: 'SQL',
+  yaml: 'YAML',
+  yml: 'YAML',
+  bash: 'Bash',
+  sh: 'Shell',
+  hcl: 'Terraform',
+  json: 'JSON',
+  kotlin: 'Kotlin',
+  rust: 'Rust',
+};
 
 // Shiki highlighter'ı bir kez yüklenir (lazy), çift tema (açık/koyu CSS değişkenleri)
 let highlighterPromise: Promise<import('shiki').Highlighter> | null = null;
@@ -20,19 +37,52 @@ function getHighlighter() {
   highlighterPromise ??= import('shiki').then((m) =>
     m.createHighlighter({
       themes: ['github-light', 'github-dark'],
-      langs: ['typescript', 'javascript', 'python', 'java', 'go', 'sql', 'yaml', 'bash', 'json', 'hcl', 'kotlin', 'rust'],
+      langs: [
+        'typescript',
+        'javascript',
+        'python',
+        'java',
+        'go',
+        'sql',
+        'yaml',
+        'bash',
+        'json',
+        'hcl',
+        'kotlin',
+        'rust',
+      ],
     }),
   );
   return highlighterPromise;
 }
 
 function normalizeLang(lang: string): string {
-  const map: Record<string, string> = { ts: 'typescript', js: 'javascript', py: 'python', yml: 'yaml', sh: 'bash', shell: 'bash', terraform: 'hcl' };
+  const map: Record<string, string> = {
+    ts: 'typescript',
+    js: 'javascript',
+    py: 'python',
+    yml: 'yaml',
+    sh: 'bash',
+    shell: 'bash',
+    terraform: 'hcl',
+  };
   return map[lang] ?? lang;
 }
 
 /** Kod bloğu: Shiki ile sözdizimi vurgulama, dil sekmeleri (TS/Python/Java), kopyalama, satır vurgulama. */
-export function CodeBlock({ language, code, title, alternatives = [], highlightLines = [] }: { language: string; code: string; title?: LocalizedString; alternatives?: Variant[]; highlightLines?: number[] }) {
+export function CodeBlock({
+  language,
+  code,
+  title,
+  alternatives = [],
+  highlightLines = [],
+}: {
+  language: string;
+  code: string;
+  title?: LocalizedString;
+  alternatives?: Variant[];
+  highlightLines?: number[];
+}) {
   const { t, tl } = useI18n();
   const variants: Variant[] = [{ language, code, title }, ...alternatives];
   const [active, setActive] = useState(0);
@@ -54,7 +104,8 @@ export function CodeBlock({ language, code, title, alternatives = [], highlightL
           transformers: [
             {
               line(node, line) {
-                if (active === 0 && highlightLines.includes(line)) this.addClassToHast(node, 'bg-primary/10 -mx-4 px-4 block');
+                if (active === 0 && highlightLines.includes(line))
+                  this.addClassToHast(node, 'bg-primary/10 -mx-4 px-4 block');
               },
             },
           ],
@@ -79,22 +130,43 @@ export function CodeBlock({ language, code, title, alternatives = [], highlightL
         <div className="flex min-w-0 items-center gap-1" role="tablist">
           {variants.length > 1 ? (
             variants.map((v, i) => (
-              <button key={`${v.language}-${i}`} type="button" role="tab" aria-selected={i === active} onClick={() => setActive(i)} className={cn('rounded-md px-2.5 py-1 text-xs font-medium', i === active ? 'bg-surface text-fg shadow-sm' : 'text-muted hover:text-fg')}>
+              <button
+                key={`${v.language}-${i}`}
+                type="button"
+                role="tab"
+                aria-selected={i === active}
+                onClick={() => setActive(i)}
+                className={cn(
+                  'rounded-md px-2.5 py-1 text-xs font-medium',
+                  i === active ? 'bg-surface text-fg shadow-sm' : 'text-muted hover:text-fg',
+                )}
+              >
                 {LANGUAGE_LABELS[v.language] ?? v.language}
               </button>
             ))
           ) : (
-            <span className="px-1 text-xs font-medium text-muted">{LANGUAGE_LABELS[language] ?? language}</span>
+            <span className="px-1 text-xs font-medium text-muted">
+              {LANGUAGE_LABELS[language] ?? language}
+            </span>
           )}
           {title && <span className="ml-2 truncate text-xs text-muted">· {tl(title)}</span>}
         </div>
-        <button type="button" onClick={copy} className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-muted hover:text-fg" aria-label={t('lesson.copy')}>
+        <button
+          type="button"
+          onClick={copy}
+          className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-muted hover:text-fg"
+          aria-label={t('lesson.copy')}
+        >
           {copied ? <Check size={14} /> : <Copy size={14} />}
           {copied ? t('lesson.copied') : t('lesson.copy')}
         </button>
       </div>
       <div className="overflow-x-auto p-4 font-mono text-[13px] leading-6">
-        {html ? <div dangerouslySetInnerHTML={{ __html: html }} /> : <pre className="whitespace-pre">{current.code}</pre>}
+        {html ? (
+          <div dangerouslySetInnerHTML={{ __html: html }} />
+        ) : (
+          <pre className="whitespace-pre">{current.code}</pre>
+        )}
       </div>
     </div>
   );

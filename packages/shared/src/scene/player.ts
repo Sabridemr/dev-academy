@@ -34,7 +34,10 @@ export type PlayerAction =
 
 export const PLAYER_SPEEDS = [0.5, 1, 1.5, 2] as const;
 
-export function createPlayerState(scene: AnimationScene, overrides: Partial<PlayerState> = {}): PlayerState {
+export function createPlayerState(
+  scene: AnimationScene,
+  overrides: Partial<PlayerState> = {},
+): PlayerState {
   return {
     stepIndex: 0,
     elapsedMs: 0,
@@ -51,7 +54,11 @@ function clampStep(scene: AnimationScene, idx: number): number {
   return Math.max(0, Math.min(scene.steps.length - 1, idx));
 }
 
-export function playerReducer(scene: AnimationScene, state: PlayerState, action: PlayerAction): PlayerState {
+export function playerReducer(
+  scene: AnimationScene,
+  state: PlayerState,
+  action: PlayerAction,
+): PlayerState {
   switch (action.type) {
     case 'PLAY':
       if (state.finished) {
@@ -70,9 +77,19 @@ export function playerReducer(scene: AnimationScene, state: PlayerState, action:
       return { ...state, stepIndex: state.stepIndex + 1, elapsedMs: 0, finished: false };
     }
     case 'PREV':
-      return { ...state, stepIndex: clampStep(scene, state.stepIndex - 1), elapsedMs: 0, finished: false };
+      return {
+        ...state,
+        stepIndex: clampStep(scene, state.stepIndex - 1),
+        elapsedMs: 0,
+        finished: false,
+      };
     case 'SEEK':
-      return { ...state, stepIndex: clampStep(scene, action.stepIndex), elapsedMs: 0, finished: false };
+      return {
+        ...state,
+        stepIndex: clampStep(scene, action.stepIndex),
+        elapsedMs: 0,
+        finished: false,
+      };
     case 'SET_SPEED':
       return { ...state, speed: Math.max(0.1, Math.min(8, action.speed)) };
     case 'TOGGLE_NARRATION':
@@ -80,7 +97,11 @@ export function playerReducer(scene: AnimationScene, state: PlayerState, action:
     case 'SET_REDUCED_MOTION':
       return { ...state, reducedMotion: action.value };
     case 'RESET':
-      return createPlayerState(scene, { speed: state.speed, showNarration: state.showNarration, reducedMotion: state.reducedMotion });
+      return createPlayerState(scene, {
+        speed: state.speed,
+        showNarration: state.showNarration,
+        reducedMotion: state.reducedMotion,
+      });
     case 'TICK': {
       if (!state.playing) return state;
       const step = scene.steps[state.stepIndex];
@@ -163,7 +184,12 @@ export function resolveStepView(scene: AnimationScene, stepIndex: number): Resol
   }
 
   for (const [id, st] of Object.entries(step.nodeStates)) {
-    const cur = nodes[id] ?? { id, status: 'idle' as NodeStatus, visible: true, highlighted: false };
+    const cur = nodes[id] ?? {
+      id,
+      status: 'idle' as NodeStatus,
+      visible: true,
+      highlighted: false,
+    };
     nodes[id] = {
       ...cur,
       status: st.status ?? cur.status,
@@ -209,7 +235,11 @@ export interface PacketInstance {
 type ScenePacketLabel = SceneStep['packets'][number]['label'];
 
 /** Aktif adımda geçen süreye göre her paket örneğinin ilerlemesini verir. */
-export function computePackets(step: SceneStep, elapsedMs: number, reducedMotion = false): PacketInstance[] {
+export function computePackets(
+  step: SceneStep,
+  elapsedMs: number,
+  reducedMotion = false,
+): PacketInstance[] {
   const out: PacketInstance[] = [];
   step.packets.forEach((p, pIdx) => {
     for (let r = 0; r < p.repeat; r++) {

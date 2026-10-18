@@ -16,7 +16,11 @@ export const EnvSchema = z.object({
 
   JWT_ACCESS_SECRET: z.string().min(32, 'JWT_ACCESS_SECRET en az 32 karakter olmalı'),
   JWT_ACCESS_TTL: z.coerce.number().int().positive().default(900),
-  JWT_REFRESH_TTL: z.coerce.number().int().positive().default(60 * 60 * 24 * 30),
+  JWT_REFRESH_TTL: z.coerce
+    .number()
+    .int()
+    .positive()
+    .default(60 * 60 * 24 * 30),
   GOOGLE_CLIENT_IDS: z.string().default(''),
   APPLE_CLIENT_IDS: z.string().default(''),
 
@@ -44,7 +48,9 @@ export type Env = z.infer<typeof EnvSchema>;
 export function validateEnv(raw: Record<string, unknown>): Env {
   const parsed = EnvSchema.safeParse(raw);
   if (!parsed.success) {
-    const details = parsed.error.issues.map((i) => `  - ${i.path.join('.')}: ${i.message}`).join('\n');
+    const details = parsed.error.issues
+      .map((i) => `  - ${i.path.join('.')}: ${i.message}`)
+      .join('\n');
     throw new Error(`Ortam değişkenleri geçersiz:\n${details}`);
   }
   return parsed.data;

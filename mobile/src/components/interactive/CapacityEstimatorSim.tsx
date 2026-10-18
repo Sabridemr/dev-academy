@@ -1,24 +1,39 @@
 import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { DEFAULT_CAPACITY_INPUT, estimateCapacity, formatBytes, formatNumber, type CapacityInput } from '@devacademy/shared';
+import {
+  DEFAULT_CAPACITY_INPUT,
+  estimateCapacity,
+  formatBytes,
+  formatNumber,
+  type CapacityInput,
+} from '@devacademy/shared';
 import { useI18n } from '@/i18n';
 import { spacing, useTheme } from '@/theme';
-import { Button, ProgressBar, Row, SegmentedControl, Stepper, Text, TextField } from '@/components/ui';
+import {
+  Button,
+  ProgressBar,
+  Row,
+  SegmentedControl,
+  Stepper,
+  Text,
+  TextField,
+} from '@/components/ui';
 import { Stat, StatRow, paramNumber, type SimProps } from './common';
 
 export type CapacityField = keyof CapacityInput;
 
-export const CAPACITY_FIELDS: { key: CapacityField; min: number; max: number; ratio?: boolean }[] = [
-  { key: 'dau', min: 1, max: 5_000_000_000 },
-  { key: 'readsPerUserPerDay', min: 0, max: 100_000 },
-  { key: 'writesPerUserPerDay', min: 0, max: 100_000 },
-  { key: 'avgWriteSizeBytes', min: 1, max: 10_000_000_000 },
-  { key: 'avgReadSizeBytes', min: 1, max: 10_000_000_000 },
-  { key: 'retentionYears', min: 0.1, max: 50 },
-  { key: 'peakMultiplier', min: 1, max: 50 },
-  { key: 'hotDataRatio', min: 0, max: 1, ratio: true },
-  { key: 'replicationFactor', min: 1, max: 10 },
-];
+export const CAPACITY_FIELDS: { key: CapacityField; min: number; max: number; ratio?: boolean }[] =
+  [
+    { key: 'dau', min: 1, max: 5_000_000_000 },
+    { key: 'readsPerUserPerDay', min: 0, max: 100_000 },
+    { key: 'writesPerUserPerDay', min: 0, max: 100_000 },
+    { key: 'avgWriteSizeBytes', min: 1, max: 10_000_000_000 },
+    { key: 'avgReadSizeBytes', min: 1, max: 10_000_000_000 },
+    { key: 'retentionYears', min: 0.1, max: 50 },
+    { key: 'peakMultiplier', min: 1, max: 50 },
+    { key: 'hotDataRatio', min: 0, max: 1, ratio: true },
+    { key: 'replicationFactor', min: 1, max: 10 },
+  ];
 
 /** Sunucu başına QPS kapasitesi için hazır seçenekler (web: 100–20.000 kaydırıcı) */
 const SERVER_QPS_OPTIONS = [100, 500, 1000, 2000, 5000, 10000, 20000];
@@ -26,11 +41,19 @@ const SERVER_QPS_OPTIONS = [100, 500, 1000, 2000, 5000, 10000, 20000];
 /** Ders parametrelerinden (sınırlandırılmış) girdi; eksik alanlar shared varsayılanlarına düşer */
 export function initialCapacityInput(params: Record<string, unknown>): CapacityInput {
   const out = { ...DEFAULT_CAPACITY_INPUT };
-  for (const f of CAPACITY_FIELDS) out[f.key] = Math.max(f.min, Math.min(f.max, paramNumber(params, f.key, DEFAULT_CAPACITY_INPUT[f.key])));
+  for (const f of CAPACITY_FIELDS)
+    out[f.key] = Math.max(
+      f.min,
+      Math.min(f.max, paramNumber(params, f.key, DEFAULT_CAPACITY_INPUT[f.key])),
+    );
   return out;
 }
 
-const toDrafts = (input: CapacityInput) => Object.fromEntries(CAPACITY_FIELDS.map((f) => [f.key, String(input[f.key])])) as Record<CapacityField, string>;
+const toDrafts = (input: CapacityInput) =>
+  Object.fromEntries(CAPACITY_FIELDS.map((f) => [f.key, String(input[f.key])])) as Record<
+    CapacityField,
+    string
+  >;
 
 /** Kapasite tahmini (arka zarf hesabı) — hesap shared/capacity estimateCapacity'den */
 export function CapacityEstimatorSim({ params, onInteract }: SimProps) {
@@ -117,18 +140,55 @@ export function CapacityEstimatorSim({ params, onInteract }: SimProps) {
       <Text variant="label">{t('sim.estimator.results')}</Text>
       <View accessibilityLiveRegion="polite">
         <StatRow>
-          <Stat label={t('sim.estimator.readQps')} value={fmt(est.readQps)} color={colors.primary} />
-          <Stat label={t('sim.estimator.writeQps')} value={fmt(est.writeQps)} color={colors.success} />
-          <Stat label={t('sim.estimator.ratio')} value={Number.isFinite(rwRatio) ? `${fmt(rwRatio)} : 1` : '∞'} />
-          <Stat label={t('sim.estimator.peakRead')} value={fmt(est.peakReadQps)} color={colors.warning} />
-          <Stat label={t('sim.estimator.peakWrite')} value={fmt(est.peakWriteQps)} color={colors.warning} />
-          <Stat label={t('sim.estimator.servers')} value={fmt(est.appServers)} color={colors.primary} />
+          <Stat
+            label={t('sim.estimator.readQps')}
+            value={fmt(est.readQps)}
+            color={colors.primary}
+          />
+          <Stat
+            label={t('sim.estimator.writeQps')}
+            value={fmt(est.writeQps)}
+            color={colors.success}
+          />
+          <Stat
+            label={t('sim.estimator.ratio')}
+            value={Number.isFinite(rwRatio) ? `${fmt(rwRatio)} : 1` : '∞'}
+          />
+          <Stat
+            label={t('sim.estimator.peakRead')}
+            value={fmt(est.peakReadQps)}
+            color={colors.warning}
+          />
+          <Stat
+            label={t('sim.estimator.peakWrite')}
+            value={fmt(est.peakWriteQps)}
+            color={colors.warning}
+          />
+          <Stat
+            label={t('sim.estimator.servers')}
+            value={fmt(est.appServers)}
+            color={colors.primary}
+          />
           <Stat label={t('sim.estimator.daily')} value={formatBytes(est.dailyWriteBytes)} />
           <Stat label={t('sim.estimator.storage')} value={formatBytes(est.totalStorageBytes)} />
-          <Stat label={t('sim.estimator.storageRep')} value={formatBytes(est.totalStorageWithReplicationBytes)} color={colors.danger} />
-          <Stat label={t('sim.estimator.ingress')} value={`${formatBytes(est.ingressBytesPerSec)}/s`} />
-          <Stat label={t('sim.estimator.egress')} value={`${formatBytes(est.egressBytesPerSec)}/s`} />
-          <Stat label={t('sim.estimator.peakEgress')} value={`${formatBytes(est.peakEgressBytesPerSec)}/s`} color={colors.warning} />
+          <Stat
+            label={t('sim.estimator.storageRep')}
+            value={formatBytes(est.totalStorageWithReplicationBytes)}
+            color={colors.danger}
+          />
+          <Stat
+            label={t('sim.estimator.ingress')}
+            value={`${formatBytes(est.ingressBytesPerSec)}/s`}
+          />
+          <Stat
+            label={t('sim.estimator.egress')}
+            value={`${formatBytes(est.egressBytesPerSec)}/s`}
+          />
+          <Stat
+            label={t('sim.estimator.peakEgress')}
+            value={`${formatBytes(est.peakEgressBytesPerSec)}/s`}
+            color={colors.warning}
+          />
           <Stat label={t('sim.estimator.cache')} value={formatBytes(est.cacheBytes)} />
         </StatRow>
       </View>
@@ -140,7 +200,12 @@ export function CapacityEstimatorSim({ params, onInteract }: SimProps) {
             {b.label}
           </Text>
           <View style={{ flex: 1 }}>
-            <ProgressBar value={Math.log10(b.v + 1) / maxLog} color={b.color} height={10} label={b.label} />
+            <ProgressBar
+              value={Math.log10(b.v + 1) / maxLog}
+              color={b.color}
+              height={10}
+              label={b.label}
+            />
           </View>
           <Text variant="caption" muted style={styles.barValue}>
             {fmt(b.v)}

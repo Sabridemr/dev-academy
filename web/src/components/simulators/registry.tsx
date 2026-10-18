@@ -9,7 +9,8 @@ function Loading() {
   return <div className="card h-64 animate-pulse bg-elevated/60" aria-busy="true" />;
 }
 
-const load = (loader: () => Promise<{ default: ComponentType<SimulatorProps> }>) => dynamic(loader, { ssr: false, loading: Loading });
+const load = (loader: () => Promise<{ default: ComponentType<SimulatorProps> }>) =>
+  dynamic(loader, { ssr: false, loading: Loading });
 
 /**
  * interactive türü → simülatör bileşeni (lazy-load). Her simülatör ayrı bundle'dır,

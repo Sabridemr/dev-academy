@@ -11,7 +11,9 @@ export function useReducedMotion(): boolean {
         if (alive) setReduced(v);
       })
       .catch(() => undefined);
-    const sub = AccessibilityInfo.addEventListener?.('reduceMotionChanged', (v: boolean) => setReduced(v));
+    const sub = AccessibilityInfo.addEventListener?.('reduceMotionChanged', (v: boolean) =>
+      setReduced(v),
+    );
     return () => {
       alive = false;
       sub?.remove();

@@ -43,7 +43,9 @@ export interface CacheState {
   seq: number;
 }
 
-export function createCacheState(partial: Partial<Pick<CacheState, 'capacity' | 'policy' | 'writePolicy' | 'defaultTtlMs'>> = {}): CacheState {
+export function createCacheState(
+  partial: Partial<Pick<CacheState, 'capacity' | 'policy' | 'writePolicy' | 'defaultTtlMs'>> = {},
+): CacheState {
   return {
     capacity: partial.capacity ?? 4,
     policy: partial.policy ?? 'lru',
@@ -67,7 +69,12 @@ function pushEvent(state: CacheState, ev: Omit<CacheEvent, 'seq'>): void {
 }
 
 function clone(state: CacheState): CacheState {
-  return { ...state, entries: state.entries.map((e) => ({ ...e })), db: { ...state.db }, events: [...state.events] };
+  return {
+    ...state,
+    entries: state.entries.map((e) => ({ ...e })),
+    db: { ...state.db },
+    events: [...state.events],
+  };
 }
 
 function expireEntries(state: CacheState, now: number): void {
@@ -78,7 +85,12 @@ function expireEntries(state: CacheState, now: number): void {
         state.db[e.key] = e.value;
         state.dbWrites += 1;
       }
-      pushEvent(state, { op: 'expire', key: e.key, result: 'expired', detail: `TTL doldu (${e.ttlMs}ms)` });
+      pushEvent(state, {
+        op: 'expire',
+        key: e.key,
+        result: 'expired',
+        detail: `TTL doldu (${e.ttlMs}ms)`,
+      });
     } else {
       alive.push(e);
     }
@@ -93,7 +105,9 @@ export function pickVictim(entries: CacheEntry[], policy: EvictionPolicy): Cache
     case 'lru':
       return entries.reduce((a, b) => (b.lastAccess < a.lastAccess ? b : a));
     case 'lfu':
-      return entries.reduce((a, b) => (b.hits < a.hits || (b.hits === a.hits && b.lastAccess < a.lastAccess) ? b : a));
+      return entries.reduce((a, b) =>
+        b.hits < a.hits || (b.hits === a.hits && b.lastAccess < a.lastAccess) ? b : a,
+      );
     case 'fifo':
       return entries.reduce((a, b) => (b.insertedAt < a.insertedAt ? b : a));
   }
@@ -108,14 +122,28 @@ function ensureCapacity(state: CacheState, now: number): void {
       state.dbWrites += 1;
     }
     state.entries = state.entries.filter((e) => e !== victim);
-    const why = state.policy === 'lru' ? `en uzun süredir erişilmeyen (t=${victim.lastAccess})` : state.policy === 'lfu' ? `en az erişilen (${victim.hits} hit)` : 'ilk giren';
-    pushEvent(state, { op: 'evict', key: victim.key, result: 'evicted', detail: `${state.policy.toUpperCase()} eviction: ${why}${victim.dirty ? ', kirli veri DB’ye yazıldı' : ''}` });
+    const why =
+      state.policy === 'lru'
+        ? `en uzun süredir erişilmeyen (t=${victim.lastAccess})`
+        : state.policy === 'lfu'
+          ? `en az erişilen (${victim.hits} hit)`
+          : 'ilk giren';
+    pushEvent(state, {
+      op: 'evict',
+      key: victim.key,
+      result: 'evicted',
+      detail: `${state.policy.toUpperCase()} eviction: ${why}${victim.dirty ? ', kirli veri DB’ye yazıldı' : ''}`,
+    });
     void now;
   }
 }
 
 /** Okuma: cache'te varsa hit, yoksa DB'den okur ve cache'e koyar (cache-aside / read-through davranışı) */
-export function cacheGet(state: CacheState, key: string, now: number): { state: CacheState; hit: boolean; value: string | undefined } {
+export function cacheGet(
+  state: CacheState,
+  key: string,
+  now: number,
+): { state: CacheState; hit: boolean; value: string | undefined } {
   const s = clone(state);
   expireEntries(s, now);
   const entry = s.entries.find((e) => e.key === key);
@@ -134,8 +162,21 @@ export function cacheGet(state: CacheState, key: string, now: number): { state: 
     return { state: s, hit: false, value: undefined };
   }
   ensureCapacity(s, now);
-  s.entries.push({ key, value, insertedAt: now, lastAccess: now, hits: 1, ttlMs: s.defaultTtlMs, dirty: false });
-  pushEvent(s, { op: 'get', key, result: 'miss', detail: 'Cache MISS → DB’den okundu ve cache’e yazıldı' });
+  s.entries.push({
+    key,
+    value,
+    insertedAt: now,
+    lastAccess: now,
+    hits: 1,
+    ttlMs: s.defaultTtlMs,
+    dirty: false,
+  });
+  pushEvent(s, {
+    op: 'get',
+    key,
+    result: 'miss',
+    detail: 'Cache MISS → DB’den okundu ve cache’e yazıldı',
+  });
   return { state: s, hit: false, value };
 }
 
@@ -150,7 +191,12 @@ export function cacheSet(state: CacheState, key: string, value: string, now: num
       s.db[key] = value;
       s.dbWrites += 1;
       if (existing) s.entries = s.entries.filter((e) => e !== existing);
-      pushEvent(s, { op: 'set', key, result: 'stored', detail: 'Cache-aside: DB’ye yazıldı, cache girdisi invalidate edildi' });
+      pushEvent(s, {
+        op: 'set',
+        key,
+        result: 'stored',
+        detail: 'Cache-aside: DB’ye yazıldı, cache girdisi invalidate edildi',
+      });
       return s;
     case 'write-through':
       s.db[key] = value;
@@ -161,9 +207,22 @@ export function cacheSet(state: CacheState, key: string, value: string, now: num
         existing.dirty = false;
       } else {
         ensureCapacity(s, now);
-        s.entries.push({ key, value, insertedAt: now, lastAccess: now, hits: 0, ttlMs: s.defaultTtlMs, dirty: false });
+        s.entries.push({
+          key,
+          value,
+          insertedAt: now,
+          lastAccess: now,
+          hits: 0,
+          ttlMs: s.defaultTtlMs,
+          dirty: false,
+        });
       }
-      pushEvent(s, { op: 'set', key, result: 'stored', detail: 'Write-through: cache ve DB eş zamanlı yazıldı' });
+      pushEvent(s, {
+        op: 'set',
+        key,
+        result: 'stored',
+        detail: 'Write-through: cache ve DB eş zamanlı yazıldı',
+      });
       return s;
     case 'write-back':
       if (existing) {
@@ -172,9 +231,22 @@ export function cacheSet(state: CacheState, key: string, value: string, now: num
         existing.dirty = true;
       } else {
         ensureCapacity(s, now);
-        s.entries.push({ key, value, insertedAt: now, lastAccess: now, hits: 0, ttlMs: s.defaultTtlMs, dirty: true });
+        s.entries.push({
+          key,
+          value,
+          insertedAt: now,
+          lastAccess: now,
+          hits: 0,
+          ttlMs: s.defaultTtlMs,
+          dirty: true,
+        });
       }
-      pushEvent(s, { op: 'set', key, result: 'stored', detail: 'Write-back: yalnızca cache’e yazıldı (dirty); DB sonra güncellenecek' });
+      pushEvent(s, {
+        op: 'set',
+        key,
+        result: 'stored',
+        detail: 'Write-back: yalnızca cache’e yazıldı (dirty); DB sonra güncellenecek',
+      });
       return s;
   }
 }
@@ -191,7 +263,12 @@ export function cacheFlush(state: CacheState): CacheState {
       count += 1;
     }
   }
-  pushEvent(s, { op: 'flush', key: '*', result: 'flushed', detail: `${count} kirli girdi DB’ye yazıldı` });
+  pushEvent(s, {
+    op: 'flush',
+    key: '*',
+    result: 'flushed',
+    detail: `${count} kirli girdi DB’ye yazıldı`,
+  });
   return s;
 }
 

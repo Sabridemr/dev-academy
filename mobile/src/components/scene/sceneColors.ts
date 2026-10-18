@@ -24,6 +24,9 @@ export function statusColors(c: ThemeColors): Record<NodeStatus, StatusColor> {
 }
 
 /** Sahnenin kendi tema eşlemesini (scene.theme.light/dark) uygular */
-export function sceneThemeColors(base: ThemeColors, overrides: Record<string, string> | undefined): ThemeColors & Record<string, string> {
+export function sceneThemeColors(
+  base: ThemeColors,
+  overrides: Record<string, string> | undefined,
+): ThemeColors & Record<string, string> {
   return { ...base, ...(overrides ?? {}) };
 }

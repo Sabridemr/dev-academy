@@ -22,6 +22,11 @@ export function errorMessageKey(error: unknown): MessageKey {
 
 /** Doğrulama hatalarında sunucu mesajını, diğerlerinde i18n mesajını döner */
 export function errorText(error: unknown, t: (key: MessageKey) => string): string {
-  if (isApiError(error) && (error.code === 'validation' || error.code === 'forbidden') && error.message) return error.message;
+  if (
+    isApiError(error) &&
+    (error.code === 'validation' || error.code === 'forbidden') &&
+    error.message
+  )
+    return error.message;
   return t(errorMessageKey(error));
 }

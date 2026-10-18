@@ -19,7 +19,12 @@ export function Celebration({ size = 160, onFinish }: { size?: number; onFinish?
   }, []);
   if (reduced === null) return <View style={{ width: size, height: size }} />;
   return (
-    <View style={styles.wrap} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" testID="celebration">
+    <View
+      style={styles.wrap}
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+      testID="celebration"
+    >
       <LottieView
         source={CELEBRATION}
         autoPlay={!reduced}

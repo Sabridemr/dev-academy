@@ -22,7 +22,9 @@ jest.mock('expo-secure-store', () => {
 jest.mock('react-native-reanimated', () => require('react-native-reanimated/mock'));
 
 // NetInfo — resmi mock
-jest.mock('@react-native-community/netinfo', () => require('@react-native-community/netinfo/jest/netinfo-mock.js'));
+jest.mock('@react-native-community/netinfo', () =>
+  require('@react-native-community/netinfo/jest/netinfo-mock.js'),
+);
 
 // expo-localization — sabit cihaz dili
 jest.mock('expo-localization', () => ({

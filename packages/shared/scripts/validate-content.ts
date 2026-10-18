@@ -20,19 +20,41 @@ const coverage = coverageReport(content);
 const errors = content.issues.filter((i) => i.severity === 'error');
 const warnings = content.issues.filter((i) => i.severity === 'warning');
 
-const sceneCount = content.modules.reduce((a, m) => a + m.lessons.reduce((b, l) => b + l.scenes.length, 0), 0);
+const sceneCount = content.modules.reduce(
+  (a, m) => a + m.lessons.reduce((b, l) => b + l.scenes.length, 0),
+  0,
+);
 const quizCount = content.modules.reduce((a, m) => a + m.lessons.filter((l) => l.quiz).length, 0);
-const svgCount = content.modules.reduce((a, m) => a + m.lessons.reduce((b, l) => b + Object.keys(l.svgs).length, 0), 0);
+const svgCount = content.modules.reduce(
+  (a, m) => a + m.lessons.reduce((b, l) => b + Object.keys(l.svgs).length, 0),
+  0,
+);
 const interactiveCount = content.modules.reduce(
-  (a, m) => a + m.lessons.reduce((b, l) => b + l.doc.blocks.filter((x) => x.type === 'interactive').length, 0),
+  (a, m) =>
+    a +
+    m.lessons.reduce((b, l) => b + l.doc.blocks.filter((x) => x.type === 'interactive').length, 0),
   0,
 );
 
 if (asJson) {
-  console.log(JSON.stringify({ root, coverage, counts: { sceneCount, quizCount, svgCount, interactiveCount }, errors, warnings }, null, 2));
+  console.log(
+    JSON.stringify(
+      {
+        root,
+        coverage,
+        counts: { sceneCount, quizCount, svgCount, interactiveCount },
+        errors,
+        warnings,
+      },
+      null,
+      2,
+    ),
+  );
 } else {
   console.log(`İçerik kökü: ${root}`);
-  console.log(`Modül: ${content.modules.length}  Ders: ${coverage.written}/${coverage.total}  Sahne: ${sceneCount}  Quiz: ${quizCount}  SVG: ${svgCount}  İnteraktif: ${interactiveCount}`);
+  console.log(
+    `Modül: ${content.modules.length}  Ders: ${coverage.written}/${coverage.total}  Sahne: ${sceneCount}  Quiz: ${quizCount}  SVG: ${svgCount}  İnteraktif: ${interactiveCount}`,
+  );
   if (coverage.missing.length) {
     console.log(`\nEksik dersler (${coverage.missing.length}):`);
     for (const m of coverage.missing) console.log(`  - ${m.moduleId}/${m.lessonId}`);
@@ -45,7 +67,11 @@ if (asJson) {
     console.log(`\nHatalar (${errors.length}):`);
     for (const e of errors) console.log(`  ✗ ${e.file}: ${e.message}`);
   }
-  console.log(errors.length === 0 && (!strict || warnings.length === 0) ? '\n✓ İçerik geçerli' : '\n✗ İçerik doğrulaması başarısız');
+  console.log(
+    errors.length === 0 && (!strict || warnings.length === 0)
+      ? '\n✓ İçerik geçerli'
+      : '\n✗ İçerik doğrulaması başarısız',
+  );
 }
 
 process.exit(errors.length > 0 || (strict && warnings.length > 0) ? 1 : 0);

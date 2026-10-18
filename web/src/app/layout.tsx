@@ -8,11 +8,16 @@ import { LOCALE_COOKIE } from '@/i18n';
 import './globals.css';
 
 const sans = Inter({ subsets: ['latin', 'latin-ext'], variable: '--font-sans', display: 'swap' });
-const mono = JetBrains_Mono({ subsets: ['latin', 'latin-ext'], variable: '--font-mono', display: 'swap' });
+const mono = JetBrains_Mono({
+  subsets: ['latin', 'latin-ext'],
+  variable: '--font-mono',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: { default: 'DevAcademy', template: '%s · DevAcademy' },
-  description: 'Yazılım mimarisi, sistem tasarımı ve yapay zekâyı animasyonlu, interaktif derslerle öğrenin.',
+  description:
+    'Yazılım mimarisi, sistem tasarımı ve yapay zekâyı animasyonlu, interaktif derslerle öğrenin.',
   applicationName: 'DevAcademy',
 };
 

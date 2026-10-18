@@ -8,7 +8,8 @@ import { usePrefersReducedMotion } from '@/lib/hooks';
 import { Range, Select, SimShell, Stat } from './ui';
 import { boolParam, numParam, strParam, type SimulatorProps } from './types';
 
-type HopKind = 'client' | 'dns' | 'cdn' | 'lb' | 'gateway' | 'service' | 'cache' | 'db' | 'net' | 'generic';
+type HopKind =
+  'client' | 'dns' | 'cdn' | 'lb' | 'gateway' | 'service' | 'cache' | 'db' | 'net' | 'generic';
 
 interface Hop {
   id: string;
@@ -39,12 +40,25 @@ function classify(name: string): { kind: HopKind; ms: number } {
   if (n.includes('dns')) return { kind: 'dns', ms: 40 };
   if (n.includes('cdn') || n.includes('edge')) return { kind: 'cdn', ms: 15 };
   if (n === 'lb' || n.includes('load')) return { kind: 'lb', ms: 2 };
-  if (n.includes('gateway') || n === 'bff' || n.includes('routing') || n.includes('auth') || n.includes('rate')) return { kind: 'gateway', ms: 5 };
+  if (
+    n.includes('gateway') ||
+    n === 'bff' ||
+    n.includes('routing') ||
+    n.includes('auth') ||
+    n.includes('rate')
+  )
+    return { kind: 'gateway', ms: 5 };
   if (n.includes('cache') || n.includes('redis')) return { kind: 'cache', ms: 2 };
   if (n === 'db' || n.includes('database') || n.includes('postgres')) return { kind: 'db', ms: 25 };
-  if (['tcp', 'tls', 'http', 'websocket', 'quic'].some((k) => n.includes(k))) return { kind: 'net', ms: 0 };
+  if (['tcp', 'tls', 'http', 'websocket', 'quic'].some((k) => n.includes(k)))
+    return { kind: 'net', ms: 0 };
   if (n.includes('lambda-cold')) return { kind: 'service', ms: 800 };
-  if (n.includes('service') || n.includes('lambda') || ['orders', 'catalog', 'payments', 'aggregation', 'circuit-breaker'].some((k) => n.includes(k))) return { kind: 'service', ms: 30 };
+  if (
+    n.includes('service') ||
+    n.includes('lambda') ||
+    ['orders', 'catalog', 'payments', 'aggregation', 'circuit-breaker'].some((k) => n.includes(k))
+  )
+    return { kind: 'service', ms: 30 };
   return { kind: 'generic', ms: 8 };
 }
 
@@ -116,9 +130,18 @@ export default function RequestJourneySim({ params, onInteract }: SimulatorProps
   const { locale } = useI18n();
   const l = L[locale];
   const reduced = usePrefersReducedMotion();
-  const raw = ['layers', 'path', 'stages', 'services'].map((k) => params[k]).find((v): v is string => typeof v === 'string' && v.trim().length > 0);
-  const names = raw ? raw.split(',').map((s) => s.trim()).filter(Boolean).slice(0, 10) : DEFAULT_LAYERS;
-  const withClient = classify(splitSpec(names[0]).id).kind === 'client' ? names : ['user', ...names];
+  const raw = ['layers', 'path', 'stages', 'services']
+    .map((k) => params[k])
+    .find((v): v is string => typeof v === 'string' && v.trim().length > 0);
+  const names = raw
+    ? raw
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean)
+        .slice(0, 10)
+    : DEFAULT_LAYERS;
+  const withClient =
+    classify(splitSpec(names[0]).id).kind === 'client' ? names : ['user', ...names];
   // slowService parametresi verilmişse yavaş katman seçilebilir hâle gelir ("none" → başlangıçta yok)
   const slowSelectable = params.slowService !== undefined;
   const slowPenalty = numParam(params, 'slowPenaltyMs', 300, 1, 5000);
@@ -137,8 +160,20 @@ export default function RequestJourneySim({ params, onInteract }: SimulatorProps
       layersKey.split(',').map((spec) => {
         const { id, ms: override } = splitSpec(spec);
         const c = classify(id);
-        const lambdaCold = coldToggle && coldStart && id.toLowerCase().includes('lambda') && !id.toLowerCase().includes('lambda-cold');
-        return { id, label: id, kind: c.kind, ms: (override ?? c.ms) + (id === slowService ? slowPenalty : 0) + (lambdaCold ? COLD_START_MS : 0) };
+        const lambdaCold =
+          coldToggle &&
+          coldStart &&
+          id.toLowerCase().includes('lambda') &&
+          !id.toLowerCase().includes('lambda-cold');
+        return {
+          id,
+          label: id,
+          kind: c.kind,
+          ms:
+            (override ?? c.ms) +
+            (id === slowService ? slowPenalty : 0) +
+            (lambdaCold ? COLD_START_MS : 0),
+        };
       }),
     [layersKey, slowService, slowPenalty, coldToggle, coldStart],
   );
@@ -205,10 +240,16 @@ export default function RequestJourneySim({ params, onInteract }: SimulatorProps
 
   const sendBatch = () => {
     onInteract();
-    const totals = Array.from({ length: 20 }, () =>
-      compute({ dns: Math.random() < 0.8, cdn: cdnHit, cache: Math.random() * 100 < hitRate }).total,
+    const totals = Array.from(
+      { length: 20 },
+      () =>
+        compute({ dns: Math.random() < 0.8, cdn: cdnHit, cache: Math.random() * 100 < hitRate })
+          .total,
     ).sort((a, b) => a - b);
-    setBatch({ avg: totals.reduce((a, b) => a + b, 0) / totals.length, p95: totals[Math.floor(totals.length * 0.95) - 1] ?? totals[totals.length - 1] });
+    setBatch({
+      avg: totals.reduce((a, b) => a + b, 0) / totals.length,
+      p95: totals[Math.floor(totals.length * 0.95) - 1] ?? totals[totals.length - 1],
+    });
   };
 
   const n = hops.length;
@@ -217,7 +258,14 @@ export default function RequestJourneySim({ params, onInteract }: SimulatorProps
   const done = journey && cursor >= journey.visited.length;
   const hasKind = (k: HopKind) => hops.some((h) => h.kind === k);
   const hasHop = (id: string) => hops.some((h) => h.id.toLowerCase() === id);
-  const kindColor = (k: HopKind) => (k === 'cdn' || k === 'cache' ? 'var(--da-success)' : k === 'db' ? 'var(--da-accent)' : k === 'client' ? 'var(--da-muted)' : 'var(--da-primary)');
+  const kindColor = (k: HopKind) =>
+    k === 'cdn' || k === 'cache'
+      ? 'var(--da-success)'
+      : k === 'db'
+        ? 'var(--da-accent)'
+        : k === 'client'
+          ? 'var(--da-muted)'
+          : 'var(--da-primary)';
   const maxMs = journey ? Math.max(...journey.visited.map((v) => v.ms), 1) : 1;
   const overBudget = budget > 0 && journey && done && !journey.failed && journey.total > budget;
 
@@ -238,50 +286,139 @@ export default function RequestJourneySim({ params, onInteract }: SimulatorProps
         <>
           {hasKind('dns') && (
             <label className="flex items-center gap-2 text-sm">
-              <input type="checkbox" checked={dnsCached} onChange={(e) => { onInteract(); setDnsCached(e.target.checked); }} /> {l.dnsCached}
+              <input
+                type="checkbox"
+                checked={dnsCached}
+                onChange={(e) => {
+                  onInteract();
+                  setDnsCached(e.target.checked);
+                }}
+              />{' '}
+              {l.dnsCached}
             </label>
           )}
           {hasKind('cdn') && (
             <label className="flex items-center gap-2 text-sm">
-              <input type="checkbox" checked={cdnHit} onChange={(e) => { onInteract(); setCdnHit(e.target.checked); }} /> {l.cdnHit}
+              <input
+                type="checkbox"
+                checked={cdnHit}
+                onChange={(e) => {
+                  onInteract();
+                  setCdnHit(e.target.checked);
+                }}
+              />{' '}
+              {l.cdnHit}
             </label>
           )}
           {hasKind('cache') && (
             <label className="flex items-center gap-2 text-sm">
-              <input type="checkbox" checked={cacheHit} onChange={(e) => { onInteract(); setCacheHit(e.target.checked); }} /> {l.cacheHit}
+              <input
+                type="checkbox"
+                checked={cacheHit}
+                onChange={(e) => {
+                  onInteract();
+                  setCacheHit(e.target.checked);
+                }}
+              />{' '}
+              {l.cacheHit}
             </label>
           )}
           {failureStage && hops.some((h) => h.id === failureStage) && (
             <label className="flex items-center gap-2 text-sm">
-              <input type="checkbox" checked={injectFail} onChange={(e) => { onInteract(); setInjectFail(e.target.checked); }} /> {l.fail(failureStage)}
+              <input
+                type="checkbox"
+                checked={injectFail}
+                onChange={(e) => {
+                  onInteract();
+                  setInjectFail(e.target.checked);
+                }}
+              />{' '}
+              {l.fail(failureStage)}
             </label>
           )}
           {hasHop('tcp') && hasHop('tls') && (
             <label className="flex items-center gap-2 text-sm">
-              <input type="checkbox" checked={http3} onChange={(e) => { onInteract(); setHttp3(e.target.checked); }} /> {l.http3}
+              <input
+                type="checkbox"
+                checked={http3}
+                onChange={(e) => {
+                  onInteract();
+                  setHttp3(e.target.checked);
+                }}
+              />{' '}
+              {l.http3}
             </label>
           )}
           {coldToggle && hops.some((h) => h.id.toLowerCase().includes('lambda')) && (
             <label className="flex items-center gap-2 text-sm">
-              <input type="checkbox" checked={coldStart} onChange={(e) => { onInteract(); setColdStart(e.target.checked); }} /> {l.coldStart}
+              <input
+                type="checkbox"
+                checked={coldStart}
+                onChange={(e) => {
+                  onInteract();
+                  setColdStart(e.target.checked);
+                }}
+              />{' '}
+              {l.coldStart}
             </label>
           )}
           {slowSelectable && (
             <Select
               label={l.slowLayer(slowPenalty)}
               value={slowService}
-              options={[{ id: '', label: l.none }, ...hops.filter((h) => h.kind !== 'client').map((h) => ({ id: h.id, label: h.id }))]}
-              onChange={(v) => { onInteract(); setSlowService(v); }}
+              options={[
+                { id: '', label: l.none },
+                ...hops.filter((h) => h.kind !== 'client').map((h) => ({ id: h.id, label: h.id })),
+              ]}
+              onChange={(v) => {
+                onInteract();
+                setSlowService(v);
+              }}
             />
           )}
-          <Range label={l.rtt} value={rtt} min={1} max={200} onChange={(v) => { onInteract(); setRtt(v); }} />
-          {hasKind('cache') && <Range label={l.hitRate} value={hitRate} min={0} max={100} step={5} format={(v) => `${v}%`} onChange={setHitRate} />}
+          <Range
+            label={l.rtt}
+            value={rtt}
+            min={1}
+            max={200}
+            onChange={(v) => {
+              onInteract();
+              setRtt(v);
+            }}
+          />
+          {hasKind('cache') && (
+            <Range
+              label={l.hitRate}
+              value={hitRate}
+              min={0}
+              max={100}
+              step={5}
+              format={(v) => `${v}%`}
+              onChange={setHitRate}
+            />
+          )}
           <div className="grid grid-cols-2 gap-2" aria-live="polite">
-            <Stat label={l.total} value={journey && done ? `${Math.round(journey.total)} ms` : '—'} tone={journey?.failed || overBudget ? 'danger' : 'primary'} />
+            <Stat
+              label={l.total}
+              value={journey && done ? `${Math.round(journey.total)} ms` : '—'}
+              tone={journey?.failed || overBudget ? 'danger' : 'primary'}
+            />
             <Stat label={l.hops} value={journey ? `${journey.visited.length}/${n}` : '—'} />
-            {budget > 0 && <Stat label={l.budget} value={`${budget} ms`} tone={overBudget ? 'danger' : 'success'} />}
+            {budget > 0 && (
+              <Stat
+                label={l.budget}
+                value={`${budget} ms`}
+                tone={overBudget ? 'danger' : 'success'}
+              />
+            )}
             {batch && <Stat label={l.avg} value={`${Math.round(batch.avg)} ms`} />}
-            {batch && <Stat label={l.p95} value={`${Math.round(batch.p95)} ms`} tone={budget > 0 && batch.p95 > budget ? 'danger' : 'warning'} />}
+            {batch && (
+              <Stat
+                label={l.p95}
+                value={`${Math.round(batch.p95)} ms`}
+                tone={budget > 0 && batch.p95 > budget ? 'danger' : 'warning'}
+              />
+            )}
           </div>
           {budget > 0 && journey && done && !journey.failed && (
             <p className={`text-xs ${overBudget ? 'text-danger' : 'text-success'}`} role="status">
@@ -299,20 +436,58 @@ export default function RequestJourneySim({ params, onInteract }: SimulatorProps
           const skipped = journey && i > journey.terminal;
           return (
             <g key={`${h.id}-${i}`} opacity={skipped ? 0.35 : 1}>
-              {i > 0 && <line x1={hx(i - 1) + boxW} y1={60} x2={hx(i)} y2={60} stroke={reached ? kindColor(h.kind) : 'var(--da-border)'} strokeWidth={2} />}
+              {i > 0 && (
+                <line
+                  x1={hx(i - 1) + boxW}
+                  y1={60}
+                  x2={hx(i)}
+                  y2={60}
+                  stroke={reached ? kindColor(h.kind) : 'var(--da-border)'}
+                  strokeWidth={2}
+                />
+              )}
               <rect
                 x={hx(i)}
                 y={36}
                 width={boxW}
                 height={48}
                 rx={9}
-                fill={isTerminal ? `color-mix(in srgb, ${journey?.failed ? 'var(--da-danger)' : kindColor(h.kind)} 20%, var(--da-surface))` : 'var(--da-surface)'}
-                stroke={isTerminal && journey?.failed ? 'var(--da-danger)' : reached ? kindColor(h.kind) : 'var(--da-border)'}
+                fill={
+                  isTerminal
+                    ? `color-mix(in srgb, ${journey?.failed ? 'var(--da-danger)' : kindColor(h.kind)} 20%, var(--da-surface))`
+                    : 'var(--da-surface)'
+                }
+                stroke={
+                  isTerminal && journey?.failed
+                    ? 'var(--da-danger)'
+                    : reached
+                      ? kindColor(h.kind)
+                      : 'var(--da-border)'
+                }
                 strokeWidth={reached ? 2 : 1.2}
               />
-              <text x={hx(i) + boxW / 2} y={57} textAnchor="middle" fontSize={Math.min(11, boxW / 6.5)} fontWeight={600} fill="var(--da-fg)">{h.label.length > 12 ? `${h.label.slice(0, 11)}…` : h.label}</text>
-              <text x={hx(i) + boxW / 2} y={73} textAnchor="middle" fontSize={9} fill={h.id === slowService ? 'var(--da-danger)' : 'var(--da-muted)'}>
-                {journey && reached ? `${Math.round(journey.visited[i].ms)} ms` : h.id === slowService ? l.slow : h.kind}
+              <text
+                x={hx(i) + boxW / 2}
+                y={57}
+                textAnchor="middle"
+                fontSize={Math.min(11, boxW / 6.5)}
+                fontWeight={600}
+                fill="var(--da-fg)"
+              >
+                {h.label.length > 12 ? `${h.label.slice(0, 11)}…` : h.label}
+              </text>
+              <text
+                x={hx(i) + boxW / 2}
+                y={73}
+                textAnchor="middle"
+                fontSize={9}
+                fill={h.id === slowService ? 'var(--da-danger)' : 'var(--da-muted)'}
+              >
+                {journey && reached
+                  ? `${Math.round(journey.visited[i].ms)} ms`
+                  : h.id === slowService
+                    ? l.slow
+                    : h.kind}
               </text>
             </g>
           );
@@ -331,9 +506,23 @@ export default function RequestJourneySim({ params, onInteract }: SimulatorProps
         )}
         {journey && done && (
           <>
-            <path d={`M ${hx(journey.terminal) + boxW / 2} 86 Q ${(hx(journey.terminal) + hx(0)) / 2 + boxW / 2} 140 ${hx(0) + boxW / 2} 86`} fill="none" stroke={journey.failed ? 'var(--da-danger)' : 'var(--da-success)'} strokeDasharray="5 4" />
-            <text x={300} y={146} textAnchor="middle" fontSize={11} fill={journey.failed ? 'var(--da-danger)' : 'var(--da-success)'}>
-              {journey.failed ? l.failed(hops[journey.terminal].label) : l.served(hops[journey.terminal].label)} · {Math.round(journey.total)} ms
+            <path
+              d={`M ${hx(journey.terminal) + boxW / 2} 86 Q ${(hx(journey.terminal) + hx(0)) / 2 + boxW / 2} 140 ${hx(0) + boxW / 2} 86`}
+              fill="none"
+              stroke={journey.failed ? 'var(--da-danger)' : 'var(--da-success)'}
+              strokeDasharray="5 4"
+            />
+            <text
+              x={300}
+              y={146}
+              textAnchor="middle"
+              fontSize={11}
+              fill={journey.failed ? 'var(--da-danger)' : 'var(--da-success)'}
+            >
+              {journey.failed
+                ? l.failed(hops[journey.terminal].label)
+                : l.served(hops[journey.terminal].label)}{' '}
+              · {Math.round(journey.total)} ms
             </text>
           </>
         )}
@@ -342,7 +531,12 @@ export default function RequestJourneySim({ params, onInteract }: SimulatorProps
       {journey && (
         <figure className="mt-3">
           <figcaption className="label">{l.waterfall}</figcaption>
-          <svg viewBox={`0 0 600 ${journey.visited.length * 22 + 8}`} className="h-auto w-full" role="img" aria-label={l.waterfall}>
+          <svg
+            viewBox={`0 0 600 ${journey.visited.length * 22 + 8}`}
+            className="h-auto w-full"
+            role="img"
+            aria-label={l.waterfall}
+          >
             {(() => {
               let offset = 0;
               const scale = 420 / Math.max(1, journey.total);
@@ -350,10 +544,31 @@ export default function RequestJourneySim({ params, onInteract }: SimulatorProps
                 const x = 130 + offset * scale;
                 offset += v.ms;
                 return (
-                  <g key={i} transform={`translate(0, ${i * 22 + 4})`} opacity={i < cursor ? 1 : 0.3}>
-                    <text x={0} y={13} fontSize={10} fill="var(--da-fg)">{v.hop.label}</text>
-                    <rect x={x} y={3} width={Math.max(2, v.ms * scale)} height={12} rx={3} fill={kindColor(v.hop.kind)} opacity={0.4 + (0.6 * v.ms) / maxMs} />
-                    <text x={x + Math.max(2, v.ms * scale) + 4} y={13} fontSize={9} fill="var(--da-muted)">{v.ms.toFixed(v.ms < 10 ? 1 : 0)} ms</text>
+                  <g
+                    key={i}
+                    transform={`translate(0, ${i * 22 + 4})`}
+                    opacity={i < cursor ? 1 : 0.3}
+                  >
+                    <text x={0} y={13} fontSize={10} fill="var(--da-fg)">
+                      {v.hop.label}
+                    </text>
+                    <rect
+                      x={x}
+                      y={3}
+                      width={Math.max(2, v.ms * scale)}
+                      height={12}
+                      rx={3}
+                      fill={kindColor(v.hop.kind)}
+                      opacity={0.4 + (0.6 * v.ms) / maxMs}
+                    />
+                    <text
+                      x={x + Math.max(2, v.ms * scale) + 4}
+                      y={13}
+                      fontSize={9}
+                      fill="var(--da-muted)"
+                    >
+                      {v.ms.toFixed(v.ms < 10 ? 1 : 0)} ms
+                    </text>
                   </g>
                 );
               });

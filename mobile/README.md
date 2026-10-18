@@ -4,16 +4,16 @@ DevAcademy'nin Expo tabanlı mobil uygulaması. Web ile **aynı animasyon sahnel
 `playerReducer`) oynatır; dersler, interaktif simülatörler, quizler, aralıklı tekrar, çevrimdışı içerik ve
 push bildirimleri içerir.
 
-| Katman | Teknoloji |
-| --- | --- |
-| Çatı | Expo SDK 53, React Native 0.79 (New Architecture), React 19.0, TypeScript (strict) |
-| Gezinme | expo-router 5 (dosya tabanlı; `src/app`) |
-| Animasyon | react-native-svg 15 + react-native-reanimated 3.17, Lottie (lottie-react-native 7) |
-| Veri | @tanstack/react-query 5, zustand 5 |
-| Depolama | expo-sqlite 15 (çevrimdışı içerik), react-native-mmkv 3 (ayarlar, ETag, kuyruk), expo-secure-store (token) |
-| Kimlik | E-posta/şifre, Google (expo-auth-session), Apple (expo-apple-authentication, yalnızca iOS) |
-| Bildirim | expo-notifications 0.31, expo-device |
-| Test | jest-expo + @testing-library/react-native, Detox (e2e) |
+| Katman    | Teknoloji                                                                                                  |
+| --------- | ---------------------------------------------------------------------------------------------------------- |
+| Çatı      | Expo SDK 53, React Native 0.79 (New Architecture), React 19.0, TypeScript (strict)                         |
+| Gezinme   | expo-router 5 (dosya tabanlı; `src/app`)                                                                   |
+| Animasyon | react-native-svg 15 + react-native-reanimated 3.17, Lottie (lottie-react-native 7)                         |
+| Veri      | @tanstack/react-query 5, zustand 5                                                                         |
+| Depolama  | expo-sqlite 15 (çevrimdışı içerik), react-native-mmkv 3 (ayarlar, ETag, kuyruk), expo-secure-store (token) |
+| Kimlik    | E-posta/şifre, Google (expo-auth-session), Apple (expo-apple-authentication, yalnızca iOS)                 |
+| Bildirim  | expo-notifications 0.31, expo-device                                                                       |
+| Test      | jest-expo + @testing-library/react-native, Detox (e2e)                                                     |
 
 ---
 
@@ -32,12 +32,12 @@ cp .env.example .env                        # değişkenleri düzenleyin
 
 ### Ortam değişkenleri (`mobile/.env`)
 
-| Değişken | Açıklama |
-| --- | --- |
-| `EXPO_PUBLIC_API_URL` | Backend kök adresi, örn. `http://localhost:4000/api/v1`. Android emülatöründe `http://10.0.2.2:4000/api/v1`, fiziksel cihazda bilgisayarın LAN IP'si. |
-| `EXPO_PUBLIC_WEB_URL` | Web uygulaması adresi — mobilde olmayan simülatörler için "Web'de aç" bağlantısı. |
-| `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID` / `..._ANDROID_CLIENT_ID` / `..._WEB_CLIENT_ID` | Google OAuth istemci kimlikleri. Boşsa Google butonu devre dışı görünür. Backend'de `GOOGLE_CLIENT_IDS` aynı kimlikleri içermelidir. |
-| `EAS_PROJECT_ID` | Expo push token için EAS proje kimliği (`eas init` sonrası). Boşsa yalnızca yerel hatırlatmalar çalışır. |
+| Değişken                                                                           | Açıklama                                                                                                                                              |
+| ---------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `EXPO_PUBLIC_API_URL`                                                              | Backend kök adresi, örn. `http://localhost:4000/api/v1`. Android emülatöründe `http://10.0.2.2:4000/api/v1`, fiziksel cihazda bilgisayarın LAN IP'si. |
+| `EXPO_PUBLIC_WEB_URL`                                                              | Web uygulaması adresi — mobilde olmayan simülatörler için "Web'de aç" bağlantısı.                                                                     |
+| `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID` / `..._ANDROID_CLIENT_ID` / `..._WEB_CLIENT_ID` | Google OAuth istemci kimlikleri. Boşsa Google butonu devre dışı görünür. Backend'de `GOOGLE_CLIENT_IDS` aynı kimlikleri içermelidir.                  |
+| `EAS_PROJECT_ID`                                                                   | Expo push token için EAS proje kimliği (`eas init` sonrası). Boşsa yalnızca yerel hatırlatmalar çalışır.                                              |
 
 `EXPO_PUBLIC_*` değişkenleri derleme anında koda gömülür; gizli anahtar koymayın.
 
@@ -190,13 +190,13 @@ Test: `npx expo push:send` ya da https://expo.dev/notifications ile token'a mesa
 pnpm test           # birim testleri (jest-expo)
 ```
 
-| Test | Kapsam |
-| --- | --- |
+| Test                             | Kapsam                                                                             |
+| -------------------------------- | ---------------------------------------------------------------------------------- |
 | `__tests__/ScenePlayer.test.tsx` | Reducer ile adım ileri/geri, seek, oynatma (TICK), hız, reduced-motion, transkript |
-| `__tests__/i18n.test.ts` | Çeviri, parametreler, tr/en anahtar eşitliği, dil değiştirme + MMKV kalıcılığı |
-| `__tests__/sync.test.ts` | Sahte SQLite ile upsert/transaction, ETag + 304 akışı, kuyruk birleştirme |
-| `__tests__/api.test.ts` | Single-flight refresh, oturum sonlandırma, offline/network hataları, 304 |
-| `__tests__/svgTheme.test.ts` | Diyagram SVG'lerinin tema renklerine çevrilmesi |
+| `__tests__/i18n.test.ts`         | Çeviri, parametreler, tr/en anahtar eşitliği, dil değiştirme + MMKV kalıcılığı     |
+| `__tests__/sync.test.ts`         | Sahte SQLite ile upsert/transaction, ETag + 304 akışı, kuyruk birleştirme          |
+| `__tests__/api.test.ts`          | Single-flight refresh, oturum sonlandırma, offline/network hataları, 304           |
+| `__tests__/svgTheme.test.ts`     | Diyagram SVG'lerinin tema renklerine çevrilmesi                                    |
 
 **Detox (e2e)** — `e2e/smoke.e2e.ts`: giriş → modül → ders → animasyonu oynat.
 

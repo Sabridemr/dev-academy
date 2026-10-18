@@ -25,7 +25,10 @@ export function isGoogleConfigured(): boolean {
  * Google ile giriş kancası. `signIn()` tarayıcı akışını başlatır; başarıda onSuccess AuthResponse ile çağrılır.
  * İstemci kimlikleri yapılandırılmamışsa `available=false` döner (buton devre dışı gösterilir).
  */
-export function useGoogleSignIn(onSuccess: (res: AuthResponse) => void, onError: (e: unknown) => void) {
+export function useGoogleSignIn(
+  onSuccess: (res: AuthResponse) => void,
+  onError: (e: unknown) => void,
+) {
   const available = isGoogleConfigured();
   const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
     // Boş string verilirse kanca hata fırlatır; yapılandırılmamışsa yer tutucu kullanılır ve buton gizlenir
@@ -83,14 +86,30 @@ export async function isAppleAvailable(): Promise<boolean> {
 export async function signInWithApple(): Promise<AuthResponse | null> {
   try {
     const credential = await AppleAuthentication.signInAsync({
-      requestedScopes: [AppleAuthentication.AppleAuthenticationScope.FULL_NAME, AppleAuthentication.AppleAuthenticationScope.EMAIL],
+      requestedScopes: [
+        AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+        AppleAuthentication.AppleAuthenticationScope.EMAIL,
+      ],
     });
     if (!credential.identityToken) throw new Error('Apple identityToken missing');
     // Apple adı yalnızca ilk girişte paylaşır
-    const name = [credential.fullName?.givenName, credential.fullName?.familyName].filter(Boolean).join(' ').trim();
-    return await endpoints.oauth({ provider: 'apple', idToken: credential.identityToken, displayName: name || undefined });
+    const name = [credential.fullName?.givenName, credential.fullName?.familyName]
+      .filter(Boolean)
+      .join(' ')
+      .trim();
+    return await endpoints.oauth({
+      provider: 'apple',
+      idToken: credential.identityToken,
+      displayName: name || undefined,
+    });
   } catch (e) {
-    if (e && typeof e === 'object' && 'code' in e && (e as { code: string }).code === 'ERR_REQUEST_CANCELED') return null;
+    if (
+      e &&
+      typeof e === 'object' &&
+      'code' in e &&
+      (e as { code: string }).code === 'ERR_REQUEST_CANCELED'
+    )
+      return null;
     throw e;
   }
 }

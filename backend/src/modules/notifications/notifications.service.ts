@@ -15,8 +15,20 @@ interface ExpoPushMessage {
 }
 
 const MESSAGES = {
-  tr: { title: 'Günlük çalışma zamanı 🔥', body: (streak: number) => (streak > 0 ? `${streak} günlük serini koru! 10 dakikalık bir ders seni bekliyor.` : 'Bugün yeni bir kavram öğrenmeye ne dersin? Kısa bir ders seni bekliyor.') },
-  en: { title: 'Time for today’s lesson 🔥', body: (streak: number) => (streak > 0 ? `Keep your ${streak}-day streak alive! A 10-minute lesson is waiting.` : 'How about learning a new concept today? A short lesson is waiting.') },
+  tr: {
+    title: 'Günlük çalışma zamanı 🔥',
+    body: (streak: number) =>
+      streak > 0
+        ? `${streak} günlük serini koru! 10 dakikalık bir ders seni bekliyor.`
+        : 'Bugün yeni bir kavram öğrenmeye ne dersin? Kısa bir ders seni bekliyor.',
+  },
+  en: {
+    title: 'Time for today’s lesson 🔥',
+    body: (streak: number) =>
+      streak > 0
+        ? `Keep your ${streak}-day streak alive! A 10-minute lesson is waiting.`
+        : 'How about learning a new concept today? A short lesson is waiting.',
+  },
 };
 
 /**
@@ -51,13 +63,28 @@ export class NotificationsService {
     for (const user of candidates) {
       // Tek bir kullanıcının hatalı verisi (ör. geçersiz saat dilimi) tüm işi durdurmasın
       try {
-        const localHour = Number(new Intl.DateTimeFormat('en-US', { timeZone: user.timezone, hour: 'numeric', hour12: false }).format(now)) % 24;
+        const localHour =
+          Number(
+            new Intl.DateTimeFormat('en-US', {
+              timeZone: user.timezone,
+              hour: 'numeric',
+              hour12: false,
+            }).format(now),
+          ) % 24;
         if (localHour !== user.reminderHour) continue;
         if (user.lastActivityDate === dateKey(now, user.timezone)) continue; // bugün zaten çalışmış
         const msg = MESSAGES[user.locale];
         const body = msg.body(user.currentStreak);
         if (user.pushTokens.length > 0) {
-          await this.sendExpoPush(user.pushTokens.map((t) => ({ to: t.token, title: msg.title, body, sound: 'default', data: { type: 'daily-reminder' } })));
+          await this.sendExpoPush(
+            user.pushTokens.map((t) => ({
+              to: t.token,
+              title: msg.title,
+              body,
+              sound: 'default',
+              data: { type: 'daily-reminder' },
+            })),
+          );
           push += user.pushTokens.length;
         } else {
           await this.sendEmail(user.email, msg.title, body);
@@ -82,10 +109,19 @@ export class NotificationsService {
       });
       if (!res.ok) this.logger.warn(`Expo push yanıtı ${res.status}`);
       else {
-        const json = (await res.json()) as { data?: { status: string; details?: { error?: string } }[] };
+        const json = (await res.json()) as {
+          data?: { status: string; details?: { error?: string } }[];
+        };
         // Geçersiz token'ları temizle
-        const invalid = (json.data ?? []).map((d, i) => (d.status === 'error' && d.details?.error === 'DeviceNotRegistered' ? expoTokens[i].to : null)).filter((t): t is string => Boolean(t));
-        if (invalid.length) await this.prisma.pushToken.deleteMany({ where: { token: { in: invalid } } });
+        const invalid = (json.data ?? [])
+          .map((d, i) =>
+            d.status === 'error' && d.details?.error === 'DeviceNotRegistered'
+              ? expoTokens[i].to
+              : null,
+          )
+          .filter((t): t is string => Boolean(t));
+        if (invalid.length)
+          await this.prisma.pushToken.deleteMany({ where: { token: { in: invalid } } });
       }
     } catch (err) {
       this.logger.warn(`Expo push gönderilemedi: ${(err as Error).message}`);

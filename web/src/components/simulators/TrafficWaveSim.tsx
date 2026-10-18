@@ -93,9 +93,24 @@ function simulate(o: {
   fixed: number;
   perInstance: number;
 }): SimResult {
-  const r: SimResult = { demand: [], capacity: [], served: [], queued: [], dropped: [], instances: [], totalDropped: 0, totalDemand: 0, maxQueue: 0, cost: 0, peakInstances: 0, maxWaitSec: 0 };
+  const r: SimResult = {
+    demand: [],
+    capacity: [],
+    served: [],
+    queued: [],
+    dropped: [],
+    instances: [],
+    totalDropped: 0,
+    totalDemand: 0,
+    maxQueue: 0,
+    cost: 0,
+    peakInstances: 0,
+    maxWaitSec: 0,
+  };
   const rampMin = Math.max(1, o.rampSec / 60);
-  let instances = o.autoscale ? Math.max(2, Math.ceil(o.baseline / (o.perInstance * 0.7))) : o.fixed;
+  let instances = o.autoscale
+    ? Math.max(2, Math.ceil(o.baseline / (o.perInstance * 0.7)))
+    : o.fixed;
   let queue = 0;
   const queueCap = o.baseline * 60 * 10; // ~10 dakikalık taban trafik
   // Bekleyen ölçek artışları: [hazır olacağı dakika, adet]
@@ -125,8 +140,13 @@ function simulate(o: {
         const need = desired - instances - inFlight;
         const fromWarm = Math.min(need, o.warm);
         const cold = need - fromWarm;
-        if (fromWarm > 0) pending.push({ readyAt: m + Math.ceil((o.delaySec + WARM_BOOT_SEC) / 60), count: fromWarm });
-        if (cold > 0) pending.push({ readyAt: m + Math.ceil((o.delaySec + COLD_BOOT_SEC) / 60), count: cold });
+        if (fromWarm > 0)
+          pending.push({
+            readyAt: m + Math.ceil((o.delaySec + WARM_BOOT_SEC) / 60),
+            count: fromWarm,
+          });
+        if (cold > 0)
+          pending.push({ readyAt: m + Math.ceil((o.delaySec + COLD_BOOT_SEC) / 60), count: cold });
       } else if (desired < instances - 1 && m % 10 === 0) {
         instances = Math.max(desired, instances - Math.ceil(instances * 0.1)); // yavaş küçülme
       }
@@ -153,7 +173,9 @@ function simulate(o: {
     r.totalDemand += demand * 60;
     r.maxQueue = Math.max(r.maxQueue, queue * 60);
     r.maxWaitSec = Math.max(r.maxWaitSec, capacity > 0 ? (queue * 60) / capacity : 0);
-    r.cost += (instances * COST_PER_INSTANCE_HOUR) / 60 + (o.autoscale ? (o.warm * COST_PER_INSTANCE_HOUR * 0.25) / 60 : 0);
+    r.cost +=
+      (instances * COST_PER_INSTANCE_HOUR) / 60 +
+      (o.autoscale ? (o.warm * COST_PER_INSTANCE_HOUR * 0.25) / 60 : 0);
     r.peakInstances = Math.max(r.peakInstances, instances);
   }
   return r;
@@ -163,11 +185,15 @@ export default function TrafficWaveSim({ params, onInteract }: SimulatorProps) {
   const { locale } = useI18n();
   const l = L[locale];
   const reduced = usePrefersReducedMotion();
-  const [baseline, setBaseline] = useState(() => numParam(params, 'baselineRps', 5000, 100, 100000));
+  const [baseline, setBaseline] = useState(() =>
+    numParam(params, 'baselineRps', 5000, 100, 100000),
+  );
   const [peak, setPeak] = useState(() => numParam(params, 'peakMultiplier', 12, 1, 30));
   const [rampSec, setRampSec] = useState(() => numParam(params, 'rampSeconds', 60, 10, 3600));
   const [autoscale, setAutoscale] = useState(() => boolParam(params, 'autoscale', true));
-  const [delaySec, setDelaySec] = useState(() => numParam(params, 'scaleUpDelaySeconds', 90, 0, 600));
+  const [delaySec, setDelaySec] = useState(() =>
+    numParam(params, 'scaleUpDelaySeconds', 90, 0, 600),
+  );
   const [warm, setWarm] = useState(0);
   const [queueEnabled, setQueueEnabled] = useState(() => boolParam(params, 'queueEnabled', false));
   const perInstance = Math.max(50, Math.round(baseline / 4));
@@ -176,7 +202,18 @@ export default function TrafficWaveSim({ params, onInteract }: SimulatorProps) {
   const [playing, setPlaying] = useState(false);
 
   const sim = useMemo(
-    () => simulate({ baseline, peak, rampSec, autoscale, delaySec, warm, queueEnabled, fixed, perInstance }),
+    () =>
+      simulate({
+        baseline,
+        peak,
+        rampSec,
+        autoscale,
+        delaySec,
+        warm,
+        queueEnabled,
+        fixed,
+        perInstance,
+      }),
     [baseline, peak, rampSec, autoscale, delaySec, warm, queueEnabled, fixed, perInstance],
   );
 
@@ -197,7 +234,11 @@ export default function TrafficWaveSim({ params, onInteract }: SimulatorProps) {
   const Y = (v: number) => 180 - (v / maxY) * 160;
   const step = 4; // çizim için örnekleme (360 nokta)
   const upTo = cursor;
-  const pts = (arr: number[]) => arr.map((v, m) => (m % step === 0 && m <= upTo ? `${X(m).toFixed(1)},${Y(v).toFixed(1)}` : null)).filter(Boolean).join(' ');
+  const pts = (arr: number[]) =>
+    arr
+      .map((v, m) => (m % step === 0 && m <= upTo ? `${X(m).toFixed(1)},${Y(v).toFixed(1)}` : null))
+      .filter(Boolean)
+      .join(' ');
   // Düşen istekleri alan olarak göster: talep ile kapasite arasındaki fark (kuyruk yoksa)
   const lossArea = sim.demand
     .map((d, m) => ({ m, d, c: sim.capacity[m] }))
@@ -236,62 +277,223 @@ export default function TrafficWaveSim({ params, onInteract }: SimulatorProps) {
       }
       aside={
         <>
-          <Range label={l.baseline} value={baseline} min={500} max={20000} step={500} onChange={(v) => { interact(); setBaseline(v); }} />
-          <Range label={l.peak} value={peak} min={1} max={30} format={(v) => `${v}×`} onChange={(v) => { interact(); setPeak(v); }} />
-          <Range label={l.ramp} value={rampSec} min={10} max={1800} step={10} format={(v) => `${v}s`} onChange={(v) => { interact(); setRampSec(v); }} />
+          <Range
+            label={l.baseline}
+            value={baseline}
+            min={500}
+            max={20000}
+            step={500}
+            onChange={(v) => {
+              interact();
+              setBaseline(v);
+            }}
+          />
+          <Range
+            label={l.peak}
+            value={peak}
+            min={1}
+            max={30}
+            format={(v) => `${v}×`}
+            onChange={(v) => {
+              interact();
+              setPeak(v);
+            }}
+          />
+          <Range
+            label={l.ramp}
+            value={rampSec}
+            min={10}
+            max={1800}
+            step={10}
+            format={(v) => `${v}s`}
+            onChange={(v) => {
+              interact();
+              setRampSec(v);
+            }}
+          />
           <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" checked={autoscale} onChange={(e) => { interact(); setAutoscale(e.target.checked); }} /> {l.autoscale}
+            <input
+              type="checkbox"
+              checked={autoscale}
+              onChange={(e) => {
+                interact();
+                setAutoscale(e.target.checked);
+              }}
+            />{' '}
+            {l.autoscale}
           </label>
           {autoscale ? (
             <>
-              <Range label={l.delay} value={delaySec} min={0} max={600} step={15} format={(v) => `${v}s`} onChange={(v) => { interact(); setDelaySec(v); }} />
-              <Range label={l.warm} value={warm} min={0} max={60} onChange={(v) => { interact(); setWarm(v); }} />
+              <Range
+                label={l.delay}
+                value={delaySec}
+                min={0}
+                max={600}
+                step={15}
+                format={(v) => `${v}s`}
+                onChange={(v) => {
+                  interact();
+                  setDelaySec(v);
+                }}
+              />
+              <Range
+                label={l.warm}
+                value={warm}
+                min={0}
+                max={60}
+                onChange={(v) => {
+                  interact();
+                  setWarm(v);
+                }}
+              />
             </>
           ) : (
-            <Range label={l.fixed} value={fixed} min={1} max={80} onChange={(v) => { interact(); setFixed(v); }} />
+            <Range
+              label={l.fixed}
+              value={fixed}
+              min={1}
+              max={80}
+              onChange={(v) => {
+                interact();
+                setFixed(v);
+              }}
+            />
           )}
           <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" checked={queueEnabled} onChange={(e) => { interact(); setQueueEnabled(e.target.checked); }} /> {l.queue}
+            <input
+              type="checkbox"
+              checked={queueEnabled}
+              onChange={(e) => {
+                interact();
+                setQueueEnabled(e.target.checked);
+              }}
+            />{' '}
+            {l.queue}
           </label>
-          <p className="text-xs text-muted">{l.perInstance}: {fmt(perInstance)} req/s</p>
+          <p className="text-xs text-muted">
+            {l.perInstance}: {fmt(perInstance)} req/s
+          </p>
         </>
       }
     >
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3" aria-live="polite">
-        <Stat label={l.dropped} value={fmt(sim.totalDropped)} tone={sim.totalDropped > 0 ? 'danger' : 'success'} />
-        <Stat label={l.dropPct} value={`${dropPct.toFixed(2)}%`} tone={dropPct > 1 ? 'danger' : dropPct > 0 ? 'warning' : 'success'} />
+        <Stat
+          label={l.dropped}
+          value={fmt(sim.totalDropped)}
+          tone={sim.totalDropped > 0 ? 'danger' : 'success'}
+        />
+        <Stat
+          label={l.dropPct}
+          value={`${dropPct.toFixed(2)}%`}
+          tone={dropPct > 1 ? 'danger' : dropPct > 0 ? 'warning' : 'success'}
+        />
         <Stat label={l.cost} value={`$${sim.cost.toFixed(0)}`} />
         <Stat label={l.peakInst} value={sim.peakInstances} tone="primary" />
-        <Stat label={l.maxQueue} value={fmt(sim.maxQueue)} tone={sim.maxQueue > 0 ? 'warning' : undefined} />
+        <Stat
+          label={l.maxQueue}
+          value={fmt(sim.maxQueue)}
+          tone={sim.maxQueue > 0 ? 'warning' : undefined}
+        />
         <Stat label={l.wait} value={`${sim.maxWaitSec.toFixed(0)}s`} />
       </div>
       <figure className="mt-3">
         <figcaption className="label">
-          {l.chart} · {l.now} {String(hh).padStart(2, '0')}:{String(mm).padStart(2, '0')} · {fmt(sim.demand[cursor])} / {fmt(sim.capacity[cursor])} req/s · {sim.instances[cursor]} inst.
+          {l.chart} · {l.now} {String(hh).padStart(2, '0')}:{String(mm).padStart(2, '0')} ·{' '}
+          {fmt(sim.demand[cursor])} / {fmt(sim.capacity[cursor])} req/s · {sim.instances[cursor]}{' '}
+          inst.
         </figcaption>
         <svg viewBox="0 0 600 210" className="h-auto w-full" role="img" aria-label={l.chart}>
-          <rect x={40} y={20} width={550} height={160} fill="var(--da-bg)" stroke="var(--da-border)" />
+          <rect
+            x={40}
+            y={20}
+            width={550}
+            height={160}
+            fill="var(--da-bg)"
+            stroke="var(--da-border)"
+          />
           {[0, 6, 12, 18, 24].map((hr) => (
             <g key={hr}>
-              <line x1={X(Math.min(MINUTES - 1, hr * 60))} x2={X(Math.min(MINUTES - 1, hr * 60))} y1={20} y2={180} stroke="var(--da-border)" strokeDasharray="2 4" />
-              <text x={X(Math.min(MINUTES - 1, hr * 60))} y={194} textAnchor="middle" fontSize={10} fill="var(--da-muted)">{String(hr).padStart(2, '0')}:00</text>
+              <line
+                x1={X(Math.min(MINUTES - 1, hr * 60))}
+                x2={X(Math.min(MINUTES - 1, hr * 60))}
+                y1={20}
+                y2={180}
+                stroke="var(--da-border)"
+                strokeDasharray="2 4"
+              />
+              <text
+                x={X(Math.min(MINUTES - 1, hr * 60))}
+                y={194}
+                textAnchor="middle"
+                fontSize={10}
+                fill="var(--da-muted)"
+              >
+                {String(hr).padStart(2, '0')}:00
+              </text>
             </g>
           ))}
-          <text x={36} y={26} textAnchor="end" fontSize={9} fill="var(--da-muted)">{fmt(maxY)}</text>
-          <text x={36} y={180} textAnchor="end" fontSize={9} fill="var(--da-muted)">0</text>
+          <text x={36} y={26} textAnchor="end" fontSize={9} fill="var(--da-muted)">
+            {fmt(maxY)}
+          </text>
+          <text x={36} y={180} textAnchor="end" fontSize={9} fill="var(--da-muted)">
+            0
+          </text>
           {/* Kayıp alanı: talebin kapasiteyi aştığı kısım */}
-          {lossArea.length > 1 && <polygon points={[...lossArea, ...capLine].join(' ')} fill="color-mix(in srgb, var(--da-danger) 25%, transparent)" />}
-          <polyline points={pts(sim.capacity)} fill="none" stroke="var(--da-success)" strokeWidth={2} />
-          <polyline points={pts(sim.demand)} fill="none" stroke="var(--da-primary)" strokeWidth={2} />
-          {queueEnabled && <polyline points={pts(sim.queued.map((q) => q / 60))} fill="none" stroke="var(--da-warning)" strokeWidth={1.5} strokeDasharray="4 3" />}
-          <line x1={X(cursor)} x2={X(cursor)} y1={20} y2={180} stroke="var(--da-fg)" opacity={0.4} />
+          {lossArea.length > 1 && (
+            <polygon
+              points={[...lossArea, ...capLine].join(' ')}
+              fill="color-mix(in srgb, var(--da-danger) 25%, transparent)"
+            />
+          )}
+          <polyline
+            points={pts(sim.capacity)}
+            fill="none"
+            stroke="var(--da-success)"
+            strokeWidth={2}
+          />
+          <polyline
+            points={pts(sim.demand)}
+            fill="none"
+            stroke="var(--da-primary)"
+            strokeWidth={2}
+          />
+          {queueEnabled && (
+            <polyline
+              points={pts(sim.queued.map((q) => q / 60))}
+              fill="none"
+              stroke="var(--da-warning)"
+              strokeWidth={1.5}
+              strokeDasharray="4 3"
+            />
+          )}
+          <line
+            x1={X(cursor)}
+            x2={X(cursor)}
+            y1={20}
+            y2={180}
+            stroke="var(--da-fg)"
+            opacity={0.4}
+          />
           <g transform="translate(48, 34)">
             <rect width={10} height={3} y={-3} fill="var(--da-primary)" />
-            <text x={14} y={0} fontSize={10} fill="var(--da-fg)">{l.demand}</text>
+            <text x={14} y={0} fontSize={10} fill="var(--da-fg)">
+              {l.demand}
+            </text>
             <rect x={70} width={10} height={3} y={-3} fill="var(--da-success)" />
-            <text x={84} y={0} fontSize={10} fill="var(--da-fg)">{l.capacity}</text>
-            <rect x={150} width={10} height={8} y={-7} fill="color-mix(in srgb, var(--da-danger) 25%, transparent)" />
-            <text x={164} y={0} fontSize={10} fill="var(--da-fg)">{l.dropped}{queueEnabled ? ' / queue' : ''}</text>
+            <text x={84} y={0} fontSize={10} fill="var(--da-fg)">
+              {l.capacity}
+            </text>
+            <rect
+              x={150}
+              width={10}
+              height={8}
+              y={-7}
+              fill="color-mix(in srgb, var(--da-danger) 25%, transparent)"
+            />
+            <text x={164} y={0} fontSize={10} fill="var(--da-fg)">
+              {l.dropped}
+              {queueEnabled ? ' / queue' : ''}
+            </text>
           </g>
         </svg>
       </figure>

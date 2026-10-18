@@ -4,7 +4,22 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { BookOpen, Flame, Languages, LayoutDashboard, Library, LogOut, Menu, Moon, Repeat, Search, Shield, Sun, X, GraduationCap } from 'lucide-react';
+import {
+  BookOpen,
+  Flame,
+  Languages,
+  LayoutDashboard,
+  Library,
+  LogOut,
+  Menu,
+  Moon,
+  Repeat,
+  Search,
+  Shield,
+  Sun,
+  X,
+  GraduationCap,
+} from 'lucide-react';
 import type { Locale } from '@devacademy/shared';
 import { useI18n } from '@/i18n';
 import { api } from '@/lib/api';
@@ -62,7 +77,10 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-bg/80 backdrop-blur">
-      <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-2 focus:z-50 focus:rounded focus:bg-surface focus:px-3 focus:py-1">
+      <a
+        href="#main"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-2 focus:z-50 focus:rounded focus:bg-surface focus:px-3 focus:py-1"
+      >
         {t('nav.skipToContent')}
       </a>
       <div className="mx-auto flex h-14 max-w-7xl items-center gap-4 px-4">
@@ -74,7 +92,16 @@ export function Header() {
         </Link>
         <nav className="hidden items-center gap-1 md:flex" aria-label="ana menü">
           {links.map((l) => (
-            <Link key={l.href} href={l.href} className={cn('rounded-lg px-3 py-1.5 text-sm', pathname.startsWith(l.href) ? 'bg-elevated font-medium text-fg' : 'text-muted hover:text-fg')}>
+            <Link
+              key={l.href}
+              href={l.href}
+              className={cn(
+                'rounded-lg px-3 py-1.5 text-sm',
+                pathname.startsWith(l.href)
+                  ? 'bg-elevated font-medium text-fg'
+                  : 'text-muted hover:text-fg',
+              )}
+            >
               {l.label}
             </Link>
           ))}
@@ -85,21 +112,42 @@ export function Header() {
           </Link>
           {authed && summary && (
             <span className="chip hidden sm:inline-flex" title={t('dashboard.streak')}>
-              <Flame size={13} className={summary.activeToday ? 'text-accent' : ''} /> {summary.currentStreak}
+              <Flame size={13} className={summary.activeToday ? 'text-accent' : ''} />{' '}
+              {summary.currentStreak}
             </span>
           )}
-          <button type="button" className="btn-icon" onClick={() => setLocale((locale === 'tr' ? 'en' : 'tr') as Locale)} aria-label={t('common.language')} title={t('common.language')}>
+          <button
+            type="button"
+            className="btn-icon"
+            onClick={() => setLocale((locale === 'tr' ? 'en' : 'tr') as Locale)}
+            aria-label={t('common.language')}
+            title={t('common.language')}
+          >
             <Languages size={16} />
             <span className="sr-only">{locale}</span>
           </button>
-          <button type="button" className="btn-icon" onClick={toggleTheme} aria-label={dark ? t('theme.light') : t('theme.dark')} title={dark ? t('theme.light') : t('theme.dark')}>
+          <button
+            type="button"
+            className="btn-icon"
+            onClick={toggleTheme}
+            aria-label={dark ? t('theme.light') : t('theme.dark')}
+            title={dark ? t('theme.light') : t('theme.dark')}
+          >
             {dark ? <Sun size={16} /> : <Moon size={16} />}
           </button>
           {hydrated &&
             (authed ? (
               <div className="hidden items-center gap-2 md:flex">
-                <span className="max-w-[140px] truncate text-sm text-muted">{user?.displayName}</span>
-                <button type="button" className="btn-icon" onClick={logout} aria-label={t('nav.logout')} title={t('nav.logout')}>
+                <span className="max-w-[140px] truncate text-sm text-muted">
+                  {user?.displayName}
+                </span>
+                <button
+                  type="button"
+                  className="btn-icon"
+                  onClick={logout}
+                  aria-label={t('nav.logout')}
+                  title={t('nav.logout')}
+                >
                   <LogOut size={16} />
                 </button>
               </div>
@@ -113,7 +161,13 @@ export function Header() {
                 </Link>
               </div>
             ))}
-          <button type="button" className="btn-icon md:hidden" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-label="menu">
+          <button
+            type="button"
+            className="btn-icon md:hidden"
+            onClick={() => setOpen((o) => !o)}
+            aria-expanded={open}
+            aria-label="menu"
+          >
             {open ? <X size={16} /> : <Menu size={16} />}
           </button>
         </div>
@@ -123,18 +177,28 @@ export function Header() {
           <ul className="space-y-1">
             {links.map((l) => (
               <li key={l.href}>
-                <Link href={l.href} className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-elevated">
+                <Link
+                  href={l.href}
+                  className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-elevated"
+                >
                   <l.icon size={16} /> {l.label}
                 </Link>
               </li>
             ))}
             <li>
               {authed ? (
-                <button type="button" onClick={logout} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-elevated">
+                <button
+                  type="button"
+                  onClick={logout}
+                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-elevated"
+                >
                   <LogOut size={16} /> {t('nav.logout')}
                 </button>
               ) : (
-                <Link href="/login" className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-elevated">
+                <Link
+                  href="/login"
+                  className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-elevated"
+                >
                   {t('nav.login')}
                 </Link>
               )}

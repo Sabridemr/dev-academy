@@ -3,7 +3,8 @@ import { annotationBox, badgeBox, nodeTextLayout, truncateToWidth } from './geom
 import { parseScene } from './validate';
 import type { SceneNode } from './schema';
 
-const node = (over: Partial<SceneNode>): SceneNode => ({ id: 'n', kind: 'service', label: 'x', x: 500, y: 300, status: 'idle', ...over }) as SceneNode;
+const node = (over: Partial<SceneNode>): SceneNode =>
+  ({ id: 'n', kind: 'service', label: 'x', x: 500, y: 300, status: 'idle', ...over }) as SceneNode;
 
 describe('Yerleşim yardımcıları', () => {
   it('truncateToWidth uzun metni … ile kısaltır, kısa metne dokunmaz', () => {
@@ -29,7 +30,13 @@ describe('Yerleşim yardımcıları', () => {
   });
 
   it('not kutusu tuval dışına taşmaz', () => {
-    const scene = parseScene({ id: 's', title: 't', a11y: { description: 'd' }, nodes: [{ id: 'a', label: 'A', x: 10, y: 10 }], steps: [{ id: 's1', title: 't', narration: 'n' }] });
+    const scene = parseScene({
+      id: 's',
+      title: 't',
+      a11y: { description: 'd' },
+      nodes: [{ id: 'a', label: 'A', x: 10, y: 10 }],
+      steps: [{ id: 's1', title: 't', narration: 'n' }],
+    });
     const box = annotationBox(scene, { x: 990, y: 5 }, 'Kosinüs benzerliği, yaklaşık (ANN) arama');
     expect(box.x + box.w / 2).toBeLessThanOrEqual(scene.canvas.width);
     expect(box.y - box.h / 2).toBeGreaterThanOrEqual(0);

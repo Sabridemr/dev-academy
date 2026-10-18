@@ -1,7 +1,10 @@
 import { corsOrigins, validateEnv } from './env';
 
 describe('validateEnv', () => {
-  const base = { DATABASE_URL: 'postgresql://u:p@localhost:5432/db', JWT_ACCESS_SECRET: 'a'.repeat(32) };
+  const base = {
+    DATABASE_URL: 'postgresql://u:p@localhost:5432/db',
+    JWT_ACCESS_SECRET: 'a'.repeat(32),
+  };
 
   it('geçerli ortamı varsayılanlarla doldurur', () => {
     const env = validateEnv(base);
@@ -14,6 +17,8 @@ describe('validateEnv', () => {
   });
 
   it('CORS listesini ayrıştırır', () => {
-    expect(corsOrigins(validateEnv({ ...base, CORS_ORIGINS: 'http://a.com, http://b.com,' }))).toEqual(['http://a.com', 'http://b.com']);
+    expect(
+      corsOrigins(validateEnv({ ...base, CORS_ORIGINS: 'http://a.com, http://b.com,' })),
+    ).toEqual(['http://a.com', 'http://b.com']);
   });
 });

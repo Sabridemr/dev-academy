@@ -15,7 +15,16 @@ import { lastSyncAt, refreshDownloadedModules, removeModuleDownload } from '@/of
 import { useSession } from '@/stores/session';
 import { useSettings, type ThemePreference } from '@/stores/settings';
 import { radius, spacing, useTheme, withAlpha } from '@/theme';
-import { Button, Card, IconButton, Row, Screen, Section, SegmentedControl, Text } from '@/components/ui';
+import {
+  Button,
+  Card,
+  IconButton,
+  Row,
+  Screen,
+  Section,
+  SegmentedControl,
+  Text,
+} from '@/components/ui';
 import { ReminderPicker } from '@/components/content/ReminderPicker';
 import { errorText } from '@/utils/errors';
 
@@ -50,7 +59,10 @@ export default function ProfileScreen() {
       const perm = await requestPermission();
       setPermissionDenied(perm === 'denied');
     }
-    update.mutate({ reminderHour: hour, timezone: Intl.DateTimeFormat().resolvedOptions().timeZone });
+    update.mutate({
+      reminderHour: hour,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    });
     await scheduleDailyReminder(hour).catch(() => undefined);
   };
 
@@ -92,9 +104,19 @@ export default function ProfileScreen() {
               onPress={() => update.mutate({ selectedPathId: p.id })}
               accessibilityRole="radio"
               accessibilityState={{ checked: selected }}
-              style={[styles.option, { borderColor: selected ? colors.primary : colors.border, backgroundColor: selected ? withAlpha(colors.primary, 0.08) : colors.surface }]}
+              style={[
+                styles.option,
+                {
+                  borderColor: selected ? colors.primary : colors.border,
+                  backgroundColor: selected ? withAlpha(colors.primary, 0.08) : colors.surface,
+                },
+              ]}
             >
-              <Ionicons name={selected ? 'radio-button-on' : 'radio-button-off'} size={20} color={selected ? colors.primary : colors.muted} />
+              <Ionicons
+                name={selected ? 'radio-button-on' : 'radio-button-off'}
+                size={20}
+                color={selected ? colors.primary : colors.muted}
+              />
               <Text style={{ flex: 1 }}>{tl(p.title)}</Text>
             </Pressable>
           );
@@ -102,7 +124,10 @@ export default function ProfileScreen() {
       </Section>
 
       <Card>
-        <ReminderPicker value={user?.reminderHour ?? null} onChange={(h) => void changeReminder(h)} />
+        <ReminderPicker
+          value={user?.reminderHour ?? null}
+          onChange={(h) => void changeReminder(h)}
+        />
         {permissionDenied ? (
           <Text variant="caption" color={colors.warning}>
             {t('profile.notificationsDenied')}
@@ -134,7 +159,10 @@ export default function ProfileScreen() {
 
       <Section title={t('profile.offline')}>
         <Text variant="caption" muted>
-          {t('profile.downloadedCount', { count: downloads.data?.length ?? 0 })} · {t('profile.lastSync', { time: last ? new Date(last).toLocaleString() : t('profile.never') })}
+          {t('profile.downloadedCount', { count: downloads.data?.length ?? 0 })} ·{' '}
+          {t('profile.lastSync', {
+            time: last ? new Date(last).toLocaleString() : t('profile.never'),
+          })}
         </Text>
         {pending > 0 ? (
           <Text variant="caption" color={colors.warning}>
@@ -142,10 +170,15 @@ export default function ProfileScreen() {
           </Text>
         ) : null}
         {(downloads.data ?? []).map((d) => (
-          <View key={d.id} style={[styles.option, { borderColor: colors.border, backgroundColor: colors.surface }]}>
+          <View
+            key={d.id}
+            style={[styles.option, { borderColor: colors.border, backgroundColor: colors.surface }]}
+          >
             <Ionicons name="cloud-done-outline" size={20} color={colors.success} />
             <View style={{ flex: 1 }}>
-              <Text variant="label">{d.module ? `${d.module.code}. ${tl(d.module.title)}` : d.id}</Text>
+              <Text variant="label">
+                {d.module ? `${d.module.code}. ${tl(d.module.title)}` : d.id}
+              </Text>
               <Text variant="caption" muted>
                 {t('home.lessons', { count: d.lessonCount })}
               </Text>
@@ -154,12 +187,21 @@ export default function ProfileScreen() {
               icon="trash-outline"
               label={`${t('module.removeDownload')}: ${d.id}`}
               onPress={() => {
-                void removeModuleDownload(d.id).then(() => qc.invalidateQueries({ queryKey: queryKeys.downloads }));
+                void removeModuleDownload(d.id).then(() =>
+                  qc.invalidateQueries({ queryKey: queryKeys.downloads }),
+                );
               }}
             />
           </View>
         ))}
-        <Button title={t('profile.syncNow')} variant="secondary" icon="sync" loading={syncing} disabled={!online || !downloads.data?.length} onPress={() => void syncNow()} />
+        <Button
+          title={t('profile.syncNow')}
+          variant="secondary"
+          icon="sync"
+          loading={syncing}
+          disabled={!online || !downloads.data?.length}
+          onPress={() => void syncNow()}
+        />
       </Section>
 
       {update.error ? (
@@ -168,7 +210,13 @@ export default function ProfileScreen() {
         </Text>
       ) : null}
 
-      <Button title={t('nav.logout')} variant="danger" icon="log-out-outline" onPress={() => void signOut().then(() => qc.clear())} testID="logout" />
+      <Button
+        title={t('nav.logout')}
+        variant="danger"
+        icon="log-out-outline"
+        onPress={() => void signOut().then(() => qc.clear())}
+        testID="logout"
+      />
       <Text variant="caption" muted align="center">
         {t('profile.version', { version: Constants.expoConfig?.version ?? '0.0.0' })}
       </Text>
@@ -177,6 +225,19 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  avatar: { width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center' },
-  option: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, borderWidth: 1.5, borderRadius: radius.md, padding: spacing.md },
+  avatar: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  option: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    borderWidth: 1.5,
+    borderRadius: radius.md,
+    padding: spacing.md,
+  },
 });

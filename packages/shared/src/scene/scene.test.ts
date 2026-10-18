@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import example from '../../examples/load-balancer-round-robin.scene.json';
 import { validateScene, parseScene } from './validate';
-import { computePackets, createPlayerState, playerReducer, resolveStepView, sceneDuration, sceneTranscript } from './player';
+import {
+  computePackets,
+  createPlayerState,
+  playerReducer,
+  resolveStepView,
+  sceneDuration,
+  sceneTranscript,
+} from './player';
 import { edgeGeometry, packetPosition } from './geometry';
 
 describe('AnimationScene şeması', () => {

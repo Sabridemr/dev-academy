@@ -25,7 +25,10 @@ describe('RealtimeGateway simulation.input', () => {
   it('kimliği doğrulanmış istemcinin girdisini odaya yayar', () => {
     const { socket, emit } = fakeSocket('u1');
     gateway.relaySimulationInput(socket as never, { simulationId: 'demo', data: { x: 1 } });
-    expect(emit).toHaveBeenCalledWith('event', expect.objectContaining({ type: 'simulation.tick' }));
+    expect(emit).toHaveBeenCalledWith(
+      'event',
+      expect.objectContaining({ type: 'simulation.tick' }),
+    );
   });
 
   it('odada olmayan istemcinin girdisini yaymaz', () => {
@@ -36,7 +39,8 @@ describe('RealtimeGateway simulation.input', () => {
 
   it('saniyede 20 mesajdan fazlasını düşürür', () => {
     const { socket, emit } = fakeSocket('u1');
-    for (let i = 0; i < 30; i++) gateway.relaySimulationInput(socket as never, { simulationId: 'demo', data: i });
+    for (let i = 0; i < 30; i++)
+      gateway.relaySimulationInput(socket as never, { simulationId: 'demo', data: i });
     expect(emit).toHaveBeenCalledTimes(20);
   });
 });

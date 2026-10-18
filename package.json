@@ -18,8 +18,8 @@
     "content:validate": "pnpm --filter @devacademy/shared run content:validate",
     "db:migrate": "pnpm --filter @devacademy/backend run prisma:migrate",
     "db:seed": "pnpm --filter @devacademy/backend run prisma:seed",
-    "format": "prettier --write \"**/*.{ts,tsx,js,json,md,yml,yaml}\" --ignore-path .gitignore",
-    "format:check": "prettier --check \"**/*.{ts,tsx,js,json,md,yml,yaml}\" --ignore-path .gitignore",
+    "format": "prettier --write \"**/*.{ts,tsx,js,mjs,cjs,json,md,yml,yaml}\" --ignore-path .gitignore --ignore-path .prettierignore",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,mjs,cjs,json,md,yml,yaml}\" --ignore-path .gitignore --ignore-path .prettierignore",
     "clean": "turbo run clean && rm -rf node_modules"
   },
   "devDependencies": {

@@ -1,4 +1,15 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Patch,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { z } from 'zod';
 import { CreateBookmarkSchema, UpsertNoteSchema } from '@devacademy/shared';
@@ -25,7 +36,10 @@ export class LibraryController {
   @Post('bookmarks')
   @ApiOperation({ summary: 'Yer imi ekle (ders ya da ders içindeki blok)' })
   @ApiZodBody(CreateBookmarkSchema)
-  addBookmark(@CurrentUser() user: AuthUser, @Body(zodBody(CreateBookmarkSchema)) dto: CreateBookmarkDto): Promise<BookmarkDto> {
+  addBookmark(
+    @CurrentUser() user: AuthUser,
+    @Body(zodBody(CreateBookmarkSchema)) dto: CreateBookmarkDto,
+  ): Promise<BookmarkDto> {
     return this.library.addBookmark(user.id, dto);
   }
 
@@ -46,14 +60,21 @@ export class LibraryController {
   @Post('notes')
   @ApiOperation({ summary: 'Not oluştur' })
   @ApiZodBody(UpsertNoteSchema)
-  createNote(@CurrentUser() user: AuthUser, @Body(zodBody(UpsertNoteSchema)) dto: UpsertNoteDto): Promise<NoteDto> {
+  createNote(
+    @CurrentUser() user: AuthUser,
+    @Body(zodBody(UpsertNoteSchema)) dto: UpsertNoteDto,
+  ): Promise<NoteDto> {
     return this.library.createNote(user.id, dto);
   }
 
   @Patch('notes/:id')
   @ApiOperation({ summary: 'Notu güncelle' })
   @ApiZodBody(UpdateNoteSchema)
-  updateNote(@CurrentUser() user: AuthUser, @Param('id') id: string, @Body(zodBody(UpdateNoteSchema)) dto: z.infer<typeof UpdateNoteSchema>): Promise<NoteDto> {
+  updateNote(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+    @Body(zodBody(UpdateNoteSchema)) dto: z.infer<typeof UpdateNoteSchema>,
+  ): Promise<NoteDto> {
     return this.library.updateNote(user.id, id, dto.body);
   }
 

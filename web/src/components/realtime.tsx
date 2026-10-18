@@ -25,7 +25,12 @@ export function RealtimeBridge() {
     void import('socket.io-client').then(({ io }) => {
       if (cancelled) return;
       const origin = new URL(API_URL).origin;
-      const s = io(origin, { path: '/ws', auth: token ? { token } : {}, transports: ['websocket'], reconnectionAttempts: 5 });
+      const s = io(origin, {
+        path: '/ws',
+        auth: token ? { token } : {},
+        transports: ['websocket'],
+        reconnectionAttempts: 5,
+      });
       s.on('event', (ev: WsServerEvent) => {
         switch (ev.type) {
           case 'progress.updated':
@@ -58,7 +63,13 @@ export function RealtimeBridge() {
     <div className="pointer-events-none fixed bottom-4 right-4 z-50 space-y-2" aria-live="polite">
       <AnimatePresence>
         {toasts.map((b) => (
-          <motion.div key={b.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="card pointer-events-auto flex items-center gap-3 px-4 py-3">
+          <motion.div
+            key={b.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            className="card pointer-events-auto flex items-center gap-3 px-4 py-3"
+          >
             <span className="flex h-9 w-9 items-center justify-center rounded-full bg-accent/20 text-accent">
               <Award size={18} />
             </span>

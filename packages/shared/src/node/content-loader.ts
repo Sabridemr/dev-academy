@@ -93,15 +93,26 @@ export function loadContent(root = findContentRoot()): LoadedContent {
   if (existsSync(pathsFile)) {
     const parsed = LearningPathManifestSchema.array().safeParse(readJson(pathsFile));
     if (parsed.success) paths = parsed.data;
-    else issues.push({ severity: 'error', file: rel(pathsFile), message: parsed.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('; ') });
+    else
+      issues.push({
+        severity: 'error',
+        file: rel(pathsFile),
+        message: parsed.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('; '),
+      });
   } else {
-    issues.push({ severity: 'warning', file: 'paths.json', message: 'paths.json yok; müfredattaki varsayılan yollar kullanılacak' });
+    issues.push({
+      severity: 'warning',
+      file: 'paths.json',
+      message: 'paths.json yok; müfredattaki varsayılan yollar kullanılacak',
+    });
   }
 
   const modulesDir = join(root, 'modules');
   const modules: LoadedModule[] = [];
   const moduleDirs = existsSync(modulesDir)
-    ? readdirSync(modulesDir).filter((d) => statSync(join(modulesDir, d)).isDirectory()).sort()
+    ? readdirSync(modulesDir)
+        .filter((d) => statSync(join(modulesDir, d)).isDirectory())
+        .sort()
     : [];
 
   for (const mDir of moduleDirs) {
@@ -113,12 +124,22 @@ export function loadContent(root = findContentRoot()): LoadedContent {
     }
     const manifestParsed = ModuleManifestSchema.safeParse(readJson(manifestFile));
     if (!manifestParsed.success) {
-      issues.push({ severity: 'error', file: rel(manifestFile), message: manifestParsed.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('; ') });
+      issues.push({
+        severity: 'error',
+        file: rel(manifestFile),
+        message: manifestParsed.error.issues
+          .map((i) => `${i.path.join('.')}: ${i.message}`)
+          .join('; '),
+      });
       continue;
     }
     const manifest = manifestParsed.data;
     if (manifest.id !== mDir) {
-      issues.push({ severity: 'warning', file: rel(manifestFile), message: `Klasör adı (${mDir}) ile module.id (${manifest.id}) farklı` });
+      issues.push({
+        severity: 'warning',
+        file: rel(manifestFile),
+        message: `Klasör adı (${mDir}) ile module.id (${manifest.id}) farklı`,
+      });
     }
 
     const lessons: LoadedLesson[] = [];
@@ -141,31 +162,53 @@ export function loadContent(root = findContentRoot()): LoadedContent {
           englishMarkdown: existsSync(enFile) ? readFileSync(enFile, 'utf8') : undefined,
         });
       } catch (err) {
-        issues.push({ severity: 'error', file: rel(mdFile), message: err instanceof LessonParseError ? err.message : String(err) });
+        issues.push({
+          severity: 'error',
+          file: rel(mdFile),
+          message: err instanceof LessonParseError ? err.message : String(err),
+        });
         continue;
       }
       if (doc.meta.id !== lDir) {
-        issues.push({ severity: 'warning', file: rel(mdFile), message: `Klasör adı (${lDir}) ile lesson id (${doc.meta.id}) farklı` });
+        issues.push({
+          severity: 'warning',
+          file: rel(mdFile),
+          message: `Klasör adı (${lDir}) ile lesson id (${doc.meta.id}) farklı`,
+        });
       }
       if (doc.meta.module !== manifest.id) {
-        issues.push({ severity: 'error', file: rel(mdFile), message: `lesson.module (${doc.meta.module}) modül id'si ile (${manifest.id}) eşleşmiyor` });
+        issues.push({
+          severity: 'error',
+          file: rel(mdFile),
+          message: `lesson.module (${doc.meta.module}) modül id'si ile (${manifest.id}) eşleşmiyor`,
+        });
       }
 
       // Sahneler
       const scenes: LoadedScene[] = [];
-      const sceneFiles = readdirSync(lessonDir).filter((f) => f === 'scene.json' || f.endsWith('.scene.json'));
+      const sceneFiles = readdirSync(lessonDir).filter(
+        (f) => f === 'scene.json' || f.endsWith('.scene.json'),
+      );
       for (const sf of sceneFiles) {
         const file = join(lessonDir, sf);
         let raw: unknown;
         try {
           raw = readJson(file);
         } catch (err) {
-          issues.push({ severity: 'error', file: rel(file), message: `JSON parse hatası: ${String(err)}` });
+          issues.push({
+            severity: 'error',
+            file: rel(file),
+            message: `JSON parse hatası: ${String(err)}`,
+          });
           continue;
         }
         const result = validateScene(raw);
         for (const is of result.issues) {
-          issues.push({ severity: is.severity, file: rel(file), message: `${is.path}: ${is.message}` });
+          issues.push({
+            severity: is.severity,
+            file: rel(file),
+            message: `${is.path}: ${is.message}`,
+          });
         }
         if (result.ok && result.scene) scenes.push({ file: sf, scene: result.scene });
       }
@@ -181,10 +224,20 @@ export function loadContent(root = findContentRoot()): LoadedContent {
             quiz = parsed.data;
             quizFile = 'quiz.json';
           } else {
-            issues.push({ severity: 'error', file: rel(qf), message: parsed.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('; ') });
+            issues.push({
+              severity: 'error',
+              file: rel(qf),
+              message: parsed.error.issues
+                .map((i) => `${i.path.join('.')}: ${i.message}`)
+                .join('; '),
+            });
           }
         } catch (err) {
-          issues.push({ severity: 'error', file: rel(qf), message: `JSON parse hatası: ${String(err)}` });
+          issues.push({
+            severity: 'error',
+            file: rel(qf),
+            message: `JSON parse hatası: ${String(err)}`,
+          });
         }
       }
 
@@ -193,11 +246,19 @@ export function loadContent(root = findContentRoot()): LoadedContent {
       for (const f of readdirSync(lessonDir).filter((x) => x.endsWith('.svg'))) {
         const content = readFileSync(join(lessonDir, f), 'utf8');
         if (!/<svg[\s>]/i.test(content)) {
-          issues.push({ severity: 'error', file: rel(join(lessonDir, f)), message: 'Geçerli bir <svg> kökü yok' });
+          issues.push({
+            severity: 'error',
+            file: rel(join(lessonDir, f)),
+            message: 'Geçerli bir <svg> kökü yok',
+          });
           continue;
         }
         if (!/viewBox=/i.test(content)) {
-          issues.push({ severity: 'warning', file: rel(join(lessonDir, f)), message: 'viewBox yok; responsive ölçekleme için gerekli' });
+          issues.push({
+            severity: 'warning',
+            file: rel(join(lessonDir, f)),
+            message: 'viewBox yok; responsive ölçekleme için gerekli',
+          });
         }
         svgs[f] = content;
       }
@@ -205,25 +266,49 @@ export function loadContent(root = findContentRoot()): LoadedContent {
       // Blok referansları
       for (const b of doc.blocks) {
         if (b.type === 'diagram' && !/^https?:\/\//.test(b.src) && !svgs[b.src]) {
-          issues.push({ severity: 'error', file: rel(mdFile), message: `Diyagram dosyası bulunamadı: ${b.src}` });
+          issues.push({
+            severity: 'error',
+            file: rel(mdFile),
+            message: `Diyagram dosyası bulunamadı: ${b.src}`,
+          });
         }
         if (b.type === 'animation' && !scenes.some((s) => s.file === b.scene)) {
-          issues.push({ severity: 'error', file: rel(mdFile), message: `Sahne dosyası bulunamadı ya da geçersiz: ${b.scene}` });
+          issues.push({
+            severity: 'error',
+            file: rel(mdFile),
+            message: `Sahne dosyası bulunamadı ya da geçersiz: ${b.scene}`,
+          });
         }
         if (b.type === 'quiz' && (!quiz || b.src !== quizFile)) {
-          issues.push({ severity: 'error', file: rel(mdFile), message: `Quiz dosyası bulunamadı ya da geçersiz: ${b.src}` });
+          issues.push({
+            severity: 'error',
+            file: rel(mdFile),
+            message: `Quiz dosyası bulunamadı ya da geçersiz: ${b.src}`,
+          });
         }
         // Simülatörün okumadığı parametre sessizce yok sayılır; yönerge gerçek kontrollerle uyuşmaz
         if (b.type === 'interactive') {
           const allowed: readonly string[] = INTERACTIVE_PARAMS[b.interactive];
           const unknown = Object.keys(b.params ?? {}).filter((k) => !allowed.includes(k));
           if (unknown.length) {
-            issues.push({ severity: 'error', file: rel(mdFile), message: `':::interactive{type=${b.interactive}}' bilinmeyen parametre: ${unknown.join(', ')} (geçerli: ${allowed.join(', ')})` });
+            issues.push({
+              severity: 'error',
+              file: rel(mdFile),
+              message: `':::interactive{type=${b.interactive}}' bilinmeyen parametre: ${unknown.join(', ')} (geçerli: ${allowed.join(', ')})`,
+            });
           }
         }
       }
-      if (quiz && (quiz.questions.length < QUIZ_QUESTION_RANGE.min || quiz.questions.length > QUIZ_QUESTION_RANGE.max)) {
-        issues.push({ severity: 'error', file: rel(join(lessonDir, 'quiz.json')), message: `Quiz ${QUIZ_QUESTION_RANGE.min}–${QUIZ_QUESTION_RANGE.max} soru içermeli (şu an ${quiz.questions.length})` });
+      if (
+        quiz &&
+        (quiz.questions.length < QUIZ_QUESTION_RANGE.min ||
+          quiz.questions.length > QUIZ_QUESTION_RANGE.max)
+      ) {
+        issues.push({
+          severity: 'error',
+          file: rel(join(lessonDir, 'quiz.json')),
+          message: `Quiz ${QUIZ_QUESTION_RANGE.min}–${QUIZ_QUESTION_RANGE.max} soru içermeli (şu an ${quiz.questions.length})`,
+        });
       }
 
       lessons.push({ dir: lessonDir, doc, scenes, quiz, quizFile, svgs });
@@ -242,25 +327,45 @@ export function loadContent(root = findContentRoot()): LoadedContent {
     for (const l of m.lessons) {
       for (const b of l.doc.blocks) {
         if (b.type === 'next' && !allLessonIds.has(b.lesson) && !curriculumIds.has(b.lesson)) {
-          issues.push({ severity: 'error', file: rel(join(l.dir, 'lesson.md')), message: `':::next' bilinmeyen derse işaret ediyor: ${b.lesson}` });
+          issues.push({
+            severity: 'error',
+            file: rel(join(l.dir, 'lesson.md')),
+            message: `':::next' bilinmeyen derse işaret ediyor: ${b.lesson}`,
+          });
         }
       }
       for (const p of l.doc.meta.prerequisites) {
         if (!allLessonIds.has(p) && !curriculumIds.has(p)) {
-          issues.push({ severity: 'warning', file: rel(join(l.dir, 'lesson.md')), message: `Ön koşul bilinmeyen ders: ${p}` });
+          issues.push({
+            severity: 'warning',
+            file: rel(join(l.dir, 'lesson.md')),
+            message: `Ön koşul bilinmeyen ders: ${p}`,
+          });
         }
       }
     }
   }
 
   // Öğrenme yolu öğeleri ("modül" ya da "modül/ders") var olan içeriğe işaret etmeli
-  const moduleLessons = new Map(modules.map((m) => [m.manifest.id, new Set(m.lessons.map((l) => l.doc.meta.id))]));
+  const moduleLessons = new Map(
+    modules.map((m) => [m.manifest.id, new Set(m.lessons.map((l) => l.doc.meta.id))]),
+  );
   for (const p of paths) {
     for (const item of p.items) {
       const [moduleId, lessonId] = item.split('/');
       const lessonsOfModule = moduleLessons.get(moduleId);
-      if (!lessonsOfModule) issues.push({ severity: 'error', file: 'paths.json', message: `Yol '${p.id}': bilinmeyen modül ${moduleId}` });
-      else if (lessonId && !lessonsOfModule.has(lessonId)) issues.push({ severity: 'error', file: 'paths.json', message: `Yol '${p.id}': ${moduleId} modülünde bilinmeyen ders ${lessonId}` });
+      if (!lessonsOfModule)
+        issues.push({
+          severity: 'error',
+          file: 'paths.json',
+          message: `Yol '${p.id}': bilinmeyen modül ${moduleId}`,
+        });
+      else if (lessonId && !lessonsOfModule.has(lessonId))
+        issues.push({
+          severity: 'error',
+          file: 'paths.json',
+          message: `Yol '${p.id}': ${moduleId} modülünde bilinmeyen ders ${lessonId}`,
+        });
     }
   }
 
@@ -268,7 +373,11 @@ export function loadContent(root = findContentRoot()): LoadedContent {
 }
 
 /** Müfredat kapsama raporu: hangi dersler henüz yazılmamış */
-export function coverageReport(content: LoadedContent): { total: number; written: number; missing: { moduleId: string; lessonId: string }[] } {
+export function coverageReport(content: LoadedContent): {
+  total: number;
+  written: number;
+  missing: { moduleId: string; lessonId: string }[];
+} {
   const written = new Set(content.modules.flatMap((m) => m.lessons.map((l) => l.doc.meta.id)));
   const missing: { moduleId: string; lessonId: string }[] = [];
   let total = 0;

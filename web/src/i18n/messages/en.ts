@@ -19,7 +19,8 @@ export const en: Messages = {
   theme: { light: 'Light theme', dark: 'Dark theme', system: 'System' },
   home: {
     heroTitle: 'Learn complex systems step by step, with animations',
-    heroSubtitle: 'From load balancers to Transformers — with clickable diagrams, simulators and mini quizzes.',
+    heroSubtitle:
+      'From load balancers to Transformers — with clickable diagrams, simulators and mini quizzes.',
     start: 'Start learning',
     continue: 'Continue where you left off',
     pathsTitle: 'Learning paths',
@@ -134,8 +135,19 @@ export const en: Messages = {
     yourAnswerCorrect: 'You remembered it correctly!',
     yourAnswerWrong: 'Your answer is not correct.',
   },
-  library: { title: 'Library', bookmarks: 'Bookmarks', notes: 'Notes', empty: 'Nothing here yet.', delete: 'Delete' },
-  search: { placeholder: 'Search lessons, concepts or patterns… (e.g. round-robin, saga, attention)', results: '{count} results', empty: 'No results.', types: { lesson: 'Lesson', concept: 'Concept', pattern: 'Pattern', module: 'Module' } },
+  library: {
+    title: 'Library',
+    bookmarks: 'Bookmarks',
+    notes: 'Notes',
+    empty: 'Nothing here yet.',
+    delete: 'Delete',
+  },
+  search: {
+    placeholder: 'Search lessons, concepts or patterns… (e.g. round-robin, saga, attention)',
+    results: '{count} results',
+    empty: 'No results.',
+    types: { lesson: 'Lesson', concept: 'Concept', pattern: 'Pattern', module: 'Module' },
+  },
   sim: {
     send: 'Send request',
     burst: 'Send 10 requests',
@@ -177,7 +189,8 @@ export const en: Messages = {
     temperature: 'Temperature',
     causal: 'Causal mask',
     sentence: 'Sentence',
-    unsupported: 'This interactive experiment is available in the mobile app or coming soon to the web.',
+    unsupported:
+      'This interactive experiment is available in the mobile app or coming soon to the web.',
     params: 'Parameters',
   },
   admin: {

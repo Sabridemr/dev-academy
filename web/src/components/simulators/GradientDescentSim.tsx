@@ -39,7 +39,13 @@ const freshOptState = (): OptState => ({ vw: 0, vb: 0, sw: 0, sb: 0 });
  * fark, dar vadide SGD'nin zikzak çizmesi, momentum'un sığ eksende hızlanması ve
  * Adam'ın adımı eksen başına ölçeklemesidir.
  */
-function optimizerStep(data: DataPoint[], last: GdStep, lr: number, optimizer: Optimizer, o: OptState): GdStep {
+function optimizerStep(
+  data: DataPoint[],
+  last: GdStep,
+  lr: number,
+  optimizer: Optimizer,
+  o: OptState,
+): GdStep {
   const { gradW, gradB } = gradients(data, last.params);
   const t = last.iteration + 1;
   let dw = gradW;
@@ -76,7 +82,10 @@ const L = {
     bowl: 'Kase (x merkezli)',
     valley: 'Dar vadi (x kaydırılmış)',
     optimizer: 'Optimizer',
-    optimizers: { sgd: 'SGD (düz)', momentum: 'Momentum (β=0.9)', adam: 'Adam' } satisfies Record<Optimizer, string>,
+    optimizers: { sgd: 'SGD (düz)', momentum: 'Momentum (β=0.9)', adam: 'Adam' } satisfies Record<
+      Optimizer,
+      string
+    >,
     diverged: 'Iraksama! Öğrenme oranı çok büyük; kayıp patladı. Oranı düşürüp sıfırla.',
     optimum: 'OLS optimum',
     pause: 'Duraklat',
@@ -92,7 +101,10 @@ const L = {
     bowl: 'Bowl (centered x)',
     valley: 'Narrow valley (shifted x)',
     optimizer: 'Optimizer',
-    optimizers: { sgd: 'SGD (plain)', momentum: 'Momentum (β=0.9)', adam: 'Adam' } satisfies Record<Optimizer, string>,
+    optimizers: { sgd: 'SGD (plain)', momentum: 'Momentum (β=0.9)', adam: 'Adam' } satisfies Record<
+      Optimizer,
+      string
+    >,
     diverged: 'Diverged! Learning rate too large; the loss exploded. Lower it and reset.',
     optimum: 'OLS optimum',
     pause: 'Pause',
@@ -111,14 +123,24 @@ export default function GradientDescentSim({ params, onInteract }: SimulatorProp
   const { t, locale } = useI18n();
   const l = L[locale];
   // "saddle" MSE için mümkün değil (kayıp dışbükey); en yakın öğretici varyant olan vadiye düşülür
-  const initialSurface: Surface = strParam<string>(params, 'surface', 'bowl') === 'bowl' ? 'bowl' : 'valley';
+  const initialSurface: Surface =
+    strParam<string>(params, 'surface', 'bowl') === 'bowl' ? 'bowl' : 'valley';
   const [surface, setSurface] = useState<Surface>(initialSurface);
   const data = useMemo(() => makeData(surface), [surface]);
-  const [start, setStart] = useState<RegressionParams>(() => ({ w: numParam(params, 'startX', -3, -4, 6), b: -6 }));
-  const [lrExp, setLrExp] = useState(() => Math.log10(numParam(params, 'learningRate', 0.02, 0.0001, 1)));
+  const [start, setStart] = useState<RegressionParams>(() => ({
+    w: numParam(params, 'startX', -3, -4, 6),
+    b: -6,
+  }));
+  const [lrExp, setLrExp] = useState(() =>
+    Math.log10(numParam(params, 'learningRate', 0.02, 0.0001, 1)),
+  );
   const lr = Math.pow(10, lrExp);
-  const [optimizer, setOptimizer] = useState<Optimizer>(() => strParam(params, 'optimizer', 'sgd', OPTIMIZERS));
-  const [steps, setSteps] = useState<GdStep[]>(() => [{ iteration: 0, params: start, loss: mseLoss(data, start), gradW: 0, gradB: 0 }]);
+  const [optimizer, setOptimizer] = useState<Optimizer>(() =>
+    strParam(params, 'optimizer', 'sgd', OPTIMIZERS),
+  );
+  const [steps, setSteps] = useState<GdStep[]>(() => [
+    { iteration: 0, params: start, loss: mseLoss(data, start), gradW: 0, gradB: 0 },
+  ]);
   const [running, setRunning] = useState(false);
   const stepsRef = useRef(steps);
   const optRef = useRef<OptState>(freshOptState());
@@ -129,29 +151,36 @@ export default function GradientDescentSim({ params, onInteract }: SimulatorProp
   const optimum = useMemo(() => closedFormSolution(data), [data]);
   const current = steps[steps.length - 1];
   const diverged = !Number.isFinite(current.loss) || current.loss > 1e6;
-  const converged = steps.length > 2 && Math.abs(steps[steps.length - 2].loss - current.loss) < 1e-6;
+  const converged =
+    steps.length > 2 && Math.abs(steps[steps.length - 2].loss - current.loss) < 1e-6;
 
-  const reset = useCallback((p: RegressionParams = start, d: DataPoint[] = data) => {
-    setRunning(false);
-    optRef.current = freshOptState();
-    const first = [{ iteration: 0, params: p, loss: mseLoss(d, p), gradW: 0, gradB: 0 }];
-    stepsRef.current = first;
-    setSteps(first);
-  }, [start, data]);
+  const reset = useCallback(
+    (p: RegressionParams = start, d: DataPoint[] = data) => {
+      setRunning(false);
+      optRef.current = freshOptState();
+      const first = [{ iteration: 0, params: p, loss: mseLoss(d, p), gradW: 0, gradB: 0 }];
+      stepsRef.current = first;
+      setSteps(first);
+    },
+    [start, data],
+  );
 
   // Adımlar updater dışında hesaplanır: optimizer durumu (momentum/Adam) ref'te tutulur ve
   // StrictMode'un updater'ı iki kez çağırması bu durumu bozmamalıdır.
-  const doStep = useCallback((n = 1) => {
-    let out = stepsRef.current;
-    for (let i = 0; i < n; i++) {
-      const last = out[out.length - 1];
-      if (!Number.isFinite(last.loss) || last.loss > 1e6) break;
-      out = [...out, optimizerStep(data, last, lr, optimizer, optRef.current)];
-    }
-    if (out.length > MAX_STEPS) out = [out[0], ...out.slice(out.length - MAX_STEPS + 1)];
-    stepsRef.current = out;
-    setSteps(out);
-  }, [data, lr, optimizer]);
+  const doStep = useCallback(
+    (n = 1) => {
+      let out = stepsRef.current;
+      for (let i = 0; i < n; i++) {
+        const last = out[out.length - 1];
+        if (!Number.isFinite(last.loss) || last.loss > 1e6) break;
+        out = [...out, optimizerStep(data, last, lr, optimizer, optRef.current)];
+      }
+      if (out.length > MAX_STEPS) out = [out[0], ...out.slice(out.length - MAX_STEPS + 1)];
+      stepsRef.current = out;
+      setSteps(out);
+    },
+    [data, lr, optimizer],
+  );
 
   useEffect(() => {
     if (!running) return;
@@ -193,7 +222,10 @@ export default function GradientDescentSim({ params, onInteract }: SimulatorProp
   const cellH = hh / RES;
   const path = steps
     .filter((s) => Number.isFinite(s.params.w) && Number.isFinite(s.params.b))
-    .map((s) => `${Math.max(-20, Math.min(hw + 20, hx(s.params.w))).toFixed(1)},${Math.max(-20, Math.min(hh + 20, hy(s.params.b))).toFixed(1)}`)
+    .map(
+      (s) =>
+        `${Math.max(-20, Math.min(hw + 20, hx(s.params.w))).toFixed(1)},${Math.max(-20, Math.min(hh + 20, hy(s.params.b))).toFixed(1)}`,
+    )
     .join(' ');
 
   // ---------- Kayıp eğrisi ----------
@@ -202,7 +234,10 @@ export default function GradientDescentSim({ params, onInteract }: SimulatorProp
   const lMin = Math.min(...lossLogs, 0);
   const lMax = Math.max(...lossLogs, 1);
   const lossPath = finite
-    .map((s, i) => `${(560 * i) / Math.max(1, finite.length - 1)},${(90 - ((Math.log10(s.loss) - lMin) / Math.max(1e-6, lMax - lMin)) * 80).toFixed(1)}`)
+    .map(
+      (s, i) =>
+        `${(560 * i) / Math.max(1, finite.length - 1)},${(90 - ((Math.log10(s.loss) - lMin) / Math.max(1e-6, lMax - lMin)) * 80).toFixed(1)}`,
+    )
     .join(' ');
 
   const onHeatmapClick = (e: MouseEvent<SVGRectElement>) => {
@@ -210,7 +245,10 @@ export default function GradientDescentSim({ params, onInteract }: SimulatorProp
     const rect = e.currentTarget.getBoundingClientRect();
     const fx = (e.clientX - rect.left) / rect.width;
     const fy = (e.clientY - rect.top) / rect.height;
-    const p = { w: W_RANGE[0] + fx * (W_RANGE[1] - W_RANGE[0]), b: B_RANGE[1] - fy * (B_RANGE[1] - B_RANGE[0]) };
+    const p = {
+      w: W_RANGE[0] + fx * (W_RANGE[1] - W_RANGE[0]),
+      b: B_RANGE[1] - fy * (B_RANGE[1] - B_RANGE[0]),
+    };
     setStart(p);
     reset(p);
   };
@@ -220,10 +258,27 @@ export default function GradientDescentSim({ params, onInteract }: SimulatorProp
       title={l.title}
       toolbar={
         <>
-          <button type="button" className="btn-ghost" onClick={() => { onInteract(); doStep(1); }} disabled={diverged || running}>
+          <button
+            type="button"
+            className="btn-ghost"
+            onClick={() => {
+              onInteract();
+              doStep(1);
+            }}
+            disabled={diverged || running}
+          >
             <StepForward size={14} /> {t('sim.step')}
           </button>
-          <button type="button" className="btn-primary" onClick={() => { onInteract(); setRunning((r) => !r); }} disabled={diverged} aria-pressed={running}>
+          <button
+            type="button"
+            className="btn-primary"
+            onClick={() => {
+              onInteract();
+              setRunning((r) => !r);
+            }}
+            disabled={diverged}
+            aria-pressed={running}
+          >
             {running ? <Pause size={14} /> : <Play size={14} />} {running ? l.pause : t('sim.run')}
           </button>
           <button type="button" className="btn-ghost" onClick={() => reset()}>
@@ -233,27 +288,66 @@ export default function GradientDescentSim({ params, onInteract }: SimulatorProp
       }
       aside={
         <>
-          <Range label={t('sim.learningRate')} value={lrExp} min={-3} max={-0.3} step={0.05} format={(v) => Math.pow(10, v).toPrecision(2)} onChange={(v) => { onInteract(); setLrExp(v); }} />
+          <Range
+            label={t('sim.learningRate')}
+            value={lrExp}
+            min={-3}
+            max={-0.3}
+            step={0.05}
+            format={(v) => Math.pow(10, v).toPrecision(2)}
+            onChange={(v) => {
+              onInteract();
+              setLrExp(v);
+            }}
+          />
           <Select
             label={l.dataset}
             value={surface}
-            options={[{ id: 'bowl', label: l.bowl }, { id: 'valley', label: l.valley }]}
-            onChange={(v) => { onInteract(); setSurface(v); reset(start, makeData(v)); }}
+            options={[
+              { id: 'bowl', label: l.bowl },
+              { id: 'valley', label: l.valley },
+            ]}
+            onChange={(v) => {
+              onInteract();
+              setSurface(v);
+              reset(start, makeData(v));
+            }}
           />
           <Select
             label={l.optimizer}
             value={optimizer}
             options={OPTIMIZERS.map((o) => ({ id: o, label: l.optimizers[o] }))}
-            onChange={(v) => { onInteract(); setOptimizer(v); reset(); }}
+            onChange={(v) => {
+              onInteract();
+              setOptimizer(v);
+              reset();
+            }}
           />
           <div className="grid grid-cols-2 gap-2">
             <Stat label={t('sim.iteration')} value={current.iteration} />
-            <Stat label={t('sim.loss')} value={Number.isFinite(current.loss) ? (current.loss > 1e4 ? current.loss.toExponential(1) : current.loss.toFixed(3)) : '∞'} tone={diverged ? 'danger' : converged ? 'success' : 'primary'} />
-            <Stat label="w" value={Number.isFinite(current.params.w) ? current.params.w.toFixed(3) : 'NaN'} />
-            <Stat label="b" value={Number.isFinite(current.params.b) ? current.params.b.toFixed(3) : 'NaN'} />
+            <Stat
+              label={t('sim.loss')}
+              value={
+                Number.isFinite(current.loss)
+                  ? current.loss > 1e4
+                    ? current.loss.toExponential(1)
+                    : current.loss.toFixed(3)
+                  : '∞'
+              }
+              tone={diverged ? 'danger' : converged ? 'success' : 'primary'}
+            />
+            <Stat
+              label="w"
+              value={Number.isFinite(current.params.w) ? current.params.w.toFixed(3) : 'NaN'}
+            />
+            <Stat
+              label="b"
+              value={Number.isFinite(current.params.b) ? current.params.b.toFixed(3) : 'NaN'}
+            />
           </div>
           <p className="text-xs text-muted">
-            {l.optimum}: w={optimum.w.toFixed(2)}, b={optimum.b.toFixed(2)} · ∂L/∂w={current.gradW.toFixed(2)}, ∂L/∂b={current.gradB.toFixed(2)}
+            {l.optimum}: w={optimum.w.toFixed(2)}, b={optimum.b.toFixed(2)} · ∂L/∂w=
+            {current.gradW.toFixed(2)}, ∂L/∂b={current.gradB.toFixed(2)}
           </p>
           <div aria-live="polite">
             {diverged && (
@@ -270,22 +364,62 @@ export default function GradientDescentSim({ params, onInteract }: SimulatorProp
         <figure>
           <figcaption className="label">{l.data}</figcaption>
           <svg viewBox="0 0 300 220" className="h-auto w-full" role="img" aria-label={l.data}>
-            <rect x={30} y={10} width={260} height={200} fill="var(--da-bg)" stroke="var(--da-border)" />
-            {xMin < 0 && xMax > 0 && <line x1={sx(0)} x2={sx(0)} y1={10} y2={210} stroke="var(--da-border)" />}
-            {yMin < 0 && yMax > 0 && <line x1={30} x2={290} y1={sy(0)} y2={sy(0)} stroke="var(--da-border)" />}
+            <rect
+              x={30}
+              y={10}
+              width={260}
+              height={200}
+              fill="var(--da-bg)"
+              stroke="var(--da-border)"
+            />
+            {xMin < 0 && xMax > 0 && (
+              <line x1={sx(0)} x2={sx(0)} y1={10} y2={210} stroke="var(--da-border)" />
+            )}
+            {yMin < 0 && yMax > 0 && (
+              <line x1={30} x2={290} y1={sy(0)} y2={sy(0)} stroke="var(--da-border)" />
+            )}
             {data.map((d, i) => (
-              <circle key={i} cx={sx(d.x)} cy={sy(d.y)} r={3.5} fill="var(--da-primary)" opacity={0.8} />
+              <circle
+                key={i}
+                cx={sx(d.x)}
+                cy={sy(d.y)}
+                r={3.5}
+                fill="var(--da-primary)"
+                opacity={0.8}
+              />
             ))}
             {Number.isFinite(lineY(xMin)) && (
-              <line x1={sx(xMin)} y1={clampY(lineY(xMin))} x2={sx(xMax)} y2={clampY(lineY(xMax))} stroke={diverged ? 'var(--da-danger)' : 'var(--da-accent)'} strokeWidth={2.5} />
+              <line
+                x1={sx(xMin)}
+                y1={clampY(lineY(xMin))}
+                x2={sx(xMax)}
+                y2={clampY(lineY(xMax))}
+                stroke={diverged ? 'var(--da-danger)' : 'var(--da-accent)'}
+                strokeWidth={2.5}
+              />
             )}
-            <line x1={sx(xMin)} y1={clampY(optimum.w * xMin + optimum.b)} x2={sx(xMax)} y2={clampY(optimum.w * xMax + optimum.b)} stroke="var(--da-success)" strokeDasharray="4 4" opacity={0.6} />
-            <text x={34} y={24} fontSize={10} fill="var(--da-muted)">y = {current.params.w.toFixed(2)}x + {current.params.b.toFixed(2)}</text>
+            <line
+              x1={sx(xMin)}
+              y1={clampY(optimum.w * xMin + optimum.b)}
+              x2={sx(xMax)}
+              y2={clampY(optimum.w * xMax + optimum.b)}
+              stroke="var(--da-success)"
+              strokeDasharray="4 4"
+              opacity={0.6}
+            />
+            <text x={34} y={24} fontSize={10} fill="var(--da-muted)">
+              y = {current.params.w.toFixed(2)}x + {current.params.b.toFixed(2)}
+            </text>
           </svg>
         </figure>
         <figure>
           <figcaption className="label">{l.surface}</figcaption>
-          <svg viewBox={`-30 -4 ${hw + 40} ${hh + 28}`} className="h-auto w-full" role="img" aria-label={l.surface}>
+          <svg
+            viewBox={`-30 -4 ${hw + 40} ${hh + 28}`}
+            className="h-auto w-full"
+            role="img"
+            aria-label={l.surface}
+          >
             <defs>
               <clipPath id={clipId}>
                 <rect width={hw} height={hh} />
@@ -306,25 +440,81 @@ export default function GradientDescentSim({ params, onInteract }: SimulatorProp
                 );
               }),
             )}
-            <rect width={hw} height={hh} fill="transparent" className="cursor-crosshair" onClick={onHeatmapClick} aria-label={l.hint} />
+            <rect
+              width={hw}
+              height={hh}
+              fill="transparent"
+              className="cursor-crosshair"
+              onClick={onHeatmapClick}
+              aria-label={l.hint}
+            />
             <g clipPath={`url(#${clipId})`} pointerEvents="none">
               <polyline points={path} fill="none" stroke="var(--da-fg)" strokeWidth={1.5} />
               {steps.length < 120 &&
-                steps.map((s, i) => Number.isFinite(s.params.w) && <circle key={i} cx={hx(s.params.w)} cy={hy(s.params.b)} r={1.8} fill="var(--da-fg)" />)}
-              <circle cx={hx(optimum.w)} cy={hy(optimum.b)} r={5} fill="none" stroke="var(--da-success)" strokeWidth={2} />
-              {Number.isFinite(current.params.w) && <circle cx={hx(current.params.w)} cy={hy(current.params.b)} r={5} fill="var(--da-accent)" stroke="var(--da-surface)" />}
+                steps.map(
+                  (s, i) =>
+                    Number.isFinite(s.params.w) && (
+                      <circle
+                        key={i}
+                        cx={hx(s.params.w)}
+                        cy={hy(s.params.b)}
+                        r={1.8}
+                        fill="var(--da-fg)"
+                      />
+                    ),
+                )}
+              <circle
+                cx={hx(optimum.w)}
+                cy={hy(optimum.b)}
+                r={5}
+                fill="none"
+                stroke="var(--da-success)"
+                strokeWidth={2}
+              />
+              {Number.isFinite(current.params.w) && (
+                <circle
+                  cx={hx(current.params.w)}
+                  cy={hy(current.params.b)}
+                  r={5}
+                  fill="var(--da-accent)"
+                  stroke="var(--da-surface)"
+                />
+              )}
             </g>
-            <text x={hw / 2} y={hh + 16} textAnchor="middle" fontSize={10} fill="var(--da-muted)">w ({W_RANGE[0]} … {W_RANGE[1]})</text>
-            <text x={-8} y={hh / 2} textAnchor="middle" fontSize={10} fill="var(--da-muted)" transform={`rotate(-90 -8 ${hh / 2})`}>b</text>
+            <text x={hw / 2} y={hh + 16} textAnchor="middle" fontSize={10} fill="var(--da-muted)">
+              w ({W_RANGE[0]} … {W_RANGE[1]})
+            </text>
+            <text
+              x={-8}
+              y={hh / 2}
+              textAnchor="middle"
+              fontSize={10}
+              fill="var(--da-muted)"
+              transform={`rotate(-90 -8 ${hh / 2})`}
+            >
+              b
+            </text>
           </svg>
           <p className="text-[11px] text-muted">{l.hint}</p>
         </figure>
       </div>
       <figure className="mt-3">
         <figcaption className="label">{l.lossCurve}</figcaption>
-        <svg viewBox="-4 0 568 100" className="h-24 w-full" preserveAspectRatio="none" role="img" aria-label={l.lossCurve}>
+        <svg
+          viewBox="-4 0 568 100"
+          className="h-24 w-full"
+          preserveAspectRatio="none"
+          role="img"
+          aria-label={l.lossCurve}
+        >
           <rect x={0} y={5} width={560} height={90} fill="var(--da-bg)" stroke="var(--da-border)" />
-          <polyline points={lossPath} fill="none" stroke={diverged ? 'var(--da-danger)' : 'var(--da-primary)'} strokeWidth={2} vectorEffect="non-scaling-stroke" />
+          <polyline
+            points={lossPath}
+            fill="none"
+            stroke={diverged ? 'var(--da-danger)' : 'var(--da-primary)'}
+            strokeWidth={2}
+            vectorEffect="non-scaling-stroke"
+          />
         </svg>
       </figure>
     </SimShell>

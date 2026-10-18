@@ -42,7 +42,9 @@ export const BlockRenderer = memo(function BlockRenderer({ block, lesson, onQuiz
     case 'realworld':
       return <RealWorldBlockView company={block.company} markdown={md(block, locale)} />;
     case 'callout':
-      return <CalloutBlockView tone={block.tone} title={block.title} markdown={md(block, locale)} />;
+      return (
+        <CalloutBlockView tone={block.tone} title={block.title} markdown={md(block, locale)} />
+      );
     case 'quiz':
       return <QuizBlockView lessonId={lesson.id} onPassed={onQuizPassed} />;
     case 'next':
@@ -57,14 +59,16 @@ function AnimationBlockView({ sceneId, caption }: { sceneId?: string; caption?: 
   const scene = useScene(sceneId);
   if (!sceneId) return null;
   if (scene.isLoading) return <LoadingView label={t('lesson.loadingScene')} />;
-  if (scene.error || !scene.data) return <ErrorView error={scene.error} onRetry={() => void scene.refetch()} />;
+  if (scene.error || !scene.data)
+    return <ErrorView error={scene.error} onRetry={() => void scene.refetch()} />;
   return <ScenePlayer scene={scene.data.scene} caption={caption ? tl(caption) : undefined} />;
 }
 
 function QuizBlockView({ lessonId, onPassed }: { lessonId: string; onPassed?: () => void }) {
   const quiz = useQuiz(lessonId);
   if (quiz.isLoading) return <LoadingView />;
-  if (quiz.error || !quiz.data) return <ErrorView error={quiz.error} onRetry={() => void quiz.refetch()} />;
+  if (quiz.error || !quiz.data)
+    return <ErrorView error={quiz.error} onRetry={() => void quiz.refetch()} />;
   return <QuizView quiz={quiz.data} lessonId={lessonId} onPassed={onPassed} />;
 }
 
@@ -75,12 +79,30 @@ const CALLOUT_ICONS: Record<'info' | 'tip' | 'warning' | 'danger', IconName> = {
   danger: 'alert-circle',
 };
 
-function CalloutBlockView({ tone, title, markdown }: { tone: 'info' | 'tip' | 'warning' | 'danger'; title?: LocalizedString; markdown: string }) {
+function CalloutBlockView({
+  tone,
+  title,
+  markdown,
+}: {
+  tone: 'info' | 'tip' | 'warning' | 'danger';
+  title?: LocalizedString;
+  markdown: string;
+}) {
   const { t, tl } = useI18n();
   const { colors } = useTheme();
-  const color = tone === 'tip' ? colors.success : tone === 'warning' ? colors.warning : tone === 'danger' ? colors.danger : colors.primary;
+  const color =
+    tone === 'tip'
+      ? colors.success
+      : tone === 'warning'
+        ? colors.warning
+        : tone === 'danger'
+          ? colors.danger
+          : colors.primary;
   return (
-    <View style={[styles.callout, { borderLeftColor: color, backgroundColor: withAlpha(color, 0.08) }]} accessibilityRole="summary">
+    <View
+      style={[styles.callout, { borderLeftColor: color, backgroundColor: withAlpha(color, 0.08) }]}
+      accessibilityRole="summary"
+    >
       <Row>
         <Ionicons name={CALLOUT_ICONS[tone]} size={18} color={color} />
         <Text variant="label" color={color}>
@@ -106,17 +128,34 @@ function RealWorldBlockView({ company, markdown }: { company: string; markdown: 
   );
 }
 
-function NextBlockView({ lessonId, note, lesson }: { lessonId: string; note?: LocalizedString; lesson: LessonDetail }) {
+function NextBlockView({
+  lessonId,
+  note,
+  lesson,
+}: {
+  lessonId: string;
+  note?: LocalizedString;
+  lesson: LessonDetail;
+}) {
   const { t, tl } = useI18n();
   const { colors } = useTheme();
-  const targetId = lesson.next && (lesson.next.id === lessonId || lesson.next.slug === lessonId) ? lesson.next.id : lessonId;
+  const targetId =
+    lesson.next && (lesson.next.id === lessonId || lesson.next.slug === lessonId)
+      ? lesson.next.id
+      : lessonId;
   const title = lesson.next && targetId === lesson.next.id ? tl(lesson.next.title) : lessonId;
   return (
     <Pressable
       onPress={() => router.push({ pathname: '/lesson/[id]', params: { id: targetId } })}
       accessibilityRole="link"
       accessibilityLabel={`${t('lesson.nextStep')}: ${title}`}
-      style={({ pressed }) => [styles.next, { borderColor: colors.primary, backgroundColor: withAlpha(colors.primary, pressed ? 0.16 : 0.08) }]}
+      style={({ pressed }) => [
+        styles.next,
+        {
+          borderColor: colors.primary,
+          backgroundColor: withAlpha(colors.primary, pressed ? 0.16 : 0.08),
+        },
+      ]}
     >
       <View style={{ flex: 1, gap: 2 }}>
         <Text variant="caption" muted>
@@ -136,5 +175,12 @@ function NextBlockView({ lessonId, note, lesson }: { lessonId: string; note?: Lo
 
 const styles = StyleSheet.create({
   callout: { borderLeftWidth: 4, borderRadius: radius.md, padding: spacing.md, gap: spacing.xs },
-  next: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, borderWidth: 1.5, borderRadius: radius.md, padding: spacing.lg },
+  next: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    borderWidth: 1.5,
+    borderRadius: radius.md,
+    padding: spacing.lg,
+  },
 });

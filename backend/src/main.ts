@@ -21,7 +21,10 @@ class CorsIoAdapter extends IoAdapter {
   }
 
   override createIOServer(port: number, options?: ServerOptions): unknown {
-    return super.createIOServer(port, { ...options, cors: { origin: this.origins, credentials: true } } as ServerOptions);
+    return super.createIOServer(port, {
+      ...options,
+      cors: { origin: this.origins, credentials: true },
+    } as ServerOptions);
   }
 }
 
@@ -32,7 +35,9 @@ export async function createApp(): Promise<NestExpressApplication> {
 
   app.setGlobalPrefix(config.get('API_PREFIX'), { exclude: ['health', 'health/ready'] });
   app.set('trust proxy', 1);
-  app.use(helmet({ contentSecurityPolicy: false, crossOriginResourcePolicy: { policy: 'cross-origin' } }));
+  app.use(
+    helmet({ contentSecurityPolicy: false, crossOriginResourcePolicy: { policy: 'cross-origin' } }),
+  );
   const origins = corsOrigins({ CORS_ORIGINS: config.get('CORS_ORIGINS') } as Env);
   app.enableCors({
     origin: origins,
@@ -58,7 +63,10 @@ function setupSwagger(app: NestExpressApplication): void {
     .addServer(`/`)
     .build();
   const document = SwaggerModule.createDocument(app, swagger);
-  SwaggerModule.setup('docs', app, document, { jsonDocumentUrl: 'docs/openapi.json', swaggerOptions: { persistAuthorization: true } });
+  SwaggerModule.setup('docs', app, document, {
+    jsonDocumentUrl: 'docs/openapi.json',
+    swaggerOptions: { persistAuthorization: true },
+  });
 }
 
 async function bootstrap(): Promise<void> {
@@ -66,7 +74,10 @@ async function bootstrap(): Promise<void> {
   const config = app.get(ConfigService<Env, true>);
   const port = config.get('PORT');
   await app.listen(port, '0.0.0.0');
-  const docs = config.get('NODE_ENV') !== 'production' ? ` — dokümantasyon: http://localhost:${port}/docs` : '';
+  const docs =
+    config.get('NODE_ENV') !== 'production'
+      ? ` — dokümantasyon: http://localhost:${port}/docs`
+      : '';
   app.get(Logger).log(`DevAcademy API http://localhost:${port}/${config.get('API_PREFIX')}${docs}`);
 }
 

@@ -18,25 +18,62 @@ export class LibraryService {
     const rows = await this.prisma.bookmark.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },
-      include: { lesson: { select: { id: true, slug: true, moduleId: true, publishedVersion: { select: { title: true } } } } },
+      include: {
+        lesson: {
+          select: {
+            id: true,
+            slug: true,
+            moduleId: true,
+            publishedVersion: { select: { title: true } },
+          },
+        },
+      },
     });
     return rows.map((b) => ({
       id: b.id,
       lessonId: b.lessonId,
       blockId: b.blockId,
       createdAt: b.createdAt.toISOString(),
-      lesson: { id: b.lesson.id, slug: b.lesson.slug, moduleId: b.lesson.moduleId, title: asLocalized(b.lesson.publishedVersion?.title) },
+      lesson: {
+        id: b.lesson.id,
+        slug: b.lesson.slug,
+        moduleId: b.lesson.moduleId,
+        title: asLocalized(b.lesson.publishedVersion?.title),
+      },
     }));
   }
 
   async addBookmark(userId: string, dto: CreateBookmarkDto): Promise<BookmarkDto> {
     await this.ensureLesson(dto.lessonId);
-    const existing = await this.prisma.bookmark.findFirst({ where: { userId, lessonId: dto.lessonId, blockId: dto.blockId ?? null } });
+    const existing = await this.prisma.bookmark.findFirst({
+      where: { userId, lessonId: dto.lessonId, blockId: dto.blockId ?? null },
+    });
     const row =
       existing ??
-      (await this.prisma.bookmark.create({ data: { userId, lessonId: dto.lessonId, blockId: dto.blockId ?? null } }));
-    const lesson = await this.prisma.lesson.findUniqueOrThrow({ where: { id: dto.lessonId }, select: { id: true, slug: true, moduleId: true, publishedVersion: { select: { title: true } } } });
-    return { id: row.id, lessonId: row.lessonId, blockId: row.blockId, createdAt: row.createdAt.toISOString(), lesson: { id: lesson.id, slug: lesson.slug, moduleId: lesson.moduleId, title: asLocalized(lesson.publishedVersion?.title) } };
+      (await this.prisma.bookmark.create({
+        data: { userId, lessonId: dto.lessonId, blockId: dto.blockId ?? null },
+      }));
+    const lesson = await this.prisma.lesson.findUniqueOrThrow({
+      where: { id: dto.lessonId },
+      select: {
+        id: true,
+        slug: true,
+        moduleId: true,
+        publishedVersion: { select: { title: true } },
+      },
+    });
+    return {
+      id: row.id,
+      lessonId: row.lessonId,
+      blockId: row.blockId,
+      createdAt: row.createdAt.toISOString(),
+      lesson: {
+        id: lesson.id,
+        slug: lesson.slug,
+        moduleId: lesson.moduleId,
+        title: asLocalized(lesson.publishedVersion?.title),
+      },
+    };
   }
 
   async removeBookmark(userId: string, id: string): Promise<void> {
@@ -47,13 +84,18 @@ export class LibraryService {
   /* -------------------------------- Notlar ------------------------------- */
 
   async listNotes(userId: string, lessonId?: string): Promise<NoteDto[]> {
-    const rows = await this.prisma.note.findMany({ where: { userId, ...(lessonId ? { lessonId } : {}) }, orderBy: { updatedAt: 'desc' } });
+    const rows = await this.prisma.note.findMany({
+      where: { userId, ...(lessonId ? { lessonId } : {}) },
+      orderBy: { updatedAt: 'desc' },
+    });
     return rows.map(toNote);
   }
 
   async createNote(userId: string, dto: UpsertNoteDto): Promise<NoteDto> {
     await this.ensureLesson(dto.lessonId);
-    const row = await this.prisma.note.create({ data: { userId, lessonId: dto.lessonId, blockId: dto.blockId ?? null, body: dto.body } });
+    const row = await this.prisma.note.create({
+      data: { userId, lessonId: dto.lessonId, blockId: dto.blockId ?? null, body: dto.body },
+    });
     await this.progress.recordActivity(userId, { note: true });
     return toNote(row);
   }
@@ -76,6 +118,20 @@ export class LibraryService {
   }
 }
 
-function toNote(n: { id: string; lessonId: string; blockId: string | null; body: string; createdAt: Date; updatedAt: Date }): NoteDto {
-  return { id: n.id, lessonId: n.lessonId, blockId: n.blockId, body: n.body, createdAt: n.createdAt.toISOString(), updatedAt: n.updatedAt.toISOString() };
+function toNote(n: {
+  id: string;
+  lessonId: string;
+  blockId: string | null;
+  body: string;
+  createdAt: Date;
+  updatedAt: Date;
+}): NoteDto {
+  return {
+    id: n.id,
+    lessonId: n.lessonId,
+    blockId: n.blockId,
+    body: n.body,
+    createdAt: n.createdAt.toISOString(),
+    updatedAt: n.updatedAt.toISOString(),
+  };
 }

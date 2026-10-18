@@ -8,7 +8,10 @@ interface FieldProps extends TextInputProps {
   error?: string | null;
 }
 
-export const TextField = forwardRef<TextInput, FieldProps>(function TextField({ label, error, style, ...rest }, ref) {
+export const TextField = forwardRef<TextInput, FieldProps>(function TextField(
+  { label, error, style, ...rest },
+  ref,
+) {
   const { colors } = useTheme();
   return (
     <View style={{ gap: spacing.xs }}>
@@ -20,7 +23,11 @@ export const TextField = forwardRef<TextInput, FieldProps>(function TextField({ 
         {...rest}
         style={[
           styles.input,
-          { color: colors.fg, backgroundColor: colors.surface, borderColor: error ? colors.danger : colors.border },
+          {
+            color: colors.fg,
+            backgroundColor: colors.surface,
+            borderColor: error ? colors.danger : colors.border,
+          },
           style,
         ]}
       />
@@ -56,7 +63,14 @@ export function SegmentedControl<T extends string | number>({
   return (
     <View style={{ gap: spacing.xs }}>
       {label ? <Text variant="label">{label}</Text> : null}
-      <View accessibilityRole="radiogroup" accessibilityLabel={label} style={[styles.segments, { flexWrap: wrap ? 'wrap' : 'nowrap', backgroundColor: colors.elevated }]}>
+      <View
+        accessibilityRole="radiogroup"
+        accessibilityLabel={label}
+        style={[
+          styles.segments,
+          { flexWrap: wrap ? 'wrap' : 'nowrap', backgroundColor: colors.elevated },
+        ]}
+      >
         {options.map((o) => {
           const selected = o.value === value;
           return (
@@ -66,9 +80,18 @@ export function SegmentedControl<T extends string | number>({
               accessibilityRole="radio"
               accessibilityState={{ checked: selected }}
               accessibilityLabel={o.label}
-              style={[styles.segment, wrap ? null : { flex: 1 }, selected && { backgroundColor: colors.surface, borderColor: colors.primary }]}
+              style={[
+                styles.segment,
+                wrap ? null : { flex: 1 },
+                selected && { backgroundColor: colors.surface, borderColor: colors.primary },
+              ]}
             >
-              <Text variant="caption" weight={selected ? '700' : '500'} color={selected ? colors.primary : colors.fg} numberOfLines={1}>
+              <Text
+                variant="caption"
+                weight={selected ? '700' : '500'}
+                color={selected ? colors.primary : colors.fg}
+                numberOfLines={1}
+              >
                 {o.label}
               </Text>
             </Pressable>
@@ -79,11 +102,24 @@ export function SegmentedControl<T extends string | number>({
   );
 }
 
-export function Chip({ label, tone = 'default', icon }: { label: string; tone?: 'default' | 'primary' | 'success' | 'warning' | 'danger'; icon?: React.ReactNode }) {
+export function Chip({
+  label,
+  tone = 'default',
+  icon,
+}: {
+  label: string;
+  tone?: 'default' | 'primary' | 'success' | 'warning' | 'danger';
+  icon?: React.ReactNode;
+}) {
   const { colors } = useTheme();
   const c = tone === 'default' ? colors.muted : colors[tone];
   return (
-    <View style={[styles.chip, { backgroundColor: withAlpha(c, 0.12), borderColor: withAlpha(c, 0.35) }]}>
+    <View
+      style={[
+        styles.chip,
+        { backgroundColor: withAlpha(c, 0.12), borderColor: withAlpha(c, 0.35) },
+      ]}
+    >
       {icon}
       <Text variant="caption" color={tone === 'default' ? colors.fg : c} weight="600">
         {label}
@@ -93,25 +129,65 @@ export function Chip({ label, tone = 'default', icon }: { label: string; tone?: 
 }
 
 /** -/+ ile sayısal değer ayarlama (kaydırıcı yerine erişilebilir, bağımlılıksız) */
-export function Stepper({ label, value, onChange, min, max, step = 1, format }: { label: string; value: number; onChange: (v: number) => void; min: number; max: number; step?: number; format?: (v: number) => string }) {
+export function Stepper({
+  label,
+  value,
+  onChange,
+  min,
+  max,
+  step = 1,
+  format,
+}: {
+  label: string;
+  value: number;
+  onChange: (v: number) => void;
+  min: number;
+  max: number;
+  step?: number;
+  format?: (v: number) => string;
+}) {
   const { colors } = useTheme();
   const clamp = (v: number) => Math.max(min, Math.min(max, Math.round(v / step) * step));
   const display = format ? format(value) : String(value);
   return (
-    <View style={styles.stepper} accessibilityRole="adjustable" accessibilityLabel={label} accessibilityValue={{ text: display }}
+    <View
+      style={styles.stepper}
+      accessibilityRole="adjustable"
+      accessibilityLabel={label}
+      accessibilityValue={{ text: display }}
       accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
-      onAccessibilityAction={(e) => onChange(clamp(value + (e.nativeEvent.actionName === 'increment' ? step : -step)))}
+      onAccessibilityAction={(e) =>
+        onChange(clamp(value + (e.nativeEvent.actionName === 'increment' ? step : -step)))
+      }
     >
       <Text variant="caption" style={{ flex: 1 }}>
         {label}
       </Text>
-      <Pressable accessibilityRole="button" accessibilityLabel={`${label} -`} onPress={() => onChange(clamp(value - step))} disabled={value <= min} style={[styles.stepBtn, { backgroundColor: colors.elevated, opacity: value <= min ? 0.4 : 1 }]}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`${label} -`}
+        onPress={() => onChange(clamp(value - step))}
+        disabled={value <= min}
+        style={[
+          styles.stepBtn,
+          { backgroundColor: colors.elevated, opacity: value <= min ? 0.4 : 1 },
+        ]}
+      >
         <Text weight="700">−</Text>
       </Pressable>
       <Text variant="label" style={{ minWidth: 48, textAlign: 'center' }}>
         {display}
       </Text>
-      <Pressable accessibilityRole="button" accessibilityLabel={`${label} +`} onPress={() => onChange(clamp(value + step))} disabled={value >= max} style={[styles.stepBtn, { backgroundColor: colors.elevated, opacity: value >= max ? 0.4 : 1 }]}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`${label} +`}
+        onPress={() => onChange(clamp(value + step))}
+        disabled={value >= max}
+        style={[
+          styles.stepBtn,
+          { backgroundColor: colors.elevated, opacity: value >= max ? 0.4 : 1 },
+        ]}
+      >
         <Text weight="700">+</Text>
       </Pressable>
     </View>
@@ -119,10 +195,39 @@ export function Stepper({ label, value, onChange, min, max, step = 1, format }: 
 }
 
 const styles = StyleSheet.create({
-  input: { minHeight: 48, borderWidth: 1, borderRadius: radius.md, paddingHorizontal: spacing.md, fontSize: 16 },
+  input: {
+    minHeight: 48,
+    borderWidth: 1,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.md,
+    fontSize: 16,
+  },
   segments: { flexDirection: 'row', borderRadius: radius.md, padding: 3, gap: 3 },
-  segment: { minHeight: 36, paddingHorizontal: spacing.md, borderRadius: radius.sm, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'transparent' },
-  chip: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: spacing.sm, paddingVertical: 3, borderRadius: radius.pill, borderWidth: 1, alignSelf: 'flex-start' },
+  segment: {
+    minHeight: 36,
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 3,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    alignSelf: 'flex-start',
+  },
   stepper: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  stepBtn: { width: 36, height: 36, borderRadius: radius.sm, alignItems: 'center', justifyContent: 'center' },
+  stepBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: radius.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });

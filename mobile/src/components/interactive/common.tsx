@@ -15,7 +15,11 @@ export interface SimProps {
 }
 
 /** İlk kullanıcı etkileşiminde bir kez sunucuya oturum kaydı gönderir */
-export function useInteractiveSession(type: InteractiveType, lessonId: string, params: Record<string, unknown>): () => void {
+export function useInteractiveSession(
+  type: InteractiveType,
+  lessonId: string,
+  params: Record<string, unknown>,
+): () => void {
   const sent = useRef(false);
   const authed = useSession((s) => s.status === 'authenticated');
   return useCallback(() => {
@@ -38,13 +42,22 @@ export function useInterval(callback: () => void, delay: number | null): void {
   }, [delay]);
 }
 
-export function paramNumber(params: Record<string, unknown>, key: string, fallback: number): number {
+export function paramNumber(
+  params: Record<string, unknown>,
+  key: string,
+  fallback: number,
+): number {
   const v = params[key];
   const n = typeof v === 'number' ? v : typeof v === 'string' ? Number(v) : NaN;
   return Number.isFinite(n) ? n : fallback;
 }
 
-export function paramString<T extends string>(params: Record<string, unknown>, key: string, allowed: readonly T[], fallback: T): T {
+export function paramString<T extends string>(
+  params: Record<string, unknown>,
+  key: string,
+  allowed: readonly T[],
+  fallback: T,
+): T {
   const v = params[key];
   return typeof v === 'string' && (allowed as readonly string[]).includes(v) ? (v as T) : fallback;
 }
@@ -68,7 +81,16 @@ export function StatRow({ children }: { children: ReactNode }) {
 }
 
 /** Simülatörlerde düğüm/sunucu renkleri */
-export const SIM_PALETTE = ['#6366F1', '#F59E0B', '#10B981', '#EF4444', '#0EA5E9', '#A855F7', '#EC4899', '#84CC16'];
+export const SIM_PALETTE = [
+  '#6366F1',
+  '#F59E0B',
+  '#10B981',
+  '#EF4444',
+  '#0EA5E9',
+  '#A855F7',
+  '#EC4899',
+  '#84CC16',
+];
 
 const styles = StyleSheet.create({
   stat: { flexGrow: 1, flexBasis: '30%', borderRadius: radius.sm, padding: spacing.sm, gap: 2 },

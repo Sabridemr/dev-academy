@@ -17,11 +17,7 @@ export interface AttentionResult {
 }
 
 export function tokenize(text: string): string[] {
-  return text
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 12);
+  return text.trim().split(/\s+/).filter(Boolean).slice(0, 12);
 }
 
 /** Kelimeden deterministik gömme üretir */
@@ -43,14 +39,21 @@ function matVec(matrix: number[][], vec: number[]): number[] {
 
 function makeProjection(seed: number, dim: number): number[][] {
   const rnd = seededRandom(seed);
-  return Array.from({ length: dim }, () => Array.from({ length: dim }, () => (rnd() * 2 - 1) * 0.8));
+  return Array.from({ length: dim }, () =>
+    Array.from({ length: dim }, () => (rnd() * 2 - 1) * 0.8),
+  );
 }
 
 /**
  * Self-attention: her token için Q, K, V; weights = softmax(QKᵀ/√d); output = weights·V.
  * `temperature` ile dikkat dağılımının keskinliği değiştirilebilir (eğitim amaçlı).
  */
-export function computeSelfAttention(text: string, dim = 8, temperature = 1, causal = false): AttentionResult {
+export function computeSelfAttention(
+  text: string,
+  dim = 8,
+  temperature = 1,
+  causal = false,
+): AttentionResult {
   const tokens = tokenize(text);
   const embeddings = tokens.map((tk) => embedToken(tk, dim));
   const Wq = makeProjection(11, dim);
@@ -79,7 +82,11 @@ export function computeSelfAttention(text: string, dim = 8, temperature = 1, cau
 }
 
 /** Bir satırda en çok dikkat edilen k token */
-export function topAttended(result: AttentionResult, rowIndex: number, k = 3): { token: string; weight: number; index: number }[] {
+export function topAttended(
+  result: AttentionResult,
+  rowIndex: number,
+  k = 3,
+): { token: string; weight: number; index: number }[] {
   const row = result.weights[rowIndex] ?? [];
   return row
     .map((weight, index) => ({ token: result.tokens[index], weight, index }))

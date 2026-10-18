@@ -1,4 +1,10 @@
-import { CallHandler, ExecutionContext, HttpStatus, Injectable, NestInterceptor } from '@nestjs/common';
+import {
+  CallHandler,
+  ExecutionContext,
+  HttpStatus,
+  Injectable,
+  NestInterceptor,
+} from '@nestjs/common';
 import { createHash } from 'node:crypto';
 import type { Request, Response } from 'express';
 import { Observable, map } from 'rxjs';
@@ -30,7 +36,13 @@ export class EtagInterceptor implements NestInterceptor {
           res.setHeader('Cache-Control', 'private, max-age=0, must-revalidate');
         }
         const inm = req.headers['if-none-match'];
-        if (inm && inm.split(',').map((s) => s.trim()).includes(etag)) {
+        if (
+          inm &&
+          inm
+            .split(',')
+            .map((s) => s.trim())
+            .includes(etag)
+        ) {
           res.status(HttpStatus.NOT_MODIFIED);
           return undefined;
         }

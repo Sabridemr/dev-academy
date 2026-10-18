@@ -1,12 +1,31 @@
 import { AccessibilityInfo } from 'react-native';
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import { estimateCapacity } from '@devacademy/shared';
-import { CapacityEstimatorSim, initialCapacityInput } from '@/components/interactive/CapacityEstimatorSim';
+import {
+  CapacityEstimatorSim,
+  initialCapacityInput,
+} from '@/components/interactive/CapacityEstimatorSim';
 import { PipelineSim } from '@/components/interactive/PipelineSim';
 import { RequestJourneySim } from '@/components/interactive/RequestJourneySim';
 import { MOBILE_SIMULATORS } from '@/components/interactive/registry';
-import { createPipelineState, defaultFailStage, fleetView, parseStages, pipelineTick, type PipelineConfig, type PipelineState } from '@/components/interactive/pipeline';
-import { batchJourney, buildHops, classify, computeJourney, parseLayers, splitSpec, type JourneyOptions } from '@/components/interactive/requestJourney';
+import {
+  createPipelineState,
+  defaultFailStage,
+  fleetView,
+  parseStages,
+  pipelineTick,
+  type PipelineConfig,
+  type PipelineState,
+} from '@/components/interactive/pipeline';
+import {
+  batchJourney,
+  buildHops,
+  classify,
+  computeJourney,
+  parseLayers,
+  splitSpec,
+  type JourneyOptions,
+} from '@/components/interactive/requestJourney';
 import { useSettings } from '@/stores/settings';
 
 /** Mobil simülatörler: request-journey, capacity-estimator, pipeline (saf mantık + bileşen etkileşimi) */
@@ -14,7 +33,9 @@ import { useSettings } from '@/stores/settings';
 beforeEach(() => {
   useSettings.setState({ locale: 'en' });
   // reduced-motion sorgusu testte hiç çözülmez (act dışı durum güncellemesi olmasın)
-  jest.spyOn(AccessibilityInfo, 'isReduceMotionEnabled').mockReturnValue(new Promise<boolean>(() => {}));
+  jest
+    .spyOn(AccessibilityInfo, 'isReduceMotionEnabled')
+    .mockReturnValue(new Promise<boolean>(() => {}));
 });
 
 afterEach(() => {
@@ -24,7 +45,15 @@ afterEach(() => {
 
 /* ------------------------------ request-journey: saf mantık ------------------------------ */
 
-const baseOpts: JourneyOptions = { dns: false, cdn: false, cache: false, rttMs: 20, http3: false, injectFail: false, failureStage: '' };
+const baseOpts: JourneyOptions = {
+  dns: false,
+  cdn: false,
+  cache: false,
+  rttMs: 20,
+  http3: false,
+  injectFail: false,
+  failureStage: '',
+};
 const noSlow = { slowService: '', slowPenaltyMs: 300, coldToggle: false, coldStart: false };
 
 describe('requestJourney', () => {
@@ -44,7 +73,12 @@ describe('requestJourney', () => {
   });
 
   it('parseLayers istemci yoksa "user" ekler ve layers/path/stages/services okur', () => {
-    expect(parseLayers({ path: 'dns,cdn-edge,database' })).toEqual(['user', 'dns', 'cdn-edge', 'database']);
+    expect(parseLayers({ path: 'dns,cdn-edge,database' })).toEqual([
+      'user',
+      'dns',
+      'cdn-edge',
+      'database',
+    ]);
     expect(parseLayers({ layers: 'browser,cdn,db' })).toEqual(['browser', 'cdn', 'db']);
     expect(parseLayers({ services: 'gateway,order-service' })[0]).toBe('user');
     expect(parseLayers({})).toHaveLength(8);
@@ -68,10 +102,19 @@ describe('requestJourney', () => {
   });
 
   it('yavaş servis, cold start ve ms geçersiz kılma uygulanır', () => {
-    const hops = buildHops(['user', 'gateway:5', 'payment-service'], { ...noSlow, slowService: 'payment-service', slowPenaltyMs: 50 });
+    const hops = buildHops(['user', 'gateway:5', 'payment-service'], {
+      ...noSlow,
+      slowService: 'payment-service',
+      slowPenaltyMs: 50,
+    });
     expect(hops[1].ms).toBe(5);
     expect(hops[2].ms).toBe(80);
-    const cold = buildHops(['client', 'lambda'], { slowService: '', slowPenaltyMs: 0, coldToggle: true, coldStart: true });
+    const cold = buildHops(['client', 'lambda'], {
+      slowService: '',
+      slowPenaltyMs: 0,
+      coldToggle: true,
+      coldStart: true,
+    });
     expect(cold[1].ms).toBe(30 + 770);
   });
 
@@ -104,7 +147,13 @@ function runToEnd(stages: string[], cfg: PipelineConfig): { state: PipelineState
   return { state, logs };
 }
 
-const cfg: PipelineConfig = { inject: false, failAt: '', canaryErr: 0.5, retries: 1, strategy: 'canary' };
+const cfg: PipelineConfig = {
+  inject: false,
+  failAt: '',
+  canaryErr: 0.5,
+  retries: 1,
+  strategy: 'canary',
+};
 
 describe('pipeline', () => {
   it('parseStages ve defaultFailStage', () => {
@@ -126,7 +175,12 @@ describe('pipeline', () => {
 
   it('hata enjeksiyonu yeniden denemelerden sonra durur, sonraki aşamalar atlanır', () => {
     const stages = ['lint', 'e2e-test', 'deploy'];
-    const { state, logs } = runToEnd(stages, { ...cfg, inject: true, failAt: 'e2e-test', retries: 2 });
+    const { state, logs } = runToEnd(stages, {
+      ...cfg,
+      inject: true,
+      failAt: 'e2e-test',
+      retries: 2,
+    });
     expect(state.outcome).toBe('failed');
     expect(state.status).toEqual(['success', 'failed', 'skipped']);
     expect(logs.filter((l) => l === 'retry')).toHaveLength(2);
@@ -164,7 +218,13 @@ describe('RequestJourneySim', () => {
   it('istek gönderir, cache hit yolu kısaltır', () => {
     jest.useFakeTimers();
     const onInteract = jest.fn();
-    render(<RequestJourneySim params={{ layers: 'client,cdn,gateway,service,cache,db' }} lessonId="l1" onInteract={onInteract} />);
+    render(
+      <RequestJourneySim
+        params={{ layers: 'client,cdn,gateway,service,cache,db' }}
+        lessonId="l1"
+        onInteract={onInteract}
+      />,
+    );
     fireEvent.press(screen.getByTestId('rj-send'));
     expect(onInteract).toHaveBeenCalled();
     act(() => {
@@ -184,7 +244,13 @@ describe('RequestJourneySim', () => {
 
   it('hata enjeksiyonu ve 20 isteklik toplu gönderim', () => {
     jest.useFakeTimers();
-    render(<RequestJourneySim params={{ stages: 'gateway,orders,catalog,payments,db', failureStage: 'payments' }} lessonId="l1" onInteract={() => {}} />);
+    render(
+      <RequestJourneySim
+        params={{ stages: 'gateway,orders,catalog,payments,db', failureStage: 'payments' }}
+        lessonId="l1"
+        onInteract={() => {}}
+      />,
+    );
     fireEvent(screen.getByTestId('rj-fail'), 'valueChange', true);
     fireEvent.press(screen.getByTestId('rj-send'));
     act(() => {
@@ -198,7 +264,13 @@ describe('RequestJourneySim', () => {
 
   it('bütçe aşımını gösterir', () => {
     jest.useFakeTimers();
-    render(<RequestJourneySim params={{ budgetMs: 10, stages: 'gateway:5,ranking:30' }} lessonId="l1" onInteract={() => {}} />);
+    render(
+      <RequestJourneySim
+        params={{ budgetMs: 10, stages: 'gateway:5,ranking:30' }}
+        lessonId="l1"
+        onInteract={() => {}}
+      />,
+    );
     fireEvent.press(screen.getByTestId('rj-send'));
     act(() => {
       jest.runAllTimers();
@@ -209,7 +281,12 @@ describe('RequestJourneySim', () => {
 
 describe('CapacityEstimatorSim', () => {
   it('ders parametrelerini okur ve girdi değişince sonuçları günceller', () => {
-    const params = { dau: 50000000, readsPerUserPerDay: 100, writesPerUserPerDay: 3, avgWriteSizeBytes: 2000 };
+    const params = {
+      dau: 50000000,
+      readsPerUserPerDay: 100,
+      writesPerUserPerDay: 3,
+      avgWriteSizeBytes: 2000,
+    };
     const input = initialCapacityInput(params);
     expect(input.dau).toBe(50_000_000);
     expect(input.retentionYears).toBe(5); // varsayılan
@@ -238,7 +315,13 @@ describe('PipelineSim', () => {
   it('çalıştırınca aşamalar ilerler, enjekte hata pipeline’ı durdurur', () => {
     jest.useFakeTimers();
     const onInteract = jest.fn();
-    render(<PipelineSim params={{ stages: 'lint,e2e-test,deploy', failureStage: 'e2e-test' }} lessonId="l1" onInteract={onInteract} />);
+    render(
+      <PipelineSim
+        params={{ stages: 'lint,e2e-test,deploy', failureStage: 'e2e-test' }}
+        lessonId="l1"
+        onInteract={onInteract}
+      />,
+    );
     fireEvent(screen.getByTestId('pipe-inject'), 'valueChange', true);
     fireEvent.press(screen.getByTestId('pipe-run'));
     expect(onInteract).toHaveBeenCalled();

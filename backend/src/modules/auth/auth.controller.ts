@@ -4,14 +4,27 @@ import { Throttle } from '@nestjs/throttler';
 import type { Request } from 'express';
 import { z } from 'zod';
 import { LoginSchema, OAuthLoginSchema, RefreshSchema, RegisterSchema } from '@devacademy/shared';
-import type { AuthResponse, AuthTokens, LoginDto, OAuthLoginDto, RefreshDto, RegisterDto } from '@devacademy/shared';
+import type {
+  AuthResponse,
+  AuthTokens,
+  LoginDto,
+  OAuthLoginDto,
+  RefreshDto,
+  RegisterDto,
+} from '@devacademy/shared';
 import { CurrentUser, Public, type AuthUser } from '../../common/auth/decorators';
 import { zodBody } from '../../common/pipes/zod-validation.pipe';
 import { ApiZodBody } from '../../common/swagger/zod-openapi';
 import { AuthService, type SessionMeta } from './auth.service';
 
-const ChangePasswordSchema = z.object({ currentPassword: z.string().min(1).max(128), newPassword: z.string().min(8).max(128) });
-const LogoutSchema = z.object({ refreshToken: z.string().optional(), everywhere: z.boolean().default(false) });
+const ChangePasswordSchema = z.object({
+  currentPassword: z.string().min(1).max(128),
+  newPassword: z.string().min(8).max(128),
+});
+const LogoutSchema = z.object({
+  refreshToken: z.string().optional(),
+  everywhere: z.boolean().default(false),
+});
 
 function meta(req: Request): SessionMeta {
   return { userAgent: req.headers['user-agent'], ip: req.ip };
@@ -27,7 +40,10 @@ export class AuthController {
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @ApiOperation({ summary: 'E-posta ile kayıt' })
   @ApiZodBody(RegisterSchema)
-  register(@Body(zodBody(RegisterSchema)) dto: RegisterDto, @Req() req: Request): Promise<AuthResponse> {
+  register(
+    @Body(zodBody(RegisterSchema)) dto: RegisterDto,
+    @Req() req: Request,
+  ): Promise<AuthResponse> {
     return this.auth.register(dto, meta(req));
   }
 
@@ -47,7 +63,10 @@ export class AuthController {
   @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @ApiOperation({ summary: 'Google / Apple ID token ile giriş' })
   @ApiZodBody(OAuthLoginSchema)
-  oauth(@Body(zodBody(OAuthLoginSchema)) dto: OAuthLoginDto, @Req() req: Request): Promise<AuthResponse> {
+  oauth(
+    @Body(zodBody(OAuthLoginSchema)) dto: OAuthLoginDto,
+    @Req() req: Request,
+  ): Promise<AuthResponse> {
     return this.auth.oauthLogin(dto, meta(req));
   }
 
@@ -66,7 +85,10 @@ export class AuthController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Çıkış (tek cihaz ya da tüm cihazlar)' })
   @ApiZodBody(LogoutSchema)
-  async logout(@Body(zodBody(LogoutSchema)) dto: z.infer<typeof LogoutSchema>, @CurrentUser() user: AuthUser): Promise<void> {
+  async logout(
+    @Body(zodBody(LogoutSchema)) dto: z.infer<typeof LogoutSchema>,
+    @CurrentUser() user: AuthUser,
+  ): Promise<void> {
     await this.auth.logout(dto.refreshToken, user.id, dto.everywhere);
   }
 
@@ -75,7 +97,10 @@ export class AuthController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Şifre değiştir (tüm oturumları kapatır)' })
   @ApiZodBody(ChangePasswordSchema)
-  async changePassword(@Body(zodBody(ChangePasswordSchema)) dto: z.infer<typeof ChangePasswordSchema>, @CurrentUser() user: AuthUser): Promise<void> {
+  async changePassword(
+    @Body(zodBody(ChangePasswordSchema)) dto: z.infer<typeof ChangePasswordSchema>,
+    @CurrentUser() user: AuthUser,
+  ): Promise<void> {
     await this.auth.changePassword(user.id, dto.currentPassword, dto.newPassword);
   }
 }

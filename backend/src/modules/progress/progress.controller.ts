@@ -2,13 +2,23 @@ import { Body, Controller, Get, Param, Post, Put, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { z } from 'zod';
 import { ReviewGradeSchema, UpdateProgressSchema } from '@devacademy/shared';
-import type { BadgeDto, ProgressItem, ProgressSummary, ReviewGradeDto, UpdateProgressDto } from '@devacademy/shared';
+import type {
+  BadgeDto,
+  ProgressItem,
+  ProgressSummary,
+  ReviewGradeDto,
+  UpdateProgressDto,
+} from '@devacademy/shared';
 import { CurrentUser, Public, type AuthUser } from '../../common/auth/decorators';
 import { zodBody } from '../../common/pipes/zod-validation.pipe';
 import { ApiZodBody } from '../../common/swagger/zod-openapi';
 import { ProgressService } from './progress.service';
 
-const InteractiveSchema = z.object({ interactive: z.string().min(1), lessonId: z.string().optional(), params: z.record(z.unknown()).optional() });
+const InteractiveSchema = z.object({
+  interactive: z.string().min(1),
+  lessonId: z.string().optional(),
+  params: z.record(z.unknown()).optional(),
+});
 
 @ApiTags('progress')
 @ApiBearerAuth()
@@ -23,7 +33,9 @@ export class ProgressController {
   }
 
   @Get('summary')
-  @ApiOperation({ summary: 'Özet: tamamlanma yüzdesi, seri, rozetler, devam edilecek ders, bekleyen tekrarlar' })
+  @ApiOperation({
+    summary: 'Özet: tamamlanma yüzdesi, seri, rozetler, devam edilecek ders, bekleyen tekrarlar',
+  })
   summary(@CurrentUser() user: AuthUser): Promise<ProgressSummary> {
     return this.progress.summary(user.id);
   }
@@ -31,14 +43,21 @@ export class ProgressController {
   @Put('lessons/:lessonId')
   @ApiOperation({ summary: 'Ders ilerlemesini güncelle (yüzde, son blok, süre, tamamlandı)' })
   @ApiZodBody(UpdateProgressSchema)
-  update(@CurrentUser() user: AuthUser, @Param('lessonId') lessonId: string, @Body(zodBody(UpdateProgressSchema)) dto: UpdateProgressDto) {
+  update(
+    @CurrentUser() user: AuthUser,
+    @Param('lessonId') lessonId: string,
+    @Body(zodBody(UpdateProgressSchema)) dto: UpdateProgressDto,
+  ) {
     return this.progress.update(user.id, lessonId, dto);
   }
 
   @Post('interactive')
   @ApiOperation({ summary: 'İnteraktif simülatör oturumu kaydet (rozetler için)' })
   @ApiZodBody(InteractiveSchema)
-  interactive(@CurrentUser() user: AuthUser, @Body(zodBody(InteractiveSchema)) dto: z.infer<typeof InteractiveSchema>): Promise<BadgeDto[]> {
+  interactive(
+    @CurrentUser() user: AuthUser,
+    @Body(zodBody(InteractiveSchema)) dto: z.infer<typeof InteractiveSchema>,
+  ): Promise<BadgeDto[]> {
     return this.progress.recordInteractive(user.id, dto.interactive, dto.lessonId, dto.params);
   }
 
@@ -52,7 +71,11 @@ export class ProgressController {
   @Post('reviews/:cardId/grade')
   @ApiOperation({ summary: 'Tekrar kartını değerlendir (SM-2 kalite 0-5)' })
   @ApiZodBody(ReviewGradeSchema)
-  grade(@CurrentUser() user: AuthUser, @Param('cardId') cardId: string, @Body(zodBody(ReviewGradeSchema)) dto: ReviewGradeDto) {
+  grade(
+    @CurrentUser() user: AuthUser,
+    @Param('cardId') cardId: string,
+    @Body(zodBody(ReviewGradeSchema)) dto: ReviewGradeDto,
+  ) {
     return this.progress.gradeReview(user.id, cardId, dto.quality);
   }
 

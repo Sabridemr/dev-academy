@@ -39,7 +39,13 @@ export function isSupportedOnMobile(type: InteractiveType): boolean {
 
 type InteractiveBlock = Extract<LessonBlock, { type: 'interactive' }>;
 
-export function InteractiveBlockView({ block, lessonId }: { block: InteractiveBlock; lessonId: string }) {
+export function InteractiveBlockView({
+  block,
+  lessonId,
+}: {
+  block: InteractiveBlock;
+  lessonId: string;
+}) {
   const { t, tl } = useI18n();
   const { colors } = useTheme();
   const onInteract = useInteractiveSession(block.interactive, lessonId, block.params);
@@ -65,7 +71,9 @@ export function InteractiveBlockView({ block, lessonId }: { block: InteractiveBl
             title={t('sim.openOnWeb')}
             variant="secondary"
             icon="open-outline"
-            onPress={() => void Linking.openURL(`${env.webUrl}/lessons/${encodeURIComponent(lessonId)}`)}
+            onPress={() =>
+              void Linking.openURL(`${env.webUrl}/lessons/${encodeURIComponent(lessonId)}`)
+            }
           />
         </View>
       )}

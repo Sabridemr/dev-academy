@@ -14,7 +14,11 @@ export function Markdown({ children, className }: { children: string; className?
           h2: ({ children: c }) => <h2 id={slugify(String(c))}>{c}</h2>,
           h3: ({ children: c }) => <h3 id={slugify(String(c))}>{c}</h3>,
           a: ({ href, children: c }) => (
-            <a href={href} target={href?.startsWith('http') ? '_blank' : undefined} rel={href?.startsWith('http') ? 'noreferrer noopener' : undefined}>
+            <a
+              href={href}
+              target={href?.startsWith('http') ? '_blank' : undefined}
+              rel={href?.startsWith('http') ? 'noreferrer noopener' : undefined}
+            >
               {c}
             </a>
           ),

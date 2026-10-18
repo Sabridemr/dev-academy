@@ -7,7 +7,11 @@ import { LessonView } from './LessonView';
 const mutate = vi.fn();
 let lessonData: LessonDetail | undefined;
 
-vi.mock('next/link', () => ({ default: ({ children, href }: { children: React.ReactNode; href: string }) => <a href={href}>{children}</a> }));
+vi.mock('next/link', () => ({
+  default: ({ children, href }: { children: React.ReactNode; href: string }) => (
+    <a href={href}>{children}</a>
+  ),
+}));
 vi.mock('@/lib/auth-store', () => ({ useIsAuthenticated: () => true }));
 vi.mock('@/lib/api', () => ({ api: vi.fn(async () => undefined) }));
 vi.mock('@/lib/hooks', () => ({
@@ -59,7 +63,14 @@ describe('LessonView ilerleme', () => {
       window.dispatchEvent(new Event('pagehide'));
     });
 
-    expect(api).toHaveBeenCalledWith('/progress/lessons/l1', expect.objectContaining({ method: 'PUT', keepalive: true, body: expect.objectContaining({ percent: 30 }) }));
+    expect(api).toHaveBeenCalledWith(
+      '/progress/lessons/l1',
+      expect.objectContaining({
+        method: 'PUT',
+        keepalive: true,
+        body: expect.objectContaining({ percent: 30 }),
+      }),
+    );
   });
 
   it('yüzde değişmedikçe periyodik kayıt tekrar istek atmaz', () => {

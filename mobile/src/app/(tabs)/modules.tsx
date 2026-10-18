@@ -13,12 +13,18 @@ export default function ModulesScreen() {
   const [expanded, setExpanded] = useState<string | null>(null);
 
   return (
-    <Screen refreshing={modules.isRefetching} onRefresh={() => void modules.refetch()} testID="modules-screen">
+    <Screen
+      refreshing={modules.isRefetching}
+      onRefresh={() => void modules.refetch()}
+      testID="modules-screen"
+    >
       <Text variant="heading" accessibilityRole="header">
         {t('nav.modules')}
       </Text>
       {modules.isLoading ? <LoadingView /> : null}
-      {modules.error ? <ErrorView error={modules.error} onRetry={() => void modules.refetch()} /> : null}
+      {modules.error ? (
+        <ErrorView error={modules.error} onRetry={() => void modules.refetch()} />
+      ) : null}
       {modules.data?.length === 0 ? <EmptyState text={t('library.empty')} /> : null}
       {(modules.data ?? []).map((m) => {
         const open = expanded === m.id;
@@ -45,7 +51,8 @@ export default function ModulesScreen() {
 function ModuleLessons({ moduleId }: { moduleId: string }) {
   const mod = useModule(moduleId);
   if (mod.isLoading) return <LoadingView />;
-  if (mod.error || !mod.data) return <ErrorView error={mod.error} onRetry={() => void mod.refetch()} />;
+  if (mod.error || !mod.data)
+    return <ErrorView error={mod.error} onRetry={() => void mod.refetch()} />;
   return (
     <View style={{ gap: spacing.sm, paddingLeft: spacing.md }}>
       {mod.data.lessons.map((l) => (

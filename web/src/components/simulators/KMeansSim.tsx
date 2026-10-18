@@ -76,7 +76,10 @@ function makeData(seed: number): P[] {
     for (let i = 0; i < 28; i++) {
       const g1 = (rnd() + rnd() + rnd() - 1.5) * 1.4;
       const g2 = (rnd() + rnd() + rnd() - 1.5) * 1.4;
-      pts.push({ x: Math.max(1, Math.min(99, cx + g1 * spread)), y: Math.max(1, Math.min(99, cy + g2 * spread)) });
+      pts.push({
+        x: Math.max(1, Math.min(99, cx + g1 * spread)),
+        y: Math.max(1, Math.min(99, cy + g2 * spread)),
+      });
     }
   }
   return pts;
@@ -131,7 +134,12 @@ export default function KMeansSim({ params, onInteract }: SimulatorProps) {
   const reduced = usePrefersReducedMotion();
   const [seed, setSeed] = useState(3);
   const [k, setK] = useState(() => numParam(params, 'k', 3, 1, 8));
-  const [init, setInit] = useState<Init>(() => (strParam<string>(params, 'init', 'random') === 'kmeans++' || strParam<string>(params, 'init', 'random') === 'k-means++' ? 'kmeans++' : 'random'));
+  const [init, setInit] = useState<Init>(() =>
+    strParam<string>(params, 'init', 'random') === 'kmeans++' ||
+    strParam<string>(params, 'init', 'random') === 'k-means++'
+      ? 'kmeans++'
+      : 'random',
+  );
   const points = useMemo(() => makeData(seed), [seed]);
   const [centroids, setCentroids] = useState<P[]>(() => initCentroids(points, k, init, seed));
   const [labels, setLabels] = useState<number[]>([]);
@@ -141,16 +149,21 @@ export default function KMeansSim({ params, onInteract }: SimulatorProps) {
   const [running, setRunning] = useState(false);
   const [history, setHistory] = useState<number[]>([]);
 
-  const restart = useCallback((nextK = k, nextInit = init, nextSeed = seed) => {
-    const pts = makeData(nextSeed);
-    setCentroids(initCentroids(pts, nextK, nextInit, nextSeed + Math.floor(Math.random() * 1000)));
-    setLabels([]);
-    setPhase('assign');
-    setIteration(0);
-    setConverged(false);
-    setRunning(false);
-    setHistory([]);
-  }, [k, init, seed]);
+  const restart = useCallback(
+    (nextK = k, nextInit = init, nextSeed = seed) => {
+      const pts = makeData(nextSeed);
+      setCentroids(
+        initCentroids(pts, nextK, nextInit, nextSeed + Math.floor(Math.random() * 1000)),
+      );
+      setLabels([]);
+      setPhase('assign');
+      setIteration(0);
+      setConverged(false);
+      setRunning(false);
+      setHistory([]);
+    },
+    [k, init, seed],
+  );
 
   const step = useCallback(() => {
     if (converged) return;
@@ -170,7 +183,10 @@ export default function KMeansSim({ params, onInteract }: SimulatorProps) {
       const next = centroids.map((c, ci) => {
         const members = points.filter((_, i) => labels[i] === ci);
         if (!members.length) return c;
-        return { x: members.reduce((a, p) => a + p.x, 0) / members.length, y: members.reduce((a, p) => a + p.y, 0) / members.length };
+        return {
+          x: members.reduce((a, p) => a + p.x, 0) / members.length,
+          y: members.reduce((a, p) => a + p.y, 0) / members.length,
+        };
       });
       setCentroids(next);
       setIteration((i) => i + 1);
@@ -187,37 +203,105 @@ export default function KMeansSim({ params, onInteract }: SimulatorProps) {
   const inertia = inertiaOf(points, centroids, labels);
   const s = (v: number) => v * 4;
   const hMax = Math.max(1, ...history);
-  const hPath = history.map((v, i) => `${(i / Math.max(1, history.length - 1)) * 260},${56 - (v / hMax) * 50}`).join(' ');
+  const hPath = history
+    .map((v, i) => `${(i / Math.max(1, history.length - 1)) * 260},${56 - (v / hMax) * 50}`)
+    .join(' ');
 
   return (
     <SimShell
       title={l.title}
       toolbar={
         <>
-          <button type="button" className="btn-ghost" onClick={() => { onInteract(); step(); }} disabled={converged || running}>
+          <button
+            type="button"
+            className="btn-ghost"
+            onClick={() => {
+              onInteract();
+              step();
+            }}
+            disabled={converged || running}
+          >
             <StepForward size={14} /> {t('sim.step')}
           </button>
-          <button type="button" className="btn-primary" aria-pressed={running} onClick={() => { onInteract(); setRunning((r) => !r); }} disabled={converged}>
+          <button
+            type="button"
+            className="btn-primary"
+            aria-pressed={running}
+            onClick={() => {
+              onInteract();
+              setRunning((r) => !r);
+            }}
+            disabled={converged}
+          >
             {running ? <Pause size={14} /> : <Play size={14} />} {running ? l.pause : t('sim.run')}
           </button>
-          <button type="button" className="btn-ghost" onClick={() => { onInteract(); restart(); }}>
+          <button
+            type="button"
+            className="btn-ghost"
+            onClick={() => {
+              onInteract();
+              restart();
+            }}
+          >
             <RotateCcw size={14} /> {t('sim.reset')}
           </button>
-          <button type="button" className="btn-ghost" onClick={() => { onInteract(); const ns = seed + 1; setSeed(ns); restart(k, init, ns); }}>
+          <button
+            type="button"
+            className="btn-ghost"
+            onClick={() => {
+              onInteract();
+              const ns = seed + 1;
+              setSeed(ns);
+              restart(k, init, ns);
+            }}
+          >
             <Dices size={14} /> {l.newData}
           </button>
         </>
       }
       aside={
         <>
-          <Range label={l.k} value={k} min={1} max={8} onChange={(v) => { onInteract(); setK(v); restart(v); }} />
-          <Select label={l.init} value={init} options={[{ id: 'random', label: l.random }, { id: 'kmeans++', label: l.kpp }]} onChange={(v) => { onInteract(); setInit(v); restart(k, v); }} />
+          <Range
+            label={l.k}
+            value={k}
+            min={1}
+            max={8}
+            onChange={(v) => {
+              onInteract();
+              setK(v);
+              restart(v);
+            }}
+          />
+          <Select
+            label={l.init}
+            value={init}
+            options={[
+              { id: 'random', label: l.random },
+              { id: 'kmeans++', label: l.kpp },
+            ]}
+            onChange={(v) => {
+              onInteract();
+              setInit(v);
+              restart(k, v);
+            }}
+          />
           <div className="grid grid-cols-2 gap-2">
             <Stat label={l.iteration} value={iteration} />
-            <Stat label={l.inertia} value={Math.round(inertia).toLocaleString(locale === 'tr' ? 'tr-TR' : 'en-US')} tone={converged ? 'success' : 'primary'} />
+            <Stat
+              label={l.inertia}
+              value={Math.round(inertia).toLocaleString(locale === 'tr' ? 'tr-TR' : 'en-US')}
+              tone={converged ? 'success' : 'primary'}
+            />
           </div>
           <p className="text-sm" aria-live="polite">
-            {converged ? <span className="text-success">✓ {l.converged}</span> : <><span className="label">{l.phase}</span>{phase === 'assign' ? l.assign : l.update}</>}
+            {converged ? (
+              <span className="text-success">✓ {l.converged}</span>
+            ) : (
+              <>
+                <span className="label">{l.phase}</span>
+                {phase === 'assign' ? l.assign : l.update}
+              </>
+            )}
           </p>
           <figure>
             <figcaption className="label">{l.history}</figcaption>
@@ -230,20 +314,55 @@ export default function KMeansSim({ params, onInteract }: SimulatorProps) {
         </>
       }
     >
-      <svg viewBox="0 0 400 400" className="mx-auto h-auto w-full max-w-lg" role="img" aria-label={l.title}>
+      <svg
+        viewBox="0 0 400 400"
+        className="mx-auto h-auto w-full max-w-lg"
+        role="img"
+        aria-label={l.title}
+      >
         <rect width={400} height={400} fill="var(--da-bg)" stroke="var(--da-border)" />
         {/* Nokta → merkez çizgileri (atama sonrası) */}
         {labels.length > 0 &&
           points.map((p, i) => (
-            <line key={`l${i}`} x1={s(p.x)} y1={s(p.y)} x2={s(centroids[labels[i]].x)} y2={s(centroids[labels[i]].y)} stroke={PALETTE[labels[i] % PALETTE.length]} strokeWidth={0.5} opacity={0.3} />
+            <line
+              key={`l${i}`}
+              x1={s(p.x)}
+              y1={s(p.y)}
+              x2={s(centroids[labels[i]].x)}
+              y2={s(centroids[labels[i]].y)}
+              stroke={PALETTE[labels[i] % PALETTE.length]}
+              strokeWidth={0.5}
+              opacity={0.3}
+            />
           ))}
         {points.map((p, i) => (
-          <circle key={i} cx={s(p.x)} cy={s(p.y)} r={4} fill={labels.length ? PALETTE[labels[i] % PALETTE.length] : 'var(--da-muted)'} opacity={0.85} />
+          <circle
+            key={i}
+            cx={s(p.x)}
+            cy={s(p.y)}
+            r={4}
+            fill={labels.length ? PALETTE[labels[i] % PALETTE.length] : 'var(--da-muted)'}
+            opacity={0.85}
+          />
         ))}
         {centroids.map((c, i) => (
-          <motion.g key={i} initial={false} animate={{ x: s(c.x), y: s(c.y) }} transition={{ duration: reduced ? 0 : 0.5, ease: 'easeInOut' }}>
-            <circle r={11} fill="var(--da-surface)" stroke={PALETTE[i % PALETTE.length]} strokeWidth={3} />
-            <path d="M -5 -5 L 5 5 M -5 5 L 5 -5" stroke={PALETTE[i % PALETTE.length]} strokeWidth={2.5} />
+          <motion.g
+            key={i}
+            initial={false}
+            animate={{ x: s(c.x), y: s(c.y) }}
+            transition={{ duration: reduced ? 0 : 0.5, ease: 'easeInOut' }}
+          >
+            <circle
+              r={11}
+              fill="var(--da-surface)"
+              stroke={PALETTE[i % PALETTE.length]}
+              strokeWidth={3}
+            />
+            <path
+              d="M -5 -5 L 5 5 M -5 5 L 5 -5"
+              stroke={PALETTE[i % PALETTE.length]}
+              strokeWidth={2.5}
+            />
           </motion.g>
         ))}
       </svg>

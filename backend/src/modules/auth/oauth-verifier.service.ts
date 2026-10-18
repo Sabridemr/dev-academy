@@ -58,7 +58,10 @@ export class OAuthVerifierService {
     const audience = this.audiences('APPLE_CLIENT_IDS');
     if (audience.length === 0) throw new UnauthorizedException('Apple girişi yapılandırılmamış');
     try {
-      const { payload } = await jwtVerify(idToken, this.appleJwks, { issuer: 'https://appleid.apple.com', audience });
+      const { payload } = await jwtVerify(idToken, this.appleJwks, {
+        issuer: 'https://appleid.apple.com',
+        audience,
+      });
       if (!payload.sub) throw new Error('sub yok');
       return {
         providerUserId: payload.sub,

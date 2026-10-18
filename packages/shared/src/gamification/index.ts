@@ -11,7 +11,12 @@ import type { LocalizedString } from '../i18n';
 
 /** YYYY-MM-DD biçiminde yerel tarih anahtarı */
 export function dateKey(date: Date, timezone = 'UTC'): string {
-  const fmt = new Intl.DateTimeFormat('en-CA', { timeZone: timezone, year: 'numeric', month: '2-digit', day: '2-digit' });
+  const fmt = new Intl.DateTimeFormat('en-CA', {
+    timeZone: timezone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
   return fmt.format(date);
 }
 
@@ -30,12 +35,20 @@ export interface StreakState {
 /** Yeni aktivite kaydedildiğinde seri durumunu günceller */
 export function applyActivity(state: StreakState, todayKey: string): StreakState {
   if (!state.lastActivityDate) {
-    return { currentStreak: 1, longestStreak: Math.max(1, state.longestStreak), lastActivityDate: todayKey };
+    return {
+      currentStreak: 1,
+      longestStreak: Math.max(1, state.longestStreak),
+      lastActivityDate: todayKey,
+    };
   }
   const gap = daysBetween(state.lastActivityDate, todayKey);
   if (gap <= 0) return state; // aynı gün
   const currentStreak = gap === 1 ? state.currentStreak + 1 : 1;
-  return { currentStreak, longestStreak: Math.max(state.longestStreak, currentStreak), lastActivityDate: todayKey };
+  return {
+    currentStreak,
+    longestStreak: Math.max(state.longestStreak, currentStreak),
+    lastActivityDate: todayKey,
+  };
 }
 
 /** Okuma sırasında (aktivite olmadan) seri hâlâ geçerli mi */
@@ -121,7 +134,10 @@ export const BADGES: BadgeDefinition[] = [
   {
     slug: 'module-master',
     title: { tr: 'Modül Ustası', en: 'Module Master' },
-    description: { tr: 'Bir modülün tüm derslerini bitirdin.', en: 'You finished every lesson in a module.' },
+    description: {
+      tr: 'Bir modülün tüm derslerini bitirdin.',
+      en: 'You finished every lesson in a module.',
+    },
     icon: 'trophy',
     condition: (c) => c.completedModuleIds.length >= 1,
   },
@@ -142,7 +158,10 @@ export const BADGES: BadgeDefinition[] = [
   {
     slug: 'perfect-quiz',
     title: { tr: 'Kusursuz', en: 'Flawless' },
-    description: { tr: 'Bir quizde tüm soruları doğru yanıtladın.', en: 'You answered every question in a quiz correctly.' },
+    description: {
+      tr: 'Bir quizde tüm soruları doğru yanıtladın.',
+      en: 'You answered every question in a quiz correctly.',
+    },
     icon: 'sparkles',
     condition: (c) => c.perfectQuizzes >= 1,
   },
@@ -156,7 +175,10 @@ export const BADGES: BadgeDefinition[] = [
   {
     slug: 'experimenter',
     title: { tr: 'Deneyci', en: 'Experimenter' },
-    description: { tr: '10 interaktif simülasyonla oynadın.', en: 'You played with 10 interactive simulations.' },
+    description: {
+      tr: '10 interaktif simülasyonla oynadın.',
+      en: 'You played with 10 interactive simulations.',
+    },
     icon: 'flask-conical',
     condition: (c) => c.interactiveSessions >= 10,
   },
@@ -170,14 +192,20 @@ export const BADGES: BadgeDefinition[] = [
   {
     slug: 'system-designer',
     title: { tr: 'Sistem Tasarımcısı', en: 'System Designer' },
-    description: { tr: 'Sistem Tasarımı Temelleri modülünü bitirdin.', en: 'You finished the System Design Fundamentals module.' },
+    description: {
+      tr: 'Sistem Tasarımı Temelleri modülünü bitirdin.',
+      en: 'You finished the System Design Fundamentals module.',
+    },
     icon: 'network',
     condition: (c) => c.completedModuleIds.includes('a-system-design-fundamentals'),
   },
   {
     slug: 'ai-explorer',
     title: { tr: 'AI Kâşifi', en: 'AI Explorer' },
-    description: { tr: 'Yapay Zekâ modülünü bitirdin.', en: 'You finished the Artificial Intelligence module.' },
+    description: {
+      tr: 'Yapay Zekâ modülünü bitirdin.',
+      en: 'You finished the Artificial Intelligence module.',
+    },
     icon: 'brain',
     condition: (c) => c.completedModuleIds.includes('g-artificial-intelligence'),
   },
@@ -191,7 +219,11 @@ export function evaluateBadges(ctx: BadgeContext, alreadyEarned: string[]): Badg
 
 /* ----------------------------- Quiz puanı -------------------------- */
 
-export function gradeAnswer(type: 'single' | 'multiple' | 'truefalse' | 'order', selected: string[], correct: string[]): boolean {
+export function gradeAnswer(
+  type: 'single' | 'multiple' | 'truefalse' | 'order',
+  selected: string[],
+  correct: string[],
+): boolean {
   if (type === 'order') {
     return selected.length === correct.length && selected.every((v, i) => v === correct[i]);
   }

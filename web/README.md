@@ -10,12 +10,12 @@ pnpm --filter @devacademy/shared build
 NEXT_PUBLIC_API_URL=http://localhost:4000/api/v1 pnpm dev     # http://localhost:3000
 ```
 
-| Değişken | Açıklama |
-|---|---|
-| `NEXT_PUBLIC_API_URL` | Tarayıcının kullandığı API adresi |
-| `API_URL_INTERNAL` | Sunucu tarafı render’ın kullandığı API adresi (Docker ağında farklı olabilir) |
-| `NEXT_PUBLIC_GOOGLE_CLIENT_ID` | Google Identity Services istemci kimliği (boşsa buton devre dışı) |
-| `NEXT_PUBLIC_APPLE_CLIENT_ID`, `NEXT_PUBLIC_APPLE_REDIRECT_URI` | Sign in with Apple (boşsa buton devre dışı) |
+| Değişken                                                        | Açıklama                                                                      |
+| --------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `NEXT_PUBLIC_API_URL`                                           | Tarayıcının kullandığı API adresi                                             |
+| `API_URL_INTERNAL`                                              | Sunucu tarafı render’ın kullandığı API adresi (Docker ağında farklı olabilir) |
+| `NEXT_PUBLIC_GOOGLE_CLIENT_ID`                                  | Google Identity Services istemci kimliği (boşsa buton devre dışı)             |
+| `NEXT_PUBLIC_APPLE_CLIENT_ID`, `NEXT_PUBLIC_APPLE_REDIRECT_URI` | Sign in with Apple (boşsa buton devre dışı)                                   |
 
 ## Yapı
 

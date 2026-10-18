@@ -13,10 +13,20 @@ import {
 
 /** Çevrimdışı kuyruklar: çıkışta temizlik ve geçici hatalarda denemenin korunması */
 
-jest.mock('@/lib/endpoints', () => ({ endpoints: { submitAttempt: jest.fn(), updateProgress: jest.fn() } }));
+jest.mock('@/lib/endpoints', () => ({
+  endpoints: { submitAttempt: jest.fn(), updateProgress: jest.fn() },
+}));
 
 const dto = { answers: [{ questionId: 'q1', selected: ['a'] }] };
-const result = { attemptId: 'at1', score: 100, passed: true, correctCount: 1, totalCount: 1, results: [], reviewCardsCreated: 0 } as never;
+const result = {
+  attemptId: 'at1',
+  score: 100,
+  passed: true,
+  correctCount: 1,
+  totalCount: 1,
+  results: [],
+  reviewCardsCreated: 0,
+} as never;
 
 beforeEach(() => {
   clearQueues();
@@ -40,7 +50,9 @@ describe('clearQueues', () => {
 describe('flushAttemptQueue', () => {
   it('hız sınırına takılan deneme kuyrukta kalır', async () => {
     enqueueAttempt('quiz-1', 'l1', dto);
-    jest.mocked(endpoints.submitAttempt).mockRejectedValue(new ApiError('rate_limited', 429, 'Çok fazla istek'));
+    jest
+      .mocked(endpoints.submitAttempt)
+      .mockRejectedValue(new ApiError('rate_limited', 429, 'Çok fazla istek'));
     const out = await flushAttemptQueue();
     expect(out).toEqual([]);
     expect(readAttemptQueue()).toHaveLength(1);
@@ -48,7 +60,9 @@ describe('flushAttemptQueue', () => {
 
   it('kalıcı doğrulama hatasında deneme düşürülür', async () => {
     enqueueAttempt('quiz-1', 'l1', dto);
-    jest.mocked(endpoints.submitAttempt).mockRejectedValue(new ApiError('validation', 400, 'Geçersiz'));
+    jest
+      .mocked(endpoints.submitAttempt)
+      .mockRejectedValue(new ApiError('validation', 400, 'Geçersiz'));
     await flushAttemptQueue();
     expect(readAttemptQueue()).toHaveLength(0);
   });

@@ -40,13 +40,19 @@ export function PipelineSim({ params, onInteract }: SimProps) {
   const { colors } = useTheme();
   const reduced = useReducedMotion();
   const [stages] = useState(() => parseStages(params));
-  const [failAt, setFailAt] = useState(() => defaultFailStage(stages, typeof params.failureStage === 'string' ? params.failureStage : ''));
+  const [failAt, setFailAt] = useState(() =>
+    defaultFailStage(stages, typeof params.failureStage === 'string' ? params.failureStage : ''),
+  );
   const [inject, setInject] = useState(false);
   const [canaryErr, setCanaryErr] = useState(0.5);
-  const [retries, setRetries] = useState(() => Math.max(0, Math.min(3, paramNumber(params, 'retries', 1))));
+  const [retries, setRetries] = useState(() =>
+    Math.max(0, Math.min(3, paramNumber(params, 'retries', 1))),
+  );
   const [strategy, setStrategy] = useState<Strategy>('canary');
   const [state, setState] = useState<PipelineState>(() => createPipelineState(stages.length));
-  const [log, setLog] = useState<{ id: number; text: string; tone: 'success' | 'danger' | 'muted' }[]>([]);
+  const [log, setLog] = useState<
+    { id: number; text: string; tone: 'success' | 'danger' | 'muted' }[]
+  >([]);
   const seq = useRef(0);
 
   const logText = (l: PipelineLog): { text: string; tone: 'success' | 'danger' | 'muted' } => {
@@ -56,7 +62,10 @@ export function PipelineSim({ params, onInteract }: SimProps) {
       case 'ok':
         return { text: t('sim.pipeline.logOk', { stage: l.stage }), tone: 'success' };
       case 'retry':
-        return { text: t('sim.pipeline.logRetry', { stage: l.stage, n: l.attempt }), tone: 'danger' };
+        return {
+          text: t('sim.pipeline.logRetry', { stage: l.stage, n: l.attempt }),
+          tone: 'danger',
+        };
       case 'fail':
         return { text: t('sim.pipeline.logFail', { stage: l.stage }), tone: 'danger' };
       default:
@@ -68,7 +77,10 @@ export function PipelineSim({ params, onInteract }: SimProps) {
     () => {
       const res = pipelineTick(state, stages, { inject, failAt, canaryErr, retries, strategy });
       setState(res.state);
-      if (res.logs.length) setLog((lg) => [...lg, ...res.logs.map((l) => ({ id: ++seq.current, ...logText(l) }))].slice(-30));
+      if (res.logs.length)
+        setLog((lg) =>
+          [...lg, ...res.logs.map((l) => ({ id: ++seq.current, ...logText(l) }))].slice(-30),
+        );
     },
     state.running ? (reduced ? 200 : 600) : null,
   );
@@ -115,12 +127,26 @@ export function PipelineSim({ params, onInteract }: SimProps) {
         {stages.map((s, i) => {
           const st = state.status[i];
           const c = statusColor(st, colors);
-          const mark = st === 'success' ? '✓ ' : st === 'failed' || st === 'rolledback' ? '✗ ' : st === 'running' ? '… ' : '';
+          const mark =
+            st === 'success'
+              ? '✓ '
+              : st === 'failed' || st === 'rolledback'
+                ? '✗ '
+                : st === 'running'
+                  ? '… '
+                  : '';
           const statusLabel = t(`sim.pipeline.statuses.${st}`);
           return (
             <View
               key={`${s}-${i}`}
-              style={[styles.stage, { borderColor: c, borderWidth: st === 'running' ? 2.5 : 1.5, backgroundColor: st === 'idle' ? colors.surface : withAlpha(c, 0.18) }]}
+              style={[
+                styles.stage,
+                {
+                  borderColor: c,
+                  borderWidth: st === 'running' ? 2.5 : 1.5,
+                  backgroundColor: st === 'idle' ? colors.surface : withAlpha(c, 0.18),
+                },
+              ]}
               accessible
               accessibilityLabel={`${i + 1}. ${s}: ${statusLabel}`}
               testID={`pipe-stage-${i}`}
@@ -136,7 +162,15 @@ export function PipelineSim({ params, onInteract }: SimProps) {
           );
         })}
       </View>
-      <Text variant="caption" weight="600" color={state.outcome === 'ok' ? colors.success : state.outcome ? colors.danger : colors.muted} accessibilityLiveRegion="polite" testID="pipe-outcome">
+      <Text
+        variant="caption"
+        weight="600"
+        color={
+          state.outcome === 'ok' ? colors.success : state.outcome ? colors.danger : colors.muted
+        }
+        accessibilityLiveRegion="polite"
+        testID="pipe-outcome"
+      >
         {t('sim.pipeline.status')}: {outcomeText}
       </Text>
 
@@ -159,8 +193,22 @@ export function PipelineSim({ params, onInteract }: SimProps) {
         }}
         testID="pipe-inject"
       />
-      {inject ? <SegmentedControl label={t('sim.pipeline.injectAt')} wrap value={failAt} onChange={setFailAt} options={stages.map((s) => ({ value: s, label: s }))} /> : null}
-      <Stepper label={t('sim.pipeline.retries')} value={retries} min={0} max={3} onChange={setRetries} />
+      {inject ? (
+        <SegmentedControl
+          label={t('sim.pipeline.injectAt')}
+          wrap
+          value={failAt}
+          onChange={setFailAt}
+          options={stages.map((s) => ({ value: s, label: s }))}
+        />
+      ) : null}
+      <Stepper
+        label={t('sim.pipeline.retries')}
+        value={retries}
+        min={0}
+        max={3}
+        onChange={setRetries}
+      />
       <Stepper
         label={t('sim.pipeline.canaryErr')}
         value={canaryErr}
@@ -175,13 +223,21 @@ export function PipelineSim({ params, onInteract }: SimProps) {
       />
       <StatRow>
         <Stat label={t('sim.pipeline.duration')} value={`${state.elapsed * 30}s`} />
-        <Stat label={t('sim.pipeline.traffic')} value={`v2 ${fleet.v2Traffic}%`} color={rolledBack ? colors.danger : colors.primary} />
+        <Stat
+          label={t('sim.pipeline.traffic')}
+          value={`v2 ${fleet.v2Traffic}%`}
+          color={rolledBack ? colors.danger : colors.primary}
+        />
       </StatRow>
 
       <Text variant="label">
         {t('sim.pipeline.fleet')} · {t(STRATEGY_KEY[strategy])}
       </Text>
-      <View style={styles.fleet} accessible accessibilityLabel={`${t('sim.pipeline.fleet')}: v2 ${fleet.v2Traffic}%`}>
+      <View
+        style={styles.fleet}
+        accessible
+        accessibilityLabel={`${t('sim.pipeline.fleet')}: v2 ${fleet.v2Traffic}%`}
+      >
         {fleet.versions.map((v, i) => {
           const ready = strategy !== 'blue-green' || v === 1 || fleet.progress > 0;
           const isV2 = v === 2;
@@ -206,7 +262,12 @@ export function PipelineSim({ params, onInteract }: SimProps) {
           );
         })}
       </View>
-      <ProgressBar value={fleet.v2Traffic / 100} color={rolledBack ? colors.danger : colors.primary} height={10} label={t('sim.pipeline.traffic')} />
+      <ProgressBar
+        value={fleet.v2Traffic / 100}
+        color={rolledBack ? colors.danger : colors.primary}
+        height={10}
+        label={t('sim.pipeline.traffic')}
+      />
       <Text variant="caption" muted>
         {t('sim.pipeline.traffic')}: v1 {100 - fleet.v2Traffic}% · v2 {fleet.v2Traffic}%
       </Text>
@@ -216,7 +277,18 @@ export function PipelineSim({ params, onInteract }: SimProps) {
         .slice(-8)
         .reverse()
         .map((x) => (
-          <Text key={x.id} variant="caption" color={x.tone === 'success' ? colors.success : x.tone === 'danger' ? colors.danger : colors.muted} numberOfLines={2}>
+          <Text
+            key={x.id}
+            variant="caption"
+            color={
+              x.tone === 'success'
+                ? colors.success
+                : x.tone === 'danger'
+                  ? colors.danger
+                  : colors.muted
+            }
+            numberOfLines={2}
+          >
             {x.text}
           </Text>
         ))}
@@ -226,7 +298,21 @@ export function PipelineSim({ params, onInteract }: SimProps) {
 
 const styles = StyleSheet.create({
   stages: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  stage: { flexGrow: 1, flexBasis: '30%', borderRadius: radius.md, paddingHorizontal: spacing.sm, paddingVertical: spacing.xs, gap: 2 },
+  stage: {
+    flexGrow: 1,
+    flexBasis: '30%',
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    gap: 2,
+  },
   fleet: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  instance: { width: 56, height: 44, borderRadius: radius.sm, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center' },
+  instance: {
+    width: 56,
+    height: 44,
+    borderRadius: radius.sm,
+    borderWidth: 1.5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });

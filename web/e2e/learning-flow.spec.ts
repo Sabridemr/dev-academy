@@ -46,7 +46,9 @@ test('arama sonuç döndürür', async ({ page }) => {
   await expect(page.getByRole('link', { name: /Load Balancer/ }).first()).toBeVisible();
 });
 
-test('CSP başlığı var ve ders sayfası (kod, diyagram, animasyon) ihlalsiz çalışır', async ({ page }) => {
+test('CSP başlığı var ve ders sayfası (kod, diyagram, animasyon) ihlalsiz çalışır', async ({
+  page,
+}) => {
   const violations: string[] = [];
   page.on('console', (msg) => {
     if (/Content Security Policy|Refused to/i.test(msg.text())) violations.push(msg.text());
@@ -59,7 +61,10 @@ test('CSP başlığı var ve ders sayfası (kod, diyagram, animasyon) ihlalsiz �
   const player = page.getByRole('figure', { name: /Round-Robin ile/ });
   await player.getByRole('button', { name: 'Adım ileri' }).click();
   // Shiki (WASM) vurgulaması CSP altında çalışmalı: düz <pre> yerini .shiki çıktısına bırakır
-  await page.locator('pre').first().evaluate((el) => el.scrollIntoView());
+  await page
+    .locator('pre')
+    .first()
+    .evaluate((el) => el.scrollIntoView());
   await expect(page.locator('pre.shiki').first()).toBeVisible({ timeout: 15_000 });
   expect(violations).toEqual([]);
 });

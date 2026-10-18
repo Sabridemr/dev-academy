@@ -90,7 +90,11 @@ export const UpdateProfileSchema = z.object({
   locale: z.enum(['tr', 'en']).optional(),
   selectedPathId: z.string().nullable().optional(),
   reminderHour: z.number().int().min(0).max(23).nullable().optional(),
-  timezone: z.string().max(64).refine(isValidTimeZone, { message: 'Geçersiz saat dilimi' }).optional(),
+  timezone: z
+    .string()
+    .max(64)
+    .refine(isValidTimeZone, { message: 'Geçersiz saat dilimi' })
+    .optional(),
 });
 export type UpdateProfileDto = z.infer<typeof UpdateProfileSchema>;
 
@@ -255,7 +259,13 @@ export interface ProgressSummary {
   badges: BadgeDto[];
   perModule: { moduleId: string; total: number; completed: number }[];
   /** Devam edilecek ders */
-  continueLesson: { id: string; slug: string; moduleId: string; title: LocalizedString; percent: number } | null;
+  continueLesson: {
+    id: string;
+    slug: string;
+    moduleId: string;
+    title: LocalizedString;
+    percent: number;
+  } | null;
   /** Bugün tekrar edilmesi gereken kavram sayısı */
   dueReviews: number;
 }
@@ -295,7 +305,10 @@ export interface BookmarkDto {
   lesson: { id: string; slug: string; moduleId: string; title: LocalizedString };
 }
 
-export const CreateBookmarkSchema = z.object({ lessonId: z.string().min(1), blockId: z.string().optional() });
+export const CreateBookmarkSchema = z.object({
+  lessonId: z.string().min(1),
+  blockId: z.string().optional(),
+});
 export type CreateBookmarkDto = z.infer<typeof CreateBookmarkSchema>;
 
 export interface NoteDto {

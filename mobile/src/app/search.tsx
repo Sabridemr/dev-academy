@@ -32,7 +32,9 @@ export default function SearchScreen() {
 
   return (
     <Screen edges={[]} testID="search-screen">
-      <View style={[styles.inputWrap, { borderColor: colors.border, backgroundColor: colors.surface }]}>
+      <View
+        style={[styles.inputWrap, { borderColor: colors.border, backgroundColor: colors.surface }]}
+      >
         <Ionicons name="search" size={18} color={colors.muted} />
         <TextInput
           value={query}
@@ -53,21 +55,34 @@ export default function SearchScreen() {
         </Text>
       ) : null}
       {search.isFetching && !search.data ? <LoadingView /> : null}
-      {search.error ? <ErrorView error={search.error} onRetry={() => void search.refetch()} /> : null}
+      {search.error ? (
+        <ErrorView error={search.error} onRetry={() => void search.refetch()} />
+      ) : null}
       {search.data ? (
         <Text variant="caption" muted accessibilityLiveRegion="polite">
           {t('search.results', { count: search.data.results.length })}
         </Text>
       ) : null}
-      {search.data?.results.length === 0 ? <EmptyState icon="search-outline" text={t('search.empty')} /> : null}
+      {search.data?.results.length === 0 ? (
+        <EmptyState icon="search-outline" text={t('search.empty')} />
+      ) : null}
       {(search.data?.results ?? []).map((r) => (
         <Pressable
           key={`${r.type}-${r.id}`}
           onPress={() => open(r)}
           accessibilityRole="button"
-          style={({ pressed }) => [styles.result, { borderColor: colors.border, backgroundColor: pressed ? colors.elevated : colors.surface }]}
+          style={({ pressed }) => [
+            styles.result,
+            {
+              borderColor: colors.border,
+              backgroundColor: pressed ? colors.elevated : colors.surface,
+            },
+          ]}
         >
-          <Chip label={t(`search.types.${r.type}`)} tone={r.type === 'lesson' ? 'primary' : r.type === 'module' ? 'success' : 'warning'} />
+          <Chip
+            label={t(`search.types.${r.type}`)}
+            tone={r.type === 'lesson' ? 'primary' : r.type === 'module' ? 'success' : 'warning'}
+          />
           <Text variant="label">{tl(r.title)}</Text>
           {r.snippet ? (
             <Text variant="caption" muted numberOfLines={2}>
@@ -81,7 +96,14 @@ export default function SearchScreen() {
 }
 
 const styles = StyleSheet.create({
-  inputWrap: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, borderWidth: 1, borderRadius: radius.md, paddingHorizontal: spacing.md },
+  inputWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    borderWidth: 1,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.md,
+  },
   input: { flex: 1, minHeight: 48, fontSize: 16 },
   result: { borderWidth: 1, borderRadius: radius.md, padding: spacing.md, gap: 4 },
 });

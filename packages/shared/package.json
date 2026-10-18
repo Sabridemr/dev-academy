@@ -39,13 +39,25 @@
   },
   "typesVersions": {
     "*": {
-      "scene": ["./dist/scene/index.d.ts"],
-      "content": ["./dist/content/index.d.ts"],
-      "simulators": ["./dist/simulators/index.d.ts"],
-      "node": ["./dist/node/index.d.ts"]
+      "scene": [
+        "./dist/scene/index.d.ts"
+      ],
+      "content": [
+        "./dist/content/index.d.ts"
+      ],
+      "simulators": [
+        "./dist/simulators/index.d.ts"
+      ],
+      "node": [
+        "./dist/node/index.d.ts"
+      ]
     }
   },
-  "files": ["dist", "examples", "schema"],
+  "files": [
+    "dist",
+    "examples",
+    "schema"
+  ],
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",

@@ -8,7 +8,15 @@ import { useI18n } from '@/i18n';
 import { endpoints } from '@/lib/endpoints';
 import { queryKeys } from '@/lib/queryClient';
 import { radius, spacing, useTheme } from '@/theme';
-import { EmptyState, ErrorView, IconButton, LoadingView, Screen, SegmentedControl, Text } from '@/components/ui';
+import {
+  EmptyState,
+  ErrorView,
+  IconButton,
+  LoadingView,
+  Screen,
+  SegmentedControl,
+  Text,
+} from '@/components/ui';
 
 /** Kütüphane: yer imleri ve notlar */
 export default function LibraryScreen() {
@@ -56,7 +64,9 @@ export default function LibraryScreen() {
         ]}
       />
       {active.isLoading ? <LoadingView /> : null}
-      {active.error ? <ErrorView error={active.error} onRetry={() => void active.refetch()} /> : null}
+      {active.error ? (
+        <ErrorView error={active.error} onRetry={() => void active.refetch()} />
+      ) : null}
 
       {tab === 'bookmarks' ? (
         bookmarks.data?.length === 0 ? (
@@ -76,7 +86,11 @@ export default function LibraryScreen() {
                   {new Date(b.createdAt).toLocaleDateString()}
                 </Text>
               </View>
-              <IconButton icon="trash-outline" label={t('library.delete')} onPress={() => removeBookmark.mutate(b.id)} />
+              <IconButton
+                icon="trash-outline"
+                label={t('library.delete')}
+                onPress={() => removeBookmark.mutate(b.id)}
+              />
             </Pressable>
           ))
         )
@@ -88,7 +102,14 @@ export default function LibraryScreen() {
             key={n.id}
             onPress={() => router.push({ pathname: '/lesson/[id]', params: { id: n.lessonId } })}
             accessibilityRole="button"
-            style={[styles.row, { borderColor: colors.border, backgroundColor: colors.surface, alignItems: 'flex-start' }]}
+            style={[
+              styles.row,
+              {
+                borderColor: colors.border,
+                backgroundColor: colors.surface,
+                alignItems: 'flex-start',
+              },
+            ]}
           >
             <Ionicons name="document-text" size={18} color={colors.accent} />
             <View style={{ flex: 1, gap: 4 }}>
@@ -97,7 +118,11 @@ export default function LibraryScreen() {
               </Text>
               <Text>{n.body}</Text>
             </View>
-            <IconButton icon="trash-outline" label={t('library.delete')} onPress={() => removeNote.mutate(n.id)} />
+            <IconButton
+              icon="trash-outline"
+              label={t('library.delete')}
+              onPress={() => removeNote.mutate(n.id)}
+            />
           </Pressable>
         ))
       )}
@@ -106,5 +131,12 @@ export default function LibraryScreen() {
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, borderWidth: 1, borderRadius: radius.md, padding: spacing.md },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    borderWidth: 1,
+    borderRadius: radius.md,
+    padding: spacing.md,
+  },
 });

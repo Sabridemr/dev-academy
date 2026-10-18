@@ -22,7 +22,11 @@ export class HealthController {
   @Get()
   @ApiOperation({ summary: 'Liveness' })
   live() {
-    return { status: 'ok', uptimeSeconds: Math.round((Date.now() - this.startedAt) / 1000), timestamp: new Date().toISOString() };
+    return {
+      status: 'ok',
+      uptimeSeconds: Math.round((Date.now() - this.startedAt) / 1000),
+      timestamp: new Date().toISOString(),
+    };
   }
 
   @Public()
@@ -30,7 +34,11 @@ export class HealthController {
   @ApiOperation({ summary: 'Readiness: veritabanı ve Redis' })
   async ready() {
     const [db, redis] = await Promise.all([this.prisma.ping(), this.redis.ping()]);
-    const body = { status: db ? (redis ? 'ok' : 'degraded') : 'down', checks: { database: db ? 'up' : 'down', redis: redis ? 'up' : 'down' }, timestamp: new Date().toISOString() };
+    const body = {
+      status: db ? (redis ? 'ok' : 'degraded') : 'down',
+      checks: { database: db ? 'up' : 'down', redis: redis ? 'up' : 'down' },
+      timestamp: new Date().toISOString(),
+    };
     if (!db) throw new ServiceUnavailableException(body);
     return body;
   }

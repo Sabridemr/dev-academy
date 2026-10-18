@@ -2,7 +2,10 @@
   "$schema": "../schema/animation-scene.schema.json",
   "schemaVersion": 1,
   "id": "load-balancer-round-robin",
-  "title": { "tr": "Round-Robin ile İstek Dağıtımı", "en": "Request Distribution with Round-Robin" },
+  "title": {
+    "tr": "Round-Robin ile İstek Dağıtımı",
+    "en": "Request Distribution with Round-Robin"
+  },
   "summary": {
     "tr": "Üç sunuculu bir havuzda yük dengeleyicinin istekleri sırayla dağıtması, bir sunucunun düşmesi ve health check ile havuzdan çıkarılması.",
     "en": "A load balancer distributing requests in turn across three servers, one server failing, and the health check removing it from the pool."
@@ -15,18 +18,74 @@
   },
   "canvas": { "width": 1000, "height": 600 },
   "nodes": [
-    { "id": "users", "kind": "user", "label": { "tr": "Kullanıcılar", "en": "Users" }, "x": 110, "y": 300 },
-    { "id": "lb", "kind": "lb", "label": "Load Balancer", "sublabel": { "tr": "Round-robin", "en": "Round-robin" }, "x": 420, "y": 300, "w": 150, "h": 80 },
-    { "id": "s1", "kind": "server", "label": "S1", "sublabel": { "tr": "Uygulama sunucusu", "en": "App server" }, "x": 800, "y": 140, "w": 120, "h": 70 },
-    { "id": "s2", "kind": "server", "label": "S2", "sublabel": { "tr": "Uygulama sunucusu", "en": "App server" }, "x": 800, "y": 300, "w": 120, "h": 70 },
-    { "id": "s3", "kind": "server", "label": "S3", "sublabel": { "tr": "Uygulama sunucusu", "en": "App server" }, "x": 800, "y": 460, "w": 120, "h": 70 }
+    {
+      "id": "users",
+      "kind": "user",
+      "label": { "tr": "Kullanıcılar", "en": "Users" },
+      "x": 110,
+      "y": 300
+    },
+    {
+      "id": "lb",
+      "kind": "lb",
+      "label": "Load Balancer",
+      "sublabel": { "tr": "Round-robin", "en": "Round-robin" },
+      "x": 420,
+      "y": 300,
+      "w": 150,
+      "h": 80
+    },
+    {
+      "id": "s1",
+      "kind": "server",
+      "label": "S1",
+      "sublabel": { "tr": "Uygulama sunucusu", "en": "App server" },
+      "x": 800,
+      "y": 140,
+      "w": 120,
+      "h": 70
+    },
+    {
+      "id": "s2",
+      "kind": "server",
+      "label": "S2",
+      "sublabel": { "tr": "Uygulama sunucusu", "en": "App server" },
+      "x": 800,
+      "y": 300,
+      "w": 120,
+      "h": 70
+    },
+    {
+      "id": "s3",
+      "kind": "server",
+      "label": "S3",
+      "sublabel": { "tr": "Uygulama sunucusu", "en": "App server" },
+      "x": 800,
+      "y": 460,
+      "w": 120,
+      "h": 70
+    }
   ],
   "edges": [
-    { "id": "u-lb", "from": "users", "to": "lb", "kind": "request", "label": { "tr": "HTTP istekleri", "en": "HTTP requests" } },
+    {
+      "id": "u-lb",
+      "from": "users",
+      "to": "lb",
+      "kind": "request",
+      "label": { "tr": "HTTP istekleri", "en": "HTTP requests" }
+    },
     { "id": "lb-s1", "from": "lb", "to": "s1", "kind": "request", "curvature": -0.15 },
     { "id": "lb-s2", "from": "lb", "to": "s2", "kind": "request" },
     { "id": "lb-s3", "from": "lb", "to": "s3", "kind": "request", "curvature": 0.15 },
-    { "id": "hc-s2", "from": "lb", "to": "s2", "kind": "control", "style": "dotted", "curvature": 0.4, "label": { "tr": "health check", "en": "health check" } }
+    {
+      "id": "hc-s2",
+      "from": "lb",
+      "to": "s2",
+      "kind": "control",
+      "style": "dotted",
+      "curvature": 0.4,
+      "label": { "tr": "health check", "en": "health check" }
+    }
   ],
   "steps": [
     {
@@ -67,7 +126,13 @@
         { "edge": "lb-s1", "label": "#4", "startAt": 2700, "durationMs": 900 }
       ],
       "annotations": [
-        { "id": "rr-note", "x": 420, "y": 440, "text": { "tr": "sayaç: (i++) mod 3", "en": "counter: (i++) mod 3" }, "target": "lb" }
+        {
+          "id": "rr-note",
+          "x": 420,
+          "y": 440,
+          "text": { "tr": "sayaç: (i++) mod 3", "en": "counter: (i++) mod 3" },
+          "target": "lb"
+        }
       ]
     },
     {
@@ -80,12 +145,27 @@
       "durationMs": 3500,
       "highlight": { "nodes": ["s2"], "edges": ["lb-s2"] },
       "nodeStates": {
-        "s2": { "status": "down", "badge": "✕", "sublabel": { "tr": "yanıt yok", "en": "no response" } }
+        "s2": {
+          "status": "down",
+          "badge": "✕",
+          "sublabel": { "tr": "yanıt yok", "en": "no response" }
+        }
       },
-      "edgeStates": { "lb-s2": { "status": "error", "label": { "tr": "timeout", "en": "timeout" } } },
-      "packets": [{ "edge": "lb-s2", "label": "#5", "color": "danger", "durationMs": 1200, "shape": "square" }],
+      "edgeStates": {
+        "lb-s2": { "status": "error", "label": { "tr": "timeout", "en": "timeout" } }
+      },
+      "packets": [
+        { "edge": "lb-s2", "label": "#5", "color": "danger", "durationMs": 1200, "shape": "square" }
+      ],
       "annotations": [
-        { "id": "fail-note", "x": 800, "y": 395, "text": { "tr": "503 / timeout", "en": "503 / timeout" }, "tone": "danger", "target": "s2" }
+        {
+          "id": "fail-note",
+          "x": 800,
+          "y": 395,
+          "text": { "tr": "503 / timeout", "en": "503 / timeout" },
+          "tone": "danger",
+          "target": "s2"
+        }
       ]
     },
     {
@@ -98,14 +178,25 @@
       "durationMs": 3500,
       "highlight": { "nodes": ["lb", "s2"], "edges": ["hc-s2"] },
       "nodeStates": {
-        "s2": { "status": "muted", "badge": "OUT", "sublabel": { "tr": "havuz dışı", "en": "out of pool" } }
+        "s2": {
+          "status": "muted",
+          "badge": "OUT",
+          "sublabel": { "tr": "havuz dışı", "en": "out of pool" }
+        }
       },
       "edgeStates": {
         "lb-s2": { "status": "muted", "label": "" },
         "hc-s2": { "status": "active" }
       },
       "packets": [
-        { "edge": "hc-s2", "shape": "diamond", "durationMs": 700, "repeat": 3, "repeatGapMs": 300, "label": "GET /health" }
+        {
+          "edge": "hc-s2",
+          "shape": "diamond",
+          "durationMs": 700,
+          "repeat": 3,
+          "repeatGapMs": 300,
+          "label": "GET /health"
+        }
       ]
     },
     {

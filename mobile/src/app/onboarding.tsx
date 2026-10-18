@@ -67,17 +67,28 @@ export default function OnboardingScreen() {
             accessibilityRole="radio"
             accessibilityState={{ checked: selected }}
             accessibilityLabel={tl(p.title)}
-            style={[styles.path, { borderColor: selected ? colors.primary : colors.border, backgroundColor: selected ? withAlpha(colors.primary, 0.08) : colors.surface }]}
+            style={[
+              styles.path,
+              {
+                borderColor: selected ? colors.primary : colors.border,
+                backgroundColor: selected ? withAlpha(colors.primary, 0.08) : colors.surface,
+              },
+            ]}
             testID={`path-${p.id}`}
           >
-            <Ionicons name={selected ? 'checkmark-circle' : 'ellipse-outline'} size={22} color={selected ? colors.primary : colors.muted} />
+            <Ionicons
+              name={selected ? 'checkmark-circle' : 'ellipse-outline'}
+              size={22}
+              color={selected ? colors.primary : colors.muted}
+            />
             <View style={{ flex: 1, gap: 4 }}>
               <Text variant="label">{tl(p.title)}</Text>
               <Text variant="caption" muted>
                 {tl(p.description)}
               </Text>
               <Text variant="caption" muted>
-                {t('home.modulesCount', { count: p.moduleCount })} · {t('home.lessons', { count: p.lessonCount })}
+                {t('home.modulesCount', { count: p.moduleCount })} ·{' '}
+                {t('home.lessons', { count: p.lessonCount })}
               </Text>
             </View>
           </Pressable>
@@ -91,12 +102,29 @@ export default function OnboardingScreen() {
           {errorText(error, t)}
         </Text>
       ) : null}
-      <Button title={t('onboarding.save')} onPress={() => void save()} loading={saving} disabled={!pathId} testID="onboarding-save" />
-      <Button title={t('onboarding.skip')} variant="ghost" onPress={finish} testID="onboarding-skip" />
+      <Button
+        title={t('onboarding.save')}
+        onPress={() => void save()}
+        loading={saving}
+        disabled={!pathId}
+        testID="onboarding-save"
+      />
+      <Button
+        title={t('onboarding.skip')}
+        variant="ghost"
+        onPress={finish}
+        testID="onboarding-skip"
+      />
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  path: { flexDirection: 'row', gap: spacing.md, borderWidth: 1.5, borderRadius: radius.lg, padding: spacing.lg },
+  path: {
+    flexDirection: 'row',
+    gap: spacing.md,
+    borderWidth: 1.5,
+    borderRadius: radius.lg,
+    padding: spacing.lg,
+  },
 });

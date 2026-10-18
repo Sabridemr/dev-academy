@@ -17,7 +17,12 @@ describe('NotificationsService.sendDailyReminders', () => {
 
   it('geçersiz saat dilimli kullanıcıyı atlayıp diğerlerine gönderir', async () => {
     const prisma = {
-      user: { findMany: jest.fn(async () => [user({ id: 'bozuk', timezone: 'Nope/Zone' }), user({ id: 'saglam', email: 'ok@x.y' })]) },
+      user: {
+        findMany: jest.fn(async () => [
+          user({ id: 'bozuk', timezone: 'Nope/Zone' }),
+          user({ id: 'saglam', email: 'ok@x.y' }),
+        ]),
+      },
     };
     const config = { get: (k: string) => ({ NODE_ENV: 'development', SMTP_URL: undefined })[k] };
     const service = new NotificationsService(prisma as never, config as never);

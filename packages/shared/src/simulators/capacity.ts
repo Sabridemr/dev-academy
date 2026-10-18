@@ -55,7 +55,10 @@ export const DEFAULT_CAPACITY_INPUT: CapacityInput = {
   replicationFactor: 3,
 };
 
-export function estimateCapacity(input: CapacityInput, serverQpsCapacity = 1_000): CapacityEstimate {
+export function estimateCapacity(
+  input: CapacityInput,
+  serverQpsCapacity = 1_000,
+): CapacityEstimate {
   const readQps = (input.dau * input.readsPerUserPerDay) / SECONDS_PER_DAY;
   const writeQps = (input.dau * input.writesPerUserPerDay) / SECONDS_PER_DAY;
   const dailyWriteBytes = input.dau * input.writesPerUserPerDay * input.avgWriteSizeBytes;
@@ -74,7 +77,10 @@ export function estimateCapacity(input: CapacityInput, serverQpsCapacity = 1_000
     egressBytesPerSec,
     peakEgressBytesPerSec: egressBytesPerSec * input.peakMultiplier,
     cacheBytes: dailyWriteBytes * input.hotDataRatio * 7, // son bir haftanın sıcak verisi
-    appServers: Math.max(1, Math.ceil(((readQps + writeQps) * input.peakMultiplier) / serverQpsCapacity)),
+    appServers: Math.max(
+      1,
+      Math.ceil(((readQps + writeQps) * input.peakMultiplier) / serverQpsCapacity),
+    ),
   };
 }
 
@@ -88,8 +94,11 @@ export function formatBytes(bytes: number, fractionDigits = 1): string {
 
 export function formatNumber(value: number, locale = 'tr-TR'): string {
   if (!Number.isFinite(value)) return '∞';
-  if (value >= 1_000_000_000) return `${(value / 1_000_000_000).toLocaleString(locale, { maximumFractionDigits: 2 })} Mia`;
-  if (value >= 1_000_000) return `${(value / 1_000_000).toLocaleString(locale, { maximumFractionDigits: 2 })} Mn`;
-  if (value >= 1_000) return `${(value / 1_000).toLocaleString(locale, { maximumFractionDigits: 1 })} B`;
+  if (value >= 1_000_000_000)
+    return `${(value / 1_000_000_000).toLocaleString(locale, { maximumFractionDigits: 2 })} Mia`;
+  if (value >= 1_000_000)
+    return `${(value / 1_000_000).toLocaleString(locale, { maximumFractionDigits: 2 })} Mn`;
+  if (value >= 1_000)
+    return `${(value / 1_000).toLocaleString(locale, { maximumFractionDigits: 1 })} B`;
   return value.toLocaleString(locale, { maximumFractionDigits: 1 });
 }

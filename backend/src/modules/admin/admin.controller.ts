@@ -1,8 +1,27 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Put, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Post,
+  Put,
+  Query,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { z } from 'zod';
-import { AdminLessonUpsertSchema, AdminQuizUpsertSchema, AdminSceneUpsertSchema } from '@devacademy/shared';
-import type { AdminLessonUpsertDto, AdminQuizUpsertDto, AdminSceneUpsertDto } from '@devacademy/shared';
+import {
+  AdminLessonUpsertSchema,
+  AdminQuizUpsertSchema,
+  AdminSceneUpsertSchema,
+} from '@devacademy/shared';
+import type {
+  AdminLessonUpsertDto,
+  AdminQuizUpsertDto,
+  AdminSceneUpsertDto,
+} from '@devacademy/shared';
 import { CurrentUser, Roles, type AuthUser } from '../../common/auth/decorators';
 import { zodBody } from '../../common/pipes/zod-validation.pipe';
 import { ApiZodBody } from '../../common/swagger/zod-openapi';
@@ -63,7 +82,10 @@ export class AdminController {
   @Put('lessons')
   @ApiOperation({ summary: 'Ders taslağı oluştur/güncelle' })
   @ApiZodBody(AdminLessonUpsertSchema)
-  upsertLesson(@Body(zodBody(AdminLessonUpsertSchema)) dto: AdminLessonUpsertDto, @CurrentUser() user: AuthUser) {
+  upsertLesson(
+    @Body(zodBody(AdminLessonUpsertSchema)) dto: AdminLessonUpsertDto,
+    @CurrentUser() user: AuthUser,
+  ) {
     return this.admin.upsertDraft(dto, user.id);
   }
 
@@ -76,7 +98,10 @@ export class AdminController {
   @Post('lessons/:lessonId/publish')
   @ApiOperation({ summary: 'Taslağı yayınla (cache temizlenir, istemcilere WS bildirimi gider)' })
   @ApiZodBody(PublishSchema)
-  publish(@Param('lessonId') lessonId: string, @Body(zodBody(PublishSchema)) dto: z.infer<typeof PublishSchema>) {
+  publish(
+    @Param('lessonId') lessonId: string,
+    @Body(zodBody(PublishSchema)) dto: z.infer<typeof PublishSchema>,
+  ) {
     return this.admin.publish(lessonId, dto.versionId);
   }
 
@@ -112,7 +137,11 @@ export class AdminController {
   @ApiOperation({ summary: 'Sahne kaydet (şema doğrulamasıyla); ?publish=true ile yayınla' })
   @ApiQuery({ name: 'publish', required: false })
   @ApiZodBody(AdminSceneUpsertSchema)
-  upsertScene(@Body(zodBody(AdminSceneUpsertSchema)) dto: AdminSceneUpsertDto, @CurrentUser() user: AuthUser, @Query('publish') publish?: string) {
+  upsertScene(
+    @Body(zodBody(AdminSceneUpsertSchema)) dto: AdminSceneUpsertDto,
+    @CurrentUser() user: AuthUser,
+    @Query('publish') publish?: string,
+  ) {
     return this.admin.upsertScene(dto, user.id, publish === 'true');
   }
 

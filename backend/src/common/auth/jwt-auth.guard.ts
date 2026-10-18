@@ -26,8 +26,14 @@ export class JwtAuthGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [context.getHandler(), context.getClass()]);
-    const optional = this.reflector.getAllAndOverride<boolean>(OPTIONAL_AUTH_KEY, [context.getHandler(), context.getClass()]);
+    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+    const optional = this.reflector.getAllAndOverride<boolean>(OPTIONAL_AUTH_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
     const req = context.switchToHttp().getRequest<Request & { user?: AuthUser }>();
     const token = extractBearer(req);
 
@@ -37,7 +43,9 @@ export class JwtAuthGuard implements CanActivate {
     }
 
     try {
-      const payload = await this.jwt.verifyAsync<AccessTokenPayload>(token, { secret: this.config.get('JWT_ACCESS_SECRET') });
+      const payload = await this.jwt.verifyAsync<AccessTokenPayload>(token, {
+        secret: this.config.get('JWT_ACCESS_SECRET'),
+      });
       if (payload.type !== 'access') throw new Error('wrong token type');
       req.user = { id: payload.sub, email: payload.email, role: payload.role };
       return true;

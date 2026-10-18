@@ -8,7 +8,17 @@ import { useOnline } from '@/lib/network';
 import { queryKeys } from '@/lib/queryClient';
 import { removeModuleDownload, syncModule } from '@/offline/sync';
 import { resolveThemeColor, spacing, useTheme } from '@/theme';
-import { Button, Card, Chip, ErrorView, LoadingView, ProgressBar, Row, Screen, Text } from '@/components/ui';
+import {
+  Button,
+  Card,
+  Chip,
+  ErrorView,
+  LoadingView,
+  ProgressBar,
+  Row,
+  Screen,
+  Text,
+} from '@/components/ui';
 import { LessonRow } from '@/components/content/ModuleCard';
 import { errorText } from '@/utils/errors';
 
@@ -50,13 +60,19 @@ export default function ModuleScreen() {
   };
 
   if (mod.isLoading) return <LoadingView />;
-  if (mod.error || !mod.data) return <ErrorView error={mod.error} onRetry={() => void mod.refetch()} />;
+  if (mod.error || !mod.data)
+    return <ErrorView error={mod.error} onRetry={() => void mod.refetch()} />;
   const m = mod.data;
   const color = resolveThemeColor(m.color, colors);
   const done = m.lessons.filter((l) => l.progress?.status === 'completed').length;
 
   return (
-    <Screen edges={[]} refreshing={mod.isRefetching} onRefresh={() => void mod.refetch()} testID="module-screen">
+    <Screen
+      edges={[]}
+      refreshing={mod.isRefetching}
+      onRefresh={() => void mod.refetch()}
+      testID="module-screen"
+    >
       <Stack.Screen options={{ title: `${m.code}. ${tl(m.title)}` }} />
       <Card>
         <Text variant="heading" accessibilityRole="header">
@@ -72,7 +88,13 @@ export default function ModuleScreen() {
           {message ? <Chip tone="primary" label={message} /> : null}
         </Row>
         <Button
-          title={busy ? t('module.downloading') : downloaded ? t('profile.syncNow') : t('module.download')}
+          title={
+            busy
+              ? t('module.downloading')
+              : downloaded
+                ? t('profile.syncNow')
+                : t('module.download')
+          }
           icon={downloaded ? 'sync' : 'cloud-download-outline'}
           variant={downloaded ? 'secondary' : 'primary'}
           loading={busy}
@@ -80,7 +102,14 @@ export default function ModuleScreen() {
           onPress={() => void download()}
           testID="module-download"
         />
-        {downloaded ? <Button title={t('module.removeDownload')} variant="ghost" icon="trash-outline" onPress={() => void remove()} /> : null}
+        {downloaded ? (
+          <Button
+            title={t('module.removeDownload')}
+            variant="ghost"
+            icon="trash-outline"
+            onPress={() => void remove()}
+          />
+        ) : null}
         {error ? (
           <Text variant="caption" color={colors.danger}>
             {errorText(error, t)}

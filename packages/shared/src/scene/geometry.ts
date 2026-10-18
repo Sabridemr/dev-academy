@@ -81,7 +81,11 @@ export function pointOnQuadratic(p0: Point, p1: Point, p2: Point, tt: number): P
 }
 
 /** Paketin kenar üzerindeki konumu; backward yönünde t tersine çevrilir */
-export function packetPosition(geom: EdgeGeometry, progress: number, direction: 'forward' | 'backward'): Point {
+export function packetPosition(
+  geom: EdgeGeometry,
+  progress: number,
+  direction: 'forward' | 'backward',
+): Point {
   const tt = direction === 'forward' ? progress : 1 - progress;
   return pointOnQuadratic(geom.start, geom.control, geom.end, Math.max(0, Math.min(1, tt)));
 }
@@ -173,7 +177,11 @@ export interface AnnotationBox {
 }
 
 /** Not kutusunu tuval sınırları içinde tutar (kenarda kesilmesin) */
-export function annotationBox(scene: AnimationScene, a: { x: number; y: number }, text: string): AnnotationBox {
+export function annotationBox(
+  scene: AnimationScene,
+  a: { x: number; y: number },
+  text: string,
+): AnnotationBox {
   const h = 28;
   const w = Math.min(scene.canvas.width - 16, Math.max(80, text.length * approxCharWidth(12) + 24));
   const x = Math.min(scene.canvas.width - w / 2 - 8, Math.max(w / 2 + 8, a.x));
@@ -195,5 +203,11 @@ export function badgeBox(node: SceneNode, raw: string): BadgeBox {
   const { w, h } = nodeSize(node);
   const text = raw.length > 12 ? `${raw.slice(0, 11)}…` : raw;
   const bw = text.length <= 2 ? 26 : Math.ceil(text.length * approxCharWidth(10.5)) + 14;
-  return { text, w: bw, h: 22, cx: node.x + w / 2 - Math.max(4, bw / 2 - 9), cy: node.y - h / 2 + 4 };
+  return {
+    text,
+    w: bw,
+    h: 22,
+    cx: node.x + w / 2 - Math.max(4, bw / 2 - 9),
+    cy: node.y - h / 2 + 4,
+  };
 }

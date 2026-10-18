@@ -7,7 +7,10 @@ import { useAuthStore } from './auth-store';
  *  - 401'de tek seferlik refresh dener (eş zamanlı istekler aynı refresh promise'ini paylaşır).
  *  - Hata gövdesini ApiError olarak fırlatır (merkezi hata formatı).
  */
-export const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api/v1').replace(/\/$/, '');
+export const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api/v1').replace(
+  /\/$/,
+  '',
+);
 
 export class ApiError extends Error {
   constructor(
@@ -48,7 +51,11 @@ export interface RequestOptions extends Omit<RequestInit, 'body'> {
   anonymous?: boolean;
 }
 
-export async function api<T>(path: string, options: RequestOptions = {}, retried = false): Promise<T> {
+export async function api<T>(
+  path: string,
+  options: RequestOptions = {},
+  retried = false,
+): Promise<T> {
   const { body, anonymous, headers, ...rest } = options;
   const accessToken = anonymous ? null : useAuthStore.getState().accessToken;
   const res = await fetch(`${API_URL}${path}`, {

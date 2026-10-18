@@ -75,7 +75,8 @@ function preTokenize(text: string): string[] {
 /** Deterministik BPE eğitimi: eşitlikte sözlükbilimsel olarak küçük çift seçilir */
 function trainBpe(corpus: string, maxMerges: number): { base: string[]; merges: Merge[] } {
   const wordCounts = new Map<string, number>();
-  for (const w of preTokenize(corpus.toLowerCase())) wordCounts.set(w, (wordCounts.get(w) ?? 0) + 1);
+  for (const w of preTokenize(corpus.toLowerCase()))
+    wordCounts.set(w, (wordCounts.get(w) ?? 0) + 1);
   let words = [...wordCounts.entries()].map(([w, c]) => ({ syms: Array.from(w), c }));
   const base = [...new Set(words.flatMap((w) => w.syms))].sort();
   const merges: Merge[] = [];
@@ -119,7 +120,12 @@ interface Tok {
 }
 
 /** Bir kelimeyi öğrenilmiş birleştirmeleri sıra (rank) önceliğiyle uygulayarak kodlar */
-function encodeWord(word: string, ranks: Map<string, number>, vocab: Map<string, number>, baseSet: Set<string>): Tok[] {
+function encodeWord(
+  word: string,
+  ranks: Map<string, number>,
+  vocab: Map<string, number>,
+  baseSet: Set<string>,
+): Tok[] {
   let syms = Array.from(word.toLowerCase());
   for (;;) {
     let bestRank = Infinity;
@@ -132,7 +138,11 @@ function encodeWord(word: string, ranks: Map<string, number>, vocab: Map<string,
       }
     }
     if (bestIdx < 0) break;
-    syms = [...syms.slice(0, bestIdx), syms[bestIdx] + syms[bestIdx + 1], ...syms.slice(bestIdx + 2)];
+    syms = [
+      ...syms.slice(0, bestIdx),
+      syms[bestIdx] + syms[bestIdx + 1],
+      ...syms.slice(bestIdx + 2),
+    ];
   }
   const enc = new TextEncoder();
   return syms.flatMap((s): Tok[] => {
@@ -140,18 +150,38 @@ function encodeWord(word: string, ranks: Map<string, number>, vocab: Map<string,
     if (id !== undefined) return [{ text: s, id, byte: false }];
     if (s.length === 1 && !baseSet.has(s)) {
       // Bilinmeyen karakter → UTF-8 byte token'ları (id: 256 byte'lık blok, sözlüğün sonunda)
-      return Array.from(enc.encode(s)).map((b) => ({ text: `<0x${b.toString(16).toUpperCase().padStart(2, '0')}>`, id: 10_000 + b, byte: true }));
+      return Array.from(enc.encode(s)).map((b) => ({
+        text: `<0x${b.toString(16).toUpperCase().padStart(2, '0')}>`,
+        id: 10_000 + b,
+        byte: true,
+      }));
     }
-    return Array.from(s).map((ch) => ({ text: ch, id: vocab.get(ch) ?? 10_000 + ch.charCodeAt(0), byte: !vocab.has(ch) }));
+    return Array.from(s).map((ch) => ({
+      text: ch,
+      id: vocab.get(ch) ?? 10_000 + ch.charCodeAt(0),
+      byte: !vocab.has(ch),
+    }));
   });
 }
 
-const CHIP_TONES = ['var(--da-primary)', 'var(--da-accent)', 'var(--da-success)', 'var(--da-danger)', 'var(--da-warning)'];
+const CHIP_TONES = [
+  'var(--da-primary)',
+  'var(--da-accent)',
+  'var(--da-success)',
+  'var(--da-danger)',
+  'var(--da-warning)',
+];
 
 export default function TokenizerSim({ params, onInteract }: SimulatorProps) {
   const { locale } = useI18n();
   const l = L[locale];
-  const [text, setText] = useState(() => strParam<string>(params, 'text', 'Unbelievable! The model learns tokens. Ürünler 2024’te geliyor.'));
+  const [text, setText] = useState(() =>
+    strParam<string>(
+      params,
+      'text',
+      'Unbelievable! The model learns tokens. Ürünler 2024’te geliyor.',
+    ),
+  );
   const [mergeCount, setMergeCount] = useState(120);
 
   // Eğitim bir kez yapılır; kaydırıcı yalnızca ilk n birleştirmeyi kullanır
@@ -167,7 +197,10 @@ export default function TokenizerSim({ params, onInteract }: SimulatorProps) {
     return { ranks: r, vocab: v, baseSet: new Set(trained.base) };
   }, [trained, mergeCount]);
 
-  const tokens = useMemo(() => preTokenize(text).flatMap((w) => encodeWord(w, ranks, vocab, baseSet)), [text, ranks, vocab, baseSet]);
+  const tokens = useMemo(
+    () => preTokenize(text).flatMap((w) => encodeWord(w, ranks, vocab, baseSet)),
+    [text, ranks, vocab, baseSet],
+  );
   const charCount = Array.from(text).length;
   const wordCount = text.split(/[\s]+/).filter(Boolean).length;
   const byteCount = tokens.filter((tk) => tk.byte).length;
@@ -177,13 +210,26 @@ export default function TokenizerSim({ params, onInteract }: SimulatorProps) {
       title={l.title}
       aside={
         <>
-          <Range label={l.merges} value={mergeCount} min={0} max={trained.merges.length} onChange={(v) => { onInteract(); setMergeCount(v); }} />
+          <Range
+            label={l.merges}
+            value={mergeCount}
+            min={0}
+            max={trained.merges.length}
+            onChange={(v) => {
+              onInteract();
+              setMergeCount(v);
+            }}
+          />
           <div className="grid grid-cols-2 gap-2" aria-live="polite">
             <Stat label={l.tokens} value={tokens.length} tone="primary" />
             <Stat label={l.vocab} value={vocab.size} />
             <Stat label={l.chars} value={charCount} />
             <Stat label={l.words} value={wordCount} />
-            <Stat label={l.ratio} value={tokens.length ? (charCount / tokens.length).toFixed(2) : '—'} tone="success" />
+            <Stat
+              label={l.ratio}
+              value={tokens.length ? (charCount / tokens.length).toFixed(2) : '—'}
+              tone="success"
+            />
             <Stat label={l.bytes} value={byteCount} tone={byteCount ? 'warning' : undefined} />
           </div>
           <div>
@@ -202,7 +248,9 @@ export default function TokenizerSim({ params, onInteract }: SimulatorProps) {
                   {trained.merges.slice(0, Math.min(24, mergeCount)).map((m, i) => (
                     <tr key={i} className="border-t border-border">
                       <td className="px-2 py-0.5 text-muted">{i + 1}</td>
-                      <td className="px-2 py-0.5">{m.a} + {m.b}</td>
+                      <td className="px-2 py-0.5">
+                        {m.a} + {m.b}
+                      </td>
                       <td className="px-2 py-0.5 text-primary">{m.a + m.b}</td>
                       <td className="px-2 py-0.5 text-right">{m.count}</td>
                     </tr>
@@ -215,7 +263,15 @@ export default function TokenizerSim({ params, onInteract }: SimulatorProps) {
       }
     >
       <Field label={l.input}>
-        <textarea className="input min-h-[80px] font-mono" value={text} maxLength={400} onChange={(e) => { onInteract(); setText(e.target.value); }} />
+        <textarea
+          className="input min-h-[80px] font-mono"
+          value={text}
+          maxLength={400}
+          onChange={(e) => {
+            onInteract();
+            setText(e.target.value);
+          }}
+        />
       </Field>
       <p className="mt-2 text-xs text-muted">{l.hint}</p>
       <div className="mt-3 flex flex-wrap gap-1.5" aria-label={l.tokens} aria-live="polite">
@@ -225,7 +281,10 @@ export default function TokenizerSim({ params, onInteract }: SimulatorProps) {
             <span
               key={i}
               className="inline-flex flex-col items-center rounded-lg border px-1.5 py-0.5 font-mono text-xs"
-              style={{ borderColor: tone, background: `color-mix(in srgb, ${tone} 14%, var(--da-surface))` }}
+              style={{
+                borderColor: tone,
+                background: `color-mix(in srgb, ${tone} 14%, var(--da-surface))`,
+              }}
               title={`id ${tk.id}`}
             >
               <span className="whitespace-pre">{tk.text}</span>
@@ -235,17 +294,33 @@ export default function TokenizerSim({ params, onInteract }: SimulatorProps) {
         })}
       </div>
       {/* Üç düzeyin karşılaştırması */}
-      <svg viewBox="0 0 600 96" className="mt-4 h-auto w-full" role="img" aria-label={`${l.chars} / ${l.tokens} / ${l.words}`}>
+      <svg
+        viewBox="0 0 600 96"
+        className="mt-4 h-auto w-full"
+        role="img"
+        aria-label={`${l.chars} / ${l.tokens} / ${l.words}`}
+      >
         {[
           { label: l.chars, v: charCount, c: 'var(--da-muted)' },
           { label: l.tokens, v: tokens.length, c: 'var(--da-primary)' },
           { label: l.words, v: wordCount, c: 'var(--da-success)' },
         ].map((b, i) => (
           <g key={b.label} transform={`translate(0, ${i * 30 + 4})`}>
-            <text x={0} y={15} fontSize={11} fill="var(--da-fg)">{b.label}</text>
+            <text x={0} y={15} fontSize={11} fill="var(--da-fg)">
+              {b.label}
+            </text>
             <rect x={130} y={3} width={400} height={16} rx={5} fill="var(--da-elevated)" />
-            <rect x={130} y={3} width={(400 * b.v) / Math.max(1, charCount)} height={16} rx={5} fill={b.c} />
-            <text x={540} y={15} fontSize={11} fill="var(--da-muted)">{b.v}</text>
+            <rect
+              x={130}
+              y={3}
+              width={(400 * b.v) / Math.max(1, charCount)}
+              height={16}
+              rx={5}
+              fill={b.c}
+            />
+            <text x={540} y={15} fontSize={11} fill="var(--da-muted)">
+              {b.v}
+            </text>
           </g>
         ))}
       </svg>

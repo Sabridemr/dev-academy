@@ -12,6 +12,15 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "__tests__/**/*.ts", "__tests__/**/*.tsx", "e2e/**/*.ts", "app.config.ts", "jest.setup.ts", "expo-env.d.ts"],
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "__tests__/**/*.ts",
+    "__tests__/**/*.tsx",
+    "e2e/**/*.ts",
+    "app.config.ts",
+    "jest.setup.ts",
+    "expo-env.d.ts"
+  ],
   "exclude": ["node_modules", "dist", ".expo", "coverage"]
 }

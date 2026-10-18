@@ -7,7 +7,16 @@ import { useI18n } from '@/i18n';
 import { endpoints } from '@/lib/endpoints';
 import { queryKeys } from '@/lib/queryClient';
 import { radius, spacing, useTheme, withAlpha } from '@/theme';
-import { Button, Card, EmptyState, ErrorView, LoadingView, Row, Screen, Text } from '@/components/ui';
+import {
+  Button,
+  Card,
+  EmptyState,
+  ErrorView,
+  LoadingView,
+  Row,
+  Screen,
+  Text,
+} from '@/components/ui';
 import { errorText } from '@/utils/errors';
 
 /**
@@ -26,7 +35,8 @@ export default function ReviewScreen() {
   const [revealed, setRevealed] = useState(false);
 
   const grade = useMutation({
-    mutationFn: ({ id, quality }: { id: string; quality: number }) => endpoints.gradeReview(id, quality),
+    mutationFn: ({ id, quality }: { id: string; quality: number }) =>
+      endpoints.gradeReview(id, quality),
     onSuccess: (_res, vars) => {
       setDoneIds((d) => [...d, vars.id]);
       setRevealed(false);
@@ -50,7 +60,9 @@ export default function ReviewScreen() {
         {t('review.title')}
       </Text>
       {reviews.isLoading ? <LoadingView /> : null}
-      {reviews.error ? <ErrorView error={reviews.error} onRetry={() => void reviews.refetch()} /> : null}
+      {reviews.error ? (
+        <ErrorView error={reviews.error} onRetry={() => void reviews.refetch()} />
+      ) : null}
       {reviews.data && !card ? <EmptyState icon="happy-outline" text={t('review.empty')} /> : null}
 
       {card ? (
@@ -65,7 +77,13 @@ export default function ReviewScreen() {
           </Row>
           <Text variant="subheading">{tl(card.prompt)}</Text>
           {(card.options ?? []).map((o, i) => (
-            <View key={o.id} style={[styles.option, { borderColor: colors.border, backgroundColor: colors.elevated }]}>
+            <View
+              key={o.id}
+              style={[
+                styles.option,
+                { borderColor: colors.border, backgroundColor: colors.elevated },
+              ]}
+            >
               <Text variant="label" muted>
                 {String.fromCharCode(65 + i)}
               </Text>
@@ -78,7 +96,12 @@ export default function ReviewScreen() {
               <Text variant="caption" muted>
                 {t('review.think')}
               </Text>
-              <Button title={t('review.reveal')} icon="bulb-outline" onPress={() => setRevealed(true)} testID="review-reveal" />
+              <Button
+                title={t('review.reveal')}
+                icon="bulb-outline"
+                onPress={() => setRevealed(true)}
+                testID="review-reveal"
+              />
             </>
           ) : (
             <View style={{ gap: spacing.sm }}>
@@ -93,7 +116,13 @@ export default function ReviewScreen() {
                       onPress={() => grade.mutate({ id: card.id, quality: q })}
                       accessibilityRole="button"
                       accessibilityLabel={`${q} — ${label}`}
-                      style={({ pressed }) => [styles.grade, { borderColor: tone, backgroundColor: withAlpha(tone, pressed ? 0.25 : 0.1) }]}
+                      style={({ pressed }) => [
+                        styles.grade,
+                        {
+                          borderColor: tone,
+                          backgroundColor: withAlpha(tone, pressed ? 0.25 : 0.1),
+                        },
+                      ]}
                       testID={`review-grade-${q}`}
                     >
                       <Text variant="label" color={tone}>
@@ -111,7 +140,13 @@ export default function ReviewScreen() {
               ) : null}
             </View>
           )}
-          <Button title={t('review.openLesson')} variant="ghost" icon="book-outline" compact onPress={() => router.push({ pathname: '/lesson/[id]', params: { id: card.lessonId } })} />
+          <Button
+            title={t('review.openLesson')}
+            variant="ghost"
+            icon="book-outline"
+            compact
+            onPress={() => router.push({ pathname: '/lesson/[id]', params: { id: card.lessonId } })}
+          />
         </Card>
       ) : null}
     </Screen>
@@ -119,7 +154,22 @@ export default function ReviewScreen() {
 }
 
 const styles = StyleSheet.create({
-  option: { flexDirection: 'row', gap: spacing.md, alignItems: 'center', borderWidth: 1, borderRadius: radius.md, padding: spacing.md },
+  option: {
+    flexDirection: 'row',
+    gap: spacing.md,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderRadius: radius.md,
+    padding: spacing.md,
+  },
   grades: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  grade: { flexBasis: '30%', flexGrow: 1, alignItems: 'center', borderWidth: 1.5, borderRadius: radius.md, paddingVertical: spacing.sm, gap: 2 },
+  grade: {
+    flexBasis: '30%',
+    flexGrow: 1,
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderRadius: radius.md,
+    paddingVertical: spacing.sm,
+    gap: 2,
+  },
 });

@@ -51,7 +51,10 @@ export const useSession = create<SessionState>((set, get) => ({
   },
 
   signIn: async (res) => {
-    await tokenStorage.set({ accessToken: res.tokens.accessToken, refreshToken: res.tokens.refreshToken });
+    await tokenStorage.set({
+      accessToken: res.tokens.accessToken,
+      refreshToken: res.tokens.refreshToken,
+    });
     setJson(USER_KEY, res.user);
     set({ status: 'authenticated', user: res.user });
     void get().refreshProfile();

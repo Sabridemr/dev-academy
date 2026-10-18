@@ -44,11 +44,15 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
   ) {}
 
   async handleConnection(client: Socket): Promise<void> {
-    const token = (client.handshake.auth?.token as string | undefined) ?? bearerFromHeader(client.handshake.headers.authorization);
+    const token =
+      (client.handshake.auth?.token as string | undefined) ??
+      bearerFromHeader(client.handshake.headers.authorization);
     const data = client.data as SocketData;
     if (token) {
       try {
-        const payload = await this.jwt.verifyAsync<AccessTokenPayload>(token, { secret: this.config.get('JWT_ACCESS_SECRET') });
+        const payload = await this.jwt.verifyAsync<AccessTokenPayload>(token, {
+          secret: this.config.get('JWT_ACCESS_SECRET'),
+        });
         data.userId = payload.sub;
         data.role = payload.role;
         await client.join(`user:${payload.sub}`);
@@ -56,7 +60,10 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
         // anonim bağlantı: yalnızca genel yayınlar
       }
     }
-    client.emit('hello', { authenticated: Boolean(data.userId), serverTime: new Date().toISOString() });
+    client.emit('hello', {
+      authenticated: Boolean(data.userId),
+      serverTime: new Date().toISOString(),
+    });
   }
 
   handleDisconnect(client: Socket): void {
@@ -66,14 +73,20 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
   }
 
   @SubscribeMessage('subscribe.lesson')
-  async subscribeLesson(@ConnectedSocket() client: Socket, @MessageBody() body: { lessonId?: string }): Promise<{ ok: boolean }> {
+  async subscribeLesson(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() body: { lessonId?: string },
+  ): Promise<{ ok: boolean }> {
     if (!body?.lessonId) return { ok: false };
     await client.join(`lesson:${body.lessonId}`);
     return { ok: true };
   }
 
   @SubscribeMessage('simulation.join')
-  async joinSimulation(@ConnectedSocket() client: Socket, @MessageBody() body: { simulationId?: string }): Promise<{ ok: boolean; members: number }> {
+  async joinSimulation(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() body: { simulationId?: string },
+  ): Promise<{ ok: boolean; members: number }> {
     if (!body?.simulationId) return { ok: false, members: 0 };
     const room = `sim:${sanitize(body.simulationId)}`;
     await client.join(room);
@@ -83,14 +96,20 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
   }
 
   @SubscribeMessage('simulation.input')
-  relaySimulationInput(@ConnectedSocket() client: Socket, @MessageBody() body: { simulationId?: string; data?: unknown }): void {
+  relaySimulationInput(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() body: { simulationId?: string; data?: unknown },
+  ): void {
     const data = client.data as SocketData;
     if (!data.userId) return; // anonim istemciler girdi yayınlayamaz
     if (!body?.simulationId) return;
     const room = `sim:${sanitize(body.simulationId)}`;
     if (!client.rooms.has(room)) return;
     if (!this.allowRelay(client.id)) return;
-    const event: WsServerEvent = { type: 'simulation.tick', payload: { simulationId: body.simulationId, data: { input: body.data, from: data.userId } } };
+    const event: WsServerEvent = {
+      type: 'simulation.tick',
+      payload: { simulationId: body.simulationId, data: { input: body.data, from: data.userId } },
+    };
     client.to(room).emit('event', event);
   }
 

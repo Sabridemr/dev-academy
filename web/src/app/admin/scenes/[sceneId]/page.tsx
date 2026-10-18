@@ -15,7 +15,15 @@ const NEW_SCENE: AnimationSceneInput = {
     { id: 'server', kind: 'server', label: 'Server', x: 650, y: 300 },
   ],
   edges: [{ id: 'c-s', from: 'client', to: 'server', kind: 'request' }],
-  steps: [{ id: 'step-1', title: { tr: 'İstek', en: 'Request' }, narration: { tr: 'İstemci sunucuya istek gönderir.', en: 'The client sends a request.' }, highlight: { nodes: ['client', 'server'], edges: ['c-s'] }, packets: [{ edge: 'c-s' }] }],
+  steps: [
+    {
+      id: 'step-1',
+      title: { tr: 'İstek', en: 'Request' },
+      narration: { tr: 'İstemci sunucuya istek gönderir.', en: 'The client sends a request.' },
+      highlight: { nodes: ['client', 'server'], edges: ['c-s'] },
+      packets: [{ edge: 'c-s' }],
+    },
+  ],
 };
 
 export default function AdminSceneEditorPage({ params }: { params: Promise<{ sceneId: string }> }) {
@@ -23,9 +31,17 @@ export default function AdminSceneEditorPage({ params }: { params: Promise<{ sce
   const isNew = sceneId === 'new';
   const { data, isLoading } = useQuery({
     queryKey: ['admin-scene', sceneId],
-    queryFn: () => api<{ id: string; lessonId: string | null; data: AnimationSceneInput }>(`/admin/scenes/${sceneId}`),
+    queryFn: () =>
+      api<{ id: string; lessonId: string | null; data: AnimationSceneInput }>(
+        `/admin/scenes/${sceneId}`,
+      ),
     enabled: !isNew,
   });
   if (!isNew && isLoading) return <div className="card h-96 animate-pulse" />;
-  return <SceneEditor initial={isNew ? NEW_SCENE : data!.data} lessonId={isNew ? undefined : data?.lessonId ?? undefined} />;
+  return (
+    <SceneEditor
+      initial={isNew ? NEW_SCENE : data!.data}
+      lessonId={isNew ? undefined : (data?.lessonId ?? undefined)}
+    />
+  );
 }

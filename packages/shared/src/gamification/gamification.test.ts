@@ -1,9 +1,20 @@
 import { describe, expect, it } from 'vitest';
-import { applyActivity, effectiveStreak, sm2Review, SM2_INITIAL, evaluateBadges, gradeAnswer, daysBetween } from './index';
+import {
+  applyActivity,
+  effectiveStreak,
+  sm2Review,
+  SM2_INITIAL,
+  evaluateBadges,
+  gradeAnswer,
+  daysBetween,
+} from './index';
 
 describe('Streak', () => {
   it('ardışık günlerde artar, boşlukta sıfırlanır', () => {
-    let s = applyActivity({ currentStreak: 0, longestStreak: 0, lastActivityDate: null }, '2026-01-01');
+    let s = applyActivity(
+      { currentStreak: 0, longestStreak: 0, lastActivityDate: null },
+      '2026-01-01',
+    );
     expect(s.currentStreak).toBe(1);
     s = applyActivity(s, '2026-01-02');
     s = applyActivity(s, '2026-01-02'); // aynı gün
@@ -14,8 +25,18 @@ describe('Streak', () => {
     expect(daysBetween('2026-01-31', '2026-02-01')).toBe(1);
   });
   it('dünden eski aktivitede efektif seri 0', () => {
-    expect(effectiveStreak({ currentStreak: 5, longestStreak: 5, lastActivityDate: '2026-01-01' }, '2026-01-02')).toBe(5);
-    expect(effectiveStreak({ currentStreak: 5, longestStreak: 5, lastActivityDate: '2026-01-01' }, '2026-01-03')).toBe(0);
+    expect(
+      effectiveStreak(
+        { currentStreak: 5, longestStreak: 5, lastActivityDate: '2026-01-01' },
+        '2026-01-02',
+      ),
+    ).toBe(5);
+    expect(
+      effectiveStreak(
+        { currentStreak: 5, longestStreak: 5, lastActivityDate: '2026-01-01' },
+        '2026-01-03',
+      ),
+    ).toBe(0);
   });
 });
 
@@ -37,7 +58,15 @@ describe('SM-2', () => {
 describe('Rozetler ve puanlama', () => {
   it('koşulu sağlanan ve kazanılmamış rozetleri döner', () => {
     const got = evaluateBadges(
-      { completedLessons: 1, completedModuleIds: [], currentStreak: 7, perfectQuizzes: 0, totalQuizzes: 0, interactiveSessions: 0, notesCount: 0 },
+      {
+        completedLessons: 1,
+        completedModuleIds: [],
+        currentStreak: 7,
+        perfectQuizzes: 0,
+        totalQuizzes: 0,
+        interactiveSessions: 0,
+        notesCount: 0,
+      },
       ['first-steps'],
     );
     expect(got.map((b) => b.slug)).toEqual(['streak-7']);

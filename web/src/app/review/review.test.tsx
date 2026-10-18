@@ -3,8 +3,14 @@ import { fireEvent, screen } from '@testing-library/react';
 import { renderWithProviders } from '@/test/utils';
 import ReviewPage from './page';
 
-vi.mock('next/link', () => ({ default: ({ children, href }: { children: React.ReactNode; href: string }) => <a href={href}>{children}</a> }));
-vi.mock('@/components/auth/RequireAuth', () => ({ RequireAuth: ({ children }: { children: React.ReactNode }) => <>{children}</> }));
+vi.mock('next/link', () => ({
+  default: ({ children, href }: { children: React.ReactNode; href: string }) => (
+    <a href={href}>{children}</a>
+  ),
+}));
+vi.mock('@/components/auth/RequireAuth', () => ({
+  RequireAuth: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
 vi.mock('@/lib/api', () => ({ api: vi.fn(async () => undefined) }));
 vi.mock('@/lib/hooks', () => ({
   useReviews: () => ({

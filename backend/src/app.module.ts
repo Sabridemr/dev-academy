@@ -29,7 +29,11 @@ import { OfflineModule } from './modules/offline/offline.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true, validate: validateEnv, envFilePath: ['.env', '.env.local'] }),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      validate: validateEnv,
+      envFilePath: ['.env', '.env.local'],
+    }),
     LoggerModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService<Env, true>) => ({
@@ -39,7 +43,10 @@ import { OfflineModule } from './modules/offline/offline.module';
           autoLogging: { ignore: (req) => (req.url ?? '').includes('/health') },
           redact: ['req.headers.authorization', 'req.headers.cookie'],
           customProps: () => ({ service: 'devacademy-api' }),
-          transport: config.get('NODE_ENV') === 'development' ? { target: 'pino-pretty', options: { singleLine: true, translateTime: 'HH:MM:ss' } } : undefined,
+          transport:
+            config.get('NODE_ENV') === 'development'
+              ? { target: 'pino-pretty', options: { singleLine: true, translateTime: 'HH:MM:ss' } }
+              : undefined,
         },
       }),
     }),
@@ -47,7 +54,13 @@ import { OfflineModule } from './modules/offline/offline.module';
       imports: [RedisModule],
       inject: [ConfigService, RedisService],
       useFactory: (config: ConfigService<Env, true>, redis: RedisService) => ({
-        throttlers: [{ name: 'default', ttl: config.get('RATE_LIMIT_TTL') * 1000, limit: config.get('RATE_LIMIT_MAX') }],
+        throttlers: [
+          {
+            name: 'default',
+            ttl: config.get('RATE_LIMIT_TTL') * 1000,
+            limit: config.get('RATE_LIMIT_MAX'),
+          },
+        ],
         storage: new RedisThrottlerStorage(redis),
       }),
     }),

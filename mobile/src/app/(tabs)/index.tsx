@@ -5,7 +5,18 @@ import { useModules, usePaths, useProgressSummary } from '@/hooks/content';
 import { useI18n } from '@/i18n';
 import { useSession } from '@/stores/session';
 import { radius, spacing, useTheme, withAlpha } from '@/theme';
-import { Button, Card, ErrorView, IconButton, LoadingView, ProgressBar, Row, Screen, Section, Text } from '@/components/ui';
+import {
+  Button,
+  Card,
+  ErrorView,
+  IconButton,
+  LoadingView,
+  ProgressBar,
+  Row,
+  Screen,
+  Section,
+  Text,
+} from '@/components/ui';
 import { ModuleCard } from '@/components/content/ModuleCard';
 
 /** Ana sayfa: selamlama, seri/özet, devam et, öğrenme yolları, modüller */
@@ -36,15 +47,40 @@ export default function HomeScreen() {
             {t('home.greeting', { name: user?.displayName?.split(' ')[0] ?? '' })}
           </Text>
         </View>
-        <IconButton icon="search" label={t('nav.search')} onPress={() => router.push('/search')} testID="open-search" />
+        <IconButton
+          icon="search"
+          label={t('nav.search')}
+          onPress={() => router.push('/search')}
+          testID="open-search"
+        />
       </Row>
 
       {s ? (
         <Row gap={spacing.sm}>
-          <StatTile icon="flame" color={colors.accent} label={t('dashboard.streak')} value={t('dashboard.days', { count: s.currentStreak })} />
-          <StatTile icon="pie-chart" color={colors.primary} label={t('dashboard.completion')} value={`%${s.completionPercent}`} />
-          <Pressable style={{ flex: 1 }} onPress={() => router.push('/review')} accessibilityRole="button" accessibilityLabel={t('dashboard.dueReviews', { count: s.dueReviews })}>
-            <StatTile icon="repeat" color={colors.success} label={t('nav.review')} value={String(s.dueReviews)} />
+          <StatTile
+            icon="flame"
+            color={colors.accent}
+            label={t('dashboard.streak')}
+            value={t('dashboard.days', { count: s.currentStreak })}
+          />
+          <StatTile
+            icon="pie-chart"
+            color={colors.primary}
+            label={t('dashboard.completion')}
+            value={`%${s.completionPercent}`}
+          />
+          <Pressable
+            style={{ flex: 1 }}
+            onPress={() => router.push('/review')}
+            accessibilityRole="button"
+            accessibilityLabel={t('dashboard.dueReviews', { count: s.dueReviews })}
+          >
+            <StatTile
+              icon="repeat"
+              color={colors.success}
+              label={t('nav.review')}
+              value={String(s.dueReviews)}
+            />
           </Pressable>
         </Row>
       ) : null}
@@ -58,7 +94,9 @@ export default function HomeScreen() {
             <Button
               title={t('home.start')}
               icon="play"
-              onPress={() => router.push({ pathname: '/lesson/[id]', params: { id: s.continueLesson!.id } })}
+              onPress={() =>
+                router.push({ pathname: '/lesson/[id]', params: { id: s.continueLesson!.id } })
+              }
               testID="continue-lesson"
             />
           </>
@@ -69,11 +107,24 @@ export default function HomeScreen() {
 
       <Section title={t('home.pathsTitle')}>
         {paths.isLoading ? <LoadingView /> : null}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.md }}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ gap: spacing.md }}
+        >
           {(paths.data ?? []).map((p) => {
             const selected = user?.selectedPathId === p.id;
             return (
-              <View key={p.id} style={[styles.path, { borderColor: selected ? colors.primary : colors.border, backgroundColor: selected ? withAlpha(colors.primary, 0.08) : colors.surface }]}>
+              <View
+                key={p.id}
+                style={[
+                  styles.path,
+                  {
+                    borderColor: selected ? colors.primary : colors.border,
+                    backgroundColor: selected ? withAlpha(colors.primary, 0.08) : colors.surface,
+                  },
+                ]}
+              >
                 {selected ? (
                   <Text variant="caption" color={colors.primary} weight="700">
                     {t('home.selectedPath')}
@@ -84,7 +135,8 @@ export default function HomeScreen() {
                   {tl(p.description)}
                 </Text>
                 <Text variant="caption" muted>
-                  {t('home.modulesCount', { count: p.moduleCount })} · {t('home.lessons', { count: p.lessonCount })}
+                  {t('home.modulesCount', { count: p.moduleCount })} ·{' '}
+                  {t('home.lessons', { count: p.lessonCount })}
                 </Text>
               </View>
             );
@@ -94,7 +146,9 @@ export default function HomeScreen() {
 
       <Section title={t('home.modulesTitle')}>
         {modules.isLoading ? <LoadingView /> : null}
-        {modules.error ? <ErrorView error={modules.error} onRetry={() => void modules.refetch()} /> : null}
+        {modules.error ? (
+          <ErrorView error={modules.error} onRetry={() => void modules.refetch()} />
+        ) : null}
         {(modules.data ?? []).map((m) => (
           <ModuleCard key={m.id} module={m} />
         ))}
@@ -103,10 +157,24 @@ export default function HomeScreen() {
   );
 }
 
-function StatTile({ icon, color, label, value }: { icon: React.ComponentProps<typeof Ionicons>['name']; color: string; label: string; value: string }) {
+function StatTile({
+  icon,
+  color,
+  label,
+  value,
+}: {
+  icon: React.ComponentProps<typeof Ionicons>['name'];
+  color: string;
+  label: string;
+  value: string;
+}) {
   const { colors } = useTheme();
   return (
-    <View style={[styles.tile, { backgroundColor: colors.surface, borderColor: colors.border }]} accessible accessibilityLabel={`${label}: ${value}`}>
+    <View
+      style={[styles.tile, { backgroundColor: colors.surface, borderColor: colors.border }]}
+      accessible
+      accessibilityLabel={`${label}: ${value}`}
+    >
       <Ionicons name={icon} size={18} color={color} />
       <Text variant="label">{value}</Text>
       <Text variant="caption" muted numberOfLines={1}>
@@ -117,6 +185,12 @@ function StatTile({ icon, color, label, value }: { icon: React.ComponentProps<ty
 }
 
 const styles = StyleSheet.create({
-  path: { width: 240, borderWidth: 1.5, borderRadius: radius.lg, padding: spacing.lg, gap: spacing.xs },
+  path: {
+    width: 240,
+    borderWidth: 1.5,
+    borderRadius: radius.lg,
+    padding: spacing.lg,
+    gap: spacing.xs,
+  },
   tile: { flex: 1, borderWidth: 1, borderRadius: radius.md, padding: spacing.md, gap: 2 },
 });

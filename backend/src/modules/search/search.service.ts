@@ -28,7 +28,11 @@ export class SearchService {
 
     const like = `%${escapeLike(query)}%`;
     // Önce yalnızca full-text (GIN indeksini kullanır); hiç sonuç yoksa ILIKE alt dize yedeği (tam tarama)
-    let rows = await this.lessonRows(query, limit, Prisma.sql`to_tsvector('simple', l."searchText") @@ plainto_tsquery('simple', ${query})`);
+    let rows = await this.lessonRows(
+      query,
+      limit,
+      Prisma.sql`to_tsvector('simple', l."searchText") @@ plainto_tsquery('simple', ${query})`,
+    );
     if (rows.length === 0) {
       rows = await this.lessonRows(
         query,
@@ -52,14 +56,19 @@ export class SearchService {
         slug: r.slug,
         moduleId: r.moduleId,
         title,
-        snippet: conceptHit && !titleHit ? `Kavram: ${conceptHit} — ${r.headline}` : r.headline || String(asLocalized(r.summary)),
+        snippet:
+          conceptHit && !titleHit
+            ? `Kavram: ${conceptHit} — ${r.headline}`
+            : r.headline || String(asLocalized(r.summary)),
         score: Number(r.rank) + (titleHit ? 1 : 0) + (conceptHit ? 0.5 : 0),
       });
     }
 
     // Modül başlıkları
     // Modül başlıkları: büyük/küçük harf duyarsız, Türkçe ve İngilizce başlıkta
-    const modules = await this.prisma.$queryRaw<{ id: string; slug: string; title: Prisma.JsonValue; description: Prisma.JsonValue }[]>(Prisma.sql`
+    const modules = await this.prisma.$queryRaw<
+      { id: string; slug: string; title: Prisma.JsonValue; description: Prisma.JsonValue }[]
+    >(Prisma.sql`
       SELECT m."id", m."slug", m."title", m."description"
       FROM "Module" m
       WHERE (m."title"->>'tr') ILIKE ${like} OR (m."title"->>'en') ILIKE ${like} OR m."slug" ILIKE ${like}
@@ -67,7 +76,15 @@ export class SearchService {
       LIMIT 5
     `);
     for (const m of modules) {
-      results.push({ type: 'module', id: m.id, slug: m.slug, moduleId: null, title: asLocalized(m.title), snippet: String(asLocalized(m.description)), score: 0.8 });
+      results.push({
+        type: 'module',
+        id: m.id,
+        slug: m.slug,
+        moduleId: null,
+        title: asLocalized(m.title),
+        snippet: String(asLocalized(m.description)),
+        score: 0.8,
+      });
     }
 
     results.sort((a, b) => b.score - a.score);
@@ -78,7 +95,16 @@ export class SearchService {
 
   private lessonRows(query: string, limit: number, where: Prisma.Sql) {
     return this.prisma.$queryRaw<
-      { id: string; slug: string; moduleId: string; title: Prisma.JsonValue; summary: Prisma.JsonValue; concepts: string[]; rank: number; headline: string }[]
+      {
+        id: string;
+        slug: string;
+        moduleId: string;
+        title: Prisma.JsonValue;
+        summary: Prisma.JsonValue;
+        concepts: string[];
+        rank: number;
+        headline: string;
+      }[]
     >(Prisma.sql`
       SELECT l."id", l."slug", l."moduleId", v."title", v."summary", v."concepts",
              ts_rank(to_tsvector('simple', l."searchText"), plainto_tsquery('simple', ${query})) AS rank,

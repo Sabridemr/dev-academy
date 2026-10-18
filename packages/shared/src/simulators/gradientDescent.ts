@@ -35,7 +35,13 @@ export function seededRandom(seed: number): () => number {
   };
 }
 
-export function generateLinearData(count = 30, trueW = 2, trueB = 1, noise = 1, seed = 42): DataPoint[] {
+export function generateLinearData(
+  count = 30,
+  trueW = 2,
+  trueB = 1,
+  noise = 1,
+  seed = 42,
+): DataPoint[] {
   const rnd = seededRandom(seed);
   return Array.from({ length: count }, () => {
     const x = rnd() * 10 - 5;
@@ -54,7 +60,10 @@ export function mseLoss(data: DataPoint[], p: RegressionParams): number {
   return sum / data.length;
 }
 
-export function gradients(data: DataPoint[], p: RegressionParams): { gradW: number; gradB: number } {
+export function gradients(
+  data: DataPoint[],
+  p: RegressionParams,
+): { gradW: number; gradB: number } {
   let gw = 0;
   let gb = 0;
   for (const d of data) {
@@ -66,14 +75,26 @@ export function gradients(data: DataPoint[], p: RegressionParams): { gradW: numb
   return { gradW: gw / n, gradB: gb / n };
 }
 
-export function gradientStep(data: DataPoint[], p: RegressionParams, learningRate: number, iteration: number): GdStep {
+export function gradientStep(
+  data: DataPoint[],
+  p: RegressionParams,
+  learningRate: number,
+  iteration: number,
+): GdStep {
   const { gradW, gradB } = gradients(data, p);
   const params = { w: p.w - learningRate * gradW, b: p.b - learningRate * gradB };
   return { iteration: iteration + 1, params, loss: mseLoss(data, params), gradW, gradB };
 }
 
-export function runGradientDescent(data: DataPoint[], start: RegressionParams, learningRate: number, iterations: number): GdStep[] {
-  const steps: GdStep[] = [{ iteration: 0, params: start, loss: mseLoss(data, start), gradW: 0, gradB: 0 }];
+export function runGradientDescent(
+  data: DataPoint[],
+  start: RegressionParams,
+  learningRate: number,
+  iterations: number,
+): GdStep[] {
+  const steps: GdStep[] = [
+    { iteration: 0, params: start, loss: mseLoss(data, start), gradW: 0, gradB: 0 },
+  ];
   let p = start;
   for (let i = 0; i < iterations; i++) {
     const s = gradientStep(data, p, learningRate, i);
@@ -91,8 +112,14 @@ export function sampleLossSurface(
   bRange: [number, number],
   resolution = 40,
 ): { w: number[]; b: number[]; loss: number[][]; min: number; max: number } {
-  const w = Array.from({ length: resolution }, (_, i) => wRange[0] + ((wRange[1] - wRange[0]) * i) / (resolution - 1));
-  const b = Array.from({ length: resolution }, (_, i) => bRange[0] + ((bRange[1] - bRange[0]) * i) / (resolution - 1));
+  const w = Array.from(
+    { length: resolution },
+    (_, i) => wRange[0] + ((wRange[1] - wRange[0]) * i) / (resolution - 1),
+  );
+  const b = Array.from(
+    { length: resolution },
+    (_, i) => bRange[0] + ((bRange[1] - bRange[0]) * i) / (resolution - 1),
+  );
   let min = Number.POSITIVE_INFINITY;
   let max = 0;
   const loss = b.map((bv) =>

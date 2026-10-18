@@ -47,12 +47,27 @@ function Review() {
     <div className="card p-6">
       <div className="mb-3 flex justify-between text-xs text-muted">
         <span className="chip">{t('review.concept', { name: card.concept })}</span>
-        <span>{index + 1}/{cards?.length}</span>
+        <span>
+          {index + 1}/{cards?.length}
+        </span>
       </div>
       <p className="mb-4 text-lg font-medium">{tl(card.prompt)}</p>
       <div className="grid gap-2 sm:grid-cols-2">
         {card.options.map((o) => (
-          <button key={o.id} type="button" disabled={revealed} onClick={() => setSelected((s) => (card.type === 'multiple' ? (s.includes(o.id) ? s.filter((x) => x !== o.id) : [...s, o.id]) : [o.id]))} className={cn(
+          <button
+            key={o.id}
+            type="button"
+            disabled={revealed}
+            onClick={() =>
+              setSelected((s) =>
+                card.type === 'multiple'
+                  ? s.includes(o.id)
+                    ? s.filter((x) => x !== o.id)
+                    : [...s, o.id]
+                  : [o.id],
+              )
+            }
+            className={cn(
               'rounded-lg border px-3 py-2 text-left text-sm',
               revealed && card.correctAnswer.includes(o.id)
                 ? 'border-success bg-success/10'
@@ -61,21 +76,30 @@ function Review() {
                   : selected.includes(o.id)
                     ? 'border-primary bg-primary/10'
                     : 'border-border hover:bg-elevated',
-            )}>
+            )}
+          >
             {tl(o.text)}
           </button>
         ))}
       </div>
       {!revealed ? (
-        <button type="button" className="btn-primary mt-5" disabled={selected.length === 0} onClick={() => setRevealed(true)}>
+        <button
+          type="button"
+          className="btn-primary mt-5"
+          disabled={selected.length === 0}
+          onClick={() => setRevealed(true)}
+        >
           {t('review.reveal')}
         </button>
       ) : (
         <div className="mt-5">
           <div className="mb-4 rounded-lg bg-elevated/60 p-3 text-sm" role="status">
-            <p className={cn('font-medium', isRight ? 'text-success' : 'text-danger')}>{isRight ? t('review.yourAnswerCorrect') : t('review.yourAnswerWrong')}</p>
+            <p className={cn('font-medium', isRight ? 'text-success' : 'text-danger')}>
+              {isRight ? t('review.yourAnswerCorrect') : t('review.yourAnswerWrong')}
+            </p>
             <p className="mt-1">
-              <span className="font-medium">{t('review.correctAnswer')}:</span> {card.correctAnswer.map(optionText).join(card.type === 'order' ? ' → ' : ', ')}
+              <span className="font-medium">{t('review.correctAnswer')}:</span>{' '}
+              {card.correctAnswer.map(optionText).join(card.type === 'order' ? ' → ' : ', ')}
             </p>
             {tl(card.explanation) && <p className="mt-1 text-muted">{tl(card.explanation)}</p>}
           </div>
@@ -87,7 +111,12 @@ function Review() {
           </p>
           <div className="flex flex-wrap gap-2">
             {messages.review.grades.map((label, q) => (
-              <button key={label} type="button" className={cn('btn-ghost', q < 3 ? 'hover:border-danger' : 'hover:border-success')} onClick={() => grade(q)}>
+              <button
+                key={label}
+                type="button"
+                className={cn('btn-ghost', q < 3 ? 'hover:border-danger' : 'hover:border-success')}
+                onClick={() => grade(q)}
+              >
                 {q} · {label}
               </button>
             ))}

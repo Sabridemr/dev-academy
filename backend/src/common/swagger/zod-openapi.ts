@@ -8,7 +8,10 @@ import type { ZodObject, ZodRawShape, ZodSchema } from 'zod';
  * shared paketinde zod olarak tanımlanır; OpenAPI ve doğrulama aynı kaynaktan beslenir.
  */
 // zod-to-json-schema'nın derin generic tipleri TS2589'a yol açtığı için gevşek imza kullanıyoruz.
-const toJsonSchema = zodToJsonSchema as unknown as (schema: unknown, options: Record<string, unknown>) => Record<string, unknown>;
+const toJsonSchema = zodToJsonSchema as unknown as (
+  schema: unknown,
+  options: Record<string, unknown>,
+) => Record<string, unknown>;
 
 export function ApiZodBody(schema: ZodSchema, description?: string) {
   const jsonSchema = toJsonSchema(schema, { $refStrategy: 'none', target: 'openApi3' });
@@ -23,7 +26,11 @@ export function ApiZodQuery(schema: ZodObject<ZodRawShape>) {
     required?: string[];
   };
   const decorators = Object.entries(jsonSchema.properties ?? {}).map(([name, prop]) =>
-    ApiQuery({ name, required: jsonSchema.required?.includes(name) ?? false, schema: prop as never }),
+    ApiQuery({
+      name,
+      required: jsonSchema.required?.includes(name) ?? false,
+      schema: prop as never,
+    }),
   );
   return applyDecorators(...decorators);
 }

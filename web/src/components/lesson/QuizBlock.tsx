@@ -25,7 +25,15 @@ function QuizForm({ quiz, title }: { quiz: QuizPublic; title: string }) {
   const { t, tl } = useI18n();
   const authed = useIsAuthenticated();
   const submit = useSubmitAttempt(quiz.id);
-  const initialOrder = useMemo(() => Object.fromEntries(quiz.questions.filter((q) => q.type === 'order').map((q) => [q.id, q.options.map((o) => o.id)])), [quiz]);
+  const initialOrder = useMemo(
+    () =>
+      Object.fromEntries(
+        quiz.questions
+          .filter((q) => q.type === 'order')
+          .map((q) => [q.id, q.options.map((o) => o.id)]),
+      ),
+    [quiz],
+  );
   const [answers, setAnswers] = useState<Answers>(initialOrder);
   const [result, setResult] = useState<AttemptResult | null>(null);
   const [startedAt] = useState(() => Date.now());
@@ -51,7 +59,10 @@ function QuizForm({ quiz, title }: { quiz: QuizPublic; title: string }) {
 
   const allAnswered = quiz.questions.every((q) => (answers[q.id]?.length ?? 0) > 0);
   const onSubmit = async () => {
-    const res = await submit.mutateAsync({ answers: quiz.questions.map((q) => ({ questionId: q.id, selected: answers[q.id] ?? [] })), durationMs: Date.now() - startedAt });
+    const res = await submit.mutateAsync({
+      answers: quiz.questions.map((q) => ({ questionId: q.id, selected: answers[q.id] ?? [] })),
+      durationMs: Date.now() - startedAt,
+    });
     setResult(res);
   };
   const reset = () => {
@@ -74,7 +85,17 @@ function QuizForm({ quiz, title }: { quiz: QuizPublic; title: string }) {
           const selected = answers[q.id] ?? [];
           const multiple = q.type === 'multiple';
           return (
-            <li key={q.id} className={cn('rounded-xl border p-4', r ? (r.correct ? 'border-success/50 bg-success/5' : 'border-danger/50 bg-danger/5') : 'border-border')}>
+            <li
+              key={q.id}
+              className={cn(
+                'rounded-xl border p-4',
+                r
+                  ? r.correct
+                    ? 'border-success/50 bg-success/5'
+                    : 'border-danger/50 bg-danger/5'
+                  : 'border-border',
+              )}
+            >
               <p className="mb-3 font-medium">
                 <span className="mr-2 text-muted">{qi + 1}.</span>
                 {tl(q.prompt)}
@@ -87,13 +108,28 @@ function QuizForm({ quiz, title }: { quiz: QuizPublic; title: string }) {
                     {selected.map((oid, idx) => {
                       const opt = q.options.find((o) => o.id === oid)!;
                       return (
-                        <li key={oid} className="flex items-center gap-2 rounded-lg border border-border bg-surface px-3 py-2 text-sm">
+                        <li
+                          key={oid}
+                          className="flex items-center gap-2 rounded-lg border border-border bg-surface px-3 py-2 text-sm"
+                        >
                           <span className="w-5 text-muted">{idx + 1}</span>
                           <span className="flex-1">{tl(opt.text)}</span>
-                          <button type="button" className="btn-icon h-7 w-7" onClick={() => move(q.id, idx, -1)} disabled={idx === 0 || Boolean(result)} aria-label="↑">
+                          <button
+                            type="button"
+                            className="btn-icon h-7 w-7"
+                            onClick={() => move(q.id, idx, -1)}
+                            disabled={idx === 0 || Boolean(result)}
+                            aria-label="↑"
+                          >
                             <ArrowUp size={14} />
                           </button>
-                          <button type="button" className="btn-icon h-7 w-7" onClick={() => move(q.id, idx, 1)} disabled={idx === selected.length - 1 || Boolean(result)} aria-label="↓">
+                          <button
+                            type="button"
+                            className="btn-icon h-7 w-7"
+                            onClick={() => move(q.id, idx, 1)}
+                            disabled={idx === selected.length - 1 || Boolean(result)}
+                            aria-label="↓"
+                          >
                             <ArrowDown size={14} />
                           </button>
                         </li>
@@ -116,7 +152,9 @@ function QuizForm({ quiz, title }: { quiz: QuizPublic; title: string }) {
                         onClick={() => toggle(q.id, o.id, multiple)}
                         className={cn(
                           'rounded-lg border px-3 py-2 text-left text-sm transition',
-                          isSel ? 'border-primary bg-primary/10' : 'border-border bg-surface hover:bg-elevated',
+                          isSel
+                            ? 'border-primary bg-primary/10'
+                            : 'border-border bg-surface hover:bg-elevated',
                           r && isCorrect && 'border-success bg-success/10',
                           r && isSel && !isCorrect && 'border-danger bg-danger/10',
                         )}
@@ -128,10 +166,19 @@ function QuizForm({ quiz, title }: { quiz: QuizPublic; title: string }) {
                 </div>
               )}
               {r && (
-                <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} className="mt-3 flex gap-2 text-sm">
-                  {r.correct ? <CheckCircle2 className="mt-0.5 shrink-0 text-success" size={16} /> : <XCircle className="mt-0.5 shrink-0 text-danger" size={16} />}
+                <motion.div
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-3 flex gap-2 text-sm"
+                >
+                  {r.correct ? (
+                    <CheckCircle2 className="mt-0.5 shrink-0 text-success" size={16} />
+                  ) : (
+                    <XCircle className="mt-0.5 shrink-0 text-danger" size={16} />
+                  )}
                   <p>
-                    <strong>{r.correct ? t('quiz.correct') : t('quiz.wrong')}.</strong> <span className="text-muted">{tl(r.explanation)}</span>
+                    <strong>{r.correct ? t('quiz.correct') : t('quiz.wrong')}.</strong>{' '}
+                    <span className="text-muted">{tl(r.explanation)}</span>
                   </p>
                 </motion.div>
               )}
@@ -150,8 +197,15 @@ function QuizForm({ quiz, title }: { quiz: QuizPublic; title: string }) {
           </p>
         ) : result ? (
           <>
-            <div className={cn('rounded-xl px-4 py-2 text-sm font-semibold', result.passed ? 'bg-success/15 text-success' : 'bg-warning/15 text-warning')} aria-live="polite">
-              {t('quiz.score', { score: result.score })} — {result.passed ? t('quiz.passed') : t('quiz.failed')}
+            <div
+              className={cn(
+                'rounded-xl px-4 py-2 text-sm font-semibold',
+                result.passed ? 'bg-success/15 text-success' : 'bg-warning/15 text-warning',
+              )}
+              aria-live="polite"
+            >
+              {t('quiz.score', { score: result.score })} —{' '}
+              {result.passed ? t('quiz.passed') : t('quiz.failed')}
             </div>
             {result.newBadges.map((b) => (
               <span key={b.id} className="chip border-accent text-accent">
@@ -163,7 +217,12 @@ function QuizForm({ quiz, title }: { quiz: QuizPublic; title: string }) {
             </button>
           </>
         ) : (
-          <button type="button" className="btn-primary" onClick={onSubmit} disabled={!allAnswered || submit.isPending}>
+          <button
+            type="button"
+            className="btn-primary"
+            onClick={onSubmit}
+            disabled={!allAnswered || submit.isPending}
+          >
             {t('quiz.submit')}
           </button>
         )}

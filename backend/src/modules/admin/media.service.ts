@@ -39,15 +39,23 @@ export class MediaService {
     }
   }
 
-  async presignUpload(contentType: string, folder = 'uploads'): Promise<{ uploadUrl: string; publicUrl: string; key: string; expiresIn: number }> {
+  async presignUpload(
+    contentType: string,
+    folder = 'uploads',
+  ): Promise<{ uploadUrl: string; publicUrl: string; key: string; expiresIn: number }> {
     if (!this.client) throw new BadRequestException('Medya depolama yapılandırılmamış');
     const ext = ALLOWED.get(contentType);
     if (!ext) throw new BadRequestException(`Desteklenmeyen içerik türü: ${contentType}`);
     const safeFolder = folder.replace(/[^a-z0-9/_-]/gi, '').slice(0, 64) || 'uploads';
     const key = `${safeFolder}/${new Date().toISOString().slice(0, 10)}/${randomUUID()}.${ext}`;
     const bucket = this.config.get('S3_BUCKET');
-    const uploadUrl = await getSignedUrl(this.client, new PutObjectCommand({ Bucket: bucket, Key: key, ContentType: contentType }), { expiresIn: 300 });
-    const base = this.config.get('S3_PUBLIC_URL') || `${this.config.get('S3_ENDPOINT') ?? ''}/${bucket}`;
+    const uploadUrl = await getSignedUrl(
+      this.client,
+      new PutObjectCommand({ Bucket: bucket, Key: key, ContentType: contentType }),
+      { expiresIn: 300 },
+    );
+    const base =
+      this.config.get('S3_PUBLIC_URL') || `${this.config.get('S3_ENDPOINT') ?? ''}/${bucket}`;
     return { uploadUrl, publicUrl: `${base}/${key}`, key, expiresIn: 300 };
   }
 }

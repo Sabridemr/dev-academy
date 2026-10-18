@@ -42,7 +42,10 @@ const L = {
     minLeaf: 'min_samples_leaf',
     dataset: 'Veri seti',
     criterion: 'Bölme ölçütü',
-    datasets: { moons: 'Hilal (moons)', xor: 'XOR', blobs: 'Kümeler' } satisfies Record<Dataset, string>,
+    datasets: { moons: 'Hilal (moons)', xor: 'XOR', blobs: 'Kümeler' } satisfies Record<
+      Dataset,
+      string
+    >,
     addClass: 'Tıklayınca eklenecek sınıf',
     classA: 'Sınıf 0 (kırmızı)',
     classB: 'Sınıf 1 (mavi)',
@@ -88,14 +91,18 @@ function makeData(kind: Dataset, seed = 5): Pt[] {
     } else if (kind === 'xor') {
       const x = rnd();
       const y = rnd();
-      pts.push({ x, y, c: (x > 0.5) !== (y > 0.5) ? 1 : 0 });
+      pts.push({ x, y, c: x > 0.5 !== y > 0.5 ? 1 : 0 });
     } else {
       const cx = c === 0 ? 0.35 : 0.65;
       const cy = c === 0 ? 0.6 : 0.4;
       pts.push({ x: cx + (rnd() + rnd() - 1) * 0.22, y: cy + (rnd() + rnd() - 1) * 0.22, c });
     }
   }
-  return pts.map((p) => ({ ...p, x: Math.max(0.01, Math.min(0.99, p.x)), y: Math.max(0.01, Math.min(0.99, p.y)) }));
+  return pts.map((p) => ({
+    ...p,
+    x: Math.max(0.01, Math.min(0.99, p.x)),
+    y: Math.max(0.01, Math.min(0.99, p.y)),
+  }));
 }
 
 function impurity(counts: [number, number], criterion: Criterion): number {
@@ -106,7 +113,10 @@ function impurity(counts: [number, number], criterion: Criterion): number {
   return -p.reduce((a, q) => a + (q > 0 ? q * Math.log2(q) : 0), 0);
 }
 
-const countOf = (pts: Pt[]): [number, number] => [pts.filter((p) => p.c === 0).length, pts.filter((p) => p.c === 1).length];
+const countOf = (pts: Pt[]): [number, number] => [
+  pts.filter((p) => p.c === 0).length,
+  pts.filter((p) => p.c === 1).length,
+];
 
 /** Greedy, özyinelemeli ağaç kurulumu; minLeaf: bir yaprakta kalması gereken en az örnek (budama) */
 function buildTree(pts: Pt[], maxDepth: number, criterion: Criterion, minLeaf = 1): TreeNode {
@@ -124,7 +134,10 @@ function buildTree(pts: Pt[], maxDepth: number, criterion: Criterion, minLeaf = 
         const left = subset.filter((p) => p[feature] < threshold);
         const right = subset.filter((p) => p[feature] >= threshold);
         if (left.length < minLeaf || right.length < minLeaf) continue;
-        const weighted = (left.length * impurity(countOf(left), criterion) + right.length * impurity(countOf(right), criterion)) / subset.length;
+        const weighted =
+          (left.length * impurity(countOf(left), criterion) +
+            right.length * impurity(countOf(right), criterion)) /
+          subset.length;
         const gain = imp - weighted;
         if (!best || gain > best.gain + 1e-12) best = { feature, threshold, gain };
       }
@@ -156,14 +169,20 @@ function collect(node: TreeNode, out: TreeNode[] = []): TreeNode[] {
 
 function predict(node: TreeNode, p: Pt): 0 | 1 {
   if (!node.split || !node.left || !node.right) return node.counts[1] > node.counts[0] ? 1 : 0;
-  return p[node.split.feature] < node.split.threshold ? predict(node.left, p) : predict(node.right, p);
+  return p[node.split.feature] < node.split.threshold
+    ? predict(node.left, p)
+    : predict(node.right, p);
 }
 
 export default function DecisionTreeSim({ params, onInteract }: SimulatorProps) {
   const { t, locale } = useI18n();
   const l = L[locale];
-  const [dataset, setDataset] = useState<Dataset>(() => strParam(params, 'dataset', 'moons', DATASETS));
-  const [criterion, setCriterion] = useState<Criterion>(() => strParam(params, 'criterion', 'gini', ['gini', 'entropy'] as const));
+  const [dataset, setDataset] = useState<Dataset>(() =>
+    strParam(params, 'dataset', 'moons', DATASETS),
+  );
+  const [criterion, setCriterion] = useState<Criterion>(() =>
+    strParam(params, 'criterion', 'gini', ['gini', 'entropy'] as const),
+  );
   const [maxDepth, setMaxDepth] = useState(() => numParam(params, 'maxDepth', 3, 1, MAX_DEPTH));
   const [minLeaf, setMinLeaf] = useState(() => numParam(params, 'minSamplesLeaf', 1, 1, 10));
   const [points, setPoints] = useState<Pt[]>(() => makeData(dataset));
@@ -171,10 +190,15 @@ export default function DecisionTreeSim({ params, onInteract }: SimulatorProps) 
   // Doğrulama kümesi: aynı dağılımdan, ağacın hiç görmediği noktalar
   const valPoints = useMemo(() => makeData(dataset, VALIDATION_SEED), [dataset]);
 
-  const tree = useMemo(() => buildTree(points, maxDepth, criterion, minLeaf), [points, maxDepth, criterion, minLeaf]);
+  const tree = useMemo(
+    () => buildTree(points, maxDepth, criterion, minLeaf),
+    [points, maxDepth, criterion, minLeaf],
+  );
   const nodes = useMemo(() => collect(tree), [tree]);
   const leaves = nodes.filter((n) => !n.split);
-  const accuracy = points.length ? points.filter((p) => predict(tree, p) === p.c).length / points.length : 0;
+  const accuracy = points.length
+    ? points.filter((p) => predict(tree, p) === p.c).length / points.length
+    : 0;
   const valAccuracy = valPoints.filter((p) => predict(tree, p) === p.c).length / valPoints.length;
 
   const S = 320;
@@ -218,23 +242,78 @@ export default function DecisionTreeSim({ params, onInteract }: SimulatorProps) 
       }
       aside={
         <>
-          <Range label={l.depth} value={maxDepth} min={1} max={MAX_DEPTH} onChange={(v) => { onInteract(); setMaxDepth(v); }} />
-          <Range label={l.minLeaf} value={minLeaf} min={1} max={10} onChange={(v) => { onInteract(); setMinLeaf(v); }} />
-          <Select label={l.dataset} value={dataset} options={DATASETS.map((d) => ({ id: d, label: l.datasets[d] }))} onChange={(v) => { onInteract(); setDataset(v); setPoints(makeData(v)); }} />
-          <Select label={l.criterion} value={criterion} options={[{ id: 'gini', label: 'Gini' }, { id: 'entropy', label: 'Entropy' }]} onChange={(v) => { onInteract(); setCriterion(v); }} />
+          <Range
+            label={l.depth}
+            value={maxDepth}
+            min={1}
+            max={MAX_DEPTH}
+            onChange={(v) => {
+              onInteract();
+              setMaxDepth(v);
+            }}
+          />
+          <Range
+            label={l.minLeaf}
+            value={minLeaf}
+            min={1}
+            max={10}
+            onChange={(v) => {
+              onInteract();
+              setMinLeaf(v);
+            }}
+          />
+          <Select
+            label={l.dataset}
+            value={dataset}
+            options={DATASETS.map((d) => ({ id: d, label: l.datasets[d] }))}
+            onChange={(v) => {
+              onInteract();
+              setDataset(v);
+              setPoints(makeData(v));
+            }}
+          />
+          <Select
+            label={l.criterion}
+            value={criterion}
+            options={[
+              { id: 'gini', label: 'Gini' },
+              { id: 'entropy', label: 'Entropy' },
+            ]}
+            onChange={(v) => {
+              onInteract();
+              setCriterion(v);
+            }}
+          />
           <div role="radiogroup" aria-label={l.addClass}>
             <p className="label">{l.addClass}</p>
             <div className="flex gap-1">
               {([0, 1] as const).map((c) => (
-                <button key={c} type="button" role="radio" aria-checked={addClass === c} className={addClass === c ? 'btn-primary px-2 py-1 text-xs' : 'btn-ghost px-2 py-1 text-xs'} onClick={() => setAddClass(c)}>
+                <button
+                  key={c}
+                  type="button"
+                  role="radio"
+                  aria-checked={addClass === c}
+                  className={
+                    addClass === c ? 'btn-primary px-2 py-1 text-xs' : 'btn-ghost px-2 py-1 text-xs'
+                  }
+                  onClick={() => setAddClass(c)}
+                >
                   {c === 0 ? l.classA : l.classB}
                 </button>
               ))}
             </div>
           </div>
           <div className="grid grid-cols-2 gap-2" aria-live="polite">
-            <Stat label={l.accuracy} value={`${(accuracy * 100).toFixed(0)}%`} tone={accuracy > 0.95 ? 'success' : 'primary'} />
-            <Stat label={l.valAccuracy} value={`${(valAccuracy * 100).toFixed(0)}%`} tone={accuracy - valAccuracy > 0.1 ? 'warning' : 'success'} />
+            <Stat
+              label={l.accuracy}
+              value={`${(accuracy * 100).toFixed(0)}%`}
+              tone={accuracy > 0.95 ? 'success' : 'primary'}
+            />
+            <Stat
+              label={l.valAccuracy}
+              value={`${(valAccuracy * 100).toFixed(0)}%`}
+              tone={accuracy - valAccuracy > 0.1 ? 'warning' : 'success'}
+            />
             <Stat label={l.leaves} value={leaves.length} />
           </div>
           <p className="text-xs text-muted">{l.hint}</p>
@@ -242,7 +321,12 @@ export default function DecisionTreeSim({ params, onInteract }: SimulatorProps) 
       }
     >
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)]">
-        <svg viewBox={`0 0 ${S} ${S}`} className="mx-auto h-auto w-full max-w-sm" role="img" aria-label={l.title}>
+        <svg
+          viewBox={`0 0 ${S} ${S}`}
+          className="mx-auto h-auto w-full max-w-sm"
+          role="img"
+          aria-label={l.title}
+        >
           {leaves.map((lf) => {
             const cls = lf.counts[1] > lf.counts[0] ? 1 : 0;
             const purity = lf.n ? Math.max(...lf.counts) / lf.n : 0.5;
@@ -263,24 +347,70 @@ export default function DecisionTreeSim({ params, onInteract }: SimulatorProps) 
               const { feature, threshold } = n.split!;
               const b = n.bounds;
               return feature === 'x' ? (
-                <line key={n.id} x1={sx(threshold)} x2={sx(threshold)} y1={sy(b.y0)} y2={sy(b.y1)} stroke="var(--da-fg)" strokeWidth={Math.max(0.8, 2.5 - n.depth * 0.4)} />
+                <line
+                  key={n.id}
+                  x1={sx(threshold)}
+                  x2={sx(threshold)}
+                  y1={sy(b.y0)}
+                  y2={sy(b.y1)}
+                  stroke="var(--da-fg)"
+                  strokeWidth={Math.max(0.8, 2.5 - n.depth * 0.4)}
+                />
               ) : (
-                <line key={n.id} y1={sy(threshold)} y2={sy(threshold)} x1={sx(b.x0)} x2={sx(b.x1)} stroke="var(--da-fg)" strokeWidth={Math.max(0.8, 2.5 - n.depth * 0.4)} />
+                <line
+                  key={n.id}
+                  y1={sy(threshold)}
+                  y2={sy(threshold)}
+                  x1={sx(b.x0)}
+                  x2={sx(b.x1)}
+                  stroke="var(--da-fg)"
+                  strokeWidth={Math.max(0.8, 2.5 - n.depth * 0.4)}
+                />
               );
             })}
           {points.map((p, i) => (
-            <circle key={i} cx={sx(p.x)} cy={sy(p.y)} r={4} fill={CLASS_COLOR[p.c]} stroke="var(--da-surface)" strokeWidth={1} pointerEvents="none" />
+            <circle
+              key={i}
+              cx={sx(p.x)}
+              cy={sy(p.y)}
+              r={4}
+              fill={CLASS_COLOR[p.c]}
+              stroke="var(--da-surface)"
+              strokeWidth={1}
+              pointerEvents="none"
+            />
           ))}
-          <rect width={S} height={S} fill="transparent" stroke="var(--da-border)" className="cursor-crosshair" onClick={addPoint} />
+          <rect
+            width={S}
+            height={S}
+            fill="transparent"
+            stroke="var(--da-border)"
+            className="cursor-crosshair"
+            onClick={addPoint}
+          />
         </svg>
         <div className="overflow-x-auto">
           <p className="label">{l.tree}</p>
-          <svg viewBox={`0 0 ${treeW} ${treeH}`} className="h-auto w-full" style={{ minWidth: Math.min(treeW, 520) }} role="img" aria-label={l.tree}>
+          <svg
+            viewBox={`0 0 ${treeW} ${treeH}`}
+            className="h-auto w-full"
+            style={{ minWidth: Math.min(treeW, 520) }}
+            role="img"
+            aria-label={l.tree}
+          >
             {nodes.map((n) =>
               [n.left, n.right].map(
                 (ch) =>
                   ch && (
-                    <line key={`${n.id}-${ch.id}`} x1={tx(layout.get(n.id)!.x)} y1={ty(n.depth) + 18} x2={tx(layout.get(ch.id)!.x)} y2={ty(ch.depth) - 18} stroke="var(--da-border)" strokeWidth={1.5} />
+                    <line
+                      key={`${n.id}-${ch.id}`}
+                      x1={tx(layout.get(n.id)!.x)}
+                      y1={ty(n.depth) + 18}
+                      x2={tx(layout.get(ch.id)!.x)}
+                      y2={ty(ch.depth) - 18}
+                      stroke="var(--da-border)"
+                      strokeWidth={1.5}
+                    />
                   ),
               ),
             )}
@@ -291,8 +421,27 @@ export default function DecisionTreeSim({ params, onInteract }: SimulatorProps) 
               const cls = n.counts[1] > n.counts[0] ? 1 : 0;
               return (
                 <g key={n.id}>
-                  <rect x={x - 29} y={y - 18} width={58} height={36} rx={7} fill={n.split ? 'var(--da-surface)' : `color-mix(in srgb, ${CLASS_COLOR[cls]} 25%, var(--da-surface))`} stroke={n.split ? 'var(--da-fg)' : CLASS_COLOR[cls]} />
-                  <text x={x} y={y - 4} textAnchor="middle" fontSize={9} fontWeight={600} fill="var(--da-fg)">
+                  <rect
+                    x={x - 29}
+                    y={y - 18}
+                    width={58}
+                    height={36}
+                    rx={7}
+                    fill={
+                      n.split
+                        ? 'var(--da-surface)'
+                        : `color-mix(in srgb, ${CLASS_COLOR[cls]} 25%, var(--da-surface))`
+                    }
+                    stroke={n.split ? 'var(--da-fg)' : CLASS_COLOR[cls]}
+                  />
+                  <text
+                    x={x}
+                    y={y - 4}
+                    textAnchor="middle"
+                    fontSize={9}
+                    fontWeight={600}
+                    fill="var(--da-fg)"
+                  >
                     {n.split ? `${n.split.feature} < ${n.split.threshold.toFixed(2)}` : `→ ${cls}`}
                   </text>
                   <text x={x} y={y + 9} textAnchor="middle" fontSize={8} fill="var(--da-muted)">
@@ -302,7 +451,12 @@ export default function DecisionTreeSim({ params, onInteract }: SimulatorProps) 
               );
             })}
           </svg>
-          <p className="text-[11px] text-muted">{locale === 'tr' ? 'Düğüm: sınıf0/sınıf1 · safsızlık' : 'Node: class0/class1 · impurity'} · {points.length} {l.samples}</p>
+          <p className="text-[11px] text-muted">
+            {locale === 'tr'
+              ? 'Düğüm: sınıf0/sınıf1 · safsızlık'
+              : 'Node: class0/class1 · impurity'}{' '}
+            · {points.length} {l.samples}
+          </p>
         </div>
       </div>
     </SimShell>

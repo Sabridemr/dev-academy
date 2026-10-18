@@ -8,7 +8,9 @@ import { useSettings } from '@/stores/settings';
 /** Nesnedeki tüm yaprak anahtar yollarını toplar */
 function leafKeys(obj: unknown, prefix = ''): string[] {
   if (typeof obj === 'string' || Array.isArray(obj)) return [prefix];
-  return Object.entries(obj as Record<string, unknown>).flatMap(([k, v]) => leafKeys(v, prefix ? `${prefix}.${k}` : k));
+  return Object.entries(obj as Record<string, unknown>).flatMap(([k, v]) =>
+    leafKeys(v, prefix ? `${prefix}.${k}` : k),
+  );
 }
 
 describe('i18n', () => {

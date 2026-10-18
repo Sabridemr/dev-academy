@@ -5,7 +5,11 @@ import { isOnline, onConnectivityChange, startNetworkMonitoring } from '@/lib/ne
 import { queryKeys } from '@/lib/queryClient';
 import { flushAllQueues } from '@/offline/queue';
 import { refreshDownloadedModules } from '@/offline/sync';
-import { registerForPushNotifications, scheduleDailyReminder, storedReminderHour } from '@/notifications/push';
+import {
+  registerForPushNotifications,
+  scheduleDailyReminder,
+  storedReminderHour,
+} from '@/notifications/push';
 import { useSession } from '@/stores/session';
 
 /**
@@ -60,6 +64,7 @@ export function useAppBootstrap(): void {
   // Sunucudaki hatırlatma saatine göre yerel yedek bildirimi planla
   useEffect(() => {
     if (status !== 'authenticated' || reminderHour === undefined) return;
-    if (reminderHour !== storedReminderHour()) void scheduleDailyReminder(reminderHour).catch(() => undefined);
+    if (reminderHour !== storedReminderHour())
+      void scheduleDailyReminder(reminderHour).catch(() => undefined);
   }, [status, reminderHour]);
 }

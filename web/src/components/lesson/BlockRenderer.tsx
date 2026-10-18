@@ -32,16 +32,34 @@ export function BlockRenderer({ block, lesson }: { block: LessonBlock; lesson: L
     case 'animation':
       return <AnimationBlock sceneId={block.sceneId} caption={block.caption} />;
     case 'interactive':
-      return <InteractiveBlock type={block.interactive} params={block.params} title={block.title} instructions={block.instructions} lessonId={lesson.id} />;
+      return (
+        <InteractiveBlock
+          type={block.interactive}
+          params={block.params}
+          title={block.title}
+          instructions={block.instructions}
+          lessonId={lesson.id}
+        />
+      );
     case 'code':
-      return <CodeBlock language={block.language} code={block.code} title={block.title} alternatives={block.alternatives} highlightLines={block.highlightLines} />;
+      return (
+        <CodeBlock
+          language={block.language}
+          code={block.code}
+          title={block.title}
+          alternatives={block.alternatives}
+          highlightLines={block.highlightLines}
+        />
+      );
     case 'realworld':
       return (
         <aside className="card border-l-4 border-l-accent p-5">
           <p className="mb-2 flex items-center gap-2 text-sm font-semibold text-accent">
             <Building2 size={16} /> {t('lesson.realWorld', { company: block.company })}
           </p>
-          <Markdown className="max-w-none [&>*:first-child]:mt-0">{md(block.markdown, block.markdownEn)}</Markdown>
+          <Markdown className="max-w-none [&>*:first-child]:mt-0">
+            {md(block.markdown, block.markdownEn)}
+          </Markdown>
         </aside>
       );
     case 'callout': {
@@ -52,7 +70,9 @@ export function BlockRenderer({ block, lesson }: { block: LessonBlock; lesson: L
           <p className={cn('mb-1 flex items-center gap-2 text-sm font-semibold', style.iconCls)}>
             <Icon size={16} /> {block.title ? tl(block.title) : null}
           </p>
-          <Markdown className="max-w-none text-sm [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">{md(block.markdown, block.markdownEn)}</Markdown>
+          <Markdown className="max-w-none text-sm [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
+            {md(block.markdown, block.markdownEn)}
+          </Markdown>
         </aside>
       );
     }
@@ -61,9 +81,14 @@ export function BlockRenderer({ block, lesson }: { block: LessonBlock; lesson: L
     case 'next': {
       const target = lesson.next && lesson.next.id === block.lesson ? lesson.next : null;
       return (
-        <Link href={`/lessons/${block.lesson}`} className="card group flex items-center justify-between gap-4 p-5 transition hover:border-primary">
+        <Link
+          href={`/lessons/${block.lesson}`}
+          className="card group flex items-center justify-between gap-4 p-5 transition hover:border-primary"
+        >
           <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-primary">{t('lesson.nextStep')}</p>
+            <p className="text-xs font-medium uppercase tracking-wide text-primary">
+              {t('lesson.nextStep')}
+            </p>
             <p className="mt-1 font-semibold">{target ? tl(target.title) : block.lesson}</p>
             {block.note && <p className="mt-1 text-sm text-muted">{tl(block.note)}</p>}
           </div>

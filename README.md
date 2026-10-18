@@ -4,13 +4,13 @@ Yazılım mühendisliği, sistem tasarımı ve yapay zekâ konularını **görse
 
 Her ders aynı akışı izler: kısa kavram açıklaması → statik SVG diyagram → adım adım oynatılan animasyon → interaktif simülatör → gerçek dünya örneği (Amazon, Netflix, Uber…) → 3–6 soruluk quiz → bir sonraki adım.
 
-| Katman | Klasör | Teknoloji |
-|---|---|---|
+| Katman      | Klasör            | Teknoloji                                                                               |
+| ----------- | ----------------- | --------------------------------------------------------------------------------------- |
 | Ortak paket | `packages/shared` | TypeScript, zod — sahne şeması, oynatıcı durum makinesi, API tipleri, simülatör mantığı |
-| Backend | `backend/` | NestJS, Prisma, PostgreSQL, Redis, S3, socket.io |
-| Web | `web/` | Next.js (App Router), Tailwind, Framer Motion, Shiki, React Flow, TensorFlow.js |
-| Mobil | `mobile/` | Expo (React Native), Reanimated, react-native-svg, Lottie, SQLite + MMKV |
-| İçerik | `content/` | Markdown + JSON + SVG (7 modül, 49 ders) |
+| Backend     | `backend/`        | NestJS, Prisma, PostgreSQL, Redis, S3, socket.io                                        |
+| Web         | `web/`            | Next.js (App Router), Tailwind, Framer Motion, Shiki, React Flow, TensorFlow.js         |
+| Mobil       | `mobile/`         | Expo (React Native), Reanimated, react-native-svg, Lottie, SQLite + MMKV                |
+| İçerik      | `content/`        | Markdown + JSON + SVG (7 modül, 49 ders)                                                |
 
 Mimari ayrıntıları için [docs/architecture.md](docs/architecture.md). Projenin kendi mimarisi uygulamada da bir ders olarak anlatılır: **F-08 DevAcademy’nin Kendi Mimarisi**.
 
@@ -51,15 +51,15 @@ docker compose run --rm seed
 
 ## Sık kullanılan komutlar
 
-| Komut | Açıklama |
-|---|---|
-| `pnpm build` | Tüm paketleri derler (Turborepo, bağımlılık sırasıyla) |
-| `pnpm test` | Tüm birim testleri |
-| `pnpm typecheck` | Tüm paketlerde TypeScript kontrolü |
-| `pnpm content:validate` | `content/` klasörünü şemalara göre doğrular, müfredat kapsamını raporlar |
-| `pnpm db:migrate` / `pnpm db:seed` | Migration uygular / içeriği yükler (idempotent) |
-| `pnpm --filter @devacademy/backend test:e2e` | Gerçek PostgreSQL + Redis ile API uçtan uca testleri |
-| `pnpm --filter @devacademy/web test:e2e` | Playwright (masaüstü + mobil görünüm) |
+| Komut                                        | Açıklama                                                                 |
+| -------------------------------------------- | ------------------------------------------------------------------------ |
+| `pnpm build`                                 | Tüm paketleri derler (Turborepo, bağımlılık sırasıyla)                   |
+| `pnpm test`                                  | Tüm birim testleri                                                       |
+| `pnpm typecheck`                             | Tüm paketlerde TypeScript kontrolü                                       |
+| `pnpm content:validate`                      | `content/` klasörünü şemalara göre doğrular, müfredat kapsamını raporlar |
+| `pnpm db:migrate` / `pnpm db:seed`           | Migration uygular / içeriği yükler (idempotent)                          |
+| `pnpm --filter @devacademy/backend test:e2e` | Gerçek PostgreSQL + Redis ile API uçtan uca testleri                     |
+| `pnpm --filter @devacademy/web test:e2e`     | Playwright (masaüstü + mobil görünüm)                                    |
 
 ## Animasyon sahnesi şeması
 

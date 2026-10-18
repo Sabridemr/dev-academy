@@ -19,7 +19,10 @@ interface Row {
 
 export default function AdminLessons() {
   const { t, tl } = useI18n();
-  const { data, isLoading } = useQuery({ queryKey: ['admin-lessons'], queryFn: () => api<Paginated<Row>>('/admin/lessons?pageSize=200') });
+  const { data, isLoading } = useQuery({
+    queryKey: ['admin-lessons'],
+    queryFn: () => api<Paginated<Row>>('/admin/lessons?pageSize=200'),
+  });
   return (
     <div>
       <h1 className="mb-6 text-2xl font-bold">{t('admin.lessons')}</h1>
@@ -40,8 +43,20 @@ export default function AdminLessons() {
               <tr key={r.id} className="border-t border-border">
                 <td className="px-4 py-2 font-mono text-xs">{r.id}</td>
                 <td className="px-4 py-2">{tl(r.title)}</td>
-                <td className="px-4 py-2">{r.publishedVersion ? <span className="chip border-success text-success">v{r.publishedVersion}</span> : '—'}</td>
-                <td className="px-4 py-2">{r.draftVersion ? <span className="chip border-warning text-warning">v{r.draftVersion}</span> : '—'}</td>
+                <td className="px-4 py-2">
+                  {r.publishedVersion ? (
+                    <span className="chip border-success text-success">v{r.publishedVersion}</span>
+                  ) : (
+                    '—'
+                  )}
+                </td>
+                <td className="px-4 py-2">
+                  {r.draftVersion ? (
+                    <span className="chip border-warning text-warning">v{r.draftVersion}</span>
+                  ) : (
+                    '—'
+                  )}
+                </td>
                 <td className="px-4 py-2 text-right">
                   <Link href={`/admin/lessons/${r.id}`} className="btn-ghost py-1">
                     {t('admin.edit')}

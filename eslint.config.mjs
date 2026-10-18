@@ -27,14 +27,30 @@ export default tseslint.config(
   {
     languageOptions: { globals: { ...globals.node, ...globals.es2022 } },
     rules: {
-      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrors: 'none', ignoreRestSiblings: true }],
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        {
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          caughtErrors: 'none',
+          ignoreRestSiblings: true,
+        },
+      ],
       '@typescript-eslint/no-explicit-any': 'warn',
       'no-empty': ['error', { allowEmptyCatch: true }],
     },
   },
   // CommonJS yapılandırma dosyaları (jest, babel, metro, detox)
   {
-    files: ['**/*.cjs', '**/*.config.js', 'mobile/babel.config.js', 'mobile/metro.config.js', 'mobile/.detoxrc.js', 'mobile/stubs/**/*.js', 'mobile/e2e/jest.config.js'],
+    files: [
+      '**/*.cjs',
+      '**/*.config.js',
+      'mobile/babel.config.js',
+      'mobile/metro.config.js',
+      'mobile/.detoxrc.js',
+      'mobile/stubs/**/*.js',
+      'mobile/e2e/jest.config.js',
+    ],
     languageOptions: { sourceType: 'commonjs', globals: { ...globals.node } },
     rules: { '@typescript-eslint/no-require-imports': 'off' },
   },
@@ -50,13 +66,27 @@ export default tseslint.config(
     files: ['web/**/*.{ts,tsx}'],
     plugins: { '@next/next': nextPlugin },
     // App Router kullanıldığı için pages/ yok; bu kural yalnızca pages yönlendirmesi içindir
-    rules: { ...nextPlugin.configs.recommended.rules, ...nextPlugin.configs['core-web-vitals'].rules, '@next/next/no-html-link-for-pages': 'off' },
+    rules: {
+      ...nextPlugin.configs.recommended.rules,
+      ...nextPlugin.configs['core-web-vitals'].rules,
+      '@next/next/no-html-link-for-pages': 'off',
+    },
   },
   // Testler
   {
-    files: ['**/*.test.{ts,tsx}', '**/*.spec.ts', '**/__tests__/**', '**/test/**', '**/e2e/**', 'mobile/jest.setup.ts'],
+    files: [
+      '**/*.test.{ts,tsx}',
+      '**/*.spec.ts',
+      '**/__tests__/**',
+      '**/test/**',
+      '**/e2e/**',
+      'mobile/jest.setup.ts',
+    ],
     languageOptions: { globals: { ...globals.jest, ...globals.vitest } },
-    rules: { '@typescript-eslint/no-require-imports': 'off', '@typescript-eslint/no-explicit-any': 'off' },
+    rules: {
+      '@typescript-eslint/no-require-imports': 'off',
+      '@typescript-eslint/no-explicit-any': 'off',
+    },
   },
   prettier,
 );

@@ -16,7 +16,10 @@ interface Stats {
 
 export default function AdminHome() {
   const { t } = useI18n();
-  const { data } = useQuery({ queryKey: ['admin-stats'], queryFn: () => api<Stats>('/admin/stats') });
+  const { data } = useQuery({
+    queryKey: ['admin-stats'],
+    queryFn: () => api<Stats>('/admin/stats'),
+  });
   const items: [string, number | undefined][] = [
     [t('admin.users'), data?.users],
     [t('admin.lessons'), data?.lessons],

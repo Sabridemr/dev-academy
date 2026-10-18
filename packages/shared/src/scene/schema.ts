@@ -49,12 +49,24 @@ export const NodeKindSchema = z.enum([
 ]);
 export type NodeKind = z.infer<typeof NodeKindSchema>;
 
-export const NodeStatusSchema = z.enum(['idle', 'active', 'busy', 'success', 'warning', 'error', 'down', 'muted']);
+export const NodeStatusSchema = z.enum([
+  'idle',
+  'active',
+  'busy',
+  'success',
+  'warning',
+  'error',
+  'down',
+  'muted',
+]);
 export type NodeStatus = z.infer<typeof NodeStatusSchema>;
 
 export const SceneNodeSchema = z
   .object({
-    id: z.string().min(1).regex(/^[a-zA-Z0-9_-]+$/, 'Düğüm kimliği yalnızca harf, rakam, _ ve - içerebilir'),
+    id: z
+      .string()
+      .min(1)
+      .regex(/^[a-zA-Z0-9_-]+$/, 'Düğüm kimliği yalnızca harf, rakam, _ ve - içerebilir'),
     kind: NodeKindSchema.default('generic'),
     label: LocalizedStringSchema,
     /** Mantıksal x konumu (düğümün merkezi) */
@@ -76,12 +88,23 @@ export const SceneNodeSchema = z
   .strict();
 export type SceneNode = z.infer<typeof SceneNodeSchema>;
 
-export const EdgeKindSchema = z.enum(['request', 'response', 'data', 'event', 'control', 'replication', 'generic']);
+export const EdgeKindSchema = z.enum([
+  'request',
+  'response',
+  'data',
+  'event',
+  'control',
+  'replication',
+  'generic',
+]);
 export const EdgeStyleSchema = z.enum(['solid', 'dashed', 'dotted']);
 
 export const SceneEdgeSchema = z
   .object({
-    id: z.string().min(1).regex(/^[a-zA-Z0-9_-]+$/),
+    id: z
+      .string()
+      .min(1)
+      .regex(/^[a-zA-Z0-9_-]+$/),
     from: z.string().min(1),
     to: z.string().min(1),
     label: LocalizedStringSchema.optional(),
@@ -158,7 +181,10 @@ export type SceneAnnotation = z.infer<typeof SceneAnnotationSchema>;
 
 export const SceneStepSchema = z
   .object({
-    id: z.string().min(1).regex(/^[a-zA-Z0-9_-]+$/),
+    id: z
+      .string()
+      .min(1)
+      .regex(/^[a-zA-Z0-9_-]+$/),
     title: LocalizedStringSchema,
     /** Adım anlatımı (markdown destekli kısa metin) */
     narration: LocalizedStringSchema,
@@ -199,7 +225,10 @@ export const AnimationSceneSchema = z
   .object({
     $schema: z.string().optional(),
     schemaVersion: z.literal(SCENE_SCHEMA_VERSION).default(SCENE_SCHEMA_VERSION),
-    id: z.string().min(1).regex(/^[a-z0-9-]+$/, 'Sahne kimliği kebab-case olmalı'),
+    id: z
+      .string()
+      .min(1)
+      .regex(/^[a-z0-9-]+$/, 'Sahne kimliği kebab-case olmalı'),
     title: LocalizedStringSchema,
     summary: LocalizedStringSchema.optional(),
     /** Erişilebilirlik: ekran okuyucular ve reduced-motion için metin alternatifi */
