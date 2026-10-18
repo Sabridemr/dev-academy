@@ -39,20 +39,32 @@
   },
   "typesVersions": {
     "*": {
-      "scene": ["./dist/scene/index.d.ts"],
-      "content": ["./dist/content/index.d.ts"],
-      "simulators": ["./dist/simulators/index.d.ts"],
-      "node": ["./dist/node/index.d.ts"]
+      "scene": [
+        "./dist/scene/index.d.ts"
+      ],
+      "content": [
+        "./dist/content/index.d.ts"
+      ],
+      "simulators": [
+        "./dist/simulators/index.d.ts"
+      ],
+      "node": [
+        "./dist/node/index.d.ts"
+      ]
     }
   },
-  "files": ["dist", "examples", "schema"],
+  "files": [
+    "dist",
+    "examples",
+    "schema"
+  ],
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run",
     "test:watch": "vitest",
-    "lint": "tsc --noEmit -p tsconfig.json",
+    "lint": "eslint . --max-warnings=0",
     "content:validate": "tsx scripts/validate-content.ts",
     "schema:export": "tsx scripts/export-json-schema.ts",
     "clean": "rm -rf dist .turbo"

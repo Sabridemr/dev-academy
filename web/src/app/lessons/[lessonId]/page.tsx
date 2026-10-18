@@ -16,7 +16,11 @@ async function getLesson(id: string): Promise<LessonDetail> {
   }
 }
 
-export async function generateMetadata({ params }: { params: Promise<{ lessonId: string }> }): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ lessonId: string }>;
+}): Promise<Metadata> {
   const { lessonId } = await params;
   try {
     const lesson = await getLesson(lessonId);

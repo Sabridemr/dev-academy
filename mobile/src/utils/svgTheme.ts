@@ -45,7 +45,10 @@ export function parseClassRules(css: string): Record<string, Record<string, stri
       const idx = part.indexOf(':');
       if (idx < 0) continue;
       const prop = part.slice(0, idx).trim();
-      const value = part.slice(idx + 1).trim().replace(/px$/, '');
+      const value = part
+        .slice(idx + 1)
+        .trim()
+        .replace(/px$/, '');
       const attr = CSS_TO_ATTR[prop];
       if (attr && value) decls[attr] = value;
     }
@@ -55,19 +58,24 @@ export function parseClassRules(css: string): Record<string, Record<string, stri
 }
 
 export function inlineClassStyles(svg: string): string {
-  const styleBlocks = [...svg.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/g)].map((m) => m[1]).join('\n');
+  const styleBlocks = [...svg.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/g)]
+    .map((m) => m[1])
+    .join('\n');
   if (!styleBlocks) return svg;
   const rules = parseClassRules(styleBlocks);
-  return svg.replace(/<([a-zA-Z]+)([^<>]*?)\sclass="([^"]+)"([^<>]*?)(\/?)>/g, (_m, tag: string, before: string, classes: string, after: string, selfClose: string) => {
-    const existing = `${before} ${after}`;
-    const attrs: Record<string, string> = {};
-    for (const cls of classes.split(/\s+/)) Object.assign(attrs, rules[cls] ?? {});
-    const extra = Object.entries(attrs)
-      .filter(([k]) => !new RegExp(`\\s${k}=`).test(existing))
-      .map(([k, v]) => ` ${k}="${v}"`)
-      .join('');
-    return `<${tag}${before}${after}${extra}${selfClose}>`;
-  });
+  return svg.replace(
+    /<([a-zA-Z]+)([^<>]*?)\sclass="([^"]+)"([^<>]*?)(\/?)>/g,
+    (_m, tag: string, before: string, classes: string, after: string, selfClose: string) => {
+      const existing = `${before} ${after}`;
+      const attrs: Record<string, string> = {};
+      for (const cls of classes.split(/\s+/)) Object.assign(attrs, rules[cls] ?? {});
+      const extra = Object.entries(attrs)
+        .filter(([k]) => !new RegExp(`\\s${k}=`).test(existing))
+        .map(([k, v]) => ` ${k}="${v}"`)
+        .join('');
+      return `<${tag}${before}${after}${extra}${selfClose}>`;
+    },
+  );
 }
 
 export function sanitizeSvg(svg: string): string {

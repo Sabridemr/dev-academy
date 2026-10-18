@@ -7,7 +7,8 @@ import { ContentService } from './content.service';
 
 /**
  * Yayınlanmış içerik uç noktaları. Hepsi anonim erişime açık; token varsa ilerleme bilgisi eklenir.
- * ETag + Cache-Control ile istemci cache'i desteklenir.
+ * ETag + Cache-Control ile istemci cache'i desteklenir. Token'lı isteklerde yanıt `private` olur
+ * (EtagInterceptor), böylece kullanıcıya özel ilerleme paylaşılan cache'lere düşmez.
  */
 @ApiTags('content')
 @ApiBearerAuth()

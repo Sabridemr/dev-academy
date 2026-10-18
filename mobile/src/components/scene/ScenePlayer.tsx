@@ -1,5 +1,11 @@
 import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
-import { AccessibilityInfo, Pressable, StyleSheet, View, type LayoutChangeEvent } from 'react-native';
+import {
+  AccessibilityInfo,
+  Pressable,
+  StyleSheet,
+  View,
+  type LayoutChangeEvent,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import {
   PLAYER_SPEEDS,
@@ -37,11 +43,22 @@ const MAX_FRAME_DELTA = 100;
  * Erişilebilirlik: reduced-motion (AccessibilityInfo) → SET_REDUCED_MOTION; metin transkripti; tüm
  * kontrollerde etiketler.
  */
-export function ScenePlayer({ scene, caption, autoPlay = false, onFirstPlay, testID = 'scene-player' }: Props) {
+export function ScenePlayer({
+  scene,
+  caption,
+  autoPlay = false,
+  onFirstPlay,
+  testID = 'scene-player',
+}: Props) {
   const { t, tl } = useI18n();
   const { colors } = useTheme();
-  const reducer = useMemo(() => (s: PlayerState, a: PlayerAction) => playerReducer(scene, s, a), [scene]);
-  const [state, dispatch] = useReducer(reducer, scene, (sc) => createPlayerState(sc, { playing: autoPlay }));
+  const reducer = useMemo(
+    () => (s: PlayerState, a: PlayerAction) => playerReducer(scene, s, a),
+    [scene],
+  );
+  const [state, dispatch] = useReducer(reducer, scene, (sc) =>
+    createPlayerState(sc, { playing: autoPlay }),
+  );
   const [width, setWidth] = useState(0);
   const [transcriptOpen, setTranscriptOpen] = useState(false);
   const playedOnce = useRef(false);
@@ -56,7 +73,9 @@ export function ScenePlayer({ scene, caption, autoPlay = false, onFirstPlay, tes
         if (mounted) dispatch({ type: 'SET_REDUCED_MOTION', value });
       })
       .catch(() => undefined);
-    const sub = AccessibilityInfo.addEventListener('reduceMotionChanged', (value: boolean) => dispatch({ type: 'SET_REDUCED_MOTION', value }));
+    const sub = AccessibilityInfo.addEventListener('reduceMotionChanged', (value: boolean) =>
+      dispatch({ type: 'SET_REDUCED_MOTION', value }),
+    );
     return () => {
       mounted = false;
       sub?.remove();
@@ -100,7 +119,11 @@ export function ScenePlayer({ scene, caption, autoPlay = false, onFirstPlay, tes
   };
 
   return (
-    <View testID={testID} style={[styles.root, { backgroundColor: colors.surface, borderColor: colors.border }]} accessibilityLabel={tl(scene.title)}>
+    <View
+      testID={testID}
+      style={[styles.root, { backgroundColor: colors.surface, borderColor: colors.border }]}
+      accessibilityLabel={tl(scene.title)}
+    >
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
         <Text variant="label" numberOfLines={1}>
           {tl(scene.title)}
@@ -115,12 +138,29 @@ export function ScenePlayer({ scene, caption, autoPlay = false, onFirstPlay, tes
         ) : null}
       </View>
 
-      <View onLayout={onLayout} testID="scene-canvas-container" style={[styles.canvas, { backgroundColor: withAlpha(colors.bg, 0.6) }]}>
-        <SceneCanvas scene={scene} view={view} elapsedMs={state.elapsedMs} reducedMotion={state.reducedMotion} width={width} />
+      <View
+        onLayout={onLayout}
+        testID="scene-canvas-container"
+        style={[styles.canvas, { backgroundColor: withAlpha(colors.bg, 0.6) }]}
+      >
+        <SceneCanvas
+          scene={scene}
+          view={view}
+          elapsedMs={state.elapsedMs}
+          reducedMotion={state.reducedMotion}
+          width={width}
+        />
       </View>
 
       {state.showNarration ? (
-        <View style={[styles.narration, { borderTopColor: colors.border, backgroundColor: withAlpha(colors.elevated, 0.5) }]} accessibilityLiveRegion="polite" testID="scene-narration">
+        <View
+          style={[
+            styles.narration,
+            { borderTopColor: colors.border, backgroundColor: withAlpha(colors.elevated, 0.5) },
+          ]}
+          accessibilityLiveRegion="polite"
+          testID="scene-narration"
+        >
           <Text variant="label">{tl(step.title)}</Text>
           <NarrationText key={step.id} text={tl(step.narration)} />
         </View>
@@ -128,7 +168,13 @@ export function ScenePlayer({ scene, caption, autoPlay = false, onFirstPlay, tes
 
       {/* Kontroller */}
       <View style={[styles.controls, { borderTopColor: colors.border }]}>
-        <IconButton icon="chevron-back" label={t('player.stepBack')} onPress={() => dispatch({ type: 'PREV' })} disabled={state.stepIndex === 0} testID="scene-prev" />
+        <IconButton
+          icon="chevron-back"
+          label={t('player.stepBack')}
+          onPress={() => dispatch({ type: 'PREV' })}
+          disabled={state.stepIndex === 0}
+          testID="scene-prev"
+        />
         <Button
           title={state.playing ? t('player.pause') : t('player.play')}
           icon={state.playing ? 'pause' : 'play'}
@@ -136,8 +182,19 @@ export function ScenePlayer({ scene, caption, autoPlay = false, onFirstPlay, tes
           onPress={() => dispatch({ type: 'TOGGLE_PLAY' })}
           testID="scene-play"
         />
-        <IconButton icon="chevron-forward" label={t('player.stepForward')} onPress={() => dispatch({ type: 'NEXT' })} disabled={state.finished} testID="scene-next" />
-        <IconButton icon="refresh" label={t('player.restart')} onPress={() => dispatch({ type: 'RESET' })} testID="scene-restart" />
+        <IconButton
+          icon="chevron-forward"
+          label={t('player.stepForward')}
+          onPress={() => dispatch({ type: 'NEXT' })}
+          disabled={state.finished}
+          testID="scene-next"
+        />
+        <IconButton
+          icon="refresh"
+          label={t('player.restart')}
+          onPress={() => dispatch({ type: 'RESET' })}
+          testID="scene-restart"
+        />
         <View style={{ flex: 1 }} />
         <IconButton
           icon={state.showNarration ? 'chatbox-ellipses' : 'chatbox-outline'}
@@ -151,7 +208,14 @@ export function ScenePlayer({ scene, caption, autoPlay = false, onFirstPlay, tes
       {/* Adım çizelgesi (seek) */}
       <View style={styles.timeline} accessibilityRole="tablist">
         {scene.steps.map((s, i) => {
-          const fillPct = i < state.stepIndex ? 1 : i === state.stepIndex ? (state.finished ? 1 : stepProgress) : 0;
+          const fillPct =
+            i < state.stepIndex
+              ? 1
+              : i === state.stepIndex
+                ? state.finished
+                  ? 1
+                  : stepProgress
+                : 0;
           return (
             <Pressable
               key={s.id}
@@ -163,14 +227,25 @@ export function ScenePlayer({ scene, caption, autoPlay = false, onFirstPlay, tes
               style={[styles.segment, { backgroundColor: colors.elevated }]}
               testID={`scene-seek-${i}`}
             >
-              <View style={{ width: `${fillPct * 100}%`, height: '100%', backgroundColor: colors.primary, borderRadius: 3 }} />
+              <View
+                style={{
+                  width: `${fillPct * 100}%`,
+                  height: '100%',
+                  backgroundColor: colors.primary,
+                  borderRadius: 3,
+                }}
+              />
             </Pressable>
           );
         })}
       </View>
 
       {/* Hız */}
-      <View style={styles.speedRow} accessibilityRole="radiogroup" accessibilityLabel={t('player.speed')}>
+      <View
+        style={styles.speedRow}
+        accessibilityRole="radiogroup"
+        accessibilityLabel={t('player.speed')}
+      >
         <Text variant="caption" muted>
           {t('player.speed')}
         </Text>
@@ -183,7 +258,13 @@ export function ScenePlayer({ scene, caption, autoPlay = false, onFirstPlay, tes
               accessibilityRole="radio"
               accessibilityState={{ checked: selected }}
               accessibilityLabel={`${t('player.speed')} ${sp}×`}
-              style={[styles.speedBtn, { borderColor: selected ? colors.primary : colors.border, backgroundColor: selected ? withAlpha(colors.primary, 0.12) : 'transparent' }]}
+              style={[
+                styles.speedBtn,
+                {
+                  borderColor: selected ? colors.primary : colors.border,
+                  backgroundColor: selected ? withAlpha(colors.primary, 0.12) : 'transparent',
+                },
+              ]}
               testID={`scene-speed-${sp}`}
             >
               <Text variant="caption" weight="600" color={selected ? colors.primary : colors.fg}>
@@ -209,7 +290,11 @@ export function ScenePlayer({ scene, caption, autoPlay = false, onFirstPlay, tes
           style={styles.transcriptToggle}
           testID="scene-transcript-toggle"
         >
-          <Ionicons name={transcriptOpen ? 'chevron-down' : 'chevron-forward'} size={14} color={colors.muted} />
+          <Ionicons
+            name={transcriptOpen ? 'chevron-down' : 'chevron-forward'}
+            size={14}
+            color={colors.muted}
+          />
           <Text variant="caption" muted weight="600">
             {t('player.transcript')}
           </Text>
@@ -238,15 +323,57 @@ function NarrationText({ text }: { text: string }) {
 
 const styles = StyleSheet.create({
   root: { borderRadius: radius.lg, borderWidth: 1, overflow: 'hidden' },
-  header: { paddingHorizontal: spacing.lg, paddingVertical: spacing.sm, borderBottomWidth: StyleSheet.hairlineWidth, gap: 2 },
+  header: {
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    gap: 2,
+  },
   canvas: { paddingVertical: spacing.sm },
-  narration: { paddingHorizontal: spacing.lg, paddingVertical: spacing.md, borderTopWidth: StyleSheet.hairlineWidth, gap: 4 },
-  controls: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, borderTopWidth: StyleSheet.hairlineWidth },
-  timeline: { flexDirection: 'row', gap: 4, paddingHorizontal: spacing.md, paddingBottom: spacing.sm },
+  narration: {
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    gap: 4,
+  },
+  controls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderTopWidth: StyleSheet.hairlineWidth,
+  },
+  timeline: {
+    flexDirection: 'row',
+    gap: 4,
+    paddingHorizontal: spacing.md,
+    paddingBottom: spacing.sm,
+  },
   segment: { flex: 1, height: 6, borderRadius: 3, overflow: 'hidden' },
-  speedRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingHorizontal: spacing.md, paddingBottom: spacing.sm },
-  speedBtn: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: radius.pill, borderWidth: 1 },
-  caption: { paddingHorizontal: spacing.lg, paddingVertical: spacing.sm, borderTopWidth: StyleSheet.hairlineWidth },
-  transcript: { paddingHorizontal: spacing.lg, paddingVertical: spacing.sm, borderTopWidth: StyleSheet.hairlineWidth, gap: spacing.xs },
+  speedRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingBottom: spacing.sm,
+  },
+  speedBtn: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+  },
+  caption: {
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    borderTopWidth: StyleSheet.hairlineWidth,
+  },
+  transcript: {
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    gap: spacing.xs,
+  },
   transcriptToggle: { flexDirection: 'row', alignItems: 'center', gap: 4, minHeight: 32 },
 });

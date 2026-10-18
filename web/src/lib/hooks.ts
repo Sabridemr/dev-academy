@@ -18,7 +18,7 @@ import type {
   LearningPathSummary,
   UserProfile,
   UpdateProfileDto,
-  ReviewItem,
+  ReviewCardDto,
   LocalizedString,
 } from '@devacademy/shared';
 import { api } from './api';
@@ -49,34 +49,62 @@ export function useDebounced<T>(value: T, delay = 250): T {
 /* ------------------------------ İçerik ------------------------------ */
 
 export function usePaths() {
-  return useQuery({ queryKey: ['paths'], queryFn: () => api<LearningPathSummary[]>('/paths', { anonymous: true }) });
+  return useQuery({
+    queryKey: ['paths'],
+    queryFn: () => api<LearningPathSummary[]>('/paths', { anonymous: true }),
+  });
 }
 
 export function useModules() {
   const authed = useIsAuthenticated();
-  return useQuery({ queryKey: ['modules', authed], queryFn: () => api<ModuleSummary[]>('/modules') });
+  return useQuery({
+    queryKey: ['modules', authed],
+    queryFn: () => api<ModuleSummary[]>('/modules'),
+  });
 }
 
 export function useModule(id: string) {
   const authed = useIsAuthenticated();
-  return useQuery({ queryKey: ['module', id, authed], queryFn: () => api<ModuleDetail>(`/modules/${id}`), enabled: Boolean(id) });
+  return useQuery({
+    queryKey: ['module', id, authed],
+    queryFn: () => api<ModuleDetail>(`/modules/${id}`),
+    enabled: Boolean(id),
+  });
 }
 
 export function useLesson(id: string, initial?: LessonDetail) {
   const authed = useIsAuthenticated();
-  return useQuery({ queryKey: ['lesson', id, authed], queryFn: () => api<LessonDetail>(`/lessons/${id}`), initialData: authed ? undefined : initial, enabled: Boolean(id) });
+  return useQuery({
+    queryKey: ['lesson', id, authed],
+    queryFn: () => api<LessonDetail>(`/lessons/${id}`),
+    initialData: authed ? undefined : initial,
+    enabled: Boolean(id),
+  });
 }
 
 export function useScene(id: string | undefined) {
-  return useQuery({ queryKey: ['scene', id], queryFn: () => api<SceneResponse>(`/scenes/${id}`, { anonymous: true }), enabled: Boolean(id), staleTime: 5 * 60_000 });
+  return useQuery({
+    queryKey: ['scene', id],
+    queryFn: () => api<SceneResponse>(`/scenes/${id}`, { anonymous: true }),
+    enabled: Boolean(id),
+    staleTime: 5 * 60_000,
+  });
 }
 
 export function useQuiz(lessonId: string) {
-  return useQuery({ queryKey: ['quiz', lessonId], queryFn: () => api<QuizPublic>(`/quizzes/by-lesson/${lessonId}`, { anonymous: true }) });
+  return useQuery({
+    queryKey: ['quiz', lessonId],
+    queryFn: () => api<QuizPublic>(`/quizzes/by-lesson/${lessonId}`, { anonymous: true }),
+  });
 }
 
 export function useSearch(q: string) {
-  return useQuery({ queryKey: ['search', q], queryFn: () => api<SearchResponse>(`/search?q=${encodeURIComponent(q)}`, { anonymous: true }), enabled: q.trim().length >= 2, placeholderData: (prev) => prev });
+  return useQuery({
+    queryKey: ['search', q],
+    queryFn: () => api<SearchResponse>(`/search?q=${encodeURIComponent(q)}`, { anonymous: true }),
+    enabled: q.trim().length >= 2,
+    placeholderData: (prev) => prev,
+  });
 }
 
 /* ---------------------------- Kullanıcı ----------------------------- */
@@ -88,7 +116,9 @@ export function useMe() {
     queryKey: ['me'],
     enabled: authed,
     queryFn: async () => {
-      const me = await api<UserProfile & { reminderHour: number | null; timezone: string }>('/users/me');
+      const me = await api<UserProfile & { reminderHour: number | null; timezone: string }>(
+        '/users/me',
+      );
       setUser(me);
       return me;
     },
@@ -98,20 +128,29 @@ export function useMe() {
 export function useUpdateProfile() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (dto: UpdateProfileDto) => api<UserProfile>('/users/me', { method: 'PATCH', body: dto }),
+    mutationFn: (dto: UpdateProfileDto) =>
+      api<UserProfile>('/users/me', { method: 'PATCH', body: dto }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['me'] }),
   });
 }
 
 export function useProgressSummary() {
   const authed = useIsAuthenticated();
-  return useQuery({ queryKey: ['progress-summary'], queryFn: () => api<ProgressSummary>('/progress/summary'), enabled: authed });
+  return useQuery({
+    queryKey: ['progress-summary'],
+    queryFn: () => api<ProgressSummary>('/progress/summary'),
+    enabled: authed,
+  });
 }
 
 export function useUpdateProgress(lessonId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (dto: UpdateProgressDto) => api<{ status: string; percent: number; newBadges: { title: LocalizedString }[] }>(`/progress/lessons/${lessonId}`, { method: 'PUT', body: dto }),
+    mutationFn: (dto: UpdateProgressDto) =>
+      api<{ status: string; percent: number; newBadges: { title: LocalizedString }[] }>(
+        `/progress/lessons/${lessonId}`,
+        { method: 'PUT', body: dto },
+      ),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['progress-summary'] });
       void qc.invalidateQueries({ queryKey: ['module'] });
@@ -122,7 +161,8 @@ export function useUpdateProgress(lessonId: string) {
 export function useSubmitAttempt(quizId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (dto: SubmitAttemptDto) => api<AttemptResult>(`/quizzes/${quizId}/attempts`, { method: 'POST', body: dto }),
+    mutationFn: (dto: SubmitAttemptDto) =>
+      api<AttemptResult>(`/quizzes/${quizId}/attempts`, { method: 'POST', body: dto }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['progress-summary'] });
       void qc.invalidateQueries({ queryKey: ['reviews'] });
@@ -132,17 +172,29 @@ export function useSubmitAttempt(quizId: string) {
 
 export function useReviews() {
   const authed = useIsAuthenticated();
-  return useQuery({ queryKey: ['reviews'], queryFn: () => api<(ReviewItem & { prompt: LocalizedString; options: { id: string; text: LocalizedString }[]; type: string })[]>('/progress/reviews'), enabled: authed });
+  return useQuery({
+    queryKey: ['reviews'],
+    queryFn: () => api<ReviewCardDto[]>('/progress/reviews'),
+    enabled: authed,
+  });
 }
 
 export function useBookmarks() {
   const authed = useIsAuthenticated();
-  return useQuery({ queryKey: ['bookmarks'], queryFn: () => api<BookmarkDto[]>('/bookmarks'), enabled: authed });
+  return useQuery({
+    queryKey: ['bookmarks'],
+    queryFn: () => api<BookmarkDto[]>('/bookmarks'),
+    enabled: authed,
+  });
 }
 
 export function useNotes(lessonId?: string) {
   const authed = useIsAuthenticated();
-  return useQuery({ queryKey: ['notes', lessonId ?? 'all'], queryFn: () => api<NoteDto[]>(`/notes${lessonId ? `?lessonId=${lessonId}` : ''}`), enabled: authed });
+  return useQuery({
+    queryKey: ['notes', lessonId ?? 'all'],
+    queryFn: () => api<NoteDto[]>(`/notes${lessonId ? `?lessonId=${lessonId}` : ''}`),
+    enabled: authed,
+  });
 }
 
 /** İnteraktif simülatör kullanımını (rozetler için) bir kez kaydeder */
@@ -152,6 +204,8 @@ export function useTrackInteractive(interactive: string, lessonId?: string) {
   return () => {
     if (!authed || tracked) return;
     setTracked(true);
-    void api('/progress/interactive', { method: 'POST', body: { interactive, lessonId } }).catch(() => undefined);
+    void api('/progress/interactive', { method: 'POST', body: { interactive, lessonId } }).catch(
+      () => undefined,
+    );
   };
 }

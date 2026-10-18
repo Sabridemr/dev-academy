@@ -18,7 +18,8 @@ export const tr = {
   theme: { light: 'Açık tema', dark: 'Koyu tema', system: 'Sistem' },
   home: {
     heroTitle: 'Karmaşık sistemleri adım adım, animasyonlarla öğren',
-    heroSubtitle: 'Load balancer’dan Transformer’a; tıklanabilir diyagramlar, simülatörler ve mini quizlerle.',
+    heroSubtitle:
+      'Load balancer’dan Transformer’a; tıklanabilir diyagramlar, simülatörler ve mini quizlerle.',
     start: 'Öğrenmeye başla',
     continue: 'Kaldığın yerden devam et',
     pathsTitle: 'Öğrenme yolları',
@@ -129,9 +130,23 @@ export const tr = {
     howWell: 'Ne kadar iyi hatırladın?',
     grades: ['Hiç', 'Zor', 'Orta', 'İyi', 'Kolay', 'Mükemmel'],
     concept: 'Kavram: {name}',
+    correctAnswer: 'Doğru cevap',
+    yourAnswerCorrect: 'Doğru hatırladın!',
+    yourAnswerWrong: 'Cevabın doğru değil.',
   },
-  library: { title: 'Kütüphane', bookmarks: 'Yer imleri', notes: 'Notlar', empty: 'Henüz bir şey yok.', delete: 'Sil' },
-  search: { placeholder: 'Ders, kavram ya da kalıp ara… (örn. round-robin, saga, attention)', results: '{count} sonuç', empty: 'Sonuç bulunamadı.', types: { lesson: 'Ders', concept: 'Kavram', pattern: 'Kalıp', module: 'Modül' } },
+  library: {
+    title: 'Kütüphane',
+    bookmarks: 'Yer imleri',
+    notes: 'Notlar',
+    empty: 'Henüz bir şey yok.',
+    delete: 'Sil',
+  },
+  search: {
+    placeholder: 'Ders, kavram ya da kalıp ara… (örn. round-robin, saga, attention)',
+    results: '{count} sonuç',
+    empty: 'Sonuç bulunamadı.',
+    types: { lesson: 'Ders', concept: 'Kavram', pattern: 'Kalıp', module: 'Modül' },
+  },
   sim: {
     send: 'İstek gönder',
     burst: '10 istek gönder',
@@ -216,5 +231,9 @@ export const tr = {
   },
 };
 
-type Widen<T> = T extends string ? string : T extends readonly (infer U)[] ? readonly Widen<U>[] : { [K in keyof T]: Widen<T[K]> };
+type Widen<T> = T extends string
+  ? string
+  : T extends readonly (infer U)[]
+    ? readonly Widen<U>[]
+    : { [K in keyof T]: Widen<T[K]> };
 export type Messages = Widen<typeof tr>;

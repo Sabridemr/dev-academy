@@ -19,7 +19,11 @@ function Onboarding() {
   const [hour, setHour] = useState<number | null>(20);
 
   const save = async () => {
-    await update.mutateAsync({ selectedPathId: selected, reminderHour: hour, timezone: Intl.DateTimeFormat().resolvedOptions().timeZone });
+    await update.mutateAsync({
+      selectedPathId: selected,
+      reminderHour: hour,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    });
     router.push('/dashboard');
   };
 
@@ -32,7 +36,17 @@ function Onboarding() {
           const Icon = ICONS[p.icon] ?? Route;
           const active = selected === p.id;
           return (
-            <button key={p.id} type="button" role="radio" aria-checked={active} onClick={() => setSelected(p.id)} className={cn('card relative p-5 text-left transition', active ? 'border-primary ring-2 ring-primary/30' : 'hover:border-primary/50')}>
+            <button
+              key={p.id}
+              type="button"
+              role="radio"
+              aria-checked={active}
+              onClick={() => setSelected(p.id)}
+              className={cn(
+                'card relative p-5 text-left transition',
+                active ? 'border-primary ring-2 ring-primary/30' : 'hover:border-primary/50',
+              )}
+            >
               {active && <Check className="absolute right-4 top-4 text-primary" size={18} />}
               <Icon className="mb-3 text-primary" />
               <p className="font-semibold">{tl(p.title)}</p>
@@ -45,7 +59,12 @@ function Onboarding() {
         <label className="label" htmlFor="reminder">
           {t('onboarding.reminder')}
         </label>
-        <select id="reminder" className="input max-w-xs" value={hour ?? ''} onChange={(e) => setHour(e.target.value === '' ? null : Number(e.target.value))}>
+        <select
+          id="reminder"
+          className="input max-w-xs"
+          value={hour ?? ''}
+          onChange={(e) => setHour(e.target.value === '' ? null : Number(e.target.value))}
+        >
           <option value="">{t('onboarding.noReminder')}</option>
           {Array.from({ length: 24 }, (_, h) => (
             <option key={h} value={h}>
@@ -54,7 +73,12 @@ function Onboarding() {
           ))}
         </select>
       </div>
-      <button type="button" className="btn-primary mt-6 px-6 py-2.5" disabled={!selected || update.isPending} onClick={save}>
+      <button
+        type="button"
+        className="btn-primary mt-6 px-6 py-2.5"
+        disabled={!selected || update.isPending}
+        onClick={save}
+      >
         {t('onboarding.save')}
       </button>
     </div>

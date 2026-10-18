@@ -41,8 +41,16 @@ const L = {
     readHint: 'Okumak için anahtara tıkla',
     writeHint: 'Yaz (yeni değer)',
     expired: 'süresi doldu',
-    policies: { lru: 'LRU (en uzun süre kullanılmayan)', lfu: 'LFU (en az kullanılan)', fifo: 'FIFO (ilk giren ilk çıkar)' },
-    writes: { 'cache-aside': 'Cache-aside', 'write-through': 'Write-through', 'write-back': 'Write-back' },
+    policies: {
+      lru: 'LRU (en uzun süre kullanılmayan)',
+      lfu: 'LFU (en az kullanılan)',
+      fifo: 'FIFO (ilk giren ilk çıkar)',
+    },
+    writes: {
+      'cache-aside': 'Cache-aside',
+      'write-through': 'Write-through',
+      'write-back': 'Write-back',
+    },
   },
   en: {
     title: 'Cache simulator',
@@ -60,8 +68,16 @@ const L = {
     readHint: 'Click a key to read',
     writeHint: 'Write (new value)',
     expired: 'expired',
-    policies: { lru: 'LRU (least recently used)', lfu: 'LFU (least frequently used)', fifo: 'FIFO (first in first out)' },
-    writes: { 'cache-aside': 'Cache-aside', 'write-through': 'Write-through', 'write-back': 'Write-back' },
+    policies: {
+      lru: 'LRU (least recently used)',
+      lfu: 'LFU (least frequently used)',
+      fifo: 'FIFO (first in first out)',
+    },
+    writes: {
+      'cache-aside': 'Cache-aside',
+      'write-through': 'Write-through',
+      'write-back': 'Write-back',
+    },
   },
 };
 
@@ -152,7 +168,17 @@ export default function CacheSim({ params, onInteract }: SimulatorProps) {
   };
 
   const reset = () => {
-    setState((s) => seedCacheDb(createCacheState({ capacity: s.capacity, policy: s.policy, writePolicy: s.writePolicy, defaultTtlMs: s.defaultTtlMs }), KEYS));
+    setState((s) =>
+      seedCacheDb(
+        createCacheState({
+          capacity: s.capacity,
+          policy: s.policy,
+          writePolicy: s.writePolicy,
+          defaultTtlMs: s.defaultTtlMs,
+        }),
+        KEYS,
+      ),
+    );
     setFlash(null);
   };
 
@@ -169,7 +195,15 @@ export default function CacheSim({ params, onInteract }: SimulatorProps) {
             <Shuffle size={14} /> {l.randomTraffic}
           </button>
           {state.writePolicy === 'write-back' && (
-            <button type="button" className="btn-ghost" onClick={() => { onInteract(); setState(cacheFlush); }} disabled={dirtyCount === 0}>
+            <button
+              type="button"
+              className="btn-ghost"
+              onClick={() => {
+                onInteract();
+                setState(cacheFlush);
+              }}
+              disabled={dirtyCount === 0}
+            >
               <Save size={14} /> {t('sim.flush')}
             </button>
           )}
@@ -180,18 +214,30 @@ export default function CacheSim({ params, onInteract }: SimulatorProps) {
       }
       aside={
         <>
-          <Range label={t('sim.capacity')} value={state.capacity} min={1} max={8} onChange={changeCapacity} />
+          <Range
+            label={t('sim.capacity')}
+            value={state.capacity}
+            min={1}
+            max={8}
+            onChange={changeCapacity}
+          />
           <Select
             label={t('sim.eviction')}
             value={state.policy}
             options={POLICIES.map((p) => ({ id: p, label: l.policies[p] }))}
-            onChange={(v) => { onInteract(); setState((s) => ({ ...s, policy: v })); }}
+            onChange={(v) => {
+              onInteract();
+              setState((s) => ({ ...s, policy: v }));
+            }}
           />
           <Select
             label={t('sim.writePolicy')}
             value={state.writePolicy}
             options={WRITE_POLICIES.map((p) => ({ id: p, label: l.writes[p] }))}
-            onChange={(v) => { onInteract(); setState((s) => cacheFlush({ ...s, writePolicy: v })); }}
+            onChange={(v) => {
+              onInteract();
+              setState((s) => cacheFlush({ ...s, writePolicy: v }));
+            }}
           />
           <Range
             label={t('sim.ttl')}
@@ -200,12 +246,23 @@ export default function CacheSim({ params, onInteract }: SimulatorProps) {
             max={30000}
             step={1000}
             format={(v) => (v === 0 ? '∞' : `${v / 1000}s`)}
-            onChange={(v) => { onInteract(); setState((s) => ({ ...s, defaultTtlMs: v })); }}
+            onChange={(v) => {
+              onInteract();
+              setState((s) => ({ ...s, defaultTtlMs: v }));
+            }}
           />
           <div className="grid grid-cols-2 gap-2">
-            <Stat label={t('sim.hitRatio')} value={`${(ratio * 100).toFixed(0)}%`} tone={ratio >= 0.6 ? 'success' : ratio > 0 ? 'warning' : undefined} />
+            <Stat
+              label={t('sim.hitRatio')}
+              value={`${(ratio * 100).toFixed(0)}%`}
+              tone={ratio >= 0.6 ? 'success' : ratio > 0 ? 'warning' : undefined}
+            />
             <Stat label={l.hits} value={state.hits} tone="success" />
-            <Stat label={l.misses} value={state.misses} tone={state.misses ? 'danger' : undefined} />
+            <Stat
+              label={l.misses}
+              value={state.misses}
+              tone={state.misses ? 'danger' : undefined}
+            />
             <Stat label={l.dbReads} value={state.dbReads} />
             <Stat label={l.dbWrites} value={state.dbWrites} />
             <Stat label={l.dirty} value={dirtyCount} tone={dirtyCount ? 'warning' : undefined} />
@@ -213,11 +270,19 @@ export default function CacheSim({ params, onInteract }: SimulatorProps) {
           <div>
             <p className="label">{t('sim.log')}</p>
             <LogList
-              items={state.events.slice(-12).reverse().map((e) => ({
-                key: e.seq,
-                text: `${e.op.toUpperCase()} ${e.key} · ${e.detail}`,
-                tone: e.result === 'hit' ? 'success' : e.result === 'miss' || e.result === 'evicted' ? 'danger' : 'muted',
-              }))}
+              items={state.events
+                .slice(-12)
+                .reverse()
+                .map((e) => ({
+                  key: e.seq,
+                  text: `${e.op.toUpperCase()} ${e.key} · ${e.detail}`,
+                  tone:
+                    e.result === 'hit'
+                      ? 'success'
+                      : e.result === 'miss' || e.result === 'evicted'
+                        ? 'danger'
+                        : 'muted',
+                }))}
             />
           </div>
         </>
@@ -228,10 +293,20 @@ export default function CacheSim({ params, onInteract }: SimulatorProps) {
         <div className="grid grid-cols-4 gap-2 sm:grid-cols-8">
           {KEYS.map((k) => (
             <div key={k} className="flex flex-col gap-1">
-              <button type="button" className="btn-primary px-2 py-1.5" onClick={() => read(k)} aria-label={`${t('sim.read')} ${k}`}>
+              <button
+                type="button"
+                className="btn-primary px-2 py-1.5"
+                onClick={() => read(k)}
+                aria-label={`${t('sim.read')} ${k}`}
+              >
                 {t('sim.read')} {k}
               </button>
-              <button type="button" className="btn-ghost px-2 py-1 text-xs" onClick={() => write(k)} aria-label={`${t('sim.write')} ${k}`}>
+              <button
+                type="button"
+                className="btn-ghost px-2 py-1 text-xs"
+                onClick={() => write(k)}
+                aria-label={`${t('sim.write')} ${k}`}
+              >
                 {t('sim.write')} {k}
               </button>
             </div>
@@ -239,7 +314,9 @@ export default function CacheSim({ params, onInteract }: SimulatorProps) {
         </div>
 
         <svg viewBox="0 0 600 300" className="h-auto w-full" role="img" aria-label={l.slots}>
-          <text x={0} y={14} fontSize={12} fill="var(--da-muted)">{l.slots} ({state.entries.length}/{state.capacity})</text>
+          <text x={0} y={14} fontSize={12} fill="var(--da-muted)">
+            {l.slots} ({state.entries.length}/{state.capacity})
+          </text>
           {Array.from({ length: state.capacity }, (_, i) => {
             const e = state.entries[i];
             const x = i * slotW + 4;
@@ -248,31 +325,114 @@ export default function CacheSim({ params, onInteract }: SimulatorProps) {
             const isFlash = e && flash && flash.key === e.key;
             return (
               <g key={i}>
-                <rect x={x} y={24} width={w} height={96} rx={10} fill={e ? 'var(--da-surface)' : 'var(--da-elevated)'} stroke={isFlash ? (flash.hit ? 'var(--da-success)' : 'var(--da-accent)') : e?.dirty ? 'var(--da-warning)' : 'var(--da-border)'} strokeWidth={isFlash ? 3 : 1.5} strokeDasharray={e ? undefined : '4 4'} />
+                <rect
+                  x={x}
+                  y={24}
+                  width={w}
+                  height={96}
+                  rx={10}
+                  fill={e ? 'var(--da-surface)' : 'var(--da-elevated)'}
+                  stroke={
+                    isFlash
+                      ? flash.hit
+                        ? 'var(--da-success)'
+                        : 'var(--da-accent)'
+                      : e?.dirty
+                        ? 'var(--da-warning)'
+                        : 'var(--da-border)'
+                  }
+                  strokeWidth={isFlash ? 3 : 1.5}
+                  strokeDasharray={e ? undefined : '4 4'}
+                />
                 {e ? (
                   <>
-                    <text x={x + w / 2} y={60} textAnchor="middle" fontSize={22} fontWeight={700} fill="var(--da-fg)" opacity={ttlLeft <= 0 ? 0.35 : 1}>{e.key}</text>
-                    <text x={x + w / 2} y={78} textAnchor="middle" fontSize={10} fill="var(--da-muted)">{e.value}</text>
-                    <text x={x + w / 2} y={94} textAnchor="middle" fontSize={10} fill="var(--da-primary)">{e.hits} hit</text>
+                    <text
+                      x={x + w / 2}
+                      y={60}
+                      textAnchor="middle"
+                      fontSize={22}
+                      fontWeight={700}
+                      fill="var(--da-fg)"
+                      opacity={ttlLeft <= 0 ? 0.35 : 1}
+                    >
+                      {e.key}
+                    </text>
+                    <text
+                      x={x + w / 2}
+                      y={78}
+                      textAnchor="middle"
+                      fontSize={10}
+                      fill="var(--da-muted)"
+                    >
+                      {e.value}
+                    </text>
+                    <text
+                      x={x + w / 2}
+                      y={94}
+                      textAnchor="middle"
+                      fontSize={10}
+                      fill="var(--da-primary)"
+                    >
+                      {e.hits} hit
+                    </text>
                     {e.dirty && (
-                      <text x={x + w / 2} y={108} textAnchor="middle" fontSize={10} fontWeight={600} fill="var(--da-warning)">● {l.dirty}</text>
+                      <text
+                        x={x + w / 2}
+                        y={108}
+                        textAnchor="middle"
+                        fontSize={10}
+                        fontWeight={600}
+                        fill="var(--da-warning)"
+                      >
+                        ● {l.dirty}
+                      </text>
                     )}
                     {e.ttlMs > 0 && (
                       <>
-                        <rect x={x + 6} y={112} width={w - 12} height={3} rx={1.5} fill="var(--da-elevated)" />
-                        <rect x={x + 6} y={112} width={(w - 12) * ttlLeft} height={3} rx={1.5} fill={ttlLeft < 0.25 ? 'var(--da-danger)' : 'var(--da-success)'} />
+                        <rect
+                          x={x + 6}
+                          y={112}
+                          width={w - 12}
+                          height={3}
+                          rx={1.5}
+                          fill="var(--da-elevated)"
+                        />
+                        <rect
+                          x={x + 6}
+                          y={112}
+                          width={(w - 12) * ttlLeft}
+                          height={3}
+                          rx={1.5}
+                          fill={ttlLeft < 0.25 ? 'var(--da-danger)' : 'var(--da-success)'}
+                        />
                       </>
                     )}
                   </>
                 ) : (
-                  <text x={x + w / 2} y={76} textAnchor="middle" fontSize={11} fill="var(--da-muted)">{l.empty}</text>
+                  <text
+                    x={x + w / 2}
+                    y={76}
+                    textAnchor="middle"
+                    fontSize={11}
+                    fill="var(--da-muted)"
+                  >
+                    {l.empty}
+                  </text>
                 )}
               </g>
             );
           })}
 
           {/* Cache ↔ DB bağlantısı */}
-          <line x1={300} y1={124} x2={300} y2={176} stroke="var(--da-border)" strokeWidth={2} strokeDasharray="5 4" />
+          <line
+            x1={300}
+            y1={124}
+            x2={300}
+            y2={176}
+            stroke="var(--da-border)"
+            strokeWidth={2}
+            strokeDasharray="5 4"
+          />
           <AnimatePresence>
             {flash && !flash.hit && (
               <motion.circle
@@ -289,25 +449,65 @@ export default function CacheSim({ params, onInteract }: SimulatorProps) {
           </AnimatePresence>
 
           <g>
-            <rect x={4} y={180} width={592} height={112} rx={12} fill="color-mix(in srgb, var(--da-primary) 6%, var(--da-surface))" stroke="var(--da-border)" />
-            <text x={18} y={200} fontSize={12} fontWeight={600} fill="var(--da-fg)">{l.db}</text>
+            <rect
+              x={4}
+              y={180}
+              width={592}
+              height={112}
+              rx={12}
+              fill="color-mix(in srgb, var(--da-primary) 6%, var(--da-surface))"
+              stroke="var(--da-border)"
+            />
+            <text x={18} y={200} fontSize={12} fontWeight={600} fill="var(--da-fg)">
+              {l.db}
+            </text>
             {KEYS.map((k, i) => {
               const x = 18 + i * 72;
               const cached = state.entries.find((e) => e.key === k);
               const stale = cached && cached.value !== state.db[k];
               return (
                 <g key={k}>
-                  <rect x={x} y={212} width={64} height={66} rx={8} fill="var(--da-surface)" stroke={stale ? 'var(--da-warning)' : 'var(--da-border)'} />
-                  <text x={x + 32} y={236} textAnchor="middle" fontSize={14} fontWeight={600} fill="var(--da-fg)">{k}</text>
-                  <text x={x + 32} y={254} textAnchor="middle" fontSize={9} fill="var(--da-muted)">{state.db[k] ?? '—'}</text>
-                  {stale && <text x={x + 32} y={270} textAnchor="middle" fontSize={9} fill="var(--da-warning)">≠ cache</text>}
+                  <rect
+                    x={x}
+                    y={212}
+                    width={64}
+                    height={66}
+                    rx={8}
+                    fill="var(--da-surface)"
+                    stroke={stale ? 'var(--da-warning)' : 'var(--da-border)'}
+                  />
+                  <text
+                    x={x + 32}
+                    y={236}
+                    textAnchor="middle"
+                    fontSize={14}
+                    fontWeight={600}
+                    fill="var(--da-fg)"
+                  >
+                    {k}
+                  </text>
+                  <text x={x + 32} y={254} textAnchor="middle" fontSize={9} fill="var(--da-muted)">
+                    {state.db[k] ?? '—'}
+                  </text>
+                  {stale && (
+                    <text
+                      x={x + 32}
+                      y={270}
+                      textAnchor="middle"
+                      fontSize={9}
+                      fill="var(--da-warning)"
+                    >
+                      ≠ cache
+                    </text>
+                  )}
                 </g>
               );
             })}
           </g>
         </svg>
         <p className="flex items-center gap-2 text-xs text-muted">
-          <Database size={12} /> {state.defaultTtlMs > 0 ? `TTL ${state.defaultTtlMs / 1000}s` : l.noTtl} · {l.readHint}
+          <Database size={12} />{' '}
+          {state.defaultTtlMs > 0 ? `TTL ${state.defaultTtlMs / 1000}s` : l.noTtl} · {l.readHint}
         </p>
       </div>
     </SimShell>

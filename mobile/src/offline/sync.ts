@@ -2,7 +2,16 @@ import type { ModuleDetail, OfflineBundle } from '@devacademy/shared';
 import type { RawResponse } from '@/lib/api';
 import { endpoints } from '@/lib/endpoints';
 import { kv, KV_KEYS } from '@/lib/storage';
-import { applyBundle, deleteModule, getDb, getModuleEtag, listDownloadedModules, touchModuleSync, upsertModule, type SqlDb } from './db';
+import {
+  applyBundle,
+  deleteModule,
+  getDb,
+  getModuleEtag,
+  listDownloadedModules,
+  touchModuleSync,
+  upsertModule,
+  type SqlDb,
+} from './db';
 
 /**
  * ÇEVRİMDIŞI SENKRON

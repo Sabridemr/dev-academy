@@ -2,7 +2,21 @@
 
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { ArrowRight, Boxes, Brain, Briefcase, Database, Layers, Network, Puzzle, Rocket, Route, Server, Terminal, type LucideIcon } from 'lucide-react';
+import {
+  ArrowRight,
+  Boxes,
+  Brain,
+  Briefcase,
+  Database,
+  Layers,
+  Network,
+  Puzzle,
+  Rocket,
+  Route,
+  Server,
+  Terminal,
+  type LucideIcon,
+} from 'lucide-react';
 import type { LearningPathSummary, ModuleSummary } from '@devacademy/shared';
 import { parseScene } from '@devacademy/shared';
 import exampleScene from '@devacademy/shared/examples/load-balancer-round-robin.scene.json';
@@ -11,11 +25,29 @@ import { useIsAuthenticated } from '@/lib/auth-store';
 import { useProgressSummary } from '@/lib/hooks';
 import { ScenePlayer } from '../scene/ScenePlayer';
 
-export const ICONS: Record<string, LucideIcon> = { layers: Layers, boxes: Boxes, puzzle: Puzzle, database: Database, rocket: Rocket, server: Server, brain: Brain, terminal: Terminal, network: Network, briefcase: Briefcase, route: Route };
+export const ICONS: Record<string, LucideIcon> = {
+  layers: Layers,
+  boxes: Boxes,
+  puzzle: Puzzle,
+  database: Database,
+  rocket: Rocket,
+  server: Server,
+  brain: Brain,
+  terminal: Terminal,
+  network: Network,
+  briefcase: Briefcase,
+  route: Route,
+};
 
 const heroScene = parseScene(exampleScene);
 
-export function HomeView({ paths, modules }: { paths: LearningPathSummary[]; modules: ModuleSummary[] }) {
+export function HomeView({
+  paths,
+  modules,
+}: {
+  paths: LearningPathSummary[];
+  modules: ModuleSummary[];
+}) {
   const { t, tl } = useI18n();
   const authed = useIsAuthenticated();
   const { data: summary } = useProgressSummary();
@@ -29,7 +61,10 @@ export function HomeView({ paths, modules }: { paths: LearningPathSummary[]; mod
           <p className="mt-4 max-w-xl text-lg text-muted">{t('home.heroSubtitle')}</p>
           <div className="mt-8 flex flex-wrap gap-3">
             {authed && summary?.continueLesson ? (
-              <Link href={`/lessons/${summary.continueLesson.id}`} className="btn-primary px-5 py-2.5">
+              <Link
+                href={`/lessons/${summary.continueLesson.id}`}
+                className="btn-primary px-5 py-2.5"
+              >
                 {t('home.continue')} <ArrowRight size={16} />
               </Link>
             ) : (
@@ -54,12 +89,17 @@ export function HomeView({ paths, modules }: { paths: LearningPathSummary[]; mod
             {paths.map((p) => {
               const Icon = ICONS[p.icon] ?? Route;
               return (
-                <Link key={p.id} href={authed ? `/onboarding?path=${p.id}` : `/register?path=${p.id}`} className="card group p-5 transition hover:-translate-y-0.5 hover:border-primary">
+                <Link
+                  key={p.id}
+                  href={authed ? `/onboarding?path=${p.id}` : `/register?path=${p.id}`}
+                  className="card group p-5 transition hover:-translate-y-0.5 hover:border-primary"
+                >
                   <Icon className="mb-3 text-primary" size={22} />
                   <p className="font-semibold">{tl(p.title)}</p>
                   <p className="mt-1 text-sm text-muted">{tl(p.description)}</p>
                   <p className="mt-3 text-xs text-muted">
-                    {t('home.modulesCount', { count: p.moduleCount })} · {t('home.lessons', { count: p.lessonCount })}
+                    {t('home.modulesCount', { count: p.moduleCount })} ·{' '}
+                    {t('home.lessons', { count: p.lessonCount })}
                   </p>
                 </Link>
               );
@@ -76,8 +116,15 @@ export function HomeView({ paths, modules }: { paths: LearningPathSummary[]; mod
           {modules.map((m) => {
             const Icon = ICONS[m.icon] ?? Layers;
             return (
-              <Link key={m.id} href={`/modules/${m.id}`} className="card group flex gap-4 p-5 transition hover:border-primary">
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-white" style={{ background: m.color }}>
+              <Link
+                key={m.id}
+                href={`/modules/${m.id}`}
+                className="card group flex gap-4 p-5 transition hover:border-primary"
+              >
+                <span
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-white"
+                  style={{ background: m.color }}
+                >
                   <Icon size={20} />
                 </span>
                 <div className="min-w-0">

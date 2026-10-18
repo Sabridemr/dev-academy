@@ -22,14 +22,18 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
 
   const onAuth = (res: AuthResponse) => void signIn(res);
-  const onError = (e: unknown) => setError(isApiError(e) && e.code === 'unauthorized' ? t('auth.loginFailed') : errorText(e, t));
+  const onError = (e: unknown) =>
+    setError(isApiError(e) && e.code === 'unauthorized' ? t('auth.loginFailed') : errorText(e, t));
 
   const submit = async () => {
     setError(null);
     const parsed = LoginSchema.safeParse({ email: email.trim(), password });
     if (!parsed.success) {
       const issues = parsed.error.flatten().fieldErrors;
-      setFieldErrors({ email: issues.email ? t('auth.invalidEmail') : undefined, password: issues.password ? t('auth.passwordMin') : undefined });
+      setFieldErrors({
+        email: issues.email ? t('auth.invalidEmail') : undefined,
+        password: issues.password ? t('auth.passwordMin') : undefined,
+      });
       return;
     }
     setFieldErrors({});
@@ -44,8 +48,15 @@ export default function LoginScreen() {
   };
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <Screen edges={['top', 'bottom']} contentStyle={{ justifyContent: 'center', flexGrow: 1 }} testID="login-screen">
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <Screen
+        edges={['top', 'bottom']}
+        contentStyle={{ justifyContent: 'center', flexGrow: 1 }}
+        testID="login-screen"
+      >
         <View style={{ gap: spacing.xs }}>
           <Text variant="title" color={colors.primary}>
             {t('app.name')}
@@ -82,7 +93,12 @@ export default function LoginScreen() {
             {error}
           </Text>
         ) : null}
-        <Button title={t('auth.loginCta')} onPress={() => void submit()} loading={loading} testID="login-submit" />
+        <Button
+          title={t('auth.loginCta')}
+          onPress={() => void submit()}
+          loading={loading}
+          testID="login-submit"
+        />
         <Text muted align="center" variant="caption">
           {t('auth.or')}
         </Text>

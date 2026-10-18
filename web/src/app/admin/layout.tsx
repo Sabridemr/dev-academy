@@ -24,7 +24,14 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           {links.map((l) => {
             const active = l.exact ? pathname === l.href : pathname.startsWith(l.href);
             return (
-              <Link key={l.href} href={l.href} className={cn('flex items-center gap-2 rounded-lg px-3 py-2 text-sm', active ? 'bg-elevated font-medium' : 'text-muted hover:text-fg')}>
+              <Link
+                key={l.href}
+                href={l.href}
+                className={cn(
+                  'flex items-center gap-2 rounded-lg px-3 py-2 text-sm',
+                  active ? 'bg-elevated font-medium' : 'text-muted hover:text-fg',
+                )}
+              >
                 <l.icon size={16} /> {l.label}
               </Link>
             );

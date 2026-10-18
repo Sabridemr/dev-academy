@@ -24,7 +24,10 @@ export const LocalizedStringSchema = z.union([
 export type LocalizedString = z.infer<typeof LocalizedStringSchema>;
 
 /** Yerelleştirilmiş metni istenen dile çözer; yoksa Türkçeye düşer. */
-export function t(value: LocalizedString | undefined | null, locale: Locale = DEFAULT_LOCALE): string {
+export function t(
+  value: LocalizedString | undefined | null,
+  locale: Locale = DEFAULT_LOCALE,
+): string {
   if (value === undefined || value === null) return '';
   if (typeof value === 'string') return value;
   return value[locale] ?? value.tr;

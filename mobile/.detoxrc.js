@@ -19,25 +19,30 @@ module.exports = {
     'ios.debug': {
       type: 'ios.app',
       binaryPath: 'ios/build/Build/Products/Debug-iphonesimulator/DevAcademy.app',
-      build: 'xcodebuild -workspace ios/DevAcademy.xcworkspace -scheme DevAcademy -configuration Debug -sdk iphonesimulator -derivedDataPath ios/build',
+      build:
+        'xcodebuild -workspace ios/DevAcademy.xcworkspace -scheme DevAcademy -configuration Debug -sdk iphonesimulator -derivedDataPath ios/build',
     },
     'ios.release': {
       type: 'ios.app',
       binaryPath: 'ios/build/Build/Products/Release-iphonesimulator/DevAcademy.app',
-      build: 'xcodebuild -workspace ios/DevAcademy.xcworkspace -scheme DevAcademy -configuration Release -sdk iphonesimulator -derivedDataPath ios/build',
+      build:
+        'xcodebuild -workspace ios/DevAcademy.xcworkspace -scheme DevAcademy -configuration Release -sdk iphonesimulator -derivedDataPath ios/build',
     },
     'android.debug': {
       type: 'android.apk',
       binaryPath: 'android/app/build/outputs/apk/debug/app-debug.apk',
       testBinaryPath: 'android/app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk',
-      build: 'cd android && ./gradlew assembleDebug assembleAndroidTest -DtestBuildType=debug && cd ..',
+      build:
+        'cd android && ./gradlew assembleDebug assembleAndroidTest -DtestBuildType=debug && cd ..',
       reversePorts: [8081, 4000],
     },
     'android.release': {
       type: 'android.apk',
       binaryPath: 'android/app/build/outputs/apk/release/app-release.apk',
-      testBinaryPath: 'android/app/build/outputs/apk/androidTest/release/app-release-androidTest.apk',
-      build: 'cd android && ./gradlew assembleRelease assembleAndroidTest -DtestBuildType=release && cd ..',
+      testBinaryPath:
+        'android/app/build/outputs/apk/androidTest/release/app-release-androidTest.apk',
+      build:
+        'cd android && ./gradlew assembleRelease assembleAndroidTest -DtestBuildType=release && cd ..',
     },
   },
   devices: {

@@ -12,7 +12,15 @@ import { createHash } from 'node:crypto';
 import { resolve } from 'node:path';
 import { PrismaClient, type Prisma } from '@prisma/client';
 import * as argon2 from 'argon2';
-import { BADGES, CURRICULUM, LEARNING_PATHS, lessonPlainText, type LessonBlock, type LocalizedString } from '@devacademy/shared';
+import Redis from 'ioredis';
+import {
+  BADGES,
+  CURRICULUM,
+  LEARNING_PATHS,
+  lessonPlainText,
+  type LessonBlock,
+  type LocalizedString,
+} from '@devacademy/shared';
 import { coverageReport, loadContent, type LoadedLesson } from '@devacademy/shared/node';
 
 const prisma = new PrismaClient();
@@ -37,7 +45,9 @@ function canonical(v: unknown): unknown {
   return v;
 }
 function hash(v: unknown): string {
-  return createHash('sha1').update(JSON.stringify(canonical(v))).digest('hex');
+  return createHash('sha1')
+    .update(JSON.stringify(canonical(v)))
+    .digest('hex');
 }
 
 /** Ders bloklarını veritabanına yazılabilir hâle getirir: SVG'ler inline, sahne/quiz id'leri çözülmüş */
@@ -69,17 +79,84 @@ async function seedBadges(): Promise<void> {
   console.log(`✓ ${BADGES.length} rozet`);
 }
 
-async function seedAdmin(): Promise<string> {
+/**
+ * Admin hesabını yalnızca yoksa oluşturur. Aynı e-postayla var olan bir hesabın rolüne dokunulmaz
+ * (seed, kayıtlı herhangi bir kullanıcıyı admin yapamasın). Üretimde şifre ortam değişkeniyle verilmelidir.
+ */
+async function seedAdmin(): Promise<string | null> {
   const email = process.env.SEED_ADMIN_EMAIL ?? 'admin@devacademy.local';
-  const password = process.env.SEED_ADMIN_PASSWORD ?? 'Admin123!';
+  const existing = await prisma.user.findUnique({ where: { email } });
+  if (existing) {
+    if (existing.role !== 'admin') {
+      console.warn(`⚠ ${email} kayıtlı ama admin değil; rolü değiştirilmedi`);
+      return null;
+    }
+    console.log(`✓ admin kullanıcı mevcut: ${email}`);
+    return existing.id;
+  }
+  let password = process.env.SEED_ADMIN_PASSWORD;
+  if (!password) {
+    if (process.env.NODE_ENV === 'production')
+      throw new Error('SEED_ADMIN_PASSWORD üretimde zorunludur');
+    console.warn('⚠ SEED_ADMIN_PASSWORD verilmedi; varsayılan geliştirme şifresi kullanılıyor');
+    password = 'Admin123!';
+  }
   const passwordHash = await argon2.hash(password, { type: argon2.argon2id });
-  const admin = await prisma.user.upsert({
-    where: { email },
-    update: { role: 'admin' },
-    create: { email, passwordHash, displayName: 'DevAcademy Admin', role: 'admin', locale: 'tr' },
+  const admin = await prisma.user.create({
+    data: { email, passwordHash, displayName: 'DevAcademy Admin', role: 'admin', locale: 'tr' },
   });
-  console.log(`✓ admin kullanıcı: ${email}`);
+  console.log(`✓ admin kullanıcı oluşturuldu: ${email}`);
   return admin.id;
+}
+
+/** API'nin Redis içerik ve arama cache'ini temizler; aksi hâlde yeni içerik TTL dolana kadar görünmez */
+async function clearApiCache(): Promise<void> {
+  if (process.env.SEED_SKIP_REDIS === '1') return;
+  const redis = new Redis(process.env.REDIS_URL ?? 'redis://localhost:6379', {
+    lazyConnect: true,
+    maxRetriesPerRequest: 1,
+    enableOfflineQueue: false,
+  });
+  try {
+    await redis.connect();
+    let removed = 0;
+    for (const pattern of ['content:*', 'search:*']) {
+      let cursor = '0';
+      do {
+        const [next, keys] = await redis.scan(cursor, 'MATCH', pattern, 'COUNT', 200);
+        cursor = next;
+        if (keys.length) removed += await redis.del(...keys);
+      } while (cursor !== '0');
+    }
+    console.log(`✓ Redis cache temizlendi (${removed} anahtar)`);
+  } catch (err) {
+    console.warn(`⚠ Redis cache temizlenemedi: ${(err as Error).message}`);
+  } finally {
+    redis.disconnect();
+  }
+}
+
+type VersionFields = {
+  title: unknown;
+  summary: unknown;
+  durationMinutes: number;
+  level: unknown;
+  tags: string[];
+  prerequisites: string[];
+  concepts: string[];
+  blocks: unknown;
+};
+function versionFingerprint(v: VersionFields): string {
+  return hash({
+    title: v.title,
+    summary: v.summary,
+    durationMinutes: v.durationMinutes,
+    level: v.level,
+    tags: v.tags,
+    prerequisites: v.prerequisites,
+    concepts: v.concepts,
+    blocks: v.blocks,
+  });
 }
 
 async function main(): Promise<void> {
@@ -95,10 +172,14 @@ async function main(): Promise<void> {
   }
   // Hatalı dersleri atla (ders klasörü yolu hata dosya yolunun öneki ise)
   const brokenLessonDirs = new Set(
-    errors.map((e) => e.file.split('/').slice(0, 3).join('/')).filter((p) => p.split('/').length === 3),
+    errors
+      .map((e) => e.file.split('/').slice(0, 3).join('/'))
+      .filter((p) => p.split('/').length === 3),
   );
   if (errors.length) {
-    console.warn(`⚠ İçerikte ${errors.length} hata var; etkilenen ${brokenLessonDirs.size} ders atlanacak (tam doğrulama için --strict):`);
+    console.warn(
+      `⚠ İçerikte ${errors.length} hata var; etkilenen ${brokenLessonDirs.size} ders atlanacak (tam doğrulama için --strict):`,
+    );
     for (const e of errors) console.warn(`  ✗ ${e.file}: ${e.message}`);
   }
   for (const m of content.modules) {
@@ -122,8 +203,25 @@ async function main(): Promise<void> {
     const m = module.manifest;
     await prisma.module.upsert({
       where: { id: m.id },
-      update: { slug: m.slug, code: m.code, order: m.order, title: loc(m.title), description: loc(m.description), icon: m.icon, color: m.color },
-      create: { id: m.id, slug: m.slug, code: m.code, order: m.order, title: loc(m.title), description: loc(m.description), icon: m.icon, color: m.color },
+      update: {
+        slug: m.slug,
+        code: m.code,
+        order: m.order,
+        title: loc(m.title),
+        description: loc(m.description),
+        icon: m.icon,
+        color: m.color,
+      },
+      create: {
+        id: m.id,
+        slug: m.slug,
+        code: m.code,
+        order: m.order,
+        title: loc(m.title),
+        description: loc(m.description),
+        icon: m.icon,
+        color: m.color,
+      },
     });
 
     for (const lesson of module.lessons) {
@@ -140,8 +238,27 @@ async function main(): Promise<void> {
         const changed = !existing || hash(existing.data) !== hash(s.scene);
         await prisma.animationScene.upsert({
           where: { id: s.scene.id },
-          update: changed ? { data: json(s.scene), title: loc(s.scene.title), lessonId: meta.id, sourceFile: s.file, version: (existing?.version ?? 0) + 1, status: 'published', authorId: adminId } : { lessonId: meta.id, sourceFile: s.file },
-          create: { id: s.scene.id, data: json(s.scene), title: loc(s.scene.title), lessonId: meta.id, sourceFile: s.file, version: 1, status: 'published', authorId: adminId },
+          update: changed
+            ? {
+                data: json(s.scene),
+                title: loc(s.scene.title),
+                lessonId: meta.id,
+                sourceFile: s.file,
+                version: (existing?.version ?? 0) + 1,
+                status: 'published',
+                authorId: adminId,
+              }
+            : { lessonId: meta.id, sourceFile: s.file },
+          create: {
+            id: s.scene.id,
+            data: json(s.scene),
+            title: loc(s.scene.title),
+            lessonId: meta.id,
+            sourceFile: s.file,
+            version: 1,
+            status: 'published',
+            authorId: adminId,
+          },
         });
         sceneCount += 1;
       }
@@ -151,13 +268,42 @@ async function main(): Promise<void> {
         const q = lesson.quiz;
         await prisma.quiz.upsert({
           where: { id: q.id },
-          update: { lessonId: meta.id, title: loc(q.title), passScore: q.passScore, status: 'published' },
-          create: { id: q.id, lessonId: meta.id, title: loc(q.title), passScore: q.passScore, status: 'published' },
+          update: {
+            lessonId: meta.id,
+            title: loc(q.title),
+            passScore: q.passScore,
+            status: 'published',
+          },
+          create: {
+            id: q.id,
+            lessonId: meta.id,
+            title: loc(q.title),
+            passScore: q.passScore,
+            status: 'published',
+          },
         });
-        await prisma.question.deleteMany({ where: { quizId: q.id, key: { notIn: q.questions.map((x) => x.id) } } });
+        // Dosyadan çıkan sorular arşivlenir (silinirse deneme ve tekrar geçmişi de silinirdi)
+        await prisma.question.updateMany({
+          where: { quizId: q.id, key: { notIn: q.questions.map((x) => x.id) } },
+          data: { archived: true },
+        });
         for (const [i, question] of q.questions.entries()) {
-          const data = { order: i, type: question.type, prompt: loc(question.prompt), options: json(question.options), correct: question.correct, explanation: loc(question.explanation), difficulty: question.difficulty, concepts: question.concepts };
-          await prisma.question.upsert({ where: { quizId_key: { quizId: q.id, key: question.id } }, update: data, create: { ...data, quizId: q.id, key: question.id } });
+          const data = {
+            archived: false,
+            order: i,
+            type: question.type,
+            prompt: loc(question.prompt),
+            options: json(question.options),
+            correct: question.correct,
+            explanation: loc(question.explanation),
+            difficulty: question.difficulty,
+            concepts: question.concepts,
+          };
+          await prisma.question.upsert({
+            where: { quizId_key: { quizId: q.id, key: question.id } },
+            update: data,
+            create: { ...data, quizId: q.id, key: question.id },
+          });
         }
         quizCount += 1;
       }
@@ -174,33 +320,69 @@ async function main(): Promise<void> {
         concepts: meta.concepts,
         blocks: json(blocks),
       };
-      const current = await prisma.lesson.findUnique({ where: { id: meta.id }, include: { publishedVersion: true } });
+      const current = await prisma.lesson.findUnique({
+        where: { id: meta.id },
+        include: { publishedVersion: true },
+      });
       const published = current?.publishedVersion;
-      const fingerprint = hash(versionPayload);
-      const existingFingerprint = published
-        ? hash({ title: published.title, summary: published.summary, durationMinutes: published.durationMinutes, level: published.level, tags: published.tags, prerequisites: published.prerequisites, concepts: published.concepts, blocks: published.blocks })
-        : null;
+      const fingerprint = versionFingerprint(versionPayload);
+      const existingFingerprint = published ? versionFingerprint(published) : null;
 
       if (published && existingFingerprint === fingerprint && meta.status === 'published') {
         unchangedCount += 1;
         continue;
       }
+      // Taslak dersler: son taslak aynı içerikteyse her seed'de yeni taslak sürümü üretme
+      if (meta.status !== 'published') {
+        const latestDraft = await prisma.lessonVersion.findFirst({
+          where: { lessonId: meta.id, status: 'draft' },
+          orderBy: { version: 'desc' },
+        });
+        if (latestDraft && versionFingerprint(latestDraft) === fingerprint) {
+          unchangedCount += 1;
+          continue;
+        }
+      }
 
-      const last = await prisma.lessonVersion.findFirst({ where: { lessonId: meta.id }, orderBy: { version: 'desc' } });
+      const last = await prisma.lessonVersion.findFirst({
+        where: { lessonId: meta.id },
+        orderBy: { version: 'desc' },
+      });
       const nextVersion = (last?.version ?? 0) + 1;
-      const titleText = typeof meta.title === 'string' ? meta.title : `${meta.title.tr} ${meta.title.en ?? ''}`;
-      const summaryText = typeof meta.summary === 'string' ? meta.summary : `${meta.summary.tr} ${meta.summary.en ?? ''}`;
-      const searchText = `${titleText}\n${summaryText}\n${meta.concepts.join(' ')} ${meta.tags.join(' ')}\n${lessonPlainText(lesson.doc)}`.slice(0, 200_000);
+      const titleText =
+        typeof meta.title === 'string' ? meta.title : `${meta.title.tr} ${meta.title.en ?? ''}`;
+      const summaryText =
+        typeof meta.summary === 'string'
+          ? meta.summary
+          : `${meta.summary.tr} ${meta.summary.en ?? ''}`;
+      const searchText =
+        `${titleText}\n${summaryText}\n${meta.concepts.join(' ')} ${meta.tags.join(' ')}\n${lessonPlainText(lesson.doc)}`.slice(
+          0,
+          200_000,
+        );
 
       await prisma.$transaction(async (tx) => {
         if (meta.status === 'published') {
-          await tx.lessonVersion.updateMany({ where: { lessonId: meta.id, status: 'published' }, data: { status: 'archived' } });
+          await tx.lessonVersion.updateMany({
+            where: { lessonId: meta.id, status: 'published' },
+            data: { status: 'archived' },
+          });
         }
         const version = await tx.lessonVersion.create({
-          data: { ...versionPayload, lessonId: meta.id, version: nextVersion, status: meta.status === 'published' ? 'published' : 'draft', publishedAt: meta.status === 'published' ? new Date() : null, authorId: adminId },
+          data: {
+            ...versionPayload,
+            lessonId: meta.id,
+            version: nextVersion,
+            status: meta.status === 'published' ? 'published' : 'draft',
+            publishedAt: meta.status === 'published' ? new Date() : null,
+            authorId: adminId,
+          },
         });
         if (meta.status === 'published') {
-          await tx.lesson.update({ where: { id: meta.id }, data: { publishedVersionId: version.id, searchText } });
+          await tx.lesson.update({
+            where: { id: meta.id },
+            data: { publishedVersionId: version.id, searchText },
+          });
         }
       });
       publishedCount += 1;
@@ -209,13 +391,30 @@ async function main(): Promise<void> {
 
   // Öğrenme yolları (content/paths.json yoksa müfredattaki varsayılanlar)
   const paths = content.paths.length ? content.paths : LEARNING_PATHS;
-  const existingLessonIds = new Set((await prisma.lesson.findMany({ select: { id: true } })).map((l) => l.id));
-  const existingModuleIds = new Set((await prisma.module.findMany({ select: { id: true } })).map((m) => m.id));
+  const existingLessonIds = new Set(
+    (await prisma.lesson.findMany({ select: { id: true } })).map((l) => l.id),
+  );
+  const existingModuleIds = new Set(
+    (await prisma.module.findMany({ select: { id: true } })).map((m) => m.id),
+  );
   for (const [order, p] of paths.entries()) {
     await prisma.learningPath.upsert({
       where: { id: p.id },
-      update: { slug: p.slug, title: loc(p.title), description: loc(p.description), icon: p.icon, order },
-      create: { id: p.id, slug: p.slug, title: loc(p.title), description: loc(p.description), icon: p.icon, order },
+      update: {
+        slug: p.slug,
+        title: loc(p.title),
+        description: loc(p.description),
+        icon: p.icon,
+        order,
+      },
+      create: {
+        id: p.id,
+        slug: p.slug,
+        title: loc(p.title),
+        description: loc(p.description),
+        icon: p.icon,
+        order,
+      },
     });
     await prisma.learningPathItem.deleteMany({ where: { pathId: p.id } });
     let itemOrder = 0;
@@ -229,7 +428,9 @@ async function main(): Promise<void> {
         console.warn(`  ⚠ yol ${p.id}: ders henüz yazılmamış → ${lessonId} (atlandı)`);
         continue;
       }
-      await prisma.learningPathItem.create({ data: { pathId: p.id, order: itemOrder++, moduleId, lessonId: lessonId ?? null } });
+      await prisma.learningPathItem.create({
+        data: { pathId: p.id, order: itemOrder++, moduleId, lessonId: lessonId ?? null },
+      });
     }
   }
   console.log(`✓ ${paths.length} öğrenme yolu`);
@@ -240,14 +441,29 @@ async function main(): Promise<void> {
     if (!existingModuleIds.has(m.id)) continue;
     for (const l of m.lessons) {
       if (existingLessonIds.has(l.id)) continue;
-      await prisma.lesson.create({ data: { id: l.id, slug: l.slug, moduleId: m.id, order: l.order } });
-      await prisma.lessonVersion.create({ data: { lessonId: l.id, version: 1, status: 'draft', title: loc(l.title), summary: loc(l.summary), blocks: json([]), authorId: adminId } });
+      await prisma.lesson.create({
+        data: { id: l.id, slug: l.slug, moduleId: m.id, order: l.order },
+      });
+      await prisma.lessonVersion.create({
+        data: {
+          lessonId: l.id,
+          version: 1,
+          status: 'draft',
+          title: loc(l.title),
+          summary: loc(l.summary),
+          blocks: json([]),
+          authorId: adminId,
+        },
+      });
       placeholders += 1;
     }
   }
 
-  console.log(`✓ ${publishedCount} ders sürümü yazıldı, ${unchangedCount} değişmedi, ${placeholders} taslak yer tutucu`);
+  console.log(
+    `✓ ${publishedCount} ders sürümü yazıldı, ${unchangedCount} değişmedi, ${placeholders} taslak yer tutucu`,
+  );
   console.log(`✓ ${sceneCount} sahne, ${quizCount} quiz`);
+  await clearApiCache();
 }
 
 main()

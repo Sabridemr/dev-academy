@@ -68,7 +68,10 @@ export const tokenStorage = {
   },
   async clear(): Promise<void> {
     memoryTokens = null;
-    await Promise.all([SecureStore.deleteItemAsync(ACCESS_KEY), SecureStore.deleteItemAsync(REFRESH_KEY)]);
+    await Promise.all([
+      SecureStore.deleteItemAsync(ACCESS_KEY),
+      SecureStore.deleteItemAsync(REFRESH_KEY),
+    ]);
   },
   /** Testler için bellek önbelleğini sıfırlar */
   resetMemory(): void {

@@ -24,7 +24,14 @@ config.resolver.nodeModulesPaths = [
   path.resolve(workspaceRoot, 'node_modules'),
 ];
 
-const SINGLETONS = ['react', 'react-native', 'react-native-reanimated', 'react-native-svg', 'expo', 'expo-router'];
+const SINGLETONS = [
+  'react',
+  'react-native',
+  'react-native-reanimated',
+  'react-native-svg',
+  'expo',
+  'expo-router',
+];
 
 /** Paket kök dizinini mobil projeden başlayarak bulur */
 function singletonRoot(name) {
@@ -34,7 +41,9 @@ function singletonRoot(name) {
     return null;
   }
 }
-const singletonRoots = Object.fromEntries(SINGLETONS.map((n) => [n, singletonRoot(n)]).filter(([, p]) => p));
+const singletonRoots = Object.fromEntries(
+  SINGLETONS.map((n) => [n, singletonRoot(n)]).filter(([, p]) => p),
+);
 
 const STUBS = {
   'gray-matter': path.resolve(projectRoot, 'stubs/gray-matter.js'),

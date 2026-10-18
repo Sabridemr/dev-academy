@@ -4,7 +4,13 @@ import { ApiError, isApiError } from '@/lib/api';
 import { endpoints } from '@/lib/endpoints';
 import { isOnline } from '@/lib/network';
 import { queryKeys } from '@/lib/queryClient';
-import { listDownloadedModules, readLesson, readModule, readQuizByLesson, readScene } from '@/offline/db';
+import {
+  listDownloadedModules,
+  readLesson,
+  readModule,
+  readQuizByLesson,
+  readScene,
+} from '@/offline/db';
 import { useSession } from '@/stores/session';
 
 /**
@@ -12,7 +18,10 @@ import { useSession } from '@/stores/session';
  * Çevrimiçiyken API'den okunur; ağ hatası ya da çevrimdışı durumda indirilmiş içerik döner.
  * Hiçbiri yoksa ApiError('offline') fırlatılır (UI "çevrimdışı kullanılamıyor" gösterir).
  */
-export async function networkFirst<T>(remote: () => Promise<T>, local: () => Promise<T | null>): Promise<T> {
+export async function networkFirst<T>(
+  remote: () => Promise<T>,
+  local: () => Promise<T | null>,
+): Promise<T> {
   const fallback = async (error: unknown): Promise<T> => {
     let cached: T | null = null;
     try {
@@ -55,7 +64,11 @@ export function useModule(id: string | undefined) {
   return useQuery({
     queryKey: queryKeys.module(id ?? ''),
     enabled: Boolean(id),
-    queryFn: () => networkFirst(() => endpoints.module(id!), () => readModule(id!)),
+    queryFn: () =>
+      networkFirst(
+        () => endpoints.module(id!),
+        () => readModule(id!),
+      ),
   });
 }
 
@@ -63,7 +76,11 @@ export function useLesson(id: string | undefined) {
   return useQuery({
     queryKey: queryKeys.lesson(id ?? ''),
     enabled: Boolean(id),
-    queryFn: () => networkFirst(() => endpoints.lesson(id!), () => readLesson(id!)),
+    queryFn: () =>
+      networkFirst(
+        () => endpoints.lesson(id!),
+        () => readLesson(id!),
+      ),
   });
 }
 
@@ -72,7 +89,11 @@ export function useScene(id: string | undefined) {
     queryKey: queryKeys.scene(id ?? ''),
     enabled: Boolean(id),
     staleTime: 10 * 60_000,
-    queryFn: () => networkFirst(() => endpoints.scene(id!), () => readScene(id!)),
+    queryFn: () =>
+      networkFirst(
+        () => endpoints.scene(id!),
+        () => readScene(id!),
+      ),
   });
 }
 
@@ -80,7 +101,11 @@ export function useQuiz(lessonId: string | undefined) {
   return useQuery({
     queryKey: queryKeys.quiz(lessonId ?? ''),
     enabled: Boolean(lessonId),
-    queryFn: () => networkFirst(() => endpoints.quizByLesson(lessonId!), () => readQuizByLesson(lessonId!)),
+    queryFn: () =>
+      networkFirst(
+        () => endpoints.quizByLesson(lessonId!),
+        () => readQuizByLesson(lessonId!),
+      ),
   });
 }
 
@@ -90,24 +115,46 @@ function useAuthed(): boolean {
 
 export function useProgressSummary() {
   const authed = useAuthed();
-  return useQuery({ queryKey: queryKeys.summary, enabled: authed, queryFn: () => endpoints.progressSummary() });
+  return useQuery({
+    queryKey: queryKeys.summary,
+    enabled: authed,
+    queryFn: () => endpoints.progressSummary(),
+  });
 }
 
 export function useReviews() {
   const authed = useAuthed();
-  return useQuery({ queryKey: queryKeys.reviews, enabled: authed, queryFn: () => endpoints.reviews(20), staleTime: 0 });
+  return useQuery({
+    queryKey: queryKeys.reviews,
+    enabled: authed,
+    queryFn: () => endpoints.reviews(20),
+    staleTime: 0,
+  });
 }
 
 export function useBookmarks() {
   const authed = useAuthed();
-  return useQuery({ queryKey: queryKeys.bookmarks, enabled: authed, queryFn: () => endpoints.bookmarks() });
+  return useQuery({
+    queryKey: queryKeys.bookmarks,
+    enabled: authed,
+    queryFn: () => endpoints.bookmarks(),
+  });
 }
 
 export function useNotes(lessonId?: string) {
   const authed = useAuthed();
-  return useQuery({ queryKey: queryKeys.notes(lessonId), enabled: authed, queryFn: () => endpoints.notes(lessonId) });
+  return useQuery({
+    queryKey: queryKeys.notes(lessonId),
+    enabled: authed,
+    queryFn: () => endpoints.notes(lessonId),
+  });
 }
 
 export function useDownloads() {
-  return useQuery({ queryKey: queryKeys.downloads, queryFn: () => listDownloadedModules(), staleTime: 0, networkMode: 'always' });
+  return useQuery({
+    queryKey: queryKeys.downloads,
+    queryFn: () => listDownloadedModules(),
+    staleTime: 0,
+    networkMode: 'always',
+  });
 }

@@ -55,15 +55,29 @@ describe('createApiClient', () => {
       if (u.endsWith('/auth/refresh')) {
         refreshCalls += 1;
         await refreshGate; // tüm istekler 401 alana kadar yenilemeyi beklet
-        return response({ status: 200, body: { accessToken: 'new', refreshToken: 'refresh-2', expiresIn: 900, tokenType: 'Bearer' } });
+        return response({
+          status: 200,
+          body: {
+            accessToken: 'new',
+            refreshToken: 'refresh-2',
+            expiresIn: 900,
+            tokenType: 'Bearer',
+          },
+        });
       }
-      if (auth === 'Bearer old') return response({ status: 401, body: { statusCode: 401, message: 'expired' } });
-      if (auth === 'Bearer new') return response({ status: 200, body: { path: u.replace(BASE, '') } });
+      if (auth === 'Bearer old')
+        return response({ status: 401, body: { statusCode: 401, message: 'expired' } });
+      if (auth === 'Bearer new')
+        return response({ status: 200, body: { path: u.replace(BASE, '') } });
       return response({ status: 500 });
     }) as unknown as typeof fetch;
 
     const api = createApiClient({ baseUrl: BASE, tokens, fetchImpl });
-    const pending = Promise.all([api.get<{ path: string }>('/a'), api.get<{ path: string }>('/b'), api.get<{ path: string }>('/c')]);
+    const pending = Promise.all([
+      api.get<{ path: string }>('/a'),
+      api.get<{ path: string }>('/b'),
+      api.get<{ path: string }>('/c'),
+    ]);
     // Mikro görevlerin ilerlemesine izin ver, sonra yenilemeyi serbest bırak
     await new Promise((r) => setTimeout(r, 10));
     releaseRefresh();
@@ -78,7 +92,8 @@ describe('createApiClient', () => {
     const tokens = memoryTokens({ accessToken: 'old', refreshToken: 'bad-refresh' });
     const onSessionExpired = jest.fn();
     const fetchImpl = jest.fn(async (url: RequestInfo | URL) => {
-      if (String(url).endsWith('/auth/refresh')) return response({ status: 401, body: { message: 'invalid' } });
+      if (String(url).endsWith('/auth/refresh'))
+        return response({ status: 401, body: { message: 'invalid' } });
       return response({ status: 401, body: { statusCode: 401, message: 'expired' } });
     }) as unknown as typeof fetch;
 
@@ -90,9 +105,13 @@ describe('createApiClient', () => {
 
   it('auth:false isteklerinde Authorization başlığı göndermez ve 401’de refresh denemez', async () => {
     const tokens = memoryTokens({ accessToken: 'tok', refreshToken: 'r' });
-    const fetchImpl = jest.fn(async () => response({ status: 401, body: { message: 'Invalid credentials' } })) as unknown as typeof fetch;
+    const fetchImpl = jest.fn(async () =>
+      response({ status: 401, body: { message: 'Invalid credentials' } }),
+    ) as unknown as typeof fetch;
     const api = createApiClient({ baseUrl: BASE, tokens, fetchImpl });
-    await expect(api.post('/auth/login', { email: 'a@b.co', password: 'x' }, { auth: false })).rejects.toBeInstanceOf(ApiError);
+    await expect(
+      api.post('/auth/login', { email: 'a@b.co', password: 'x' }, { auth: false }),
+    ).rejects.toBeInstanceOf(ApiError);
     expect(fetchImpl).toHaveBeenCalledTimes(1);
     const init = (fetchImpl as unknown as jest.Mock).mock.calls[0][1] as RequestInit;
     expect((init.headers as Record<string, string>).Authorization).toBeUndefined();
@@ -100,7 +119,12 @@ describe('createApiClient', () => {
 
   it('çevrimdışıyken istek atmadan offline hatası verir', async () => {
     const fetchImpl = jest.fn() as unknown as typeof fetch;
-    const api = createApiClient({ baseUrl: BASE, tokens: memoryTokens(null), fetchImpl, isOffline: () => true });
+    const api = createApiClient({
+      baseUrl: BASE,
+      tokens: memoryTokens(null),
+      fetchImpl,
+      isOffline: () => true,
+    });
     const err = await api.get('/paths').catch((e: unknown) => e);
     expect(err).toBeInstanceOf(ApiError);
     expect((err as ApiError).code).toBe('offline');
@@ -117,7 +141,9 @@ describe('createApiClient', () => {
   });
 
   it('If-None-Match gönderir ve 304’ü notModified olarak döner', async () => {
-    const fetchImpl = jest.fn(async () => response({ status: 304, headers: { ETag: 'W/"v1"' } })) as unknown as typeof fetch;
+    const fetchImpl = jest.fn(async () =>
+      response({ status: 304, headers: { ETag: 'W/"v1"' } }),
+    ) as unknown as typeof fetch;
     const api = createApiClient({ baseUrl: BASE, tokens: memoryTokens(null), fetchImpl });
     const res = await api.requestRaw('/offline/modules/a', { etag: 'W/"v1"' });
     expect(res).toEqual({ status: 304, data: null, etag: 'W/"v1"', notModified: true });

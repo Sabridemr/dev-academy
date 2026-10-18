@@ -1,5 +1,11 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { ScrollView, View, type LayoutChangeEvent, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
+import {
+  ScrollView,
+  View,
+  type LayoutChangeEvent,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -10,7 +16,17 @@ import { endpoints } from '@/lib/endpoints';
 import { queryKeys } from '@/lib/queryClient';
 import { useSession } from '@/stores/session';
 import { spacing, useTheme } from '@/theme';
-import { Button, Chip, ErrorView, IconButton, LoadingView, OfflineBanner, ProgressBar, Row, Text } from '@/components/ui';
+import {
+  Button,
+  Chip,
+  ErrorView,
+  IconButton,
+  LoadingView,
+  OfflineBanner,
+  ProgressBar,
+  Row,
+  Text,
+} from '@/components/ui';
 import { BlockRenderer } from '@/components/lesson/BlockRenderer';
 import { NoteModal } from '@/components/lesson/NoteModal';
 
@@ -32,7 +48,10 @@ export default function LessonScreen() {
   const blockOffsets = useRef(new Map<string, { y: number; h: number }>());
   const viewport = useRef({ y: 0, h: 0 });
 
-  const blocks = useMemo(() => [...(lesson.data?.blocks ?? [])].sort((a, b) => a.order - b.order), [lesson.data]);
+  const blocks = useMemo(
+    () => [...(lesson.data?.blocks ?? [])].sort((a, b) => a.order - b.order),
+    [lesson.data],
+  );
   const bookmark = bookmarks.data?.find((b) => b.lessonId === lesson.data?.id && !b.blockId);
 
   const toggleBookmark = useMutation({
@@ -55,21 +74,32 @@ export default function LessonScreen() {
   }, [progress]);
 
   const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-    viewport.current = { y: e.nativeEvent.contentOffset.y, h: e.nativeEvent.layoutMeasurement.height };
+    viewport.current = {
+      y: e.nativeEvent.contentOffset.y,
+      h: e.nativeEvent.layoutMeasurement.height,
+    };
     checkVisibility();
   };
 
   const onBlockLayout = (blockId: string) => (e: LayoutChangeEvent) => {
-    blockOffsets.current.set(blockId, { y: e.nativeEvent.layout.y, h: e.nativeEvent.layout.height });
+    blockOffsets.current.set(blockId, {
+      y: e.nativeEvent.layout.y,
+      h: e.nativeEvent.layout.height,
+    });
     checkVisibility();
   };
 
   if (lesson.isLoading) return <LoadingView />;
-  if (lesson.error || !lesson.data) return <ErrorView error={lesson.error} onRetry={() => void lesson.refetch()} />;
+  if (lesson.error || !lesson.data)
+    return <ErrorView error={lesson.error} onRetry={() => void lesson.refetch()} />;
   const l = lesson.data;
 
   return (
-    <SafeAreaView edges={['bottom']} style={{ flex: 1, backgroundColor: colors.bg }} testID="lesson-screen">
+    <SafeAreaView
+      edges={['bottom']}
+      style={{ flex: 1, backgroundColor: colors.bg }}
+      testID="lesson-screen"
+    >
       <Stack.Screen
         options={{
           title: `${l.module.code} · ${l.order}`,
@@ -83,7 +113,12 @@ export default function LessonScreen() {
                   onPress={() => toggleBookmark.mutate()}
                   testID="lesson-bookmark"
                 />
-                <IconButton icon="create-outline" label={t('lesson.note')} onPress={() => setNoteOpen(true)} testID="lesson-note" />
+                <IconButton
+                  icon="create-outline"
+                  label={t('lesson.note')}
+                  onPress={() => setNoteOpen(true)}
+                  testID="lesson-note"
+                />
               </Row>
             ) : null,
         }}
@@ -99,7 +134,11 @@ export default function LessonScreen() {
           viewport.current = { ...viewport.current, h: e.nativeEvent.layout.height };
           checkVisibility();
         }}
-        contentContainerStyle={{ padding: spacing.lg, gap: spacing.lg, paddingBottom: spacing.xxl * 2 }}
+        contentContainerStyle={{
+          padding: spacing.lg,
+          gap: spacing.lg,
+          paddingBottom: spacing.xxl * 2,
+        }}
       >
         <View style={{ gap: spacing.xs }}>
           <Text variant="caption" muted>
@@ -117,22 +156,50 @@ export default function LessonScreen() {
         </View>
 
         {blocks.map((block) => (
-          <View key={block.id} onLayout={onBlockLayout(block.id)} testID={`block-${block.type}-${block.id}`}>
-            <BlockRenderer block={block} lesson={l} onQuizPassed={() => void progress.markCompleted()} />
+          <View
+            key={block.id}
+            onLayout={onBlockLayout(block.id)}
+            testID={`block-${block.type}-${block.id}`}
+          >
+            <BlockRenderer
+              block={block}
+              lesson={l}
+              onQuizPassed={() => void progress.markCompleted()}
+            />
           </View>
         ))}
 
         {authed && !progress.completed ? (
-          <Button title={t('lesson.markComplete')} icon="checkmark-done" onPress={() => void progress.markCompleted()} testID="lesson-complete" />
+          <Button
+            title={t('lesson.markComplete')}
+            icon="checkmark-done"
+            onPress={() => void progress.markCompleted()}
+            testID="lesson-complete"
+          />
         ) : null}
         <Row style={{ justifyContent: 'space-between' }}>
           {l.prev ? (
-            <Button compact variant="secondary" icon="arrow-back" title={t('lesson.prev')} onPress={() => router.replace({ pathname: '/lesson/[id]', params: { id: l.prev!.id } })} />
+            <Button
+              compact
+              variant="secondary"
+              icon="arrow-back"
+              title={t('lesson.prev')}
+              onPress={() =>
+                router.replace({ pathname: '/lesson/[id]', params: { id: l.prev!.id } })
+              }
+            />
           ) : (
             <View />
           )}
           {l.next ? (
-            <Button compact icon="arrow-forward" title={t('lesson.next')} onPress={() => router.replace({ pathname: '/lesson/[id]', params: { id: l.next!.id } })} />
+            <Button
+              compact
+              icon="arrow-forward"
+              title={t('lesson.next')}
+              onPress={() =>
+                router.replace({ pathname: '/lesson/[id]', params: { id: l.next!.id } })
+              }
+            />
           ) : null}
         </Row>
       </ScrollView>

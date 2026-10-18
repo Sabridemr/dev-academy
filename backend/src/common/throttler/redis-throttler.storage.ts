@@ -9,11 +9,20 @@ import { RedisService } from '../redis/redis.service';
  */
 @Injectable()
 export class RedisThrottlerStorage implements ThrottlerStorage {
-  private readonly memory = new Map<string, { hits: number; expiresAt: number; blockedUntil: number }>();
+  private readonly memory = new Map<
+    string,
+    { hits: number; expiresAt: number; blockedUntil: number }
+  >();
 
   constructor(private readonly redis: RedisService) {}
 
-  async increment(key: string, ttl: number, limit: number, blockDuration: number, throttlerName: string): Promise<ThrottlerStorageRecord> {
+  async increment(
+    key: string,
+    ttl: number,
+    limit: number,
+    blockDuration: number,
+    throttlerName: string,
+  ): Promise<ThrottlerStorageRecord> {
     const fullKey = `throttle:${throttlerName}:${key}`;
     if (this.redis.isAvailable) {
       try {
@@ -25,12 +34,22 @@ export class RedisThrottlerStorage implements ThrottlerStorage {
     return this.incrementMemory(fullKey, ttl, limit, blockDuration);
   }
 
-  private async incrementRedis(key: string, ttl: number, limit: number, blockDuration: number): Promise<ThrottlerStorageRecord> {
+  private async incrementRedis(
+    key: string,
+    ttl: number,
+    limit: number,
+    blockDuration: number,
+  ): Promise<ThrottlerStorageRecord> {
     const client = this.redis.client;
     const blockKey = `${key}:blocked`;
     const blockedTtl = await client.pttl(blockKey);
     if (blockedTtl > 0) {
-      return { totalHits: limit + 1, timeToExpire: Math.ceil(blockedTtl / 1000), isBlocked: true, timeToBlockExpire: Math.ceil(blockedTtl / 1000) };
+      return {
+        totalHits: limit + 1,
+        timeToExpire: Math.ceil(blockedTtl / 1000),
+        isBlocked: true,
+        timeToBlockExpire: Math.ceil(blockedTtl / 1000),
+      };
     }
     const multi = client.multi();
     multi.incr(key);
@@ -52,14 +71,24 @@ export class RedisThrottlerStorage implements ThrottlerStorage {
     return { totalHits: hits, timeToExpire: Math.ceil(pttl / 1000), isBlocked, timeToBlockExpire };
   }
 
-  private incrementMemory(key: string, ttl: number, limit: number, blockDuration: number): ThrottlerStorageRecord {
+  private incrementMemory(
+    key: string,
+    ttl: number,
+    limit: number,
+    blockDuration: number,
+  ): ThrottlerStorageRecord {
     const now = Date.now();
     let rec = this.memory.get(key);
     if (!rec || rec.expiresAt <= now) {
       rec = { hits: 0, expiresAt: now + ttl, blockedUntil: 0 };
     }
     if (rec.blockedUntil > now) {
-      return { totalHits: limit + 1, timeToExpire: Math.ceil((rec.expiresAt - now) / 1000), isBlocked: true, timeToBlockExpire: Math.ceil((rec.blockedUntil - now) / 1000) };
+      return {
+        totalHits: limit + 1,
+        timeToExpire: Math.ceil((rec.expiresAt - now) / 1000),
+        isBlocked: true,
+        timeToBlockExpire: Math.ceil((rec.blockedUntil - now) / 1000),
+      };
     }
     rec.hits += 1;
     if (rec.hits > limit && blockDuration > 0) rec.blockedUntil = now + blockDuration;

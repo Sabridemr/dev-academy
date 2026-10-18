@@ -292,6 +292,8 @@ model Question {
   explanation Json
   difficulty  Difficulty   @default(medium)
   concepts    String[]     @default([])
+  /// Quiz dosyasından çıkarılan soru: öğrencilere gösterilmez ama deneme/tekrar geçmişi korunur
+  archived    Boolean      @default(false)
   answers     AttemptAnswer[]
   reviewCards ReviewCard[]
 

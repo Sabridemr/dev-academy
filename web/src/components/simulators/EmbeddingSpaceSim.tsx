@@ -66,7 +66,12 @@ const L = {
     pick: 'Bir kelimeye tıkla',
     analogy: 'Vektör aritmetiği',
     result: 'Sonuç',
-    clusters: { animal: 'hayvan', vehicle: 'taşıt', person: 'insan', food: 'yiyecek' } satisfies Record<Cluster, string>,
+    clusters: {
+      animal: 'hayvan',
+      vehicle: 'taşıt',
+      person: 'insan',
+      food: 'yiyecek',
+    } satisfies Record<Cluster, string>,
     hint: 'Sürükleyerek ya da kaydırıcılarla döndür. Vektörler 8 boyutlu; ekranda 3B izdüşümü görünür, benzerlik tam vektörlerle hesaplanır.',
   },
   en: {
@@ -77,7 +82,12 @@ const L = {
     pick: 'Click a word',
     analogy: 'Vector arithmetic',
     result: 'Result',
-    clusters: { animal: 'animal', vehicle: 'vehicle', person: 'person', food: 'food' } satisfies Record<Cluster, string>,
+    clusters: {
+      animal: 'animal',
+      vehicle: 'vehicle',
+      person: 'person',
+      food: 'food',
+    } satisfies Record<Cluster, string>,
     hint: 'Drag or use the sliders to rotate. Vectors are 8-dimensional; you see a 3D projection, similarity uses the full vectors.',
   },
 };
@@ -122,7 +132,7 @@ export default function EmbeddingSpaceSim({ params, onInteract }: SimulatorProps
   const [c, setC] = useState('woman');
   const drag = useRef<{ x: number; y: number; yaw: number; pitch: number } | null>(null);
 
-  const label = (id: string) => (locale === 'tr' ? WORDS.find((w) => w.id === id)?.tr ?? id : id);
+  const label = (id: string) => (locale === 'tr' ? (WORDS.find((w) => w.id === id)?.tr ?? id) : id);
 
   // Döndürme + perspektif
   const toScreen3 = ([x0, y0, z0]: [number, number, number]) => {
@@ -161,13 +171,20 @@ export default function EmbeddingSpaceSim({ params, onInteract }: SimulatorProps
     if (!drag.current) return;
     onInteract();
     setYaw(Math.round((drag.current.yaw + (e.clientX - drag.current.x) * 0.5 + 360) % 360));
-    setPitch(Math.max(-80, Math.min(80, Math.round(drag.current.pitch + (e.clientY - drag.current.y) * 0.4))));
+    setPitch(
+      Math.max(
+        -80,
+        Math.min(80, Math.round(drag.current.pitch + (e.clientY - drag.current.y) * 0.4)),
+      ),
+    );
   };
   const onPointerUp = () => {
     drag.current = null;
   };
 
-  const projected = WORDS.map((w) => ({ w, p: toScreen(vectors[w.id]) })).sort((x, y) => y.p.z - x.p.z);
+  const projected = WORDS.map((w) => ({ w, p: toScreen(vectors[w.id]) })).sort(
+    (x, y) => y.p.z - x.p.z,
+  );
   const sel = selected ? toScreen(vectors[selected]) : null;
   const ana = toScreen(analogy.v);
   const options = WORDS.map((w) => ({ id: w.id, label: label(w.id) }));
@@ -177,8 +194,28 @@ export default function EmbeddingSpaceSim({ params, onInteract }: SimulatorProps
       title={l.title}
       aside={
         <>
-          <Range label={l.yaw} value={yaw} min={0} max={359} format={(v) => `${v}°`} onChange={(v) => { onInteract(); setYaw(v); }} />
-          <Range label={l.pitch} value={pitch} min={-80} max={80} format={(v) => `${v}°`} onChange={(v) => { onInteract(); setPitch(v); }} />
+          <Range
+            label={l.yaw}
+            value={yaw}
+            min={0}
+            max={359}
+            format={(v) => `${v}°`}
+            onChange={(v) => {
+              onInteract();
+              setYaw(v);
+            }}
+          />
+          <Range
+            label={l.pitch}
+            value={pitch}
+            min={-80}
+            max={80}
+            format={(v) => `${v}°`}
+            onChange={(v) => {
+              onInteract();
+              setPitch(v);
+            }}
+          />
           {showNeighbors && (
             <div aria-live="polite">
               <p className="label">{l.neighbors}</p>
@@ -188,9 +225,14 @@ export default function EmbeddingSpaceSim({ params, onInteract }: SimulatorProps
                     <li key={nb.id} className="flex items-center gap-2">
                       <span className="w-24 truncate">{label(nb.id)}</span>
                       <span className="h-2 flex-1 overflow-hidden rounded bg-elevated">
-                        <span className="block h-full bg-primary" style={{ width: `${Math.max(0, nb.sim) * 100}%` }} />
+                        <span
+                          className="block h-full bg-primary"
+                          style={{ width: `${Math.max(0, nb.sim) * 100}%` }}
+                        />
                       </span>
-                      <span className="w-10 text-right text-xs tabular-nums">{nb.sim.toFixed(2)}</span>
+                      <span className="w-10 text-right text-xs tabular-nums">
+                        {nb.sim.toFixed(2)}
+                      </span>
                     </li>
                   ))}
                 </ol>
@@ -201,11 +243,37 @@ export default function EmbeddingSpaceSim({ params, onInteract }: SimulatorProps
           )}
           <div className="space-y-2 rounded-xl border border-border p-2">
             <p className="label">{l.analogy}</p>
-            <Select label="A" value={a} options={options} onChange={(v) => { onInteract(); setA(v); }} />
-            <Select label="− B" value={b} options={options} onChange={(v) => { onInteract(); setB(v); }} />
-            <Select label="+ C" value={c} options={options} onChange={(v) => { onInteract(); setC(v); }} />
+            <Select
+              label="A"
+              value={a}
+              options={options}
+              onChange={(v) => {
+                onInteract();
+                setA(v);
+              }}
+            />
+            <Select
+              label="− B"
+              value={b}
+              options={options}
+              onChange={(v) => {
+                onInteract();
+                setB(v);
+              }}
+            />
+            <Select
+              label="+ C"
+              value={c}
+              options={options}
+              onChange={(v) => {
+                onInteract();
+                setC(v);
+              }}
+            />
             <p className="text-sm" aria-live="polite">
-              {label(a)} − {label(b)} + {label(c)} ≈ <strong className="text-primary">{label(analogy.best.id)}</strong> <span className="text-xs text-muted">({analogy.best.sim.toFixed(2)})</span>
+              {label(a)} − {label(b)} + {label(c)} ≈{' '}
+              <strong className="text-primary">{label(analogy.best.id)}</strong>{' '}
+              <span className="text-xs text-muted">({analogy.best.sim.toFixed(2)})</span>
             </p>
           </div>
         </>
@@ -224,18 +292,53 @@ export default function EmbeddingSpaceSim({ params, onInteract }: SimulatorProps
       >
         <rect width={600} height={400} fill="var(--da-bg)" />
         {/* Eksenler */}
-        {([[1, 0, 0], [0, 1, 0], [0, 0, 1]] as [number, number, number][]).map((axis, i) => {
+        {(
+          [
+            [1, 0, 0],
+            [0, 1, 0],
+            [0, 0, 1],
+          ] as [number, number, number][]
+        ).map((axis, i) => {
           const e = toScreen3(axis);
           const nE = toScreen3([-axis[0], -axis[1], -axis[2]]);
-          return <line key={i} x1={nE.x} y1={nE.y} x2={e.x} y2={e.y} stroke="var(--da-border)" strokeDasharray="3 3" />;
+          return (
+            <line
+              key={i}
+              x1={nE.x}
+              y1={nE.y}
+              x2={e.x}
+              y2={e.y}
+              stroke="var(--da-border)"
+              strokeDasharray="3 3"
+            />
+          );
         })}
-        {showNeighbors && sel &&
+        {showNeighbors &&
+          sel &&
           neighbors.map((nb) => {
             const p = toScreen(vectors[nb.id]);
-            return <line key={nb.id} x1={sel.x} y1={sel.y} x2={p.x} y2={p.y} stroke="var(--da-primary)" strokeWidth={1 + nb.sim * 2} opacity={0.6} />;
+            return (
+              <line
+                key={nb.id}
+                x1={sel.x}
+                y1={sel.y}
+                x2={p.x}
+                y2={p.y}
+                stroke="var(--da-primary)"
+                strokeWidth={1 + nb.sim * 2}
+                opacity={0.6}
+              />
+            );
           })}
         {/* Analoji vektörü */}
-        <line x1={toScreen(vectors[analogy.best.id]).x} y1={toScreen(vectors[analogy.best.id]).y} x2={ana.x} y2={ana.y} stroke="var(--da-accent)" strokeDasharray="4 3" />
+        <line
+          x1={toScreen(vectors[analogy.best.id]).x}
+          y1={toScreen(vectors[analogy.best.id]).y}
+          x2={ana.x}
+          y2={ana.y}
+          stroke="var(--da-accent)"
+          strokeDasharray="4 3"
+        />
         <motion.path
           d="M 0 -9 L 2.6 -2.8 L 9 -2.8 L 3.9 1.2 L 5.6 7.6 L 0 3.8 L -5.6 7.6 L -3.9 1.2 L -9 -2.8 L -2.6 -2.8 Z"
           fill="var(--da-accent)"
@@ -255,11 +358,33 @@ export default function EmbeddingSpaceSim({ params, onInteract }: SimulatorProps
               aria-label={label(w.id)}
               className="cursor-pointer"
               onPointerDown={(e) => e.stopPropagation()}
-              onClick={() => { onInteract(); setSelected(isSel ? null : w.id); }}
-              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { onInteract(); setSelected(isSel ? null : w.id); } }}
+              onClick={() => {
+                onInteract();
+                setSelected(isSel ? null : w.id);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  onInteract();
+                  setSelected(isSel ? null : w.id);
+                }
+              }}
             >
-              <circle cx={p.x} cy={p.y} r={(isSel ? 8 : 5.5) * p.s} fill={CLUSTER_COLOR[w.cluster]} stroke={isSel || isNb ? 'var(--da-fg)' : 'var(--da-surface)'} strokeWidth={isSel ? 2 : 1} opacity={0.5 + 0.5 * Math.min(1, p.s)} />
-              <text x={p.x + 8} y={p.y + 4} fontSize={11 * Math.min(1.2, p.s)} fill={isSel ? 'var(--da-fg)' : 'var(--da-muted)'} fontWeight={isSel ? 600 : 400}>
+              <circle
+                cx={p.x}
+                cy={p.y}
+                r={(isSel ? 8 : 5.5) * p.s}
+                fill={CLUSTER_COLOR[w.cluster]}
+                stroke={isSel || isNb ? 'var(--da-fg)' : 'var(--da-surface)'}
+                strokeWidth={isSel ? 2 : 1}
+                opacity={0.5 + 0.5 * Math.min(1, p.s)}
+              />
+              <text
+                x={p.x + 8}
+                y={p.y + 4}
+                fontSize={11 * Math.min(1.2, p.s)}
+                fill={isSel ? 'var(--da-fg)' : 'var(--da-muted)'}
+                fontWeight={isSel ? 600 : 400}
+              >
                 {label(w.id)}
               </text>
             </g>
@@ -268,7 +393,9 @@ export default function EmbeddingSpaceSim({ params, onInteract }: SimulatorProps
         {(Object.keys(CLUSTER_COLOR) as Cluster[]).map((cl, i) => (
           <g key={cl} transform={`translate(${12 + i * 90}, 384)`}>
             <circle cx={5} cy={0} r={5} fill={CLUSTER_COLOR[cl]} />
-            <text x={14} y={4} fontSize={10} fill="var(--da-fg)">{l.clusters[cl]}</text>
+            <text x={14} y={4} fontSize={10} fill="var(--da-fg)">
+              {l.clusters[cl]}
+            </text>
           </g>
         ))}
       </svg>

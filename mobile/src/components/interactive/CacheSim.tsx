@@ -20,7 +20,12 @@ const KEYS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
 const POLICIES: EvictionPolicy[] = ['lru', 'lfu', 'fifo'];
 const WRITE_POLICIES: WritePolicy[] = ['cache-aside', 'write-through', 'write-back'];
 
-function initialState(capacity: number, policy: EvictionPolicy, writePolicy: WritePolicy, ttl: number): CacheState {
+function initialState(
+  capacity: number,
+  policy: EvictionPolicy,
+  writePolicy: WritePolicy,
+  ttl: number,
+): CacheState {
   return seedCacheDb(createCacheState({ capacity, policy, writePolicy, defaultTtlMs: ttl }), KEYS);
 }
 
@@ -31,7 +36,9 @@ export function CacheSim({ params, onInteract }: SimProps) {
   const startCapacity = Math.max(2, Math.min(8, paramNumber(params, 'capacity', 4)));
   const startPolicy = paramString(params, 'policy', POLICIES, 'lru');
   const startWrite = paramString(params, 'writePolicy', WRITE_POLICIES, 'cache-aside');
-  const [state, setState] = useState<CacheState>(() => initialState(startCapacity, startPolicy, startWrite, 0));
+  const [state, setState] = useState<CacheState>(() =>
+    initialState(startCapacity, startPolicy, startWrite, 0),
+  );
   const [selected, setSelected] = useState('A');
   const [lastHit, setLastHit] = useState<boolean | null>(null);
   const t0 = useRef(Date.now());
@@ -58,10 +65,35 @@ export function CacheSim({ params, onInteract }: SimProps) {
 
   return (
     <View style={{ gap: spacing.md }} testID="sim-cache">
-      <SegmentedControl label={t('sim.eviction')} value={state.policy} onChange={(policy) => setState((s) => ({ ...s, policy }))} options={POLICIES.map((p) => ({ value: p, label: p.toUpperCase() }))} />
-      <SegmentedControl label={t('sim.writePolicy')} wrap value={state.writePolicy} onChange={(writePolicy) => setState((s) => ({ ...s, writePolicy }))} options={WRITE_POLICIES.map((p) => ({ value: p, label: p }))} />
-      <Stepper label={t('sim.capacity')} value={state.capacity} min={2} max={8} onChange={(capacity) => setState((s) => ({ ...s, capacity }))} />
-      <Stepper label={t('sim.ttl')} value={state.defaultTtlMs} min={0} max={10000} step={1000} onChange={(defaultTtlMs) => setState((s) => ({ ...s, defaultTtlMs }))} format={(v) => (v === 0 ? '∞' : `${v / 1000}s`)} />
+      <SegmentedControl
+        label={t('sim.eviction')}
+        value={state.policy}
+        onChange={(policy) => setState((s) => ({ ...s, policy }))}
+        options={POLICIES.map((p) => ({ value: p, label: p.toUpperCase() }))}
+      />
+      <SegmentedControl
+        label={t('sim.writePolicy')}
+        wrap
+        value={state.writePolicy}
+        onChange={(writePolicy) => setState((s) => ({ ...s, writePolicy }))}
+        options={WRITE_POLICIES.map((p) => ({ value: p, label: p }))}
+      />
+      <Stepper
+        label={t('sim.capacity')}
+        value={state.capacity}
+        min={2}
+        max={8}
+        onChange={(capacity) => setState((s) => ({ ...s, capacity }))}
+      />
+      <Stepper
+        label={t('sim.ttl')}
+        value={state.defaultTtlMs}
+        min={0}
+        max={10000}
+        step={1000}
+        onChange={(defaultTtlMs) => setState((s) => ({ ...s, defaultTtlMs }))}
+        format={(v) => (v === 0 ? '∞' : `${v / 1000}s`)}
+      />
 
       <Text variant="label">{t('sim.key')}</Text>
       <View style={styles.keys}>
@@ -83,12 +115,35 @@ export function CacheSim({ params, onInteract }: SimProps) {
         })}
       </View>
       <Row wrap>
-        <Button compact title={`${t('sim.read')} ${selected}`} icon="download-outline" onPress={() => read(selected)} />
-        <Button compact variant="secondary" title={`${t('sim.write')} ${selected}`} icon="create-outline" onPress={write} />
-        {state.writePolicy === 'write-back' ? <Button compact variant="secondary" title={t('sim.flush')} icon="save-outline" onPress={() => setState(cacheFlush(state))} /> : null}
+        <Button
+          compact
+          title={`${t('sim.read')} ${selected}`}
+          icon="download-outline"
+          onPress={() => read(selected)}
+        />
+        <Button
+          compact
+          variant="secondary"
+          title={`${t('sim.write')} ${selected}`}
+          icon="create-outline"
+          onPress={write}
+        />
+        {state.writePolicy === 'write-back' ? (
+          <Button
+            compact
+            variant="secondary"
+            title={t('sim.flush')}
+            icon="save-outline"
+            onPress={() => setState(cacheFlush(state))}
+          />
+        ) : null}
       </Row>
       {lastHit !== null ? (
-        <Text variant="label" color={lastHit ? colors.success : colors.warning} accessibilityLiveRegion="polite">
+        <Text
+          variant="label"
+          color={lastHit ? colors.success : colors.warning}
+          accessibilityLiveRegion="polite"
+        >
           {lastHit ? 'HIT' : 'MISS'}
         </Text>
       ) : null}
@@ -100,7 +155,16 @@ export function CacheSim({ params, onInteract }: SimProps) {
         {Array.from({ length: state.capacity }).map((_, i) => {
           const e = state.entries[i];
           return (
-            <View key={i} style={[styles.slot, { borderColor: e ? (e.dirty ? colors.warning : colors.primary) : colors.border, backgroundColor: e ? withAlpha(colors.primary, 0.08) : colors.elevated }]}>
+            <View
+              key={i}
+              style={[
+                styles.slot,
+                {
+                  borderColor: e ? (e.dirty ? colors.warning : colors.primary) : colors.border,
+                  backgroundColor: e ? withAlpha(colors.primary, 0.08) : colors.elevated,
+                },
+              ]}
+            >
               <Text variant="label">{e ? e.key : '—'}</Text>
               {e ? (
                 <Text variant="caption" muted>
@@ -112,7 +176,9 @@ export function CacheSim({ params, onInteract }: SimProps) {
         })}
       </View>
 
-      <Text variant="caption">{t('sim.hitRatio')}: {(ratio * 100).toFixed(0)}%</Text>
+      <Text variant="caption">
+        {t('sim.hitRatio')}: {(ratio * 100).toFixed(0)}%
+      </Text>
       <ProgressBar value={ratio} color={colors.success} height={8} label={t('sim.hitRatio')} />
       <StatRow>
         <Stat label="HIT" value={String(state.hits)} color={colors.success} />
@@ -125,7 +191,18 @@ export function CacheSim({ params, onInteract }: SimProps) {
           {ev.op.toUpperCase()} {ev.key}: {ev.detail}
         </Text>
       ))}
-      <Button compact variant="ghost" title={t('sim.reset')} icon="refresh" onPress={() => { setState(initialState(state.capacity, state.policy, state.writePolicy, state.defaultTtlMs)); setLastHit(null); }} />
+      <Button
+        compact
+        variant="ghost"
+        title={t('sim.reset')}
+        icon="refresh"
+        onPress={() => {
+          setState(
+            initialState(state.capacity, state.policy, state.writePolicy, state.defaultTtlMs),
+          );
+          setLastHit(null);
+        }}
+      />
     </View>
   );
 }
@@ -133,5 +210,12 @@ export function CacheSim({ params, onInteract }: SimProps) {
 const styles = StyleSheet.create({
   keys: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   entries: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  slot: { width: 64, height: 56, borderRadius: radius.sm, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center' },
+  slot: {
+    width: 64,
+    height: 56,
+    borderRadius: radius.sm,
+    borderWidth: 1.5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });

@@ -8,10 +8,13 @@ import { spacing, useTheme } from '@/theme';
 import { Button, Card, Row, Text } from '@/components/ui';
 import { MarkdownView } from '@/components/lesson/MarkdownView';
 import { CacheSim } from './CacheSim';
+import { CapacityEstimatorSim } from './CapacityEstimatorSim';
 import { ConsistentHashingSim } from './ConsistentHashingSim';
 import { GradientDescentSim } from './GradientDescentSim';
 import { LoadBalancerSim } from './LoadBalancerSim';
+import { PipelineSim } from './PipelineSim';
 import { RateLimiterSim } from './RateLimiterSim';
+import { RequestJourneySim } from './RequestJourneySim';
 import { useInteractiveSession, type SimProps } from './common';
 
 /**
@@ -25,6 +28,9 @@ export const MOBILE_SIMULATORS: Partial<Record<InteractiveType, ComponentType<Si
   'rate-limiter': RateLimiterSim,
   'consistent-hashing': ConsistentHashingSim,
   'gradient-descent': GradientDescentSim,
+  'request-journey': RequestJourneySim,
+  'capacity-estimator': CapacityEstimatorSim,
+  pipeline: PipelineSim,
 };
 
 export function isSupportedOnMobile(type: InteractiveType): boolean {
@@ -33,7 +39,13 @@ export function isSupportedOnMobile(type: InteractiveType): boolean {
 
 type InteractiveBlock = Extract<LessonBlock, { type: 'interactive' }>;
 
-export function InteractiveBlockView({ block, lessonId }: { block: InteractiveBlock; lessonId: string }) {
+export function InteractiveBlockView({
+  block,
+  lessonId,
+}: {
+  block: InteractiveBlock;
+  lessonId: string;
+}) {
   const { t, tl } = useI18n();
   const { colors } = useTheme();
   const onInteract = useInteractiveSession(block.interactive, lessonId, block.params);
@@ -59,7 +71,9 @@ export function InteractiveBlockView({ block, lessonId }: { block: InteractiveBl
             title={t('sim.openOnWeb')}
             variant="secondary"
             icon="open-outline"
-            onPress={() => void Linking.openURL(`${env.webUrl}/lessons/${encodeURIComponent(lessonId)}`)}
+            onPress={() =>
+              void Linking.openURL(`${env.webUrl}/lessons/${encodeURIComponent(lessonId)}`)
+            }
           />
         </View>
       )}

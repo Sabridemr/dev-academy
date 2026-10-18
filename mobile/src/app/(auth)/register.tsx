@@ -17,7 +17,11 @@ export default function RegisterScreen() {
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [fieldErrors, setFieldErrors] = useState<{ displayName?: string; email?: string; password?: string }>({});
+  const [fieldErrors, setFieldErrors] = useState<{
+    displayName?: string;
+    email?: string;
+    password?: string;
+  }>({});
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -26,7 +30,12 @@ export default function RegisterScreen() {
 
   const submit = async () => {
     setError(null);
-    const parsed = RegisterSchema.safeParse({ displayName: displayName.trim(), email: email.trim(), password, locale });
+    const parsed = RegisterSchema.safeParse({
+      displayName: displayName.trim(),
+      email: email.trim(),
+      password,
+      locale,
+    });
     if (!parsed.success) {
       const f = parsed.error.flatten().fieldErrors;
       setFieldErrors({
@@ -48,14 +57,46 @@ export default function RegisterScreen() {
   };
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <Screen edges={['top', 'bottom']} contentStyle={{ justifyContent: 'center', flexGrow: 1 }} testID="register-screen">
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <Screen
+        edges={['top', 'bottom']}
+        contentStyle={{ justifyContent: 'center', flexGrow: 1 }}
+        testID="register-screen"
+      >
         <Text variant="heading" accessibilityRole="header">
           {t('auth.registerTitle')}
         </Text>
-        <TextField label={t('auth.displayName')} value={displayName} onChangeText={setDisplayName} autoComplete="name" textContentType="name" error={fieldErrors.displayName} />
-        <TextField label={t('auth.email')} value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" autoComplete="email" textContentType="emailAddress" error={fieldErrors.email} />
-        <TextField label={t('auth.password')} value={password} onChangeText={setPassword} secureTextEntry autoComplete="new-password" textContentType="newPassword" error={fieldErrors.password} onSubmitEditing={() => void submit()} />
+        <TextField
+          label={t('auth.displayName')}
+          value={displayName}
+          onChangeText={setDisplayName}
+          autoComplete="name"
+          textContentType="name"
+          error={fieldErrors.displayName}
+        />
+        <TextField
+          label={t('auth.email')}
+          value={email}
+          onChangeText={setEmail}
+          autoCapitalize="none"
+          keyboardType="email-address"
+          autoComplete="email"
+          textContentType="emailAddress"
+          error={fieldErrors.email}
+        />
+        <TextField
+          label={t('auth.password')}
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+          autoComplete="new-password"
+          textContentType="newPassword"
+          error={fieldErrors.password}
+          onSubmitEditing={() => void submit()}
+        />
         {error ? (
           <Text color={colors.danger} accessibilityLiveRegion="assertive">
             {error}

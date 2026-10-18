@@ -45,3 +45,26 @@ test('arama sonuç döndürür', async ({ page }) => {
   await page.goto('/search?q=round-robin');
   await expect(page.getByRole('link', { name: /Load Balancer/ }).first()).toBeVisible();
 });
+
+test('CSP başlığı var ve ders sayfası (kod, diyagram, animasyon) ihlalsiz çalışır', async ({
+  page,
+}) => {
+  const violations: string[] = [];
+  page.on('console', (msg) => {
+    if (/Content Security Policy|Refused to/i.test(msg.text())) violations.push(msg.text());
+  });
+  const res = await page.goto('/lessons/a-05-load-balancing');
+  const csp = res?.headers()['content-security-policy'] ?? '';
+  expect(csp).toContain("object-src 'none'");
+  expect(csp).toContain("frame-ancestors 'self'");
+  await expect(page.locator('.diagram-svg svg').first()).toBeVisible();
+  const player = page.getByRole('figure', { name: /Round-Robin ile/ });
+  await player.getByRole('button', { name: 'Adım ileri' }).click();
+  // Shiki (WASM) vurgulaması CSP altında çalışmalı: düz <pre> yerini .shiki çıktısına bırakır
+  await page
+    .locator('pre')
+    .first()
+    .evaluate((el) => el.scrollIntoView());
+  await expect(page.locator('pre.shiki').first()).toBeVisible({ timeout: 15_000 });
+  expect(violations).toEqual([]);
+});

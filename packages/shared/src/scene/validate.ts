@@ -39,7 +39,11 @@ export function validateScene(input: unknown): SceneValidationResult {
 
   scene.nodes.forEach((n, idx) => {
     if (nodeIds.has(n.id)) {
-      issues.push({ path: `nodes.${idx}.id`, message: `Tekrarlanan düğüm kimliği: ${n.id}`, severity: 'error' });
+      issues.push({
+        path: `nodes.${idx}.id`,
+        message: `Tekrarlanan düğüm kimliği: ${n.id}`,
+        severity: 'error',
+      });
     }
     nodeIds.add(n.id);
   });
@@ -48,7 +52,11 @@ export function validateScene(input: unknown): SceneValidationResult {
     if (n.parent) {
       const parent = scene.nodes.find((p) => p.id === n.parent);
       if (!parent) {
-        issues.push({ path: `nodes.${idx}.parent`, message: `Bilinmeyen üst düğüm: ${n.parent}`, severity: 'error' });
+        issues.push({
+          path: `nodes.${idx}.parent`,
+          message: `Bilinmeyen üst düğüm: ${n.parent}`,
+          severity: 'error',
+        });
       } else if (parent.kind !== 'group' && parent.kind !== 'region' && parent.kind !== 'zone') {
         issues.push({
           path: `nodes.${idx}.parent`,
@@ -58,20 +66,36 @@ export function validateScene(input: unknown): SceneValidationResult {
       }
     }
     if (n.x < 0 || n.x > scene.canvas.width || n.y < 0 || n.y > scene.canvas.height) {
-      issues.push({ path: `nodes.${idx}`, message: `Düğüm tuval dışında: ${n.id}`, severity: 'warning' });
+      issues.push({
+        path: `nodes.${idx}`,
+        message: `Düğüm tuval dışında: ${n.id}`,
+        severity: 'warning',
+      });
     }
   });
 
   scene.edges.forEach((e, idx) => {
     if (edgeIds.has(e.id)) {
-      issues.push({ path: `edges.${idx}.id`, message: `Tekrarlanan kenar kimliği: ${e.id}`, severity: 'error' });
+      issues.push({
+        path: `edges.${idx}.id`,
+        message: `Tekrarlanan kenar kimliği: ${e.id}`,
+        severity: 'error',
+      });
     }
     edgeIds.add(e.id);
     if (!nodeIds.has(e.from)) {
-      issues.push({ path: `edges.${idx}.from`, message: `Bilinmeyen düğüm: ${e.from}`, severity: 'error' });
+      issues.push({
+        path: `edges.${idx}.from`,
+        message: `Bilinmeyen düğüm: ${e.from}`,
+        severity: 'error',
+      });
     }
     if (!nodeIds.has(e.to)) {
-      issues.push({ path: `edges.${idx}.to`, message: `Bilinmeyen düğüm: ${e.to}`, severity: 'error' });
+      issues.push({
+        path: `edges.${idx}.to`,
+        message: `Bilinmeyen düğüm: ${e.to}`,
+        severity: 'error',
+      });
     }
   });
 
@@ -79,25 +103,53 @@ export function validateScene(input: unknown): SceneValidationResult {
   scene.steps.forEach((s, idx) => {
     const base = `steps.${idx}`;
     if (stepIds.has(s.id)) {
-      issues.push({ path: `${base}.id`, message: `Tekrarlanan adım kimliği: ${s.id}`, severity: 'error' });
+      issues.push({
+        path: `${base}.id`,
+        message: `Tekrarlanan adım kimliği: ${s.id}`,
+        severity: 'error',
+      });
     }
     stepIds.add(s.id);
 
     s.highlight.nodes.forEach((id) => {
-      if (!nodeIds.has(id)) issues.push({ path: `${base}.highlight.nodes`, message: `Bilinmeyen düğüm: ${id}`, severity: 'error' });
+      if (!nodeIds.has(id))
+        issues.push({
+          path: `${base}.highlight.nodes`,
+          message: `Bilinmeyen düğüm: ${id}`,
+          severity: 'error',
+        });
     });
     s.highlight.edges.forEach((id) => {
-      if (!edgeIds.has(id)) issues.push({ path: `${base}.highlight.edges`, message: `Bilinmeyen kenar: ${id}`, severity: 'error' });
+      if (!edgeIds.has(id))
+        issues.push({
+          path: `${base}.highlight.edges`,
+          message: `Bilinmeyen kenar: ${id}`,
+          severity: 'error',
+        });
     });
     Object.keys(s.nodeStates).forEach((id) => {
-      if (!nodeIds.has(id)) issues.push({ path: `${base}.nodeStates.${id}`, message: `Bilinmeyen düğüm: ${id}`, severity: 'error' });
+      if (!nodeIds.has(id))
+        issues.push({
+          path: `${base}.nodeStates.${id}`,
+          message: `Bilinmeyen düğüm: ${id}`,
+          severity: 'error',
+        });
     });
     Object.keys(s.edgeStates).forEach((id) => {
-      if (!edgeIds.has(id)) issues.push({ path: `${base}.edgeStates.${id}`, message: `Bilinmeyen kenar: ${id}`, severity: 'error' });
+      if (!edgeIds.has(id))
+        issues.push({
+          path: `${base}.edgeStates.${id}`,
+          message: `Bilinmeyen kenar: ${id}`,
+          severity: 'error',
+        });
     });
     s.packets.forEach((p, pIdx) => {
       if (!edgeIds.has(p.edge)) {
-        issues.push({ path: `${base}.packets.${pIdx}.edge`, message: `Bilinmeyen kenar: ${p.edge}`, severity: 'error' });
+        issues.push({
+          path: `${base}.packets.${pIdx}.edge`,
+          message: `Bilinmeyen kenar: ${p.edge}`,
+          severity: 'error',
+        });
       }
       const total = p.startAt + p.durationMs * p.repeat + p.repeatGapMs * (p.repeat - 1);
       if (total > s.durationMs * 1.5) {
@@ -110,7 +162,11 @@ export function validateScene(input: unknown): SceneValidationResult {
     });
     s.annotations.forEach((a, aIdx) => {
       if (a.target && !nodeIds.has(a.target)) {
-        issues.push({ path: `${base}.annotations.${aIdx}.target`, message: `Bilinmeyen düğüm: ${a.target}`, severity: 'error' });
+        issues.push({
+          path: `${base}.annotations.${aIdx}.target`,
+          message: `Bilinmeyen düğüm: ${a.target}`,
+          severity: 'error',
+        });
       }
     });
   });

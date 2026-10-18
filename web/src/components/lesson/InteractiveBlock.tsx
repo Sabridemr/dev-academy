@@ -6,7 +6,19 @@ import { useI18n } from '@/i18n';
 import { useTrackInteractive } from '@/lib/hooks';
 import { SIMULATORS } from '../simulators/registry';
 
-export function InteractiveBlock({ type, params, title, instructions, lessonId }: { type: InteractiveType; params: Record<string, unknown>; title?: LocalizedString; instructions?: LocalizedString; lessonId?: string }) {
+export function InteractiveBlock({
+  type,
+  params,
+  title,
+  instructions,
+  lessonId,
+}: {
+  type: InteractiveType;
+  params: Record<string, unknown>;
+  title?: LocalizedString;
+  instructions?: LocalizedString;
+  lessonId?: string;
+}) {
   const { t, tl } = useI18n();
   const track = useTrackInteractive(type, lessonId);
   const Sim = SIMULATORS[type];

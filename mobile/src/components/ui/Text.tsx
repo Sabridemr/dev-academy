@@ -2,7 +2,8 @@ import { Platform, Text as RNText, type TextProps, type TextStyle } from 'react-
 import { fontSize, useTheme } from '@/theme';
 
 /** Tipografi varyantları — tüm metinler tema rengini otomatik alır */
-export type TextVariant = 'title' | 'heading' | 'subheading' | 'body' | 'caption' | 'label' | 'mono';
+export type TextVariant =
+  'title' | 'heading' | 'subheading' | 'body' | 'caption' | 'label' | 'mono';
 
 interface Props extends TextProps {
   variant?: TextVariant;
@@ -12,7 +13,11 @@ interface Props extends TextProps {
   align?: TextStyle['textAlign'];
 }
 
-export const MONO_FONT = Platform.select({ ios: 'Menlo', android: 'monospace', default: 'monospace' });
+export const MONO_FONT = Platform.select({
+  ios: 'Menlo',
+  android: 'monospace',
+  default: 'monospace',
+});
 
 const VARIANTS: Record<TextVariant, TextStyle> = {
   title: { fontSize: fontSize.xxl, fontWeight: '800', lineHeight: 34 },

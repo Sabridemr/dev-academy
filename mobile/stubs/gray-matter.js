@@ -4,7 +4,9 @@
  * Mobil paket bu fonksiyonu hiç çağırmaz; çağrılırsa açık bir hata verir.
  */
 function matter() {
-  throw new Error('gray-matter mobil uygulamada desteklenmiyor (yalnızca Node ortamında kullanılır).');
+  throw new Error(
+    'gray-matter mobil uygulamada desteklenmiyor (yalnızca Node ortamında kullanılır).',
+  );
 }
 matter.stringify = matter;
 matter.read = matter;

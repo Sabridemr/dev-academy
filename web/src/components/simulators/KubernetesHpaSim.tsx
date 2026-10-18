@@ -35,7 +35,10 @@ const L = {
     max: 'Maks replika',
     window: 'Ölçek küçültme stabilizasyon penceresi',
     pattern: 'Yük deseni',
-    patterns: { manual: 'Elle (kaydırıcı)', spike: 'Ani artış', wave: 'Dalga' } satisfies Record<Pattern, string>,
+    patterns: { manual: 'Elle (kaydırıcı)', spike: 'Ani artış', wave: 'Dalga' } satisfies Record<
+      Pattern,
+      string
+    >,
     util: 'Ortalama CPU',
     replicas: 'Hazır pod',
     desired: 'İstenen',
@@ -56,7 +59,10 @@ const L = {
     max: 'Max replicas',
     window: 'Scale-down stabilization window',
     pattern: 'Load pattern',
-    patterns: { manual: 'Manual (slider)', spike: 'Spike', wave: 'Wave' } satisfies Record<Pattern, string>,
+    patterns: { manual: 'Manual (slider)', spike: 'Spike', wave: 'Wave' } satisfies Record<
+      Pattern,
+      string
+    >,
     util: 'Average CPU',
     replicas: 'Ready pods',
     desired: 'Desired',
@@ -79,11 +85,15 @@ export default function KubernetesHpaSim({ params, onInteract }: SimulatorProps)
   const [minR, setMinR] = useState(() => numParam(params, 'minReplicas', 2, 1, 20));
   const [maxR, setMaxR] = useState(() => numParam(params, 'maxReplicas', 10, 1, 30));
   const [target, setTarget] = useState(() => numParam(params, 'targetCpuPercent', 50, 10, 95));
-  const [windowSec, setWindowSec] = useState(() => numParam(params, 'stabilizationWindowSec', 300, 0, 600));
+  const [windowSec, setWindowSec] = useState(() =>
+    numParam(params, 'stabilizationWindowSec', 300, 0, 600),
+  );
   const [load, setLoad] = useState(() => request * 1.2);
   const [pattern, setPattern] = useState<Pattern>('manual');
   const [running, setRunning] = useState(false);
-  const [pods, setPods] = useState<Pod[]>(() => Array.from({ length: minR }, (_, i) => ({ id: i + 1, state: 'running', age: 10 })));
+  const [pods, setPods] = useState<Pod[]>(() =>
+    Array.from({ length: minR }, (_, i) => ({ id: i + 1, state: 'running', age: 10 })),
+  );
   const [history, setHistory] = useState<Sample[]>([]);
   const [tick, setTick] = useState(0);
   const recs = useRef<number[]>([]);
@@ -104,42 +114,58 @@ export default function KubernetesHpaSim({ params, onInteract }: SimulatorProps)
 
   useEffect(() => {
     if (!running) return;
-    const id = setInterval(() => {
-      tickRef.current += 1;
-      const next = tickRef.current;
-      setTick(next);
-      const c = cfg.current;
-      // Yük deseni
-      let curLoad = c.load;
-      if (c.pattern === 'spike') curLoad = next % 40 < 12 ? request * 6 : request * 1.2;
-      if (c.pattern === 'wave') curLoad = Math.round(request * (3 + 2.6 * Math.sin(next / 7)));
-      if (curLoad !== c.load) setLoad(curLoad);
+    const id = setInterval(
+      () => {
+        tickRef.current += 1;
+        const next = tickRef.current;
+        setTick(next);
+        const c = cfg.current;
+        // Yük deseni
+        let curLoad = c.load;
+        if (c.pattern === 'spike') curLoad = next % 40 < 12 ? request * 6 : request * 1.2;
+        if (c.pattern === 'wave') curLoad = Math.round(request * (3 + 2.6 * Math.sin(next / 7)));
+        if (curLoad !== c.load) setLoad(curLoad);
 
-      // Yaşlandır: pending → running, terminating → sil
-      let ps = podsRef.current
-        .filter((p) => p.state !== 'terminating')
-        .map((p) => ({ ...p, age: p.age + 1, state: (p.state === 'pending' && p.age + 1 >= POD_START_TICKS ? 'running' : p.state) as PodState }));
-      const readyNow = ps.filter((p) => p.state === 'running').length;
-      const current = ps.length; // pending'ler de sayılır (HPA mevcut replikayı spec'ten alır)
-      const u = readyNow > 0 ? (curLoad / (readyNow * request)) * 100 : 300;
-      const ratio = u / c.target;
-      let desired = Math.abs(ratio - 1) <= TOLERANCE ? current : Math.ceil(current * ratio);
-      desired = Math.max(c.minR, Math.min(c.maxR, desired));
-      // Stabilizasyon: küçültmede penceredeki en yüksek öneri kullanılır
-      recs.current.push(desired);
-      const windowTicks = Math.max(1, Math.round(c.windowSec / SYNC_SEC));
-      if (recs.current.length > windowTicks) recs.current.splice(0, recs.current.length - windowTicks);
-      const final = desired < current ? Math.min(current, Math.max(...recs.current)) : desired;
-      if (final > current) {
-        for (let i = 0; i < final - current; i++) ps.push({ id: ++podSeq.current, state: 'pending', age: 0 });
-      } else if (final < current) {
-        // En yeni pod'lar önce sonlandırılır
-        let toKill = current - final;
-        ps = [...ps].reverse().map((p) => (toKill-- > 0 ? { ...p, state: 'terminating' as PodState } : p)).reverse();
-      }
-      commitPods(ps);
-      setHistory((h) => [...h, { util: Math.min(300, u), replicas: readyNow, desired: final }].slice(-HISTORY));
-    }, reduced ? 700 : 450);
+        // Yaşlandır: pending → running, terminating → sil
+        let ps = podsRef.current
+          .filter((p) => p.state !== 'terminating')
+          .map((p) => ({
+            ...p,
+            age: p.age + 1,
+            state: (p.state === 'pending' && p.age + 1 >= POD_START_TICKS
+              ? 'running'
+              : p.state) as PodState,
+          }));
+        const readyNow = ps.filter((p) => p.state === 'running').length;
+        const current = ps.length; // pending'ler de sayılır (HPA mevcut replikayı spec'ten alır)
+        const u = readyNow > 0 ? (curLoad / (readyNow * request)) * 100 : 300;
+        const ratio = u / c.target;
+        let desired = Math.abs(ratio - 1) <= TOLERANCE ? current : Math.ceil(current * ratio);
+        desired = Math.max(c.minR, Math.min(c.maxR, desired));
+        // Stabilizasyon: küçültmede penceredeki en yüksek öneri kullanılır
+        recs.current.push(desired);
+        const windowTicks = Math.max(1, Math.round(c.windowSec / SYNC_SEC));
+        if (recs.current.length > windowTicks)
+          recs.current.splice(0, recs.current.length - windowTicks);
+        const final = desired < current ? Math.min(current, Math.max(...recs.current)) : desired;
+        if (final > current) {
+          for (let i = 0; i < final - current; i++)
+            ps.push({ id: ++podSeq.current, state: 'pending', age: 0 });
+        } else if (final < current) {
+          // En yeni pod'lar önce sonlandırılır
+          let toKill = current - final;
+          ps = [...ps]
+            .reverse()
+            .map((p) => (toKill-- > 0 ? { ...p, state: 'terminating' as PodState } : p))
+            .reverse();
+        }
+        commitPods(ps);
+        setHistory((h) =>
+          [...h, { util: Math.min(300, u), replicas: readyNow, desired: final }].slice(-HISTORY),
+        );
+      },
+      reduced ? 700 : 450,
+    );
     return () => clearInterval(id);
   }, [running, reduced, request]);
 
@@ -147,7 +173,13 @@ export default function KubernetesHpaSim({ params, onInteract }: SimulatorProps)
     setRunning(false);
     recs.current = [];
     podSeq.current = minR;
-    commitPods(Array.from({ length: minR }, (_, i) => ({ id: i + 1, state: 'running' as PodState, age: 10 })));
+    commitPods(
+      Array.from({ length: minR }, (_, i) => ({
+        id: i + 1,
+        state: 'running' as PodState,
+        age: 10,
+      })),
+    );
     setHistory([]);
     setTick(0);
     tickRef.current = 0;
@@ -156,15 +188,27 @@ export default function KubernetesHpaSim({ params, onInteract }: SimulatorProps)
   const desiredNow = history.length ? history[history.length - 1].desired : pods.length;
   const chartMaxR = Math.max(maxR, 1);
   const hx = (i: number) => (i / (HISTORY - 1)) * 560 + 20;
-  const utilPath = history.map((s, i) => `${hx(i)},${130 - (Math.min(200, s.util) / 200) * 110}`).join(' ');
-  const repPath = history.map((s, i) => `${hx(i)},${130 - (s.replicas / chartMaxR) * 110}`).join(' ');
+  const utilPath = history
+    .map((s, i) => `${hx(i)},${130 - (Math.min(200, s.util) / 200) * 110}`)
+    .join(' ');
+  const repPath = history
+    .map((s, i) => `${hx(i)},${130 - (s.replicas / chartMaxR) * 110}`)
+    .join(' ');
 
   return (
     <SimShell
       title={l.title}
       toolbar={
         <>
-          <button type="button" className="btn-primary" aria-pressed={running} onClick={() => { onInteract(); setRunning((r) => !r); }}>
+          <button
+            type="button"
+            className="btn-primary"
+            aria-pressed={running}
+            onClick={() => {
+              onInteract();
+              setRunning((r) => !r);
+            }}
+          >
             {running ? <Pause size={14} /> : <Play size={14} />} {running ? l.pause : l.start}
           </button>
           <button type="button" className="btn-ghost" onClick={reset}>
@@ -174,17 +218,89 @@ export default function KubernetesHpaSim({ params, onInteract }: SimulatorProps)
       }
       aside={
         <>
-          <Select label={l.pattern} value={pattern} options={(['manual', 'spike', 'wave'] as const).map((p) => ({ id: p, label: l.patterns[p] }))} onChange={(v) => { onInteract(); setPattern(v); }} />
-          <Range label={l.load} value={Math.round(load)} min={0} max={request * 12} step={25} onChange={(v) => { onInteract(); setPattern('manual'); setLoad(v); }} />
-          <Range label={l.target} value={target} min={10} max={95} step={5} format={(v) => `${v}%`} onChange={(v) => { onInteract(); setTarget(v); }} />
-          <Range label={l.min} value={minR} min={1} max={Math.min(maxR, 10)} onChange={(v) => { onInteract(); setMinR(v); }} />
-          <Range label={l.max} value={maxR} min={Math.max(minR, 2)} max={30} onChange={(v) => { onInteract(); setMaxR(v); }} />
-          <Range label={l.window} value={windowSec} min={0} max={600} step={15} format={(v) => `${v}s`} onChange={(v) => { onInteract(); setWindowSec(v); }} />
+          <Select
+            label={l.pattern}
+            value={pattern}
+            options={(['manual', 'spike', 'wave'] as const).map((p) => ({
+              id: p,
+              label: l.patterns[p],
+            }))}
+            onChange={(v) => {
+              onInteract();
+              setPattern(v);
+            }}
+          />
+          <Range
+            label={l.load}
+            value={Math.round(load)}
+            min={0}
+            max={request * 12}
+            step={25}
+            onChange={(v) => {
+              onInteract();
+              setPattern('manual');
+              setLoad(v);
+            }}
+          />
+          <Range
+            label={l.target}
+            value={target}
+            min={10}
+            max={95}
+            step={5}
+            format={(v) => `${v}%`}
+            onChange={(v) => {
+              onInteract();
+              setTarget(v);
+            }}
+          />
+          <Range
+            label={l.min}
+            value={minR}
+            min={1}
+            max={Math.min(maxR, 10)}
+            onChange={(v) => {
+              onInteract();
+              setMinR(v);
+            }}
+          />
+          <Range
+            label={l.max}
+            value={maxR}
+            min={Math.max(minR, 2)}
+            max={30}
+            onChange={(v) => {
+              onInteract();
+              setMaxR(v);
+            }}
+          />
+          <Range
+            label={l.window}
+            value={windowSec}
+            min={0}
+            max={600}
+            step={15}
+            format={(v) => `${v}s`}
+            onChange={(v) => {
+              onInteract();
+              setWindowSec(v);
+            }}
+          />
           <div className="grid grid-cols-2 gap-2" aria-live="polite">
-            <Stat label={l.util} value={`${Math.round(util)}%`} tone={util > target * 1.1 ? 'danger' : util < target * 0.9 ? 'warning' : 'success'} />
-            <Stat label={l.replicas} value={`${ready}/${pods.filter((p) => p.state !== 'terminating').length}`} />
+            <Stat
+              label={l.util}
+              value={`${Math.round(util)}%`}
+              tone={util > target * 1.1 ? 'danger' : util < target * 0.9 ? 'warning' : 'success'}
+            />
+            <Stat
+              label={l.replicas}
+              value={`${ready}/${pods.filter((p) => p.state !== 'terminating').length}`}
+            />
             <Stat label={l.desired} value={desiredNow} tone="primary" />
-            <Stat label={l.time} value={`${Math.floor((tick * SYNC_SEC) / 60)}m ${(tick * SYNC_SEC) % 60}s`} />
+            <Stat
+              label={l.time}
+              value={`${Math.floor((tick * SYNC_SEC) / 60)}m ${(tick * SYNC_SEC) % 60}s`}
+            />
           </div>
           <p className="font-mono text-[11px] text-muted">{l.formula}</p>
           <p className="text-xs text-muted">{l.note}</p>
@@ -209,9 +325,21 @@ export default function KubernetesHpaSim({ params, onInteract }: SimulatorProps)
               >
                 <p className="font-mono font-semibold">pod-{p.id}</p>
                 <div className="mt-1 h-1.5 overflow-hidden rounded bg-elevated">
-                  <div className="h-full" style={{ width: `${Math.min(100, podUtil)}%`, background: podUtil > target * 1.1 ? 'var(--da-danger)' : 'var(--da-success)' }} />
+                  <div
+                    className="h-full"
+                    style={{
+                      width: `${Math.min(100, podUtil)}%`,
+                      background: podUtil > target * 1.1 ? 'var(--da-danger)' : 'var(--da-success)',
+                    }}
+                  />
                 </div>
-                <p className="mt-0.5 text-muted">{p.state === 'running' ? `${Math.round(podUtil)}%` : p.state === 'pending' ? l.pending : l.terminating}</p>
+                <p className="mt-0.5 text-muted">
+                  {p.state === 'running'
+                    ? `${Math.round(podUtil)}%`
+                    : p.state === 'pending'
+                      ? l.pending
+                      : l.terminating}
+                </p>
               </motion.div>
             );
           })}
@@ -221,14 +349,46 @@ export default function KubernetesHpaSim({ params, onInteract }: SimulatorProps)
       <figure className="mt-3">
         <figcaption className="label">{l.chart}</figcaption>
         <svg viewBox="0 0 600 150" className="h-auto w-full" role="img" aria-label={l.chart}>
-          <rect x={20} y={20} width={560} height={110} fill="var(--da-bg)" stroke="var(--da-border)" />
+          <rect
+            x={20}
+            y={20}
+            width={560}
+            height={110}
+            fill="var(--da-bg)"
+            stroke="var(--da-border)"
+          />
           {/* Hedef çizgisi */}
-          <line x1={20} x2={580} y1={130 - (target / 200) * 110} y2={130 - (target / 200) * 110} stroke="var(--da-success)" strokeDasharray="5 4" />
-          <text x={576} y={126 - (target / 200) * 110} textAnchor="end" fontSize={9} fill="var(--da-success)">target {target}%</text>
+          <line
+            x1={20}
+            x2={580}
+            y1={130 - (target / 200) * 110}
+            y2={130 - (target / 200) * 110}
+            stroke="var(--da-success)"
+            strokeDasharray="5 4"
+          />
+          <text
+            x={576}
+            y={126 - (target / 200) * 110}
+            textAnchor="end"
+            fontSize={9}
+            fill="var(--da-success)"
+          >
+            target {target}%
+          </text>
           <polyline points={utilPath} fill="none" stroke="var(--da-danger)" strokeWidth={2} />
-          <polyline points={repPath} fill="none" stroke="var(--da-primary)" strokeWidth={2} strokeDasharray="1 0" />
-          <text x={24} y={14} fontSize={10} fill="var(--da-danger)">— CPU % (0–200)</text>
-          <text x={140} y={14} fontSize={10} fill="var(--da-primary)">— replicas (0–{chartMaxR})</text>
+          <polyline
+            points={repPath}
+            fill="none"
+            stroke="var(--da-primary)"
+            strokeWidth={2}
+            strokeDasharray="1 0"
+          />
+          <text x={24} y={14} fontSize={10} fill="var(--da-danger)">
+            — CPU % (0–200)
+          </text>
+          <text x={140} y={14} fontSize={10} fill="var(--da-primary)">
+            — replicas (0–{chartMaxR})
+          </text>
         </svg>
       </figure>
     </SimShell>

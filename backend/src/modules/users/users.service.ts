@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import type { RegisterPushTokenDto, UpdateProfileDto, UserProfile } from '@devacademy/shared';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { toProfile } from '../auth/auth.service';
@@ -7,7 +7,9 @@ import { toProfile } from '../auth/auth.service';
 export class UsersService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async getProfile(userId: string): Promise<UserProfile & { reminderHour: number | null; timezone: string }> {
+  async getProfile(
+    userId: string,
+  ): Promise<UserProfile & { reminderHour: number | null; timezone: string }> {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user || user.deletedAt) throw new NotFoundException('Kullanıcı bulunamadı');
     return { ...toProfile(user), reminderHour: user.reminderHour, timezone: user.timezone };
@@ -34,20 +36,43 @@ export class UsersService {
 
   async softDelete(userId: string): Promise<void> {
     await this.prisma.$transaction([
-      this.prisma.refreshToken.updateMany({ where: { userId, revokedAt: null }, data: { revokedAt: new Date() } }),
+      this.prisma.refreshToken.updateMany({
+        where: { userId, revokedAt: null },
+        data: { revokedAt: new Date() },
+      }),
       this.prisma.pushToken.deleteMany({ where: { userId } }),
       this.prisma.user.update({
         where: { id: userId },
-        data: { deletedAt: new Date(), email: `deleted_${userId}@users.devacademy.local`, displayName: 'Silinmiş kullanıcı', avatarUrl: null, passwordHash: null },
+        data: {
+          deletedAt: new Date(),
+          email: `deleted_${userId}@users.devacademy.local`,
+          displayName: 'Silinmiş kullanıcı',
+          avatarUrl: null,
+          passwordHash: null,
+        },
       }),
     ]);
   }
 
   async registerPushToken(userId: string, dto: RegisterPushTokenDto): Promise<void> {
+    // Başka bir hesaba kayıtlı token'ı devralmak, o kullanıcının bildirimlerini çalmak demektir
+    const existing = await this.prisma.pushToken.findUnique({ where: { token: dto.token } });
+    if (existing && existing.userId !== userId)
+      throw new ConflictException('Bu cihaz token’ı başka bir hesaba kayıtlı');
     await this.prisma.pushToken.upsert({
       where: { token: dto.token },
-      update: { userId, platform: dto.platform, deviceName: dto.deviceName, lastSeenAt: new Date() },
+      update: {
+        userId,
+        platform: dto.platform,
+        deviceName: dto.deviceName,
+        lastSeenAt: new Date(),
+      },
       create: { userId, token: dto.token, platform: dto.platform, deviceName: dto.deviceName },
     });
+  }
+
+  /** Çıkışta cihaz token'ını bırak; aynı cihazda sonraki hesap kaydedebilsin */
+  async unregisterPushToken(userId: string, token: string): Promise<void> {
+    await this.prisma.pushToken.deleteMany({ where: { userId, token } });
   }
 }

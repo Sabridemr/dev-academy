@@ -27,10 +27,16 @@ export function ModulesView() {
           const pct = m.lessonCount ? Math.round((done / m.lessonCount) * 100) : 0;
           return (
             <li key={m.id} className="relative">
-              <span className="absolute -left-[37px] top-5 flex h-6 w-6 items-center justify-center rounded-full border-2 border-bg text-[10px] font-bold text-white" style={{ background: m.color }}>
+              <span
+                className="absolute -left-[37px] top-5 flex h-6 w-6 items-center justify-center rounded-full border-2 border-bg text-[10px] font-bold text-white"
+                style={{ background: m.color }}
+              >
                 {m.code}
               </span>
-              <Link href={`/modules/${m.id}`} className="card flex items-center gap-4 p-5 transition hover:border-primary">
+              <Link
+                href={`/modules/${m.id}`}
+                className="card flex items-center gap-4 p-5 transition hover:border-primary"
+              >
                 <Icon className="shrink-0" style={{ color: m.color }} />
                 <div className="min-w-0 flex-1">
                   <p className="font-semibold">{tl(m.title)}</p>
@@ -38,9 +44,14 @@ export function ModulesView() {
                   {m.completedCount !== undefined && (
                     <div className="mt-2 flex items-center gap-2">
                       <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-elevated">
-                        <div className="h-full rounded-full" style={{ width: `${pct}%`, background: m.color }} />
+                        <div
+                          className="h-full rounded-full"
+                          style={{ width: `${pct}%`, background: m.color }}
+                        />
                       </div>
-                      <span className="text-xs text-muted">{t('module.completed', { done, total: m.lessonCount })}</span>
+                      <span className="text-xs text-muted">
+                        {t('module.completed', { done, total: m.lessonCount })}
+                      </span>
                     </div>
                   )}
                 </div>

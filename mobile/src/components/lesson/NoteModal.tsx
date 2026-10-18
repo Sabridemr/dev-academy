@@ -8,7 +8,15 @@ import { Button, Row, Text } from '@/components/ui';
 import { errorText } from '@/utils/errors';
 
 /** Ders notu ekleme penceresi (POST /notes) */
-export function NoteModal({ visible, lessonId, onClose }: { visible: boolean; lessonId: string; onClose: () => void }) {
+export function NoteModal({
+  visible,
+  lessonId,
+  onClose,
+}: {
+  visible: boolean;
+  lessonId: string;
+  onClose: () => void;
+}) {
   const { t } = useI18n();
   const { colors } = useTheme();
   const qc = useQueryClient();
@@ -24,8 +32,13 @@ export function NoteModal({ visible, lessonId, onClose }: { visible: boolean; le
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.backdrop}>
-        <View style={[styles.sheet, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={styles.backdrop}
+      >
+        <View
+          style={[styles.sheet, { backgroundColor: colors.surface, borderColor: colors.border }]}
+        >
           <Text variant="subheading" accessibilityRole="header">
             {t('lesson.note')}
           </Text>
@@ -38,7 +51,10 @@ export function NoteModal({ visible, lessonId, onClose }: { visible: boolean; le
             maxLength={5000}
             autoFocus
             accessibilityLabel={t('lesson.note')}
-            style={[styles.input, { color: colors.fg, borderColor: colors.border, backgroundColor: colors.bg }]}
+            style={[
+              styles.input,
+              { color: colors.fg, borderColor: colors.border, backgroundColor: colors.bg },
+            ]}
           />
           {save.error ? (
             <Text variant="caption" color={colors.danger}>
@@ -47,7 +63,14 @@ export function NoteModal({ visible, lessonId, onClose }: { visible: boolean; le
           ) : null}
           <Row style={{ justifyContent: 'flex-end' }}>
             <Button compact variant="ghost" title={t('common.cancel')} onPress={onClose} />
-            <Button compact title={t('lesson.saveNote')} icon="save-outline" disabled={!body.trim()} loading={save.isPending} onPress={() => save.mutate()} />
+            <Button
+              compact
+              title={t('lesson.saveNote')}
+              icon="save-outline"
+              disabled={!body.trim()}
+              loading={save.isPending}
+              onPress={() => save.mutate()}
+            />
           </Row>
         </View>
       </KeyboardAvoidingView>
@@ -57,6 +80,19 @@ export function NoteModal({ visible, lessonId, onClose }: { visible: boolean; le
 
 const styles = StyleSheet.create({
   backdrop: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.4)' },
-  sheet: { borderTopLeftRadius: radius.lg, borderTopRightRadius: radius.lg, borderWidth: 1, padding: spacing.lg, gap: spacing.md },
-  input: { minHeight: 140, borderWidth: 1, borderRadius: radius.md, padding: spacing.md, fontSize: 16, textAlignVertical: 'top' },
+  sheet: {
+    borderTopLeftRadius: radius.lg,
+    borderTopRightRadius: radius.lg,
+    borderWidth: 1,
+    padding: spacing.lg,
+    gap: spacing.md,
+  },
+  input: {
+    minHeight: 140,
+    borderWidth: 1,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    fontSize: 16,
+    textAlignVertical: 'top',
+  },
 });

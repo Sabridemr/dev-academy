@@ -93,6 +93,10 @@ Her türün web ve mobilde bir bileşeni vardır; ek öznitelikler `params` olar
 - `steps`: her adımda `narration`, `highlight`, `nodeStates`, `edgeStates`, `packets`, `annotations`. Adımlar varsayılan olarak önceki durumu devralır (`inherit: true`).
 - `a11y.description` zorunludur; `prefers-reduced-motion` açıkken paketler animasyonsuz gösterilir ve transkript listelenir.
 
+## İnteraktif parametreler
+
+`:::interactive{type="..." key=value}` bloğundaki her parametre, o simülatörün okuduğu bir anahtar olmalıdır. Kabul edilen anahtarlar `packages/shared/src/content/schema.ts` içindeki `INTERACTIVE_PARAMS` listesindedir; listede olmayan parametre `pnpm content:validate` tarafından hata olarak raporlanır. Bir simülatöre yeni parametre eklerken listeyi de güncelleyin (web birim testi ikisinin uyumunu kontrol eder). Yönerge metni yalnızca simülatörde gerçekten bulunan kontrollere atıf yapmalıdır.
+
 ## Quiz (`quiz.json`)
 
 ```json
@@ -115,7 +119,7 @@ Her türün web ve mobilde bir bileşeni vardır; ek öznitelikler `params` olar
 }
 ```
 
-Soru tipleri: `single`, `multiple`, `truefalse`, `order`. Her derste 3–5 soru bulunmalıdır. `concepts` alanı yanlış cevaplarda tekrar listesine (spaced repetition) eklenecek kavramı belirler.
+Soru tipleri: `single`, `multiple`, `truefalse`, `order`. Her derste 3–6 soru bulunmalıdır (genellikle 5); doğrulayıcı bu aralığın dışını hata sayar. `concepts` alanı yanlış cevaplarda tekrar listesine (spaced repetition) eklenecek kavramı belirler.
 
 ## SVG diyagramlar
 

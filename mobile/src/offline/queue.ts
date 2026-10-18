@@ -1,7 +1,7 @@
 import type { AttemptResult, SubmitAttemptDto, UpdateProgressDto } from '@devacademy/shared';
 import { isApiError } from '@/lib/api';
 import { endpoints } from '@/lib/endpoints';
-import { getJson, KV_KEYS, setJson } from '@/lib/storage';
+import { getJson, kv, KV_KEYS, setJson } from '@/lib/storage';
 
 /**
  * ÇEVRİMDIŞI KUYRUKLAR (MMKV)
@@ -31,7 +31,10 @@ export function readProgressQueue(): ProgressMap {
 }
 
 /** İki ilerleme kaydını birleştirir (saf fonksiyon — test edilir) */
-export function mergeProgress(prev: QueuedProgress | undefined, next: QueuedProgress): QueuedProgress {
+export function mergeProgress(
+  prev: QueuedProgress | undefined,
+  next: QueuedProgress,
+): QueuedProgress {
   if (!prev) return next;
   return {
     lessonId: next.lessonId,
@@ -45,7 +48,11 @@ export function mergeProgress(prev: QueuedProgress | undefined, next: QueuedProg
 
 export function enqueueProgress(lessonId: string, dto: UpdateProgressDto): void {
   const queue = readProgressQueue();
-  queue[lessonId] = mergeProgress(queue[lessonId], { ...dto, lessonId, queuedAt: new Date().toISOString() });
+  queue[lessonId] = mergeProgress(queue[lessonId], {
+    ...dto,
+    lessonId,
+    queuedAt: new Date().toISOString(),
+  });
   setJson(KV_KEYS.progressQueue, queue);
 }
 
@@ -84,7 +91,14 @@ export function flushProgressQueue(): Promise<number> {
         sent += 1;
         removeProgress(lessonId, item.queuedAt);
       } catch (e) {
-        if (isApiError(e) && (e.isConnectivity || e.code === 'server' || e.code === 'unauthorized' || e.code === 'rate_limited')) break;
+        if (
+          isApiError(e) &&
+          (e.isConnectivity ||
+            e.code === 'server' ||
+            e.code === 'unauthorized' ||
+            e.code === 'rate_limited')
+        )
+          break;
         // Kalıcı hata (ör. ders silindi) → kaydı at
         removeProgress(lessonId, item.queuedAt);
       }
@@ -122,16 +136,32 @@ export function queuedAttemptFor(quizId: string): QueuedAttempt | undefined {
 }
 
 /** Bekleyen quiz denemelerini gönderir; sonuçları döner */
-export async function flushAttemptQueue(): Promise<{ attempt: QueuedAttempt; result: AttemptResult }[]> {
+export async function flushAttemptQueue(): Promise<
+  { attempt: QueuedAttempt; result: AttemptResult }[]
+> {
   const out: { attempt: QueuedAttempt; result: AttemptResult }[] = [];
   for (const attempt of readAttemptQueue()) {
     try {
       const result = await endpoints.submitAttempt(attempt.quizId, attempt.dto);
       out.push({ attempt, result });
-      setJson(KV_KEYS.attemptQueue, readAttemptQueue().filter((a) => a.queuedAt !== attempt.queuedAt));
+      setJson(
+        KV_KEYS.attemptQueue,
+        readAttemptQueue().filter((a) => a.queuedAt !== attempt.queuedAt),
+      );
     } catch (e) {
-      if (isApiError(e) && (e.isConnectivity || e.code === 'server' || e.code === 'unauthorized')) break;
-      setJson(KV_KEYS.attemptQueue, readAttemptQueue().filter((a) => a.queuedAt !== attempt.queuedAt));
+      // Geçici hatalarda (bağlantı, sunucu, oturum, hız sınırı) deneme kuyrukta kalır; kalıcı hatada düşürülür
+      if (
+        isApiError(e) &&
+        (e.isConnectivity ||
+          e.code === 'server' ||
+          e.code === 'unauthorized' ||
+          e.code === 'rate_limited')
+      )
+        break;
+      setJson(
+        KV_KEYS.attemptQueue,
+        readAttemptQueue().filter((a) => a.queuedAt !== attempt.queuedAt),
+      );
     }
   }
   return out;
@@ -152,6 +182,13 @@ export function takeAttemptResult(quizId: string): AttemptResult | undefined {
     setJson(ATTEMPT_RESULTS_KEY, map);
   }
   return r;
+}
+
+/** Çıkışta tüm yerel kuyrukları siler: bir kullanıcının bekleyen verisi sonraki hesaba gönderilmesin */
+export function clearQueues(): void {
+  kv.delete(KV_KEYS.progressQueue);
+  kv.delete(KV_KEYS.attemptQueue);
+  kv.delete(ATTEMPT_RESULTS_KEY);
 }
 
 /** Tüm kuyrukları boşaltır (çevrimiçi olunca / açılışta) */

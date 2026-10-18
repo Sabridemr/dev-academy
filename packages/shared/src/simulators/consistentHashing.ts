@@ -23,7 +23,7 @@ export interface HashRing {
 }
 
 export function hashToRing(value: string): number {
-  return (hashString(value) % 100000) / 100000 * RING_SIZE;
+  return ((hashString(value) % 100000) / 100000) * RING_SIZE;
 }
 
 export function createRing(nodes: string[], virtualNodes = 3): HashRing {
@@ -38,7 +38,10 @@ export function createRing(nodes: string[], virtualNodes = 3): HashRing {
 }
 
 /** Anahtarın halka üzerindeki konumu ve saat yönünde ilk düğüm */
-export function locateKey(ring: HashRing, key: string): { position: number; owner: string | null; point: RingPoint | null } {
+export function locateKey(
+  ring: HashRing,
+  key: string,
+): { position: number; owner: string | null; point: RingPoint | null } {
   const position = hashToRing(key);
   if (ring.points.length === 0) return { position, owner: null, point: null };
   const point = ring.points.find((p) => p.position >= position) ?? ring.points[0];
@@ -51,7 +54,10 @@ export function addRingNode(ring: HashRing, nodeId: string): HashRing {
 }
 
 export function removeRingNode(ring: HashRing, nodeId: string): HashRing {
-  return createRing(ring.nodes.filter((n) => n !== nodeId), ring.virtualNodes);
+  return createRing(
+    ring.nodes.filter((n) => n !== nodeId),
+    ring.virtualNodes,
+  );
 }
 
 /** Her düğüme düşen anahtar sayısı */
@@ -65,7 +71,11 @@ export function ringDistribution(ring: HashRing, keys: string[]): Record<string,
 }
 
 /** İki halka arasında kaç anahtar sahibini değiştirdi */
-export function movedKeys(before: HashRing, after: HashRing, keys: string[]): { moved: number; total: number; ratio: number } {
+export function movedKeys(
+  before: HashRing,
+  after: HashRing,
+  keys: string[],
+): { moved: number; total: number; ratio: number } {
   let moved = 0;
   for (const k of keys) {
     if (locateKey(before, k).owner !== locateKey(after, k).owner) moved += 1;
@@ -79,9 +89,14 @@ export function modHashOwner(nodes: string[], key: string): string | null {
   return nodes[hashString(key) % nodes.length];
 }
 
-export function modHashMoved(beforeNodes: string[], afterNodes: string[], keys: string[]): { moved: number; total: number; ratio: number } {
+export function modHashMoved(
+  beforeNodes: string[],
+  afterNodes: string[],
+  keys: string[],
+): { moved: number; total: number; ratio: number } {
   let moved = 0;
-  for (const k of keys) if (modHashOwner(beforeNodes, k) !== modHashOwner(afterNodes, k)) moved += 1;
+  for (const k of keys)
+    if (modHashOwner(beforeNodes, k) !== modHashOwner(afterNodes, k)) moved += 1;
   return { moved, total: keys.length, ratio: keys.length ? moved / keys.length : 0 };
 }
 

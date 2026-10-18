@@ -24,14 +24,16 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
     setSession(res.user, res.tokens);
     const next = params.get('next');
     const path = params.get('path');
-    if (mode === 'register' || !res.user.selectedPathId) router.push(`/onboarding${path ? `?path=${path}` : ''}`);
+    if (mode === 'register' || !res.user.selectedPathId)
+      router.push(`/onboarding${path ? `?path=${path}` : ''}`);
     else router.push(next && next.startsWith('/') ? next : '/dashboard');
   };
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setMessage(null);
-    const payload = mode === 'register' ? { ...form, locale } : { email: form.email, password: form.password };
+    const payload =
+      mode === 'register' ? { ...form, locale } : { email: form.email, password: form.password };
     const schema = mode === 'register' ? RegisterSchema : LoginSchema;
     const parsed = schema.safeParse(payload);
     if (!parsed.success) {
@@ -41,24 +43,44 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
     setErrors({});
     setSubmitting(true);
     try {
-      const res = await api<AuthResponse>(`/auth/${mode}`, { method: 'POST', body: parsed.data, anonymous: true });
+      const res = await api<AuthResponse>(`/auth/${mode}`, {
+        method: 'POST',
+        body: parsed.data,
+        anonymous: true,
+      });
       onSuccess(res);
     } catch (err) {
       if (err instanceof ApiError) {
         setMessage(err.body.message ?? t('common.error'));
-        if (err.body.details) setErrors(Object.fromEntries(err.body.details.map((d) => [d.path, d.message])));
+        if (err.body.details)
+          setErrors(Object.fromEntries(err.body.details.map((d) => [d.path, d.message])));
       } else setMessage(t('common.error'));
     } finally {
       setSubmitting(false);
     }
   };
 
-  const field = (name: 'email' | 'password' | 'displayName', type: string, label: string, autoComplete: string) => (
+  const field = (
+    name: 'email' | 'password' | 'displayName',
+    type: string,
+    label: string,
+    autoComplete: string,
+  ) => (
     <div>
       <label htmlFor={name} className="label">
         {label}
       </label>
-      <input id={name} type={type} autoComplete={autoComplete} className="input" value={form[name]} onChange={(e) => setForm((f) => ({ ...f, [name]: e.target.value }))} aria-invalid={Boolean(errors[name])} aria-describedby={errors[name] ? `${name}-err` : undefined} required />
+      <input
+        id={name}
+        type={type}
+        autoComplete={autoComplete}
+        className="input"
+        value={form[name]}
+        onChange={(e) => setForm((f) => ({ ...f, [name]: e.target.value }))}
+        aria-invalid={Boolean(errors[name])}
+        aria-describedby={errors[name] ? `${name}-err` : undefined}
+        required
+      />
       {errors[name] && (
         <p id={`${name}-err`} className="mt-1 text-xs text-danger">
           {errors[name]}
@@ -70,11 +92,18 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
   return (
     <div className="mx-auto max-w-md px-4 py-16">
       <div className="card p-6">
-        <h1 className="mb-6 text-2xl font-bold">{mode === 'login' ? t('auth.loginTitle') : t('auth.registerTitle')}</h1>
+        <h1 className="mb-6 text-2xl font-bold">
+          {mode === 'login' ? t('auth.loginTitle') : t('auth.registerTitle')}
+        </h1>
         <form onSubmit={onSubmit} className="space-y-4" noValidate>
           {mode === 'register' && field('displayName', 'text', t('auth.displayName'), 'name')}
           {field('email', 'email', t('auth.email'), 'email')}
-          {field('password', 'password', t('auth.password'), mode === 'login' ? 'current-password' : 'new-password')}
+          {field(
+            'password',
+            'password',
+            t('auth.password'),
+            mode === 'login' ? 'current-password' : 'new-password',
+          )}
           {message && (
             <p className="rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger" role="alert">
               {message}
@@ -85,7 +114,8 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
           </button>
         </form>
         <div className="my-5 flex items-center gap-3 text-xs text-muted">
-          <span className="h-px flex-1 bg-border" /> {t('auth.or')} <span className="h-px flex-1 bg-border" />
+          <span className="h-px flex-1 bg-border" /> {t('auth.or')}{' '}
+          <span className="h-px flex-1 bg-border" />
         </div>
         <OAuthButtons onSuccess={onSuccess} onError={setMessage} />
         <p className="mt-6 text-center text-sm text-muted">

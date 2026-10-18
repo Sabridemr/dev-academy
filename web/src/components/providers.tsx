@@ -10,7 +10,12 @@ export function Providers({ locale, children }: { locale: string; children: Reac
     () =>
       new QueryClient({
         defaultOptions: {
-          queries: { staleTime: 60_000, retry: (count, err) => count < 2 && !(err as { status?: number }).status?.toString().startsWith('4'), refetchOnWindowFocus: false },
+          queries: {
+            staleTime: 60_000,
+            retry: (count, err) =>
+              count < 2 && !(err as { status?: number }).status?.toString().startsWith('4'),
+            refetchOnWindowFocus: false,
+          },
         },
       }),
   );

@@ -3,7 +3,13 @@
 import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { RotateCcw } from 'lucide-react';
-import { DEFAULT_CAPACITY_INPUT, estimateCapacity, formatBytes, formatNumber, type CapacityInput } from '@devacademy/shared';
+import {
+  DEFAULT_CAPACITY_INPUT,
+  estimateCapacity,
+  formatBytes,
+  formatNumber,
+  type CapacityInput,
+} from '@devacademy/shared';
 import { useI18n } from '@/i18n';
 import { usePrefersReducedMotion } from '@/lib/hooks';
 import { Range, SimShell, Stat } from './ui';
@@ -92,7 +98,8 @@ const L = {
 
 function initialInput(params: Record<string, unknown>): CapacityInput {
   const out = { ...DEFAULT_CAPACITY_INPUT };
-  for (const f of FIELDS) out[f.key] = numParam(params, f.key, DEFAULT_CAPACITY_INPUT[f.key], f.min, f.max);
+  for (const f of FIELDS)
+    out[f.key] = numParam(params, f.key, DEFAULT_CAPACITY_INPUT[f.key], f.min, f.max);
   return out;
 }
 
@@ -116,9 +123,17 @@ export default function CapacityEstimatorSim({ params, onInteract }: SimulatorPr
 
   const bars = [
     { label: l.readQps, v: est.readQps, color: 'var(--da-primary)' },
-    { label: l.peakRead, v: est.peakReadQps, color: 'color-mix(in srgb, var(--da-primary) 60%, var(--da-danger))' },
+    {
+      label: l.peakRead,
+      v: est.peakReadQps,
+      color: 'color-mix(in srgb, var(--da-primary) 60%, var(--da-danger))',
+    },
     { label: l.writeQps, v: est.writeQps, color: 'var(--da-success)' },
-    { label: l.peakWrite, v: est.peakWriteQps, color: 'color-mix(in srgb, var(--da-success) 60%, var(--da-danger))' },
+    {
+      label: l.peakWrite,
+      v: est.peakWriteQps,
+      color: 'color-mix(in srgb, var(--da-success) 60%, var(--da-danger))',
+    },
   ];
   const maxLog = Math.max(1, ...bars.map((b) => Math.log10(b.v + 1)));
   const rwRatio = est.writeQps > 0 ? est.readQps / est.writeQps : Infinity;
@@ -136,18 +151,47 @@ export default function CapacityEstimatorSim({ params, onInteract }: SimulatorPr
           <p className="label">{l.inputs}</p>
           {FIELDS.map((f) =>
             f.ratio ? (
-              <Range key={f.key} label={l.fields[f.key]} value={input[f.key]} min={0} max={1} step={0.01} format={(v) => `${Math.round(v * 100)}%`} onChange={(v) => update(f.key, String(v))} />
+              <Range
+                key={f.key}
+                label={l.fields[f.key]}
+                value={input[f.key]}
+                min={0}
+                max={1}
+                step={0.01}
+                format={(v) => `${Math.round(v * 100)}%`}
+                onChange={(v) => update(f.key, String(v))}
+              />
             ) : (
               <label key={f.key} className="block">
                 <span className="label flex justify-between gap-2">
                   <span className="normal-case">{l.fields[f.key]}</span>
-                  <span className="tabular-nums text-fg">{f.key.endsWith('Bytes') ? formatBytes(input[f.key]) : fmt(input[f.key])}</span>
+                  <span className="tabular-nums text-fg">
+                    {f.key.endsWith('Bytes') ? formatBytes(input[f.key]) : fmt(input[f.key])}
+                  </span>
                 </span>
-                <input type="number" className="input" value={input[f.key]} min={f.min} max={f.max} step={f.step} onChange={(e) => update(f.key, e.target.value)} />
+                <input
+                  type="number"
+                  className="input"
+                  value={input[f.key]}
+                  min={f.min}
+                  max={f.max}
+                  step={f.step}
+                  onChange={(e) => update(f.key, e.target.value)}
+                />
               </label>
             ),
           )}
-          <Range label={l.serverQps} value={serverQps} min={100} max={20000} step={100} onChange={(v) => { onInteract(); setServerQps(v); }} />
+          <Range
+            label={l.serverQps}
+            value={serverQps}
+            min={100}
+            max={20000}
+            step={100}
+            onChange={(v) => {
+              onInteract();
+              setServerQps(v);
+            }}
+          />
         </>
       }
     >
@@ -161,10 +205,18 @@ export default function CapacityEstimatorSim({ params, onInteract }: SimulatorPr
         <Stat label={l.servers} value={fmt(est.appServers)} tone="primary" />
         <Stat label={l.daily} value={formatBytes(est.dailyWriteBytes)} />
         <Stat label={l.storage} value={formatBytes(est.totalStorageBytes)} />
-        <Stat label={l.storageRep} value={formatBytes(est.totalStorageWithReplicationBytes)} tone="danger" />
+        <Stat
+          label={l.storageRep}
+          value={formatBytes(est.totalStorageWithReplicationBytes)}
+          tone="danger"
+        />
         <Stat label={l.ingress} value={`${formatBytes(est.ingressBytesPerSec)}/s`} />
         <Stat label={l.egress} value={`${formatBytes(est.egressBytesPerSec)}/s`} />
-        <Stat label={l.peakEgress} value={`${formatBytes(est.peakEgressBytesPerSec)}/s`} tone="warning" />
+        <Stat
+          label={l.peakEgress}
+          value={`${formatBytes(est.peakEgressBytesPerSec)}/s`}
+          tone="warning"
+        />
         <Stat label={l.cache} value={formatBytes(est.cacheBytes)} />
       </div>
 
@@ -175,10 +227,22 @@ export default function CapacityEstimatorSim({ params, onInteract }: SimulatorPr
             const w = (Math.log10(b.v + 1) / maxLog) * 400;
             return (
               <g key={b.label} transform={`translate(0, ${i * 36 + 4})`}>
-                <text x={0} y={18} fontSize={12} fill="var(--da-fg)">{b.label}</text>
+                <text x={0} y={18} fontSize={12} fill="var(--da-fg)">
+                  {b.label}
+                </text>
                 <rect x={130} y={4} width={400} height={20} rx={6} fill="var(--da-elevated)" />
-                <motion.rect x={130} y={4} height={20} rx={6} fill={b.color} animate={{ width: Math.max(2, w) }} transition={{ duration: reduced ? 0 : 0.35 }} />
-                <text x={540} y={18} fontSize={12} fill="var(--da-muted)">{fmt(b.v)}</text>
+                <motion.rect
+                  x={130}
+                  y={4}
+                  height={20}
+                  rx={6}
+                  fill={b.color}
+                  animate={{ width: Math.max(2, w) }}
+                  transition={{ duration: reduced ? 0 : 0.35 }}
+                />
+                <text x={540} y={18} fontSize={12} fill="var(--da-muted)">
+                  {fmt(b.v)}
+                </text>
               </g>
             );
           })}

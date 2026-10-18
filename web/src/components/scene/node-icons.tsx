@@ -18,7 +18,6 @@ import {
   Smartphone,
   SplitSquareHorizontal,
   User,
-  Users,
   Workflow,
   Zap,
   CircleDot,
@@ -61,11 +60,29 @@ export const NODE_ICONS: Record<NodeKind, LucideIcon> = {
 
 export const STATUS_COLORS: Record<string, { stroke: string; fill: string }> = {
   idle: { stroke: 'var(--da-border)', fill: 'var(--da-surface)' },
-  active: { stroke: 'var(--da-primary)', fill: 'color-mix(in srgb, var(--da-primary) 12%, var(--da-surface))' },
-  busy: { stroke: 'var(--da-accent)', fill: 'color-mix(in srgb, var(--da-accent) 14%, var(--da-surface))' },
-  success: { stroke: 'var(--da-success)', fill: 'color-mix(in srgb, var(--da-success) 14%, var(--da-surface))' },
-  warning: { stroke: 'var(--da-warning)', fill: 'color-mix(in srgb, var(--da-warning) 16%, var(--da-surface))' },
-  error: { stroke: 'var(--da-danger)', fill: 'color-mix(in srgb, var(--da-danger) 14%, var(--da-surface))' },
-  down: { stroke: 'var(--da-danger)', fill: 'color-mix(in srgb, var(--da-danger) 22%, var(--da-surface))' },
+  active: {
+    stroke: 'var(--da-primary)',
+    fill: 'color-mix(in srgb, var(--da-primary) 12%, var(--da-surface))',
+  },
+  busy: {
+    stroke: 'var(--da-accent)',
+    fill: 'color-mix(in srgb, var(--da-accent) 14%, var(--da-surface))',
+  },
+  success: {
+    stroke: 'var(--da-success)',
+    fill: 'color-mix(in srgb, var(--da-success) 14%, var(--da-surface))',
+  },
+  warning: {
+    stroke: 'var(--da-warning)',
+    fill: 'color-mix(in srgb, var(--da-warning) 16%, var(--da-surface))',
+  },
+  error: {
+    stroke: 'var(--da-danger)',
+    fill: 'color-mix(in srgb, var(--da-danger) 14%, var(--da-surface))',
+  },
+  down: {
+    stroke: 'var(--da-danger)',
+    fill: 'color-mix(in srgb, var(--da-danger) 22%, var(--da-surface))',
+  },
   muted: { stroke: 'var(--da-border)', fill: 'var(--da-elevated)' },
 };

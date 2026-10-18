@@ -96,9 +96,21 @@ export interface ApiClient {
   request<T>(path: string, options?: RequestOptions): Promise<T>;
   requestRaw<T>(path: string, options?: RequestOptions): Promise<RawResponse<T>>;
   get<T>(path: string, options?: Omit<RequestOptions, 'method' | 'body'>): Promise<T>;
-  post<T>(path: string, body?: unknown, options?: Omit<RequestOptions, 'method' | 'body'>): Promise<T>;
-  put<T>(path: string, body?: unknown, options?: Omit<RequestOptions, 'method' | 'body'>): Promise<T>;
-  patch<T>(path: string, body?: unknown, options?: Omit<RequestOptions, 'method' | 'body'>): Promise<T>;
+  post<T>(
+    path: string,
+    body?: unknown,
+    options?: Omit<RequestOptions, 'method' | 'body'>,
+  ): Promise<T>;
+  put<T>(
+    path: string,
+    body?: unknown,
+    options?: Omit<RequestOptions, 'method' | 'body'>,
+  ): Promise<T>;
+  patch<T>(
+    path: string,
+    body?: unknown,
+    options?: Omit<RequestOptions, 'method' | 'body'>,
+  ): Promise<T>;
   del<T = void>(path: string, options?: Omit<RequestOptions, 'method' | 'body'>): Promise<T>;
   /** Tek uçuşlu token yenileme; yeni access token ya da null döner */
   refreshAccessToken(): Promise<string | null>;
@@ -141,7 +153,10 @@ export function createApiClient(opts: ApiClientOptions): ApiClient {
           return null;
         }
         const tokens = (await parseBody(res)) as AuthTokens;
-        await opts.tokens.set({ accessToken: tokens.accessToken, refreshToken: tokens.refreshToken });
+        await opts.tokens.set({
+          accessToken: tokens.accessToken,
+          refreshToken: tokens.refreshToken,
+        });
         return tokens.accessToken;
       } catch {
         // Ağ hatası: token'ları silme, kullanıcı çevrimiçi olunca tekrar denenir
@@ -153,7 +168,11 @@ export function createApiClient(opts: ApiClientOptions): ApiClient {
     return refreshInFlight;
   }
 
-  async function send(path: string, options: RequestOptions, accessToken: string | null): Promise<Response> {
+  async function send(
+    path: string,
+    options: RequestOptions,
+    accessToken: string | null,
+  ): Promise<Response> {
     const headers: Record<string, string> = { Accept: 'application/json', ...options.headers };
     if (options.body !== undefined) headers['Content-Type'] = 'application/json';
     if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
@@ -171,7 +190,10 @@ export function createApiClient(opts: ApiClientOptions): ApiClient {
     }
   }
 
-  async function requestRaw<T>(path: string, options: RequestOptions = {}): Promise<RawResponse<T>> {
+  async function requestRaw<T>(
+    path: string,
+    options: RequestOptions = {},
+  ): Promise<RawResponse<T>> {
     if (opts.isOffline?.()) throw new ApiError('offline', 0, 'Offline');
     const useAuth = options.auth !== false;
     const tokens = useAuth ? await opts.tokens.get() : null;
@@ -181,7 +203,10 @@ export function createApiClient(opts: ApiClientOptions): ApiClient {
     if (res.status === 401 && useAuth && usedToken) {
       // Başka bir istek token'ı zaten yenilemiş olabilir
       const latest = await opts.tokens.get();
-      const newToken = latest && latest.accessToken !== usedToken ? latest.accessToken : await refreshAccessToken();
+      const newToken =
+        latest && latest.accessToken !== usedToken
+          ? latest.accessToken
+          : await refreshAccessToken();
       if (newToken) {
         res = await send(path, options, newToken);
       }
@@ -194,9 +219,19 @@ export function createApiClient(opts: ApiClientOptions): ApiClient {
     if (!res.ok) {
       const body = data && typeof data === 'object' ? (data as ApiErrorBody) : undefined;
       const message = body?.message ?? `HTTP ${res.status}`;
-      throw new ApiError(codeForStatus(res.status), res.status, Array.isArray(message) ? message.join(', ') : String(message), body);
+      throw new ApiError(
+        codeForStatus(res.status),
+        res.status,
+        Array.isArray(message) ? message.join(', ') : String(message),
+        body,
+      );
     }
-    return { status: res.status, data: data as T, etag: res.headers.get('ETag'), notModified: false };
+    return {
+      status: res.status,
+      data: data as T,
+      etag: res.headers.get('ETag'),
+      notModified: false,
+    };
   }
 
   async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {

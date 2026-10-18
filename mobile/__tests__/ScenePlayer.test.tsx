@@ -11,14 +11,24 @@ import { useSettings } from '@/stores/settings';
 const input: AnimationSceneInput = {
   id: 'test-scene',
   title: { tr: 'Test sahnesi', en: 'Test scene' },
-  a11y: { description: { tr: 'İstemci sunucuya istek gönderir.', en: 'Client sends a request to the server.' } },
+  a11y: {
+    description: {
+      tr: 'İstemci sunucuya istek gönderir.',
+      en: 'Client sends a request to the server.',
+    },
+  },
   nodes: [
     { id: 'client', kind: 'client', label: { tr: 'İstemci', en: 'Client' }, x: 200, y: 300 },
     { id: 'server', kind: 'server', label: { tr: 'Sunucu', en: 'Server' }, x: 800, y: 300 },
   ],
   edges: [{ id: 'e1', from: 'client', to: 'server', label: 'HTTP' }],
   steps: [
-    { id: 's1', title: { tr: 'Başlangıç', en: 'Start' }, narration: { tr: 'İki düğüm var.', en: 'Two nodes.' }, durationMs: 1000 },
+    {
+      id: 's1',
+      title: { tr: 'Başlangıç', en: 'Start' },
+      narration: { tr: 'İki düğüm var.', en: 'Two nodes.' },
+      durationMs: 1000,
+    },
     {
       id: 's2',
       title: { tr: 'İstek', en: 'Request' },
@@ -28,7 +38,13 @@ const input: AnimationSceneInput = {
       nodeStates: { server: { status: 'busy', badge: 'x1' } },
       packets: [{ edge: 'e1', startAt: 0, durationMs: 800 }],
     },
-    { id: 's3', title: { tr: 'Yanıt', en: 'Response' }, narration: { tr: 'Sunucu yanıt verir.', en: 'Server responds.' }, durationMs: 1000, nodeStates: { server: { status: 'success' } } },
+    {
+      id: 's3',
+      title: { tr: 'Yanıt', en: 'Response' },
+      narration: { tr: 'Sunucu yanıt verir.', en: 'Server responds.' },
+      durationMs: 1000,
+      nodeStates: { server: { status: 'success' } },
+    },
   ],
 };
 const scene = AnimationSceneSchema.parse(input);
@@ -39,8 +55,10 @@ const originalCancel = global.cancelAnimationFrame;
 beforeEach(() => {
   jest.useFakeTimers();
   // 16 ms'lik kare: sahte zamanlayıcılarla gerçekçi kare döngüsü
-  global.requestAnimationFrame = ((cb: (t: number) => void) => setTimeout(() => cb(Date.now()), 16) as unknown as number) as typeof requestAnimationFrame;
-  global.cancelAnimationFrame = ((id: number) => clearTimeout(id as unknown as ReturnType<typeof setTimeout>)) as typeof cancelAnimationFrame;
+  global.requestAnimationFrame = ((cb: (t: number) => void) =>
+    setTimeout(() => cb(Date.now()), 16) as unknown as number) as typeof requestAnimationFrame;
+  global.cancelAnimationFrame = ((id: number) =>
+    clearTimeout(id as unknown as ReturnType<typeof setTimeout>)) as typeof cancelAnimationFrame;
   useSettings.setState({ locale: 'tr' });
 });
 
@@ -59,7 +77,9 @@ async function renderPlayer() {
   });
   // Canvas genişliği onLayout ile gelir
   act(() => {
-    fireEvent(screen.getByTestId('scene-canvas-container'), 'layout', { nativeEvent: { layout: { width: 360, height: 216, x: 0, y: 0 } } });
+    fireEvent(screen.getByTestId('scene-canvas-container'), 'layout', {
+      nativeEvent: { layout: { width: 360, height: 216, x: 0, y: 0 } },
+    });
   });
   expect(screen.getByTestId('scene-canvas')).toBeTruthy();
   return utils;
@@ -131,7 +151,9 @@ describe('ScenePlayer', () => {
     });
     expect(screen.queryByTestId('scene-transcript')).toBeNull();
     fireEvent.press(screen.getByTestId('scene-transcript-toggle'));
-    expect(screen.getByTestId('scene-transcript')).toHaveTextContent(/İstemci sunucuya istek gönderir\./);
+    expect(screen.getByTestId('scene-transcript')).toHaveTextContent(
+      /İstemci sunucuya istek gönderir\./,
+    );
     expect(screen.getByTestId('scene-transcript')).toHaveTextContent(/3\. Sunucu yanıt verir\./);
   });
 

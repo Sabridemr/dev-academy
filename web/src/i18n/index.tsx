@@ -1,7 +1,13 @@
 'use client';
 
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
-import { DEFAULT_LOCALE, isLocale, t as tLocalized, type Locale, type LocalizedString } from '@devacademy/shared';
+import {
+  DEFAULT_LOCALE,
+  isLocale,
+  t as tLocalized,
+  type Locale,
+  type LocalizedString,
+} from '@devacademy/shared';
 import { tr, type Messages } from './messages/tr';
 import { en } from './messages/en';
 
@@ -19,11 +25,23 @@ type Leaves<T, P extends string = ''> = T extends string
     : { [K in keyof T & string]: Leaves<T[K], P extends '' ? K : `${P}.${K}`> }[keyof T & string];
 export type MessageKey = Leaves<Messages>;
 
-export function translate(messages: Messages, key: string, params?: Record<string, string | number>): string {
-  const value = key.split('.').reduce<unknown>((acc, part) => (acc && typeof acc === 'object' ? (acc as Record<string, unknown>)[part] : undefined), messages);
+export function translate(
+  messages: Messages,
+  key: string,
+  params?: Record<string, string | number>,
+): string {
+  const value = key
+    .split('.')
+    .reduce<unknown>(
+      (acc, part) =>
+        acc && typeof acc === 'object' ? (acc as Record<string, unknown>)[part] : undefined,
+      messages,
+    );
   if (typeof value !== 'string') return key;
   if (!params) return value;
-  return value.replace(/\{(\w+)\}/g, (_, name: string) => (params[name] !== undefined ? String(params[name]) : `{${name}}`));
+  return value.replace(/\{(\w+)\}/g, (_, name: string) =>
+    params[name] !== undefined ? String(params[name]) : `{${name}}`,
+  );
 }
 
 interface I18nContextValue {
@@ -37,8 +55,16 @@ interface I18nContextValue {
 
 const I18nContext = createContext<I18nContextValue | null>(null);
 
-export function I18nProvider({ initialLocale, children }: { initialLocale?: string; children: ReactNode }) {
-  const [locale, setLocaleState] = useState<Locale>(initialLocale && isLocale(initialLocale) ? initialLocale : DEFAULT_LOCALE);
+export function I18nProvider({
+  initialLocale,
+  children,
+}: {
+  initialLocale?: string;
+  children: ReactNode;
+}) {
+  const [locale, setLocaleState] = useState<Locale>(
+    initialLocale && isLocale(initialLocale) ? initialLocale : DEFAULT_LOCALE,
+  );
 
   const setLocale = useCallback((l: Locale) => {
     setLocaleState(l);

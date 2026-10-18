@@ -27,15 +27,21 @@ export const useAuthStore = create<AuthState>()(
       refreshToken: null,
       user: null,
       hydrated: false,
-      setSession: (user, tokens) => set({ user, accessToken: tokens.accessToken, refreshToken: tokens.refreshToken }),
-      setTokens: (tokens) => set({ accessToken: tokens.accessToken, refreshToken: tokens.refreshToken }),
+      setSession: (user, tokens) =>
+        set({ user, accessToken: tokens.accessToken, refreshToken: tokens.refreshToken }),
+      setTokens: (tokens) =>
+        set({ accessToken: tokens.accessToken, refreshToken: tokens.refreshToken }),
       setUser: (user) => set({ user }),
       clear: () => set({ user: null, accessToken: null, refreshToken: null }),
     }),
     {
       name: 'da-auth',
       storage: createJSONStorage(() => localStorage),
-      partialize: (s) => ({ accessToken: s.accessToken, refreshToken: s.refreshToken, user: s.user }),
+      partialize: (s) => ({
+        accessToken: s.accessToken,
+        refreshToken: s.refreshToken,
+        user: s.user,
+      }),
       onRehydrateStorage: () => (state) => {
         if (state) state.hydrated = true;
         useAuthStore.setState({ hydrated: true });

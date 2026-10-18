@@ -1,9 +1,28 @@
 import { describe, expect, it } from 'vitest';
-import { createLbState, routeRequest, setServerHealth, distributionStats, completeRequest } from './loadBalancer';
+import {
+  createLbState,
+  routeRequest,
+  setServerHealth,
+  distributionStats,
+  completeRequest,
+} from './loadBalancer';
 import { cacheGet, cacheSet, createCacheState, seedCacheDb, hitRatio, cacheFlush } from './cache';
 import { createRateLimiter, tryAcquire, advanceRateLimiter } from './rateLimiter';
-import { createRing, locateKey, addRingNode, movedKeys, generateKeys, modHashMoved, ringDistribution } from './consistentHashing';
-import { generateLinearData, runGradientDescent, closedFormSolution, sampleLossSurface } from './gradientDescent';
+import {
+  createRing,
+  locateKey,
+  addRingNode,
+  movedKeys,
+  generateKeys,
+  modHashMoved,
+  ringDistribution,
+} from './consistentHashing';
+import {
+  generateLinearData,
+  runGradientDescent,
+  closedFormSolution,
+  sampleLossSurface,
+} from './gradientDescent';
 import { computeSelfAttention, softmax } from './attention';
 import { estimateCapacity, DEFAULT_CAPACITY_INPUT, formatBytes } from './capacity';
 
@@ -96,7 +115,12 @@ describe('Cache', () => {
   });
 
   it('yazma politikaları doğru davranır', () => {
-    const aside = cacheSet(seedCacheDb(createCacheState({ writePolicy: 'cache-aside' }), []), 'k', 'v', 1);
+    const aside = cacheSet(
+      seedCacheDb(createCacheState({ writePolicy: 'cache-aside' }), []),
+      'k',
+      'v',
+      1,
+    );
     expect(aside.db.k).toBe('v');
     expect(aside.entries).toHaveLength(0);
 
@@ -114,7 +138,10 @@ describe('Cache', () => {
 
 describe('Rate limiter', () => {
   it('token bucket kapasiteyi aşınca reddeder ve zamanla dolar', () => {
-    let s = createRateLimiter({ algorithm: 'token-bucket', limit: 3, windowMs: 1000, ratePerSec: 1 }, 0);
+    let s = createRateLimiter(
+      { algorithm: 'token-bucket', limit: 3, windowMs: 1000, ratePerSec: 1 },
+      0,
+    );
     const results: boolean[] = [];
     for (let i = 0; i < 4; i++) {
       const r = tryAcquire(s, 0);
@@ -127,7 +154,10 @@ describe('Rate limiter', () => {
   });
 
   it('leaky bucket sabit hızda sızar', () => {
-    let s = createRateLimiter({ algorithm: 'leaky-bucket', limit: 2, windowMs: 1000, ratePerSec: 2 }, 0);
+    let s = createRateLimiter(
+      { algorithm: 'leaky-bucket', limit: 2, windowMs: 1000, ratePerSec: 2 },
+      0,
+    );
     s = tryAcquire(s, 0).state;
     s = tryAcquire(s, 0).state;
     expect(tryAcquire(s, 0).decision.allowed).toBe(false);
@@ -136,7 +166,10 @@ describe('Rate limiter', () => {
   });
 
   it('fixed window sınırda patlama (burst) problemine izin verir', () => {
-    let s = createRateLimiter({ algorithm: 'fixed-window', limit: 2, windowMs: 1000, ratePerSec: 0 }, 0);
+    let s = createRateLimiter(
+      { algorithm: 'fixed-window', limit: 2, windowMs: 1000, ratePerSec: 0 },
+      0,
+    );
     s = tryAcquire(s, 900).state;
     s = tryAcquire(s, 950).state;
     expect(tryAcquire(s, 980).decision.allowed).toBe(false);
@@ -146,7 +179,10 @@ describe('Rate limiter', () => {
   });
 
   it('sliding window log pencere boyunca sayar', () => {
-    let s = createRateLimiter({ algorithm: 'sliding-window-log', limit: 2, windowMs: 1000, ratePerSec: 0 }, 0);
+    let s = createRateLimiter(
+      { algorithm: 'sliding-window-log', limit: 2, windowMs: 1000, ratePerSec: 0 },
+      0,
+    );
     s = tryAcquire(s, 900).state;
     s = tryAcquire(s, 950).state;
     expect(tryAcquire(s, 1000).decision.allowed).toBe(false); // hâlâ pencere içinde
@@ -154,7 +190,10 @@ describe('Rate limiter', () => {
   });
 
   it('sliding window counter önceki pencereyi ağırlıklandırır', () => {
-    let s = createRateLimiter({ algorithm: 'sliding-window-counter', limit: 10, windowMs: 1000, ratePerSec: 0 }, 0);
+    let s = createRateLimiter(
+      { algorithm: 'sliding-window-counter', limit: 10, windowMs: 1000, ratePerSec: 0 },
+      0,
+    );
     for (let i = 0; i < 10; i++) s = tryAcquire(s, 100).state;
     // yeni pencerenin %10'unda: önceki ağırlık 0.9 → tahmini 9 → 1 istek daha kabul
     const r1 = tryAcquire(s, 1100);

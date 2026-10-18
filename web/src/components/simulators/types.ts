@@ -12,20 +12,35 @@ export interface SimulatorProps {
 }
 
 /** params içinden güvenli okuma yardımcıları */
-export function numParam(params: Record<string, unknown>, key: string, fallback: number, min = -Infinity, max = Infinity): number {
+export function numParam(
+  params: Record<string, unknown>,
+  key: string,
+  fallback: number,
+  min = -Infinity,
+  max = Infinity,
+): number {
   const v = params[key];
   const n = typeof v === 'number' ? v : typeof v === 'string' ? Number(v) : NaN;
   return Number.isFinite(n) ? Math.max(min, Math.min(max, n)) : fallback;
 }
 
-export function strParam<T extends string>(params: Record<string, unknown>, key: string, fallback: T, allowed?: readonly T[]): T {
+export function strParam<T extends string>(
+  params: Record<string, unknown>,
+  key: string,
+  fallback: T,
+  allowed?: readonly T[],
+): T {
   const v = params[key];
   if (typeof v !== 'string') return fallback;
   if (allowed && !allowed.includes(v as T)) return fallback;
   return v as T;
 }
 
-export function boolParam(params: Record<string, unknown>, key: string, fallback: boolean): boolean {
+export function boolParam(
+  params: Record<string, unknown>,
+  key: string,
+  fallback: boolean,
+): boolean {
   const v = params[key];
   if (typeof v === 'boolean') return v;
   if (v === 'true') return true;

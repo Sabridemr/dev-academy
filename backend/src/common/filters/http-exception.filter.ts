@@ -1,4 +1,11 @@
-import { ArgumentsHost, Catch, ExceptionFilter, HttpException, HttpStatus, Logger } from '@nestjs/common';
+import {
+  ArgumentsHost,
+  Catch,
+  ExceptionFilter,
+  HttpException,
+  HttpStatus,
+  Logger,
+} from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { Prisma } from '@prisma/client';
 import type { ApiErrorBody } from '@devacademy/shared';
@@ -28,7 +35,9 @@ export class HttpExceptionFilter implements ExceptionFilter {
         message = body;
       } else if (body && typeof body === 'object') {
         const b = body as Record<string, unknown>;
-        message = Array.isArray(b.message) ? (b.message as string[]).join('; ') : String(b.message ?? exception.message);
+        message = Array.isArray(b.message)
+          ? (b.message as string[]).join('; ')
+          : String(b.message ?? exception.message);
         if (Array.isArray(b.details)) details = b.details as ApiErrorBody['details'];
       }
       error = HttpStatus[status] ?? 'Error';
@@ -57,7 +66,9 @@ export class HttpExceptionFilter implements ExceptionFilter {
       error = 'Bad Request';
       message = 'Geçersiz sorgu';
     } else {
-      this.logger.error(exception instanceof Error ? exception.stack ?? exception.message : String(exception));
+      this.logger.error(
+        exception instanceof Error ? (exception.stack ?? exception.message) : String(exception),
+      );
     }
 
     const body: ApiErrorBody = {

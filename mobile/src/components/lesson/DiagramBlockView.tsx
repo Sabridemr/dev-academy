@@ -24,7 +24,12 @@ export function DiagramBlockView({ block }: { block: DiagramBlock }) {
 
   return (
     <View style={[styles.root, { borderColor: colors.border, backgroundColor: colors.surface }]}>
-      <View onLayout={onLayout} accessible accessibilityRole="image" accessibilityLabel={tl(block.alt)}>
+      <View
+        onLayout={onLayout}
+        accessible
+        accessibilityRole="image"
+        accessibilityLabel={tl(block.alt)}
+      >
         {xml && width > 0 ? (
           <SvgXml xml={xml} width={width} height={width / ratio} />
         ) : !xml ? (

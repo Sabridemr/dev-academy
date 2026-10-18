@@ -13,17 +13,49 @@ describe('i18n', () => {
     expect(translate(MESSAGES.tr, 'yok.boyle')).toBe('yok.boyle');
   });
   it('tr ve en sözlükleri aynı anahtar yapısına sahip', () => {
-    const keys = (o: object, p = ''): string[] => Object.entries(o).flatMap(([k, v]) => (v && typeof v === 'object' && !Array.isArray(v) ? keys(v, `${p}${k}.`) : [`${p}${k}`]));
+    const keys = (o: object, p = ''): string[] =>
+      Object.entries(o).flatMap(([k, v]) =>
+        v && typeof v === 'object' && !Array.isArray(v) ? keys(v, `${p}${k}.`) : [`${p}${k}`],
+      );
     expect(keys(MESSAGES.en).sort()).toEqual(keys(MESSAGES.tr).sort());
   });
 });
 
 describe('sanitizeSvg', () => {
   it('script, olay işleyicileri ve javascript: bağlantılarını temizler', () => {
-    const dirty = '<svg viewBox="0 0 10 10" onload="alert(1)"><script>alert(2)</script><a href="javascript:alert(3)"><rect onclick="x()"/></a></svg>';
+    const dirty =
+      '<svg viewBox="0 0 10 10" onload="alert(1)"><script>alert(2)</script><a href="javascript:alert(3)"><rect onclick="x()"/></a></svg>';
     const clean = sanitizeSvg(dirty);
     expect(clean).not.toMatch(/script|onload|onclick|javascript:/i);
     expect(clean).toContain('<rect');
+  });
+
+  it('regex sanitizer’ı atlatan saldırı biçimlerini de temizler', () => {
+    const payloads = [
+      '<svg/onload=alert(1)><rect/></svg>',
+      '<svg viewBox="0 0 10 10"><a><animate attributeName="href" to="javascript:alert(1)"/><rect/></a></svg>',
+      '<svg viewBox="0 0 10 10"><set attributeName="onmouseover" to="alert(1)"/><rect/></svg>',
+      '<svg viewBox="0 0 10 10"><a href="data:text/html,<script>alert(1)</script>"><rect/></a></svg>',
+      '<svg viewBox="0 0 10 10"><image href="http://evil.example/x.svg"/><use href="http://evil.example/s.svg#x"/><rect/></svg>',
+      '<svg viewBox="0 0 10 10"><foreignObject><iframe src="javascript:alert(1)"></iframe></foreignObject><rect/></svg>',
+    ];
+    for (const p of payloads) {
+      const clean = sanitizeSvg(p);
+      expect(clean).not.toMatch(
+        /onload|onmouseover|<animate|<set|javascript:|data:text|evil\.example|<iframe|foreignObject/i,
+      );
+      expect(clean).toContain('<rect');
+    }
+  });
+
+  it('tema değişkenli normal diyagram öğelerini korur', () => {
+    const clean = sanitizeSvg(
+      '<svg viewBox="0 0 100 50" font-family="inherit"><defs><marker id="arr"><path d="M0,0 L5,5"/></marker></defs><rect fill="var(--da-surface)" stroke="var(--da-border)"/><line marker-end="url(#arr)"/><text x="5" y="5">API</text></svg>',
+    );
+    expect(clean).toContain('viewBox="0 0 100 50"');
+    expect(clean).toContain('fill="var(--da-surface)"');
+    expect(clean).toContain('marker-end="url(#arr)"');
+    expect(clean).toContain('>API</text>');
   });
 });
 

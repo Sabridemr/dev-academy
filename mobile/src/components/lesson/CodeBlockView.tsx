@@ -13,7 +13,10 @@ export function CodeBlockView({ block }: { block: CodeBlock }) {
   const { t, tl } = useI18n();
   const { colors, scheme } = useTheme();
   const variants = useMemo(
-    () => [{ language: block.language, code: block.code, title: block.title }, ...block.alternatives],
+    () => [
+      { language: block.language, code: block.code, title: block.title },
+      ...block.alternatives,
+    ],
     [block],
   );
   const [index, setIndex] = useState(0);
@@ -48,19 +51,37 @@ export function CodeBlockView({ block }: { block: CodeBlock }) {
           />
         </View>
       ) : null}
-      <ScrollView horizontal showsHorizontalScrollIndicator contentContainerStyle={styles.code} accessibilityLabel={current.code}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator
+        contentContainerStyle={styles.code}
+        accessibilityLabel={current.code}
+      >
         <View>
           {lines.map((tokens, li) => (
-            <View key={li} style={[styles.line, highlight.has(li + 1) && { backgroundColor: withAlpha(colors.primary, 0.12) }]}>
+            <View
+              key={li}
+              style={[
+                styles.line,
+                highlight.has(li + 1) && { backgroundColor: withAlpha(colors.primary, 0.12) },
+              ]}
+            >
               <Text variant="mono" color={colors.muted} style={styles.lineNo}>
                 {String(li + 1).padStart(2, ' ')}
               </Text>
               <Text variant="mono" selectable>
-                {tokens.length === 0 ? ' ' : tokens.map((tok, ti) => (
-                  <Text key={ti} variant="mono" color={tokenColor[tok.kind]} style={tok.kind === 'comment' ? { fontStyle: 'italic' } : undefined}>
-                    {tok.text}
-                  </Text>
-                ))}
+                {tokens.length === 0
+                  ? ' '
+                  : tokens.map((tok, ti) => (
+                      <Text
+                        key={ti}
+                        variant="mono"
+                        color={tokenColor[tok.kind]}
+                        style={tok.kind === 'comment' ? { fontStyle: 'italic' } : undefined}
+                      >
+                        {tok.text}
+                      </Text>
+                    ))}
               </Text>
             </View>
           ))}
@@ -72,7 +93,13 @@ export function CodeBlockView({ block }: { block: CodeBlock }) {
 
 const styles = StyleSheet.create({
   root: { borderRadius: radius.md, borderWidth: 1, overflow: 'hidden' },
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.md, paddingVertical: spacing.sm, borderBottomWidth: StyleSheet.hairlineWidth },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
   tabs: { paddingHorizontal: spacing.md, paddingTop: spacing.sm },
   code: { padding: spacing.md },
   line: { flexDirection: 'row', paddingRight: spacing.md },

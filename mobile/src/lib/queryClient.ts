@@ -12,7 +12,11 @@ export const queryClient = new QueryClient({
       gcTime: 30 * 60_000,
       networkMode: 'offlineFirst',
       retry: (failureCount, error) => {
-        if (isApiError(error) && (error.isConnectivity || (error.status >= 400 && error.status < 500))) return false;
+        if (
+          isApiError(error) &&
+          (error.isConnectivity || (error.status >= 400 && error.status < 500))
+        )
+          return false;
         return failureCount < 2;
       },
     },

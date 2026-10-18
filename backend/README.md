@@ -19,17 +19,17 @@ pnpm dev                          # http://localhost:4000/api/v1  ·  dokümanta
 
 Tam liste ve varsayılanlar: `.env.example`, doğrulama: `src/config/env.ts` (eksik/hatalı değişkende uygulama açılmaz).
 
-| Değişken | Açıklama |
-|---|---|
-| `DATABASE_URL` | PostgreSQL bağlantısı |
-| `REDIS_URL` | Redis (cache, rate limit). Erişilemezse API çalışmaya devam eder, cache atlanır |
-| `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET` | ≥ 32 karakter |
-| `JWT_ACCESS_TTL`, `JWT_REFRESH_TTL` | saniye (varsayılan 15 dk / 30 gün) |
-| `GOOGLE_CLIENT_IDS`, `APPLE_CLIENT_IDS` | virgülle ayrılmış audience listeleri (web + iOS + Android istemci kimlikleri) |
-| `S3_*` | S3 uyumlu depolama (MinIO yerelde) |
-| `SMTP_URL`, `MAIL_FROM` | e-posta hatırlatmaları (boşsa loglanır) |
-| `RATE_LIMIT_TTL`, `RATE_LIMIT_MAX` | genel istek limiti (auth uç noktalarında daha sıkı) |
-| `CONTENT_DIR` | seed için içerik klasörü |
+| Değişken                                | Açıklama                                                                        |
+| --------------------------------------- | ------------------------------------------------------------------------------- |
+| `DATABASE_URL`                          | PostgreSQL bağlantısı                                                           |
+| `REDIS_URL`                             | Redis (cache, rate limit). Erişilemezse API çalışmaya devam eder, cache atlanır |
+| `JWT_ACCESS_SECRET`                     | ≥ 32 karakter (refresh token’lar opak rastgele değerdir, ayrı sır gerekmez)     |
+| `JWT_ACCESS_TTL`, `JWT_REFRESH_TTL`     | saniye (varsayılan 15 dk / 30 gün)                                              |
+| `GOOGLE_CLIENT_IDS`, `APPLE_CLIENT_IDS` | virgülle ayrılmış audience listeleri (web + iOS + Android istemci kimlikleri)   |
+| `S3_*`                                  | S3 uyumlu depolama (MinIO yerelde)                                              |
+| `SMTP_URL`, `MAIL_FROM`                 | e-posta hatırlatmaları (boşsa loglanır)                                         |
+| `RATE_LIMIT_TTL`, `RATE_LIMIT_MAX`      | genel istek limiti (auth uç noktalarında daha sıkı)                             |
+| `CONTENT_DIR`                           | seed için içerik klasörü                                                        |
 
 ## Testler
 

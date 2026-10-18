@@ -7,7 +7,12 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 import { AnimationSceneSchema } from '../src/scene/schema';
-import { LessonFrontmatterSchema, ModuleManifestSchema, QuizSchema, LearningPathManifestSchema } from '../src/content/schema';
+import {
+  LessonFrontmatterSchema,
+  ModuleManifestSchema,
+  QuizSchema,
+  LearningPathManifestSchema,
+} from '../src/content/schema';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const outDir = join(here, '..', 'schema');
@@ -22,7 +27,10 @@ const targets: [string, Parameters<typeof zodToJsonSchema>[0]][] = [
 ];
 
 for (const [file, schema] of targets) {
-  const json = zodToJsonSchema(schema, { name: file.replace('.schema.json', ''), $refStrategy: 'none' });
+  const json = zodToJsonSchema(schema, {
+    name: file.replace('.schema.json', ''),
+    $refStrategy: 'none',
+  });
   writeFileSync(join(outDir, file), JSON.stringify(json, null, 2) + '\n');
   console.log(`✓ ${file}`);
 }

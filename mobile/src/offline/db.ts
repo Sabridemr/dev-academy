@@ -1,5 +1,11 @@
 import * as SQLite from 'expo-sqlite';
-import type { LessonDetail, ModuleDetail, OfflineBundle, QuizPublic, SceneResponse } from '@devacademy/shared';
+import type {
+  LessonDetail,
+  ModuleDetail,
+  OfflineBundle,
+  QuizPublic,
+  SceneResponse,
+} from '@devacademy/shared';
 
 /**
  * ÇEVRİMDIŞI İÇERİK VERİTABANI (expo-sqlite)
@@ -99,11 +105,22 @@ export async function upsertLesson(db: SqlDb, lesson: LessonDetail): Promise<voi
     `INSERT INTO lessons (id, module_id, slug, json, version, updated_at) VALUES (?, ?, ?, ?, ?, ?)
      ON CONFLICT(id) DO UPDATE SET module_id = excluded.module_id, slug = excluded.slug, json = excluded.json,
        version = excluded.version, updated_at = excluded.updated_at`,
-    [lesson.id, lesson.moduleId, lesson.slug, JSON.stringify(lesson), lesson.version ?? 0, lesson.publishedAt ?? new Date().toISOString()],
+    [
+      lesson.id,
+      lesson.moduleId,
+      lesson.slug,
+      JSON.stringify(lesson),
+      lesson.version ?? 0,
+      lesson.publishedAt ?? new Date().toISOString(),
+    ],
   );
 }
 
-export async function upsertScene(db: SqlDb, scene: SceneResponse, moduleId: string | null): Promise<void> {
+export async function upsertScene(
+  db: SqlDb,
+  scene: SceneResponse,
+  moduleId: string | null,
+): Promise<void> {
   await db.runAsync(
     `INSERT INTO scenes (id, module_id, json, version) VALUES (?, ?, ?, ?)
      ON CONFLICT(id) DO UPDATE SET module_id = excluded.module_id, json = excluded.json, version = excluded.version`,
@@ -111,7 +128,11 @@ export async function upsertScene(db: SqlDb, scene: SceneResponse, moduleId: str
   );
 }
 
-export async function upsertQuiz(db: SqlDb, quiz: QuizPublic, moduleId: string | null): Promise<void> {
+export async function upsertQuiz(
+  db: SqlDb,
+  quiz: QuizPublic,
+  moduleId: string | null,
+): Promise<void> {
   await db.runAsync(
     `INSERT INTO quizzes (id, lesson_id, module_id, json) VALUES (?, ?, ?, ?)
      ON CONFLICT(id) DO UPDATE SET lesson_id = excluded.lesson_id, module_id = excluded.module_id, json = excluded.json`,
@@ -119,7 +140,13 @@ export async function upsertQuiz(db: SqlDb, quiz: QuizPublic, moduleId: string |
   );
 }
 
-export async function upsertModule(db: SqlDb, moduleId: string, module: ModuleDetail | null, etag: string | null, syncedAt: string): Promise<void> {
+export async function upsertModule(
+  db: SqlDb,
+  moduleId: string,
+  module: ModuleDetail | null,
+  etag: string | null,
+  syncedAt: string,
+): Promise<void> {
   await db.runAsync(
     `INSERT INTO modules (id, json, etag, synced_at) VALUES (?, ?, ?, ?)
      ON CONFLICT(id) DO UPDATE SET json = COALESCE(excluded.json, modules.json), etag = excluded.etag, synced_at = excluded.synced_at`,
@@ -127,7 +154,11 @@ export async function upsertModule(db: SqlDb, moduleId: string, module: ModuleDe
   );
 }
 
-export async function touchModuleSync(db: SqlDb, moduleId: string, syncedAt: string): Promise<void> {
+export async function touchModuleSync(
+  db: SqlDb,
+  moduleId: string,
+  syncedAt: string,
+): Promise<void> {
   await db.runAsync('UPDATE modules SET synced_at = ? WHERE id = ?', [syncedAt, moduleId]);
 }
 
@@ -149,11 +180,21 @@ export async function applyBundle(
     const keepIds = bundle.lessons.map((l) => l.id);
     if (keepIds.length > 0) {
       const placeholders = keepIds.map(() => '?').join(', ');
-      await db.runAsync(`DELETE FROM lessons WHERE module_id = ? AND id NOT IN (${placeholders})`, [bundle.moduleId, ...keepIds]);
+      await db.runAsync(`DELETE FROM lessons WHERE module_id = ? AND id NOT IN (${placeholders})`, [
+        bundle.moduleId,
+        ...keepIds,
+      ]);
+    } else {
+      // Modülde yayında ders kalmadıysa yereldeki tüm dersleri sil
+      await db.runAsync('DELETE FROM lessons WHERE module_id = ?', [bundle.moduleId]);
     }
     await upsertModule(db, bundle.moduleId, module, etag, syncedAt);
   });
-  return { lessons: bundle.lessons.length, scenes: bundle.scenes.length, quizzes: bundle.quizzes.length };
+  return {
+    lessons: bundle.lessons.length,
+    scenes: bundle.scenes.length,
+    quizzes: bundle.quizzes.length,
+  };
 }
 
 export async function deleteModule(db: SqlDb, moduleId: string): Promise<void> {
@@ -178,22 +219,38 @@ function parse<T>(row: { json: string | null } | null): T | null {
 
 export async function readLesson(idOrSlug: string): Promise<LessonDetail | null> {
   const db = await getDb();
-  return parse<LessonDetail>(await db.getFirstAsync<{ json: string }>('SELECT json FROM lessons WHERE id = ? OR slug = ? LIMIT 1', [idOrSlug, idOrSlug]));
+  return parse<LessonDetail>(
+    await db.getFirstAsync<{ json: string }>(
+      'SELECT json FROM lessons WHERE id = ? OR slug = ? LIMIT 1',
+      [idOrSlug, idOrSlug],
+    ),
+  );
 }
 
 export async function readScene(id: string): Promise<SceneResponse | null> {
   const db = await getDb();
-  return parse<SceneResponse>(await db.getFirstAsync<{ json: string }>('SELECT json FROM scenes WHERE id = ? LIMIT 1', [id]));
+  return parse<SceneResponse>(
+    await db.getFirstAsync<{ json: string }>('SELECT json FROM scenes WHERE id = ? LIMIT 1', [id]),
+  );
 }
 
 export async function readQuizByLesson(lessonId: string): Promise<QuizPublic | null> {
   const db = await getDb();
-  return parse<QuizPublic>(await db.getFirstAsync<{ json: string }>('SELECT json FROM quizzes WHERE lesson_id = ? LIMIT 1', [lessonId]));
+  return parse<QuizPublic>(
+    await db.getFirstAsync<{ json: string }>(
+      'SELECT json FROM quizzes WHERE lesson_id = ? LIMIT 1',
+      [lessonId],
+    ),
+  );
 }
 
 export async function readModule(idOrSlug: string): Promise<ModuleDetail | null> {
   const db = await getDb();
-  const direct = parse<ModuleDetail>(await db.getFirstAsync<{ json: string }>('SELECT json FROM modules WHERE id = ? LIMIT 1', [idOrSlug]));
+  const direct = parse<ModuleDetail>(
+    await db.getFirstAsync<{ json: string }>('SELECT json FROM modules WHERE id = ? LIMIT 1', [
+      idOrSlug,
+    ]),
+  );
   if (direct) return direct;
   const all = await db.getAllAsync<{ json: string | null }>('SELECT json FROM modules', []);
   return all.map((r) => parse<ModuleDetail>(r)).find((m) => m?.slug === idOrSlug) ?? null;
@@ -209,15 +266,30 @@ export interface DownloadedModule {
 
 export async function listDownloadedModules(): Promise<DownloadedModule[]> {
   const db = await getDb();
-  const rows = await db.getAllAsync<{ id: string; json: string | null; etag: string | null; synced_at: string | null; lesson_count: number }>(
+  const rows = await db.getAllAsync<{
+    id: string;
+    json: string | null;
+    etag: string | null;
+    synced_at: string | null;
+    lesson_count: number;
+  }>(
     `SELECT m.id, m.json, m.etag, m.synced_at, (SELECT COUNT(*) FROM lessons l WHERE l.module_id = m.id) AS lesson_count
      FROM modules m ORDER BY m.id`,
     [],
   );
-  return rows.map((r) => ({ id: r.id, etag: r.etag, syncedAt: r.synced_at, lessonCount: r.lesson_count, module: parse<ModuleDetail>(r) }));
+  return rows.map((r) => ({
+    id: r.id,
+    etag: r.etag,
+    syncedAt: r.synced_at,
+    lessonCount: r.lesson_count,
+    module: parse<ModuleDetail>(r),
+  }));
 }
 
 export async function getModuleEtag(db: SqlDb, moduleId: string): Promise<string | null> {
-  const row = await db.getFirstAsync<{ etag: string | null }>('SELECT etag FROM modules WHERE id = ?', [moduleId]);
+  const row = await db.getFirstAsync<{ etag: string | null }>(
+    'SELECT etag FROM modules WHERE id = ?',
+    [moduleId],
+  );
   return row?.etag ?? null;
 }

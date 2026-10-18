@@ -8,7 +8,13 @@ import { spacing, useTheme } from '@/theme';
 import { Button, Text } from '@/components/ui';
 
 /** Google + Apple giriş butonları; başarıda onSuccess(AuthResponse) */
-export function SocialButtons({ onSuccess, onError }: { onSuccess: (res: AuthResponse) => void; onError: (e: unknown) => void }) {
+export function SocialButtons({
+  onSuccess,
+  onError,
+}: {
+  onSuccess: (res: AuthResponse) => void;
+  onError: (e: unknown) => void;
+}) {
   const { t } = useI18n();
   const { scheme } = useTheme();
   const google = useGoogleSignIn(onSuccess, onError);
@@ -38,7 +44,11 @@ export function SocialButtons({ onSuccess, onError }: { onSuccess: (res: AuthRes
       {Platform.OS === 'ios' && appleAvailable ? (
         <AppleAuthentication.AppleAuthenticationButton
           buttonType={AppleAuthentication.AppleAuthenticationButtonType.CONTINUE}
-          buttonStyle={scheme === 'dark' ? AppleAuthentication.AppleAuthenticationButtonStyle.WHITE : AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+          buttonStyle={
+            scheme === 'dark'
+              ? AppleAuthentication.AppleAuthenticationButtonStyle.WHITE
+              : AppleAuthentication.AppleAuthenticationButtonStyle.BLACK
+          }
           cornerRadius={12}
           style={{ height: 48 }}
           onPress={() => {

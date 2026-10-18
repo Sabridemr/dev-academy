@@ -2,7 +2,15 @@
 
 import { useCallback, useEffect, useMemo, useReducer, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Pause, Play, RotateCcw, Captions, CaptionsOff } from 'lucide-react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  Pause,
+  Play,
+  RotateCcw,
+  Captions,
+  CaptionsOff,
+} from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import {
   PLAYER_SPEEDS,
@@ -35,8 +43,13 @@ interface Props {
 export function ScenePlayer({ scene, caption, autoPlay = false, className, onFirstPlay }: Props) {
   const { t, tl } = useI18n();
   const reducedMotionPref = usePrefersReducedMotion();
-  const reducer = useMemo(() => (s: PlayerState, a: PlayerAction) => playerReducer(scene, s, a), [scene]);
-  const [state, dispatch] = useReducer(reducer, scene, (sc) => createPlayerState(sc, { playing: autoPlay }));
+  const reducer = useMemo(
+    () => (s: PlayerState, a: PlayerAction) => playerReducer(scene, s, a),
+    [scene],
+  );
+  const [state, dispatch] = useReducer(reducer, scene, (sc) =>
+    createPlayerState(sc, { playing: autoPlay }),
+  );
   const lastTs = useRef<number | null>(null);
   const playedOnce = useRef(false);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -61,7 +74,8 @@ export function ScenePlayer({ scene, caption, autoPlay = false, className, onFir
     }
     let raf = 0;
     const loop = (ts: number) => {
-      if (lastTs.current !== null) dispatch({ type: 'TICK', deltaMs: Math.min(100, ts - lastTs.current) });
+      if (lastTs.current !== null)
+        dispatch({ type: 'TICK', deltaMs: Math.min(100, ts - lastTs.current) });
       lastTs.current = ts;
       raf = requestAnimationFrame(loop);
     };
@@ -90,17 +104,33 @@ export function ScenePlayer({ scene, caption, autoPlay = false, className, onFir
   const transcript = sceneTranscript(scene);
 
   return (
-    <figure ref={rootRef} className={cn('card overflow-hidden', className)} tabIndex={0} onKeyDown={onKeyDown} aria-roledescription="animasyon oynatıcı" aria-label={tl(scene.title)}>
+    <figure
+      ref={rootRef}
+      className={cn('card overflow-hidden', className)}
+      tabIndex={0}
+      onKeyDown={onKeyDown}
+      aria-roledescription="animasyon oynatıcı"
+      aria-label={tl(scene.title)}
+    >
       <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-2.5">
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold">{tl(scene.title)}</p>
-          <p className="text-xs text-muted">{t('player.step', { current: state.stepIndex + 1, total })} · {tl(step.title)}</p>
+          <p className="text-xs text-muted">
+            {t('player.step', { current: state.stepIndex + 1, total })} · {tl(step.title)}
+          </p>
         </div>
-        {state.reducedMotion && <span className="chip hidden sm:inline-flex">{t('player.reducedMotion')}</span>}
+        {state.reducedMotion && (
+          <span className="chip hidden sm:inline-flex">{t('player.reducedMotion')}</span>
+        )}
       </div>
 
       <div className="relative bg-bg/60 px-2 py-3">
-        <SceneCanvas scene={scene} view={view} elapsedMs={state.elapsedMs} reducedMotion={state.reducedMotion} />
+        <SceneCanvas
+          scene={scene}
+          view={view}
+          elapsedMs={state.elapsedMs}
+          reducedMotion={state.reducedMotion}
+        />
       </div>
 
       <AnimatePresence mode="wait" initial={false}>
@@ -124,22 +154,53 @@ export function ScenePlayer({ scene, caption, autoPlay = false, className, onFir
 
       {/* Kontroller */}
       <div className="flex flex-wrap items-center gap-2 border-t border-border px-3 py-2.5">
-        <button type="button" className="btn-icon" onClick={() => dispatch({ type: 'PREV' })} disabled={state.stepIndex === 0} aria-label={t('player.stepBack')} title={t('player.stepBack')}>
+        <button
+          type="button"
+          className="btn-icon"
+          onClick={() => dispatch({ type: 'PREV' })}
+          disabled={state.stepIndex === 0}
+          aria-label={t('player.stepBack')}
+          title={t('player.stepBack')}
+        >
           <ChevronLeft size={18} />
         </button>
-        <button type="button" className="btn-primary h-9 px-3" onClick={() => dispatch({ type: 'TOGGLE_PLAY' })} aria-label={state.playing ? t('player.pause') : t('player.play')}>
+        <button
+          type="button"
+          className="btn-primary h-9 px-3"
+          onClick={() => dispatch({ type: 'TOGGLE_PLAY' })}
+          aria-label={state.playing ? t('player.pause') : t('player.play')}
+        >
           {state.playing ? <Pause size={16} /> : <Play size={16} />}
-          <span className="hidden sm:inline">{state.playing ? t('player.pause') : t('player.play')}</span>
+          <span className="hidden sm:inline">
+            {state.playing ? t('player.pause') : t('player.play')}
+          </span>
         </button>
-        <button type="button" className="btn-icon" onClick={() => dispatch({ type: 'NEXT' })} disabled={state.finished} aria-label={t('player.stepForward')} title={t('player.stepForward')}>
+        <button
+          type="button"
+          className="btn-icon"
+          onClick={() => dispatch({ type: 'NEXT' })}
+          disabled={state.finished}
+          aria-label={t('player.stepForward')}
+          title={t('player.stepForward')}
+        >
           <ChevronRight size={18} />
         </button>
-        <button type="button" className="btn-icon" onClick={() => dispatch({ type: 'RESET' })} aria-label={t('player.restart')} title={t('player.restart')}>
+        <button
+          type="button"
+          className="btn-icon"
+          onClick={() => dispatch({ type: 'RESET' })}
+          aria-label={t('player.restart')}
+          title={t('player.restart')}
+        >
           <RotateCcw size={16} />
         </button>
 
         {/* Adım çizelgesi */}
-        <div className="mx-1 flex min-w-[120px] flex-1 items-center gap-1" role="tablist" aria-label={t('player.step', { current: state.stepIndex + 1, total })}>
+        <div
+          className="mx-1 flex min-w-[120px] flex-1 items-center gap-1"
+          role="tablist"
+          aria-label={t('player.step', { current: state.stepIndex + 1, total })}
+        >
           {scene.steps.map((s, i) => (
             <button
               key={s.id}
@@ -153,7 +214,14 @@ export function ScenePlayer({ scene, caption, autoPlay = false, className, onFir
             >
               <span
                 className="absolute inset-y-0 left-0 rounded-full bg-primary transition-[width] duration-100"
-                style={{ width: i < state.stepIndex ? '100%' : i === state.stepIndex ? `${(state.finished ? 1 : stepProgress) * 100}%` : '0%' }}
+                style={{
+                  width:
+                    i < state.stepIndex
+                      ? '100%'
+                      : i === state.stepIndex
+                        ? `${(state.finished ? 1 : stepProgress) * 100}%`
+                        : '0%',
+                }}
               />
             </button>
           ))}
@@ -161,7 +229,11 @@ export function ScenePlayer({ scene, caption, autoPlay = false, className, onFir
 
         <label className="flex items-center gap-1 text-xs text-muted">
           <span className="sr-only sm:not-sr-only">{t('player.speed')}</span>
-          <select className="rounded-lg border border-border bg-surface px-1.5 py-1 text-xs" value={state.speed} onChange={(e) => dispatch({ type: 'SET_SPEED', speed: Number(e.target.value) })}>
+          <select
+            className="rounded-lg border border-border bg-surface px-1.5 py-1 text-xs"
+            value={state.speed}
+            onChange={(e) => dispatch({ type: 'SET_SPEED', speed: Number(e.target.value) })}
+          >
             {PLAYER_SPEEDS.map((s) => (
               <option key={s} value={s}>
                 {s}×
@@ -169,16 +241,29 @@ export function ScenePlayer({ scene, caption, autoPlay = false, className, onFir
             ))}
           </select>
         </label>
-        <button type="button" className="btn-icon" onClick={() => dispatch({ type: 'TOGGLE_NARRATION' })} aria-pressed={state.showNarration} aria-label={state.showNarration ? t('player.hideNarration') : t('player.showNarration')} title={state.showNarration ? t('player.hideNarration') : t('player.showNarration')}>
+        <button
+          type="button"
+          className="btn-icon"
+          onClick={() => dispatch({ type: 'TOGGLE_NARRATION' })}
+          aria-pressed={state.showNarration}
+          aria-label={state.showNarration ? t('player.hideNarration') : t('player.showNarration')}
+          title={state.showNarration ? t('player.hideNarration') : t('player.showNarration')}
+        >
           {state.showNarration ? <Captions size={16} /> : <CaptionsOff size={16} />}
         </button>
       </div>
 
-      {caption && <figcaption className="border-t border-border px-4 py-2 text-xs text-muted">{caption}</figcaption>}
+      {caption && (
+        <figcaption className="border-t border-border px-4 py-2 text-xs text-muted">
+          {caption}
+        </figcaption>
+      )}
 
       {/* Erişilebilirlik: metin alternatifi */}
       <details className="border-t border-border px-4 py-2 text-sm">
-        <summary className="cursor-pointer text-xs font-medium text-muted">{t('player.transcript')}</summary>
+        <summary className="cursor-pointer text-xs font-medium text-muted">
+          {t('player.transcript')}
+        </summary>
         <p className="mt-2 text-muted">{tl(scene.a11y.description)}</p>
         <ol className="mt-2 list-decimal space-y-1 pl-5">
           {transcript.map((line, i) => (
