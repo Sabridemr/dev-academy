@@ -40,12 +40,8 @@ jest.mock('expo-sqlite', () => ({
   })),
 }));
 
-// Lottie / Rive — native görünümler testte basit View olarak
+// Lottie — native görünüm testte basit View olarak
 jest.mock('lottie-react-native', () => {
   const { View } = require('react-native');
   return { __esModule: true, default: View };
-});
-jest.mock('rive-react-native', () => {
-  const { View } = require('react-native');
-  return { __esModule: true, default: View, Fit: { Contain: 'contain' } };
 });

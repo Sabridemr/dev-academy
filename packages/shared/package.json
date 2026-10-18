@@ -52,7 +52,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run",
     "test:watch": "vitest",
-    "lint": "tsc --noEmit -p tsconfig.json",
+    "lint": "eslint . --max-warnings=0",
     "content:validate": "tsx scripts/validate-content.ts",
     "schema:export": "tsx scripts/export-json-schema.ts",
     "clean": "rm -rf dist .turbo"

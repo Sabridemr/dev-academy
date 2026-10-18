@@ -49,15 +49,17 @@ flowchart LR
 | Modül | Uç noktalar | Not |
 |---|---|---|
 | auth | `/auth/register`, `/login`, `/oauth`, `/refresh`, `/logout`, `/change-password` | argon2id; refresh token rotasyonu ve yeniden kullanım tespiti; Google/Apple ID token doğrulama |
-| users | `/users/me`, `/users/me/push-tokens` | profil, öğrenme yolu, hatırlatma saati, saat dilimi |
+| users | `/users/me` (GET/PATCH/DELETE), `/users/me/push-tokens` (POST, DELETE `/:token`) | profil, öğrenme yolu, hatırlatma saati, doğrulanmış saat dilimi; hesap kapatma (soft delete); push token başka hesaba devredilemez |
 | content | `/paths`, `/modules`, `/lessons`, `/scenes` | yalnızca yayınlanmış sürümler; Redis cache + ETag; token varsa ilerleme eklenir |
 | quizzes | `/quizzes/by-lesson/:id`, `/quizzes/:id/attempts` | doğru cevaplar istemciye gönderilmez; yanlışlar SM-2 kartına dönüşür |
 | progress | `/progress`, `/summary`, `/lessons/:id`, `/reviews`, `/badges`, `/interactive` | seri, rozet, tekrar takvimi; WebSocket bildirimleri |
 | library | `/bookmarks`, `/notes` | |
-| search | `/search?q=` | PostgreSQL full-text + GIN indeksi |
+| search | `/search?q=` | önce PostgreSQL full-text (GIN indeksi), sonuç yoksa ILIKE alt dize yedeği; modül başlıkları iki dilde |
 | admin | `/admin/lessons`, `/versions`, `/scenes`, `/quizzes`, `/modules`, `/media/presign`, `/stats` | editor/admin rolleri; taslak → yayın akışı |
 | offline | `/offline/modules/:id` | mobil için modül paketi (ETag destekli) |
 | health | `/health`, `/health/ready` | liveness / readiness |
+| notifications | `/notifications/run-daily` (admin) | saatlik zamanlanmış iş: yerel hatırlatma saatinde Expo push ya da e-posta |
+| realtime | WebSocket `/ws` | socket.io; kullanıcı odası (ilerleme, seri, rozet olayları), `content.published` yayını, kimliği doğrulanmış simülasyon odaları |
 
 Ortak altyapı: global JWT guard (`@Public`, `@OptionalAuth`), rol guard’ı, Redis tabanlı rate limiting, zod doğrulama pipe’ı (shared şemalarıyla), merkezi hata formatı (`ApiErrorBody`), pino yapılandırılmış log ve request-id, OpenAPI (`/docs`).
 

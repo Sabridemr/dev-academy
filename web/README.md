@@ -44,7 +44,7 @@ src/
 
 ## Simülatörler
 
-Her interaktif tür (`load-balancer`, `cache`, `rate-limiter`, `consistent-hashing`, `gradient-descent`, `attention`, `neural-network-playground` …) `src/components/simulators/` altında ayrı bir bileşendir ve `registry.tsx` üzerinden lazy-load edilir. Bileşenler `SimulatorProps` (`params`, `lessonId`, `onInteract`) sözleşmesini uygular, algoritmaları shared paketten alır.
+Her interaktif tür (`load-balancer`, `cache`, `rate-limiter`, `consistent-hashing`, `gradient-descent`, `attention`, `neural-network-playground` …) `src/components/simulators/` altında ayrı bir bileşendir ve `registry.tsx` üzerinden lazy-load edilir. Bileşenler `SimulatorProps` (`params`, `lessonId`, `onInteract`) sözleşmesini uygular. 26 simülatörün 7'si algoritmasını shared paketten alır (`load-balancer`, `cache`, `rate-limiter`, `consistent-hashing`, `gradient-descent`, `attention`, `capacity-estimator`); diğerlerinin mantığı bileşenin içindedir. Her simülatörün kabul ettiği ders parametreleri shared `INTERACTIVE_PARAMS` listesindedir (`simulators/params.test.ts` uyumu denetler).
 
 ## Admin paneli
 

@@ -7,7 +7,6 @@ import { clearQueues, enqueueAttempt, storeAttemptResult } from '@/offline/queue
 /** Çevrimdışı kuyruğa alınmış quiz sonucu gelince ders tamamlama akışı (onPassed) tetiklenmeli */
 
 jest.mock('@/components/celebration/Celebration', () => ({ Celebration: () => null }));
-jest.mock('@/components/celebration/RiveAnimation', () => ({ RiveAnimation: () => null }));
 
 const quiz: QuizPublic = {
   id: 'quiz-1',

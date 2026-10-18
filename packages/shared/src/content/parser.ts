@@ -361,7 +361,7 @@ export function lessonPlainText(doc: LessonDocument): string {
       }
     })
     .join('\n')
-    .replace(/[#*_`>\[\]()|-]/g, ' ')
+    .replace(/[#*_`>[\]()|-]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
 }

@@ -8,7 +8,7 @@ push bildirimleri içerir.
 | --- | --- |
 | Çatı | Expo SDK 53, React Native 0.79 (New Architecture), React 19.0, TypeScript (strict) |
 | Gezinme | expo-router 5 (dosya tabanlı; `src/app`) |
-| Animasyon | react-native-svg 15 + react-native-reanimated 3.17, Lottie (lottie-react-native 7), Rive (rive-react-native 9) |
+| Animasyon | react-native-svg 15 + react-native-reanimated 3.17, Lottie (lottie-react-native 7) |
 | Veri | @tanstack/react-query 5, zustand 5 |
 | Depolama | expo-sqlite 15 (çevrimdışı içerik), react-native-mmkv 3 (ayarlar, ETag, kuyruk), expo-secure-store (token) |
 | Kimlik | E-posta/şifre, Google (expo-auth-session), Apple (expo-apple-authentication, yalnızca iOS) |
@@ -43,7 +43,7 @@ cp .env.example .env                        # değişkenleri düzenleyin
 
 ## 2. Çalıştırma
 
-> Uygulama MMKV, SQLite, Rive ve Lottie gibi native modüller kullandığı için **Expo Go yerine development
+> Uygulama MMKV, SQLite ve Lottie gibi native modüller kullandığı için **Expo Go yerine development
 > build** gerekir.
 
 ```bash
@@ -85,7 +85,7 @@ mobile/
 │  │  ├─ lesson/            # BlockRenderer, Markdown, Diyagram, Kod, Not
 │  │  ├─ interactive/       # Simülatörler + kayıt (registry)
 │  │  ├─ quiz/              # QuizView
-│  │  └─ celebration/       # Lottie + Rive sarmalayıcı
+│  │  └─ celebration/       # Lottie kutlama animasyonu
 │  ├─ i18n/                 # tr (varsayılan) + en; useI18n()
 │  ├─ theme/                # --da-* token'larının RN karşılığı, açık/koyu tema
 │  ├─ lib/                  # api.ts (refresh'li istemci), endpoints.ts, storage.ts, network.ts
@@ -112,15 +112,12 @@ mobile/
   genişletilebilir metin transkripti (`a11y.description` + adım anlatımları), tüm kontrollerde etiketler.
 - Ölçek: genişlik ekran genişliği, yükseklik `canvas.height / canvas.width` oranından.
 
-### Lottie ve Rive
+### Lottie
 
 - Quiz geçildiğinde `Celebration` (Lottie, `assets/animations/celebration.json`) oynar; reduced-motion açıksa
   son kare statik gösterilir.
-- `RiveAnimation` bileşeni `resourceName` (native projeye gömülü `.riv`) ya da `url` alır. Depoda henüz `.riv`
-  varlığı yok; bu durumda, Rive native modülü yoksa ya da çalışma zamanı hatasında **otomatik olarak `fallback`**
-  (Lottie) gösterilir. Rive eklemek için: `.riv` dosyasını iOS'ta Xcode projesine (bundle), Android'de
-  `android/app/src/main/res/raw/` altına koyup `<RiveAnimation resourceName="dosya_adi" fallback={...} />`
-  kullanın (ya da `url` ile uzaktan yükleyin).
+- Daha önce bulunan Rive sarmalayıcısı, depoda hiç `.riv` varlığı olmadığı ve her zaman Lottie'ye düştüğü için
+  kaldırıldı (gereksiz native bağımlılık).
 
 ## 5. Dersler ve simülatörler
 
@@ -129,8 +126,10 @@ mobile/
 `utils/svgTheme.ts`), `animation`, `interactive`, `code` (eş aralıklı, basit vurgulama, dil sekmeleri),
 `realworld`, `callout`, `quiz`, `next`.
 
-Mobilde gerçek etkileşimli simülatörler (mantık `@devacademy/shared/simulators`'dan):
-`load-balancer`, `cache`, `rate-limiter`, `consistent-hashing`, `gradient-descent`.
+Mobilde gerçek etkileşimli simülatörler (26 türün 8'i): `load-balancer`, `cache`, `rate-limiter`,
+`consistent-hashing`, `gradient-descent`, `capacity-estimator` (mantık `@devacademy/shared/simulators`'dan) ile
+`request-journey` ve `pipeline` (saf mantık `components/interactive/requestJourney.ts` ve `pipeline.ts`'te).
+`request-journey` ders içeriğinde en sık kullanılan simülatördür.
 Diğer `InteractiveType` değerleri için başlık/yönergeyi gösteren ve `${EXPO_PUBLIC_WEB_URL}/lessons/<id>`
 adresini açan bir yedek kart gösterilir. İlk etkileşimde `POST /progress/interactive` (rozetler için) gönderilir.
 

@@ -12,7 +12,6 @@ import { useSession } from '@/stores/session';
 import { radius, spacing, useTheme, withAlpha } from '@/theme';
 import { Button, Card, Chip, IconButton, Text } from '@/components/ui';
 import { Celebration } from '@/components/celebration/Celebration';
-import { RiveAnimation } from '@/components/celebration/RiveAnimation';
 import { errorText } from '@/utils/errors';
 
 type Question = QuizPublic['questions'][number];
@@ -125,7 +124,7 @@ export function QuizView({ quiz, lessonId, onPassed }: { quiz: QuizPublic; lesso
 
       {result ? (
         <View style={styles.resultBox} accessibilityLiveRegion="polite" testID="quiz-result">
-          {result.passed ? <RiveAnimation fallback={<Celebration size={140} />} style={{ width: 140, height: 140 }} /> : null}
+          {result.passed ? <Celebration size={140} /> : null}
           <Text variant="heading" align="center" color={result.passed ? colors.success : colors.warning}>
             {t('quiz.score', { score: Math.round(result.score) })}
           </Text>

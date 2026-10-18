@@ -18,7 +18,6 @@ import {
   Smartphone,
   SplitSquareHorizontal,
   User,
-  Users,
   Workflow,
   Zap,
   CircleDot,

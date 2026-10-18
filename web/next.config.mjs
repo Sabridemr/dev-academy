@@ -34,6 +34,7 @@ const nextConfig = {
   serverExternalPackages: ['isomorphic-dompurify', 'jsdom'],
   output: 'standalone',
   poweredByHeader: false,
+  // Lint CI’da ayrı adımda (kök eslint.config.mjs) çalışır; build sırasında tekrarlanmaz
   eslint: { ignoreDuringBuilds: true },
   experimental: {
     optimizePackageImports: ['lucide-react', 'framer-motion'],

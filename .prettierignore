@@ -1,0 +1,8 @@
+# Ders içerikleri özel :::direktif sözdizimi kullanır; Prettier Markdown biçimlendirmesi bunları bozabilir
+content/
+# Üretilen dosyalar
+pnpm-lock.yaml
+packages/shared/schema/
+backend/openapi.json
+backend/prisma/migrations/
+mobile/assets/
