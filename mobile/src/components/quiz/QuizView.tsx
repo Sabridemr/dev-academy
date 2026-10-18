@@ -37,6 +37,8 @@ export function QuizView({ quiz, lessonId, onPassed }: { quiz: QuizPublic; lesso
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<unknown>(null);
   const startedAt = useRef(Date.now());
+  const onPassedRef = useRef(onPassed);
+  onPassedRef.current = onPassed;
 
   // Kuyruktaki deneme arka planda değerlendirildiyse sonucu göster
   useEffect(() => {
@@ -46,10 +48,14 @@ export function QuizView({ quiz, lessonId, onPassed }: { quiz: QuizPublic; lesso
       if (r) {
         setResult(r);
         setQueued(false);
+        // Çevrimiçi gönderimle aynı yan etkiler: ders tamamlandı + özet/tekrar listesi tazelenir
+        if (r.passed) onPassedRef.current?.();
+        void qc.invalidateQueries({ queryKey: queryKeys.summary });
+        void qc.invalidateQueries({ queryKey: queryKeys.reviews });
       }
     }, 3000);
     return () => clearInterval(id);
-  }, [queued, quiz.id]);
+  }, [queued, quiz.id, qc]);
 
   const answeredCount = quiz.questions.filter((q) => (answers[q.id]?.length ?? 0) > 0).length;
   const complete = answeredCount === quiz.questions.length;

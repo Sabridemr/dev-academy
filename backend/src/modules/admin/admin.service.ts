@@ -71,9 +71,10 @@ export class AdminService {
       return parsed.data;
     });
 
-    return this.prisma.$transaction(async (tx) => {
+    const result = await this.prisma.$transaction(async (tx) => {
       const module = await tx.module.findUnique({ where: { id: dto.moduleId } });
       if (!module) throw new NotFoundException('Modül bulunamadı');
+      const before = await tx.lesson.findUnique({ where: { id: dto.id } });
       const lesson = await tx.lesson.upsert({
         where: { id: dto.id },
         update: { slug: dto.slug, moduleId: dto.moduleId, order: dto.order },
@@ -91,10 +92,23 @@ export class AdminService {
         blocks: jsonInput(blocks),
         authorId,
       };
-      if (draft) return tx.lessonVersion.update({ where: { id: draft.id }, data });
-      const last = await tx.lessonVersion.findFirst({ where: { lessonId: lesson.id }, orderBy: { version: 'desc' } });
-      return tx.lessonVersion.create({ data: { ...data, lessonId: lesson.id, version: (last?.version ?? 0) + 1, status: 'draft' } });
+      let version;
+      if (draft) version = await tx.lessonVersion.update({ where: { id: draft.id }, data });
+      else {
+        const last = await tx.lessonVersion.findFirst({ where: { lessonId: lesson.id }, orderBy: { version: 'desc' } });
+        version = await tx.lessonVersion.create({ data: { ...data, lessonId: lesson.id, version: (last?.version ?? 0) + 1, status: 'draft' } });
+      }
+      return { version, before, lesson };
     });
+
+    // slug/modül/sıra ders kimliğinin parçası ve hemen canlıya yansır: yayındaysa cache'ler eskimesin
+    // (komşu derslerin önceki/sonraki bağlantıları da değiştiği için tüm içerik cache'i temizlenir)
+    const { before, lesson } = result;
+    if (before?.publishedVersionId && (before.slug !== lesson.slug || before.moduleId !== lesson.moduleId || before.order !== lesson.order)) {
+      await this.content.invalidateAll();
+      await this.search.invalidate();
+    }
+    return result.version;
   }
 
   async publish(lessonId: string, versionId?: string) {
@@ -216,9 +230,10 @@ export class AdminService {
         create: { id: quiz.id, lessonId: dto.lessonId, title: toJsonLocalized(quiz.title), passScore: quiz.passScore },
       });
       const keys = quiz.questions.map((q) => q.id);
-      await tx.question.deleteMany({ where: { quizId: quiz.id, key: { notIn: keys } } });
+      // Silmek yerine arşivle: cascade ile öğrencilerin deneme cevapları ve tekrar kartları silinmesin
+      await tx.question.updateMany({ where: { quizId: quiz.id, key: { notIn: keys } }, data: { archived: true } });
       for (const [i, q] of quiz.questions.entries()) {
-        const data = { order: i, type: q.type, prompt: toJsonLocalized(q.prompt), options: jsonInput(q.options), correct: q.correct, explanation: toJsonLocalized(q.explanation), difficulty: q.difficulty, concepts: q.concepts };
+        const data = { archived: false, order: i, type: q.type, prompt: toJsonLocalized(q.prompt), options: jsonInput(q.options), correct: q.correct, explanation: toJsonLocalized(q.explanation), difficulty: q.difficulty, concepts: q.concepts };
         await tx.question.upsert({ where: { quizId_key: { quizId: quiz.id, key: q.id } }, update: data, create: { ...data, quizId: quiz.id, key: q.id } });
       }
       return tx.quiz.findUniqueOrThrow({ where: { id: quiz.id }, include: { questions: { orderBy: { order: 'asc' } } } });

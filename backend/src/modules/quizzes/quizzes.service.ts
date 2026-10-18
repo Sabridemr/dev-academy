@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import type { AttemptResult, QuizPublic, SubmitAttemptDto, LocalizedString } from '@devacademy/shared';
 import { gradeAnswer, qualityFromAnswer, sm2Review, SM2_INITIAL } from '@devacademy/shared';
-import type { Question, Quiz } from '@prisma/client';
+import type { Prisma, Question, Quiz } from '@prisma/client';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { asLocalized } from '../../common/utils/localized';
 import { ProgressService } from '../progress/progress.service';
@@ -18,19 +18,19 @@ export class QuizzesService {
   ) {}
 
   async getQuiz(quizId: string): Promise<QuizPublic> {
-    const quiz = await this.prisma.quiz.findFirst({ where: { id: quizId, status: 'published' }, include: { questions: { orderBy: { order: 'asc' } } } });
+    const quiz = await this.prisma.quiz.findFirst({ where: { id: quizId, status: 'published' }, include: { questions: { where: { archived: false }, orderBy: { order: 'asc' } } } });
     if (!quiz) throw new NotFoundException('Quiz bulunamadı');
     return toPublic(quiz);
   }
 
   async getLessonQuiz(lessonId: string): Promise<QuizPublic> {
-    const quiz = await this.prisma.quiz.findFirst({ where: { lessonId, status: 'published' }, include: { questions: { orderBy: { order: 'asc' } } } });
+    const quiz = await this.prisma.quiz.findFirst({ where: { lessonId, status: 'published' }, include: { questions: { where: { archived: false }, orderBy: { order: 'asc' } } } });
     if (!quiz) throw new NotFoundException('Bu dersin quizi yok');
     return toPublic(quiz);
   }
 
   async submit(userId: string, quizId: string, dto: SubmitAttemptDto): Promise<AttemptResult> {
-    const quiz = await this.prisma.quiz.findFirst({ where: { id: quizId, status: 'published' }, include: { questions: true } });
+    const quiz = await this.prisma.quiz.findFirst({ where: { id: quizId, status: 'published' }, include: { questions: { where: { archived: false } } } });
     if (!quiz) throw new NotFoundException('Quiz bulunamadı');
     const byKey = new Map(quiz.questions.map((q) => [q.key, q]));
     const answered = new Map(dto.answers.map((a) => [a.questionId, a.selected]));
@@ -48,22 +48,25 @@ export class QuizzesService {
     const score = Math.round((correctCount / Math.max(1, totalCount)) * 100);
     const passed = score >= quiz.passScore;
 
-    const attempt = await this.prisma.attempt.create({
-      data: {
-        userId,
-        quizId,
-        score,
-        passed,
-        correctCount,
-        totalCount,
-        durationMs: dto.durationMs,
-        answers: { create: results.map((r) => ({ questionId: r.question.id, selected: r.selected, correct: r.correct })) },
-      },
-    });
-
-    // Aralıklı tekrar kartları: yanlışlar yeni/sıfırlanmış kart, doğrular mevcut kartı ilerletir
+    // Deneme ve tekrar kartları birlikte yazılır: yarıda kalırsa ikisi de geri alınır
     const perQuestionMs = dto.durationMs ? dto.durationMs / Math.max(1, totalCount) : undefined;
-    await this.upsertReviewCards(userId, quiz.lessonId, results.map((r) => ({ question: r.question, correct: r.correct })), perQuestionMs);
+    const attempt = await this.prisma.$transaction(async (tx) => {
+      const created = await tx.attempt.create({
+        data: {
+          userId,
+          quizId,
+          score,
+          passed,
+          correctCount,
+          totalCount,
+          durationMs: dto.durationMs,
+          answers: { create: results.map((r) => ({ questionId: r.question.id, selected: r.selected, correct: r.correct })) },
+        },
+      });
+      // Aralıklı tekrar kartları: yanlışlar yeni/sıfırlanmış kart, doğrular mevcut kartı ilerletir
+      await this.upsertReviewCards(tx, userId, quiz.lessonId, results.map((r) => ({ question: r.question, correct: r.correct })), perQuestionMs);
+      return created;
+    });
 
     const newBadges = await this.progress.recordActivity(userId, { quizCompleted: true, perfectQuiz: correctCount === totalCount });
 
@@ -107,30 +110,34 @@ export class QuizzesService {
   }
 
   private async upsertReviewCards(
+    tx: Prisma.TransactionClient,
     userId: string,
     lessonId: string,
     results: { question: Question; correct: boolean }[],
     perQuestionMs?: number,
   ): Promise<void> {
     const now = new Date();
+    // Mevcut kartlar tek sorguda okunur (soru başına ayrı sorgu yerine)
+    const existingCards = await tx.reviewCard.findMany({ where: { userId, questionId: { in: results.map((r) => r.question.id) } } });
+    const byQuestion = new Map(existingCards.map((c) => [c.questionId, c]));
+    const creates: Prisma.ReviewCardCreateManyInput[] = [];
     for (const r of results) {
-      const existing = await this.prisma.reviewCard.findUnique({ where: { userId_questionId: { userId, questionId: r.question.id } } });
+      const existing = byQuestion.get(r.question.id);
       if (!existing && r.correct) continue; // doğru bilinen ve kartı olmayan soru için kart açma
       const quality = qualityFromAnswer(r.correct, perQuestionMs);
       const card = sm2Review(existing ?? SM2_INITIAL, quality);
       const dueAt = new Date(now.getTime() + card.intervalDays * 86_400_000);
       const concept = r.question.concepts[0] ?? lessonId;
       if (existing) {
-        await this.prisma.reviewCard.update({
+        await tx.reviewCard.update({
           where: { id: existing.id },
           data: { intervalDays: card.intervalDays, easeFactor: card.easeFactor, repetitions: card.repetitions, dueAt, lastReviewed: now },
         });
       } else {
-        await this.prisma.reviewCard.create({
-          data: { userId, questionId: r.question.id, lessonId, concept, intervalDays: card.intervalDays, easeFactor: card.easeFactor, repetitions: card.repetitions, dueAt, lastReviewed: now },
-        });
+        creates.push({ userId, questionId: r.question.id, lessonId, concept, intervalDays: card.intervalDays, easeFactor: card.easeFactor, repetitions: card.repetitions, dueAt, lastReviewed: now });
       }
     }
+    if (creates.length > 0) await tx.reviewCard.createMany({ data: creates, skipDuplicates: true });
   }
 }
 

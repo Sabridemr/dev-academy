@@ -56,6 +56,7 @@ export const endpoints = {
   me: () => api.get<MeProfile>('/users/me'),
   updateMe: (dto: UpdateProfileDto) => api.patch<MeProfile>('/users/me', dto),
   registerPushToken: (dto: RegisterPushTokenDto) => api.post<void>('/users/me/push-tokens', dto),
+  unregisterPushToken: (token: string) => api.del<void>(`/users/me/push-tokens/${encodeURIComponent(token)}`),
 
   /* ------------------------------ İçerik ------------------------------ */
   paths: () => api.get<LearningPathSummary[]>('/paths'),

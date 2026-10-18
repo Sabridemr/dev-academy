@@ -26,7 +26,15 @@ export function LessonView({ initial }: { initial: LessonDetail }) {
   const seen = useRef(new Set<string>());
   const startedAt = useRef(Date.now());
   const [percent, setPercent] = useState(lesson.progress?.percent ?? 0);
+  const percentRef = useRef(percent);
+  percentRef.current = percent;
   const completed = lesson.progress?.status === 'completed' || percent >= 100;
+
+  // SSR yanıtı misafir olarak alınır (ilerleme yok); oturumlu veri gelince sunucudaki ilerlemeyi yansıt
+  const serverPercent = data?.progress?.percent;
+  useEffect(() => {
+    if (serverPercent != null) setPercent((cur) => Math.max(cur, serverPercent));
+  }, [serverPercent]);
 
   // Görünen blokları izle
   useEffect(() => {
@@ -43,27 +51,44 @@ export function LessonView({ initial }: { initial: LessonDetail }) {
     return () => observer.disconnect();
   }, [lesson.blocks.length, lesson.id]);
 
-  // İlerlemeyi 5 sn'de bir ve sayfadan çıkarken kaydet
+  // İlerlemeyi 5 sn'de bir ve sayfa gizlenirken/kapanırken kaydet.
+  // Yüzde ref'ten okunur: efekt her yüzde değişiminde yeniden kurulup ekstra istek atmaz.
   const lastSent = useRef(0);
+  const mutateRef = useRef(progress.mutate);
+  mutateRef.current = progress.mutate;
   useEffect(() => {
     if (!authed) return;
-    const flush = () => {
-      if (percent <= lastSent.current && Date.now() - startedAt.current < 30_000) return;
+    const build = () => {
+      const current = percentRef.current;
+      if (current <= lastSent.current && Date.now() - startedAt.current < 30_000) return null;
       const secondsSpent = Math.round((Date.now() - startedAt.current) / 1000);
       startedAt.current = Date.now();
-      lastSent.current = percent;
-      const lastBlockId = Array.from(seen.current).at(-1);
-      progress.mutate({ percent, lastBlockId, secondsSpent });
+      lastSent.current = current;
+      return { percent: current, lastBlockId: Array.from(seen.current).at(-1), secondsSpent };
+    };
+    const flush = () => {
+      const dto = build();
+      if (dto) mutateRef.current(dto);
+    };
+    // Sayfa kapanırken normal fetch iptal edilebilir; keepalive isteği tarayıcı kapansa da tamamlanır
+    // (sendBeacon Authorization başlığı taşıyamadığı için kullanılmaz)
+    const flushOnLeave = () => {
+      const dto = build();
+      if (dto) void api(`/progress/lessons/${lesson.id}`, { method: 'PUT', body: dto, keepalive: true }).catch(() => undefined);
+    };
+    const onVisibility = () => {
+      if (document.visibilityState === 'hidden') flushOnLeave();
     };
     const id = setInterval(flush, 5000);
-    window.addEventListener('beforeunload', flush);
+    window.addEventListener('pagehide', flushOnLeave);
+    document.addEventListener('visibilitychange', onVisibility);
     return () => {
       clearInterval(id);
-      window.removeEventListener('beforeunload', flush);
+      window.removeEventListener('pagehide', flushOnLeave);
+      document.removeEventListener('visibilitychange', onVisibility);
       flush();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authed, percent]);
+  }, [authed, lesson.id]);
 
   const markComplete = () => {
     setPercent(100);

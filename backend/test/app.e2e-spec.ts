@@ -1,4 +1,7 @@
 import type { INestApplication } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import request from 'supertest';
 import { createApp } from '../src/main';
 import { PrismaService } from '../src/common/prisma/prisma.service';
@@ -23,6 +26,13 @@ describe('DevAcademy API (e2e)', () => {
     http = request(app.getHttpServer());
     await app.get(RedisService).delByPattern('content:*');
   });
+
+  /** Kayıt uç noktasının hız sınırını tüketmeden test kullanıcısı + access token üretir */
+  async function directUser(tag: string): Promise<string> {
+    const user = await app.get(PrismaService).user.create({ data: { email: `e2e_${tag}_${Date.now()}@test.local`, displayName: tag } });
+    const token = await app.get(JwtService).signAsync({ sub: user.id, email: user.email, role: user.role, type: 'access' }, { secret: process.env.JWT_ACCESS_SECRET, expiresIn: 900 });
+    return `Bearer ${token}`;
+  }
 
   afterAll(async () => {
     const prisma = app.get(PrismaService);
@@ -83,6 +93,17 @@ describe('DevAcademy API (e2e)', () => {
     it('korumalı uç nokta token olmadan 401', async () => {
       await http.get(`${prefix}/users/me`).expect(401);
     });
+
+    it('şifre değiştirme mevcut şifreyi zorunlu tutar ve oturumları kapatır', async () => {
+      const cpEmail = `e2e_cp_${Date.now()}@test.local`;
+      const reg = await http.post(`${prefix}/auth/register`).send({ email: cpEmail, password, displayName: 'Şifre' }).expect(201);
+      const auth = `Bearer ${reg.body.tokens.accessToken}`;
+      await http.post(`${prefix}/auth/change-password`).set('Authorization', auth).send({ newPassword: 'YeniSifre123!' }).expect(400);
+      await http.post(`${prefix}/auth/change-password`).set('Authorization', auth).send({ currentPassword: 'yanlis-sifre', newPassword: 'YeniSifre123!' }).expect(401);
+      await http.post(`${prefix}/auth/change-password`).set('Authorization', auth).send({ currentPassword: password, newPassword: 'YeniSifre123!' }).expect(204);
+      await http.post(`${prefix}/auth/refresh`).send({ refreshToken: reg.body.tokens.refreshToken }).expect(401);
+      await http.post(`${prefix}/auth/login`).send({ email: cpEmail, password: 'YeniSifre123!' }).expect(200);
+    });
   });
 
   describe('users', () => {
@@ -95,6 +116,20 @@ describe('DevAcademy API (e2e)', () => {
     });
     it('bilinmeyen öğrenme yolu 404', async () => {
       await http.patch(`${prefix}/users/me`).set('Authorization', `Bearer ${accessToken}`).send({ selectedPathId: 'yok' }).expect(404);
+    });
+
+    it('geçersiz saat dilimi 400', async () => {
+      await http.patch(`${prefix}/users/me`).set('Authorization', `Bearer ${accessToken}`).send({ timezone: 'Nope/Zone' }).expect(400);
+    });
+
+    it('push token başka hesaba devredilemez; sahibi bırakınca kaydedilebilir', async () => {
+      const otherAuth = await directUser('push');
+      const token = `ExponentPushToken[e2e-${Date.now()}]`;
+      await http.post(`${prefix}/users/me/push-tokens`).set('Authorization', `Bearer ${accessToken}`).send({ token, platform: 'ios' }).expect(204);
+      await http.post(`${prefix}/users/me/push-tokens`).set('Authorization', otherAuth).send({ token, platform: 'ios' }).expect(409);
+      await http.post(`${prefix}/users/me/push-tokens`).set('Authorization', `Bearer ${accessToken}`).send({ token, platform: 'ios' }).expect(204);
+      await http.delete(`${prefix}/users/me/push-tokens/${encodeURIComponent(token)}`).set('Authorization', `Bearer ${accessToken}`).expect(204);
+      await http.post(`${prefix}/users/me/push-tokens`).set('Authorization', otherAuth).send({ token, platform: 'ios' }).expect(204);
     });
   });
 
@@ -138,6 +173,21 @@ describe('DevAcademy API (e2e)', () => {
       await http.get(`${prefix}/lessons/${lessonId}`).set('If-None-Match', etag).expect(304);
     });
 
+    it('token’lı ders yanıtı paylaşılan cache’e düşmez; anonim yanıt public kalır', async () => {
+      const authed = await http.get(`${prefix}/lessons/${lessonId}`).set('Authorization', `Bearer ${accessToken}`).expect(200);
+      expect(authed.headers['cache-control']).toMatch(/private/);
+      expect(authed.headers.vary).toMatch(/Authorization/);
+      const anon = await http.get(`${prefix}/lessons/${lessonId}`).expect(200);
+      expect(anon.headers['cache-control']).toMatch(/public/);
+    });
+
+    it('WebSocket CORS yalnızca izinli origin’lere açık', async () => {
+      const allowed = await http.get('/ws/').query({ EIO: '4', transport: 'polling' }).set('Origin', 'http://localhost:3000');
+      expect(allowed.headers['access-control-allow-origin']).toBe('http://localhost:3000');
+      const denied = await http.get('/ws/').query({ EIO: '4', transport: 'polling' }).set('Origin', 'http://evil.example');
+      expect(denied.headers['access-control-allow-origin']).toBeUndefined();
+    });
+
     it('sahne JSON’ı döner', async () => {
       const res = await http.get(`${prefix}/scenes/load-balancer-round-robin`).expect(200);
       expect(res.body.scene.steps.length).toBeGreaterThan(0);
@@ -178,6 +228,23 @@ describe('DevAcademy API (e2e)', () => {
       expect(Array.isArray(reviews.body)).toBe(true);
     });
 
+    it('aynı quiz tekrar çözülünce tekrar kartı çoğalmaz; vadesi gelen kart doğru cevabı içerir', async () => {
+      const prisma = app.get(PrismaService);
+      const me = await http.get(`${prefix}/users/me`).set('Authorization', `Bearer ${accessToken}`).expect(200);
+      const before = await prisma.reviewCard.count({ where: { userId: me.body.id } });
+      const quiz = await http.get(`${prefix}/quizzes/by-lesson/${lessonId}`).expect(200);
+      const answers = quiz.body.questions.map((q: { id: string }) => ({ questionId: q.id, selected: [q.id === 'q1' ? 'b' : 'zzz-yanlis'] }));
+      await http.post(`${prefix}/quizzes/${quiz.body.id}/attempts`).set('Authorization', `Bearer ${accessToken}`).send({ answers }).expect(201);
+      expect(await prisma.reviewCard.count({ where: { userId: me.body.id } })).toBe(before);
+
+      await prisma.reviewCard.updateMany({ where: { userId: me.body.id }, data: { dueAt: new Date(Date.now() - 60_000) } });
+      const reviews = await http.get(`${prefix}/progress/reviews`).set('Authorization', `Bearer ${accessToken}`).expect(200);
+      expect(reviews.body.length).toBeGreaterThan(0);
+      expect(Array.isArray(reviews.body[0].correctAnswer)).toBe(true);
+      expect(reviews.body[0].correctAnswer.length).toBeGreaterThan(0);
+      expect(reviews.body[0].explanation).toBeDefined();
+    });
+
     it('bilinmeyen soru id’si 400', async () => {
       await http.post(`${prefix}/quizzes/a-05-load-balancing-quiz/attempts`).set('Authorization', `Bearer ${accessToken}`).send({ answers: [{ questionId: 'qX', selected: ['a'] }] }).expect(400);
     });
@@ -193,6 +260,17 @@ describe('DevAcademy API (e2e)', () => {
       expect(summary.body.activeToday).toBe(true);
       expect(summary.body.totalSecondsSpent).toBe(420);
       expect(summary.body.badges.length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('eş zamanlı tamamlamalar aynı rozeti iki kez vermez ve hata döndürmez', async () => {
+      const auth = await directUser('badge');
+      const [a, b] = await Promise.all([
+        http.put(`${prefix}/progress/lessons/${lessonId}`).set('Authorization', auth).send({ percent: 100, completed: true }),
+        http.put(`${prefix}/progress/lessons/${lessonId}`).set('Authorization', auth).send({ percent: 100, completed: true }),
+      ]);
+      expect([a.status, b.status]).toEqual([200, 200]);
+      const summary = await http.get(`${prefix}/progress/summary`).set('Authorization', auth).expect(200);
+      expect(summary.body.badges.filter((x: { slug: string }) => x.slug === 'first-steps')).toHaveLength(1);
     });
 
     it('ilerleme geriye düşmez', async () => {
@@ -230,6 +308,16 @@ describe('DevAcademy API (e2e)', () => {
     it('ders ve kavram arar', async () => {
       const res = await http.get(`${prefix}/search`).query({ q: 'round-robin' }).expect(200);
       expect(res.body.results.some((r: { id: string }) => r.id === lessonId)).toBe(true);
+    });
+    it('full-text eşleşmesi yoksa alt dize yedeğiyle bulur', async () => {
+      const res = await http.get(`${prefix}/search`).query({ q: 'robi' }).expect(200);
+      expect(res.body.results.some((r: { id: string }) => r.id === lessonId)).toBe(true);
+    });
+    it('modül başlığını büyük/küçük harf duyarsız ve iki dilde arar', async () => {
+      const en = await http.get(`${prefix}/search`).query({ q: 'FUNDAMENTALS' }).expect(200);
+      expect(en.body.results.some((r: { type: string; id: string }) => r.type === 'module' && r.id === 'a-system-design-fundamentals')).toBe(true);
+      const tr = await http.get(`${prefix}/search`).query({ q: 'sistem tasar' }).expect(200);
+      expect(tr.body.results.some((r: { type: string; id: string }) => r.type === 'module' && r.id === 'a-system-design-fundamentals')).toBe(true);
     });
     it('çok kısa sorgu boş döner', async () => {
       const res = await http.get(`${prefix}/search`).query({ q: 'a' }).expect(200);
@@ -282,6 +370,39 @@ describe('DevAcademy API (e2e)', () => {
       expect(res.body.status).toBe('published');
       await http.get(`${prefix}/scenes/e2e-test-scene`).expect(200);
       await http.delete(`${prefix}/admin/scenes/e2e-test-scene`).set('Authorization', `Bearer ${adminToken}`).expect(204);
+    });
+
+    it('quizden çıkarılan soru arşivlenir: öğrenciye gösterilmez, deneme geçmişi korunur', async () => {
+      const prisma = app.get(PrismaService);
+      const quizFile = JSON.parse(readFileSync(resolve(__dirname, '../../content/modules/a-system-design-fundamentals/a-05-load-balancing/quiz.json'), 'utf8'));
+      const answersBefore = await prisma.attemptAnswer.count({ where: { question: { quizId: quizFile.id, key: 'q1' } } });
+      expect(answersBefore).toBeGreaterThan(0);
+      try {
+        const trimmed = { ...quizFile, questions: quizFile.questions.filter((q: { id: string }) => q.id !== 'q1') };
+        await http.put(`${prefix}/admin/quizzes`).set('Authorization', `Bearer ${adminToken}`).send({ lessonId, quiz: trimmed }).expect(200);
+        const pub = await http.get(`${prefix}/quizzes/by-lesson/${lessonId}`).expect(200);
+        expect(pub.body.questions.map((q: { id: string }) => q.id)).not.toContain('q1');
+        expect(await prisma.attemptAnswer.count({ where: { question: { quizId: quizFile.id, key: 'q1' } } })).toBe(answersBefore);
+      } finally {
+        await http.put(`${prefix}/admin/quizzes`).set('Authorization', `Bearer ${adminToken}`).send({ lessonId, quiz: quizFile }).expect(200);
+      }
+      const restored = await http.get(`${prefix}/quizzes/by-lesson/${lessonId}`).expect(200);
+      expect(restored.body.questions.map((q: { id: string }) => q.id)).toContain('q1');
+    });
+
+    it('yayındaki dersin sırası değişince modül detayı hemen güncellenir', async () => {
+      const versions = await http.get(`${prefix}/admin/lessons/${lessonId}/versions`).set('Authorization', `Bearer ${adminToken}`).expect(200);
+      const publishedId = versions.body.find((v: { status: string }) => v.status === 'published').id;
+      const v = (await http.get(`${prefix}/admin/versions/${publishedId}`).set('Authorization', `Bearer ${adminToken}`).expect(200)).body;
+      const dto = { id: lessonId, slug: v.lesson.slug, moduleId: v.lesson.moduleId, order: v.lesson.order, title: v.title, summary: v.summary, durationMinutes: v.durationMinutes, level: v.level, tags: v.tags, prerequisites: v.prerequisites, concepts: v.concepts, blocks: v.blocks };
+      await http.get(`${prefix}/modules/${dto.moduleId}`).expect(200); // cache'i ısıt
+      try {
+        await http.put(`${prefix}/admin/lessons`).set('Authorization', `Bearer ${adminToken}`).send({ ...dto, order: 99 }).expect(200);
+        const mod = await http.get(`${prefix}/modules/${dto.moduleId}`).expect(200);
+        expect(mod.body.lessons.find((l: { id: string }) => l.id === lessonId).order).toBe(99);
+      } finally {
+        await http.put(`${prefix}/admin/lessons`).set('Authorization', `Bearer ${adminToken}`).send(dto).expect(200);
+      }
     });
   });
 });

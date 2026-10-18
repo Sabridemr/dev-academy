@@ -84,7 +84,6 @@ services:
       DATABASE_URL: postgresql://devacademy:devacademy@postgres:5432/devacademy?schema=public
       REDIS_URL: redis://redis:6379
       JWT_ACCESS_SECRET: local-dev-access-secret-change-me-0123456789
-      JWT_REFRESH_SECRET: local-dev-refresh-secret-change-me-012345678
       S3_ENDPOINT: http://minio:9000
       S3_PUBLIC_URL: http://localhost:9000/devacademy-media
       S3_BUCKET: devacademy-media

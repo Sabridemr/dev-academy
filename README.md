@@ -90,6 +90,7 @@ Admin panelinden (web) dersler taslak olarak düzenlenir, sahne editöründe gö
 - **İçerik Git’te**: Code review, diff ve CI doğrulaması için. Admin paneli aynı veritabanı sürümlerini düzenler; panelde yapılan değişiklikleri `content/` klasörüne geri yazan bir dışa aktarım henüz yoktur.
 - **Tek React sürümü**: React Native 0.79, React 19.0.0 gerektirir. `node-linker=hoisted` (Expo/Metro gereği) ile çakışma olmaması için tüm çalışma alanı `pnpm.overrides` ile React 19.0.0’a sabitlenmiştir.
 - **Kimlik doğrulama**: Web istemcisi token’ları `localStorage`’da tutar (SPA modeli). Daha yüksek güvenlik için refresh token’ı httpOnly çerezde tutan bir BFF katmanı önerilir. Mobil token’ları `expo-secure-store`’da tutar.
+- **Web güvenliği**: İçerik SVG’leri DOMPurify ile temizlenir, sayfalar Content-Security-Policy ile sunulur. CSP’nin `connect-src` değeri build anındaki `NEXT_PUBLIC_API_URL`’den hesaplanır; API adresi değişirse web yeniden build edilmelidir. Swagger (`/docs`) üretimde kapalıdır.
 - **Arama**: PostgreSQL full-text (`simple` sözlük) + ILIKE yedeği; içerik ölçeği ayrı bir arama motorunu gerektirmiyor.
 - **Bildirimler**: Saatlik zamanlanmış iş, kullanıcının saat dilimine göre hatırlatma saati gelen ve o gün çalışmamış kullanıcılara Expo push (yoksa e-posta) gönderir.
 

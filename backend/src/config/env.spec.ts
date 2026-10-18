@@ -1,7 +1,7 @@
 import { corsOrigins, validateEnv } from './env';
 
 describe('validateEnv', () => {
-  const base = { DATABASE_URL: 'postgresql://u:p@localhost:5432/db', JWT_ACCESS_SECRET: 'a'.repeat(32), JWT_REFRESH_SECRET: 'b'.repeat(32) };
+  const base = { DATABASE_URL: 'postgresql://u:p@localhost:5432/db', JWT_ACCESS_SECRET: 'a'.repeat(32) };
 
   it('geçerli ortamı varsayılanlarla doldurur', () => {
     const env = validateEnv(base);

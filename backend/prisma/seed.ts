@@ -12,6 +12,7 @@ import { createHash } from 'node:crypto';
 import { resolve } from 'node:path';
 import { PrismaClient, type Prisma } from '@prisma/client';
 import * as argon2 from 'argon2';
+import Redis from 'ioredis';
 import { BADGES, CURRICULUM, LEARNING_PATHS, lessonPlainText, type LessonBlock, type LocalizedString } from '@devacademy/shared';
 import { coverageReport, loadContent, type LoadedLesson } from '@devacademy/shared/node';
 
@@ -69,17 +70,59 @@ async function seedBadges(): Promise<void> {
   console.log(`✓ ${BADGES.length} rozet`);
 }
 
-async function seedAdmin(): Promise<string> {
+/**
+ * Admin hesabını yalnızca yoksa oluşturur. Aynı e-postayla var olan bir hesabın rolüne dokunulmaz
+ * (seed, kayıtlı herhangi bir kullanıcıyı admin yapamasın). Üretimde şifre ortam değişkeniyle verilmelidir.
+ */
+async function seedAdmin(): Promise<string | null> {
   const email = process.env.SEED_ADMIN_EMAIL ?? 'admin@devacademy.local';
-  const password = process.env.SEED_ADMIN_PASSWORD ?? 'Admin123!';
+  const existing = await prisma.user.findUnique({ where: { email } });
+  if (existing) {
+    if (existing.role !== 'admin') {
+      console.warn(`⚠ ${email} kayıtlı ama admin değil; rolü değiştirilmedi`);
+      return null;
+    }
+    console.log(`✓ admin kullanıcı mevcut: ${email}`);
+    return existing.id;
+  }
+  let password = process.env.SEED_ADMIN_PASSWORD;
+  if (!password) {
+    if (process.env.NODE_ENV === 'production') throw new Error('SEED_ADMIN_PASSWORD üretimde zorunludur');
+    console.warn('⚠ SEED_ADMIN_PASSWORD verilmedi; varsayılan geliştirme şifresi kullanılıyor');
+    password = 'Admin123!';
+  }
   const passwordHash = await argon2.hash(password, { type: argon2.argon2id });
-  const admin = await prisma.user.upsert({
-    where: { email },
-    update: { role: 'admin' },
-    create: { email, passwordHash, displayName: 'DevAcademy Admin', role: 'admin', locale: 'tr' },
-  });
-  console.log(`✓ admin kullanıcı: ${email}`);
+  const admin = await prisma.user.create({ data: { email, passwordHash, displayName: 'DevAcademy Admin', role: 'admin', locale: 'tr' } });
+  console.log(`✓ admin kullanıcı oluşturuldu: ${email}`);
   return admin.id;
+}
+
+/** API'nin Redis içerik ve arama cache'ini temizler; aksi hâlde yeni içerik TTL dolana kadar görünmez */
+async function clearApiCache(): Promise<void> {
+  if (process.env.SEED_SKIP_REDIS === '1') return;
+  const redis = new Redis(process.env.REDIS_URL ?? 'redis://localhost:6379', { lazyConnect: true, maxRetriesPerRequest: 1, enableOfflineQueue: false });
+  try {
+    await redis.connect();
+    let removed = 0;
+    for (const pattern of ['content:*', 'search:*']) {
+      let cursor = '0';
+      do {
+        const [next, keys] = await redis.scan(cursor, 'MATCH', pattern, 'COUNT', 200);
+        cursor = next;
+        if (keys.length) removed += await redis.del(...keys);
+      } while (cursor !== '0');
+    }
+    console.log(`✓ Redis cache temizlendi (${removed} anahtar)`);
+  } catch (err) {
+    console.warn(`⚠ Redis cache temizlenemedi: ${(err as Error).message}`);
+  } finally {
+    redis.disconnect();
+  }
+}
+
+type VersionFields = { title: unknown; summary: unknown; durationMinutes: number; level: unknown; tags: string[]; prerequisites: string[]; concepts: string[]; blocks: unknown };
+function versionFingerprint(v: VersionFields): string {
+  return hash({ title: v.title, summary: v.summary, durationMinutes: v.durationMinutes, level: v.level, tags: v.tags, prerequisites: v.prerequisites, concepts: v.concepts, blocks: v.blocks });
 }
 
 async function main(): Promise<void> {
@@ -154,9 +197,10 @@ async function main(): Promise<void> {
           update: { lessonId: meta.id, title: loc(q.title), passScore: q.passScore, status: 'published' },
           create: { id: q.id, lessonId: meta.id, title: loc(q.title), passScore: q.passScore, status: 'published' },
         });
-        await prisma.question.deleteMany({ where: { quizId: q.id, key: { notIn: q.questions.map((x) => x.id) } } });
+        // Dosyadan çıkan sorular arşivlenir (silinirse deneme ve tekrar geçmişi de silinirdi)
+        await prisma.question.updateMany({ where: { quizId: q.id, key: { notIn: q.questions.map((x) => x.id) } }, data: { archived: true } });
         for (const [i, question] of q.questions.entries()) {
-          const data = { order: i, type: question.type, prompt: loc(question.prompt), options: json(question.options), correct: question.correct, explanation: loc(question.explanation), difficulty: question.difficulty, concepts: question.concepts };
+          const data = { archived: false, order: i, type: question.type, prompt: loc(question.prompt), options: json(question.options), correct: question.correct, explanation: loc(question.explanation), difficulty: question.difficulty, concepts: question.concepts };
           await prisma.question.upsert({ where: { quizId_key: { quizId: q.id, key: question.id } }, update: data, create: { ...data, quizId: q.id, key: question.id } });
         }
         quizCount += 1;
@@ -176,14 +220,20 @@ async function main(): Promise<void> {
       };
       const current = await prisma.lesson.findUnique({ where: { id: meta.id }, include: { publishedVersion: true } });
       const published = current?.publishedVersion;
-      const fingerprint = hash(versionPayload);
-      const existingFingerprint = published
-        ? hash({ title: published.title, summary: published.summary, durationMinutes: published.durationMinutes, level: published.level, tags: published.tags, prerequisites: published.prerequisites, concepts: published.concepts, blocks: published.blocks })
-        : null;
+      const fingerprint = versionFingerprint(versionPayload);
+      const existingFingerprint = published ? versionFingerprint(published) : null;
 
       if (published && existingFingerprint === fingerprint && meta.status === 'published') {
         unchangedCount += 1;
         continue;
+      }
+      // Taslak dersler: son taslak aynı içerikteyse her seed'de yeni taslak sürümü üretme
+      if (meta.status !== 'published') {
+        const latestDraft = await prisma.lessonVersion.findFirst({ where: { lessonId: meta.id, status: 'draft' }, orderBy: { version: 'desc' } });
+        if (latestDraft && versionFingerprint(latestDraft) === fingerprint) {
+          unchangedCount += 1;
+          continue;
+        }
       }
 
       const last = await prisma.lessonVersion.findFirst({ where: { lessonId: meta.id }, orderBy: { version: 'desc' } });
@@ -248,6 +298,7 @@ async function main(): Promise<void> {
 
   console.log(`✓ ${publishedCount} ders sürümü yazıldı, ${unchangedCount} değişmedi, ${placeholders} taslak yer tutucu`);
   console.log(`✓ ${sceneCount} sahne, ${quizCount} quiz`);
+  await clearApiCache();
 }
 
 main()

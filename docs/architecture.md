@@ -91,13 +91,13 @@ erDiagram
 1. İstemci `GET /lessons/:id` (varsa `If-None-Match`).
 2. API Redis’e bakar (`content:lesson:<id>`); yoksa PostgreSQL’den okur, Redis’e yazar (6 saat TTL).
 3. Yanıta zayıf ETag eklenir; eşleşirse 304 döner.
-4. Kullanıcıya özel ilerleme bilgisi cache’lenmeden eklenir.
+4. Kullanıcıya özel ilerleme bilgisi cache’lenmeden eklenir; token’lı isteklerde yanıt `Cache-Control: private` ve `Vary: Authorization` ile döner, böylece CDN/proxy’de saklanmaz.
 5. Yayınlama anında `content:*` anahtarları ve arama cache’i silinir, `content.published` olayı yayınlanır.
 
 ### Quiz → aralıklı tekrar
 
 1. İstemci cevapları gönderir; puanlama sunucuda yapılır.
-2. Yanlış cevaplanan her soru için `ReviewCard` oluşturulur ya da sıfırlanır (SM-2, kalite 1); doğru cevaplanan ve kartı olan sorular ilerletilir.
+2. Yanlış cevaplanan her soru için `ReviewCard` oluşturulur ya da sıfırlanır (SM-2, kalite 1); doğru cevaplanan ve kartı olan sorular ilerletilir. Deneme ve kartlar tek transaction’da yazılır. Quizden çıkarılan sorular silinmez, `archived` olarak işaretlenir: öğrenciye gösterilmez ama deneme ve tekrar geçmişi korunur.
 3. Aktivite kaydedilir: seri güncellenir, rozet koşulları değerlendirilir, WebSocket ile bildirilir.
 
 ### Mobil offline
@@ -108,7 +108,8 @@ erDiagram
 
 ## Ölçekleme notları
 
-- API stateless’tır (oturum JWT’de); WebSocket için birden fazla replikada socket.io Redis adapter eklenmelidir.
+- API stateless’tır (oturum JWT’de); WebSocket için birden fazla replikada socket.io Redis adapter eklenmelidir. WebSocket CORS’u HTTP ile aynı `CORS_ORIGINS` listesini kullanır.
+- Saatlik hatırlatma işi her replikada çalışır; çoklu replikada tek replikaya ya da dağıtık bir kilide bağlanmalıdır.
 - Rate limit sayaçları Redis’te tutulduğu için tüm replikalar aynı limiti uygular; Redis yoksa replika başına bellek içi sayaca düşer.
 - Okuma ağırlıklı içerik için Redis + ETag + Next.js ISR; yazma ağırlıklı ilerleme için istemci tarafında toplu gönderim (5 sn aralık).
 - Medya dosyaları S3’e ön imzalı URL ile doğrudan yüklenir; API dosya trafiği taşımaz.

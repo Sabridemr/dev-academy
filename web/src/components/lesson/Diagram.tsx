@@ -1,22 +1,23 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import DOMPurify from 'isomorphic-dompurify';
 import { Maximize2, X } from 'lucide-react';
 import { useI18n } from '@/i18n';
 import type { LocalizedString } from '@devacademy/shared';
 
 /**
- * İçerik SVG'lerini güvenli biçimde gösterir: script, on* öznitelikleri ve dış referanslar temizlenir.
+ * İçerik SVG'lerini güvenli biçimde gösterir. DOMPurify (SVG profili) script, olay işleyicileri,
+ * foreignObject ve tüm bağlantı/dış referansları temizler; animate/set ile öznitelik değiştirme de yasaktır.
+ * İçerik SVG'leri href/use kullanmadığı için bunlar tamamen kapalıdır. Sunucuda (SSR) da çalışır.
  * SVG'ler --da-* CSS değişkenlerini kullandığı için tema otomatik uygulanır.
  */
 export function sanitizeSvg(svg: string): string {
-  return svg
-    .replace(/<script[\s\S]*?<\/script>/gi, '')
-    .replace(/<foreignObject[\s\S]*?<\/foreignObject>/gi, '')
-    .replace(/\son[a-z]+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, '')
-    .replace(/(href|xlink:href)\s*=\s*("|')\s*javascript:[^"']*\2/gi, '')
-    .replace(/<\?xml[^>]*\?>/g, '')
-    .replace(/<!DOCTYPE[^>]*>/gi, '');
+  return DOMPurify.sanitize(svg, {
+    USE_PROFILES: { svg: true, svgFilters: true },
+    FORBID_TAGS: ['script', 'foreignObject', 'animate', 'animateMotion', 'animateTransform', 'set', 'use', 'image', 'a'],
+    FORBID_ATTR: ['href', 'xlink:href'],
+  });
 }
 
 export function Diagram({ svg, src, alt, caption }: { svg?: string; src: string; alt: LocalizedString; caption?: LocalizedString }) {
@@ -26,7 +27,7 @@ export function Diagram({ svg, src, alt, caption }: { svg?: string; src: string;
   const altText = tl(alt);
 
   const content = clean ? (
-    <div className="diagram-svg" role="img" aria-label={altText} dangerouslySetInnerHTML={{ __html: clean }} />
+    <div className="diagram-svg" role="img" aria-label={altText} dangerouslySetInnerHTML={{ __html: clean }} suppressHydrationWarning />
   ) : (
     // eslint-disable-next-line @next/next/no-img-element
     <img src={src} alt={altText} className="mx-auto h-auto w-full" />

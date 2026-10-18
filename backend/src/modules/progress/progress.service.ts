@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import type { BadgeDto, ProgressItem, ProgressSummary, ReviewItem, UpdateProgressDto } from '@devacademy/shared';
+import { Prisma } from '@prisma/client';
+import type { BadgeDto, ProgressItem, ProgressSummary, ReviewCardDto, ReviewItem, UpdateProgressDto } from '@devacademy/shared';
 import { applyActivity, dateKey, effectiveStreak, evaluateBadges, sm2Review, type BadgeContext } from '@devacademy/shared';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { asLocalized } from '../../common/utils/localized';
@@ -38,7 +39,8 @@ export class ProgressService {
     const percent = Math.max(existing?.percent ?? 0, Math.round(dto.percent));
     const completed = wasCompleted || dto.completed === true || percent >= 100;
 
-    const row = await this.prisma.progress.upsert({
+    // include kullanılmaz: Prisma ancak öyle yerel INSERT ... ON CONFLICT kullanır (eş zamanlı isteklerde unique ihlali olmaz)
+    const upserted = await this.prisma.progress.upsert({
       where: { userId_lessonId: { userId, lessonId } },
       update: {
         percent: completed ? 100 : percent,
@@ -56,8 +58,8 @@ export class ProgressService {
         secondsSpent: dto.secondsSpent,
         completedAt: completed ? new Date() : null,
       },
-      include: { lesson: { select: { moduleId: true } } },
     });
+    const row = { ...upserted, lesson: { moduleId: lesson.moduleId } };
 
     const newBadges = await this.recordActivity(userId, { lessonCompleted: completed && !wasCompleted ? lessonId : undefined });
     const item = toItem(row);
@@ -106,9 +108,10 @@ export class ProgressService {
 
   /* --------------------------- Aralıklı tekrar --------------------------- */
 
-  async dueReviews(userId: string, limit = 20): Promise<(ReviewItem & { prompt: unknown; options: unknown; type: string })[]> {
+  /** Vadesi gelen kartlar. Doğru cevap ve açıklama yalnızca kart sahibine döner (soruyu zaten quizde görmüştür). */
+  async dueReviews(userId: string, limit = 20): Promise<ReviewCardDto[]> {
     const cards = await this.prisma.reviewCard.findMany({
-      where: { userId, dueAt: { lte: new Date() } },
+      where: { userId, dueAt: { lte: new Date() }, question: { archived: false } },
       orderBy: { dueAt: 'asc' },
       take: limit,
       include: { question: true },
@@ -123,8 +126,10 @@ export class ProgressService {
       easeFactor: c.easeFactor,
       repetitions: c.repetitions,
       prompt: asLocalized(c.question.prompt),
-      options: c.question.options,
+      options: c.question.options as unknown as ReviewCardDto['options'],
       type: c.question.type,
+      correctAnswer: c.question.correct,
+      explanation: asLocalized(c.question.explanation),
     }));
   }
 
@@ -164,8 +169,15 @@ export class ProgressService {
     const badges = await this.prisma.badge.findMany({ where: { slug: { in: newly.map((b) => b.slug) } } });
     const out: BadgeDto[] = [];
     for (const b of badges) {
-      const ub = await this.prisma.userBadge.create({ data: { userId, badgeId: b.id } });
-      const dto = toBadgeDto(b, ub.earnedAt);
+      // Eş zamanlı iki aktivite aynı rozeti kazandırabilir; unique ihlali "zaten kazanılmış" demektir
+      let earnedAt: Date;
+      try {
+        earnedAt = (await this.prisma.userBadge.create({ data: { userId, badgeId: b.id } })).earnedAt;
+      } catch (err) {
+        if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') continue;
+        throw err;
+      }
+      const dto = toBadgeDto(b, earnedAt);
       out.push(dto);
       this.realtime.emitToUser(userId, { type: 'badge.earned', payload: dto });
     }
@@ -189,7 +201,7 @@ export class ProgressService {
       completedLessons,
       completedModuleIds,
       currentStreak,
-      perfectQuizzes: perfect + (flags.perfectQuiz ? 0 : 0),
+      perfectQuizzes: perfect,
       totalQuizzes: attempts,
       interactiveSessions,
       notesCount,

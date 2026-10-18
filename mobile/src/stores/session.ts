@@ -2,7 +2,9 @@ import { create } from 'zustand';
 import type { AuthResponse, UserProfile } from '@devacademy/shared';
 import { api, isApiError } from '@/lib/api';
 import { endpoints, type MeProfile } from '@/lib/endpoints';
-import { getJson, kv, setJson, tokenStorage } from '@/lib/storage';
+import { queryClient } from '@/lib/queryClient';
+import { getJson, kv, KV_KEYS, setJson, tokenStorage } from '@/lib/storage';
+import { clearQueues } from '@/offline/queue';
 
 /**
  * OTURUM DEPOSU (zustand)
@@ -13,6 +15,14 @@ export type SessionStatus = 'loading' | 'authenticated' | 'anonymous';
 export type SessionUser = UserProfile & { reminderHour?: number | null; timezone?: string };
 
 const USER_KEY = 'session.user';
+
+/** Yerel kullanıcı verisini temizler: profil, kuyruklar, sorgu önbelleği, kayıtlı push token işareti */
+function clearLocalSession(): void {
+  kv.delete(USER_KEY);
+  kv.delete(KV_KEYS.pushToken);
+  clearQueues();
+  queryClient.clear();
+}
 
 interface SessionState {
   status: SessionStatus;
@@ -49,13 +59,19 @@ export const useSession = create<SessionState>((set, get) => ({
 
   signOut: async () => {
     const tokens = await tokenStorage.get();
+    const pushToken = kv.getString(KV_KEYS.pushToken);
+    try {
+      if (tokens && pushToken) await endpoints.unregisterPushToken(pushToken);
+    } catch {
+      // Token zaten silinmiş olabilir; çıkışı engellemez
+    }
     try {
       if (tokens) await endpoints.logout(tokens.refreshToken);
     } catch {
       // Sunucuya ulaşılamasa da yerel oturumu kapat
     }
     await tokenStorage.clear();
-    kv.delete(USER_KEY);
+    clearLocalSession();
     set({ status: 'anonymous', user: null });
   },
 
@@ -71,7 +87,7 @@ export const useSession = create<SessionState>((set, get) => ({
     } catch (e) {
       if (isApiError(e) && e.code === 'unauthorized') {
         await tokenStorage.clear();
-        kv.delete(USER_KEY);
+        clearLocalSession();
         set({ status: 'anonymous', user: null });
       }
     }
@@ -80,6 +96,6 @@ export const useSession = create<SessionState>((set, get) => ({
 
 // Refresh token da reddedilirse oturumu kapat
 api.setSessionExpiredHandler(() => {
-  kv.delete(USER_KEY);
+  clearLocalSession();
   useSession.setState({ status: 'anonymous', user: null });
 });

@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
@@ -56,11 +56,22 @@ export class AuthService {
       where: { provider_providerUserId: { provider: dto.provider, providerUserId: identity.providerUserId } },
       include: { user: true },
     });
-    if (existingAccount) return this.issueSession(existingAccount.user, meta);
+    if (existingAccount) {
+      if (existingAccount.user.deletedAt) throw new UnauthorizedException('Hesap kapatılmış');
+      return this.issueSession(existingAccount.user, meta);
+    }
 
-    // Aynı e-posta ile e-posta/şifre hesabı varsa bağla; yoksa yeni kullanıcı oluştur
+    // Aynı e-posta ile hesap varsa yalnızca sağlayıcı e-postayı doğrulamışsa bağla; yoksa yeni kullanıcı oluştur
     const email = identity.email?.toLowerCase();
-    let user: User | null = email ? await this.prisma.user.findUnique({ where: { email } }) : null;
+    let user: User | null = null;
+    if (email) {
+      const byEmail = await this.prisma.user.findUnique({ where: { email } });
+      if (byEmail) {
+        if (byEmail.deletedAt) throw new UnauthorizedException('Hesap kapatılmış');
+        if (!identity.emailVerified) throw new ConflictException('Bu e-posta ile kayıtlı bir hesap var; e-posta ve şifre ile giriş yapın');
+        user = byEmail;
+      }
+    }
     if (!user) {
       user = await this.prisma.user.create({
         data: {
@@ -91,7 +102,13 @@ export class AuthService {
     if (stored.expiresAt < new Date()) throw new UnauthorizedException('Refresh token süresi dolmuş');
     if (stored.user.deletedAt) throw new UnauthorizedException('Hesap kapatılmış');
 
-    await this.prisma.refreshToken.update({ where: { id: stored.id }, data: { revokedAt: new Date() } });
+    // Koşullu iptal: aynı token ile eş zamanlı iki istekten yalnızca biri kazanır
+    const { count } = await this.prisma.refreshToken.updateMany({ where: { id: stored.id, revokedAt: null }, data: { revokedAt: new Date() } });
+    if (count === 0) {
+      // Yarışı kaybeden istek yeni token almaz; ailede tek geçerli zincir kalır
+      this.logger.warn(`Eş zamanlı refresh tespit edildi (user=${stored.userId})`);
+      throw new UnauthorizedException('Refresh token zaten kullanıldı');
+    }
     return this.createTokens(stored.user, stored.family, meta);
   }
 
@@ -107,10 +124,10 @@ export class AuthService {
 
   async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<void> {
     const user = await this.prisma.user.findUniqueOrThrow({ where: { id: userId } });
-    if (user.passwordHash) {
-      const ok = await argon2.verify(user.passwordHash, currentPassword);
-      if (!ok) throw new UnauthorizedException('Mevcut şifre hatalı');
-    }
+    // Sosyal girişli hesaplarda şifre yok; yalnızca access token ile kalıcı şifre atanmasına izin verilmez
+    if (!user.passwordHash) throw new BadRequestException('Bu hesabın şifresi yok (sosyal giriş); şifre belirleme desteklenmiyor');
+    const ok = await argon2.verify(user.passwordHash, currentPassword);
+    if (!ok) throw new UnauthorizedException('Mevcut şifre hatalı');
     const passwordHash = await argon2.hash(newPassword, { type: argon2.argon2id });
     await this.prisma.user.update({ where: { id: userId }, data: { passwordHash } });
     await this.prisma.refreshToken.updateMany({ where: { userId, revokedAt: null }, data: { revokedAt: new Date() } });

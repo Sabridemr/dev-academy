@@ -74,13 +74,23 @@ export interface AuthResponse {
   tokens: AuthTokens;
 }
 
+/** IANA saat dilimi geçerli mi? (Intl.supportedValuesOf Hermes'te yok; kurucu denemesi her yerde çalışır) */
+export function isValidTimeZone(tz: string): boolean {
+  try {
+    new Intl.DateTimeFormat('en-US', { timeZone: tz });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export const UpdateProfileSchema = z.object({
   displayName: z.string().min(2).max(60).optional(),
   avatarUrl: z.string().url().nullable().optional(),
   locale: z.enum(['tr', 'en']).optional(),
   selectedPathId: z.string().nullable().optional(),
   reminderHour: z.number().int().min(0).max(23).nullable().optional(),
-  timezone: z.string().max(64).optional(),
+  timezone: z.string().max(64).refine(isValidTimeZone, { message: 'Geçersiz saat dilimi' }).optional(),
 });
 export type UpdateProfileDto = z.infer<typeof UpdateProfileSchema>;
 
@@ -259,6 +269,15 @@ export interface ReviewItem {
   intervalDays: number;
   easeFactor: number;
   repetitions: number;
+}
+
+/** Tekrar ekranı için kart: soru metni, şıklar ve (yalnızca sahibine) doğru cevap + açıklama */
+export interface ReviewCardDto extends ReviewItem {
+  prompt: LocalizedString;
+  options: { id: string; text: LocalizedString }[];
+  type: QuizPublic['questions'][number]['type'];
+  correctAnswer: string[];
+  explanation: LocalizedString;
 }
 
 export const ReviewGradeSchema = z.object({

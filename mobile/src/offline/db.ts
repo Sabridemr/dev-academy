@@ -150,6 +150,9 @@ export async function applyBundle(
     if (keepIds.length > 0) {
       const placeholders = keepIds.map(() => '?').join(', ');
       await db.runAsync(`DELETE FROM lessons WHERE module_id = ? AND id NOT IN (${placeholders})`, [bundle.moduleId, ...keepIds]);
+    } else {
+      // Modülde yayında ders kalmadıysa yereldeki tüm dersleri sil
+      await db.runAsync('DELETE FROM lessons WHERE module_id = ?', [bundle.moduleId]);
     }
     await upsertModule(db, bundle.moduleId, module, etag, syncedAt);
   });

@@ -23,7 +23,7 @@ Tam liste ve varsayılanlar: `.env.example`, doğrulama: `src/config/env.ts` (ek
 |---|---|
 | `DATABASE_URL` | PostgreSQL bağlantısı |
 | `REDIS_URL` | Redis (cache, rate limit). Erişilemezse API çalışmaya devam eder, cache atlanır |
-| `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET` | ≥ 32 karakter |
+| `JWT_ACCESS_SECRET` | ≥ 32 karakter (refresh token’lar opak rastgele değerdir, ayrı sır gerekmez) |
 | `JWT_ACCESS_TTL`, `JWT_REFRESH_TTL` | saniye (varsayılan 15 dk / 30 gün) |
 | `GOOGLE_CLIENT_IDS`, `APPLE_CLIENT_IDS` | virgülle ayrılmış audience listeleri (web + iOS + Android istemci kimlikleri) |
 | `S3_*` | S3 uyumlu depolama (MinIO yerelde) |

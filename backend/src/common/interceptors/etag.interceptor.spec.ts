@@ -1,8 +1,8 @@
 import { lastValueFrom, of } from 'rxjs';
 import { EtagInterceptor } from './etag.interceptor';
 
-function ctx(method: string, ifNoneMatch?: string) {
-  const headers: Record<string, string> = {};
+function ctx(method: string, ifNoneMatch?: string, extra: { authorization?: string; cacheControl?: string } = {}) {
+  const headers: Record<string, string> = extra.cacheControl ? { 'Cache-Control': extra.cacheControl } : {};
   const res = {
     statusCode: 200,
     headersSent: false,
@@ -13,7 +13,7 @@ function ctx(method: string, ifNoneMatch?: string) {
       return this;
     },
   };
-  const req = { method, headers: ifNoneMatch ? { 'if-none-match': ifNoneMatch } : {} };
+  const req = { method, headers: { ...(ifNoneMatch ? { 'if-none-match': ifNoneMatch } : {}), ...(extra.authorization ? { authorization: extra.authorization } : {}) } };
   return {
     headers,
     res,
@@ -45,5 +45,19 @@ describe('EtagInterceptor', () => {
     const c = ctx('POST');
     await lastValueFrom(interceptor.intercept(c.context, { handle: () => of(body) }));
     expect(c.headers.ETag).toBeUndefined();
+  });
+
+  it('Authorization varsa public Cache-Control private olur ve Vary eklenir', async () => {
+    const c = ctx('GET', undefined, { authorization: 'Bearer x', cacheControl: 'public, max-age=60' });
+    await lastValueFrom(interceptor.intercept(c.context, { handle: () => of(body) }));
+    expect(c.headers['Cache-Control']).toBe('private, max-age=0, must-revalidate');
+    expect(c.headers.Vary).toBe('Authorization');
+  });
+
+  it('anonim istekte public Cache-Control korunur', async () => {
+    const c = ctx('GET', undefined, { cacheControl: 'public, max-age=60' });
+    await lastValueFrom(interceptor.intercept(c.context, { handle: () => of(body) }));
+    expect(c.headers['Cache-Control']).toBe('public, max-age=60');
+    expect(c.headers.Vary).toBe('Authorization');
   });
 });

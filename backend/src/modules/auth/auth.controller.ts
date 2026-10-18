@@ -10,7 +10,7 @@ import { zodBody } from '../../common/pipes/zod-validation.pipe';
 import { ApiZodBody } from '../../common/swagger/zod-openapi';
 import { AuthService, type SessionMeta } from './auth.service';
 
-const ChangePasswordSchema = z.object({ currentPassword: z.string().default(''), newPassword: z.string().min(8).max(128) });
+const ChangePasswordSchema = z.object({ currentPassword: z.string().min(1).max(128), newPassword: z.string().min(8).max(128) });
 const LogoutSchema = z.object({ refreshToken: z.string().optional(), everywhere: z.boolean().default(false) });
 
 function meta(req: Request): SessionMeta {

@@ -1,7 +1,7 @@
 import type { AttemptResult, SubmitAttemptDto, UpdateProgressDto } from '@devacademy/shared';
 import { isApiError } from '@/lib/api';
 import { endpoints } from '@/lib/endpoints';
-import { getJson, KV_KEYS, setJson } from '@/lib/storage';
+import { getJson, kv, KV_KEYS, setJson } from '@/lib/storage';
 
 /**
  * ÇEVRİMDIŞI KUYRUKLAR (MMKV)
@@ -130,7 +130,8 @@ export async function flushAttemptQueue(): Promise<{ attempt: QueuedAttempt; res
       out.push({ attempt, result });
       setJson(KV_KEYS.attemptQueue, readAttemptQueue().filter((a) => a.queuedAt !== attempt.queuedAt));
     } catch (e) {
-      if (isApiError(e) && (e.isConnectivity || e.code === 'server' || e.code === 'unauthorized')) break;
+      // Geçici hatalarda (bağlantı, sunucu, oturum, hız sınırı) deneme kuyrukta kalır; kalıcı hatada düşürülür
+      if (isApiError(e) && (e.isConnectivity || e.code === 'server' || e.code === 'unauthorized' || e.code === 'rate_limited')) break;
       setJson(KV_KEYS.attemptQueue, readAttemptQueue().filter((a) => a.queuedAt !== attempt.queuedAt));
     }
   }
@@ -152,6 +153,13 @@ export function takeAttemptResult(quizId: string): AttemptResult | undefined {
     setJson(ATTEMPT_RESULTS_KEY, map);
   }
   return r;
+}
+
+/** Çıkışta tüm yerel kuyrukları siler: bir kullanıcının bekleyen verisi sonraki hesaba gönderilmesin */
+export function clearQueues(): void {
+  kv.delete(KV_KEYS.progressQueue);
+  kv.delete(KV_KEYS.attemptQueue);
+  kv.delete(ATTEMPT_RESULTS_KEY);
 }
 
 /** Tüm kuyrukları boşaltır (çevrimiçi olunca / açılışta) */

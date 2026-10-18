@@ -18,7 +18,7 @@ import type {
   LearningPathSummary,
   UserProfile,
   UpdateProfileDto,
-  ReviewItem,
+  ReviewCardDto,
   LocalizedString,
 } from '@devacademy/shared';
 import { api } from './api';
@@ -132,7 +132,7 @@ export function useSubmitAttempt(quizId: string) {
 
 export function useReviews() {
   const authed = useIsAuthenticated();
-  return useQuery({ queryKey: ['reviews'], queryFn: () => api<(ReviewItem & { prompt: LocalizedString; options: { id: string; text: LocalizedString }[]; type: string })[]>('/progress/reviews'), enabled: authed });
+  return useQuery({ queryKey: ['reviews'], queryFn: () => api<ReviewCardDto[]>('/progress/reviews'), enabled: authed });
 }
 
 export function useBookmarks() {

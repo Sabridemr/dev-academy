@@ -15,6 +15,9 @@ import type { WsServerEvent } from '@devacademy/shared';
 import type { Env } from '../../config/env';
 import type { AccessTokenPayload } from '../../common/auth/jwt-auth.guard';
 
+const RELAY_WINDOW_MS = 1000;
+const RELAY_MAX = 20;
+
 interface SocketData {
   userId?: string;
   role?: string;
@@ -27,10 +30,13 @@ interface SocketData {
  *  - Simülasyon odaları: aynı simülasyonu izleyen kullanıcılar girdi olaylarını paylaşır (sınıf içi canlı demo).
  */
 @Injectable()
-@WebSocketGateway({ cors: { origin: true, credentials: true }, path: '/ws' })
+// CORS, main.ts'deki CorsIoAdapter ile HTTP beyaz listesinden uygulanır
+@WebSocketGateway({ path: '/ws' })
 export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer() server!: Server;
   private readonly logger = new Logger(RealtimeGateway.name);
+  /** Soket başına basit hız sınırı: simülasyon girdisi relay'i (pencere başına en fazla RELAY_MAX mesaj) */
+  private readonly relayCounters = new Map<string, { count: number; windowStart: number }>();
 
   constructor(
     private readonly jwt: JwtService,
@@ -55,6 +61,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
 
   handleDisconnect(client: Socket): void {
     const data = client.data as SocketData;
+    this.relayCounters.delete(client.id);
     if (data.userId) this.logger.debug(`Bağlantı kapandı: ${data.userId}`);
   }
 
@@ -77,12 +84,24 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
 
   @SubscribeMessage('simulation.input')
   relaySimulationInput(@ConnectedSocket() client: Socket, @MessageBody() body: { simulationId?: string; data?: unknown }): void {
+    const data = client.data as SocketData;
+    if (!data.userId) return; // anonim istemciler girdi yayınlayamaz
     if (!body?.simulationId) return;
     const room = `sim:${sanitize(body.simulationId)}`;
     if (!client.rooms.has(room)) return;
-    const data = client.data as SocketData;
-    const event: WsServerEvent = { type: 'simulation.tick', payload: { simulationId: body.simulationId, data: { input: body.data, from: data.userId ?? 'anon' } } };
+    if (!this.allowRelay(client.id)) return;
+    const event: WsServerEvent = { type: 'simulation.tick', payload: { simulationId: body.simulationId, data: { input: body.data, from: data.userId } } };
     client.to(room).emit('event', event);
+  }
+
+  private allowRelay(socketId: string, now = Date.now()): boolean {
+    const c = this.relayCounters.get(socketId);
+    if (!c || now - c.windowStart >= RELAY_WINDOW_MS) {
+      this.relayCounters.set(socketId, { count: 1, windowStart: now });
+      return true;
+    }
+    c.count += 1;
+    return c.count <= RELAY_MAX;
   }
 
   emitToUser(userId: string, event: WsServerEvent): void {

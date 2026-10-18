@@ -55,7 +55,6 @@ jobs:
       DATABASE_URL: postgresql://devacademy:devacademy@localhost:5432/devacademy_test?schema=public
       REDIS_URL: redis://localhost:6379/1
       JWT_ACCESS_SECRET: ci-access-secret-ci-access-secret-0123456
-      JWT_REFRESH_SECRET: ci-refresh-secret-ci-refresh-secret-01234
       SEED_STRICT: '1'
     steps:
       - uses: actions/checkout@v4
@@ -95,7 +94,6 @@ jobs:
       DATABASE_URL: postgresql://devacademy:devacademy@localhost:5432/devacademy?schema=public
       REDIS_URL: redis://localhost:6379
       JWT_ACCESS_SECRET: ci-access-secret-ci-access-secret-0123456
-      JWT_REFRESH_SECRET: ci-refresh-secret-ci-refresh-secret-01234
       NEXT_PUBLIC_API_URL: http://localhost:4000/api/v1
       PLAYWRIGHT_BASE_URL: http://localhost:3000
     steps:

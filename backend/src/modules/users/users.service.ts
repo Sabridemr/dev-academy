@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import type { RegisterPushTokenDto, UpdateProfileDto, UserProfile } from '@devacademy/shared';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { toProfile } from '../auth/auth.service';
@@ -44,10 +44,18 @@ export class UsersService {
   }
 
   async registerPushToken(userId: string, dto: RegisterPushTokenDto): Promise<void> {
+    // Başka bir hesaba kayıtlı token'ı devralmak, o kullanıcının bildirimlerini çalmak demektir
+    const existing = await this.prisma.pushToken.findUnique({ where: { token: dto.token } });
+    if (existing && existing.userId !== userId) throw new ConflictException('Bu cihaz token’ı başka bir hesaba kayıtlı');
     await this.prisma.pushToken.upsert({
       where: { token: dto.token },
       update: { userId, platform: dto.platform, deviceName: dto.deviceName, lastSeenAt: new Date() },
       create: { userId, token: dto.token, platform: dto.platform, deviceName: dto.deviceName },
     });
+  }
+
+  /** Çıkışta cihaz token'ını bırak; aynı cihazda sonraki hesap kaydedebilsin */
+  async unregisterPushToken(userId: string, token: string): Promise<void> {
+    await this.prisma.pushToken.deleteMany({ where: { userId, token } });
   }
 }

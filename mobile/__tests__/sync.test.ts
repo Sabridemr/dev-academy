@@ -46,6 +46,9 @@ function createFakeDb() {
       } else if (s.startsWith('DELETE FROM lessons WHERE module_id = ? AND id NOT IN')) {
         const [moduleId, ...keep] = params;
         for (const [id, row] of tables.lessons) if (row.module_id === moduleId && !keep.includes(id)) tables.lessons.delete(id);
+      } else if (s === 'DELETE FROM lessons WHERE module_id = ?') {
+        const [moduleId] = params;
+        for (const [id, row] of tables.lessons) if (row.module_id === moduleId) tables.lessons.delete(id);
       }
       return { changes: 1 };
     }),
@@ -127,6 +130,15 @@ describe('offline applyBundle (SQLite upsert)', () => {
     // Modül JSON'u verilmediğinde önceki korunur (COALESCE)
     expect(tables.modules.get('a-mod')?.json).toBe(JSON.stringify(moduleDetail));
     expect(calls.some((c) => /ON CONFLICT\(id\) DO UPDATE/.test(c.sql))).toBe(true);
+  });
+});
+
+describe('offline applyBundle (boş paket)', () => {
+  it('sıfır dersli paket gelirse modülün eski dersleri silinir', async () => {
+    const { db, tables } = createFakeDb();
+    await applyBundle(db, bundle([lesson('l1'), lesson('l2')]), moduleDetail, 'v1');
+    await applyBundle(db, bundle([]), null, 'v2');
+    expect(tables.lessons.size).toBe(0);
   });
 });
 

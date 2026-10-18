@@ -28,7 +28,7 @@ export class OfflineController {
     const module = await this.content.getModule(moduleId);
     const lessons = await Promise.all(module.lessons.map((l) => this.content.getLesson(l.id)));
     const scenes = (await Promise.all(module.lessons.map((l) => this.content.listLessonScenes(l.id)))).flat();
-    const quizRows = await this.prisma.quiz.findMany({ where: { lessonId: { in: module.lessons.map((l) => l.id) }, status: 'published' }, include: { questions: { orderBy: { order: 'asc' } } } });
+    const quizRows = await this.prisma.quiz.findMany({ where: { lessonId: { in: module.lessons.map((l) => l.id) }, status: 'published' }, include: { questions: { where: { archived: false }, orderBy: { order: 'asc' } } } });
     return { generatedAt: new Date().toISOString(), moduleId: module.id, lessons, scenes, quizzes: quizRows.map(toPublic) };
   }
 }

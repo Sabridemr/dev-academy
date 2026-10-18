@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { BookOpen, Flame, Languages, LayoutDashboard, Library, LogOut, Menu, Moon, Repeat, Search, Shield, Sun, X, GraduationCap } from 'lucide-react';
 import type { Locale } from '@devacademy/shared';
 import { useI18n } from '@/i18n';
@@ -15,6 +16,7 @@ export function Header() {
   const { t, locale, setLocale } = useI18n();
   const pathname = usePathname();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const authed = useIsAuthenticated();
   const editor = useIsEditor();
   const user = useAuthStore((s) => s.user);
@@ -41,6 +43,8 @@ export function Header() {
       /* oturum zaten geçersiz olabilir */
     }
     clear();
+    // Önceki kullanıcının profil/ilerleme/yer imi verisi aynı sekmede sonraki oturuma görünmesin
+    queryClient.clear();
     router.push('/');
   };
 

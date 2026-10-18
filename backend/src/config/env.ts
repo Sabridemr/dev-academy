@@ -15,7 +15,6 @@ export const EnvSchema = z.object({
   REDIS_URL: z.string().default('redis://localhost:6379'),
 
   JWT_ACCESS_SECRET: z.string().min(32, 'JWT_ACCESS_SECRET en az 32 karakter olmalı'),
-  JWT_REFRESH_SECRET: z.string().min(32, 'JWT_REFRESH_SECRET en az 32 karakter olmalı'),
   JWT_ACCESS_TTL: z.coerce.number().int().positive().default(900),
   JWT_REFRESH_TTL: z.coerce.number().int().positive().default(60 * 60 * 24 * 30),
   GOOGLE_CLIENT_IDS: z.string().default(''),

@@ -49,17 +49,22 @@ export class NotificationsService {
     let push = 0;
     let email = 0;
     for (const user of candidates) {
-      const localHour = Number(new Intl.DateTimeFormat('en-US', { timeZone: user.timezone, hour: 'numeric', hour12: false }).format(now)) % 24;
-      if (localHour !== user.reminderHour) continue;
-      if (user.lastActivityDate === dateKey(now, user.timezone)) continue; // bugün zaten çalışmış
-      const msg = MESSAGES[user.locale];
-      const body = msg.body(user.currentStreak);
-      if (user.pushTokens.length > 0) {
-        await this.sendExpoPush(user.pushTokens.map((t) => ({ to: t.token, title: msg.title, body, sound: 'default', data: { type: 'daily-reminder' } })));
-        push += user.pushTokens.length;
-      } else {
-        await this.sendEmail(user.email, msg.title, body);
-        email += 1;
+      // Tek bir kullanıcının hatalı verisi (ör. geçersiz saat dilimi) tüm işi durdurmasın
+      try {
+        const localHour = Number(new Intl.DateTimeFormat('en-US', { timeZone: user.timezone, hour: 'numeric', hour12: false }).format(now)) % 24;
+        if (localHour !== user.reminderHour) continue;
+        if (user.lastActivityDate === dateKey(now, user.timezone)) continue; // bugün zaten çalışmış
+        const msg = MESSAGES[user.locale];
+        const body = msg.body(user.currentStreak);
+        if (user.pushTokens.length > 0) {
+          await this.sendExpoPush(user.pushTokens.map((t) => ({ to: t.token, title: msg.title, body, sound: 'default', data: { type: 'daily-reminder' } })));
+          push += user.pushTokens.length;
+        } else {
+          await this.sendEmail(user.email, msg.title, body);
+          email += 1;
+        }
+      } catch (err) {
+        this.logger.warn(`Hatırlatma atlandı (user=${user.id}): ${(err as Error).message}`);
       }
     }
     if (push || email) this.logger.log(`Hatırlatmalar gönderildi: push=${push} email=${email}`);

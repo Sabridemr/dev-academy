@@ -6,6 +6,7 @@ import { Observable, map } from 'rxjs';
 /**
  * GET yanıtları için zayıf ETag üretir. İstemci If-None-Match gönderir ve içerik
  * değişmediyse 304 döner (gövde yok) — yayınlanmış içerik için bant genişliği tasarrufu.
+ * Authorization başlığı olan isteklerde `public` Cache-Control `private`'a çevrilir.
  */
 @Injectable()
 export class EtagInterceptor implements NestInterceptor {
@@ -21,7 +22,11 @@ export class EtagInterceptor implements NestInterceptor {
         const json = JSON.stringify(body);
         const etag = `W/"${createHash('sha1').update(json).digest('base64url').slice(0, 27)}"`;
         res.setHeader('ETag', etag);
-        if (!res.getHeader('Cache-Control')) {
+        // Yanıt token'a göre değişebilir (ilerleme eklenir): paylaşılan cache'ler ayırt etsin
+        res.setHeader('Vary', 'Authorization');
+        const cacheControl = String(res.getHeader('Cache-Control') ?? '');
+        // Token'lı yanıt kullanıcıya özel veri içerebilir; CDN/proxy'de saklanmamalı
+        if (!cacheControl || (req.headers.authorization && /\bpublic\b/.test(cacheControl))) {
           res.setHeader('Cache-Control', 'private, max-age=0, must-revalidate');
         }
         const inm = req.headers['if-none-match'];
