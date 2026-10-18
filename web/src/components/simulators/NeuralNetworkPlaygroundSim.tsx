@@ -12,9 +12,9 @@ type TfModel = import('@tensorflow/tfjs').Sequential;
 type TfTensor2D = import('@tensorflow/tfjs').Tensor2D;
 
 type Dataset = 'xor' | 'circle' | 'spiral';
-type Activation = 'relu' | 'tanh' | 'sigmoid';
+type Activation = 'relu' | 'tanh' | 'sigmoid' | 'linear';
 const DATASETS: Dataset[] = ['xor', 'circle', 'spiral'];
-const ACTIVATIONS: Activation[] = ['relu', 'tanh', 'sigmoid'];
+const ACTIVATIONS: Activation[] = ['relu', 'tanh', 'sigmoid', 'linear'];
 const GRID = 28;
 const POINTS = 200;
 const MAX_LOSS_HISTORY = 240;
@@ -33,6 +33,7 @@ const L = {
     activation: 'Aktivasyon',
     hidden: 'Gizli katmanlar (ör. 4,4)',
     hiddenHint: '1–3 katman, katman başına 1–8 nöron',
+    noise: 'Gürültü (yanlış etiket oranı)',
     epoch: 'Epoch',
     loss: 'Kayıp',
     accuracy: 'Doğruluk',
@@ -51,6 +52,7 @@ const L = {
     activation: 'Activation',
     hidden: 'Hidden layers (e.g. 4,4)',
     hiddenHint: '1–3 layers, 1–8 neurons each',
+    noise: 'Noise (label flip rate)',
     epoch: 'Epoch',
     loss: 'Loss',
     accuracy: 'Accuracy',

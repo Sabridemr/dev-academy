@@ -21,7 +21,7 @@ interface Row {
 }
 
 type QueryId = 'eq' | 'range' | 'composite' | 'second-col';
-type IndexId = 'none' | 'btree-customer' | 'btree-created' | 'composite';
+type IndexId = 'none' | 'btree-customer' | 'btree-created' | 'composite' | 'composite-status';
 type Projection = 'star' | 'covered';
 type PlanKind = 'Seq Scan' | 'Index Scan' | 'Index Only Scan' | 'Bitmap Heap Scan';
 
@@ -37,7 +37,11 @@ const INDEXES: Record<IndexId, string[]> = {
   'btree-customer': ['customer_id'],
   'btree-created': ['created_at'],
   composite: ['customer_id', 'status'],
+  'composite-status': ['status', 'customer_id'],
 };
+
+/** Bir satırın, sorgudaki sabitlerle verilen kolon koşulunu sağlayıp sağlamadığı */
+const colMatch = (r: Row, c: string) => (c === 'customer_id' ? r.customer_id === 42 : c === 'status' ? r.status === 'paid' : r.created_at >= 100 && r.created_at <= 130);
 
 const L = {
   tr: {
@@ -48,7 +52,7 @@ const L = {
     star: 'SELECT * (tüm kolonlar)',
     covered: 'Yalnızca indeksli kolonlar',
     queries: { eq: 'Eşitlik: customer_id = 42', range: 'Aralık: created_at 100–130', composite: 'Bileşik: customer_id + status', 'second-col': 'İkinci kolon: status = paid' } satisfies Record<QueryId, string>,
-    indexes: { none: 'İndeks yok', 'btree-customer': 'B-tree (customer_id)', 'btree-created': 'B-tree (created_at)', composite: 'Bileşik (customer_id, status)' } satisfies Record<IndexId, string>,
+    indexes: { none: 'İndeks yok', 'btree-customer': 'B-tree (customer_id)', 'btree-created': 'B-tree (created_at)', composite: 'Bileşik (customer_id, status)', 'composite-status': 'Bileşik (status, customer_id)' } satisfies Record<IndexId, string>,
     plan: 'Plan',
     examined: 'İncelenen satır',
     returned: 'Dönen satır',
@@ -60,7 +64,7 @@ const L = {
     scaled: (n: string) => `Tablo ${n} satıra ölçeklenmiş tahmin`,
     reasons: {
       noIndex: 'Uygun indeks yok → tüm tablo sırayla taranır.',
-      prefix: 'Bileşik indeks yalnızca en soldaki kolon(lar) ile kullanılabilir (leftmost prefix). status tek başına önek değil.',
+      prefix: 'Bileşik indeks yalnızca en soldaki kolon(lar) ile kullanılabilir (leftmost prefix). Sorgu indeksin ilk kolonunu filtrelemediği için indeks işe yaramaz.',
       seqCheaper: 'İndeks var ama sorgu tablonun büyük kısmını döndürüyor; rastgele heap erişimi pahalı olduğundan planlayıcı Seq Scan seçti.',
       indexOnly: 'Gereken tüm kolonlar indekste → heap’e hiç gidilmez (Index Only Scan).',
       index: 'İndeks ağacında inilir, eşleşen yapraklar taranır, her satır için heap’ten veri okunur.',
@@ -75,7 +79,7 @@ const L = {
     star: 'SELECT * (all columns)',
     covered: 'Only indexed columns',
     queries: { eq: 'Equality: customer_id = 42', range: 'Range: created_at 100–130', composite: 'Composite: customer_id + status', 'second-col': 'Second column: status = paid' } satisfies Record<QueryId, string>,
-    indexes: { none: 'No index', 'btree-customer': 'B-tree (customer_id)', 'btree-created': 'B-tree (created_at)', composite: 'Composite (customer_id, status)' } satisfies Record<IndexId, string>,
+    indexes: { none: 'No index', 'btree-customer': 'B-tree (customer_id)', 'btree-created': 'B-tree (created_at)', composite: 'Composite (customer_id, status)', 'composite-status': 'Composite (status, customer_id)' } satisfies Record<IndexId, string>,
     plan: 'Plan',
     examined: 'Rows examined',
     returned: 'Rows returned',
@@ -87,7 +91,7 @@ const L = {
     scaled: (n: string) => `Estimate scaled to a ${n}-row table`,
     reasons: {
       noIndex: 'No usable index → the whole table is scanned sequentially.',
-      prefix: 'A composite index is usable only via its leftmost column(s) (leftmost prefix). status alone is not a prefix.',
+      prefix: 'A composite index is usable only via its leftmost column(s) (leftmost prefix). The query does not filter on the index’s first column, so the index is useless here.',
       seqCheaper: 'An index exists but the query returns a large share of the table; random heap access is expensive, so the planner chose a Seq Scan.',
       indexOnly: 'All needed columns are in the index → the heap is never touched (Index Only Scan).',
       index: 'Descend the index tree, scan matching leaves, fetch each row from the heap.',
@@ -129,9 +133,12 @@ export default function IndexQueryPlanSim({ params, onInteract }: SimulatorProps
     const seqCost = pages * 1 + SAMPLE_ROWS * 0.01;
     const leading = idxCols[0];
     const usable = !!leading && (q.eqCols.includes(leading) || q.rangeCol === leading);
+    const none: string[] = [];
     if (!usable) {
-      const reason = index === 'composite' && query === 'second-col' ? l.reasons.prefix : l.reasons.noIndex;
-      return { kind: 'Seq Scan' as PlanKind, examined: SAMPLE_ROWS, cost: seqCost, seqCost, idxCost: null as number | null, reason };
+      // Sorgu indeksin ilk kolonunu değil de sonraki bir kolonunu filtreliyorsa: en-soldaki önek kuralı
+      const touchesNonLeading = idxCols.length > 1 && q.cols.some((c) => idxCols.includes(c));
+      const reason = touchesNonLeading ? l.reasons.prefix : l.reasons.noIndex;
+      return { kind: 'Seq Scan' as PlanKind, examined: SAMPLE_ROWS, cost: seqCost, seqCost, idxCost: null as number | null, reason, narrowed: none };
     }
     // İndeksin daraltabildiği kolonlar: soldan ardışık eşitlik kolonları (+ aralık)
     const narrowed: string[] = [];
@@ -139,14 +146,12 @@ export default function IndexQueryPlanSim({ params, onInteract }: SimulatorProps
       if (q.eqCols.includes(c) || q.rangeCol === c) narrowed.push(c);
       else break;
     }
-    const indexMatches = rows.filter((r) =>
-      narrowed.every((c) => (c === 'customer_id' ? r.customer_id === 42 : c === 'status' ? r.status === 'paid' : r.created_at >= 100 && r.created_at <= 130)),
-    ).length;
+    const indexMatches = rows.filter((r) => narrowed.every((c) => colMatch(r, c))).length;
     const covered = projection === 'covered' && q.cols.every((c) => idxCols.includes(c));
     const descend = 3 * 4;
     const idxCost = descend + indexMatches * 0.005 + (covered ? indexMatches * 0.01 : indexMatches * 4 * 0.25);
     if (!covered && idxCost > seqCost) {
-      return { kind: 'Seq Scan' as PlanKind, examined: SAMPLE_ROWS, cost: seqCost, seqCost, idxCost, reason: l.reasons.seqCheaper };
+      return { kind: 'Seq Scan' as PlanKind, examined: SAMPLE_ROWS, cost: seqCost, seqCost, idxCost, reason: l.reasons.seqCheaper, narrowed: none };
     }
     const filtered = narrowed.length < q.eqCols.length + (q.rangeCol ? 1 : 0);
     return {
@@ -156,13 +161,14 @@ export default function IndexQueryPlanSim({ params, onInteract }: SimulatorProps
       seqCost,
       idxCost,
       reason: covered ? l.reasons.indexOnly : filtered ? l.reasons.filter : l.reasons.index,
+      narrowed,
     };
-  }, [idxCols, q, rows, projection, index, query, l]);
+  }, [idxCols, q, rows, projection, l]);
 
-  // B-tree seviyeleri: indekslenen kolonun sıralı değerlerinden anahtarlar
+  // B-tree seviyeleri: indekslenen kolonun sıralı değerlerinden anahtarlar (status sırasız kategori → ağaç çizilmez)
   const tree = useMemo(() => {
     const col = idxCols[0];
-    if (!col) return null;
+    if (!col || col === 'status') return null;
     const vals = rows.map((r) => (col === 'customer_id' ? r.customer_id : col === 'created_at' ? r.created_at : 0)).sort((a, b) => a - b);
     const target = col === 'customer_id' ? 42 : 100;
     const q4 = (from: number, to: number) => [1, 2, 3].map((k) => vals[Math.floor(from + ((to - from) * k) / 4)]);
@@ -244,10 +250,7 @@ export default function IndexQueryPlanSim({ params, onInteract }: SimulatorProps
       <svg viewBox="0 0 600 100" className="mt-3 h-auto w-full" role="img" aria-label={`${l.examined}: ${plan.examined}`}>
         {rows.map((r, i) => {
           const isMatch = q.match(r);
-          const examined =
-            plan.kind === 'Seq Scan' ||
-            (idxCols.length > 0 &&
-              (idxCols[0] === 'customer_id' ? r.customer_id === 42 && (idxCols[1] !== 'status' || !q.eqCols.includes('status') || r.status === 'paid') : r.created_at >= 100 && r.created_at <= 130));
+          const examined = plan.kind === 'Seq Scan' || plan.narrowed.every((c) => colMatch(r, c));
           return (
             <rect
               key={r.id}

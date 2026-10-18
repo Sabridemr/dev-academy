@@ -36,6 +36,7 @@ const L = {
     ceiling: 'Donanım tavanı! Daha büyük makine yok.',
     zoneFail: 'Bölge arızası',
     zone: 'Bölge',
+    zones: 'Bölge (AZ) sayısı',
     perServerCap: 'Replika kapasitesi (istek/sn)',
     spof: 'Tek sunucu = tek hata noktası (SPOF)',
     explain: 'Dikey ölçek basittir ama bir tavana ve tek hata noktasına sahiptir; maliyet doğrusal değil artar. Yatay ölçek LB gerektirir, neredeyse doğrusal büyür ve arızaya dayanıklıdır.',
@@ -55,6 +56,7 @@ const L = {
     ceiling: 'Hardware ceiling! No bigger machine.',
     zoneFail: 'Zone failure',
     zone: 'Zone',
+    zones: 'Zones (AZs)',
     perServerCap: 'Replica capacity (req/s)',
     spof: 'Single server = single point of failure (SPOF)',
     explain: 'Vertical scaling is simple but has a ceiling and a single point of failure; cost grows super-linearly. Horizontal scaling needs an LB, grows almost linearly and tolerates failures.',
@@ -74,11 +76,13 @@ export default function ScalingSim({ params, onInteract }: SimulatorProps) {
   const { locale } = useI18n();
   const l = L[locale];
   const reduced = usePrefersReducedMotion();
-  const zones = numParam(params, 'zones', 1, 1, 3);
+  // Çok bölgeli başlatılan derslerde bölge sayısı kaydırıcıyla değiştirilebilir (1–3)
+  const initialZones = numParam(params, 'zones', 1, 1, 3);
+  const [zones, setZones] = useState(initialZones);
   const maxServers = numParam(params, 'maxServers', 10, 2, 16);
   const [traffic, setTraffic] = useState(() => numParam(params, 'trafficRps', 400, 0, 5000));
   const [sizeIdx, setSizeIdx] = useState(0);
-  const [replicas, setReplicas] = useState(() => numParam(params, 'servers', zones * numParam(params, 'instancesPerZone', 1, 1, 8), 1, maxServers));
+  const [replicas, setReplicas] = useState(() => numParam(params, 'servers', initialZones * numParam(params, 'instancesPerZone', 1, 1, 8), 1, maxServers));
   const [perCap, setPerCap] = useState(() => numParam(params, 'serverCapacityRps', 200, 50, 1000));
   const [autoscale, setAutoscale] = useState(() => boolParam(params, 'autoscale', false));
   const [wave, setWave] = useState(false);
@@ -156,6 +160,9 @@ export default function ScalingSim({ params, onInteract }: SimulatorProps) {
             <input type="checkbox" checked={autoscale} onChange={(e) => { interact(); setAutoscale(e.target.checked); }} />
             {l.autoscale}
           </label>
+          {initialZones > 1 && (
+            <Range label={l.zones} value={zones} min={1} max={3} onChange={(z) => { interact(); setZones(z); setFailedZone((f) => (f !== null && f >= z ? null : f)); }} />
+          )}
           {zones > 1 && (
             <div>
               <p className="label">{l.zoneFail}</p>

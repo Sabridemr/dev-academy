@@ -55,13 +55,13 @@
       "options": [
         { "id": "a", "text": { "tr": "Pencere sınırı problemi yoktur; karar tam doğrudur", "en": "There is no window boundary problem; the decision is exact" } },
         { "id": "b", "text": { "tr": "Her istek için bir zaman damgası saklar; bellek anahtar başına limitle orantılıdır", "en": "It stores a timestamp per request; memory per key is proportional to the limit" } },
-        { "id": "c", "text": { "tr": "Anahtar başına yalnızca iki sayaç tutar", "en": "It keeps only two counters per key" } },
+        { "id": "c", "text": { "tr": "Anahtar başına yalnızca önceki ve mevcut pencerenin iki sayacını tutar", "en": "It keeps only two counters per key, for the previous and the current window" } },
         { "id": "d", "text": { "tr": "Düşük limitli hassas uç noktalar (saatte 5 şifre sıfırlama) için uygundur", "en": "It suits low-limit sensitive endpoints (5 password resets per hour)" } }
       ],
       "correct": ["a", "b", "d"],
       "explanation": {
-        "tr": "Sliding log her isteğin zaman damgasını tutar (b), bu yüzden tam doğrudur (a) ama yüksek limitlerde bellek pahalıdır; düşük limitlerde idealdir (d). İki sayaçla çalışan (c) sliding window counter'dır, log değil.",
-        "en": "Sliding log keeps every request's timestamp (b), which makes it exact (a) but memory-expensive at high limits; it is ideal at low limits (d). The two-counter approach (c) is the sliding window counter, not the log."
+        "tr": "Sliding log her isteğin zaman damgasını tutar (b), bu yüzden tam doğrudur (a) ama yüksek limitlerde bellek pahalıdır; düşük limitlerde idealdir (d). Önceki ve mevcut pencere için iki sayaçla çalışan (c) sliding window counter'dır, log değil.",
+        "en": "Sliding log keeps every request's timestamp (b), which makes it exact (a) but memory-expensive at high limits; it is ideal at low limits (d). The two-counter approach for the previous and current window (c) is the sliding window counter, not the log."
       },
       "difficulty": "medium",
       "concepts": ["sliding-window-log", "sliding-window-counter"]
@@ -93,15 +93,15 @@
         "en": "Three gateway replicas share a token bucket in Redis. Each one sends three separate commands: 'GET tokens → compute → SET tokens'. What is the problem and how is it fixed?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "Sakıncası yok; Redis tek thread'lidir, komutlar zaten sıralıdır", "en": "No problem; Redis is single-threaded, commands are already serialized" } },
-        { "id": "b", "text": { "tr": "İki kopya aynı değeri okuyup ikisi de son token'ı harcayabilir (yarış); çözüm hesabı tek atomik Lua betiğinde yapmak", "en": "Two replicas can read the same value and both spend the last token (race); fix it by doing the computation in one atomic Lua script" } },
-        { "id": "c", "text": { "tr": "Redis çok yavaştır; sayaç her gateway'in yerel belleğinde tutulmalı", "en": "Redis is too slow; the counter should live in each gateway's local memory" } },
-        { "id": "d", "text": { "tr": "Token bucket dağıtık çalışamaz; fixed window'a geçilmeli", "en": "Token bucket cannot work distributed; switch to fixed window" } }
+        { "id": "a", "text": { "tr": "Redis tek thread'li olduğundan komutlar zaten sıralıdır; tek sorun üç RTT'lik gecikmedir ve pipeline ile çözülür", "en": "Redis is single-threaded so the commands are already serialized; the only issue is three RTTs of latency, which pipelining fixes" } },
+        { "id": "b", "text": { "tr": "GET ile SET arasında başka kopya yazarsa SET onu ezer; çözüm GET ve SET'i aynı MULTI/EXEC bloğuna koymak", "en": "If another replica writes between GET and SET, the SET overwrites it; fix it by putting GET and SET in the same MULTI/EXEC block" } },
+        { "id": "c", "text": { "tr": "İki kopya aynı değeri okuyup ikisi de son token'ı harcayabilir (yarış); hesap tek bir atomik Lua betiğine taşınmalı", "en": "Two replicas can read the same value and both spend the last token (race); the computation must move into one atomic Lua script" } },
+        { "id": "d", "text": { "tr": "Redis her istekte ağ turu ekler; sayaç her gateway'in yerel belleğinde tutulup limit kopya sayısına bölünmeli", "en": "Redis adds a network round trip to every request; keep the counter in each gateway's local memory and divide the limit by the replica count" } }
       ],
-      "correct": ["b"],
+      "correct": ["c"],
       "explanation": {
-        "tr": "Tek tek komutlar atomiktir ama GET ile SET arasına başka bir kopyanın komutları girebilir (check-then-act yarışı). Lua betiği (ya da uygun tek komut) tüm adımı kesintisiz çalıştırır. Yerel bellek (c) limiti kopya sayısıyla çarpar; (d) yanlıştır, token bucket Redis'te yaygın biçimde dağıtık çalışır.",
-        "en": "Individual commands are atomic, but another replica's commands can slip between GET and SET (a check-then-act race). A Lua script (or a suitable single command) runs the whole step uninterrupted. Local memory (c) multiplies the limit by the replica count; (d) is false, token buckets run distributed in Redis all the time."
+        "tr": "Tek tek komutlar atomiktir ama GET ile SET arasına başka bir kopyanın komutları girebilir (check-then-act yarışı); tek thread olmak bunu engellemez, pipeline yalnızca RTT azaltır (a). MULTI/EXEC komutları sıraya alır ama GET sonucunu aynı blok içinde hesaba katamazsınız; bunun için WATCH ile optimistic kilit ya da Lua gerekir (b). Limiti yerel bellekte kopya sayısına bölmek trafik kopyalara eşit düşmediğinde adaletsizdir ve autoscaling ile kopya sayısı değişince bozulur (d). Lua betiği tüm adımı Redis içinde kesintisiz çalıştırır.",
+        "en": "Individual commands are atomic, but another replica's commands can slip between GET and SET (a check-then-act race); being single-threaded does not prevent that, and pipelining only cuts RTTs (a). MULTI/EXEC queues the commands but you cannot use the GET result inside the same block; that needs WATCH-based optimistic locking or Lua (b). Dividing the limit across local memories is unfair when traffic is not spread evenly across replicas and breaks whenever autoscaling changes the replica count (d). A Lua script runs the whole step uninterrupted inside Redis."
       },
       "difficulty": "hard",
       "concepts": ["distributed-rate-limiter", "token-bucket"]
