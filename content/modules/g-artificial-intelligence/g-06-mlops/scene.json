@@ -1,0 +1,222 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "g-06-mlops-lifecycle",
+  "title": { "tr": "MLOps Döngüsü: Veriden Yeniden Eğitime", "en": "The MLOps Loop: from Data to Retraining" },
+  "summary": {
+    "tr": "Veri pipeline'ı feature store'u besler, GPU kümesi modeli eğitir, registry sürümler, canary ile kademeli yayın yapılır, izleme drift yakalar ve yeniden eğitimi tetikler.",
+    "en": "The data pipeline feeds the feature store, a GPU cluster trains the model, the registry versions it, a canary rolls it out gradually, monitoring catches drift and triggers retraining."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda olay akışı ve veri gölü; ortada üstte feature store, altta GPU eğitim kümesi; merkezde model registry; sağda bir trafik yönlendiricisi, üstte v1 kararlı model sunucusu, altta v2 canary sunucusu; en altta ortada izleme servisi. Adımlar: veri feature store'a akar; eğitim kümesi özelliklerden v2'yi eğitir; v2 metrikleriyle registry'ye kaydedilir; yönlendirici trafiğin %5'ini canary'ye verir; izleme iki sürümü karşılaştırır ve v2 %100'e terfi eder; haftalar sonra girdi dağılımı kayar (drift); izleme yeniden eğitim pipeline'ını tetikler.",
+      "en": "Event stream and data lake on the left; feature store at the top centre, GPU training cluster at the bottom centre; model registry in the middle; a traffic router on the right with the v1 stable server above and the v2 canary server below; a monitoring service at the bottom centre. Steps: data flows into the feature store; the training cluster trains v2 from features; v2 is registered with its metrics; the router sends 5% of traffic to the canary; monitoring compares both versions and v2 is promoted to 100%; weeks later the input distribution shifts (drift); monitoring triggers the retraining pipeline."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "data", "kind": "storage", "label": { "tr": "Olaylar + veri gölü", "en": "Events + data lake" }, "sublabel": "Kafka · Parquet", "x": 100, "y": 300, "w": 140, "h": 80 },
+    { "id": "fs", "kind": "db", "label": "Feature store", "sublabel": { "tr": "offline + online", "en": "offline + online" }, "x": 320, "y": 150, "w": 140, "h": 76 },
+    { "id": "train", "kind": "worker", "label": { "tr": "Eğitim kümesi", "en": "Training cluster" }, "sublabel": "8 × GPU, DDP", "x": 320, "y": 450, "w": 140, "h": 76 },
+    { "id": "reg", "kind": "storage", "label": "Model registry", "sublabel": "v1: production", "x": 540, "y": 300, "w": 140, "h": 80 },
+    { "id": "traffic", "kind": "user", "label": { "tr": "İstekler", "en": "Requests" }, "x": 740, "y": 90 },
+    { "id": "router", "kind": "lb", "label": { "tr": "Yönlendirici", "en": "Router" }, "sublabel": "100% → v1", "x": 740, "y": 300, "w": 130, "h": 70 },
+    { "id": "stable", "kind": "server", "label": "v1 stable", "sublabel": { "tr": "model sunucusu", "en": "model server" }, "x": 920, "y": 180, "w": 130, "h": 70 },
+    { "id": "canary", "kind": "server", "label": "v2 canary", "sublabel": { "tr": "henüz yok", "en": "not yet" }, "x": 920, "y": 420, "w": 130, "h": 70 },
+    { "id": "mon", "kind": "service", "label": { "tr": "İzleme", "en": "Monitoring" }, "sublabel": "PSI · AUC · p99", "x": 700, "y": 530, "w": 140, "h": 64 }
+  ],
+  "edges": [
+    { "id": "data-fs", "from": "data", "to": "fs", "kind": "data", "label": { "tr": "özellik pipeline'ı", "en": "feature pipeline" }, "curvature": -0.1 },
+    { "id": "data-train", "from": "data", "to": "train", "kind": "data", "label": { "tr": "etiketler", "en": "labels" }, "curvature": 0.1, "style": "dashed" },
+    { "id": "fs-train", "from": "fs", "to": "train", "kind": "data", "label": { "tr": "point-in-time join", "en": "point-in-time join" } },
+    { "id": "train-reg", "from": "train", "to": "reg", "kind": "data", "label": { "tr": "model + metrikler", "en": "model + metrics" }, "curvature": 0.1 },
+    { "id": "reg-router", "from": "reg", "to": "router", "kind": "control", "style": "dashed", "label": "deploy" },
+    { "id": "traffic-router", "from": "traffic", "to": "router", "kind": "request" },
+    { "id": "router-stable", "from": "router", "to": "stable", "kind": "request", "curvature": -0.1 },
+    { "id": "router-canary", "from": "router", "to": "canary", "kind": "request", "curvature": 0.1 },
+    { "id": "fs-router", "from": "fs", "to": "router", "kind": "data", "style": "dotted", "label": { "tr": "online özellikler", "en": "online features" }, "curvature": -0.2 },
+    { "id": "stable-mon", "from": "stable", "to": "mon", "kind": "event", "style": "dashed", "curvature": 0.3 },
+    { "id": "canary-mon", "from": "canary", "to": "mon", "kind": "event", "style": "dashed" },
+    { "id": "mon-train", "from": "mon", "to": "train", "kind": "control", "style": "dashed", "label": { "tr": "yeniden eğit", "en": "retrain" }, "curvature": 0.15 }
+  ],
+  "steps": [
+    {
+      "id": "data",
+      "title": { "tr": "1. Veri pipeline'ı", "en": "1. Data pipeline" },
+      "narration": {
+        "tr": "Olaylar Kafka'dan akar, veri gölüne yazılır; zamanlanmış pipeline şemayı doğrular ve özellikleri (son 7 gün sipariş sayısı vb.) hesaplayıp feature store'a yazar: offline tabloya geçmiş, online store'a güncel değer.",
+        "en": "Events flow from Kafka into the data lake; a scheduled pipeline validates the schema and computes features (orders in the last 7 days etc.) into the feature store: history into the offline table, current values into the online store."
+      },
+      "durationMs": 3500,
+      "inherit": false,
+      "highlight": { "nodes": ["data", "fs"], "edges": ["data-fs"] },
+      "nodeStates": {
+        "data": { "status": "active" },
+        "fs": { "status": "active", "badge": "✓ schema" },
+        "canary": { "status": "muted" },
+        "router": { "status": "active" },
+        "stable": { "status": "active" }
+      },
+      "edgeStates": { "data-fs": { "status": "active" }, "router-canary": { "status": "muted" }, "canary-mon": { "status": "muted" } },
+      "packets": [
+        { "edge": "data-fs", "shape": "square", "durationMs": 1000, "repeat": 3, "repeatGapMs": 200 },
+        { "edge": "traffic-router", "shape": "envelope", "durationMs": 700, "repeat": 3, "repeatGapMs": 300 },
+        { "edge": "router-stable", "shape": "envelope", "startAt": 700, "durationMs": 700, "repeat": 3, "repeatGapMs": 300 }
+      ],
+      "annotations": [
+        { "id": "fs-note", "x": 320, "y": 60, "text": { "tr": "Tek tanım: eğitim ve serving aynı özelliği okur", "en": "One definition: training and serving read the same feature" }, "tone": "info", "target": "fs" }
+      ]
+    },
+    {
+      "id": "train",
+      "title": { "tr": "2. Dağıtık eğitim", "en": "2. Distributed training" },
+      "narration": {
+        "tr": "Eğitim işi point-in-time doğru bir eğitim seti çıkarır (3 Mart'taki örnek, 3 Mart'taki özellikler) ve 8 GPU'da data-parallel eğitir: her GPU farklı batch, her adımda gradyanlar all-reduce ile ortalanır. Checkpoint'ler nesne deposuna yazılır.",
+        "en": "The training job extracts a point-in-time correct training set (an example from March 3 gets March 3 features) and trains data-parallel on 8 GPUs: each GPU takes a different batch, gradients are averaged with all-reduce every step. Checkpoints go to object storage."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["fs", "train"], "edges": ["fs-train", "data-train"] },
+      "nodeStates": {
+        "fs": { "badge": "" },
+        "train": { "status": "busy", "badge": "epoch 12/20", "progress": 0.6 }
+      },
+      "edgeStates": { "data-fs": { "status": "idle" }, "fs-train": { "status": "active" }, "data-train": { "status": "active" } },
+      "packets": [
+        { "edge": "fs-train", "shape": "square", "label": "X", "durationMs": 900, "repeat": 2, "repeatGapMs": 300 },
+        { "edge": "data-train", "shape": "square", "label": "y", "startAt": 300, "durationMs": 900, "repeat": 2, "repeatGapMs": 300 }
+      ],
+      "annotations": [
+        { "id": "ddp-note", "x": 320, "y": 540, "text": { "tr": "all-reduce: 8 gradyanın ortalaması, her adım", "en": "all-reduce: average of 8 gradients, every step" }, "tone": "info", "target": "train" }
+      ]
+    },
+    {
+      "id": "register",
+      "title": { "tr": "3. Değerlendir ve kaydet", "en": "3. Evaluate and register" },
+      "narration": {
+        "tr": "Eğitim biter; tutulan test kümesinde AUC 0.912 (üretimdeki v1: 0.897). Model, veri sürümü, commit, hiperparametreler ve metriklerle registry'ye v2 olarak yazılır ve 'staging' aşamasına alınır. Otomatik kural: v1'den en az 0.5 puan iyiyse staging'e geç.",
+        "en": "Training finishes; AUC on the held-out test set is 0.912 (v1 in production: 0.897). The model is written to the registry as v2 with data version, commit, hyperparameters and metrics, and moved to 'staging'. Automatic rule: promote to staging if at least 0.5 points better than v1."
+      },
+      "durationMs": 3500,
+      "highlight": { "nodes": ["train", "reg"], "edges": ["train-reg"] },
+      "nodeStates": {
+        "train": { "status": "success", "badge": "AUC 0.912", "progress": 1 },
+        "reg": { "status": "active", "badge": "v2: staging", "sublabel": "v1: production · v2: staging" }
+      },
+      "edgeStates": { "fs-train": { "status": "idle" }, "data-train": { "status": "idle" }, "train-reg": { "status": "active" } },
+      "packets": [
+        { "edge": "train-reg", "shape": "envelope", "label": "v2 + AUC 0.912", "durationMs": 1200 }
+      ],
+      "annotations": [
+        { "id": "reg-note", "x": 540, "y": 400, "text": { "tr": "Sürüm: ağırlık + veri + kod + metrik + imza", "en": "Version: weights + data + code + metrics + signature" }, "tone": "info", "target": "reg" }
+      ]
+    },
+    {
+      "id": "canary",
+      "title": { "tr": "4. Canary: trafiğin %5'i", "en": "4. Canary: 5% of traffic" },
+      "narration": {
+        "tr": "v2 bir model sunucusuna dağıtılır. Yönlendirici kullanıcı id'sinin hash'ine göre %5'i v2'ye, %95'i v1'e gönderir — aynı kullanıcı hep aynı sürümü görür. Her iki sunucu da online özellikleri aynı feature store'dan okur.",
+        "en": "v2 is deployed to a model server. The router sends 5% to v2 and 95% to v1 based on a hash of the user id — the same user always sees the same version. Both servers read online features from the same feature store."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["reg", "router", "canary"], "edges": ["reg-router", "router-canary", "fs-router"] },
+      "nodeStates": {
+        "train": { "status": "idle", "badge": "", "progress": 0 },
+        "reg": { "status": "idle", "badge": "" },
+        "router": { "sublabel": "95% → v1 · 5% → v2" },
+        "canary": { "status": "active", "sublabel": { "tr": "model sunucusu", "en": "model server" }, "badge": "5%" },
+        "stable": { "badge": "95%" }
+      },
+      "edgeStates": {
+        "train-reg": { "status": "idle" }, "reg-router": { "status": "active" },
+        "router-canary": { "status": "active" }, "fs-router": { "status": "active" }
+      },
+      "packets": [
+        { "edge": "reg-router", "shape": "diamond", "label": "deploy v2", "durationMs": 1000 },
+        { "edge": "fs-router", "shape": "dot", "startAt": 800, "durationMs": 800 },
+        { "edge": "router-stable", "shape": "envelope", "startAt": 1200, "durationMs": 700, "repeat": 4, "repeatGapMs": 150 },
+        { "edge": "router-canary", "shape": "envelope", "startAt": 1500, "durationMs": 700, "color": "accent" }
+      ],
+      "annotations": [
+        { "id": "hash-note", "x": 740, "y": 400, "text": { "tr": "hash(user_id) % 100 < 5 → v2", "en": "hash(user_id) % 100 < 5 → v2" }, "tone": "info", "target": "router" }
+      ]
+    },
+    {
+      "id": "promote",
+      "title": { "tr": "5. İzle ve terfi ettir", "en": "5. Monitor and promote" },
+      "narration": {
+        "tr": "İzleme her iki sürümden gecikme, hata oranı, tahmin dağılımı ve iş metriğini toplar. 3 gün sonra: v2 p99 gecikmesi aynı, dönüşüm +1.8% (anlamlı). Yönlendirici kademeli olarak %25 → %50 → %100'e geçer; v1 sıcak yedek olarak kalır.",
+        "en": "Monitoring collects latency, error rate, prediction distribution and the business metric from both versions. After 3 days: v2 p99 latency unchanged, conversion +1.8% (significant). The router moves gradually 25% → 50% → 100%; v1 stays as a warm standby."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["stable", "canary", "mon", "router"], "edges": ["stable-mon", "canary-mon"] },
+      "nodeStates": {
+        "mon": { "status": "success", "badge": "+1.8% conv" },
+        "router": { "sublabel": "100% → v2" },
+        "canary": { "status": "success", "badge": "100%", "label": "v2 stable" },
+        "stable": { "status": "muted", "badge": "0%", "sublabel": { "tr": "sıcak yedek", "en": "warm standby" } }
+      },
+      "edgeStates": {
+        "reg-router": { "status": "idle" }, "fs-router": { "status": "idle" },
+        "stable-mon": { "status": "active" }, "canary-mon": { "status": "active" },
+        "router-stable": { "status": "muted" }
+      },
+      "packets": [
+        { "edge": "stable-mon", "shape": "dot", "durationMs": 1000 },
+        { "edge": "canary-mon", "shape": "dot", "durationMs": 1000, "color": "accent" },
+        { "edge": "router-canary", "shape": "envelope", "startAt": 1200, "durationMs": 700, "repeat": 4, "repeatGapMs": 150, "color": "accent" }
+      ],
+      "annotations": [
+        { "id": "promo-note", "x": 700, "y": 460, "text": { "tr": "Geri alma otomatik: hata ↑ ya da p99 ↑ → %0", "en": "Rollback is automatic: errors ↑ or p99 ↑ → 0%" }, "tone": "success", "target": "mon" }
+      ]
+    },
+    {
+      "id": "drift",
+      "title": { "tr": "6. Drift tespiti", "en": "6. Drift detected" },
+      "narration": {
+        "tr": "Altı hafta sonra: 'sepet tutarı' özelliğinin üretim dağılımı eğitim dağılımından kaydı (PSI 0.31 > 0.25) — yeni bir ülke açıldı. Tahmin edilen pozitif oranı da %2'den %6'ya çıktı. Gerçek etiketler henüz gelmeden alarm çalar: data drift.",
+        "en": "Six weeks later: the production distribution of the 'basket amount' feature has shifted from training (PSI 0.31 > 0.25) — a new country launched. The predicted positive rate also jumped from 2% to 6%. The alarm fires before true labels even arrive: data drift."
+      },
+      "durationMs": 3800,
+      "highlight": { "nodes": ["mon", "canary"], "edges": ["canary-mon"] },
+      "nodeStates": {
+        "mon": { "status": "error", "badge": "PSI 0.31" },
+        "canary": { "status": "warning", "badge": "drift" }
+      },
+      "edgeStates": { "stable-mon": { "status": "idle" }, "canary-mon": { "status": "error" } },
+      "packets": [
+        { "edge": "canary-mon", "shape": "square", "color": "danger", "durationMs": 900, "repeat": 3, "repeatGapMs": 200 }
+      ],
+      "annotations": [
+        { "id": "drift-note", "x": 700, "y": 460, "text": { "tr": "Girdi dağılımı kaydı → model eskidi", "en": "Input distribution shifted → model went stale" }, "tone": "danger", "target": "mon" }
+      ]
+    },
+    {
+      "id": "retrain",
+      "title": { "tr": "7. Yeniden eğitim döngüsü", "en": "7. The retraining loop" },
+      "narration": {
+        "tr": "İzleme, yeniden eğitim pipeline'ını tetikler: taze veri → doğrulama → özellikler → eğitim → değerlendirme → registry'de v3 → canary. İnsan yalnızca anomali raporunu onaylar. Döngü kapanmıştır; olgun MLOps bu turu haftada bir, elle müdahale olmadan tamamlar.",
+        "en": "Monitoring triggers the retraining pipeline: fresh data → validation → features → training → evaluation → v3 in the registry → canary. A human only approves the anomaly report. The loop is closed; mature MLOps completes this cycle weekly with no manual intervention."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["mon", "train", "data", "fs"], "edges": ["mon-train", "data-fs", "fs-train"] },
+      "nodeStates": {
+        "mon": { "status": "warning", "badge": "trigger" },
+        "train": { "status": "busy", "badge": "v3 ...", "progress": 0.2 },
+        "data": { "status": "active" },
+        "fs": { "status": "active" }
+      },
+      "edgeStates": { "canary-mon": { "status": "idle" }, "mon-train": { "status": "active" }, "data-fs": { "status": "active" }, "fs-train": { "status": "active" } },
+      "packets": [
+        { "edge": "mon-train", "shape": "diamond", "label": "retrain", "color": "warning", "durationMs": 1200 },
+        { "edge": "data-fs", "shape": "square", "startAt": 1200, "durationMs": 900, "repeat": 2, "repeatGapMs": 200 },
+        { "edge": "fs-train", "shape": "square", "startAt": 2100, "durationMs": 900 }
+      ],
+      "annotations": [
+        { "id": "loop-note", "x": 540, "y": 400, "text": { "tr": "Kapalı döngü: veri → eğitim → yayın → izleme → veri", "en": "Closed loop: data → train → deploy → monitor → data" }, "tone": "success" }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["mlops", "feature-store", "canary", "drift"]
+}

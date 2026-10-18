@@ -1,0 +1,156 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 440" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Monolith, modüler monolith ve mikroservis mimarilerinin karşılaştırması</title>
+  <desc id="desc">Üç panel. Solda tek bir uygulama kutusu ve tek veritabanı olan monolith. Ortada aynı kutu içinde katalog, sipariş ve ödeme modüllerine ayrılmış, modüllerin facade üzerinden konuştuğu modüler monolith. Sağda API gateway arkasında her biri kendi veritabanına sahip üç ayrı servis. Panellerin altında dağıtım birimi, veri sınırı ve ekip bağımsızlığı karşılaştırması yer alır.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+    <marker id="arrow-p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-primary, #6366f1)"/>
+    </marker>
+  </defs>
+
+  <!-- Panel başlıkları -->
+  <g font-size="15" font-weight="700" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="160" y="32">1. Monolith</text>
+    <text x="480" y="32">2. Modüler Monolith</text>
+    <text x="800" y="32">3. Mikroservisler</text>
+  </g>
+  <g font-size="11" fill="var(--da-muted, #64748b)" text-anchor="middle">
+    <text x="160" y="50">tek süreç · tek DB · sınır yok</text>
+    <text x="480" y="50">tek süreç · tek DB · sınır kodda</text>
+    <text x="800" y="50">ayrı süreç · ayrı DB · sınır ağda</text>
+  </g>
+
+  <!-- Evrim okları -->
+  <g stroke="var(--da-primary, #6366f1)" stroke-width="2" fill="none" marker-end="url(#arrow-p)">
+    <path d="M 292 200 L 332 200"/>
+    <path d="M 612 200 L 652 200"/>
+  </g>
+  <g font-size="10" fill="var(--da-primary, #6366f1)" text-anchor="middle">
+    <text x="312" y="188">refactor</text>
+    <text x="632" y="188">extract</text>
+  </g>
+
+  <!-- PANEL 1: Monolith -->
+  <rect x="50" y="70" width="220" height="200" rx="12" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5"/>
+  <text x="160" y="95" text-anchor="middle" font-size="13" font-weight="600" fill="var(--da-fg, #0f172a)">app.jar</text>
+  <g font-size="11" fill="var(--da-muted, #64748b)">
+    <text x="70" y="125">CatalogService</text>
+    <text x="70" y="145">OrderService</text>
+    <text x="70" y="165">PaymentService</text>
+    <text x="70" y="185">ProductRepo, OrderRepo...</text>
+    <text x="70" y="205">controllers / utils / ...</text>
+  </g>
+  <text x="160" y="245" text-anchor="middle" font-size="10" fill="var(--da-danger, #ef4444)">her sınıf her tabloya erişir</text>
+  <path d="M 160 270 L 160 300" stroke="var(--da-muted, #64748b)" stroke-width="1.6" marker-end="url(#arrow)"/>
+  <ellipse cx="160" cy="312" rx="60" ry="10" fill="var(--da-accent, #f59e0b)" fill-opacity="0.25" stroke="var(--da-accent, #f59e0b)"/>
+  <rect x="100" y="312" width="120" height="30" fill="var(--da-accent, #f59e0b)" fill-opacity="0.25" stroke="var(--da-accent, #f59e0b)" stroke-dasharray="0"/>
+  <ellipse cx="160" cy="342" rx="60" ry="10" fill="var(--da-accent, #f59e0b)" fill-opacity="0.25" stroke="var(--da-accent, #f59e0b)"/>
+  <text x="160" y="332" text-anchor="middle" font-size="11" fill="var(--da-fg, #0f172a)">tek DB (tüm tablolar)</text>
+
+  <!-- PANEL 2: Modüler Monolith -->
+  <rect x="340" y="70" width="280" height="200" rx="12" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5"/>
+  <text x="480" y="92" text-anchor="middle" font-size="13" font-weight="600" fill="var(--da-fg, #0f172a)">app.jar (tek dağıtım)</text>
+  <g fill="var(--da-primary, #6366f1)" fill-opacity="0.1" stroke="var(--da-primary, #6366f1)" stroke-width="1.3">
+    <rect x="352" y="104" width="80" height="120" rx="8"/>
+    <rect x="440" y="104" width="80" height="120" rx="8"/>
+    <rect x="528" y="104" width="80" height="120" rx="8"/>
+  </g>
+  <g font-size="11" font-weight="600" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="392" y="122">catalog</text>
+    <text x="480" y="122">orders</text>
+    <text x="568" y="122">payments</text>
+  </g>
+  <g font-size="9.5" fill="var(--da-muted, #64748b)" text-anchor="middle">
+    <text x="392" y="140">facade</text>
+    <text x="392" y="154">domain</text>
+    <text x="392" y="168">repo</text>
+    <text x="480" y="140">facade</text>
+    <text x="480" y="154">domain</text>
+    <text x="480" y="168">repo</text>
+    <text x="568" y="140">facade</text>
+    <text x="568" y="154">domain</text>
+    <text x="568" y="168">repo</text>
+  </g>
+  <!-- facade çağrıları -->
+  <g stroke="var(--da-primary, #6366f1)" stroke-width="1.4" fill="none" marker-end="url(#arrow-p)">
+    <path d="M 440 200 L 434 200"/>
+    <path d="M 520 200 L 526 200"/>
+  </g>
+  <text x="480" y="214" text-anchor="middle" font-size="9.5" fill="var(--da-primary, #6366f1)">yalnızca facade çağrısı</text>
+  <text x="480" y="245" text-anchor="middle" font-size="10" fill="var(--da-success, #10b981)">lint: başka modülün repo/tablosuna erişim yasak</text>
+  <!-- tek DB, bölünmüş şema -->
+  <path d="M 392 270 L 420 300 M 480 270 L 480 300 M 568 270 L 540 300" stroke="var(--da-muted, #64748b)" stroke-width="1.4" fill="none"/>
+  <ellipse cx="480" cy="312" rx="80" ry="10" fill="var(--da-accent, #f59e0b)" fill-opacity="0.25" stroke="var(--da-accent, #f59e0b)"/>
+  <rect x="400" y="312" width="160" height="30" fill="var(--da-accent, #f59e0b)" fill-opacity="0.25" stroke="var(--da-accent, #f59e0b)"/>
+  <ellipse cx="480" cy="342" rx="80" ry="10" fill="var(--da-accent, #f59e0b)" fill-opacity="0.25" stroke="var(--da-accent, #f59e0b)"/>
+  <line x1="453" y1="314" x2="453" y2="340" stroke="var(--da-fg, #0f172a)" stroke-dasharray="3 3"/>
+  <line x1="507" y1="314" x2="507" y2="340" stroke="var(--da-fg, #0f172a)" stroke-dasharray="3 3"/>
+  <g font-size="9" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="426" y="332">catalog_*</text>
+    <text x="480" y="332">order_*</text>
+    <text x="534" y="332">payment_*</text>
+  </g>
+
+  <!-- PANEL 3: Mikroservisler -->
+  <rect x="740" y="70" width="120" height="34" rx="8" fill="var(--da-primary, #6366f1)" fill-opacity="0.15" stroke="var(--da-primary, #6366f1)" stroke-width="1.5"/>
+  <text x="800" y="92" text-anchor="middle" font-size="12" font-weight="600" fill="var(--da-primary, #6366f1)">API Gateway</text>
+  <g stroke="var(--da-muted, #64748b)" stroke-width="1.4" fill="none" marker-end="url(#arrow)">
+    <path d="M 770 104 L 712 142"/>
+    <path d="M 800 104 L 800 142"/>
+    <path d="M 830 104 L 888 142"/>
+  </g>
+  <g fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5">
+    <rect x="672" y="144" width="80" height="54" rx="8"/>
+    <rect x="760" y="144" width="80" height="54" rx="8"/>
+    <rect x="848" y="144" width="80" height="54" rx="8"/>
+  </g>
+  <g font-size="11" font-weight="600" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="712" y="166">catalog</text>
+    <text x="800" y="166">orders</text>
+    <text x="888" y="166">payments</text>
+  </g>
+  <g font-size="9" fill="var(--da-muted, #64748b)" text-anchor="middle">
+    <text x="712" y="184">x12 · Go</text>
+    <text x="800" y="184">x4 · Java</text>
+    <text x="888" y="184">x2 · PCI</text>
+  </g>
+  <!-- servisler arası HTTP -->
+  <g stroke="var(--da-primary, #6366f1)" stroke-width="1.2" fill="none" stroke-dasharray="4 3" marker-end="url(#arrow-p)">
+    <path d="M 760 178 L 754 178"/>
+    <path d="M 840 178 L 846 178"/>
+  </g>
+  <text x="800" y="214" text-anchor="middle" font-size="9.5" fill="var(--da-primary, #6366f1)">HTTP/gRPC + timeout + retry</text>
+  <!-- ayrı DB'ler -->
+  <g stroke="var(--da-muted, #64748b)" stroke-width="1.4" fill="none" marker-end="url(#arrow)">
+    <path d="M 712 198 L 712 300"/>
+    <path d="M 800 198 L 800 300"/>
+    <path d="M 888 198 L 888 300"/>
+  </g>
+  <g fill="var(--da-accent, #f59e0b)" fill-opacity="0.25" stroke="var(--da-accent, #f59e0b)">
+    <ellipse cx="712" cy="310" rx="34" ry="7"/><rect x="678" y="310" width="68" height="24"/><ellipse cx="712" cy="334" rx="34" ry="7"/>
+    <ellipse cx="800" cy="310" rx="34" ry="7"/><rect x="766" y="310" width="68" height="24"/><ellipse cx="800" cy="334" rx="34" ry="7"/>
+    <ellipse cx="888" cy="310" rx="34" ry="7"/><rect x="854" y="310" width="68" height="24"/><ellipse cx="888" cy="334" rx="34" ry="7"/>
+  </g>
+  <g font-size="9" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="712" y="326">catalog-db</text>
+    <text x="800" y="326">orders-db</text>
+    <text x="888" y="326">payments-db</text>
+  </g>
+  <text x="800" y="245" text-anchor="middle" font-size="10" fill="var(--da-success, #10b981)">database-per-service</text>
+
+  <!-- Alt karşılaştırma -->
+  <line x1="40" y1="366" x2="920" y2="366" stroke="var(--da-border, #cbd5e1)"/>
+  <g font-size="10.5" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="160" y="388">dağıtım: hepsi birlikte</text>
+    <text x="160" y="406">hata alanı: tüm sistem</text>
+    <text x="160" y="424">ekip: 1–8 kişi için ideal</text>
+    <text x="480" y="388">dağıtım: hepsi birlikte, hızlı build</text>
+    <text x="480" y="406">hata alanı: tüm sistem</text>
+    <text x="480" y="424">ekip: 8–40 kişi, sınırlar hazır</text>
+    <text x="800" y="388">dağıtım: servis başına bağımsız</text>
+    <text x="800" y="406">hata alanı: tek servis (doğru tasarımla)</text>
+    <text x="800" y="424">ekip: çok ekip, stream-aligned</text>
+  </g>
+</svg>

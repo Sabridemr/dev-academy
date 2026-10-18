@@ -1,0 +1,114 @@
+# DevAcademy Mimarisi
+
+Bu belge sistemin bileşenlerini, veri akışlarını ve tasarım kararlarını özetler. Aynı içerik uygulamada **F-08 DevAcademy’nin Kendi Mimarisi** dersinde animasyonlu olarak anlatılır.
+
+## Bileşenler
+
+```mermaid
+flowchart LR
+  subgraph Clients[İstemciler]
+    W[Web<br/>Next.js SSR/ISR]
+    A[Admin paneli<br/>web içinde]
+    M[Mobil<br/>Expo + SQLite]
+  end
+  subgraph API[NestJS API]
+    R[REST /api/v1]
+    WS[WebSocket /ws]
+    CRON[Zamanlanmış işler<br/>günlük hatırlatma]
+  end
+  PG[(PostgreSQL<br/>sürümlü içerik, ilerleme)]
+  RD[(Redis<br/>cache, rate limit)]
+  S3[(S3 / MinIO<br/>medya)]
+  PUSH[Expo Push / SMTP]
+  C[[content/<br/>Markdown + JSON]]
+  CI[CI: content:validate]
+  SEED[db:seed]
+
+  W & A & M --> R
+  W & M -. olaylar .- WS
+  R --> PG
+  R --> RD
+  R --> S3
+  CRON --> PUSH
+  C --> CI --> SEED --> PG
+```
+
+### packages/shared
+
+| Modül | İçerik |
+|---|---|
+| `scene/` | `AnimationSceneSchema` (zod), anlamsal doğrulama (`validateScene`), oynatıcı durum makinesi (`playerReducer`), adım görünümü çözümleme (`resolveStepView`, inherit zinciri), paket konumları (`computePackets`), geometri (kenar Bézier eğrileri) |
+| `content/` | Ders frontmatter, blok birleşimi (`LessonBlock`), quiz, modül/yol şemaları; Markdown directive ayrıştırıcısı; müfredat ağacı |
+| `simulators/` | Load balancer, cache (LRU/LFU/FIFO, TTL, yazma politikaları), rate limiter (5 algoritma), consistent hashing, gradient descent, self-attention, kapasite tahmini — saf fonksiyonlar |
+| `api/` | İstek/yanıt tipleri ve zod şemaları |
+| `gamification/` | Seri hesaplama (saat dilimine duyarlı), SM-2 aralıklı tekrar, rozet koşulları, quiz puanlama |
+| `node/` | `content/` klasörü yükleyicisi (doğrulama scripti ve seed ortak kullanır) |
+
+### Backend modülleri
+
+| Modül | Uç noktalar | Not |
+|---|---|---|
+| auth | `/auth/register`, `/login`, `/oauth`, `/refresh`, `/logout`, `/change-password` | argon2id; refresh token rotasyonu ve yeniden kullanım tespiti; Google/Apple ID token doğrulama |
+| users | `/users/me`, `/users/me/push-tokens` | profil, öğrenme yolu, hatırlatma saati, saat dilimi |
+| content | `/paths`, `/modules`, `/lessons`, `/scenes` | yalnızca yayınlanmış sürümler; Redis cache + ETag; token varsa ilerleme eklenir |
+| quizzes | `/quizzes/by-lesson/:id`, `/quizzes/:id/attempts` | doğru cevaplar istemciye gönderilmez; yanlışlar SM-2 kartına dönüşür |
+| progress | `/progress`, `/summary`, `/lessons/:id`, `/reviews`, `/badges`, `/interactive` | seri, rozet, tekrar takvimi; WebSocket bildirimleri |
+| library | `/bookmarks`, `/notes` | |
+| search | `/search?q=` | PostgreSQL full-text + GIN indeksi |
+| admin | `/admin/lessons`, `/versions`, `/scenes`, `/quizzes`, `/modules`, `/media/presign`, `/stats` | editor/admin rolleri; taslak → yayın akışı |
+| offline | `/offline/modules/:id` | mobil için modül paketi (ETag destekli) |
+| health | `/health`, `/health/ready` | liveness / readiness |
+
+Ortak altyapı: global JWT guard (`@Public`, `@OptionalAuth`), rol guard’ı, Redis tabanlı rate limiting, zod doğrulama pipe’ı (shared şemalarıyla), merkezi hata formatı (`ApiErrorBody`), pino yapılandırılmış log ve request-id, OpenAPI (`/docs`).
+
+## Veri modeli
+
+```mermaid
+erDiagram
+  Module ||--o{ Lesson : içerir
+  Lesson ||--o{ LessonVersion : sürümler
+  Lesson |o--o| LessonVersion : yayındaki
+  Lesson ||--o{ AnimationScene : sahneler
+  Lesson ||--o{ Quiz : quiz
+  Quiz ||--o{ Question : sorular
+  User ||--o{ Attempt : denemeler
+  Attempt ||--o{ AttemptAnswer : cevaplar
+  User ||--o{ Progress : ilerleme
+  User ||--o{ ReviewCard : tekrar
+  User ||--o{ Bookmark : yer_imi
+  User ||--o{ Note : not
+  User ||--o{ UserBadge : rozet
+  LearningPath ||--o{ LearningPathItem : öğeler
+```
+
+- **Sürümleme**: `LessonVersion.status` = `draft | published | archived`. Bir derste aynı anda en fazla bir yayın sürümü vardır; `Lesson.publishedVersionId` onu gösterir.
+- **Bloklar**: `LessonVersion.blocks` JSON’dur ve shared `LessonBlock` şemasıyla doğrulanır. Seed sırasında SVG’ler bloğa gömülür, sahne/quiz dosya adları kimliklere çözülür.
+
+## Ana akışlar
+
+### İçerik okuma (cache)
+
+1. İstemci `GET /lessons/:id` (varsa `If-None-Match`).
+2. API Redis’e bakar (`content:lesson:<id>`); yoksa PostgreSQL’den okur, Redis’e yazar (6 saat TTL).
+3. Yanıta zayıf ETag eklenir; eşleşirse 304 döner.
+4. Kullanıcıya özel ilerleme bilgisi cache’lenmeden eklenir.
+5. Yayınlama anında `content:*` anahtarları ve arama cache’i silinir, `content.published` olayı yayınlanır.
+
+### Quiz → aralıklı tekrar
+
+1. İstemci cevapları gönderir; puanlama sunucuda yapılır.
+2. Yanlış cevaplanan her soru için `ReviewCard` oluşturulur ya da sıfırlanır (SM-2, kalite 1); doğru cevaplanan ve kartı olan sorular ilerletilir.
+3. Aktivite kaydedilir: seri güncellenir, rozet koşulları değerlendirilir, WebSocket ile bildirilir.
+
+### Mobil offline
+
+1. Kullanıcı bir modülü indirir: `GET /offline/modules/:id` (ETag ile).
+2. Dersler, sahneler ve quizler SQLite’a yazılır; ETag ve senkron zamanı MMKV’de.
+3. Çevrimdışıyken içerik SQLite’tan okunur; ilerleme güncellemeleri kuyruğa alınır, bağlantı gelince gönderilir.
+
+## Ölçekleme notları
+
+- API stateless’tır (oturum JWT’de); WebSocket için birden fazla replikada socket.io Redis adapter eklenmelidir.
+- Rate limit sayaçları Redis’te tutulduğu için tüm replikalar aynı limiti uygular; Redis yoksa replika başına bellek içi sayaca düşer.
+- Okuma ağırlıklı içerik için Redis + ETag + Next.js ISR; yazma ağırlıklı ilerleme için istemci tarafında toplu gönderim (5 sn aralık).
+- Medya dosyaları S3’e ön imzalı URL ile doğrudan yüklenir; API dosya trafiği taşımaz.

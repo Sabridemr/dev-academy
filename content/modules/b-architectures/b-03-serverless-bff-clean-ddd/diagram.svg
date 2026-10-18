@@ -1,0 +1,125 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 440" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Backend for Frontend (BFF) mimarisi</title>
+  <desc id="desc">Solda web, mobil ve akıllı TV istemcileri. Her istemci kendi BFF'ine bağlanır: web-BFF, mobile-BFF, tv-BFF. BFF'ler ortadaki API gateway üzerinden sağdaki ortak mikroservisleri (catalog, pricing, reviews, recommendations) paralel çağırır ve istemciye özel biçimde birleştirir. Alt notta BFF'in frontend ekibine ait olduğu ve iş kuralı barındırmadığı yazar.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+    <marker id="arrow-p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-primary, #6366f1)"/>
+    </marker>
+  </defs>
+
+  <!-- Sütun başlıkları -->
+  <g font-size="12" fill="var(--da-muted, #64748b)" text-anchor="middle">
+    <text x="100" y="34">İstemciler</text>
+    <text x="330" y="34">BFF katmanı (frontend ekibinin)</text>
+    <text x="560" y="34">Ortak kesit</text>
+    <text x="800" y="34">Alan servisleri (backend ekiplerinin)</text>
+  </g>
+
+  <!-- İstemciler -->
+  <g fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5">
+    <rect x="40" y="70" width="120" height="70" rx="10"/>
+    <rect x="40" y="185" width="120" height="70" rx="10"/>
+    <rect x="40" y="300" width="120" height="70" rx="10"/>
+  </g>
+  <g font-size="12" font-weight="600" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="100" y="98">Web (React)</text>
+    <text x="100" y="213">Mobil (iOS/Android)</text>
+    <text x="100" y="328">Akıllı TV</text>
+  </g>
+  <g font-size="10" fill="var(--da-muted, #64748b)" text-anchor="middle">
+    <text x="100" y="116">40 alan · büyük görsel</text>
+    <text x="100" y="128">çerez oturumu</text>
+    <text x="100" y="231">12 alan · küçük görsel</text>
+    <text x="100" y="243">token · pil kaygısı</text>
+    <text x="100" y="346">satır/kutu gezinme</text>
+    <text x="100" y="358">uzaktan kumanda</text>
+  </g>
+
+  <!-- İstemci → BFF -->
+  <g stroke="var(--da-muted, #64748b)" stroke-width="1.6" fill="none" marker-end="url(#arrow)">
+    <path d="M 160 105 L 238 105"/>
+    <path d="M 160 220 L 238 220"/>
+    <path d="M 160 335 L 238 335"/>
+  </g>
+  <g font-size="9.5" fill="var(--da-muted, #64748b)" text-anchor="middle">
+    <text x="199" y="98">1 istek</text>
+    <text x="199" y="213">1 istek</text>
+    <text x="199" y="328">1 istek</text>
+  </g>
+
+  <!-- BFF'ler -->
+  <g fill="var(--da-primary, #6366f1)" fill-opacity="0.1" stroke="var(--da-primary, #6366f1)" stroke-width="1.5">
+    <rect x="240" y="70" width="180" height="70" rx="10"/>
+    <rect x="240" y="185" width="180" height="70" rx="10"/>
+    <rect x="240" y="300" width="180" height="70" rx="10"/>
+  </g>
+  <g font-size="12" font-weight="600" fill="var(--da-primary, #6366f1)" text-anchor="middle">
+    <text x="330" y="94">web-bff</text>
+    <text x="330" y="209">mobile-bff</text>
+    <text x="330" y="324">tv-bff</text>
+  </g>
+  <g font-size="10" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="330" y="112">paralel çağır → zengin JSON</text>
+    <text x="330" y="126">SSR için HTML parçası</text>
+    <text x="330" y="227">paralel çağır → sıkıştırılmış</text>
+    <text x="330" y="241">görsel URL'leri 240px</text>
+    <text x="330" y="342">paralel çağır → satır modeli</text>
+    <text x="330" y="356">odak sırası, önbellek 10 dk</text>
+  </g>
+
+  <!-- BFF → Gateway -->
+  <g stroke="var(--da-primary, #6366f1)" stroke-width="1.5" fill="none" marker-end="url(#arrow-p)">
+    <path d="M 420 105 C 460 105, 470 200, 500 205"/>
+    <path d="M 420 220 L 500 220"/>
+    <path d="M 420 335 C 460 335, 470 240, 500 235"/>
+  </g>
+
+  <!-- Gateway -->
+  <rect x="502" y="170" width="116" height="100" rx="12" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5"/>
+  <text x="560" y="196" text-anchor="middle" font-size="12" font-weight="600" fill="var(--da-fg, #0f172a)">API Gateway</text>
+  <g font-size="9.5" fill="var(--da-muted, #64748b)" text-anchor="middle">
+    <text x="560" y="214">auth doğrulama</text>
+    <text x="560" y="228">rate limit</text>
+    <text x="560" y="242">TLS, logging</text>
+    <text x="560" y="256">(istemciden bağımsız)</text>
+  </g>
+
+  <!-- Gateway → servisler (paralel) -->
+  <g stroke="var(--da-muted, #64748b)" stroke-width="1.5" fill="none" marker-end="url(#arrow)">
+    <path d="M 618 200 C 660 200, 660 95, 698 95"/>
+    <path d="M 618 212 C 660 212, 660 175, 698 175"/>
+    <path d="M 618 228 C 660 228, 660 255, 698 255"/>
+    <path d="M 618 240 C 660 240, 660 335, 698 335"/>
+  </g>
+  <text x="658" y="60" text-anchor="middle" font-size="9.5" fill="var(--da-muted, #64748b)">fan-out, paralel</text>
+
+  <!-- Servisler -->
+  <g fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5">
+    <rect x="700" y="70" width="200" height="50" rx="10"/>
+    <rect x="700" y="150" width="200" height="50" rx="10"/>
+    <rect x="700" y="230" width="200" height="50" rx="10"/>
+    <rect x="700" y="310" width="200" height="50" rx="10"/>
+  </g>
+  <g font-size="12" font-weight="600" fill="var(--da-fg, #0f172a)">
+    <text x="712" y="90">catalog-svc</text>
+    <text x="712" y="170">pricing-svc</text>
+    <text x="712" y="250">reviews-svc</text>
+    <text x="712" y="330">recs-svc</text>
+  </g>
+  <g font-size="9.5" fill="var(--da-muted, #64748b)">
+    <text x="712" y="106">ürün, görsel, açıklama</text>
+    <text x="712" y="186">fiyat, indirim KURALI burada</text>
+    <text x="712" y="266">puan, yorumlar</text>
+    <text x="712" y="346">öneriler (ML)</text>
+  </g>
+
+  <!-- Alt notlar -->
+  <line x1="40" y1="392" x2="920" y2="392" stroke="var(--da-border, #cbd5e1)"/>
+  <g font-size="10.5" fill="var(--da-fg, #0f172a)">
+    <text x="40" y="412">BFF: istemci başına ince katman, birleştirme + biçimlendirme + istemciye özel auth; frontend ekibi sahibi, bağımsız dağıtır.</text>
+    <text x="40" y="430" fill="var(--da-danger, #ef4444)">BFF'te iş kuralı YOK: indirim kuralı pricing-svc'de kalır; aksi hâlde üç farklı fiyat görürsünüz.</text>
+  </g>
+</svg>

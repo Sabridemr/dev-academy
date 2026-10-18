@@ -1,0 +1,147 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 500" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Beş derin öğrenme mimarisi</title>
+  <desc id="desc">Beş panel. CNN: bir piksel ızgarası üzerinde kayan 3x3 filtre ve ürettiği öznitelik haritası. RNN/LSTM: zaman boyunca açılmış, gizli durumu birbirine aktaran hücreler. Transformer: gömme, multi-head attention, add-norm, feed-forward, add-norm bloğu ve residual oklar. GAN: gürültüden sahte örnek üreten üretici ve gerçek/sahte kararı veren ayırt edici. Diffusion: görüntüden gürültüye ileri süreç ve gürültüden görüntüye öğrenilen ters süreç.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+  </defs>
+
+  <!-- CNN -->
+  <g transform="translate(20, 20)">
+    <rect x="0" y="0" width="275" height="220" rx="12" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+    <text x="137" y="22" text-anchor="middle" font-size="13" font-weight="600" fill="var(--da-fg, #0f172a)">CNN — konvolüsyon</text>
+    <!-- görüntü ızgarası 6x6 -->
+    <g stroke="var(--da-border, #cbd5e1)" fill="var(--da-surface, #ffffff)">
+      <rect x="20" y="40" width="96" height="96"/>
+      <line x1="36" y1="40" x2="36" y2="136"/><line x1="52" y1="40" x2="52" y2="136"/><line x1="68" y1="40" x2="68" y2="136"/><line x1="84" y1="40" x2="84" y2="136"/><line x1="100" y1="40" x2="100" y2="136"/>
+      <line x1="20" y1="56" x2="116" y2="56"/><line x1="20" y1="72" x2="116" y2="72"/><line x1="20" y1="88" x2="116" y2="88"/><line x1="20" y1="104" x2="116" y2="104"/><line x1="20" y1="120" x2="116" y2="120"/>
+    </g>
+    <!-- dikey kenar -->
+    <rect x="68" y="40" width="16" height="96" fill="var(--da-fg, #0f172a)" opacity="0.5"/>
+    <!-- filtre -->
+    <rect x="36" y="56" width="48" height="48" fill="var(--da-primary, #6366f1)" opacity="0.25" stroke="var(--da-primary, #6366f1)" stroke-width="2"/>
+    <text x="20" y="152" font-size="10" fill="var(--da-muted, #64748b)">görüntü 6×6</text>
+    <text x="36" y="166" font-size="9.5" fill="var(--da-primary, #6366f1)">3×3 filtre kayar</text>
+    <!-- ok -->
+    <path d="M 126 88 L 158 88" stroke="var(--da-muted, #64748b)" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <text x="142" y="80" text-anchor="middle" font-size="9" fill="var(--da-muted, #64748b)">⊛</text>
+    <!-- öznitelik haritası 4x4 -->
+    <g stroke="var(--da-border, #cbd5e1)">
+      <rect x="166" y="56" width="64" height="64" fill="var(--da-surface, #ffffff)"/>
+      <line x1="182" y1="56" x2="182" y2="120"/><line x1="198" y1="56" x2="198" y2="120"/><line x1="214" y1="56" x2="214" y2="120"/>
+      <line x1="166" y1="72" x2="230" y2="72"/><line x1="166" y1="88" x2="230" y2="88"/><line x1="166" y1="104" x2="230" y2="104"/>
+    </g>
+    <rect x="182" y="56" width="16" height="64" fill="var(--da-accent, #f59e0b)" opacity="0.8"/>
+    <rect x="198" y="56" width="16" height="64" fill="var(--da-accent, #f59e0b)" opacity="0.35"/>
+    <text x="198" y="134" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">öznitelik haritası</text>
+    <text x="198" y="148" text-anchor="middle" font-size="9" fill="var(--da-accent, #f59e0b)">kenar burada parlar</text>
+    <text x="137" y="190" text-anchor="middle" font-size="10" fill="var(--da-fg, #0f172a)">Conv → BN → ReLU → Pool, ×N</text>
+    <text x="137" y="206" text-anchor="middle" font-size="9.5" fill="var(--da-muted, #64748b)">ağırlık paylaşımı · yerellik · hiyerarşi</text>
+  </g>
+
+  <!-- RNN / LSTM -->
+  <g transform="translate(315, 20)">
+    <rect x="0" y="0" width="275" height="220" rx="12" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+    <text x="137" y="22" text-anchor="middle" font-size="13" font-weight="600" fill="var(--da-fg, #0f172a)">RNN / LSTM — tekrarlama</text>
+    <g fill="var(--da-primary, #6366f1)" opacity="0.14" stroke="var(--da-primary, #6366f1)" stroke-width="1.5">
+      <rect x="20" y="80" width="60" height="50" rx="8"/><rect x="108" y="80" width="60" height="50" rx="8"/><rect x="196" y="80" width="60" height="50" rx="8"/>
+    </g>
+    <g font-size="11" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+      <text x="50" y="110">LSTM</text><text x="138" y="110">LSTM</text><text x="226" y="110">LSTM</text>
+    </g>
+    <g stroke="var(--da-muted, #64748b)" stroke-width="1.5" marker-end="url(#arrow)">
+      <path d="M 80 105 L 106 105"/><path d="M 168 105 L 194 105"/>
+      <path d="M 50 160 L 50 132"/><path d="M 138 160 L 138 132"/><path d="M 226 160 L 226 132"/>
+      <path d="M 50 78 L 50 56"/><path d="M 138 78 L 138 56"/><path d="M 226 78 L 226 56"/>
+    </g>
+    <!-- hücre durumu otoyolu -->
+    <path d="M 20 92 L 256 92" stroke="var(--da-success, #10b981)" stroke-width="2" stroke-dasharray="5 3"/>
+    <text x="93" y="100" font-size="8.5" fill="var(--da-success, #10b981)">c_t (toplamsal)</text>
+    <g font-size="10" fill="var(--da-muted, #64748b)" text-anchor="middle">
+      <text x="50" y="174">x₁ "The"</text><text x="138" y="174">x₂ "cat"</text><text x="226" y="174">x₃ "sat"</text>
+      <text x="50" y="50">h₁</text><text x="138" y="50">h₂</text><text x="226" y="50">h₃</text>
+    </g>
+    <text x="137" y="196" text-anchor="middle" font-size="10" fill="var(--da-fg, #0f172a)">forget · input · output kapıları</text>
+    <text x="137" y="210" text-anchor="middle" font-size="9.5" fill="var(--da-danger, #ef4444)">ardışık → paralelleşmez</text>
+  </g>
+
+  <!-- Transformer -->
+  <g transform="translate(610, 20)">
+    <rect x="0" y="0" width="270" height="220" rx="12" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+    <text x="135" y="22" text-anchor="middle" font-size="13" font-weight="600" fill="var(--da-fg, #0f172a)">Transformer bloğu</text>
+    <g font-size="10" text-anchor="middle" fill="var(--da-fg, #0f172a)">
+      <rect x="70" y="180" width="130" height="22" rx="6" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+      <text x="135" y="195">gömme + konum</text>
+      <rect x="70" y="140" width="130" height="24" rx="6" fill="var(--da-primary, #6366f1)" opacity="0.18" stroke="var(--da-primary, #6366f1)"/>
+      <text x="135" y="156">multi-head attention</text>
+      <rect x="70" y="112" width="130" height="18" rx="6" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+      <text x="135" y="125">add &amp; norm</text>
+      <rect x="70" y="74" width="130" height="24" rx="6" fill="var(--da-accent, #f59e0b)" opacity="0.18" stroke="var(--da-accent, #f59e0b)"/>
+      <text x="135" y="90">feed-forward (GELU)</text>
+      <rect x="70" y="46" width="130" height="18" rx="6" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+      <text x="135" y="59">add &amp; norm</text>
+    </g>
+    <!-- residual okları -->
+    <path d="M 60 182 C 30 182, 30 121, 68 121" fill="none" stroke="var(--da-success, #10b981)" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
+    <path d="M 60 114 C 30 114, 30 55, 68 55" fill="none" stroke="var(--da-success, #10b981)" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
+    <text x="22" y="150" font-size="8.5" fill="var(--da-success, #10b981)">residual</text>
+    <text x="236" y="120" font-size="10" fill="var(--da-muted, #64748b)">× N</text>
+    <text x="236" y="150" font-size="9" fill="var(--da-muted, #64748b)">O(n²)</text>
+    <text x="135" y="212" text-anchor="middle" font-size="9.5" fill="var(--da-muted, #64748b)">paralel · uzun bağlam · ölçeklenir</text>
+  </g>
+
+  <!-- GAN -->
+  <g transform="translate(20, 260)">
+    <rect x="0" y="0" width="420" height="220" rx="12" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+    <text x="210" y="22" text-anchor="middle" font-size="13" font-weight="600" fill="var(--da-fg, #0f172a)">GAN — üretici vs. ayırt edici</text>
+    <circle cx="50" cy="100" r="22" fill="var(--da-muted, #64748b)" opacity="0.25" stroke="var(--da-muted, #64748b)"/>
+    <text x="50" y="104" text-anchor="middle" font-size="10" fill="var(--da-fg, #0f172a)">z</text>
+    <text x="50" y="136" text-anchor="middle" font-size="9.5" fill="var(--da-muted, #64748b)">gürültü</text>
+    <path d="M 74 100 L 104 100" stroke="var(--da-muted, #64748b)" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <rect x="106" y="76" width="90" height="48" rx="8" fill="var(--da-accent, #f59e0b)" opacity="0.18" stroke="var(--da-accent, #f59e0b)" stroke-width="1.5"/>
+    <text x="151" y="96" text-anchor="middle" font-size="11" fill="var(--da-fg, #0f172a)">Üretici G</text>
+    <text x="151" y="112" text-anchor="middle" font-size="9" fill="var(--da-muted, #64748b)">sahte örnek</text>
+    <path d="M 198 100 L 254 100" stroke="var(--da-muted, #64748b)" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <rect x="200" y="150" width="60" height="30" rx="6" fill="var(--da-success, #10b981)" opacity="0.18" stroke="var(--da-success, #10b981)"/>
+    <text x="230" y="169" text-anchor="middle" font-size="9.5" fill="var(--da-fg, #0f172a)">gerçek veri</text>
+    <path d="M 260 158 C 290 158, 280 118, 256 108" fill="none" stroke="var(--da-muted, #64748b)" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <rect x="258" y="76" width="100" height="48" rx="8" fill="var(--da-primary, #6366f1)" opacity="0.18" stroke="var(--da-primary, #6366f1)" stroke-width="1.5"/>
+    <text x="308" y="96" text-anchor="middle" font-size="11" fill="var(--da-fg, #0f172a)">Ayırt edici D</text>
+    <text x="308" y="112" text-anchor="middle" font-size="9" fill="var(--da-muted, #64748b)">gerçek mi, sahte mi?</text>
+    <path d="M 360 100 L 392 100" stroke="var(--da-muted, #64748b)" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <text x="400" y="104" font-size="10" fill="var(--da-fg, #0f172a)">0/1</text>
+    <!-- geri bildirim -->
+    <path d="M 308 126 C 308 190, 151 190, 151 128" fill="none" stroke="var(--da-danger, #ef4444)" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
+    <text x="230" y="200" text-anchor="middle" font-size="9.5" fill="var(--da-danger, #ef4444)">G, D'yi kandırmayı öğrenir (min-max)</text>
+    <text x="210" y="214" text-anchor="middle" font-size="9.5" fill="var(--da-muted, #64748b)">keskin görüntü, kararsız eğitim, mode collapse riski</text>
+  </g>
+
+  <!-- Diffusion -->
+  <g transform="translate(460, 260)">
+    <rect x="0" y="0" width="420" height="220" rx="12" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+    <text x="210" y="22" text-anchor="middle" font-size="13" font-weight="600" fill="var(--da-fg, #0f172a)">Diffusion — gürültüyü geri al</text>
+    <!-- kareler: görüntüden gürültüye -->
+    <g stroke="var(--da-border, #cbd5e1)">
+      <rect x="30" y="70" width="56" height="56" rx="6" fill="var(--da-primary, #6366f1)" opacity="0.9"/>
+      <rect x="120" y="70" width="56" height="56" rx="6" fill="var(--da-primary, #6366f1)" opacity="0.6"/>
+      <rect x="210" y="70" width="56" height="56" rx="6" fill="var(--da-primary, #6366f1)" opacity="0.35"/>
+      <rect x="300" y="70" width="56" height="56" rx="6" fill="var(--da-muted, #64748b)" opacity="0.3"/>
+    </g>
+    <g fill="var(--da-muted, #64748b)" opacity="0.6">
+      <circle cx="140" cy="90" r="2"/><circle cx="160" cy="110" r="2"/><circle cx="130" cy="115" r="2"/>
+      <circle cx="222" cy="84" r="2"/><circle cx="240" cy="100" r="2"/><circle cx="255" cy="118" r="2"/><circle cx="228" cy="112" r="2"/><circle cx="248" cy="80" r="2"/>
+      <circle cx="310" cy="80" r="2"/><circle cx="325" cy="95" r="2"/><circle cx="340" cy="85" r="2"/><circle cx="315" cy="112" r="2"/><circle cx="345" cy="118" r="2"/><circle cx="330" cy="105" r="2"/><circle cx="350" cy="100" r="2"/><circle cx="308" cy="98" r="2"/>
+    </g>
+    <g font-size="9.5" fill="var(--da-muted, #64748b)" text-anchor="middle">
+      <text x="58" y="142">x₀ görüntü</text><text x="148" y="142">x₁₀₀</text><text x="238" y="142">x₅₀₀</text><text x="328" y="142">x_T gürültü</text>
+    </g>
+    <!-- ileri süreç -->
+    <path d="M 40 58 L 346 58" stroke="var(--da-muted, #64748b)" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <text x="193" y="50" text-anchor="middle" font-size="9.5" fill="var(--da-muted, #64748b)">ileri: her adımda Gauss gürültüsü ekle (sabit)</text>
+    <!-- ters süreç -->
+    <path d="M 346 164 L 40 164" stroke="var(--da-accent, #f59e0b)" stroke-width="2" marker-end="url(#arrow)"/>
+    <text x="193" y="180" text-anchor="middle" font-size="9.5" fill="var(--da-accent, #f59e0b)">ters: ağ (U-Net/Transformer) gürültüyü tahmin eder, T kez çıkar (öğrenilir)</text>
+    <text x="210" y="206" text-anchor="middle" font-size="9.5" fill="var(--da-muted, #64748b)">kararlı eğitim, yüksek çeşitlilik; örnekleme çok adımlı → latent diffusion, distillation</text>
+  </g>
+</svg>

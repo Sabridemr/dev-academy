@@ -1,0 +1,180 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "b-03-serverless-cold-start",
+  "title": { "tr": "Serverless: Cold Start ve Warm Çağrılar", "en": "Serverless: Cold Start and Warm Invocations" },
+  "summary": {
+    "tr": "İlk istek yeni bir çalışma ortamının kurulmasını bekler (cold start); sonraki istekler sıcak ortamı kullanır; eşzamanlılık artınca yeni ortamlar ve yeni cold start'lar oluşur; provisioned concurrency bunu önler; boşta kalan ortamlar geri alınır.",
+    "en": "The first request waits for a new execution environment (cold start); later requests reuse the warm one; rising concurrency spawns new environments and new cold starts; provisioned concurrency prevents that; idle environments are reclaimed."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda kullanıcılar ve bir API gateway, ortada üst üste üç fonksiyon çalışma ortamı, sağda bir veritabanı vardır. İlk istekte ortam #1 başlatılır ve istek 900 ms sürer; ikinci istek aynı ortamda 40 ms sürer. Üç eşzamanlı istek gelince ortam #2 ve #3 soğuk başlar. Provisioned concurrency ile ortamlar önceden ısıtılır. Son adımda boşta kalan ortamlar kapatılır.",
+      "en": "Users and an API gateway on the left, three stacked function execution environments in the middle and a database on the right. On the first request environment #1 boots and the request takes 900 ms; the second request takes 40 ms in the same environment. When three concurrent requests arrive, environments #2 and #3 cold start. With provisioned concurrency the environments are pre-warmed. In the last step idle environments are shut down."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "users", "kind": "user", "label": { "tr": "İstemciler", "en": "Clients" }, "x": 90, "y": 300 },
+    { "id": "gw", "kind": "gateway", "label": "API Gateway", "sublabel": { "tr": "HTTP → olay", "en": "HTTP → event" }, "x": 290, "y": 300, "w": 130, "h": 70 },
+    { "id": "env1", "kind": "function", "label": { "tr": "Ortam #1", "en": "Env #1" }, "sublabel": "handler.js", "x": 600, "y": 140, "w": 150, "h": 70 },
+    { "id": "env2", "kind": "function", "label": { "tr": "Ortam #2", "en": "Env #2" }, "sublabel": "handler.js", "x": 600, "y": 300, "w": 150, "h": 70 },
+    { "id": "env3", "kind": "function", "label": { "tr": "Ortam #3", "en": "Env #3" }, "sublabel": "handler.js", "x": 600, "y": 460, "w": 150, "h": 70 },
+    { "id": "db", "kind": "db", "label": "DynamoDB", "sublabel": { "tr": "yönetilen", "en": "managed" }, "x": 880, "y": 300, "w": 110, "h": 80 }
+  ],
+  "edges": [
+    { "id": "u-gw", "from": "users", "to": "gw", "kind": "request" },
+    { "id": "gw-e1", "from": "gw", "to": "env1", "kind": "request", "curvature": -0.15 },
+    { "id": "gw-e2", "from": "gw", "to": "env2", "kind": "request" },
+    { "id": "gw-e3", "from": "gw", "to": "env3", "kind": "request", "curvature": 0.15 },
+    { "id": "e1-db", "from": "env1", "to": "db", "kind": "data", "curvature": -0.15 },
+    { "id": "e2-db", "from": "env2", "to": "db", "kind": "data" },
+    { "id": "e3-db", "from": "env3", "to": "db", "kind": "data", "curvature": 0.15 }
+  ],
+  "steps": [
+    {
+      "id": "idle",
+      "title": { "tr": "1. Sıfır trafik, sıfır ortam", "en": "1. Zero traffic, zero environments" },
+      "narration": {
+        "tr": "Fonksiyon dakikalardır çağrılmadı; platform hiçbir çalışma ortamı tutmuyor ve siz hiçbir şey ödemiyorsunuz. İlk istek API Gateway'e geldi.",
+        "en": "The function has not been invoked for minutes; the platform keeps no execution environment and you pay nothing. The first request arrives at the API Gateway."
+      },
+      "durationMs": 3000,
+      "inherit": false,
+      "highlight": { "nodes": ["users", "gw"], "edges": ["u-gw"] },
+      "nodeStates": {
+        "env1": { "visible": false },
+        "env2": { "visible": false },
+        "env3": { "visible": false }
+      },
+      "edgeStates": {
+        "gw-e1": { "visible": false }, "gw-e2": { "visible": false }, "gw-e3": { "visible": false },
+        "e1-db": { "visible": false }, "e2-db": { "visible": false }, "e3-db": { "visible": false }
+      },
+      "packets": [{ "edge": "u-gw", "shape": "envelope", "label": "#1", "durationMs": 1000 }],
+      "annotations": [
+        { "id": "a-idle", "x": 600, "y": 300, "text": { "tr": "çalışan ortam yok → maliyet 0", "en": "no running environment → cost 0" }, "tone": "success" }
+      ]
+    },
+    {
+      "id": "cold",
+      "title": { "tr": "2. Cold start", "en": "2. Cold start" },
+      "narration": {
+        "tr": "Platform yeni bir micro-VM ayırır, Node runtime'ını yükler, kod paketinizi açar ve handler dışındaki init bloğunu (SDK istemcileri, DB bağlantısı) çalıştırır. İstek #1 bunların hepsini bekler: ~900 ms.",
+        "en": "The platform allocates a micro-VM, loads the Node runtime, unpacks your bundle and runs the init block outside the handler (SDK clients, DB connection). Request #1 waits for all of it: ~900 ms."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["env1"], "edges": ["gw-e1"] },
+      "nodeStates": {
+        "env1": { "visible": true, "status": "busy", "badge": "COLD", "progress": 0.3, "sublabel": { "tr": "VM + runtime + init", "en": "VM + runtime + init" } }
+      },
+      "edgeStates": { "gw-e1": { "visible": true, "status": "active" }, "e1-db": { "visible": true } },
+      "packets": [
+        { "edge": "gw-e1", "shape": "envelope", "label": "#1", "durationMs": 2600, "color": "warning" },
+        { "edge": "e1-db", "startAt": 2600, "durationMs": 500, "shape": "square" },
+        { "edge": "u-gw", "startAt": 3200, "direction": "backward", "durationMs": 800, "color": "warning", "label": "900 ms" }
+      ],
+      "annotations": [
+        { "id": "a-cold", "x": 600, "y": 50, "text": { "tr": "VM 100 ms + runtime 200 ms + init 500 ms + handler 40 ms", "en": "VM 100 ms + runtime 200 ms + init 500 ms + handler 40 ms" }, "tone": "warning", "target": "env1" }
+      ]
+    },
+    {
+      "id": "warm",
+      "title": { "tr": "3. Warm çağrı", "en": "3. Warm invocation" },
+      "narration": {
+        "tr": "İstek #2 birkaç saniye sonra gelir. Ortam #1 hâlâ ayakta, init çoktan yapılmış, DB bağlantısı açık. Yalnızca handler çalışır: 40 ms. Cold start'ın 20 katından fazla fark.",
+        "en": "Request #2 arrives a few seconds later. Environment #1 is still up, init already done, DB connection open. Only the handler runs: 40 ms. More than 20x faster than the cold start."
+      },
+      "durationMs": 3500,
+      "highlight": { "nodes": ["env1"], "edges": ["gw-e1", "e1-db"] },
+      "nodeStates": {
+        "env1": { "status": "success", "badge": "WARM", "progress": 1, "sublabel": { "tr": "init tamam, bağlantı açık", "en": "init done, connection open" } }
+      },
+      "packets": [
+        { "edge": "u-gw", "shape": "envelope", "label": "#2", "durationMs": 600 },
+        { "edge": "gw-e1", "startAt": 600, "shape": "envelope", "label": "#2", "durationMs": 500, "color": "success" },
+        { "edge": "e1-db", "startAt": 1100, "durationMs": 400, "shape": "square" },
+        { "edge": "u-gw", "startAt": 1600, "direction": "backward", "durationMs": 600, "color": "success", "label": "40 ms" }
+      ],
+      "annotations": [
+        { "id": "a-warm", "x": 600, "y": 50, "text": { "tr": "init'i handler DIŞINDA tut: bir kez çalışır", "en": "keep init OUTSIDE the handler: it runs once" }, "tone": "success", "target": "env1" }
+      ]
+    },
+    {
+      "id": "burst",
+      "title": { "tr": "4. Eşzamanlılık = yeni cold start'lar", "en": "4. Concurrency = new cold starts" },
+      "narration": {
+        "tr": "Aynı anda üç istek gelir. Bir ortam aynı anda tek isteği işler; #3 sıcak ortama gider ama #4 ve #5 için platform iki yeni ortam başlatmak zorundadır. Cold start, trafik arttıkça tekrar görülür; p99 gecikmesini bu belirler.",
+        "en": "Three requests arrive at once. One environment handles one request at a time; #3 goes to the warm environment, but for #4 and #5 the platform must start two new environments. Cold starts reappear as traffic grows; that is what shapes your p99."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["env2", "env3"], "edges": ["gw-e2", "gw-e3"] },
+      "nodeStates": {
+        "env1": { "status": "busy", "badge": "#3" },
+        "env2": { "visible": true, "status": "busy", "badge": "COLD", "progress": 0.3 },
+        "env3": { "visible": true, "status": "busy", "badge": "COLD", "progress": 0.3 }
+      },
+      "edgeStates": {
+        "gw-e2": { "visible": true, "status": "active" }, "gw-e3": { "visible": true, "status": "active" },
+        "e2-db": { "visible": true }, "e3-db": { "visible": true }
+      },
+      "packets": [
+        { "edge": "u-gw", "shape": "envelope", "repeat": 3, "repeatGapMs": 100, "durationMs": 500 },
+        { "edge": "gw-e1", "startAt": 600, "shape": "envelope", "label": "#3", "durationMs": 500, "color": "success" },
+        { "edge": "gw-e2", "startAt": 600, "shape": "envelope", "label": "#4", "durationMs": 2600, "color": "warning" },
+        { "edge": "gw-e3", "startAt": 600, "shape": "envelope", "label": "#5", "durationMs": 2600, "color": "warning" }
+      ],
+      "annotations": [
+        { "id": "a-burst", "x": 600, "y": 570, "text": { "tr": "p50 = 40 ms, p99 = 900 ms: kuyruk sonu cold start'tır", "en": "p50 = 40 ms, p99 = 900 ms: the tail is cold starts" }, "tone": "danger" }
+      ]
+    },
+    {
+      "id": "provisioned",
+      "title": { "tr": "5. Hafifletme: provisioned concurrency", "en": "5. Mitigation: provisioned concurrency" },
+      "narration": {
+        "tr": "Kritik yol için 3 ortamın her zaman sıcak tutulmasını istersiniz (provisioned concurrency). Platform ortamları önceden kurar; her istek warm başlar. Bedeli: boşta da ödersiniz. Diğer araçlar: küçük paket, hafif runtime, SnapStart/GraalVM.",
+        "en": "For the critical path you ask for 3 environments to stay warm at all times (provisioned concurrency). The platform pre-builds them; every request starts warm. The cost: you pay while idle too. Other tools: small bundle, lightweight runtime, SnapStart/GraalVM."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["env1", "env2", "env3"], "edges": ["gw-e1", "gw-e2", "gw-e3"] },
+      "nodeStates": {
+        "env1": { "status": "success", "badge": "PROV", "progress": 1, "sublabel": { "tr": "önceden ısıtıldı", "en": "pre-warmed" } },
+        "env2": { "status": "success", "badge": "PROV", "progress": 1, "sublabel": { "tr": "önceden ısıtıldı", "en": "pre-warmed" } },
+        "env3": { "status": "success", "badge": "PROV", "progress": 1, "sublabel": { "tr": "önceden ısıtıldı", "en": "pre-warmed" } }
+      },
+      "packets": [
+        { "edge": "u-gw", "shape": "envelope", "repeat": 3, "repeatGapMs": 100, "durationMs": 500 },
+        { "edge": "gw-e1", "startAt": 600, "durationMs": 500, "color": "success" },
+        { "edge": "gw-e2", "startAt": 650, "durationMs": 500, "color": "success" },
+        { "edge": "gw-e3", "startAt": 700, "durationMs": 500, "color": "success" },
+        { "edge": "u-gw", "startAt": 1400, "direction": "backward", "durationMs": 600, "color": "success", "label": "40 / 42 / 45 ms" }
+      ],
+      "annotations": [
+        { "id": "a-prov", "x": 600, "y": 50, "text": { "tr": "sabit ücret: boşta da 3 ortam için ödeme", "en": "fixed fee: you pay for 3 environments even when idle" }, "tone": "info" }
+      ]
+    },
+    {
+      "id": "reclaim",
+      "title": { "tr": "6. Boşta kalan ortamlar geri alınır", "en": "6. Idle environments are reclaimed" },
+      "narration": {
+        "tr": "Provisioned olmayan ortamlar 5–15 dakika boşta kalınca platform tarafından kapatılır; maliyet yeniden sıfıra iner ve döngü başa döner. Yük sabit ve yüksekse bu döngü hiç yaşanmaz ve container'lar genellikle daha ucuzdur.",
+        "en": "Non-provisioned environments are shut down after 5–15 idle minutes; cost drops back to zero and the cycle restarts. If load is steady and high this cycle never happens and containers are usually cheaper."
+      },
+      "durationMs": 3500,
+      "highlight": { "nodes": ["env2", "env3"], "edges": [] },
+      "nodeStates": {
+        "env1": { "badge": "WARM", "sublabel": "handler.js" },
+        "env2": { "status": "muted", "badge": "", "sublabel": { "tr": "10 dk boşta → kapatıldı", "en": "10 min idle → reclaimed" }, "progress": 0 },
+        "env3": { "status": "muted", "badge": "", "sublabel": { "tr": "10 dk boşta → kapatıldı", "en": "10 min idle → reclaimed" }, "progress": 0 }
+      },
+      "edgeStates": { "gw-e2": { "status": "muted" }, "gw-e3": { "status": "muted" }, "e2-db": { "status": "muted" }, "e3-db": { "status": "muted" } },
+      "packets": [],
+      "annotations": [
+        { "id": "a-rule", "x": 600, "y": 570, "text": { "tr": "kural: ani/seyrek yük → serverless; sabit/yüksek yük → container", "en": "rule: bursty/sparse load → serverless; steady/high load → containers" }, "tone": "info" }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["serverless", "cold-start", "faas", "lambda"]
+}

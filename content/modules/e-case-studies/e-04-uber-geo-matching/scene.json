@@ -1,0 +1,197 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "e-04-uber-ride-request-journey",
+  "title": { "tr": "\"Çağır\" Tıklamasının Yolculuğu", "en": "The Journey of a \"Request Ride\" Tap" },
+  "summary": {
+    "tr": "Arka planda akan sürücü konumları geo indeksi günceller; yolcu isteği eşleştirme servisine gelir, surge çarpanı alınır, H3 halka sorgusuyla adaylar bulunur, ETA ile sıralanır, en iyi sürücüye WebSocket ile teklif gider, kabul trip veritabanına yazılır ve yolcuya yanıt döner.",
+    "en": "Driver locations streaming in the background update the geo index; a rider request reaches the matching service, the surge multiplier is fetched, candidates are found with an H3 ring query, ranked by ETA, an offer goes to the best driver over WebSocket, the acceptance is written to the trip database and the rider gets a response."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Sol üstte yolcu, sol altta sürücü uygulaması; sürücü WebSocket sunucusuna konum gönderir, sunucu Kafka'ya, Kafka tüketicisi bellek içi geo indekse yazar. Yolcunun isteği API gateway üzerinden eşleştirme servisine gelir; servis fiyatlama servisinden surge çarpanını, geo indeksten 19 hücredeki boşta sürücüleri, ETA servisinden yol sürelerini alır; en iyi sürücüye WebSocket sunucusu üzerinden teklif gönderir, sürücü kabul eder, yolculuk trip veritabanına yazılır ve yolcuya sürücü bilgisi ile 4 dakikalık ETA döner.",
+      "en": "Rider at top left, driver app at bottom left; the driver sends locations to a WebSocket server, the server to Kafka, and a Kafka consumer writes to the in-memory geo index. The rider's request reaches the matching service via the API gateway; the service gets the surge multiplier from pricing, idle drivers in 19 cells from the geo index and road travel times from the ETA service; it sends an offer to the best driver through the WebSocket server, the driver accepts, the trip is written to the trip database and the rider receives driver details with a 4-minute ETA."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "rider", "kind": "mobile", "label": { "tr": "Yolcu", "en": "Rider" }, "sublabel": { "tr": "Çağır", "en": "Request" }, "x": 80, "y": 150 },
+    { "id": "driver", "kind": "mobile", "label": { "tr": "Sürücü", "en": "Driver" }, "sublabel": "GPS · 4 s", "x": 80, "y": 460 },
+    { "id": "gateway", "kind": "gateway", "label": "API Gateway", "x": 250, "y": 150, "w": 120, "h": 64 },
+    { "id": "wsgw", "kind": "gateway", "label": { "tr": "WebSocket sunucusu", "en": "WebSocket server" }, "sublabel": "100 K conn", "x": 250, "y": 460, "w": 150, "h": 66 },
+    { "id": "matching", "kind": "service", "label": { "tr": "Eşleştirme", "en": "Matching" }, "sublabel": "DISCO", "x": 450, "y": 150, "w": 130, "h": 70 },
+    { "id": "pricing", "kind": "service", "label": { "tr": "Fiyatlama", "en": "Pricing" }, "sublabel": { "tr": "surge / hücre", "en": "surge / cell" }, "x": 450, "y": 310, "w": 120, "h": 60 },
+    { "id": "kafka", "kind": "queue", "label": "Kafka", "sublabel": "location-updates", "x": 470, "y": 540, "w": 130, "h": 56 },
+    { "id": "geo", "kind": "cache", "label": { "tr": "Geo indeks", "en": "Geo index" }, "sublabel": "cell:{h3} → drivers", "x": 680, "y": 430, "w": 150, "h": 70 },
+    { "id": "eta", "kind": "service", "label": "ETA / Routing", "sublabel": { "tr": "yol ağı grafı", "en": "road graph" }, "x": 680, "y": 60, "w": 130, "h": 60 },
+    { "id": "tripdb", "kind": "db", "label": "Trip DB", "sublabel": "CREATED → MATCHED", "x": 680, "y": 250, "w": 130, "h": 66 }
+  ],
+  "edges": [
+    { "id": "d-ws", "from": "driver", "to": "wsgw", "kind": "data", "label": { "tr": "konum", "en": "location" } },
+    { "id": "ws-kafka", "from": "wsgw", "to": "kafka", "kind": "event", "style": "dotted", "curvature": 0.15 },
+    { "id": "kafka-geo", "from": "kafka", "to": "geo", "kind": "data", "curvature": 0.1 },
+    { "id": "r-gw", "from": "rider", "to": "gateway", "kind": "request", "label": "POST /rides" },
+    { "id": "gw-match", "from": "gateway", "to": "matching", "kind": "request" },
+    { "id": "match-price", "from": "matching", "to": "pricing", "kind": "request", "style": "dashed" },
+    { "id": "match-geo", "from": "matching", "to": "geo", "kind": "data", "label": "kRing(h3, 2)", "curvature": 0.15 },
+    { "id": "match-eta", "from": "matching", "to": "eta", "kind": "request", "curvature": -0.1 },
+    { "id": "match-ws", "from": "matching", "to": "wsgw", "kind": "control", "style": "dashed", "label": { "tr": "teklif", "en": "offer" }, "curvature": -0.2 },
+    { "id": "match-db", "from": "matching", "to": "tripdb", "kind": "data" }
+  ],
+  "steps": [
+    {
+      "id": "location-stream",
+      "title": { "tr": "1 · Arka plan: konum akışı", "en": "1 · Background: the location stream" },
+      "narration": {
+        "tr": "Yolcu daha dokunmadan önce sistem zaten çalışıyor: her sürücü kalıcı WebSocket üzerinden 4 saniyede bir konum yollar. Sunucu paketleri mikro-partiler hâlinde Kafka'ya yazar; tüketici her sürücüyü H3 hücresine yerleştirir (cell:{h3} → Set) ve 15 s TTL ile tazeliği korur.",
+        "en": "Before the rider even taps, the system is already working: every driver sends a location every 4 seconds over a persistent WebSocket. The server writes packets to Kafka in micro-batches; the consumer places each driver in its H3 cell (cell:{h3} → Set) and keeps freshness with a 15 s TTL."
+      },
+      "durationMs": 3800,
+      "inherit": false,
+      "highlight": { "nodes": ["driver", "wsgw", "kafka", "geo"], "edges": ["d-ws", "ws-kafka", "kafka-geo"] },
+      "nodeStates": { "driver": { "status": "active", "badge": "IDLE" }, "wsgw": { "status": "active" }, "kafka": { "status": "active" }, "geo": { "status": "active", "badge": "1.25 M/s" } },
+      "packets": [
+        { "edge": "d-ws", "shape": "dot", "durationMs": 600, "repeat": 3, "repeatGapMs": 300 },
+        { "edge": "ws-kafka", "shape": "diamond", "startAt": 700, "durationMs": 700, "repeat": 2, "repeatGapMs": 400 },
+        { "edge": "kafka-geo", "shape": "dot", "startAt": 1500, "durationMs": 700, "repeat": 2, "repeatGapMs": 400 }
+      ],
+      "annotations": [
+        { "id": "ttl", "x": 680, "y": 520, "text": { "tr": "SADD cell:8a2a… driver · EXPIRE 15 s", "en": "SADD cell:8a2a… driver · EXPIRE 15 s" }, "target": "geo" }
+      ]
+    },
+    {
+      "id": "request",
+      "title": { "tr": "2 · Yolcu çağırıyor", "en": "2 · The rider requests" },
+      "narration": {
+        "tr": "Yolcu alış ve varış noktasını seçip \"Çağır\"a basar. POST /rides isteği gateway'den (auth, idempotency anahtarı) geçip eşleştirme servisine ulaşır. Hedef: 2 saniye içinde bir sürücüye teklif gitmiş olsun.",
+        "en": "The rider picks pickup and drop-off and taps \"Request\". The POST /rides request passes the gateway (auth, idempotency key) and reaches the matching service. Goal: an offer sent to a driver within 2 seconds."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["rider", "gateway", "matching"], "edges": ["r-gw", "gw-match"] },
+      "nodeStates": { "rider": { "status": "active" }, "gateway": { "status": "active" }, "matching": { "status": "busy", "badge": "t = 0" }, "kafka": { "status": "idle" }, "wsgw": { "status": "idle" } },
+      "packets": [
+        { "edge": "r-gw", "shape": "envelope", "durationMs": 800 },
+        { "edge": "gw-match", "shape": "envelope", "startAt": 900, "durationMs": 800 }
+      ],
+      "annotations": [
+        { "id": "payload", "x": 80, "y": 250, "text": { "tr": "pickup: 41.04, 29.00 · UberX", "en": "pickup: 41.04, 29.00 · UberX" }, "target": "rider" }
+      ]
+    },
+    {
+      "id": "surge",
+      "title": { "tr": "3 · Surge çarpanı", "en": "3 · Surge multiplier" },
+      "narration": {
+        "tr": "Eşleştirme servisi alış hücresinin güncel surge çarpanını fiyatlama servisinden alır: son 5 dakikada talep arzın 1.6 katı → 1.4×. Çarpan yolcuya gösterilen tekliften zaten biliniyordu ve birkaç dakika kilitlidir; burada yalnızca doğrulanır.",
+        "en": "The matching service fetches the current surge multiplier for the pickup cell from pricing: demand was 1.6x supply over the last 5 minutes → 1.4x. The multiplier was already known from the quote shown to the rider and is locked for a few minutes; here it is only verified."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["matching", "pricing"], "edges": ["match-price"] },
+      "nodeStates": { "pricing": { "status": "active", "badge": "1.4×" } },
+      "packets": [
+        { "edge": "match-price", "shape": "dot", "label": "surge(cell)", "durationMs": 600 },
+        { "edge": "match-price", "shape": "dot", "direction": "backward", "startAt": 700, "durationMs": 600, "color": "warning", "label": "1.4×" }
+      ],
+      "annotations": [
+        { "id": "smooth", "x": 450, "y": 400, "text": { "tr": "arz/talep per hücre · komşularla yumuşatılmış", "en": "supply/demand per cell · smoothed with neighbours" }, "tone": "warning", "target": "pricing" }
+      ]
+    },
+    {
+      "id": "ring-query",
+      "title": { "tr": "4 · H3 halka sorgusu", "en": "4 · H3 ring query" },
+      "narration": {
+        "tr": "Alış noktası H3 çözünürlük 9'da bir hücreye düşer. kRing(cell, 2) ile merkez + 2 halka = 19 hücre alınır ve bu hücrelerin sürücü kümeleri birleştirilir (SUNION). Sınır problemi böyle çözülür: 100 m ötedeki sürücü komşu hücrede olsa da bulunur. Sonuç: 23 boşta aday.",
+        "en": "The pickup point falls into a cell at H3 resolution 9. kRing(cell, 2) yields the centre + 2 rings = 19 cells and their driver sets are unioned (SUNION). That solves the boundary problem: a driver 100 m away in a neighbouring cell is still found. Result: 23 idle candidates."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["matching", "geo"], "edges": ["match-geo"] },
+      "nodeStates": { "geo": { "status": "active", "badge": "19 cells" }, "pricing": { "status": "idle" } },
+      "packets": [
+        { "edge": "match-geo", "shape": "square", "label": "SUNION 19 cells", "durationMs": 900 },
+        { "edge": "match-geo", "shape": "square", "direction": "backward", "startAt": 1100, "durationMs": 900, "color": "success", "label": "23 aday" }
+      ],
+      "annotations": [
+        { "id": "boundary", "x": 680, "y": 520, "text": { "tr": "merkez + komşular → sınır problemi yok", "en": "centre + neighbours → no boundary problem" }, "tone": "success", "target": "geo" }
+      ]
+    },
+    {
+      "id": "eta-rank",
+      "title": { "tr": "5 · ETA ile sıralama", "en": "5 · Ranking by ETA" },
+      "narration": {
+        "tr": "23 aday için kuş uçuşu değil yol ağı ETA'sı hesaplanır — nehrin karşısındaki sürücü 300 m uzakta ama 15 dakikadır. Routing servisi önceden hesaplanmış graf ile her sorguyu ~2 ms'de cevaplar. Sıralama ETA + kabul oranı + araç tipine göre yapılır; en iyi 3 sürücü seçilir.",
+        "en": "Road-network ETAs, not straight-line distances, are computed for the 23 candidates — the driver across the river is 300 m away but 15 minutes out. The routing service answers each query in ~2 ms on a precomputed graph. Ranking uses ETA + acceptance rate + vehicle type; the top 3 drivers are selected."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["matching", "eta"], "edges": ["match-eta"] },
+      "nodeStates": { "eta": { "status": "active", "badge": "23 × 2 ms" }, "geo": { "status": "idle", "badge": "" }, "matching": { "badge": "top 3" } },
+      "packets": [
+        { "edge": "match-eta", "shape": "dot", "durationMs": 600, "repeat": 4, "repeatGapMs": 150 },
+        { "edge": "match-eta", "shape": "dot", "direction": "backward", "startAt": 1500, "durationMs": 600, "color": "success", "repeat": 4, "repeatGapMs": 150 }
+      ],
+      "annotations": [
+        { "id": "notcrow", "x": 680, "y": 140, "text": { "tr": "en yakın ≠ en kısa ETA", "en": "nearest ≠ shortest ETA" }, "tone": "info", "target": "eta" }
+      ]
+    },
+    {
+      "id": "offer",
+      "title": { "tr": "6 · Sürücüye teklif", "en": "6 · Offer to the driver" },
+      "narration": {
+        "tr": "Sürücü #1'in durumu atomik olarak IDLE → OFFERED yapılır (compare-and-set); böylece aynı anda başka bir yolcuya teklif edilemez. Teklif, sürücünün bağlı olduğu WebSocket sunucusu üzerinden anında iletilir; 15 saniyelik zamanlayıcı başlar. Sürücü 6. saniyede kabul eder.",
+        "en": "Driver #1's state is atomically set IDLE → OFFERED (compare-and-set), so no other rider can be offered the same driver. The offer is pushed instantly through the WebSocket server the driver is connected to; a 15-second timer starts. The driver accepts at second 6."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["matching", "wsgw", "driver"], "edges": ["match-ws", "d-ws"] },
+      "nodeStates": { "wsgw": { "status": "active" }, "driver": { "status": "warning", "badge": "OFFERED" }, "eta": { "status": "idle", "badge": "" } },
+      "edgeStates": { "match-ws": { "status": "active" } },
+      "packets": [
+        { "edge": "match-ws", "shape": "envelope", "label": "offer(trip, 15 s)", "durationMs": 900 },
+        { "edge": "d-ws", "shape": "envelope", "direction": "backward", "startAt": 1000, "durationMs": 700, "color": "warning" },
+        { "edge": "d-ws", "shape": "envelope", "label": "ACCEPT", "startAt": 2400, "durationMs": 700, "color": "success" },
+        { "edge": "match-ws", "shape": "envelope", "direction": "backward", "startAt": 3100, "durationMs": 800, "color": "success" }
+      ],
+      "annotations": [
+        { "id": "cas", "x": 250, "y": 550, "text": { "tr": "CAS: IDLE → OFFERED, tek teklif kuralı", "en": "CAS: IDLE → OFFERED, single-offer rule" }, "tone": "warning", "target": "wsgw" }
+      ]
+    },
+    {
+      "id": "persist",
+      "title": { "tr": "7 · Yolculuk kaydı", "en": "7 · Trip record" },
+      "narration": {
+        "tr": "Kabul gelince yolculuk trip veritabanına MATCHED durumunda yazılır (yolcu, sürücü, fiyat teklifi, zaman damgaları). Sürücü geo indekste BUSY işaretlenir ve boşta kümelerinden çıkarılır; artık başka aramalarda görünmez. Olay Kafka'ya düşer: bildirim, analitik, sahtecilik.",
+        "en": "On acceptance the trip is written to the trip database as MATCHED (rider, driver, quote, timestamps). The driver is marked BUSY in the geo index and removed from idle sets; they no longer show up in other searches. An event lands in Kafka: notifications, analytics, fraud."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["matching", "tripdb", "geo"], "edges": ["match-db", "match-geo"] },
+      "nodeStates": { "tripdb": { "status": "active", "badge": "MATCHED" }, "driver": { "status": "busy", "badge": "BUSY" }, "geo": { "status": "active", "badge": "SREM" } },
+      "packets": [
+        { "edge": "match-db", "shape": "square", "label": "INSERT trip", "durationMs": 800 },
+        { "edge": "match-db", "shape": "dot", "direction": "backward", "startAt": 900, "durationMs": 500, "color": "success" },
+        { "edge": "match-geo", "shape": "dot", "label": "status = BUSY", "startAt": 1500, "durationMs": 800 }
+      ],
+      "annotations": [
+        { "id": "durable", "x": 680, "y": 330, "text": { "tr": "kalıcı kayıt: ödeme ve geçmiş için", "en": "durable record: for payment and history" }, "tone": "success", "target": "tripdb" }
+      ]
+    },
+    {
+      "id": "respond",
+      "title": { "tr": "8 · Yolcuya yanıt", "en": "8 · Response to the rider" },
+      "narration": {
+        "tr": "Yolcuya sürücü bilgisi, plaka ve 4 dakikalık ETA döner; istekten bu yana 1.8 s geçti. Bundan sonra yolcu uygulaması sürücünün konumunu WebSocket üzerinden saniyede bir alır — aynı konum akışı, bu kez tek bir sürücüye filtrelenmiş.",
+        "en": "The rider receives the driver's details, plate and a 4-minute ETA; 1.8 s have passed since the request. From here the rider app receives the driver's location once per second over WebSocket — the same location stream, now filtered to a single driver."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["matching", "gateway", "rider"], "edges": ["gw-match", "r-gw"] },
+      "nodeStates": { "rider": { "status": "success", "badge": "ETA 4 dk" }, "matching": { "status": "success", "badge": "1.8 s" }, "tripdb": { "status": "idle" }, "geo": { "status": "idle", "badge": "" } },
+      "packets": [
+        { "edge": "gw-match", "shape": "envelope", "direction": "backward", "durationMs": 700, "color": "success" },
+        { "edge": "r-gw", "shape": "envelope", "direction": "backward", "startAt": 800, "durationMs": 800, "color": "success", "label": "201 · driver, ETA" },
+        { "edge": "d-ws", "shape": "dot", "startAt": 1800, "durationMs": 500, "repeat": 2, "repeatGapMs": 300 }
+      ],
+      "annotations": [
+        { "id": "live", "x": 80, "y": 250, "text": { "tr": "canlı takip: WebSocket, 1 Hz", "en": "live tracking: WebSocket, 1 Hz" }, "tone": "success", "target": "rider" }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["uber", "geo-index", "h3", "matching", "websocket", "surge"]
+}

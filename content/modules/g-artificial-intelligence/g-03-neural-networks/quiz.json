@@ -1,0 +1,110 @@
+{
+  "id": "g-03-neural-networks-quiz",
+  "title": { "tr": "Sinir Ağları Quiz", "en": "Neural Networks Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Gizli katmanlarda aktivasyon fonksiyonu kullanılmazsa (yalnızca doğrusal katmanlar) ne olur?",
+        "en": "What happens if hidden layers have no activation function (only linear layers)?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Kaç katman olursa olsun ağ tek bir doğrusal fonksiyona indirgenir", "en": "No matter how many layers, the network collapses into a single linear function" } },
+        { "id": "b", "text": { "tr": "Gradyanlar katman sayısıyla üstel biçimde söner ve ilk katmanlar öğrenemez", "en": "Gradients vanish exponentially with depth and the first layers cannot learn" } },
+        { "id": "c", "text": { "tr": "Ağ yalnızca sigmoid çıkış katmanı sayesinde doğrusal olmayan sınır öğrenir", "en": "The network learns a non-linear boundary only thanks to the sigmoid output layer" } },
+        { "id": "d", "text": { "tr": "Yalnızca son gizli katmanın ağırlıkları güncellenir; öncekiler sabit kalır", "en": "Only the last hidden layer's weights are updated; the earlier ones stay fixed" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "Doğrusal dönüşümlerin bileşimi doğrusaldır: W₃(W₂(W₁x)) = Wx. Çıkıştaki sigmoid karar sınırını değiştirmez (lojistik regresyon gibi düz kalır), ağ XOR'u çözemez. Gradyanlar aktivasyon türevi 1 olduğu için sönmez ve tüm katmanlar güncellenir — sorun öğrenememek değil, ifade gücünün tek katmana eşit olmasıdır.",
+        "en": "A composition of linear maps is linear: W₃(W₂(W₁x)) = Wx. The sigmoid at the output does not change the decision boundary (it stays straight, as in logistic regression), so the network cannot solve XOR. Gradients do not vanish since the activation derivative is 1 and every layer is updated — the problem is not an inability to learn but expressive power equal to a single layer."
+      },
+      "difficulty": "easy",
+      "concepts": ["activation-function", "neuron"]
+    },
+    {
+      "id": "q2",
+      "type": "multiple",
+      "prompt": {
+        "tr": "ReLU'nun sigmoid'e göre avantajları hangileridir? (Birden fazla seçin)",
+        "en": "Which are advantages of ReLU over sigmoid? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Pozitif bölgede türevi 1 olduğu için gradyan sönmez", "en": "Its derivative is 1 in the positive region, so gradients do not vanish" } },
+        { "id": "b", "text": { "tr": "Hesaplaması çok ucuzdur", "en": "It is very cheap to compute" } },
+        { "id": "c", "text": { "tr": "Çıktısı her zaman 0–1 arasında bir olasılıktır", "en": "Its output is always a probability between 0 and 1" } },
+        { "id": "d", "text": { "tr": "Hiçbir nöron asla ölmez", "en": "No neuron can ever die" } }
+      ],
+      "correct": ["a", "b"],
+      "explanation": {
+        "tr": "ReLU doymaz ve bir karşılaştırmadan ibarettir. Çıktısı sınırsızdır, olasılık değildir (c yanlış); negatif bölgede türev 0 olduğu için 'ölü nöron' sorunu tam da ReLU'nun dezavantajıdır (d yanlış).",
+        "en": "ReLU does not saturate and is just a comparison. Its output is unbounded, not a probability (c is wrong); the zero derivative in the negative region is exactly ReLU's 'dead neuron' weakness (d is wrong)."
+      },
+      "difficulty": "medium",
+      "concepts": ["relu", "sigmoid", "vanishing-gradient"]
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": {
+        "tr": "Sigmoid çıkış + binary cross-entropy kaybında çıkış nöronunun hatası (δ_out = ∂L/∂z) nedir?",
+        "en": "With a sigmoid output and binary cross-entropy loss, what is the output neuron's error (δ_out = ∂L/∂z)?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "ŷ − y", "en": "ŷ − y" } },
+        { "id": "b", "text": { "tr": "(ŷ − y)²", "en": "(ŷ − y)²" } },
+        { "id": "c", "text": { "tr": "ŷ · (1 − ŷ)", "en": "ŷ · (1 − ŷ)" } },
+        { "id": "d", "text": { "tr": "−ln ŷ", "en": "−ln ŷ" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "∂L/∂ŷ = −y/ŷ + (1−y)/(1−ŷ) ve ∂ŷ/∂z = ŷ(1−ŷ) çarpılınca ŷ(1−ŷ) sadeleşir ve ŷ − y kalır. (c) sigmoid'in türevidir, (d) kaybın kendisidir (y=1 için).",
+        "en": "Multiplying ∂L/∂ŷ = −y/ŷ + (1−y)/(1−ŷ) by ∂ŷ/∂z = ŷ(1−ŷ) cancels the ŷ(1−ŷ) and leaves ŷ − y. (c) is the sigmoid's derivative, (d) is the loss itself (for y=1)."
+      },
+      "difficulty": "hard",
+      "concepts": ["backpropagation", "chain-rule"]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Backpropagation ve gradient descent aynı şeydir; ikisi de parametreleri günceller.",
+        "en": "Backpropagation and gradient descent are the same thing; both update the parameters."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "Yanlış. Backpropagation zincir kuralıyla gradyanları verimli biçimde hesaplar; gradient descent (ya da Adam gibi bir optimizer) bu gradyanları kullanarak parametreleri günceller. Biri 'ne yöne', diğeri 'ne kadar ve nasıl' sorusunu cevaplar.",
+        "en": "False. Backpropagation computes the gradients efficiently via the chain rule; gradient descent (or an optimizer like Adam) uses those gradients to update parameters. One answers 'which direction', the other 'how far and how'."
+      },
+      "difficulty": "easy",
+      "concepts": ["backpropagation", "gradient-descent"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "Animasyondaki h₂ nöronuna geri yayılımda gradyan neden ulaşmadı?",
+        "en": "Why did no gradient reach neuron h₂ during backpropagation in the animation?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "h₂'nin çıkış ağırlığı v₂ negatifti; negatif çarpan gradyanı sıfırlar", "en": "h₂'s output weight v₂ was negative; a negative factor zeroes the gradient" } },
+        { "id": "b", "text": { "tr": "h₂'ye giren ağırlıklar sıfırla başlatılmıştı; simetri kırılamadı", "en": "The weights into h₂ were initialised to zero; symmetry never broke" } },
+        { "id": "c", "text": { "tr": "Çıkış sigmoid olduğu için δ_out = ŷ − y sıfıra çok yakındı", "en": "Because the output was a sigmoid, δ_out = ŷ − y was very close to zero" } },
+        { "id": "d", "text": { "tr": "İleri geçişte z₂ < 0 olduğu için ReLU'nun türevi 0'dı", "en": "ReLU's derivative was 0 because z₂ < 0 in the forward pass" } }
+      ],
+      "correct": ["d"],
+      "explanation": {
+        "tr": "δ_h = φ'(z)·v·δ_out ve ReLU'(−0.5) = 0 olduğundan δ_h₂ = 0; dolayısıyla h₂'ye giren ağırlıkların gradyanı da sıfırdır. Negatif bir v yalnızca işareti değiştirir, sıfırlamaz; δ_out = 0.614 − 1 sıfırdan uzaktır; ağırlıklar sıfır değil küçük rastgele değerlerdi. Bu çok sık olursa 'ölü nöron' problemidir; Leaky ReLU bir çaredir.",
+        "en": "δ_h = φ'(z)·v·δ_out and ReLU'(−0.5) = 0, so δ_h₂ = 0 and the gradients of weights into h₂ are zero too. A negative v only flips the sign, it does not zero anything; δ_out = 0.614 − 1 is far from zero; the weights were small random values, not zero. If this happens persistently it is the 'dead neuron' problem; Leaky ReLU is one remedy."
+      },
+      "difficulty": "medium",
+      "concepts": ["relu", "backpropagation"]
+    }
+  ]
+}

@@ -1,0 +1,525 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "c-04-distributed-overview",
+  "title": {
+    "tr": "Bir Uzak Çağrının Dayanıklılık Katmanları",
+    "en": "The Resilience Layers of One Remote Call"
+  },
+  "summary": {
+    "tr": "OrderService'in PaymentService'e çağrısı bulkhead, circuit breaker ve retry katmanlarından geçer; bu katmanlar sidecar'a taşınabilir; başarılı ödeme sonrası olay outbox ile güvenle yayınlanır; strangler fig tüm bunları eski sistemden yeniye geçerken uygular.",
+    "en": "OrderService's call to PaymentService passes through bulkhead, circuit breaker and retry layers; these layers can move into a sidecar; after a successful payment the event is published safely via outbox; strangler fig applies all of this while moving from the old system to the new."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Soldan sağa: OrderService, bulkhead havuzu, circuit breaker, retry politikası ve PaymentService; altta outbox tablosu, relay ve broker. İstek sırayla katmanlardan geçer; her adım bir kalıbı tanıtır. Dördüncü adım katmanların sidecar'a taşınabileceğini, beşinci adım ödeme sonrası olayın outbox ile yayınlanmasını, altıncı adım strangler fig geçişini anlatır.",
+      "en": "Left to right: OrderService, bulkhead pool, circuit breaker, retry policy and PaymentService; below, the outbox table, relay and broker. The request passes through the layers in turn; each step introduces one pattern. Step four shows the layers can move into a sidecar, step five the post-payment event published via outbox, step six the strangler fig migration."
+    }
+  },
+  "canvas": {
+    "width": 1000,
+    "height": 600
+  },
+  "nodes": [
+    {
+      "id": "svc",
+      "kind": "service",
+      "label": "OrderService",
+      "x": 90,
+      "y": 240,
+      "w": 140,
+      "h": 64
+    },
+    {
+      "id": "bh",
+      "kind": "generic",
+      "label": "Bulkhead",
+      "x": 300,
+      "y": 240,
+      "w": 150,
+      "h": 70,
+      "sublabel": {
+        "tr": "payments: 20 izin",
+        "en": "payments: 20 permits"
+      }
+    },
+    {
+      "id": "cb",
+      "kind": "generic",
+      "label": "Circuit Breaker",
+      "x": 500,
+      "y": 240,
+      "w": 160,
+      "h": 70,
+      "sublabel": {
+        "tr": "CLOSED",
+        "en": "CLOSED"
+      }
+    },
+    {
+      "id": "retry",
+      "kind": "generic",
+      "label": "Retry+Backoff",
+      "x": 700,
+      "y": 240,
+      "w": 160,
+      "h": 70,
+      "sublabel": {
+        "tr": "4 deneme · jitter",
+        "en": "4 attempts · jitter"
+      }
+    },
+    {
+      "id": "pay",
+      "kind": "service",
+      "label": "PaymentService",
+      "x": 900,
+      "y": 240,
+      "w": 150,
+      "h": 64
+    },
+    {
+      "id": "outbox",
+      "kind": "db",
+      "label": "outbox",
+      "x": 300,
+      "y": 480,
+      "w": 130,
+      "h": 56,
+      "sublabel": {
+        "tr": "aynı tx",
+        "en": "same tx"
+      }
+    },
+    {
+      "id": "relay",
+      "kind": "worker",
+      "label": "Relay",
+      "x": 520,
+      "y": 480,
+      "w": 110,
+      "h": 50
+    },
+    {
+      "id": "broker",
+      "kind": "queue",
+      "label": "Broker",
+      "x": 740,
+      "y": 480,
+      "w": 120,
+      "h": 56
+    }
+  ],
+  "edges": [
+    {
+      "id": "s-bh",
+      "from": "svc",
+      "to": "bh",
+      "kind": "request"
+    },
+    {
+      "id": "bh-cb",
+      "from": "bh",
+      "to": "cb",
+      "kind": "request"
+    },
+    {
+      "id": "cb-r",
+      "from": "cb",
+      "to": "retry",
+      "kind": "request"
+    },
+    {
+      "id": "r-pay",
+      "from": "retry",
+      "to": "pay",
+      "kind": "request",
+      "label": "POST /charges"
+    },
+    {
+      "id": "s-ob",
+      "from": "svc",
+      "to": "outbox",
+      "kind": "data",
+      "label": "INSERT"
+    },
+    {
+      "id": "ob-relay",
+      "from": "outbox",
+      "to": "relay",
+      "kind": "data"
+    },
+    {
+      "id": "relay-broker",
+      "from": "relay",
+      "to": "broker",
+      "kind": "event"
+    }
+  ],
+  "steps": [
+    {
+      "id": "bulkhead",
+      "title": {
+        "tr": "1. Bulkhead: izole kapasite",
+        "en": "1. Bulkhead: isolated capacity"
+      },
+      "narration": {
+        "tr": "Çağrı önce ödeme bağımlılığına ayrılmış eşzamanlılık havuzundan izin alır. Başka bir bağımlılık (öneri servisi) yavaşlasa bile bu havuz dolu olmaz: hasar bölmelere ayrılır.",
+        "en": "The call first takes a permit from the concurrency pool dedicated to the payment dependency. Even if another dependency (recommendations) slows down, this pool does not fill: damage is compartmentalized."
+      },
+      "durationMs": 3500,
+      "inherit": false,
+      "highlight": {
+        "nodes": [
+          "bh"
+        ],
+        "edges": [
+          "s-bh"
+        ]
+      },
+      "nodeStates": {
+        "bh": {
+          "status": "active",
+          "progress": 0.2
+        },
+        "outbox": {
+          "status": "muted"
+        },
+        "relay": {
+          "status": "muted"
+        },
+        "broker": {
+          "status": "muted"
+        }
+      },
+      "edgeStates": {
+        "s-ob": {
+          "status": "muted"
+        },
+        "ob-relay": {
+          "status": "muted"
+        },
+        "relay-broker": {
+          "status": "muted"
+        }
+      },
+      "packets": [
+        {
+          "edge": "s-bh",
+          "shape": "envelope",
+          "durationMs": 900
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a1",
+          "x": 300,
+          "y": 130,
+          "text": {
+            "tr": "izin yoksa: anında ret + fallback",
+            "en": "no permit: instant reject + fallback"
+          },
+          "target": "bh"
+        }
+      ]
+    },
+    {
+      "id": "breaker",
+      "title": {
+        "tr": "2. Circuit Breaker: hasta servise gitme",
+        "en": "2. Circuit Breaker: do not call a sick service"
+      },
+      "narration": {
+        "tr": "Breaker son pencerede hata oranına bakar. Kapalıysa geçirir; açıksa ağa çıkmadan reddeder ve fallback çalışır. Retry'ın dışında durur: açıkken yeniden deneme de yapılmaz.",
+        "en": "The breaker looks at the error rate in the recent window. Closed: pass; open: reject without touching the network and run the fallback. It sits outside retry: while open, no retries happen either."
+      },
+      "durationMs": 3500,
+      "highlight": {
+        "nodes": [
+          "cb"
+        ],
+        "edges": [
+          "bh-cb"
+        ]
+      },
+      "nodeStates": {
+        "cb": {
+          "status": "success",
+          "badge": "CLOSED"
+        }
+      },
+      "edgeStates": {},
+      "packets": [
+        {
+          "edge": "bh-cb",
+          "shape": "envelope",
+          "durationMs": 900
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a2",
+          "x": 500,
+          "y": 130,
+          "text": {
+            "tr": "sıra: bulkhead → breaker → retry → timeout",
+            "en": "order: bulkhead → breaker → retry → timeout"
+          },
+          "tone": "info",
+          "target": "cb"
+        }
+      ]
+    },
+    {
+      "id": "retry",
+      "title": {
+        "tr": "3. Retry + Backoff: geçici hatayı aş",
+        "en": "3. Retry + Backoff: ride out transient errors"
+      },
+      "narration": {
+        "tr": "İlk deneme 503 alır; politika jitter'lı üstel bekleme ile yeniden dener ve başarılı olur. Yalnızca idempotent çağrılar ve geçici hatalar için; her denemenin kendi zaman aşımı vardır.",
+        "en": "The first attempt gets 503; the policy retries with jittered exponential backoff and succeeds. Only for idempotent calls and transient errors; each attempt has its own timeout."
+      },
+      "durationMs": 4000,
+      "highlight": {
+        "nodes": [
+          "retry",
+          "pay"
+        ],
+        "edges": [
+          "cb-r",
+          "r-pay"
+        ]
+      },
+      "nodeStates": {
+        "retry": {
+          "status": "active",
+          "badge": "2/4"
+        },
+        "pay": {
+          "status": "success"
+        }
+      },
+      "edgeStates": {},
+      "packets": [
+        {
+          "edge": "cb-r",
+          "shape": "envelope",
+          "durationMs": 600
+        },
+        {
+          "edge": "r-pay",
+          "startAt": 700,
+          "shape": "envelope",
+          "durationMs": 600
+        },
+        {
+          "edge": "r-pay",
+          "startAt": 1400,
+          "direction": "backward",
+          "color": "danger",
+          "label": "503",
+          "durationMs": 500
+        },
+        {
+          "edge": "r-pay",
+          "startAt": 2200,
+          "shape": "envelope",
+          "label": "retry",
+          "durationMs": 600
+        },
+        {
+          "edge": "r-pay",
+          "startAt": 2900,
+          "direction": "backward",
+          "color": "success",
+          "label": "201",
+          "durationMs": 500
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "id": "sidecar",
+      "title": {
+        "tr": "4. Sidecar: katmanları koddan çıkar",
+        "en": "4. Sidecar: move the layers out of the code"
+      },
+      "narration": {
+        "tr": "Bu üç katman uygulama kütüphanesi (Resilience4j, Polly) olarak da, pod içindeki bir sidecar proxy (Envoy) olarak da yaşayabilir. Sidecar, dilden bağımsız tek politika ve merkezi yapılandırma sağlar; bedeli ek bileşen ve gecikmedir.",
+        "en": "These three layers can live as an application library (Resilience4j, Polly) or as a sidecar proxy (Envoy) inside the pod. The sidecar offers one language-agnostic policy and central configuration; the cost is an extra component and latency."
+      },
+      "durationMs": 3500,
+      "highlight": {
+        "nodes": [
+          "bh",
+          "cb",
+          "retry"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "bh": {
+          "badge": "sidecar"
+        },
+        "cb": {
+          "badge": "sidecar"
+        },
+        "retry": {
+          "badge": "sidecar"
+        }
+      },
+      "edgeStates": {},
+      "packets": [],
+      "annotations": [
+        {
+          "id": "a4",
+          "x": 500,
+          "y": 360,
+          "text": {
+            "tr": "kütüphane (süreç içi) ya da sidecar (süreç dışı)",
+            "en": "library (in-process) or sidecar (out-of-process)"
+          },
+          "tone": "info"
+        }
+      ]
+    },
+    {
+      "id": "outbox",
+      "title": {
+        "tr": "5. Outbox: olayı kaybetmeden yayınla",
+        "en": "5. Outbox: publish without losing the event"
+      },
+      "narration": {
+        "tr": "Ödeme başarılı; OrderService siparişi ve OrderPaid olayını aynı transaction'da yazar. Relay olayı broker'a taşır. Çift yazım yok: DB ile broker arasındaki tutarsızlık penceresi kapanır.",
+        "en": "Payment succeeded; OrderService writes the order and the OrderPaid event in one transaction. The relay carries the event to the broker. No dual write: the inconsistency window between DB and broker is closed."
+      },
+      "durationMs": 4000,
+      "highlight": {
+        "nodes": [
+          "outbox",
+          "relay",
+          "broker"
+        ],
+        "edges": [
+          "s-ob",
+          "ob-relay",
+          "relay-broker"
+        ]
+      },
+      "nodeStates": {
+        "outbox": {
+          "status": "success"
+        },
+        "relay": {
+          "status": "active"
+        },
+        "broker": {
+          "status": "success"
+        },
+        "bh": {
+          "badge": ""
+        },
+        "cb": {
+          "badge": ""
+        },
+        "retry": {
+          "badge": ""
+        }
+      },
+      "edgeStates": {
+        "s-ob": {
+          "status": "active"
+        },
+        "ob-relay": {
+          "status": "active"
+        },
+        "relay-broker": {
+          "status": "active"
+        }
+      },
+      "packets": [
+        {
+          "edge": "s-ob",
+          "shape": "square",
+          "label": "tx: order + event",
+          "durationMs": 800
+        },
+        {
+          "edge": "ob-relay",
+          "startAt": 1000,
+          "shape": "square",
+          "durationMs": 700
+        },
+        {
+          "edge": "relay-broker",
+          "startAt": 1800,
+          "shape": "envelope",
+          "label": "OrderPaid",
+          "durationMs": 800
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "id": "strangler",
+      "title": {
+        "tr": "6. Strangler Fig: tüm bunları geçiş sırasında uygula",
+        "en": "6. Strangler Fig: apply all of this during migration"
+      },
+      "narration": {
+        "tr": "Bu katmanlar tipik olarak monolitten servislere geçişte, yol yol kurulur: facade yeni servise %10 trafik verir, çağrılar bulkhead/breaker/retry ile korunur, olaylar outbox ile yayınlanır. Geri dönüş her zaman bir yönlendirme satırıdır.",
+        "en": "These layers are typically built route by route while moving from a monolith to services: the facade gives the new service 10% of traffic, calls are protected by bulkhead/breaker/retry, events are published via outbox. Rollback is always one routing row."
+      },
+      "durationMs": 5000,
+      "highlight": {
+        "nodes": [
+          "svc"
+        ],
+        "edges": []
+      },
+      "nodeStates": {},
+      "edgeStates": {},
+      "packets": [],
+      "annotations": [
+        {
+          "id": "g1",
+          "x": 300,
+          "y": 380,
+          "text": {
+            "tr": "Dayanıklılık: Bulkhead · Circuit Breaker · Retry+Backoff",
+            "en": "Resilience: Bulkhead · Circuit Breaker · Retry+Backoff"
+          },
+          "tone": "success"
+        },
+        {
+          "id": "g2",
+          "x": 760,
+          "y": 380,
+          "text": {
+            "tr": "Platform: Sidecar · Geçiş: Strangler Fig · Tutarlılık: Outbox",
+            "en": "Platform: Sidecar · Migration: Strangler Fig · Consistency: Outbox"
+          },
+          "tone": "success"
+        },
+        {
+          "id": "g3",
+          "x": 500,
+          "y": 60,
+          "text": {
+            "tr": "ağ güvenilmez, süreçler çöker, saatler kayar: kalıplar bunun içindir",
+            "en": "networks fail, processes crash, clocks drift: that is what these patterns are for"
+          },
+          "tone": "warning"
+        }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": [
+    "distributed",
+    "resilience",
+    "overview"
+  ]
+}

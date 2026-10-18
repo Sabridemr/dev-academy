@@ -1,0 +1,350 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "c-03-chain-of-responsibility",
+  "title": {
+    "tr": "Chain of Responsibility: Halka Halka İşle ya da İlet",
+    "en": "Chain of Responsibility: Handle or Pass, Link by Link"
+  },
+  "summary": {
+    "tr": "İstek Auth → RateLimit → Validation → Controller zincirinden geçer; geçersiz istek Validation'da kesilir ve 400 döner; geçerli istek controller'a ulaşır.",
+    "en": "A request flows through the Auth → RateLimit → Validation → Controller chain; an invalid request is cut at Validation and gets 400; a valid request reaches the controller."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Soldan sağa beş düğüm: istemci, AuthHandler, RateLimitHandler, ValidationHandler ve ControllerHandler. İlk istek auth ve rate limit halkalarını geçer, validation halkasında gövde geçersiz olduğu için kesilir ve 400 döner. İkinci istek tüm halkaları geçip controller'a ulaşır ve 201 döner.",
+      "en": "Five nodes left to right: client, AuthHandler, RateLimitHandler, ValidationHandler and ControllerHandler. The first request passes auth and rate limit, is cut at validation because the body is invalid and gets 400. The second request passes all links, reaches the controller and gets 201."
+    }
+  },
+  "canvas": {
+    "width": 1000,
+    "height": 600
+  },
+  "nodes": [
+    {
+      "id": "client",
+      "kind": "generic",
+      "label": "Client",
+      "x": 80,
+      "y": 300,
+      "w": 110,
+      "h": 60
+    },
+    {
+      "id": "auth",
+      "kind": "generic",
+      "label": "AuthHandler",
+      "x": 290,
+      "y": 300,
+      "w": 160,
+      "h": 70,
+      "sublabel": {
+        "tr": "token geçerli mi?",
+        "en": "token valid?"
+      }
+    },
+    {
+      "id": "rate",
+      "kind": "generic",
+      "label": "RateLimitHandler",
+      "x": 500,
+      "y": 300,
+      "w": 170,
+      "h": 70,
+      "sublabel": {
+        "tr": "100 istek/dk",
+        "en": "100 req/min"
+      }
+    },
+    {
+      "id": "valid",
+      "kind": "generic",
+      "label": "ValidationHandler",
+      "x": 710,
+      "y": 300,
+      "w": 170,
+      "h": 70,
+      "sublabel": {
+        "tr": "şema kontrolü",
+        "en": "schema check"
+      }
+    },
+    {
+      "id": "ctrl",
+      "kind": "generic",
+      "label": "ControllerHandler",
+      "x": 910,
+      "y": 300,
+      "w": 160,
+      "h": 70,
+      "sublabel": {
+        "tr": "iş mantığı",
+        "en": "business logic"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "c-a",
+      "from": "client",
+      "to": "auth",
+      "kind": "request",
+      "label": "handle(req)"
+    },
+    {
+      "id": "a-r",
+      "from": "auth",
+      "to": "rate",
+      "kind": "request",
+      "label": "next"
+    },
+    {
+      "id": "r-v",
+      "from": "rate",
+      "to": "valid",
+      "kind": "request",
+      "label": "next"
+    },
+    {
+      "id": "v-c",
+      "from": "valid",
+      "to": "ctrl",
+      "kind": "request",
+      "label": "next"
+    }
+  ],
+  "steps": [
+    {
+      "id": "pass",
+      "title": {
+        "tr": "1. Halkalar istekle ilgilenmezse iletir",
+        "en": "1. Links that do not handle, forward"
+      },
+      "narration": {
+        "tr": "İstek zincirin başına verilir. AuthHandler token'ı doğrular ve ilgisini bitirir: next.handle(req). RateLimitHandler sayaç dolmamışsa yine iletir. Her halka yalnızca kendi işini bilir.",
+        "en": "The request enters the head of the chain. AuthHandler verifies the token and is done: next.handle(req). RateLimitHandler forwards too if the counter is not full. Each link knows only its own job."
+      },
+      "durationMs": 4000,
+      "inherit": false,
+      "highlight": {
+        "nodes": [
+          "auth",
+          "rate"
+        ],
+        "edges": [
+          "c-a",
+          "a-r"
+        ]
+      },
+      "nodeStates": {
+        "auth": {
+          "status": "success",
+          "badge": "✓"
+        },
+        "rate": {
+          "status": "success",
+          "badge": "37/100"
+        }
+      },
+      "edgeStates": {},
+      "packets": [
+        {
+          "edge": "c-a",
+          "shape": "envelope",
+          "label": "POST /orders",
+          "durationMs": 800
+        },
+        {
+          "edge": "a-r",
+          "startAt": 900,
+          "shape": "envelope",
+          "durationMs": 800
+        },
+        {
+          "edge": "r-v",
+          "startAt": 1800,
+          "shape": "envelope",
+          "durationMs": 800
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a1",
+          "x": 290,
+          "y": 170,
+          "text": {
+            "tr": "işle / ilet / kes: her halkanın üç seçeneği",
+            "en": "handle / forward / stop: three choices per link"
+          },
+          "target": "auth"
+        }
+      ]
+    },
+    {
+      "id": "stop",
+      "title": {
+        "tr": "2. Bir halka zinciri keser",
+        "en": "2. A link stops the chain"
+      },
+      "narration": {
+        "tr": "ValidationHandler gövdeyi şemaya göre kontrol eder: qty alanı negatif. İsteği iletmez; 400 Bad Request üretir ve yanıt zincirden geri döner. Controller hiç çalışmaz, veritabanına gidilmez.",
+        "en": "ValidationHandler checks the body against the schema: qty is negative. It does not forward; it produces 400 Bad Request and the response returns through the chain. The controller never runs, no database call is made."
+      },
+      "durationMs": 3500,
+      "highlight": {
+        "nodes": [
+          "valid"
+        ],
+        "edges": [
+          "r-v",
+          "v-c"
+        ]
+      },
+      "nodeStates": {
+        "valid": {
+          "status": "error",
+          "badge": "400"
+        },
+        "ctrl": {
+          "status": "muted"
+        }
+      },
+      "edgeStates": {
+        "v-c": {
+          "status": "muted"
+        }
+      },
+      "packets": [
+        {
+          "edge": "r-v",
+          "direction": "backward",
+          "color": "danger",
+          "label": "400",
+          "durationMs": 600
+        },
+        {
+          "edge": "a-r",
+          "startAt": 700,
+          "direction": "backward",
+          "color": "danger",
+          "durationMs": 600
+        },
+        {
+          "edge": "c-a",
+          "startAt": 1400,
+          "direction": "backward",
+          "color": "danger",
+          "label": "400 qty < 0",
+          "durationMs": 700
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a2",
+          "x": 710,
+          "y": 440,
+          "text": {
+            "tr": "erken kesme: ucuz kontroller öne",
+            "en": "early stop: cheap checks first"
+          },
+          "tone": "warning",
+          "target": "valid"
+        }
+      ]
+    },
+    {
+      "id": "success",
+      "title": {
+        "tr": "3. Geçerli istek sona ulaşır",
+        "en": "3. A valid request reaches the end"
+      },
+      "narration": {
+        "tr": "Düzeltilmiş istek tüm halkaları geçer ve ControllerHandler iş mantığını çalıştırır: 201 Created. Zincirin sırası ve içeriği çalışma zamanında kurulur; bir halka eklemek (örn. idempotency anahtarı kontrolü) diğerlerini değiştirmez.",
+        "en": "The corrected request passes every link and ControllerHandler runs the business logic: 201 Created. The chain's order and content are assembled at runtime; adding a link (e.g. an idempotency-key check) does not change the others."
+      },
+      "durationMs": 4500,
+      "highlight": {
+        "nodes": [
+          "ctrl"
+        ],
+        "edges": [
+          "c-a",
+          "a-r",
+          "r-v",
+          "v-c"
+        ]
+      },
+      "nodeStates": {
+        "valid": {
+          "status": "success",
+          "badge": "✓"
+        },
+        "ctrl": {
+          "status": "success",
+          "badge": "201"
+        },
+        "rate": {
+          "badge": "38/100"
+        }
+      },
+      "edgeStates": {
+        "v-c": {
+          "status": "active"
+        }
+      },
+      "packets": [
+        {
+          "edge": "c-a",
+          "shape": "envelope",
+          "label": "POST /orders (fix)",
+          "durationMs": 600
+        },
+        {
+          "edge": "a-r",
+          "startAt": 700,
+          "shape": "envelope",
+          "durationMs": 600
+        },
+        {
+          "edge": "r-v",
+          "startAt": 1400,
+          "shape": "envelope",
+          "durationMs": 600
+        },
+        {
+          "edge": "v-c",
+          "startAt": 2100,
+          "shape": "envelope",
+          "durationMs": 600
+        },
+        {
+          "edge": "c-a",
+          "startAt": 3000,
+          "direction": "backward",
+          "color": "success",
+          "label": "201 Created",
+          "durationMs": 800
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a3",
+          "x": 500,
+          "y": 170,
+          "text": {
+            "tr": "Express/Koa middleware, servlet filter, gRPC interceptor = bu kalıp",
+            "en": "Express/Koa middleware, servlet filters, gRPC interceptors = this pattern"
+          },
+          "tone": "info"
+        }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": [
+    "chain-of-responsibility",
+    "behavioral",
+    "middleware"
+  ]
+}

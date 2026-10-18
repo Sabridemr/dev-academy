@@ -1,0 +1,110 @@
+{
+  "id": "a-05-load-balancing-quiz",
+  "title": { "tr": "Load Balancer Quiz", "en": "Load Balancer Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Bir isteğin URL yoluna (/api/orders) göre farklı servislere yönlendirilmesini hangi tür yük dengeleyici yapabilir?",
+        "en": "Which kind of load balancer can route a request to different services based on its URL path (/api/orders)?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Yalnızca L4 (taşıma katmanı)", "en": "Only L4 (transport layer)" } },
+        { "id": "b", "text": { "tr": "Yalnızca L7 (uygulama katmanı)", "en": "Only L7 (application layer)" } },
+        { "id": "c", "text": { "tr": "Her ikisi de, TLS pass-through açıksa", "en": "Both, as long as TLS pass-through is on" } },
+        { "id": "d", "text": { "tr": "Hiçbiri; bu GeoDNS'in işidir", "en": "Neither; that is GeoDNS's job" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "URL yolu HTTP isteğinin içindedir; yalnızca uygulama katmanını (L7) ayrıştıran bir yük dengeleyici bunu görebilir. L4 yalnızca IP ve port bilgisine bakar; TLS pass-through ise isteği açmadan geçirmek demektir, yolu görünür kılmaz. DNS yalnızca isimden IP'ye gider, URL yolunu hiç görmez.",
+        "en": "The URL path lives inside the HTTP request; only a load balancer that parses the application layer (L7) can see it. L4 only looks at IP and port; TLS pass-through means forwarding without decrypting, which hides the path rather than exposing it. DNS only maps names to IPs and never sees the URL path."
+      },
+      "difficulty": "easy",
+      "concepts": ["l4-vs-l7"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "Bazı istekler çok uzun sürüyorsa (dosya yükleme, rapor üretme) hangi algoritma yükü en adil dağıtır?",
+        "en": "If some requests take very long (file uploads, report generation), which algorithm distributes load most fairly?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Least connections", "en": "Least connections" } },
+        { "id": "b", "text": { "tr": "Weighted round-robin", "en": "Weighted round-robin" } },
+        { "id": "c", "text": { "tr": "IP hash (mod N)", "en": "IP hash (mod N)" } },
+        { "id": "d", "text": { "tr": "Sticky session", "en": "Sticky session" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "Least connections o anki gerçek yükü (aktif bağlantı sayısını) ölçer. Weighted round-robin sunucu gücündeki farkı düzeltir ama istek süresini dikkate almaz; yavaş isteklerin düştüğü sunucunun kuyruğu şişer. IP hash yüke değil istemci adresine bakar; sticky session ise bir dağıtım algoritması değil, kullanıcıyı sunucuya bağlama mekanizmasıdır.",
+        "en": "Least connections measures the actual current load (active connections). Weighted round-robin corrects for differences in server size but ignores request duration, so the server that received the slow requests builds a queue. IP hash looks at the client address, not the load; and sticky session is not a distribution algorithm but a mechanism for pinning a user to a server."
+      },
+      "difficulty": "medium",
+      "concepts": ["least-connections", "round-robin"]
+    },
+    {
+      "id": "q3",
+      "type": "multiple",
+      "prompt": {
+        "tr": "IP hash algoritmasının zayıf yanları hangileridir? (Birden fazla seçin)",
+        "en": "Which are weaknesses of the IP hash algorithm? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "NAT arkasındaki çok sayıda kullanıcı aynı sunucuya düşer", "en": "Many users behind NAT land on the same server" } },
+        { "id": "b", "text": { "tr": "Sunucu sayısı değişince eşlemelerin çoğu bozulur", "en": "Most mappings break when the server count changes" } },
+        { "id": "c", "text": { "tr": "Aynı istemci her seferinde farklı sunucuya gider", "en": "The same client goes to a different server each time" } },
+        { "id": "d", "text": { "tr": "Hash hesabı her istekte LB'ye ölçülebilir CPU maliyeti ekler", "en": "Computing the hash adds measurable CPU cost to the LB on every request" } }
+      ],
+      "correct": ["a", "b"],
+      "explanation": {
+        "tr": "IP hash aynı istemciyi hep aynı sunucuya gönderir (c yanlış) ve bir IP'yi hash'leyip mod almak ihmal edilebilir maliyettir (d yanlış). Gerçek problemleri NAT yoğunlaşması ve mod N'in sunucu sayısı değişince yeniden dağıtım yapmasıdır — consistent hashing bunu çözer.",
+        "en": "IP hash always sends the same client to the same server (c is false) and hashing an IP and taking a modulus costs next to nothing (d is false). Its real problems are NAT concentration and mod-N reshuffling when the server count changes — consistent hashing solves that."
+      },
+      "difficulty": "medium",
+      "concepts": ["ip-hash"]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Yük dengeleyicinin health check uç noktası veritabanını da kontrol ederse, veritabanı yavaşladığında tüm sunucular aynı anda havuzdan çıkabilir.",
+        "en": "If the load balancer's health check endpoint also checks the database, all servers may leave the pool at once when the database slows down."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["t"],
+      "explanation": {
+        "tr": "Doğru. Derin health check paylaşılan bir bağımlılığı yansıttığında hata tüm sunucularda aynı anda görünür ve havuz boşalır. Bu yüzden LB için sığ liveness, izleme için derin readiness ayrımı yapılır.",
+        "en": "True. When a deep health check reflects a shared dependency, the failure shows on every server simultaneously and the pool empties. That is why shallow liveness for the LB is separated from deep readiness for monitoring."
+      },
+      "difficulty": "hard",
+      "concepts": ["health-check"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "Sticky session ihtiyacını ortadan kaldırmanın en sağlıklı yolu nedir?",
+        "en": "What is the healthiest way to eliminate the need for sticky sessions?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Dağıtım algoritmasını IP hash yerine least connections olarak ayarlamak", "en": "Switch the distribution algorithm from IP hash to least connections" } },
+        { "id": "b", "text": { "tr": "Health check eşiklerini (N başarısız / M başarılı) yükselterek flapping'i önlemek", "en": "Raise the health check thresholds (N failures / M successes) to prevent flapping" } },
+        { "id": "c", "text": { "tr": "L4 yerine çerez tabanlı yönlendirme yapabilen bir L7 yük dengeleyiciye geçmek", "en": "Move from L4 to an L7 load balancer that can route based on cookies" } },
+        { "id": "d", "text": { "tr": "Oturum durumunu paylaşımlı depoya (Redis) taşıyıp servisleri stateless yapmak", "en": "Move session state to a shared store (Redis) and make services stateless" } }
+      ],
+      "correct": ["d"],
+      "explanation": {
+        "tr": "Durum sunucudan çıkınca her sunucu her isteği işleyebilir; dağılım bozulmaz ve sunucu düşünce oturum kaybolmaz. Algoritma değiştirmek durumu taşımaz; least connections ile kullanıcı bir sonraki istekte başka sunucuya düşer ve oturumunu bulamaz (a yanlış). Health check eşikleri sunucuların havuza giriş çıkışını ilgilendirir (b yanlış); L7'ye geçmek sticky session'ı daha kolay uygulamanızı sağlar, ihtiyacını ortadan kaldırmaz (c yanlış).",
+        "en": "Once state leaves the server, any server can handle any request; distribution stays balanced and sessions survive server failures. Changing the algorithm does not move the state; with least connections the user lands on another server on the next request and cannot find their session (a is wrong). Health check thresholds concern servers entering and leaving the pool (b is wrong); moving to L7 makes sticky sessions easier to implement, it does not remove the need for them (c is wrong)."
+      },
+      "difficulty": "easy",
+      "concepts": ["sticky-session"]
+    }
+  ]
+}

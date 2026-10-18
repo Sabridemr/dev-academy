@@ -1,0 +1,13 @@
+{
+  "id": "d-database-design",
+  "slug": "database-design",
+  "code": "D",
+  "order": 4,
+  "title": { "tr": "Veritabanı Tasarımı", "en": "Database Design" },
+  "description": {
+    "tr": "Modelleme, indeksleme, transaction’lar, SQL/NoSQL seçimi ve ölçekleme.",
+    "en": "Modeling, indexing, transactions, SQL/NoSQL choice and scaling."
+  },
+  "icon": "database",
+  "color": "#10b981"
+}

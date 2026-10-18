@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 480" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">E-ticaret ER diyagramı (crow's foot)</title>
+  <desc id="desc">Dört tablo: customers, orders, order_items ve products. Bir müşterinin çok siparişi, bir siparişin çok kalemi vardır; bir ürün çok sipariş kaleminde geçer. order_items, orders ile products arasındaki çoka-çok ilişkiyi çözen ara tablodur.</desc>
+  <defs>
+    <marker id="many" viewBox="0 0 20 20" refX="18" refY="10" markerWidth="14" markerHeight="14" orient="auto-start-reverse">
+      <path d="M 2 2 L 18 10 L 2 18 M 2 10 L 18 10" fill="none" stroke="var(--da-primary, #6366f1)" stroke-width="1.6"/>
+    </marker>
+    <marker id="one" viewBox="0 0 20 20" refX="18" refY="10" markerWidth="14" markerHeight="14" orient="auto-start-reverse">
+      <path d="M 12 2 L 12 18 M 2 10 L 18 10" fill="none" stroke="var(--da-primary, #6366f1)" stroke-width="1.6"/>
+    </marker>
+  </defs>
+
+  <!-- customers -->
+  <g>
+    <rect x="40" y="60" width="200" height="130" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5"/>
+    <rect x="40" y="60" width="200" height="30" rx="10" fill="var(--da-primary, #6366f1)" opacity="0.15"/>
+    <text x="140" y="80" text-anchor="middle" font-size="14" font-weight="600" fill="var(--da-fg, #0f172a)">customers</text>
+    <g font-size="12" fill="var(--da-fg, #0f172a)">
+      <text x="52" y="112"><tspan font-weight="600">PK</tspan> id  bigint</text>
+      <text x="52" y="132">email  text  UNIQUE</text>
+      <text x="52" y="152">name  text</text>
+      <text x="52" y="172">city  text</text>
+    </g>
+  </g>
+
+  <!-- orders -->
+  <g>
+    <rect x="350" y="60" width="200" height="130" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5"/>
+    <rect x="350" y="60" width="200" height="30" rx="10" fill="var(--da-primary, #6366f1)" opacity="0.15"/>
+    <text x="450" y="80" text-anchor="middle" font-size="14" font-weight="600" fill="var(--da-fg, #0f172a)">orders</text>
+    <g font-size="12" fill="var(--da-fg, #0f172a)">
+      <text x="362" y="112"><tspan font-weight="600">PK</tspan> id  bigint</text>
+      <text x="362" y="132"><tspan font-weight="600" fill="var(--da-accent, #f59e0b)">FK</tspan> customer_id  bigint</text>
+      <text x="362" y="152">ordered_at  timestamptz</text>
+      <text x="362" y="172">status  text</text>
+    </g>
+  </g>
+
+  <!-- order_items -->
+  <g>
+    <rect x="350" y="290" width="220" height="130" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5"/>
+    <rect x="350" y="290" width="220" height="30" rx="10" fill="var(--da-accent, #f59e0b)" opacity="0.18"/>
+    <text x="460" y="310" text-anchor="middle" font-size="14" font-weight="600" fill="var(--da-fg, #0f172a)">order_items</text>
+    <g font-size="12" fill="var(--da-fg, #0f172a)">
+      <text x="362" y="342"><tspan font-weight="600">PK</tspan><tspan font-weight="600" fill="var(--da-accent, #f59e0b)"> FK</tspan> order_id  bigint</text>
+      <text x="362" y="362"><tspan font-weight="600">PK</tspan><tspan font-weight="600" fill="var(--da-accent, #f59e0b)"> FK</tspan> product_id  bigint</text>
+      <text x="362" y="382">qty  integer</text>
+      <text x="362" y="402">unit_price_at_purchase  numeric</text>
+    </g>
+  </g>
+
+  <!-- products -->
+  <g>
+    <rect x="660" y="290" width="200" height="130" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5"/>
+    <rect x="660" y="290" width="200" height="30" rx="10" fill="var(--da-primary, #6366f1)" opacity="0.15"/>
+    <text x="760" y="310" text-anchor="middle" font-size="14" font-weight="600" fill="var(--da-fg, #0f172a)">products</text>
+    <g font-size="12" fill="var(--da-fg, #0f172a)">
+      <text x="672" y="342"><tspan font-weight="600">PK</tspan> id  bigint</text>
+      <text x="672" y="362">name  text</text>
+      <text x="672" y="382">unit_price  numeric</text>
+      <text x="672" y="402">sku  text  UNIQUE</text>
+    </g>
+  </g>
+
+  <!-- İlişkiler -->
+  <g stroke="var(--da-primary, #6366f1)" stroke-width="1.8" fill="none">
+    <!-- customers 1 — N orders -->
+    <path d="M 240 125 L 350 125" marker-start="url(#one)" marker-end="url(#many)"/>
+    <!-- orders 1 — N order_items -->
+    <path d="M 450 190 L 450 290" marker-start="url(#one)" marker-end="url(#many)"/>
+    <!-- products 1 — N order_items -->
+    <path d="M 660 355 L 570 355" marker-start="url(#one)" marker-end="url(#many)"/>
+  </g>
+  <g font-size="11" fill="var(--da-muted, #64748b)" text-anchor="middle">
+    <text x="295" y="115">places</text>
+    <text x="295" y="140">1 : N</text>
+    <text x="485" y="245">contains</text>
+    <text x="485" y="260">1 : N</text>
+    <text x="615" y="345">appears in</text>
+    <text x="615" y="372">1 : N</text>
+  </g>
+
+  <!-- Açıklama -->
+  <rect x="40" y="290" width="250" height="130" rx="10" fill="var(--da-surface, #f8fafc)" stroke="var(--da-border, #cbd5e1)" stroke-dasharray="5 5"/>
+  <text x="52" y="314" font-size="12" font-weight="600" fill="var(--da-fg, #0f172a)">Okuma rehberi</text>
+  <g font-size="11" fill="var(--da-muted, #64748b)">
+    <text x="52" y="336">—|  tek (one) tarafı</text>
+    <text x="52" y="354">—&lt;  çok (many) tarafı</text>
+    <text x="52" y="372">PK  birincil anahtar</text>
+    <text x="52" y="390">FK  yabancı anahtar</text>
+    <text x="52" y="408">orders × products = N:M → order_items</text>
+  </g>
+
+  <text x="450" y="458" text-anchor="middle" font-size="12" fill="var(--da-muted, #64748b)">Her gerçek tek tabloda durur; müşteri adı siparişe kopyalanmaz, satın alma fiyatı ise tarihsel gerçek olarak order_items'ta saklanır.</text>
+</svg>

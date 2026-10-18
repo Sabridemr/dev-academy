@@ -1,0 +1,141 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 460" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">DDD bounded context'leri ve context map</title>
+  <desc id="desc">Üç kesikli kutu: Catalog, Ordering ve Shipping bounded context'leri. Her birinde Product adlı ama farklı alanlara sahip bir sınıf ve o bağlamın aggregate'i vardır. Catalog'dan Ordering'e ve Ordering'den Shipping'e customer-supplier ilişkisi okları; Ordering'den legacy ERP'ye anti-corruption layer ile bağlanan bir ok. Altta ortak dil ve aggregate kuralları notu.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+    <marker id="arrow-d" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-danger, #ef4444)"/>
+    </marker>
+  </defs>
+
+  <!-- Bounded context kutuları -->
+  <g fill="var(--da-primary, #6366f1)" fill-opacity="0.05" stroke="var(--da-primary, #6366f1)" stroke-width="1.6" stroke-dasharray="7 5">
+    <rect x="30" y="50" width="270" height="230" rx="14"/>
+    <rect x="345" y="50" width="270" height="230" rx="14"/>
+    <rect x="660" y="50" width="270" height="230" rx="14"/>
+  </g>
+  <g font-size="13" font-weight="700" fill="var(--da-primary, #6366f1)">
+    <text x="46" y="74">Catalog Context</text>
+    <text x="361" y="74">Ordering Context</text>
+    <text x="676" y="74">Shipping Context</text>
+  </g>
+  <g font-size="10" fill="var(--da-muted, #64748b)">
+    <text x="46" y="90">dil: ürün, varyant, kategori, görsel</text>
+    <text x="361" y="90">dil: sepet, sipariş satırı, fiyat, indirim</text>
+    <text x="676" y="90">dil: koli, ağırlık, raf, kargo etiketi</text>
+  </g>
+
+  <!-- Product sınıfları -->
+  <g fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.3">
+    <rect x="46" y="104" width="150" height="96" rx="4"/>
+    <rect x="361" y="104" width="150" height="96" rx="4"/>
+    <rect x="676" y="104" width="150" height="96" rx="4"/>
+  </g>
+  <g font-size="11.5" font-weight="700" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="121" y="121">Product</text>
+    <text x="436" y="121">Product</text>
+    <text x="751" y="121">Product</text>
+  </g>
+  <g stroke="var(--da-fg, #0f172a)" stroke-width="1">
+    <line x1="46" y1="128" x2="196" y2="128"/>
+    <line x1="361" y1="128" x2="511" y2="128"/>
+    <line x1="676" y1="128" x2="826" y2="128"/>
+  </g>
+  <g font-size="10" fill="var(--da-fg, #0f172a)">
+    <text x="52" y="144">sku: Sku</text>
+    <text x="52" y="158">title, description</text>
+    <text x="52" y="172">images: Image[]</text>
+    <text x="52" y="186">category: Category</text>
+    <text x="367" y="144">sku: Sku</text>
+    <text x="367" y="158">unitPrice: Money</text>
+    <text x="367" y="172">taxClass</text>
+    <text x="367" y="186">discountEligible</text>
+    <text x="682" y="144">sku: Sku</text>
+    <text x="682" y="158">weightGrams</text>
+    <text x="682" y="172">dimensions</text>
+    <text x="682" y="186">fragile: boolean</text>
+  </g>
+
+  <!-- Aggregate kutuları -->
+  <g fill="var(--da-accent, #f59e0b)" fill-opacity="0.14" stroke="var(--da-accent, #f59e0b)" stroke-width="1.3">
+    <rect x="206" y="104" width="84" height="60" rx="6"/>
+    <rect x="521" y="104" width="84" height="96" rx="6"/>
+    <rect x="836" y="104" width="84" height="76" rx="6"/>
+  </g>
+  <g font-size="9.5" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="248" y="120" font-weight="700">Aggregate</text>
+    <text x="248" y="136">Product</text>
+    <text x="248" y="150">(kök)</text>
+    <text x="563" y="120" font-weight="700">Aggregate</text>
+    <text x="563" y="136">Order (kök)</text>
+    <text x="563" y="150">└ OrderLine[]</text>
+    <text x="563" y="164">└ Address</text>
+    <text x="563" y="182" fill="var(--da-muted, #64748b)">tek transaction</text>
+    <text x="878" y="120" font-weight="700">Aggregate</text>
+    <text x="878" y="136">Shipment</text>
+    <text x="878" y="150">└ Parcel[]</text>
+    <text x="878" y="166" fill="var(--da-muted, #64748b)">orderId ref</text>
+  </g>
+
+  <!-- Bağlam içi notlar -->
+  <g font-size="9.5" fill="var(--da-muted, #64748b)">
+    <text x="46" y="226">"ürün" = satılabilir içerik</text>
+    <text x="46" y="242">servis: catalog-svc</text>
+    <text x="46" y="258">sahibi: Katalog ekibi</text>
+    <text x="361" y="226">"ürün" = fiyatlanan satır kalemi</text>
+    <text x="361" y="242">servis: orders-svc</text>
+    <text x="361" y="258">sahibi: Sipariş ekibi</text>
+    <text x="676" y="226">"ürün" = taşınan fiziksel nesne</text>
+    <text x="676" y="242">servis: shipping-svc</text>
+    <text x="676" y="258">sahibi: Lojistik ekibi</text>
+  </g>
+
+  <!-- Context map okları: upstream → downstream -->
+  <g stroke="var(--da-muted, #64748b)" stroke-width="1.8" fill="none" marker-end="url(#arrow)">
+    <path d="M 300 160 L 343 160"/>
+    <path d="M 615 160 L 658 160"/>
+  </g>
+  <g font-size="9" fill="var(--da-muted, #64748b)" text-anchor="middle">
+    <text x="322" y="150">U → D</text>
+    <text x="322" y="178">customer-</text>
+    <text x="322" y="189">supplier</text>
+    <text x="637" y="150">U → D</text>
+    <text x="637" y="178">published</text>
+    <text x="637" y="189">language</text>
+  </g>
+  <text x="322" y="210" text-anchor="middle" font-size="8.5" fill="var(--da-fg, #0f172a)">ProductPublished olayı</text>
+  <text x="637" y="210" text-anchor="middle" font-size="8.5" fill="var(--da-fg, #0f172a)">OrderPaid olayı</text>
+
+  <!-- Legacy ERP + ACL -->
+  <rect x="380" y="330" width="200" height="40" rx="8" fill="var(--da-success, #10b981)" fill-opacity="0.12" stroke="var(--da-success, #10b981)" stroke-width="1.5"/>
+  <text x="480" y="348" text-anchor="middle" font-size="11.5" font-weight="700" fill="var(--da-fg, #0f172a)">Anti-Corruption Layer</text>
+  <text x="480" y="362" text-anchor="middle" font-size="9.5" fill="var(--da-muted, #64748b)">KUNNR → CustomerId, 'X' → true</text>
+  <rect x="400" y="400" width="160" height="44" rx="8" fill="var(--da-surface, #ffffff)" stroke="var(--da-danger, #ef4444)" stroke-width="1.5"/>
+  <text x="480" y="419" text-anchor="middle" font-size="11.5" font-weight="700" fill="var(--da-danger, #ef4444)">Legacy ERP</text>
+  <text x="480" y="434" text-anchor="middle" font-size="9.5" fill="var(--da-muted, #64748b)">20 yıllık, değiştirilemez şema</text>
+  <g stroke="var(--da-muted, #64748b)" stroke-width="1.6" fill="none" marker-end="url(#arrow)">
+    <path d="M 480 400 L 480 372"/>
+    <path d="M 480 330 L 480 282"/>
+  </g>
+  <text x="520" y="306" font-size="9" fill="var(--da-muted, #64748b)">temiz model</text>
+  <text x="520" y="390" font-size="9" fill="var(--da-danger, #ef4444)">yabancı model</text>
+
+  <!-- Sol alt ve sağ alt notlar -->
+  <g font-size="10.5" fill="var(--da-fg, #0f172a)">
+    <text x="30" y="318" font-weight="600">Ortak dil (ubiquitous language)</text>
+    <text x="30" y="336">Alan uzmanı ne diyorsa kod o adı taşır;</text>
+    <text x="30" y="352">aynı kelime anlam değiştiriyorsa</text>
+    <text x="30" y="368">yeni bir bounded context başlamıştır.</text>
+    <text x="30" y="396" fill="var(--da-muted, #64748b)">Üç farklı Product sınıfı tekrar değil, doğruluktur.</text>
+  </g>
+  <g font-size="10.5" fill="var(--da-fg, #0f172a)">
+    <text x="660" y="318" font-weight="600">Aggregate kuralları</text>
+    <text x="660" y="336">• Dış dünya yalnızca kök üzerinden değiştirir</text>
+    <text x="660" y="352">• Bir transaction = bir aggregate</text>
+    <text x="660" y="368">• Aggregate'ler arası referans id ile</text>
+    <text x="660" y="384">• Aggregate'ler arası tutarlılık nihai (olay/saga)</text>
+    <text x="660" y="408" fill="var(--da-muted, #64748b)">aggregate ≈ transaction sınırı ≈ çoğu zaman servis sınırı</text>
+  </g>
+</svg>

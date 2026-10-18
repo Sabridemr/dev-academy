@@ -1,0 +1,36 @@
+{
+  "cli": {
+    "version": ">= 16.0.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "env": {
+        "APP_VARIANT": "development",
+        "EXPO_PUBLIC_API_URL": "http://localhost:4000/api/v1",
+        "EXPO_PUBLIC_WEB_URL": "http://localhost:3000"
+      },
+      "ios": { "simulator": true }
+    },
+    "preview": {
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://staging-api.devacademy.app/api/v1",
+        "EXPO_PUBLIC_WEB_URL": "https://staging.devacademy.app"
+      },
+      "android": { "buildType": "apk" }
+    },
+    "production": {
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://api.devacademy.app/api/v1",
+        "EXPO_PUBLIC_WEB_URL": "https://devacademy.app"
+      }
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}

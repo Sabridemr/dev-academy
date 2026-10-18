@@ -1,0 +1,177 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 560" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Amazon ölçeğinde e-ticaret mimarisi</title>
+  <desc id="desc">Üstte istemciler, CDN ve WAF, yük dengeleyici ve API gateway; ortada yedi alan servisi (katalog, sepet, sipariş, envanter, ödeme, arama, öneri); altında her servisin kendi veri deposu; en altta Kafka olay omurgası ve asenkron tüketiciler.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+    <marker id="arrow-p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-primary, #6366f1)"/>
+    </marker>
+    <marker id="arrow-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-accent, #f59e0b)"/>
+    </marker>
+  </defs>
+
+  <!-- Katman etiketleri -->
+  <g font-size="11" fill="var(--da-muted, #64748b)">
+    <text x="14" y="66">Edge / giriş</text>
+    <text x="14" y="196">Alan servisleri</text>
+    <text x="14" y="326">Veri katmanı</text>
+    <text x="14" y="466">Olay omurgası</text>
+  </g>
+
+  <!-- Giriş katmanı -->
+  <g fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.4">
+    <rect x="110" y="40" width="120" height="50" rx="10"/>
+  </g>
+  <text x="170" y="61" text-anchor="middle" font-size="13" fill="var(--da-fg, #0f172a)">Web / Mobil</text>
+  <text x="170" y="78" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">50 M DAU</text>
+
+  <rect x="290" y="40" width="130" height="50" rx="10" fill="var(--da-success, #10b981)" opacity="0.12" stroke="var(--da-success, #10b981)" stroke-width="1.6"/>
+  <text x="355" y="61" text-anchor="middle" font-size="13" fill="var(--da-fg, #0f172a)">CDN + WAF</text>
+  <text x="355" y="78" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">statik · TLS · DDoS</text>
+
+  <rect x="480" y="40" width="130" height="50" rx="10" fill="var(--da-primary, #6366f1)" opacity="0.12" stroke="var(--da-primary, #6366f1)" stroke-width="1.6"/>
+  <text x="545" y="61" text-anchor="middle" font-size="13" fill="var(--da-fg, #0f172a)">Load Balancer</text>
+  <text x="545" y="78" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">L4 + L7</text>
+
+  <rect x="670" y="40" width="150" height="50" rx="10" fill="var(--da-primary, #6366f1)" opacity="0.12" stroke="var(--da-primary, #6366f1)" stroke-width="1.6"/>
+  <text x="745" y="61" text-anchor="middle" font-size="13" fill="var(--da-fg, #0f172a)">API Gateway</text>
+  <text x="745" y="78" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">auth · rate limit · BFF</text>
+
+  <g stroke="var(--da-muted, #64748b)" stroke-width="1.6" fill="none" marker-end="url(#arrow)">
+    <path d="M 230 65 L 290 65"/>
+    <path d="M 420 65 L 480 65"/>
+    <path d="M 610 65 L 670 65"/>
+  </g>
+
+  <!-- Gateway'den servislere fan-out -->
+  <g stroke="var(--da-primary, #6366f1)" stroke-width="1.3" fill="none" marker-end="url(#arrow-p)" opacity="0.8">
+    <path d="M 700 90 C 600 130, 200 120, 110 170"/>
+    <path d="M 710 90 C 650 130, 330 125, 240 170"/>
+    <path d="M 720 90 C 690 130, 420 130, 370 170"/>
+    <path d="M 735 90 C 730 130, 530 130, 500 170"/>
+    <path d="M 745 90 L 630 170"/>
+    <path d="M 760 90 L 760 170"/>
+    <path d="M 790 90 C 820 120, 880 130, 890 170"/>
+  </g>
+
+  <!-- Servisler -->
+  <g fill="var(--da-surface, #ffffff)" stroke="var(--da-primary, #6366f1)" stroke-width="1.5">
+    <rect x="50" y="170" width="120" height="56" rx="10"/>
+    <rect x="180" y="170" width="120" height="56" rx="10"/>
+    <rect x="310" y="170" width="120" height="56" rx="10"/>
+    <rect x="440" y="170" width="120" height="56" rx="10"/>
+    <rect x="570" y="170" width="120" height="56" rx="10"/>
+    <rect x="700" y="170" width="120" height="56" rx="10"/>
+    <rect x="830" y="170" width="120" height="56" rx="10"/>
+  </g>
+  <g font-size="12.5" font-weight="600" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="110" y="192">Katalog</text>
+    <text x="240" y="192">Sepet</text>
+    <text x="370" y="192">Sipariş</text>
+    <text x="500" y="192">Envanter</text>
+    <text x="630" y="192">Ödeme</text>
+    <text x="760" y="192">Arama</text>
+    <text x="890" y="192">Öneri</text>
+  </g>
+  <g font-size="10" fill="var(--da-muted, #64748b)" text-anchor="middle">
+    <text x="110" y="212">okuma ağırlıklı</text>
+    <text x="240" y="212">her zaman yazılabilir</text>
+    <text x="370" y="212">saga · durum makinesi</text>
+    <text x="500" y="212">koşullu güncelleme</text>
+    <text x="630" y="212">idempotent · PSP</text>
+    <text x="760" y="212">ters indeks</text>
+    <text x="890" y="212">batch + online</text>
+  </g>
+
+  <!-- Servis → veri okları -->
+  <g stroke="var(--da-muted, #64748b)" stroke-width="1.4" fill="none" marker-end="url(#arrow)">
+    <path d="M 110 226 L 110 300"/>
+    <path d="M 240 226 L 240 300"/>
+    <path d="M 370 226 L 370 300"/>
+    <path d="M 500 226 L 500 300"/>
+    <path d="M 630 226 L 630 300"/>
+    <path d="M 760 226 L 760 300"/>
+    <path d="M 890 226 L 890 300"/>
+  </g>
+  <!-- Sipariş servisinin saga okları -->
+  <g stroke="var(--da-accent, #f59e0b)" stroke-width="1.4" fill="none" stroke-dasharray="4 3" marker-end="url(#arrow-a)">
+    <path d="M 430 190 L 440 190"/>
+    <path d="M 430 205 C 500 240, 540 240, 570 212"/>
+  </g>
+  <text x="505" y="250" text-anchor="middle" font-size="9.5" fill="var(--da-accent, #f59e0b)">saga: rezerve → ödeme → onay</text>
+
+  <!-- Veri depoları -->
+  <g fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)" stroke-width="1.5">
+    <rect x="50" y="300" width="120" height="62" rx="10"/>
+    <rect x="180" y="300" width="120" height="62" rx="10"/>
+    <rect x="310" y="300" width="120" height="62" rx="10"/>
+    <rect x="440" y="300" width="120" height="62" rx="10"/>
+    <rect x="570" y="300" width="120" height="62" rx="10"/>
+    <rect x="700" y="300" width="120" height="62" rx="10"/>
+    <rect x="830" y="300" width="120" height="62" rx="10"/>
+  </g>
+  <g font-size="12" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="110" y="323">Document DB</text>
+    <text x="240" y="323">DynamoDB</text>
+    <text x="370" y="323">PostgreSQL</text>
+    <text x="500" y="323">PostgreSQL</text>
+    <text x="630" y="323">PSP (dış)</text>
+    <text x="760" y="323">Elasticsearch</text>
+    <text x="890" y="323">KV deposu</text>
+  </g>
+  <g font-size="9.5" fill="var(--da-muted, #64748b)" text-anchor="middle">
+    <text x="110" y="340">+ Redis + CDN cache</text>
+    <text x="240" y="340">AP · birleştirme</text>
+    <text x="370" y="340">shard: user_id</text>
+    <text x="500" y="340">güçlü tutarlılık</text>
+    <text x="630" y="340">tokenize kart</text>
+    <text x="760" y="340">CDC ile beslenir</text>
+    <text x="890" y="340">recs:{productId}</text>
+  </g>
+  <g font-size="9.5" fill="var(--da-muted, #64748b)" text-anchor="middle">
+    <text x="110" y="354">eventual</text>
+    <text x="240" y="354">eventual</text>
+    <text x="370" y="354">strong + outbox</text>
+    <text x="500" y="354">strong</text>
+    <text x="630" y="354">idempotency key</text>
+    <text x="760" y="354">eventual</text>
+    <text x="890" y="354">eventual</text>
+  </g>
+
+  <!-- Kafka omurgası -->
+  <rect x="50" y="430" width="900" height="44" rx="10" fill="var(--da-accent, #f59e0b)" opacity="0.12" stroke="var(--da-accent, #f59e0b)" stroke-width="1.6"/>
+  <text x="500" y="457" text-anchor="middle" font-size="13" font-weight="600" fill="var(--da-fg, #0f172a)">Kafka — order-events · catalog-changes · clickstream</text>
+
+  <!-- Depolardan Kafka'ya (outbox/CDC) -->
+  <g stroke="var(--da-accent, #f59e0b)" stroke-width="1.3" fill="none" stroke-dasharray="4 3" marker-end="url(#arrow-a)">
+    <path d="M 110 362 L 110 430"/>
+    <path d="M 370 362 L 370 430"/>
+  </g>
+  <text x="128" y="400" font-size="9.5" fill="var(--da-accent, #f59e0b)">CDC</text>
+  <text x="388" y="400" font-size="9.5" fill="var(--da-accent, #f59e0b)">outbox</text>
+  <!-- Kafka'dan tüketicilere -->
+  <g stroke="var(--da-accent, #f59e0b)" stroke-width="1.3" fill="none" marker-end="url(#arrow-a)">
+    <path d="M 760 430 L 760 362"/>
+    <path d="M 890 430 L 890 362"/>
+    <path d="M 200 474 L 200 500"/>
+    <path d="M 420 474 L 420 500"/>
+    <path d="M 640 474 L 640 500"/>
+  </g>
+  <text x="778" y="400" font-size="9.5" fill="var(--da-accent, #f59e0b)">indeksle</text>
+  <text x="908" y="400" font-size="9.5" fill="var(--da-accent, #f59e0b)">eğit</text>
+
+  <!-- Asenkron tüketiciler -->
+  <g fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)" stroke-width="1.3">
+    <rect x="130" y="500" width="140" height="40" rx="8"/>
+    <rect x="350" y="500" width="140" height="40" rx="8"/>
+    <rect x="570" y="500" width="140" height="40" rx="8"/>
+  </g>
+  <g font-size="11.5" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="200" y="524">E-posta / bildirim</text>
+    <text x="420" y="524">Depo (WMS)</text>
+    <text x="640" y="524">Analitik / fraud</text>
+  </g>
+</svg>

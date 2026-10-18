@@ -1,0 +1,110 @@
+{
+  "id": "d-05-read-write-scaling-quiz",
+  "title": { "tr": "Okuma/Yazma Ölçekleme Quiz", "en": "Read/Write Scaling Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Kullanıcı profilini güncelledikten hemen sonra sayfayı yenileyince eski değeri görüyor. En olası neden nedir?",
+        "en": "Right after updating their profile, a user refreshes the page and sees the old value. What is the most likely cause?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Yazma, connection pool kuyruğunda zaman aşımına uğramış ve birincile hiç ulaşmamıştır", "en": "The write timed out in the connection pool queue and never reached the primary" } },
+        { "id": "b", "text": { "tr": "Birincil aynı satırda deadlock tespit etmiş ve kullanıcının işlemini sessizce geri almıştır", "en": "The primary detected a deadlock on that row and silently rolled the user's transaction back" } },
+        { "id": "c", "text": { "tr": "Senkron replika onay vermediği için commit askıda kalmış, eski sürüm okunmuştur", "en": "The commit was left hanging because the synchronous replica did not acknowledge, so the old version was read" } },
+        { "id": "d", "text": { "tr": "Okuma, WAL'ı henüz uygulamamış asenkron bir read replica'dan yapılmıştır", "en": "The read was served by an asynchronous read replica that had not yet replayed the WAL" } }
+      ],
+      "correct": ["d"],
+      "explanation": {
+        "tr": "Bu klasik replication lag / read-your-writes ihlalidir: yazma birincile gitti ve başarılı oldu, okuma ise geride kalan replikadan geldi. Çözüm yazma sonrası birincile yapışma ya da LSN bekleme. Havuz zaman aşımı ve deadlock iptali kullanıcıya hata döndürür, sessizce eski değer göstermez; senkron replikada commit askıdaysa yazma zaten 'başarılı' dönmemiştir.",
+        "en": "This is the classic replication lag / read-your-writes violation: the write went to the primary and succeeded, the read came from a lagging replica. The fix is sticking to the primary after a write or waiting for the LSN. A pool timeout or a deadlock abort returns an error to the user instead of silently showing an old value; with a synchronous replica, a hanging commit means the write never reported success in the first place."
+      },
+      "difficulty": "easy",
+      "concepts": ["replication-lag", "read-your-writes"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "8 çekirdekli, SSD'li bir PostgreSQL sunucusu için başlangıç havuz boyutu olarak hangisi önerilir?",
+        "en": "Which starting pool size is recommended for an 8-core PostgreSQL server with SSD storage?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Yaklaşık 17–20 bağlantı", "en": "Around 17–20 connections" } },
+        { "id": "b", "text": { "tr": "Pod sayısı × 20 (örneğin 500 pod için 10.000)", "en": "Pod count × 20 (e.g. 10,000 for 500 pods)" } },
+        { "id": "c", "text": { "tr": "max_connections ne kadar izin veriyorsa o kadar", "en": "As many as max_connections allows" } },
+        { "id": "d", "text": { "tr": "Eşzamanlı kullanıcı sayısı kadar", "en": "As many as there are concurrent users" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "Formül (çekirdek × 2) + etkin disk sayısı ≈ (8 × 2) + 1 = 17. Daha fazla bağlantı aynı CPU için kilit çekişmesi ve bağlam değiştirme demektir; istekler havuz kuyruğunda sırayla bekler ve toplam verim artar. Binlerce bağlantı veritabanını sorgu çalıştırmadan tüketir.",
+        "en": "The formula (cores × 2) + effective spindles ≈ (8 × 2) + 1 = 17. More connections mean lock contention and context switching over the same CPUs; requests queue in the pool and total throughput rises. Thousands of connections exhaust the database before running a single query."
+      },
+      "difficulty": "medium",
+      "concepts": ["pool-sizing", "connection-pooling"]
+    },
+    {
+      "id": "q3",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Bir e-ticaret sisteminde orders tablosu için shard key seçiyorsunuz. Hangi seçimler SORUNLUDUR? (Birden fazla seçin)",
+        "en": "You are choosing a shard key for the orders table in an e-commerce system. Which choices are PROBLEMATIC? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "created_at (sipariş zamanı)", "en": "created_at (order timestamp)" } },
+        { "id": "b", "text": { "tr": "country_code (ülke kodu, 5 değer)", "en": "country_code (5 distinct values)" } },
+        { "id": "c", "text": { "tr": "user_id (sipariş veren kullanıcı)", "en": "user_id (the ordering user)" } },
+        { "id": "d", "text": { "tr": "order_id (hash ile)", "en": "order_id (hashed)" } }
+      ],
+      "correct": ["a", "b"],
+      "explanation": {
+        "tr": "created_at monoton artar: tüm yeni siparişler aynı shard'a yazılır (sıcak nokta). country_code düşük kardinalitelidir ve dağılımı bozuktur. user_id hem düzgün dağılır hem 'siparişlerim' sorgusunu tek shard'a düşürür. Hash'li order_id düzgün dağılır; yalnızca kullanıcı bazlı sorgularda scatter-gather gerektirir, bu bir ödünleşimdir ama sıcak nokta yaratmaz.",
+        "en": "created_at increases monotonically: all new orders hit the same shard (hot spot). country_code has low cardinality and a skewed distribution. user_id distributes evenly and keeps the 'my orders' query on one shard. Hashed order_id distributes evenly; it only forces scatter-gather for per-user queries, which is a trade-off but not a hot spot."
+      },
+      "difficulty": "medium",
+      "concepts": ["shard-key", "hot-shard"]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Read replica eklemek hem okuma hem de yazma kapasitesini artırır.",
+        "en": "Adding read replicas increases both read and write capacity."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "Yanlış. Replikalar yalnızca okumayı ölçekler; tüm yazmalar tek birincile gitmeye devam eder ve her replika aynı yazmaları yeniden uygulamak zorundadır. Yazma kapasitesini artırmanın yolu daha güçlü birincil (dikey) ya da sharding'dir (yatay).",
+        "en": "False. Replicas scale reads only; every write still goes to the single primary and each replica must replay the same writes. Write capacity grows through a bigger primary (vertical) or sharding (horizontal)."
+      },
+      "difficulty": "easy",
+      "concepts": ["read-replica", "sharding"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "4 shard'lı bir sistemde shard = hash(key) mod 4 kullanıyorsunuz. Beşinci shard eklendiğinde verinin yaklaşık yüzde kaçı taşınır ve consistent hashing bunu nasıl değiştirir?",
+        "en": "A 4-shard system uses shard = hash(key) mod 4. When a fifth shard is added, roughly what fraction of data moves, and how does consistent hashing change that?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "~%20 taşınır; consistent hashing bunu %0'a indirir", "en": "~20% moves; consistent hashing reduces it to 0%" } },
+        { "id": "b", "text": { "tr": "~%80 taşınır; consistent hashing bunu ~%20'ye indirir", "en": "~80% moves; consistent hashing reduces it to ~20%" } },
+        { "id": "c", "text": { "tr": "~%50 taşınır; consistent hashing fark yaratmaz", "en": "~50% moves; consistent hashing makes no difference" } },
+        { "id": "d", "text": { "tr": "Hiç veri taşınmaz; yalnızca yeni veri 5. shard'a gider", "en": "No data moves; only new data goes to shard 5" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "mod N'de N değişince anahtarların çoğu (yaklaşık 1 − 1/N, burada ~%80) farklı shard'a düşer ve taşınmalıdır. Consistent hashing'de yeni düğüm halkada yalnızca komşusunun bir kısmını devralır: taşınan oran yaklaşık 1/(N+1) = %20'dir. Sıfır taşıma ancak tüm yeni veriyi ayrı tutan range benzeri bir şemada olur ve o da sıcak nokta yaratır.",
+        "en": "With mod N, changing N sends most keys (about 1 − 1/N, here ~80%) to a different shard, so they must move. With consistent hashing the new node takes over only part of its neighbor's range: about 1/(N+1) = 20% moves. Zero movement would require a range-like scheme that isolates new data, which creates a hot spot."
+      },
+      "difficulty": "hard",
+      "concepts": ["consistent-hashing", "resharding"]
+    }
+  ]
+}

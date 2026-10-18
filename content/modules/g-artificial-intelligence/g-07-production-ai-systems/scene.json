@@ -1,0 +1,204 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "g-07-production-ai-systems-recommender",
+  "title": { "tr": "100 ms'de Öneri: Aday Üretimi → Sıralama", "en": "Recommendations in 100 ms: Candidates → Ranking" },
+  "summary": {
+    "tr": "Tek bir ana sayfa isteği için öneri servisinin ANN ile aday üretmesi, özellikleri toplu getirmesi, sıralaması, yeniden sıralaması ve 70 ms'de yanıt dönmesi; tıklamanın gerçek zamanlı özellikleri güncellemesi.",
+    "en": "For one home page request the recommendation service generates candidates with ANN, fetches features in batch, ranks, re-ranks and responds in 70 ms; a click updates real-time features."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda tarayıcı, ortada öneri servisi. Sağ üstte aday üretimi (two-tower) ve ANN indeksi, ortada online feature store, sağ altta sıralama modeli ve yeniden sıralama servisi, sol altta olay akışı (Kafka). İstek 0 ms'de gelir; aday üretimi 15 ms'de 500 ürün döner; özellikler 10 ms'de toplu getirilir; sıralama 30 ms sürer; yeniden sıralama 5 ms; yanıt 70 ms'de döner. Kullanıcı tıklayınca olay Kafka'ya düşer ve feature store'daki oturum özellikleri saniyeler içinde güncellenir.",
+      "en": "Browser on the left, recommendation service in the middle. Candidate generation (two-tower) and the ANN index at the top right, the online feature store in the centre, the ranking model and re-ranking service at the bottom right, the event stream (Kafka) at the bottom left. The request arrives at 0 ms; candidate generation returns 500 items at 15 ms; features are batch-fetched in 10 ms; ranking takes 30 ms; re-ranking 5 ms; the response returns at 70 ms. When the user clicks, the event lands in Kafka and session features in the feature store update within seconds."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "browser", "kind": "browser", "label": { "tr": "Ana sayfa", "en": "Home page" }, "sublabel": { "tr": "öneri widget'ı", "en": "recommendation widget" }, "x": 100, "y": 300, "w": 120, "h": 76 },
+    { "id": "rec", "kind": "service", "label": { "tr": "Öneri servisi", "en": "Recommendation service" }, "sublabel": { "tr": "bütçe: 100 ms", "en": "budget: 100 ms" }, "x": 330, "y": 300, "w": 150, "h": 84 },
+    { "id": "cg", "kind": "model", "label": { "tr": "Aday üretimi", "en": "Candidate generation" }, "sublabel": { "tr": "two-tower kullanıcı kulesi", "en": "two-tower user tower" }, "x": 570, "y": 110, "w": 160, "h": 80 },
+    { "id": "ann", "kind": "db", "label": { "tr": "ANN indeksi", "en": "ANN index" }, "sublabel": { "tr": "300M ürün vektörü", "en": "300M item vectors" }, "x": 830, "y": 110, "w": 140, "h": 80 },
+    { "id": "fs", "kind": "cache", "label": { "tr": "Online feature store", "en": "Online feature store" }, "sublabel": "Redis / DynamoDB", "x": 570, "y": 300, "w": 160, "h": 76 },
+    { "id": "ranker", "kind": "model", "label": { "tr": "Sıralama modeli", "en": "Ranking model" }, "sublabel": "GBDT · 400 özellik", "x": 570, "y": 480, "w": 160, "h": 80 },
+    { "id": "rerank", "kind": "service", "label": { "tr": "Yeniden sıralama", "en": "Re-ranking" }, "sublabel": { "tr": "çeşitlilik · stok · kurallar", "en": "diversity · stock · rules" }, "x": 830, "y": 480, "w": 150, "h": 80 },
+    { "id": "events", "kind": "queue", "label": { "tr": "Olay akışı", "en": "Event stream" }, "sublabel": "Kafka → Flink", "x": 330, "y": 530, "w": 140, "h": 64 }
+  ],
+  "edges": [
+    { "id": "br-rec", "from": "browser", "to": "rec", "kind": "request", "label": "GET /recs" },
+    { "id": "rec-cg", "from": "rec", "to": "cg", "kind": "request", "label": "user_id", "curvature": -0.1 },
+    { "id": "cg-ann", "from": "cg", "to": "ann", "kind": "request", "label": { "tr": "kullanıcı vektörü", "en": "user vector" } },
+    { "id": "rec-fs", "from": "rec", "to": "fs", "kind": "request", "label": { "tr": "500 × özellik", "en": "500 × features" } },
+    { "id": "rec-ranker", "from": "rec", "to": "ranker", "kind": "request", "curvature": 0.1 },
+    { "id": "ranker-rerank", "from": "ranker", "to": "rerank", "kind": "response", "label": { "tr": "500 skor", "en": "500 scores" } },
+    { "id": "rerank-rec", "from": "rerank", "to": "rec", "kind": "response", "label": "top-20", "curvature": 0.35 },
+    { "id": "br-events", "from": "browser", "to": "events", "kind": "event", "style": "dashed", "label": { "tr": "tıklama", "en": "click" }, "curvature": 0.2 },
+    { "id": "events-fs", "from": "events", "to": "fs", "kind": "data", "style": "dashed", "label": { "tr": "oturum özellikleri", "en": "session features" }, "curvature": 0.15 }
+  ],
+  "steps": [
+    {
+      "id": "request",
+      "title": { "tr": "t = 0 ms: istek", "en": "t = 0 ms: request" },
+      "narration": {
+        "tr": "Kullanıcı ana sayfayı açar. Sayfa p99'da 200 ms dönmek zorunda; öneri widget'ına 100 ms bütçe ayrılmıştır. Servis saati başlatır: bütçe biterse elindeki en iyi listeyi ya da fallback'i dönecek.",
+        "en": "The user opens the home page. The page must return within 200 ms at p99; the recommendation widget gets a 100 ms budget. The service starts its clock: if the budget runs out it will return its best list so far or a fallback."
+      },
+      "durationMs": 3000,
+      "inherit": false,
+      "highlight": { "nodes": ["browser", "rec"], "edges": ["br-rec"] },
+      "nodeStates": {
+        "browser": { "status": "active" },
+        "rec": { "status": "active", "badge": "0 ms", "progress": 0 }
+      },
+      "edgeStates": { "br-rec": { "status": "active" }, "br-events": { "status": "muted" }, "events-fs": { "status": "muted" } },
+      "packets": [
+        { "edge": "br-rec", "shape": "envelope", "label": "user 8812", "durationMs": 1000 }
+      ],
+      "annotations": [
+        { "id": "budget-note", "x": 330, "y": 200, "text": { "tr": "Deadline: 100 ms (sayfa SLO'sunun yarısı)", "en": "Deadline: 100 ms (half the page SLO)" }, "tone": "warning", "target": "rec" }
+      ]
+    },
+    {
+      "id": "candidates",
+      "title": { "tr": "t = 5 → 20 ms: aday üretimi", "en": "t = 5 → 20 ms: candidate generation" },
+      "narration": {
+        "tr": "Kullanıcı vektörü (gece hesaplanmış, önbellekte) ANN indeksine gönderilir; HNSW 300 milyon ürün vektörü arasında en yakın 300'ü ~12 ms'de bulur. Paralelde 'bunu alanlar şunu da aldı' tablosundan 200 aday daha gelir. Birleştir, tekilleştir, satın alınmışları çıkar: 500 aday.",
+        "en": "The user vector (computed nightly, cached) is sent to the ANN index; HNSW finds the nearest 300 among 300 million item vectors in ~12 ms. In parallel 200 more candidates come from the 'bought together' table. Merge, dedupe, drop already purchased: 500 candidates."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["rec", "cg", "ann"], "edges": ["rec-cg", "cg-ann"] },
+      "nodeStates": {
+        "rec": { "badge": "20 ms", "progress": 0.2 },
+        "cg": { "status": "busy", "badge": "500 aday" },
+        "ann": { "status": "busy", "badge": "12 ms" }
+      },
+      "edgeStates": { "br-rec": { "status": "idle" }, "rec-cg": { "status": "active" }, "cg-ann": { "status": "active" } },
+      "packets": [
+        { "edge": "rec-cg", "shape": "envelope", "durationMs": 700 },
+        { "edge": "cg-ann", "shape": "dot", "label": "[0.3, −0.1, …]", "startAt": 700, "durationMs": 800 },
+        { "edge": "cg-ann", "direction": "backward", "shape": "square", "label": "top-300", "startAt": 1600, "durationMs": 800 },
+        { "edge": "rec-cg", "direction": "backward", "shape": "square", "label": "500", "startAt": 2500, "durationMs": 700 }
+      ],
+      "annotations": [
+        { "id": "ann-note", "x": 700, "y": 210, "text": { "tr": "300M → 500: ucuz model, geniş huni ağzı", "en": "300M → 500: cheap model, wide funnel mouth" }, "tone": "info" }
+      ]
+    },
+    {
+      "id": "features",
+      "title": { "tr": "t = 20 → 30 ms: toplu özellik getirme", "en": "t = 20 → 30 ms: batch feature fetch" },
+      "narration": {
+        "tr": "500 aday için ürün özellikleri (CTR, puan, fiyat) ve kullanıcı–ürün çapraz özellikleri tek bir toplu MGET ile online store'dan çekilir: ~10 ms. Oturum özellikleri (son 10 dakikada bakılan kategoriler) Flink tarafından saniyeler önce güncellenmiştir. 500 ayrı çağrı yapılsaydı bütçe burada biterdi.",
+        "en": "Item features (CTR, rating, price) and user–item cross features for the 500 candidates are pulled from the online store in a single batch MGET: ~10 ms. Session features (categories viewed in the last 10 minutes) were updated by Flink seconds ago. 500 separate calls would have blown the budget right here."
+      },
+      "durationMs": 3500,
+      "highlight": { "nodes": ["rec", "fs"], "edges": ["rec-fs"] },
+      "nodeStates": {
+        "rec": { "badge": "30 ms", "progress": 0.3 },
+        "cg": { "status": "idle", "badge": "" }, "ann": { "status": "idle", "badge": "" },
+        "fs": { "status": "busy", "badge": "MGET ×1" }
+      },
+      "edgeStates": { "rec-cg": { "status": "idle" }, "cg-ann": { "status": "idle" }, "rec-fs": { "status": "active" } },
+      "packets": [
+        { "edge": "rec-fs", "shape": "envelope", "label": "500 id", "durationMs": 800 },
+        { "edge": "rec-fs", "direction": "backward", "shape": "square", "label": "500 × 400", "startAt": 1000, "durationMs": 800 }
+      ],
+      "annotations": [
+        { "id": "batch-note", "x": 570, "y": 400, "text": { "tr": "Tek toplu çağrı; eksik özellik → varsayılan değer", "en": "One batch call; missing feature → default value" }, "tone": "info", "target": "fs" }
+      ]
+    },
+    {
+      "id": "ranking",
+      "title": { "tr": "t = 30 → 60 ms: sıralama", "en": "t = 30 → 60 ms: ranking" },
+      "narration": {
+        "tr": "500 × 400'lük özellik matrisi sıralama modeline tek istekte gider; GBDT her aday için 'satın alma olasılığı × marj' skorunu ~25 ms'de üretir (toplu çıkarım, CPU). Konum yanlılığı özelliği çıkarımda sabit tutulur.",
+        "en": "The 500 × 400 feature matrix goes to the ranking model in a single request; the GBDT produces a 'purchase probability × margin' score for each candidate in ~25 ms (batched inference, CPU). The position-bias feature is held fixed at inference."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["rec", "ranker"], "edges": ["rec-ranker", "ranker-rerank"] },
+      "nodeStates": {
+        "rec": { "badge": "60 ms", "progress": 0.6 },
+        "fs": { "status": "idle", "badge": "" },
+        "ranker": { "status": "busy", "badge": "25 ms" }
+      },
+      "edgeStates": { "rec-fs": { "status": "idle" }, "rec-ranker": { "status": "active" }, "ranker-rerank": { "status": "active" } },
+      "packets": [
+        { "edge": "rec-ranker", "shape": "envelope", "label": "500 × 400", "durationMs": 900 },
+        { "edge": "ranker-rerank", "shape": "square", "label": { "tr": "skorlar", "en": "scores" }, "startAt": 2000, "durationMs": 900 }
+      ],
+      "annotations": [
+        { "id": "rank-note", "x": 570, "y": 560, "text": { "tr": "Zaman aşımı 30 ms → aday skoruyla devam (fallback)", "en": "Timeout 30 ms → continue with candidate score (fallback)" }, "tone": "warning", "target": "ranker" }
+      ]
+    },
+    {
+      "id": "rerank",
+      "title": { "tr": "t = 60 → 65 ms: yeniden sıralama", "en": "t = 60 → 65 ms: re-ranking" },
+      "narration": {
+        "tr": "İş katmanı: aynı kategoriden en fazla 3 ürün (çeşitlilik), stokta olmayanları çıkar, Prime teslimatı öne al, %5 keşif dilimi (yeni ürünlere şans). 500 → 20. Nedenler ('son baktıklarına benzer') açıklama için eklenir.",
+        "en": "The business layer: at most 3 items per category (diversity), drop out-of-stock, boost Prime delivery, a 5% exploration slice (a chance for new items). 500 → 20. Reasons ('similar to recently viewed') are attached for explanation."
+      },
+      "durationMs": 3500,
+      "highlight": { "nodes": ["rerank", "rec"], "edges": ["rerank-rec"] },
+      "nodeStates": {
+        "rec": { "badge": "65 ms", "progress": 0.65 },
+        "ranker": { "status": "idle", "badge": "" },
+        "rerank": { "status": "busy", "badge": "500 → 20" }
+      },
+      "edgeStates": { "rec-ranker": { "status": "idle" }, "ranker-rerank": { "status": "idle" }, "rerank-rec": { "status": "active" } },
+      "packets": [
+        { "edge": "rerank-rec", "shape": "square", "label": "top-20", "startAt": 800, "durationMs": 1000 }
+      ],
+      "annotations": [
+        { "id": "rerank-note", "x": 830, "y": 400, "text": { "tr": "Kurallar modelden ayrı: anında değiştirilebilir", "en": "Rules live outside the model: changeable instantly" }, "tone": "info", "target": "rerank" }
+      ]
+    },
+    {
+      "id": "response",
+      "title": { "tr": "t = 70 ms: yanıt", "en": "t = 70 ms: response" },
+      "narration": {
+        "tr": "20 öneri, skorları ve model sürümüyle birlikte döner; 30 ms yedek pay kaldı. Gösterim logu (hangi ürün, hangi konum, hangi skor, model v2) Kafka'ya yazılır — yarının eğitim verisi. Liste kullanıcı başına 5 dakika önbelleklenir; yeniden yükleme huniyi hiç çalıştırmaz.",
+        "en": "20 recommendations return with scores and model version; 30 ms of headroom left. The impression log (which item, which position, which score, model v2) is written to Kafka — tomorrow's training data. The list is cached per user for 5 minutes; a reload never runs the funnel."
+      },
+      "durationMs": 3500,
+      "highlight": { "nodes": ["rec", "browser"], "edges": ["br-rec"] },
+      "nodeStates": {
+        "rec": { "status": "success", "badge": "70 ms ✓", "progress": 0.7 },
+        "rerank": { "status": "idle", "badge": "" },
+        "browser": { "status": "success", "badge": "20 ürün" }
+      },
+      "edgeStates": { "rerank-rec": { "status": "idle" }, "br-rec": { "status": "active" } },
+      "packets": [
+        { "edge": "br-rec", "direction": "backward", "shape": "envelope", "label": "200 OK", "durationMs": 1000, "color": "success" }
+      ],
+      "annotations": [
+        { "id": "resp-note", "x": 215, "y": 200, "text": { "tr": "p50 70 ms · p99 95 ms · bütçe aşımı < %0.5", "en": "p50 70 ms · p99 95 ms · budget overrun < 0.5%" }, "tone": "success" }
+      ]
+    },
+    {
+      "id": "feedback",
+      "title": { "tr": "t + 3 s: tıklama → gerçek zamanlı özellik", "en": "t + 3 s: click → real-time feature" },
+      "narration": {
+        "tr": "Kullanıcı 4. ürüne tıklar. Olay Kafka'ya düşer; Flink işi 'son 10 dakikada bakılan kategoriler' ve 'oturum içi tıklama sayısı' özelliklerini günceller ve online store'a yazar. Bir sonraki sayfa isteği 2 saniye sonra bu niyeti görür. Aynı olay gece, sıralama modelinin eğitim setine etiket olarak girer.",
+        "en": "The user clicks the 4th item. The event lands in Kafka; the Flink job updates the 'categories viewed in the last 10 minutes' and 'in-session click count' features and writes them to the online store. The next page request 2 seconds later sees this intent. The same event becomes a label in the ranking model's training set overnight."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["browser", "events", "fs"], "edges": ["br-events", "events-fs"] },
+      "nodeStates": {
+        "rec": { "status": "idle", "badge": "" },
+        "browser": { "badge": "click #4" },
+        "events": { "status": "active", "badge": "+1" },
+        "fs": { "status": "active", "badge": "fresh" }
+      },
+      "edgeStates": { "br-rec": { "status": "idle" }, "br-events": { "status": "active" }, "events-fs": { "status": "active" } },
+      "packets": [
+        { "edge": "br-events", "shape": "diamond", "label": "click", "durationMs": 1200, "color": "accent" },
+        { "edge": "events-fs", "shape": "dot", "label": { "tr": "oturum: elektronik +1", "en": "session: electronics +1" }, "startAt": 1400, "durationMs": 1200, "color": "accent" }
+      ],
+      "annotations": [
+        { "id": "loop-note", "x": 450, "y": 450, "text": { "tr": "Batch (gün) + stream (saniye) + istek anı (ms)", "en": "Batch (day) + stream (seconds) + request time (ms)" }, "tone": "success" }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["recommendation-system", "two-tower", "ranking", "latency-budget"]
+}

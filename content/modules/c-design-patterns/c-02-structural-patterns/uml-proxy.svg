@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 330" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Proxy UML sınıf diyagramı</title>
+  <desc id="desc">ImageService arayüzünü hem gerçek S3ImageService hem de CachingImageProxy uygular. Proxy içinde gerçek servise bir referans ve bir cache tutar; getThumbnail çağrısını önce cache ile karşılar, yoksa gerçek servise iletir. İstemci yalnızca arayüzü bilir.</desc>
+  <defs>
+    <marker id="m-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+    <marker id="m-open" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M 1 1 L 9 5 L 1 9" fill="none" stroke="var(--da-fg, #0f172a)" stroke-width="1.4"/>
+    </marker>
+    <marker id="m-tri" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" orient="auto-start-reverse">
+      <path d="M 1 1 L 11 6 L 1 11 z" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.3"/>
+    </marker>
+    <marker id="m-dia" viewBox="0 0 14 10" refX="1" refY="5" markerWidth="14" markerHeight="10" orient="auto-start-reverse">
+      <path d="M 1 5 L 7 1 L 13 5 L 7 9 z" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.3"/>
+    </marker>
+    <marker id="m-diaf" viewBox="0 0 14 10" refX="1" refY="5" markerWidth="14" markerHeight="10" orient="auto-start-reverse">
+      <path d="M 1 5 L 7 1 L 13 5 L 7 9 z" fill="var(--da-fg, #0f172a)" stroke="var(--da-fg, #0f172a)" stroke-width="1.3"/>
+    </marker>
+    <marker id="m-primary" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-primary, #6366f1)"/>
+    </marker>
+    <marker id="m-danger" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-danger, #ef4444)"/>
+    </marker>
+    <marker id="m-success" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-success, #10b981)"/>
+    </marker>
+    <marker id="m-accent" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-accent, #f59e0b)"/>
+    </marker>
+  </defs>
+  <rect x="30" y="110" width="170" height="72" rx="4" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.4"/>
+  <text x="115" y="128" text-anchor="middle" font-size="12" font-weight="700"  fill="var(--da-fg, #0f172a)">GalleryController</text>
+  <line x1="30" y1="136" x2="200" y2="136" stroke="var(--da-fg, #0f172a)" stroke-width="1"/>
+  <text x="36" y="152" font-size="10.5" fill="var(--da-fg, #0f172a)">-images: ImageService</text>
+  <line x1="30" y1="159" x2="200" y2="159" stroke="var(--da-fg, #0f172a)" stroke-width="1"/>
+  <text x="36" y="175" font-size="10.5"  fill="var(--da-fg, #0f172a)">+show(id)</text>
+  <rect x="330" y="20" width="220" height="86" rx="4" fill="var(--da-surface, #ffffff)" stroke="var(--da-primary, #6366f1)" stroke-width="1.4"/>
+  <text x="440" y="34" text-anchor="middle" font-size="10" fill="var(--da-primary, #6366f1)">«interface»</text>
+  <text x="440" y="50" text-anchor="middle" font-size="12" font-weight="700"  fill="var(--da-fg, #0f172a)">ImageService</text>
+  <line x1="330" y1="60" x2="550" y2="60" stroke="var(--da-primary, #6366f1)" stroke-width="1"/>
+  <line x1="330" y1="83" x2="550" y2="83" stroke="var(--da-primary, #6366f1)" stroke-width="1"/>
+  <text x="336" y="99" font-size="10.5"  fill="var(--da-fg, #0f172a)">+getThumbnail(id): Promise&lt;Bytes&gt;</text>
+  <rect x="600" y="190" width="220" height="72" rx="4" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.4"/>
+  <text x="710" y="208" text-anchor="middle" font-size="12" font-weight="700"  fill="var(--da-fg, #0f172a)">S3ImageService</text>
+  <line x1="600" y1="216" x2="820" y2="216" stroke="var(--da-fg, #0f172a)" stroke-width="1"/>
+  <text x="606" y="232" font-size="10.5" fill="var(--da-fg, #0f172a)">-s3: S3Client</text>
+  <line x1="600" y1="239" x2="820" y2="239" stroke="var(--da-fg, #0f172a)" stroke-width="1"/>
+  <text x="606" y="255" font-size="10.5"  fill="var(--da-fg, #0f172a)">+getThumbnail(id)</text>
+  <rect x="300" y="190" width="230" height="87" rx="4" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.4"/>
+  <text x="415" y="208" text-anchor="middle" font-size="12" font-weight="700"  fill="var(--da-fg, #0f172a)">CachingImageProxy</text>
+  <line x1="300" y1="216" x2="530" y2="216" stroke="var(--da-fg, #0f172a)" stroke-width="1"/>
+  <text x="306" y="232" font-size="10.5" fill="var(--da-fg, #0f172a)">-real: ImageService</text>
+  <text x="306" y="247" font-size="10.5" fill="var(--da-fg, #0f172a)">-cache: LRU&lt;id, Bytes&gt;</text>
+  <line x1="300" y1="254" x2="530" y2="254" stroke="var(--da-fg, #0f172a)" stroke-width="1"/>
+  <text x="306" y="270" font-size="10.5"  fill="var(--da-fg, #0f172a)">+getThumbnail(id)</text>
+  <path d="M 200 146 L 260 150 L 260 60 L 330 63" stroke="var(--da-fg, #0f172a)" stroke-width="1.3" fill="none" marker-end="url(#m-open)"/>
+  <path d="M 415 190 L 440 106" stroke="var(--da-fg, #0f172a)" stroke-width="1.3" fill="none" stroke-dasharray="5 4" marker-end="url(#m-tri)"/>
+  <path d="M 600 226 L 710 60 L 550 63" stroke="var(--da-fg, #0f172a)" stroke-width="1.3" fill="none" stroke-dasharray="5 4" marker-end="url(#m-tri)"/>
+  <path d="M 530 233.5 L 600 226" stroke="var(--da-fg, #0f172a)" stroke-width="1.3" fill="none" marker-end="url(#m-open)"/>
+  <text x="565" y="224.75" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">real</text>
+  <path d="M 30 240 L 260 240 L 270 250 L 270 296 L 30 296 z" fill="var(--da-accent, #f59e0b)" fill-opacity="0.12" stroke="var(--da-accent, #f59e0b)" stroke-width="1"/>
+  <text x="38" y="256" font-size="10.5" fill="var(--da-fg, #0f172a)">Türleri: caching, virtual (tembel),</text>
+  <text x="38" y="270" font-size="10.5" fill="var(--da-fg, #0f172a)">protection (yetki), remote (RPC stub),</text>
+  <text x="38" y="284" font-size="10.5" fill="var(--da-fg, #0f172a)">logging/metrics. Hepsi aynı arayüz.</text>
+</svg>

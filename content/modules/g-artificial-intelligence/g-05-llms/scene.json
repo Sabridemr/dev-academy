@@ -1,0 +1,191 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "g-05-llms-rag",
+  "title": { "tr": "RAG Mimarisi: Sorudan Kaynaklı Yanıta", "en": "RAG Architecture: from Question to Cited Answer" },
+  "summary": {
+    "tr": "Dokümanlar çevrimdışı indekslenir; soru gömülür, vektör veritabanından en yakın parçalar çekilir, prompt kurulur ve LLM bağlama dayalı yanıt üretir.",
+    "en": "Documents are indexed offline; the question is embedded, the nearest chunks are fetched from the vector database, a prompt is assembled and the LLM answers grounded in context."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda kullanıcı, ortada RAG servisi; sağ üstte embedding modeli ve vektör veritabanı, sağ altta doküman deposu ve LLM. Önce dokümanlar parçalanıp embedding modelinden geçerek vektör DB'ye yazılır. Sonra kullanıcı sorusu servise gelir, embedding modeliyle vektöre çevrilir, vektör DB en benzer 4 parçayı döner, servis sistem talimatı + parçalar + sorudan bir prompt kurar, LLM kaynak numaralı yanıt üretir ve yanıt kullanıcıya akış hâlinde döner.",
+      "en": "User on the left, RAG service in the middle; embedding model and vector database at the top right, document store and LLM at the bottom right. First documents are chunked, embedded and written to the vector DB. Then the user's question reaches the service, is turned into a vector by the embedding model, the vector DB returns the 4 most similar chunks, the service builds a prompt from system instruction + chunks + question, the LLM produces an answer with source numbers and it streams back to the user."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "user", "kind": "user", "label": { "tr": "Kullanıcı", "en": "User" }, "x": 100, "y": 300 },
+    { "id": "orch", "kind": "service", "label": { "tr": "RAG servisi", "en": "RAG service" }, "sublabel": { "tr": "orkestratör", "en": "orchestrator" }, "x": 350, "y": 300, "w": 150, "h": 84 },
+    { "id": "emb", "kind": "model", "label": { "tr": "Embedding modeli", "en": "Embedding model" }, "sublabel": "1536 boyut", "x": 600, "y": 110, "w": 150, "h": 76 },
+    { "id": "vdb", "kind": "db", "label": { "tr": "Vektör DB", "en": "Vector DB" }, "sublabel": "HNSW indeksi", "x": 860, "y": 110, "w": 130, "h": 76 },
+    { "id": "docs", "kind": "storage", "label": { "tr": "Dokümanlar", "en": "Documents" }, "sublabel": "PDF · wiki · ticket", "x": 600, "y": 500, "w": 140, "h": 76 },
+    { "id": "llm", "kind": "model", "label": "LLM", "sublabel": { "tr": "bağlam: 128k token", "en": "context: 128k tokens" }, "x": 860, "y": 500, "w": 130, "h": 76 }
+  ],
+  "edges": [
+    { "id": "u-orch", "from": "user", "to": "orch", "kind": "request", "curvature": -0.2, "label": { "tr": "soru", "en": "question" } },
+    { "id": "orch-u", "from": "orch", "to": "user", "kind": "response", "curvature": -0.2, "label": { "tr": "yanıt", "en": "answer" } },
+    { "id": "docs-emb", "from": "docs", "to": "emb", "kind": "data", "style": "dashed", "label": { "tr": "chunk'lar", "en": "chunks" } },
+    { "id": "emb-vdb", "from": "emb", "to": "vdb", "kind": "data", "label": { "tr": "vektör", "en": "vector" } },
+    { "id": "orch-emb", "from": "orch", "to": "emb", "kind": "request", "curvature": -0.1 },
+    { "id": "vdb-orch", "from": "vdb", "to": "orch", "kind": "response", "curvature": -0.25, "label": "top-k" },
+    { "id": "orch-llm", "from": "orch", "to": "llm", "kind": "request", "curvature": 0.1, "label": "prompt" },
+    { "id": "llm-orch", "from": "llm", "to": "orch", "kind": "response", "curvature": 0.35 }
+  ],
+  "steps": [
+    {
+      "id": "ingest",
+      "title": { "tr": "0. Çevrimdışı indeksleme", "en": "0. Offline indexing" },
+      "narration": {
+        "tr": "Dokümanlar ~400 tokenlık örtüşen parçalara bölünür; her parça embedding modelinden geçip 1536 boyutlu bir vektör olur ve metin + metadata ile birlikte vektör veritabanına yazılır. Bu adım dokümanlar değiştikçe tekrar çalışır.",
+        "en": "Documents are split into overlapping ~400-token chunks; each chunk passes through the embedding model, becomes a 1536-dimensional vector and is written to the vector database with its text and metadata. This step reruns whenever documents change."
+      },
+      "durationMs": 4000,
+      "inherit": false,
+      "highlight": { "nodes": ["docs", "emb", "vdb"], "edges": ["docs-emb", "emb-vdb"] },
+      "nodeStates": {
+        "docs": { "status": "active", "badge": "12 400 chunk" },
+        "emb": { "status": "busy" },
+        "vdb": { "status": "active", "badge": "12 400 vektör" }
+      },
+      "edgeStates": { "docs-emb": { "status": "active" }, "emb-vdb": { "status": "active" } },
+      "packets": [
+        { "edge": "docs-emb", "shape": "square", "durationMs": 900, "repeat": 3, "repeatGapMs": 200 },
+        { "edge": "emb-vdb", "shape": "dot", "startAt": 900, "durationMs": 700, "repeat": 3, "repeatGapMs": 400 }
+      ],
+      "annotations": [
+        { "id": "ingest-note", "x": 730, "y": 300, "text": { "tr": "Batch iş: gece ya da doküman değişince", "en": "Batch job: nightly or on document change" }, "tone": "info" }
+      ]
+    },
+    {
+      "id": "question",
+      "title": { "tr": "1. Soru gelir", "en": "1. The question arrives" },
+      "narration": {
+        "tr": "Kullanıcı sorar: 'İade süresi kaç gün?' Soru doğrudan LLM'e gitmez; önce RAG servisine gelir. LLM'in eğitim verisinde şirketin iade politikası yoktur — olsa bile güncel olmayabilir.",
+        "en": "The user asks: 'How many days is the return window?' The question does not go straight to the LLM; it reaches the RAG service first. The LLM's training data does not contain the company's return policy — and if it did, it might be stale."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["user", "orch"], "edges": ["u-orch"] },
+      "nodeStates": {
+        "docs": { "status": "idle", "badge": "" }, "emb": { "status": "idle" }, "vdb": { "status": "idle", "badge": "" },
+        "user": { "status": "active" }, "orch": { "status": "active" }
+      },
+      "edgeStates": { "docs-emb": { "status": "idle" }, "emb-vdb": { "status": "idle" }, "u-orch": { "status": "active" } },
+      "packets": [
+        { "edge": "u-orch", "shape": "envelope", "label": { "tr": "İade süresi?", "en": "Return window?" }, "durationMs": 1200 }
+      ],
+      "annotations": [
+        { "id": "q-note", "x": 225, "y": 420, "text": { "tr": "LLM bunu bilmiyor → halüsinasyon riski", "en": "The LLM doesn't know this → hallucination risk" }, "tone": "warning" }
+      ]
+    },
+    {
+      "id": "embed-query",
+      "title": { "tr": "2. Soruyu göm", "en": "2. Embed the question" },
+      "narration": {
+        "tr": "Soru, dokümanlarla AYNI embedding modelinden geçirilir (farklı model → farklı uzay → anlamsız benzerlik). Çıktı 1536 sayılık bir vektördür; ~20 ms.",
+        "en": "The question goes through the SAME embedding model as the documents (different model → different space → meaningless similarity). The output is a 1536-number vector; ~20 ms."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["orch", "emb"], "edges": ["orch-emb"] },
+      "nodeStates": { "emb": { "status": "busy", "badge": "20 ms" } },
+      "edgeStates": { "u-orch": { "status": "idle" }, "orch-emb": { "status": "active" } },
+      "packets": [
+        { "edge": "orch-emb", "shape": "envelope", "durationMs": 900 },
+        { "edge": "orch-emb", "direction": "backward", "shape": "dot", "label": "[0.12, −0.48, …]", "startAt": 1100, "durationMs": 900 }
+      ],
+      "annotations": [
+        { "id": "same-model", "x": 600, "y": 210, "text": { "tr": "Aynı model, aynı uzay", "en": "Same model, same space" }, "tone": "info", "target": "emb" }
+      ]
+    },
+    {
+      "id": "search",
+      "title": { "tr": "3. Benzerlik araması", "en": "3. Similarity search" },
+      "narration": {
+        "tr": "Vektör DB, HNSW indeksiyle 12 400 vektör arasında en yakın 4 parçayı yaklaşık en yakın komşu araması ile ~10 ms'de bulur: 'İade Politikası §2' (0.91), 'SSS: iade' (0.87)... Üretimde buna BM25 anahtar kelime araması ve bir re-ranker eklenir.",
+        "en": "Using its HNSW index the vector DB finds the 4 nearest chunks among 12 400 vectors with approximate nearest-neighbour search in ~10 ms: 'Return Policy §2' (0.91), 'FAQ: returns' (0.87)... In production BM25 keyword search and a re-ranker are added."
+      },
+      "durationMs": 3800,
+      "highlight": { "nodes": ["vdb", "orch"], "edges": ["emb-vdb", "vdb-orch"] },
+      "nodeStates": {
+        "emb": { "status": "idle", "badge": "" },
+        "vdb": { "status": "busy", "badge": "top-4 · 10 ms" }
+      },
+      "edgeStates": { "orch-emb": { "status": "idle" }, "emb-vdb": { "status": "active" }, "vdb-orch": { "status": "active" } },
+      "packets": [
+        { "edge": "emb-vdb", "shape": "dot", "label": { "tr": "sorgu vektörü", "en": "query vector" }, "durationMs": 800 },
+        { "edge": "vdb-orch", "shape": "square", "label": "0.91", "startAt": 1000, "durationMs": 900 },
+        { "edge": "vdb-orch", "shape": "square", "label": "0.87", "startAt": 1250, "durationMs": 900 },
+        { "edge": "vdb-orch", "shape": "square", "label": "0.82", "startAt": 1500, "durationMs": 900 },
+        { "edge": "vdb-orch", "shape": "square", "label": "0.79", "startAt": 1750, "durationMs": 900 }
+      ],
+      "annotations": [
+        { "id": "ann-note", "x": 860, "y": 210, "text": { "tr": "Kosinüs benzerliği, yaklaşık (ANN) arama", "en": "Cosine similarity, approximate (ANN) search" }, "tone": "info", "target": "vdb" }
+      ]
+    },
+    {
+      "id": "prompt",
+      "title": { "tr": "4. Prompt'u kur", "en": "4. Assemble the prompt" },
+      "narration": {
+        "tr": "Servis prompt'u birleştirir: sistem talimatı ('yalnızca bağlama dayan, yoksa bilmiyorum de, [n] ile kaynak göster') + 4 parça + soru. Toplam ~1 800 token; bağlam penceresine rahat sığar. Parçalar veri olarak ayrı bölümde — prompt injection'a karşı ilk savunma.",
+        "en": "The service assembles the prompt: system instruction ('rely only on context, say you don't know otherwise, cite with [n]') + 4 chunks + question. About 1 800 tokens in total; fits the context window easily. Chunks go in a separate data section — the first defence against prompt injection."
+      },
+      "durationMs": 3500,
+      "highlight": { "nodes": ["orch"], "edges": [] },
+      "nodeStates": {
+        "vdb": { "status": "idle", "badge": "" },
+        "orch": { "status": "busy", "badge": "1 800 token" }
+      },
+      "edgeStates": { "emb-vdb": { "status": "idle" }, "vdb-orch": { "status": "idle" } },
+      "annotations": [
+        { "id": "prompt-note", "x": 350, "y": 430, "text": { "tr": "sistem + [1..4] bağlam + soru", "en": "system + [1..4] context + question" }, "tone": "info", "target": "orch" }
+      ]
+    },
+    {
+      "id": "generate",
+      "title": { "tr": "5. LLM üretir", "en": "5. The LLM generates" },
+      "narration": {
+        "tr": "LLM, sıcaklık 0 ile, bağlamdaki parçalara dayanarak token token üretir: 'İade süresi teslimattan itibaren 30 gündür [1]; açılmış elektronik ürünlerde 14 gün [2].' Üretim ~1.5 s sürer; tokenlar akış hâlinde döner.",
+        "en": "At temperature 0 the LLM generates token by token grounded in the chunks: 'The return window is 30 days from delivery [1]; 14 days for opened electronics [2].' Generation takes ~1.5 s; tokens stream back."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["orch", "llm"], "edges": ["orch-llm", "llm-orch"] },
+      "nodeStates": {
+        "orch": { "status": "active", "badge": "" },
+        "llm": { "status": "busy", "badge": "TTFT 300 ms", "progress": 0.6 }
+      },
+      "edgeStates": { "orch-llm": { "status": "active" }, "llm-orch": { "status": "active" } },
+      "packets": [
+        { "edge": "orch-llm", "shape": "envelope", "label": "prompt", "durationMs": 900 },
+        { "edge": "llm-orch", "shape": "dot", "label": "token", "startAt": 1200, "durationMs": 700, "repeat": 4, "repeatGapMs": 100 }
+      ],
+      "annotations": [
+        { "id": "gen-note", "x": 860, "y": 400, "text": { "tr": "Kaynaklı yanıt: [1], [2]", "en": "Cited answer: [1], [2]" }, "tone": "success", "target": "llm" }
+      ]
+    },
+    {
+      "id": "answer",
+      "title": { "tr": "6. Yanıt ve kaynaklar", "en": "6. Answer and sources" },
+      "narration": {
+        "tr": "Kullanıcı yanıtı ve tıklanabilir kaynakları görür. Toplam gecikme ≈ 20 + 10 + 1 500 ms — LLM baskın maliyettir. Aynı soru tekrar gelirse anlamsal önbellek tüm akışı atlayabilir; soru-yanıt çifti ve kaynaklar değerlendirme için loglanır.",
+        "en": "The user sees the answer with clickable sources. Total latency ≈ 20 + 10 + 1 500 ms — the LLM dominates. If the same question returns, a semantic cache can skip the whole flow; the question-answer pair and sources are logged for evaluation."
+      },
+      "durationMs": 3500,
+      "highlight": { "nodes": ["user", "orch"], "edges": ["orch-u"] },
+      "nodeStates": {
+        "llm": { "status": "success", "badge": "", "progress": 1 },
+        "user": { "status": "success", "badge": "✓" }
+      },
+      "edgeStates": { "orch-llm": { "status": "idle" }, "llm-orch": { "status": "idle" }, "orch-u": { "status": "active" } },
+      "packets": [
+        { "edge": "orch-u", "shape": "envelope", "label": { "tr": "30 gün [1]", "en": "30 days [1]" }, "durationMs": 1200, "color": "success" }
+      ],
+      "annotations": [
+        { "id": "latency-note", "x": 225, "y": 420, "text": { "tr": "≈ 1.5 s uçtan uca; retrieval %2, LLM %98", "en": "≈ 1.5 s end to end; retrieval 2%, LLM 98%" }, "tone": "success" },
+        { "id": "eval-note", "x": 600, "y": 300, "text": { "tr": "Ölç: recall@k (retrieval) + faithfulness (generation)", "en": "Measure: recall@k (retrieval) + faithfulness (generation)" }, "tone": "info" }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["llm", "rag", "vector-database", "embedding"]
+}

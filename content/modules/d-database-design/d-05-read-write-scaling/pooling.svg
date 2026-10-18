@@ -1,0 +1,97 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 400" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">PgBouncer ile bağlantı havuzlama ve havuz boyutu formülü</title>
+  <desc id="desc">Solda yüzlerce uygulama bağlantısı PgBouncer'a gelir. PgBouncer transaction pooling modunda bunları az sayıda gerçek PostgreSQL bağlantısına çoklar; bekleyen istekler havuz kuyruğunda durur. Sağda havuz boyutu formülü: çekirdek sayısı çarpı iki artı etkin disk sayısı; 8 çekirdek ve SSD için yaklaşık 17–20.</desc>
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+  </defs>
+
+  <!-- İstemci bağlantıları -->
+  <text x="100" y="30" text-anchor="middle" font-size="13" font-weight="600" fill="var(--da-fg, #0f172a)">İstemci bağlantıları</text>
+  <text x="100" y="46" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">300 pod × 10 = 3.000 (çoğu boşta)</text>
+  <g fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.2">
+    <rect x="40" y="64" width="120" height="26" rx="6"/>
+    <rect x="40" y="98" width="120" height="26" rx="6"/>
+    <rect x="40" y="132" width="120" height="26" rx="6"/>
+    <rect x="40" y="166" width="120" height="26" rx="6"/>
+    <rect x="40" y="200" width="120" height="26" rx="6"/>
+    <rect x="40" y="234" width="120" height="26" rx="6"/>
+  </g>
+  <g font-size="10" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="100" y="81">pod-1 conn #1</text>
+    <text x="100" y="115">pod-1 conn #2</text>
+    <text x="100" y="149">pod-2 conn #1</text>
+    <text x="100" y="183">pod-2 conn #2</text>
+    <text x="100" y="217">…</text>
+    <text x="100" y="251">pod-300 conn #10</text>
+  </g>
+  <g font-size="9" text-anchor="end">
+    <text x="156" y="81" fill="var(--da-success, #10b981)">●</text>
+    <text x="156" y="115" fill="var(--da-muted, #64748b)">○</text>
+    <text x="156" y="149" fill="var(--da-muted, #64748b)">○</text>
+    <text x="156" y="183" fill="var(--da-success, #10b981)">●</text>
+    <text x="156" y="251" fill="var(--da-muted, #64748b)">○</text>
+  </g>
+  <text x="100" y="282" text-anchor="middle" font-size="9" fill="var(--da-muted, #64748b)">● transaction içinde   ○ boşta</text>
+
+  <!-- Oklar istemci → pgbouncer -->
+  <g stroke="var(--da-muted, #64748b)" stroke-width="1.2" fill="none" marker-end="url(#arr)">
+    <path d="M 160 77 L 250 140"/>
+    <path d="M 160 111 L 250 150"/>
+    <path d="M 160 145 L 250 160"/>
+    <path d="M 160 179 L 250 170"/>
+    <path d="M 160 213 L 250 180"/>
+    <path d="M 160 247 L 250 190"/>
+  </g>
+
+  <!-- PgBouncer -->
+  <rect x="252" y="90" width="190" height="160" rx="12" fill="var(--da-accent, #f59e0b)" opacity="0.14" stroke="var(--da-accent, #f59e0b)" stroke-width="1.8"/>
+  <text x="347" y="114" text-anchor="middle" font-size="13" font-weight="600" fill="var(--da-fg, #0f172a)">PgBouncer</text>
+  <text x="347" y="130" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">pool_mode = transaction</text>
+  <rect x="268" y="142" width="158" height="40" rx="6" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+  <text x="347" y="158" text-anchor="middle" font-size="10" fill="var(--da-fg, #0f172a)">bekleme kuyruğu</text>
+  <text x="347" y="173" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">pool wait: p99 2 ms ← izle!</text>
+  <rect x="268" y="192" width="158" height="44" rx="6" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+  <text x="347" y="208" text-anchor="middle" font-size="10" fill="var(--da-fg, #0f172a)">default_pool_size = 20</text>
+  <text x="347" y="224" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">bir transaction = bir sunucu bağlantısı</text>
+
+  <!-- Oklar pgbouncer → postgres -->
+  <g stroke="var(--da-primary, #6366f1)" stroke-width="1.8" fill="none" marker-end="url(#arr)">
+    <path d="M 442 150 L 530 150"/>
+    <path d="M 442 170 L 530 170"/>
+    <path d="M 442 190 L 530 190"/>
+  </g>
+  <text x="486" y="138" text-anchor="middle" font-size="10" fill="var(--da-primary, #6366f1)">20 gerçek bağlantı</text>
+
+  <!-- PostgreSQL -->
+  <rect x="532" y="90" width="150" height="160" rx="12" fill="var(--da-primary, #6366f1)" opacity="0.12" stroke="var(--da-primary, #6366f1)" stroke-width="1.8"/>
+  <text x="607" y="114" text-anchor="middle" font-size="13" font-weight="600" fill="var(--da-fg, #0f172a)">PostgreSQL</text>
+  <text x="607" y="130" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">8 çekirdek · SSD</text>
+  <g font-size="10" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="607" y="158">bağlantı = süreç</text>
+    <text x="607" y="173">~5–10 MB / bağlantı</text>
+    <text x="607" y="196">max_connections = 100</text>
+    <text x="607" y="211">(20 havuz + yedek)</text>
+    <text x="607" y="234" fill="var(--da-muted, #64748b)">statement_timeout = 5s</text>
+  </g>
+
+  <!-- Formül -->
+  <rect x="710" y="90" width="170" height="160" rx="12" fill="var(--da-surface, #f8fafc)" stroke="var(--da-border, #cbd5e1)" stroke-dasharray="5 5"/>
+  <text x="795" y="114" text-anchor="middle" font-size="12" font-weight="600" fill="var(--da-fg, #0f172a)">Havuz boyutu</text>
+  <text x="795" y="142" text-anchor="middle" font-size="12" fill="var(--da-fg, #0f172a)" font-family="monospace">cores × 2</text>
+  <text x="795" y="160" text-anchor="middle" font-size="12" fill="var(--da-fg, #0f172a)" font-family="monospace">+ spindles</text>
+  <line x1="740" y1="170" x2="850" y2="170" stroke="var(--da-border, #cbd5e1)"/>
+  <text x="795" y="190" text-anchor="middle" font-size="11" fill="var(--da-fg, #0f172a)">(8 × 2) + 1 = 17</text>
+  <text x="795" y="208" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">SSD: spindle ≈ 1</text>
+  <text x="795" y="232" text-anchor="middle" font-size="10" fill="var(--da-success, #10b981)">az bağlantı = daha hızlı</text>
+
+  <!-- Alt: mod tablosu -->
+  <g font-size="11" fill="var(--da-fg, #0f172a)">
+    <text x="40" y="320" font-weight="600">Havuz modları:</text>
+    <text x="150" y="320">session — bağlantı istemci ayrılınca döner (çoklama yok)</text>
+    <text x="150" y="340">transaction — her COMMIT/ROLLBACK'te döner (SET, prepared statement, advisory lock oturumda kalmaz)</text>
+    <text x="150" y="360">statement — her ifadede döner (çok ifadeli transaction yasak)</text>
+  </g>
+  <text x="450" y="390" text-anchor="middle" font-size="11" fill="var(--da-muted, #64748b)">Tıkanıklık zinciri: yavaş sorgu → havuz dolu → istekler kuyrukta → uygulama timeout → LB pod'u düşürür. Önlem: statement_timeout + ayrı rapor havuzu.</text>
+</svg>

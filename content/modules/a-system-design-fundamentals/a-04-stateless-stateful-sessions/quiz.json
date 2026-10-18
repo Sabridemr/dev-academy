@@ -1,0 +1,110 @@
+{
+  "id": "a-04-stateless-stateful-sessions-quiz",
+  "title": { "tr": "Stateless Servisler ve Oturum Yönetimi Quiz", "en": "Stateless Services and Session Management Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "\"Stateless servis\" ifadesi için en doğru tanım hangisidir?",
+        "en": "Which is the most accurate definition of a \"stateless service\"?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Veritabanı ya da cache gibi hiçbir kalıcı depoya yazmayan; tüm işi yalnızca istek gövdesindeki verilerle yapan servis", "en": "A service that never writes to a persistent store such as a database or cache and does all its work only with the data in the request body" } },
+        { "id": "b", "text": { "tr": "Oturum verisini yalnızca okuyan, değiştirmeyen; bu yüzden yalnızca GET gibi güvenli HTTP metodlarını sunan servis", "en": "A service that only reads session data and never modifies it, and therefore exposes only safe HTTP methods such as GET" } },
+        { "id": "c", "text": { "tr": "İki istek arasında sunucu belleğinde durum tutmayan; gereken durumu istekten ya da paylaşımlı depodan alan servis", "en": "A service that keeps no state in server memory between requests; the state it needs comes with the request or from a shared store" } },
+        { "id": "d", "text": { "tr": "Durumu kendi belleğinde tutan ama load balancer'ın sticky session ile aynı kullanıcıyı hep ona yönlendirdiği servis", "en": "A service that keeps state in its own memory but to which the load balancer always routes the same user via sticky sessions" } }
+      ],
+      "correct": ["c"],
+      "explanation": {
+        "tr": "Stateless, 'durum yok' değil 'durum sunucuda değil' demektir. Durum ya istemcide (JWT) ya da paylaşımlı bir depoda (Redis, DB) yaşar; servis veritabanına yazabilir ve POST kabul edebilir, önemli olan iki istek arasında sunucu belleğine bağımlı olmamasıdır (a ve b yanlış). Sticky session ile aynı sunucuya yapıştırılan servis hâlâ stateful'dır: durum sunucu belleğindedir ve sunucu düşünce kaybolur (d yanlış).",
+        "en": "Stateless means 'state is not on the server', not 'no state'. State lives on the client (JWT) or in a shared store (Redis, DB); the service may write to a database and accept POSTs — what matters is not depending on server memory between requests (a and b are wrong). A service pinned to one server by sticky sessions is still stateful: the state sits in server memory and is lost when that server dies (d is wrong)."
+      },
+      "difficulty": "easy",
+      "concepts": ["stateless-service", "state-externalization"]
+    },
+    {
+      "id": "q2",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Sticky session'ın dezavantajları hangileridir? (Birden fazla seçin)",
+        "en": "Which are disadvantages of sticky sessions? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Yük dağılımı bozulur; bazı sunucular yoğun kullanıcılarla dolar", "en": "Load distribution degrades; some servers fill with heavy users" } },
+        { "id": "b", "text": { "tr": "Sunucu yeniden başlayınca üzerindeki oturumlar kaybolur", "en": "Sessions on a server are lost when it restarts" } },
+        { "id": "c", "text": { "tr": "Uygulamanın oturum katmanının baştan yazılmasını gerektirir", "en": "It requires the application's session layer to be rewritten" } },
+        { "id": "d", "text": { "tr": "Rolling deploy ve ölçek küçültme zorlaşır", "en": "Rolling deploys and scaling in become harder" } }
+      ],
+      "correct": ["a", "b", "d"],
+      "explanation": {
+        "tr": "Sticky session'ın tek avantajı tam da c seçeneğinin tersidir: uygulama kodu değişmez, yapışkanlığı LB sağlar. Bedelleri dağılımın bozulması, sunucu kaybında oturum kaybı ve her deploy/küçültmede kullanıcıları düşürmemek için drain beklemek zorunda kalmaktır. Bu yüzden yeni tasarımlarda geçici çözüm olarak görülür.",
+        "en": "The one advantage of sticky sessions is the opposite of option c: application code does not change, the LB provides the stickiness. Its costs are uneven distribution, session loss when a server dies, and having to wait for connection draining on every deploy or scale-in to avoid logging users out. That is why new designs treat it as a stopgap."
+      },
+      "difficulty": "medium",
+      "concepts": ["sticky-session"]
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": {
+        "tr": "Kullanıcı 'tüm cihazlardan çıkış yap' dediğinde oturumun anında geçersiz olmasını istiyorsunuz. Hangi yaklaşım bunu en doğal biçimde sağlar?",
+        "en": "You want the session to become invalid immediately when the user clicks 'log out of all devices'. Which approach provides this most naturally?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Merkezi oturum deposu (Redis): kullanıcının tüm oturum anahtarlarını DEL ile silmek", "en": "A central session store (Redis): DEL all of the user's session keys" } },
+        { "id": "b", "text": { "tr": "Kısa ömürlü access token: 15 dakikalık exp dolunca tüm cihazlar kendiliğinden düşer", "en": "Short-lived access tokens: once the 15-minute exp passes, every device drops off by itself" } },
+        { "id": "c", "text": { "tr": "JWT imza anahtarını (JWT_SECRET) döndürmek; böylece o kullanıcının eski token'ları geçersiz olur", "en": "Rotate the JWT signing key (JWT_SECRET) so that this user's old tokens become invalid" } },
+        { "id": "d", "text": { "tr": "Sticky session çerezini (SERVERID) silmek; LB kullanıcıyı tanımayınca oturum düşer", "en": "Delete the sticky session cookie (SERVERID); once the LB no longer recognises the user the session drops" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "Sunucu tarafında tutulan oturum kayıtlarını silmek anında ve kesin iptal sağlar. Kısa ömürlü token hasar penceresini daraltır ama 'anında' değildir; exp dolana kadar token çalışmaya devam eder (b yanlış). İmza anahtarını döndürmek yalnızca o kullanıcıyı değil sistemdeki herkesi düşürür (c yanlış). Sticky çerezini silmek oturumu sunucu belleğinden kaldırmaz; diğer cihazlar kendi çerezleriyle çalışmaya devam eder (d yanlış).",
+        "en": "Deleting server-side session records gives instant, definitive revocation. Short-lived tokens narrow the damage window but are not 'immediate'; the token keeps working until exp (b is wrong). Rotating the signing key logs out everyone in the system, not just this user (c is wrong). Deleting the sticky cookie does not remove the session from server memory; the other devices keep working with their own cookies (d is wrong)."
+      },
+      "difficulty": "medium",
+      "concepts": ["central-session-store", "token-revocation"]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "JWT'nin payload kısmı şifrelidir; bu yüzden içine kullanıcının kredi kartı numarası gibi hassas veriler güvenle konulabilir.",
+        "en": "The payload of a JWT is encrypted, so sensitive data such as the user's credit card number can safely be placed in it."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "Yanlış. Standart (JWS) bir JWT'nin payload'ı yalnızca Base64URL ile kodlanmıştır ve herkes okuyabilir; imza yalnızca değiştirilmediğini garanti eder, gizliliğini değil. Token'a yalnızca kullanıcı id'si, roller ve süre gibi hassas olmayan iddialar (claims) konur. Gizlilik gerekiyorsa JWE kullanılır ya da veri sunucu tarafında tutulur.",
+        "en": "False. The payload of a standard (JWS) JWT is merely Base64URL-encoded and anyone can read it; the signature guarantees integrity, not confidentiality. Put only non-sensitive claims such as user id, roles and expiry in the token. If secrecy is required, use JWE or keep the data server-side."
+      },
+      "difficulty": "easy",
+      "concepts": ["jwt"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "Beş replikaya ölçeklenen bir servis, her gece 03:00'te 'süresi dolan kuponları temizle' işini sunucu içi bir cron ile çalıştırıyor. Yatay ölçekleme açısından sorun nedir?",
+        "en": "A service scaled to five replicas runs an in-process cron job at 03:00 every night to 'clean up expired coupons'. What is the problem from a horizontal scaling perspective?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Cron saati sunucunun yerel saat dilimine bağlıdır; farklı AZ'lerdeki replikalar işi farklı saatlerde çalıştırır", "en": "Cron time depends on the server's local time zone; replicas in different AZs run the job at different hours" } },
+        { "id": "b", "text": { "tr": "Replikalar stateless olduğu için cron hiçbirinde tetiklenmez; iş ayrı bir stateful sunucuya taşınmalıdır", "en": "Because the replicas are stateless, cron fires on none of them; the job must move to a separate stateful server" } },
+        { "id": "c", "text": { "tr": "Tek risk idempotency'dir; DELETE sorgusu idempotent olduğu için işin beş kez çalışması zararsızdır", "en": "The only risk is idempotency; since the DELETE query is idempotent, running the job five times is harmless" } },
+        { "id": "d", "text": { "tr": "İş beş kez çalışır; zamanlanmış iş gizli bir durumdur ve dağıtık kilit ya da kuyrukla sunucudan çıkarılmalıdır", "en": "The job runs five times; a scheduled job is hidden state and must leave the server via a distributed lock or a queue" } }
+      ],
+      "correct": ["d"],
+      "explanation": {
+        "tr": "Her replika aynı kodu çalıştırdığı için iş beş kez tetiklenir; stateless olmak cron'u durdurmaz (b yanlış). Silme idempotent olsa bile beş kat kaynak israfı ve satır kilidi çekişmesi vardır; idempotency sorunu hafifletir, çözmez (c yanlış). Saat dilimi ayrı bir yapılandırma konusudur; asıl sorun 'bu işi ben yapıyorum' bilgisinin sunucuda saklı bir durum olmasıdır (a yanlış). Çözüm: Redis/DB üzerinde dağıtık kilit, tek bir zamanlayıcıdan beslenen kuyruk ya da ayrı bir scheduler servisi.",
+        "en": "Because every replica runs the same code, the job fires five times; being stateless does not stop cron (b is wrong). Even if the delete is idempotent there is fivefold resource waste and row-lock contention; idempotency softens the problem, it does not solve it (c is wrong). Time zones are a separate configuration matter; the real issue is that 'I am running this job' is state hidden on the server (a is wrong). The fix: a distributed lock on Redis/DB, a queue fed by a single scheduler, or a separate scheduler service."
+      },
+      "difficulty": "hard",
+      "concepts": ["state-externalization", "idempotency"]
+    }
+  ]
+}

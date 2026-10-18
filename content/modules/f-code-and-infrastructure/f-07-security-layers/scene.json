@@ -1,0 +1,232 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "f-07-defense-in-depth",
+  "title": { "tr": "Kötü Niyetli İstek Katman Katman Filtrelenir", "en": "A Malicious Request Is Filtered Layer by Layer" },
+  "summary": {
+    "tr": "Bir botnet seli anycast edge'de dağıtılır, SQL injection WAF'ta, eski TLS el sıkışmada, geçersiz JWT gateway'de, kimliksiz pod mTLS'te, yetkisiz DELETE IAM'de durdurulur; meşru istek tüm katmanlardan geçer.",
+    "en": "A botnet flood is spread at the anycast edge, SQL injection is stopped at the WAF, old TLS at the handshake, an invalid JWT at the gateway, an unidentified pod at mTLS, an unauthorised DELETE at IAM; a legitimate request passes every layer."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Sol üstte saldırgan botnet, sol altta meşru kullanıcı. Soldan sağa savunma katmanları: anycast edge ve scrubbing, WAF, TLS sonlandırma (CDN edge'de), API gateway (Frankfurt), cart-service pod'u ve mTLS sidecar'ı, IAM rolü ve en içte veritabanı. Ayrıca küme içinde ele geçirilmiş bir pod bulunur. Her adımda farklı bir saldırı ilgili katmanda kırmızıyla durdurulur ve HTTP kodu ya da ret nedeni açıklama kutusunda yazar. Son adımda meşru kullanıcı isteği yeşil olarak tüm katmanlardan geçip veritabanına ulaşır.",
+      "en": "The attacker botnet top left, a legitimate user bottom left. Defense layers from left to right: anycast edge with scrubbing, WAF, TLS termination (at the CDN edge), API gateway (Frankfurt), the cart-service pod with its mTLS sidecar, the IAM role and innermost the database. There is also a compromised pod inside the cluster. In each step a different attack is stopped in red at the relevant layer and the HTTP code or rejection reason is written in an annotation. In the last step the legitimate user's request passes every layer in green and reaches the database."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "attacker", "kind": "client", "label": { "tr": "Botnet / saldırgan", "en": "Botnet / attacker" }, "sublabel": { "tr": "50.000 cihaz · dünya geneli", "en": "50,000 devices · worldwide" }, "x": 90, "y": 150, "w": 130, "h": 70, "color": "danger" },
+    { "id": "user", "kind": "user", "label": { "tr": "Meşru kullanıcı", "en": "Legitimate user" }, "sublabel": { "tr": "İstanbul · geçerli JWT", "en": "Istanbul · valid JWT" }, "x": 90, "y": 420 },
+    { "id": "edge", "kind": "cdn", "label": { "tr": "Anycast edge + scrubbing", "en": "Anycast edge + scrubbing" }, "sublabel": { "tr": "100+ PoP · L3/L4 filtre", "en": "100+ PoPs · L3/L4 filter" }, "x": 270, "y": 290, "w": 150, "h": 76 },
+    { "id": "waf", "kind": "proxy", "label": "WAF", "sublabel": { "tr": "edge · OWASP kuralları · rate rule", "en": "edge · OWASP rules · rate rule" }, "x": 430, "y": 150, "w": 130, "h": 70 },
+    { "id": "tls", "kind": "proxy", "label": { "tr": "TLS sonlandırma", "en": "TLS termination" }, "sublabel": { "tr": "edge · TLS 1.3 · HSTS", "en": "edge · TLS 1.3 · HSTS" }, "x": 430, "y": 430, "w": 130, "h": 70 },
+    { "id": "gw", "kind": "gateway", "label": "API gateway", "sublabel": { "tr": "Frankfurt · JWT doğrula · 429", "en": "Frankfurt · verify JWT · 429" }, "x": 600, "y": 290, "w": 130, "h": 76 },
+    { "id": "svc", "kind": "pod", "label": "cart-service", "sublabel": { "tr": "mTLS sidecar · spiffe://shop/cart", "en": "mTLS sidecar · spiffe://shop/cart" }, "x": 760, "y": 290, "w": 140, "h": 76 },
+    { "id": "rogue", "kind": "pod", "label": { "tr": "Ele geçirilmiş pod", "en": "Compromised pod" }, "sublabel": { "tr": "küme içinde · kimliksiz", "en": "inside the cluster · no identity" }, "x": 760, "y": 110, "w": 140, "h": 64, "status": "muted" },
+    { "id": "iam", "kind": "generic", "label": { "tr": "IAM rolü", "en": "IAM role" }, "sublabel": { "tr": "yalnızca carts: Get/Put", "en": "only carts: Get/Put" }, "x": 760, "y": 470, "w": 130, "h": 64 },
+    { "id": "db", "kind": "db", "label": "DynamoDB", "sublabel": { "tr": "carts · özel subnet", "en": "carts · private subnet" }, "x": 920, "y": 470, "w": 120, "h": 64 }
+  ],
+  "edges": [
+    { "id": "att-edge", "from": "attacker", "to": "edge", "kind": "request", "label": { "tr": "sel / payload", "en": "flood / payload" } },
+    { "id": "usr-edge", "from": "user", "to": "edge", "kind": "request", "label": "HTTPS" },
+    { "id": "edge-waf", "from": "edge", "to": "waf", "kind": "request", "curvature": -0.1 },
+    { "id": "edge-tls", "from": "edge", "to": "tls", "kind": "request", "curvature": 0.1 },
+    { "id": "waf-gw", "from": "waf", "to": "gw", "kind": "request", "curvature": -0.1 },
+    { "id": "tls-gw", "from": "tls", "to": "gw", "kind": "request", "curvature": 0.1 },
+    { "id": "gw-svc", "from": "gw", "to": "svc", "kind": "request", "label": "mTLS" },
+    { "id": "rogue-svc", "from": "rogue", "to": "svc", "kind": "request", "style": "dashed", "label": { "tr": "yanal hareket", "en": "lateral move" } },
+    { "id": "svc-iam", "from": "svc", "to": "iam", "kind": "control", "label": "IRSA" },
+    { "id": "iam-db", "from": "iam", "to": "db", "kind": "data" }
+  ],
+  "steps": [
+    {
+      "id": "ddos",
+      "title": { "tr": "1 · Hacimsel sel: anycast edge", "en": "1 · Volumetric flood: anycast edge" },
+      "narration": {
+        "tr": "Botnet 1,2 Tb/sn SYN ve UDP seli gönderir. Anycast sayesinde aynı IP 100+ PoP'tan yayınlandığı için her PoP'a yalnızca birkaç Gb/sn düşer; scrubbing merkezleri SYN cookie ve imzalarla kötü paketleri atar. Origin'in IP'si hiç yayınlanmadı — saldırgan edge'i atlayamaz.",
+        "en": "The botnet sends a 1.2 Tb/s SYN and UDP flood. Thanks to anycast the same IP is announced from 100+ PoPs, so each PoP receives only a few Gb/s; scrubbing centres drop bad packets with SYN cookies and signatures. The origin IP was never published — the attacker cannot bypass the edge."
+      },
+      "durationMs": 4200,
+      "inherit": false,
+      "highlight": { "nodes": ["attacker", "edge"], "edges": ["att-edge"] },
+      "nodeStates": {
+        "attacker": { "status": "error", "badge": "1.2 Tb/s" },
+        "edge": { "status": "active", "badge": "scrubbing" },
+        "rogue": { "visible": false }
+      },
+      "edgeStates": { "att-edge": { "status": "error" }, "rogue-svc": { "visible": false } },
+      "packets": [
+        { "edge": "att-edge", "shape": "square", "color": "danger", "repeat": 8, "repeatGapMs": 100, "durationMs": 550, "label": "SYN" }
+      ],
+      "annotations": [
+        { "id": "ddos-note", "x": 270, "y": 400, "text": { "tr": "DÜŞÜRÜLDÜ · L3/L4 · her PoP'a ~10 Gb/s", "en": "DROPPED · L3/L4 · ~10 Gb/s per PoP" }, "tone": "danger", "target": "edge" }
+      ]
+    },
+    {
+      "id": "sqli",
+      "title": { "tr": "2 · SQL injection: WAF", "en": "2 · SQL injection: WAF" },
+      "narration": {
+        "tr": "Sel geçmeyince saldırgan 'normal' bir HTTP isteği dener: GET /search?q=' OR 1=1 --. Edge'deki WAF, OWASP kural setiyle gövde ve URL'yi tarar, SQL injection imzasını yakalar ve 403 döner. İstek Frankfurt'a hiç ulaşmaz. Kod yine de parametreli sorgu kullanır: WAF bahane değil, ek katmandır.",
+        "en": "With the flood failing, the attacker tries a 'normal' HTTP request: GET /search?q=' OR 1=1 --. The WAF at the edge scans body and URL with the OWASP rule set, matches the SQL injection signature and returns 403. The request never reaches Frankfurt. The code still uses parameterised queries: the WAF is an extra layer, not an excuse."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["edge", "waf"], "edges": ["att-edge", "edge-waf"] },
+      "nodeStates": {
+        "attacker": { "badge": "SQLi" },
+        "edge": { "status": "active", "badge": "" },
+        "waf": { "status": "error", "badge": "403" }
+      },
+      "edgeStates": { "att-edge": { "status": "active" }, "edge-waf": { "status": "error" } },
+      "packets": [
+        { "edge": "att-edge", "shape": "envelope", "color": "danger", "durationMs": 800, "label": "q=' OR 1=1" },
+        { "edge": "edge-waf", "shape": "envelope", "color": "danger", "startAt": 800, "durationMs": 800 }
+      ],
+      "annotations": [
+        { "id": "waf-note", "x": 430, "y": 60, "text": { "tr": "403 · kural: SQLi_QUERYARGUMENTS · origin'e ulaşmadı", "en": "403 · rule: SQLi_QUERYARGUMENTS · never reached origin" }, "tone": "danger", "target": "waf" }
+      ]
+    },
+    {
+      "id": "tls-step",
+      "title": { "tr": "3 · Eski protokol: TLS el sıkışması", "en": "3 · Old protocol: TLS handshake" },
+      "narration": {
+        "tr": "Saldırgan bu kez TLS 1.0 ve zayıf bir şifre takımıyla bağlanıp düşürme (downgrade) saldırısı dener. Edge yalnızca TLS 1.3 kabul eder; el sıkışma 'protocol_version' uyarısıyla kesilir. HSTS sayesinde tarayıcılar HTTP'ye de düşürülemez; yol boyunca veri düz metin olarak hiç akmaz.",
+        "en": "This time the attacker connects with TLS 1.0 and a weak cipher suite, attempting a downgrade attack. The edge accepts only TLS 1.3; the handshake is cut with a 'protocol_version' alert. Thanks to HSTS browsers cannot be downgraded to HTTP either; data never flows in plaintext anywhere along the path."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["edge", "tls"], "edges": ["edge-tls"] },
+      "nodeStates": {
+        "attacker": { "badge": "TLS 1.0" },
+        "waf": { "status": "idle", "badge": "" },
+        "tls": { "status": "error", "badge": "alert" }
+      },
+      "edgeStates": { "edge-waf": { "status": "idle" }, "edge-tls": { "status": "error" } },
+      "packets": [
+        { "edge": "att-edge", "shape": "dot", "color": "danger", "durationMs": 700, "label": "ClientHello 1.0" },
+        { "edge": "edge-tls", "shape": "dot", "color": "danger", "startAt": 700, "durationMs": 700 }
+      ],
+      "annotations": [
+        { "id": "tls-note", "x": 430, "y": 540, "text": { "tr": "handshake_failure · yalnızca TLS 1.3 · HSTS max-age=1y", "en": "handshake_failure · TLS 1.3 only · HSTS max-age=1y" }, "tone": "danger", "target": "tls" }
+      ]
+    },
+    {
+      "id": "jwt",
+      "title": { "tr": "4 · Geçersiz JWT ve kaba kuvvet: gateway", "en": "4 · Invalid JWT and brute force: gateway" },
+      "narration": {
+        "tr": "Saldırgan geçerli TLS ile temiz bir istek gönderir ama süresi dolmuş, imzası uydurma bir token kullanır. Frankfurt'taki API gateway imzayı IdP'nin açık anahtarıyla doğrulayamaz: 401. Ardından saniyede yüzlerce token denemesi yapar; IP başına rate limit devreye girer: 429. Servis pod'u bu istekleri hiç görmez.",
+        "en": "The attacker sends a clean request over valid TLS but with an expired token and a forged signature. The API gateway in Frankfurt cannot verify the signature with the IdP's public key: 401. It then tries hundreds of tokens per second; the per-IP rate limit kicks in: 429. The service pod never sees these requests."
+      },
+      "durationMs": 4200,
+      "highlight": { "nodes": ["tls", "gw"], "edges": ["tls-gw"] },
+      "nodeStates": {
+        "attacker": { "badge": "fake JWT" },
+        "tls": { "status": "active", "badge": "" },
+        "gw": { "status": "error", "badge": "401 → 429" }
+      },
+      "edgeStates": { "edge-tls": { "status": "active" }, "tls-gw": { "status": "error" } },
+      "packets": [
+        { "edge": "att-edge", "shape": "envelope", "color": "danger", "durationMs": 600 },
+        { "edge": "edge-tls", "shape": "envelope", "color": "danger", "startAt": 600, "durationMs": 600 },
+        { "edge": "tls-gw", "shape": "envelope", "color": "danger", "startAt": 1200, "durationMs": 800, "label": "Bearer eyJ…(exp)" },
+        { "edge": "tls-gw", "shape": "dot", "color": "danger", "startAt": 2000, "durationMs": 500, "repeat": 4, "repeatGapMs": 100 }
+      ],
+      "annotations": [
+        { "id": "gw-note", "x": 600, "y": 400, "text": { "tr": "401 invalid signature · sonra 429: 2.000 istek / 5 dk aşıldı", "en": "401 invalid signature · then 429: 2,000 req / 5 min exceeded" }, "tone": "danger", "target": "gw" }
+      ]
+    },
+    {
+      "id": "lateral",
+      "title": { "tr": "5 · Yanal hareket: mTLS servis kimliği", "en": "5 · Lateral movement: mTLS service identity" },
+      "narration": {
+        "tr": "Saldırgan farklı bir yoldan, bir bağımlılık zafiyetiyle kümedeki önemsiz bir pod'u ele geçirmiştir. Oradan cart-service'e doğrudan bağlanmayı dener. Zero-trust: cart-service'in sidecar'ı karşı tarafın SPIFFE sertifikasını ister; ele geçirilen pod'un kimliği yoktur ya da yetki politikasında bu çağrı tanımlı değildir. Bağlantı el sıkışmada reddedilir. İç ağda olmak güven vermez.",
+        "en": "By a different route, through a dependency vulnerability, the attacker has taken over an unimportant pod in the cluster. From there it tries to connect directly to cart-service. Zero-trust: cart-service's sidecar demands the peer's SPIFFE certificate; the compromised pod has no identity, or the call is not defined in the authorisation policy. The connection is rejected at the handshake. Being inside the network grants no trust."
+      },
+      "durationMs": 4200,
+      "highlight": { "nodes": ["rogue", "svc"], "edges": ["rogue-svc"] },
+      "nodeStates": {
+        "attacker": { "badge": "" },
+        "gw": { "status": "idle", "badge": "" },
+        "rogue": { "visible": true, "status": "error", "badge": "pwned" },
+        "svc": { "status": "warning", "badge": "mTLS ✕" }
+      },
+      "edgeStates": { "tls-gw": { "status": "idle" }, "rogue-svc": { "visible": true, "status": "error" } },
+      "packets": [
+        { "edge": "rogue-svc", "shape": "square", "color": "danger", "durationMs": 1000, "label": "GET /internal/carts" },
+        { "edge": "rogue-svc", "shape": "dot", "color": "danger", "direction": "backward", "startAt": 1100, "durationMs": 700, "label": "RST" }
+      ],
+      "annotations": [
+        { "id": "mtls-note", "x": 600, "y": 60, "text": { "tr": "mTLS: peer sertifikası yok → bağlantı reddedildi · politika: yalnızca gateway → cart", "en": "mTLS: no peer certificate → connection refused · policy: only gateway → cart" }, "tone": "danger", "target": "rogue" }
+      ]
+    },
+    {
+      "id": "iam-step",
+      "title": { "tr": "6 · Yetki aşımı: IAM en az yetki", "en": "6 · Privilege escalation: IAM least privilege" },
+      "narration": {
+        "tr": "En kötü senaryo: saldırgan cart-service'in kendisinde kod çalıştırmayı başardı. Pod'un IRSA ile aldığı 15 dakikalık kimlik bilgileriyle orders tablosunu okumayı ve carts tablosunu silmeyi dener. IAM politikası yalnızca carts üzerinde GetItem/PutItem'a izin verir: her iki çağrı da AccessDenied. CloudTrail bu anormal çağrıları kaydeder ve GuardDuty alarm üretir.",
+        "en": "Worst case: the attacker managed to run code inside cart-service itself. With the 15-minute credentials the pod obtained via IRSA, it tries to read the orders table and delete the carts table. The IAM policy allows only GetItem/PutItem on carts: both calls get AccessDenied. CloudTrail records these anomalous calls and GuardDuty raises an alarm."
+      },
+      "durationMs": 4200,
+      "highlight": { "nodes": ["svc", "iam", "db"], "edges": ["svc-iam", "iam-db"] },
+      "nodeStates": {
+        "rogue": { "status": "muted", "badge": "" },
+        "svc": { "status": "error", "badge": "pwned" },
+        "iam": { "status": "error", "badge": "AccessDenied" },
+        "db": { "status": "active", "badge": "intact" }
+      },
+      "edgeStates": { "rogue-svc": { "status": "muted" }, "svc-iam": { "status": "error" }, "iam-db": { "status": "muted" } },
+      "packets": [
+        { "edge": "svc-iam", "shape": "square", "color": "danger", "durationMs": 800, "label": "Scan orders" },
+        { "edge": "svc-iam", "shape": "square", "color": "danger", "startAt": 1000, "durationMs": 800, "label": "DeleteTable carts" },
+        { "edge": "svc-iam", "shape": "dot", "color": "danger", "direction": "backward", "startAt": 1900, "durationMs": 700, "label": "403" }
+      ],
+      "annotations": [
+        { "id": "iam-note", "x": 600, "y": 560, "text": { "tr": "politika: dynamodb:GetItem/PutItem on table/carts — başka hiçbir şey · CloudTrail + GuardDuty alarm", "en": "policy: dynamodb:GetItem/PutItem on table/carts — nothing else · CloudTrail + GuardDuty alarm" }, "tone": "danger", "target": "iam" }
+      ]
+    },
+    {
+      "id": "legit",
+      "title": { "tr": "7 · Meşru istek tüm katmanlardan geçer", "en": "7 · A legitimate request passes every layer" },
+      "narration": {
+        "tr": "İstanbul'daki gerçek kullanıcı sepetini açar. Edge'de hacim normal, WAF temiz, TLS 1.3 kuruldu; gateway JWT'yi doğruladı ve kota içinde; gateway → cart-service mTLS ile kimlikli; IAM rolü carts tablosunda GetItem'a izin veriyor. Yedi katman, ~80 ms, kullanıcı hiçbirini fark etmedi. Güvenlik doğru yapıldığında görünmezdir.",
+        "en": "The real user in Istanbul opens their cart. Volume is normal at the edge, the WAF is clean, TLS 1.3 is established; the gateway verified the JWT and it is within quota; gateway → cart-service is identified via mTLS; the IAM role permits GetItem on the carts table. Seven layers, ~80 ms, and the user noticed none of them. Security done right is invisible."
+      },
+      "durationMs": 5000,
+      "highlight": { "nodes": ["user", "edge", "waf", "tls", "gw", "svc", "iam", "db"], "edges": ["usr-edge", "edge-waf", "edge-tls", "waf-gw", "tls-gw", "gw-svc", "svc-iam", "iam-db"] },
+      "nodeStates": {
+        "attacker": { "status": "muted", "badge": "" },
+        "user": { "status": "success" },
+        "edge": { "status": "success", "badge": "✓" },
+        "waf": { "status": "success", "badge": "✓" },
+        "tls": { "status": "success", "badge": "1.3" },
+        "gw": { "status": "success", "badge": "JWT ✓" },
+        "svc": { "status": "success", "badge": "mTLS ✓" },
+        "iam": { "status": "success", "badge": "Allow" },
+        "db": { "status": "success", "badge": "GetItem" },
+        "rogue": { "visible": false }
+      },
+      "edgeStates": {
+        "att-edge": { "status": "muted" },
+        "rogue-svc": { "visible": false },
+        "usr-edge": { "status": "active" }, "edge-waf": { "status": "active" }, "edge-tls": { "status": "active" },
+        "waf-gw": { "status": "active" }, "tls-gw": { "status": "active" }, "gw-svc": { "status": "active" },
+        "svc-iam": { "status": "active" }, "iam-db": { "status": "active" }
+      },
+      "packets": [
+        { "edge": "usr-edge", "shape": "envelope", "color": "success", "durationMs": 600, "label": "GET /cart" },
+        { "edge": "edge-waf", "shape": "envelope", "color": "success", "startAt": 600, "durationMs": 500 },
+        { "edge": "edge-tls", "shape": "envelope", "color": "success", "startAt": 600, "durationMs": 500 },
+        { "edge": "waf-gw", "shape": "envelope", "color": "success", "startAt": 1100, "durationMs": 600 },
+        { "edge": "tls-gw", "shape": "envelope", "color": "success", "startAt": 1100, "durationMs": 600 },
+        { "edge": "gw-svc", "shape": "envelope", "color": "success", "startAt": 1700, "durationMs": 600, "label": "mTLS" },
+        { "edge": "svc-iam", "shape": "diamond", "color": "success", "startAt": 2300, "durationMs": 500, "label": "GetItem carts" },
+        { "edge": "iam-db", "shape": "square", "color": "success", "startAt": 2800, "durationMs": 500 },
+        { "edge": "iam-db", "shape": "square", "color": "success", "direction": "backward", "startAt": 3300, "durationMs": 500, "label": "3 items" }
+      ],
+      "annotations": [
+        { "id": "ok-note", "x": 270, "y": 540, "text": { "tr": "200 OK · ~80 ms · 7 katman geçildi, hiçbiri hissedilmedi", "en": "200 OK · ~80 ms · 7 layers passed, none of them felt" }, "tone": "success", "target": "user" }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["security", "defense-in-depth", "waf", "ddos", "mtls", "iam"]
+}

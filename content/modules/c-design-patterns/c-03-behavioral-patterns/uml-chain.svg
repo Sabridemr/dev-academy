@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 370" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Chain of Responsibility UML sınıf diyagramı</title>
+  <desc id="desc">Soyut Handler sınıfı next referansı, setNext ve handle metodlarını tanımlar. AuthHandler, RateLimitHandler, ValidationHandler ve ControllerHandler ondan türer. İstek zincirin başına verilir; her işleyici ya işler ya da sonrakine iletir.</desc>
+  <defs>
+    <marker id="m-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+    <marker id="m-open" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M 1 1 L 9 5 L 1 9" fill="none" stroke="var(--da-fg, #0f172a)" stroke-width="1.4"/>
+    </marker>
+    <marker id="m-tri" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" orient="auto-start-reverse">
+      <path d="M 1 1 L 11 6 L 1 11 z" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.3"/>
+    </marker>
+    <marker id="m-dia" viewBox="0 0 14 10" refX="1" refY="5" markerWidth="14" markerHeight="10" orient="auto-start-reverse">
+      <path d="M 1 5 L 7 1 L 13 5 L 7 9 z" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.3"/>
+    </marker>
+    <marker id="m-diaf" viewBox="0 0 14 10" refX="1" refY="5" markerWidth="14" markerHeight="10" orient="auto-start-reverse">
+      <path d="M 1 5 L 7 1 L 13 5 L 7 9 z" fill="var(--da-fg, #0f172a)" stroke="var(--da-fg, #0f172a)" stroke-width="1.3"/>
+    </marker>
+    <marker id="m-primary" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-primary, #6366f1)"/>
+    </marker>
+    <marker id="m-danger" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-danger, #ef4444)"/>
+    </marker>
+    <marker id="m-success" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-success, #10b981)"/>
+    </marker>
+    <marker id="m-accent" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-accent, #f59e0b)"/>
+    </marker>
+  </defs>
+  <rect x="330" y="60" width="260" height="102" rx="4" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.4"/>
+  <text x="460" y="78" text-anchor="middle" font-size="12" font-weight="700" font-style="italic" fill="var(--da-fg, #0f172a)">Handler</text>
+  <line x1="330" y1="86" x2="590" y2="86" stroke="var(--da-fg, #0f172a)" stroke-width="1"/>
+  <text x="336" y="102" font-size="10.5" fill="var(--da-fg, #0f172a)">-next?: Handler</text>
+  <line x1="330" y1="109" x2="590" y2="109" stroke="var(--da-fg, #0f172a)" stroke-width="1"/>
+  <text x="336" y="125" font-size="10.5"  fill="var(--da-fg, #0f172a)">+setNext(h: Handler): Handler</text>
+  <text x="336" y="140" font-size="10.5" font-style="italic" fill="var(--da-fg, #0f172a)">+handle(req): Response</text>
+  <text x="336" y="155" font-size="10.5"  fill="var(--da-fg, #0f172a)">#forward(req) { next?.handle(req) }</text>
+  <rect x="40" y="260" width="180" height="72" rx="4" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.4"/>
+  <text x="130" y="278" text-anchor="middle" font-size="12" font-weight="700"  fill="var(--da-fg, #0f172a)">AuthHandler</text>
+  <line x1="40" y1="286" x2="220" y2="286" stroke="var(--da-fg, #0f172a)" stroke-width="1"/>
+  <line x1="40" y1="309" x2="220" y2="309" stroke="var(--da-fg, #0f172a)" stroke-width="1"/>
+  <text x="46" y="325" font-size="10.5"  fill="var(--da-fg, #0f172a)">+handle(req)</text>
+  <rect x="260" y="260" width="180" height="72" rx="4" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.4"/>
+  <text x="350" y="278" text-anchor="middle" font-size="12" font-weight="700"  fill="var(--da-fg, #0f172a)">RateLimitHandler</text>
+  <line x1="260" y1="286" x2="440" y2="286" stroke="var(--da-fg, #0f172a)" stroke-width="1"/>
+  <text x="266" y="302" font-size="10.5" fill="var(--da-fg, #0f172a)">-bucket</text>
+  <line x1="260" y1="309" x2="440" y2="309" stroke="var(--da-fg, #0f172a)" stroke-width="1"/>
+  <text x="266" y="325" font-size="10.5"  fill="var(--da-fg, #0f172a)">+handle(req)</text>
+  <rect x="480" y="260" width="180" height="72" rx="4" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.4"/>
+  <text x="570" y="278" text-anchor="middle" font-size="12" font-weight="700"  fill="var(--da-fg, #0f172a)">ValidationHandler</text>
+  <line x1="480" y1="286" x2="660" y2="286" stroke="var(--da-fg, #0f172a)" stroke-width="1"/>
+  <text x="486" y="302" font-size="10.5" fill="var(--da-fg, #0f172a)">-schema</text>
+  <line x1="480" y1="309" x2="660" y2="309" stroke="var(--da-fg, #0f172a)" stroke-width="1"/>
+  <text x="486" y="325" font-size="10.5"  fill="var(--da-fg, #0f172a)">+handle(req)</text>
+  <rect x="700" y="260" width="180" height="72" rx="4" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.4"/>
+  <text x="790" y="278" text-anchor="middle" font-size="12" font-weight="700"  fill="var(--da-fg, #0f172a)">ControllerHandler</text>
+  <line x1="700" y1="286" x2="880" y2="286" stroke="var(--da-fg, #0f172a)" stroke-width="1"/>
+  <line x1="700" y1="309" x2="880" y2="309" stroke="var(--da-fg, #0f172a)" stroke-width="1"/>
+  <text x="706" y="325" font-size="10.5"  fill="var(--da-fg, #0f172a)">+handle(req)</text>
+  <path d="M 590 111 L 680 120 L 680 25 L 460 25 L 460 60" stroke="var(--da-fg, #0f172a)" stroke-width="1.3" fill="none" marker-end="url(#m-open)"/>
+  <text x="570" y="19" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">next 0..1</text>
+  <path d="M 130 260 L 460 162" stroke="var(--da-fg, #0f172a)" stroke-width="1.3" fill="none" marker-end="url(#m-tri)"/>
+  <path d="M 350 260 L 460 162" stroke="var(--da-fg, #0f172a)" stroke-width="1.3" fill="none" marker-end="url(#m-tri)"/>
+  <path d="M 570 260 L 460 162" stroke="var(--da-fg, #0f172a)" stroke-width="1.3" fill="none" marker-end="url(#m-tri)"/>
+  <path d="M 790 260 L 460 162" stroke="var(--da-fg, #0f172a)" stroke-width="1.3" fill="none" marker-end="url(#m-tri)"/>
+  <path d="M 40 70 L 280 70 L 290 80 L 290 140 L 40 140 z" fill="var(--da-accent, #f59e0b)" fill-opacity="0.12" stroke="var(--da-accent, #f59e0b)" stroke-width="1"/>
+  <text x="48" y="86" font-size="10.5" fill="var(--da-fg, #0f172a)">Zincir çalışma zamanında kurulur:</text>
+  <text x="48" y="100" font-size="10.5" fill="var(--da-fg, #0f172a)">auth.setNext(rate).setNext(valid)</text>
+  <text x="48" y="114" font-size="10.5" fill="var(--da-fg, #0f172a)">    .setNext(ctrl)</text>
+  <text x="48" y="128" font-size="10.5" fill="var(--da-fg, #0f172a)">Her halka: işle / ilet / kes.</text>
+</svg>

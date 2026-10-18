@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 460" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">MLOps yaşam döngüsü</title>
+  <desc id="desc">Soldan sağa: veri kaynakları ve pipeline kutusu, offline ve online bölmeleri olan feature store, GPU eğitim ve değerlendirme kutusu, model registry, serving katmanı (batch işi ve online model sunucuları, canary yüzdesiyle), izleme kutusu. İzlemeden eğitime geri dönen kesikli 'yeniden eğit' oku döngüyü kapatır. Feature store'dan hem eğitime hem online serving'e oklar çıkar.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+    <marker id="arrow-d" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-danger, #ef4444)"/>
+    </marker>
+  </defs>
+
+  <text x="450" y="28" text-anchor="middle" font-size="14" font-weight="600" fill="var(--da-fg, #0f172a)">Kapalı döngü: veri → özellik → eğitim → registry → serving → izleme → (yeniden eğitim)</text>
+
+  <!-- Veri -->
+  <rect x="20" y="150" width="130" height="110" rx="12" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)" stroke-width="1.5"/>
+  <text x="85" y="174" text-anchor="middle" font-size="12.5" font-weight="600" fill="var(--da-fg, #0f172a)">Veri kaynakları</text>
+  <text x="85" y="194" text-anchor="middle" font-size="10.5" fill="var(--da-muted, #64748b)">olaylar (Kafka)</text>
+  <text x="85" y="210" text-anchor="middle" font-size="10.5" fill="var(--da-muted, #64748b)">DWH / veri gölü</text>
+  <text x="85" y="236" text-anchor="middle" font-size="10" fill="var(--da-success, #10b981)">şema + dağılım doğrulama</text>
+  <text x="85" y="250" text-anchor="middle" font-size="10" fill="var(--da-success, #10b981)">sürümlenmiş anlık görüntü</text>
+
+  <path d="M 152 205 L 186 205" stroke="var(--da-muted, #64748b)" stroke-width="1.8" marker-end="url(#arrow)"/>
+
+  <!-- Feature store -->
+  <rect x="188" y="130" width="150" height="150" rx="12" fill="var(--da-primary, #6366f1)" opacity="0.1" stroke="var(--da-primary, #6366f1)" stroke-width="2"/>
+  <text x="263" y="154" text-anchor="middle" font-size="12.5" font-weight="600" fill="var(--da-primary, #6366f1)">Feature store</text>
+  <rect x="200" y="166" width="126" height="44" rx="8" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+  <text x="263" y="184" text-anchor="middle" font-size="11" fill="var(--da-fg, #0f172a)">Offline (Parquet)</text>
+  <text x="263" y="200" text-anchor="middle" font-size="9.5" fill="var(--da-muted, #64748b)">point-in-time join</text>
+  <rect x="200" y="220" width="126" height="44" rx="8" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+  <text x="263" y="238" text-anchor="middle" font-size="11" fill="var(--da-fg, #0f172a)">Online (Redis)</text>
+  <text x="263" y="254" text-anchor="middle" font-size="9.5" fill="var(--da-muted, #64748b)">&lt; 10 ms, stream güncel</text>
+  <text x="263" y="298" text-anchor="middle" font-size="9.5" fill="var(--da-primary, #6366f1)">tek tanım → skew yok</text>
+
+  <!-- Eğitim -->
+  <path d="M 326 188 C 350 188, 350 120, 376 120" fill="none" stroke="var(--da-muted, #64748b)" stroke-width="1.8" marker-end="url(#arrow)"/>
+  <rect x="378" y="70" width="150" height="100" rx="12" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)" stroke-width="1.5"/>
+  <text x="453" y="94" text-anchor="middle" font-size="12.5" font-weight="600" fill="var(--da-fg, #0f172a)">Eğitim + değerlendirme</text>
+  <text x="453" y="114" text-anchor="middle" font-size="10.5" fill="var(--da-muted, #64748b)">GPU kümesi · DDP / FSDP</text>
+  <text x="453" y="130" text-anchor="middle" font-size="10.5" fill="var(--da-muted, #64748b)">experiment tracker</text>
+  <text x="453" y="152" text-anchor="middle" font-size="10" fill="var(--da-success, #10b981)">test metrikleri ≥ üretim + ε ?</text>
+
+  <!-- Registry -->
+  <path d="M 530 120 L 566 120" stroke="var(--da-muted, #64748b)" stroke-width="1.8" marker-end="url(#arrow)"/>
+  <rect x="568" y="70" width="130" height="100" rx="12" fill="var(--da-accent, #f59e0b)" opacity="0.12" stroke="var(--da-accent, #f59e0b)" stroke-width="2"/>
+  <text x="633" y="94" text-anchor="middle" font-size="12.5" font-weight="600" fill="var(--da-accent, #f59e0b)">Model registry</text>
+  <text x="633" y="114" text-anchor="middle" font-size="10.5" fill="var(--da-fg, #0f172a)">v1 production</text>
+  <text x="633" y="130" text-anchor="middle" font-size="10.5" fill="var(--da-fg, #0f172a)">v2 staging</text>
+  <text x="633" y="152" text-anchor="middle" font-size="9.5" fill="var(--da-muted, #64748b)">ağırlık · veri sürümü · commit · imza</text>
+
+  <!-- Serving -->
+  <path d="M 700 120 C 730 120, 730 150, 740 180" fill="none" stroke="var(--da-muted, #64748b)" stroke-width="1.8" marker-end="url(#arrow)"/>
+  <rect x="718" y="182" width="162" height="130" rx="12" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)" stroke-width="1.5"/>
+  <text x="799" y="204" text-anchor="middle" font-size="12.5" font-weight="600" fill="var(--da-fg, #0f172a)">Serving</text>
+  <rect x="730" y="214" width="138" height="30" rx="8" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+  <text x="799" y="233" text-anchor="middle" font-size="10.5" fill="var(--da-fg, #0f172a)">Batch işi → tablo/cache</text>
+  <rect x="730" y="252" width="66" height="48" rx="8" fill="var(--da-success, #10b981)" opacity="0.15" stroke="var(--da-success, #10b981)"/>
+  <text x="763" y="272" text-anchor="middle" font-size="10.5" fill="var(--da-fg, #0f172a)">v1</text>
+  <text x="763" y="288" text-anchor="middle" font-size="9.5" fill="var(--da-muted, #64748b)">95%</text>
+  <rect x="802" y="252" width="66" height="48" rx="8" fill="var(--da-accent, #f59e0b)" opacity="0.15" stroke="var(--da-accent, #f59e0b)"/>
+  <text x="835" y="272" text-anchor="middle" font-size="10.5" fill="var(--da-fg, #0f172a)">v2 canary</text>
+  <text x="835" y="288" text-anchor="middle" font-size="9.5" fill="var(--da-muted, #64748b)">5%</text>
+
+  <!-- Online feature → serving -->
+  <path d="M 326 242 C 500 242, 600 300, 716 290" fill="none" stroke="var(--da-primary, #6366f1)" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+  <text x="520" y="268" text-anchor="middle" font-size="9.5" fill="var(--da-primary, #6366f1)">online özellikler (çıkarım anında)</text>
+
+  <!-- İzleme -->
+  <path d="M 799 314 L 799 346" stroke="var(--da-muted, #64748b)" stroke-width="1.8" marker-end="url(#arrow)"/>
+  <rect x="640" y="348" width="240" height="92" rx="12" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)" stroke-width="1.5"/>
+  <text x="760" y="370" text-anchor="middle" font-size="12.5" font-weight="600" fill="var(--da-fg, #0f172a)">İzleme</text>
+  <text x="760" y="390" text-anchor="middle" font-size="10.5" fill="var(--da-muted, #64748b)">sistem: p99, hata · veri: PSI/KS</text>
+  <text x="760" y="406" text-anchor="middle" font-size="10.5" fill="var(--da-muted, #64748b)">tahmin dağılımı · gecikmeli etiketle AUC</text>
+  <text x="760" y="426" text-anchor="middle" font-size="10" fill="var(--da-danger, #ef4444)">A/B: iş metriği, kullanıcıya sabit gruplar</text>
+
+  <!-- Geri besleme -->
+  <path d="M 640 400 C 420 400, 400 320, 420 172" fill="none" stroke="var(--da-danger, #ef4444)" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#arrow-d)"/>
+  <text x="470" y="372" text-anchor="middle" font-size="10.5" fill="var(--da-danger, #ef4444)">drift (PSI &gt; 0.25) ya da zamanlayıcı</text>
+  <text x="470" y="388" text-anchor="middle" font-size="10.5" fill="var(--da-danger, #ef4444)">→ yeniden eğitim pipeline'ını tetikle</text>
+
+  <text x="200" y="440" font-size="10.5" fill="var(--da-muted, #64748b)">Her adım konteyner + artefakt; kod, veri ve model birlikte sürümlenir.</text>
+</svg>

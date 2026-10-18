@@ -1,0 +1,239 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "f-01-az-failover",
+  "title": { "tr": "Bir Availability Zone Düşünce Trafik Nasıl Kayar?", "en": "How Traffic Shifts When an Availability Zone Goes Down" },
+  "summary": {
+    "tr": "İki AZ'ye yayılmış bir sipariş servisi; AZ-a'da elektrik kesintisi, health check'in fark etmesi, trafiğin AZ-b'ye kayması ve otomatik ölçekleme.",
+    "en": "An order service spread across two AZs; a power outage in AZ-a, the health check noticing, traffic shifting to AZ-b and autoscaling."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda kullanıcılar ve bir yük dengeleyici, sağda üst üste iki availability zone kutusu bulunur. Her zone'da iki uygulama sunucusu ve bir veritabanı düğümü vardır. Başlangıçta trafik iki zone'a eşit dağılır. Üçüncü adımda AZ-a karartılır; health check başarısız olur, yük dengeleyici tüm trafiği AZ-b'ye yönlendirir, veritabanı standby'ı primary olur ve AZ-b'de yeni bir sunucu açılır.",
+      "en": "Users and a load balancer on the left, two availability zone boxes stacked on the right. Each zone has two application servers and a database node. Initially traffic is split evenly. In step three AZ-a goes dark; health checks fail, the load balancer routes all traffic to AZ-b, the database standby is promoted and a new server starts in AZ-b."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "users", "kind": "user", "label": { "tr": "Kullanıcılar", "en": "Users" }, "x": 100, "y": 300 },
+    { "id": "lb", "kind": "lb", "label": "ALB", "sublabel": { "tr": "eu-central-1 · her AZ'de bir düğüm", "en": "eu-central-1 · a node in every AZ" }, "x": 300, "y": 300, "w": 150, "h": 80 },
+    { "id": "az-a", "kind": "zone", "label": "AZ-a (eu-central-1a)", "sublabel": { "tr": "Veri merkezi: Frankfurt-Kuzey", "en": "Data center: Frankfurt-North" }, "x": 690, "y": 170, "w": 440, "h": 190 },
+    { "id": "a1", "kind": "server", "parent": "az-a", "label": "orders-1", "sublabel": { "tr": "EC2 · pod", "en": "EC2 · pod" }, "x": 560, "y": 180, "w": 110, "h": 64 },
+    { "id": "a2", "kind": "server", "parent": "az-a", "label": "orders-2", "sublabel": { "tr": "EC2 · pod", "en": "EC2 · pod" }, "x": 690, "y": 180, "w": 110, "h": 64 },
+    { "id": "db-a", "kind": "db", "parent": "az-a", "label": "RDS primary", "sublabel": { "tr": "senkron replikasyon", "en": "synchronous replication" }, "x": 830, "y": 180, "w": 120, "h": 64 },
+    { "id": "az-b", "kind": "zone", "label": "AZ-b (eu-central-1b)", "sublabel": { "tr": "Veri merkezi: Frankfurt-Güney, ~30 km", "en": "Data center: Frankfurt-South, ~30 km" }, "x": 690, "y": 430, "w": 440, "h": 190 },
+    { "id": "b1", "kind": "server", "parent": "az-b", "label": "orders-3", "sublabel": { "tr": "EC2 · pod", "en": "EC2 · pod" }, "x": 560, "y": 440, "w": 110, "h": 64 },
+    { "id": "b2", "kind": "server", "parent": "az-b", "label": "orders-4", "sublabel": { "tr": "EC2 · pod", "en": "EC2 · pod" }, "x": 690, "y": 440, "w": 110, "h": 64 },
+    { "id": "b3", "kind": "server", "parent": "az-b", "label": "orders-5", "sublabel": { "tr": "yeni (autoscale)", "en": "new (autoscale)" }, "x": 690, "y": 520, "w": 110, "h": 56, "status": "muted" },
+    { "id": "db-b", "kind": "replica", "parent": "az-b", "label": "RDS standby", "sublabel": { "tr": "bekleme kopyası", "en": "standby copy" }, "x": 830, "y": 440, "w": 120, "h": 64 }
+  ],
+  "edges": [
+    { "id": "u-lb", "from": "users", "to": "lb", "kind": "request", "label": { "tr": "HTTPS", "en": "HTTPS" } },
+    { "id": "lb-a1", "from": "lb", "to": "a1", "kind": "request", "curvature": -0.1 },
+    { "id": "lb-a2", "from": "lb", "to": "a2", "kind": "request", "curvature": -0.2 },
+    { "id": "lb-b1", "from": "lb", "to": "b1", "kind": "request", "curvature": 0.1 },
+    { "id": "lb-b2", "from": "lb", "to": "b2", "kind": "request", "curvature": 0.2 },
+    { "id": "lb-b3", "from": "lb", "to": "b3", "kind": "request", "curvature": 0.3, "style": "dashed" },
+    { "id": "a2-dba", "from": "a2", "to": "db-a", "kind": "data" },
+    { "id": "b2-dbb", "from": "b2", "to": "db-b", "kind": "data", "style": "dashed" },
+    { "id": "repl", "from": "db-a", "to": "db-b", "kind": "replication", "style": "dotted", "label": { "tr": "sync repl.", "en": "sync repl." } },
+    { "id": "hc-a1", "from": "lb", "to": "a1", "kind": "control", "style": "dotted", "curvature": -0.45, "label": { "tr": "health check", "en": "health check" } }
+  ],
+  "steps": [
+    {
+      "id": "layout",
+      "title": { "tr": "Fiziksel yerleşim", "en": "Physical layout" },
+      "narration": {
+        "tr": "Sipariş servisi tek bir region'da (Frankfurt) iki availability zone'a yayılmıştır. Her AZ ayrı bir veri merkezidir: ayrı elektrik, ayrı soğutma, ayrı fiber girişi. Aralarında yaklaşık 30 km ve 1–2 ms gecikme vardır.",
+        "en": "The order service is spread across two availability zones in one region (Frankfurt). Each AZ is a separate data center: separate power, cooling and fiber entry. They are about 30 km and 1–2 ms apart."
+      },
+      "durationMs": 4000,
+      "inherit": false,
+      "highlight": { "nodes": ["az-a", "az-b"], "edges": [] },
+      "nodeStates": {
+        "b3": { "visible": false },
+        "db-b": { "status": "idle" }
+      },
+      "edgeStates": { "lb-b3": { "visible": false }, "b2-dbb": { "visible": false } },
+      "annotations": [
+        { "id": "distance", "x": 380, "y": 460, "text": { "tr": "AZ'ler arası: ~30 km, 1–2 ms, özel fiber", "en": "Between AZs: ~30 km, 1–2 ms, private fiber" } }
+      ]
+    },
+    {
+      "id": "normal",
+      "title": { "tr": "Normal trafik: %50 / %50", "en": "Normal traffic: 50 / 50" },
+      "narration": {
+        "tr": "Yük dengeleyici istekleri iki AZ'ye eşit dağıtır. Uygulama sunucuları stateless'tır; yazmalar AZ-a'daki RDS primary'ye gider ve senkron olarak AZ-b'deki standby'a kopyalanır.",
+        "en": "The load balancer splits requests evenly across both AZs. App servers are stateless; writes go to the RDS primary in AZ-a and are synchronously copied to the standby in AZ-b."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["lb", "a1", "a2", "b1", "b2"], "edges": ["lb-a1", "lb-a2", "lb-b1", "lb-b2", "repl"] },
+      "nodeStates": {
+        "lb": { "status": "active" },
+        "a1": { "status": "active", "progress": 0.5 },
+        "a2": { "status": "active", "progress": 0.5 },
+        "b1": { "status": "active", "progress": 0.5 },
+        "b2": { "status": "active", "progress": 0.5 },
+        "db-a": { "status": "active", "badge": "primary" }
+      },
+      "edgeStates": { "repl": { "status": "active" } },
+      "packets": [
+        { "edge": "u-lb", "shape": "envelope", "repeat": 4, "repeatGapMs": 200, "durationMs": 700 },
+        { "edge": "lb-a1", "startAt": 700, "durationMs": 800 },
+        { "edge": "lb-b1", "startAt": 1000, "durationMs": 800 },
+        { "edge": "lb-a2", "startAt": 1300, "durationMs": 800 },
+        { "edge": "lb-b2", "startAt": 1600, "durationMs": 800 },
+        { "edge": "a2-dba", "startAt": 2100, "durationMs": 600, "shape": "square", "label": "INSERT" },
+        { "edge": "repl", "startAt": 2700, "durationMs": 700, "shape": "diamond", "color": "accent" }
+      ],
+      "annotations": [
+        { "id": "headroom", "x": 300, "y": 180, "text": { "tr": "Her AZ %50 yükte → biri düşerse diğeri %100'e çıkar", "en": "Each AZ at 50% → if one fails the other goes to 100%" }, "target": "lb" }
+      ]
+    },
+    {
+      "id": "outage",
+      "title": { "tr": "AZ-a kararıyor", "en": "AZ-a goes dark" },
+      "narration": {
+        "tr": "AZ-a'nın veri merkezinde elektrik kesintisi yaşanır ve jeneratörler devreye giremez. İçerideki tüm sunucular ve RDS primary aynı anda yanıt vermeyi keser. Yük dengeleyici bunu henüz bilmediği için birkaç istek AZ-a'ya gider ve zaman aşımına uğrar.",
+        "en": "A power outage hits AZ-a's data center and the generators fail to kick in. Every server inside, including the RDS primary, stops responding at once. The load balancer does not know yet, so a few requests go to AZ-a and time out."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["az-a", "a1", "a2", "db-a"], "edges": ["lb-a1", "lb-a2"] },
+      "nodeStates": {
+        "az-a": { "status": "down", "sublabel": { "tr": "ELEKTRİK KESİNTİSİ", "en": "POWER OUTAGE" } },
+        "a1": { "status": "down", "badge": "✕", "progress": 0 },
+        "a2": { "status": "down", "badge": "✕", "progress": 0 },
+        "db-a": { "status": "down", "badge": "✕" }
+      },
+      "edgeStates": {
+        "lb-a1": { "status": "error", "label": { "tr": "timeout", "en": "timeout" } },
+        "lb-a2": { "status": "error" },
+        "repl": { "status": "error" },
+        "a2-dba": { "status": "muted" }
+      },
+      "packets": [
+        { "edge": "lb-a1", "color": "danger", "shape": "square", "durationMs": 1200 },
+        { "edge": "lb-a2", "color": "danger", "shape": "square", "startAt": 600, "durationMs": 1200 }
+      ],
+      "annotations": [
+        { "id": "outage-note", "x": 690, "y": 70, "text": { "tr": "Patlama yarıçapı: yalnızca AZ-a", "en": "Blast radius: only AZ-a" }, "tone": "danger", "target": "az-a" }
+      ]
+    },
+    {
+      "id": "health-check",
+      "title": { "tr": "Health check fark ediyor", "en": "Health check notices" },
+      "narration": {
+        "tr": "Yük dengeleyici her birkaç saniyede bir sunucuları yoklar. Arka arkaya başarısız yoklamalardan sonra AZ-a'daki hedefleri havuzdan çıkarır. Bu süre tipik olarak 10–30 saniyedir; kullanıcı bu pencerede birkaç hata görebilir.",
+        "en": "The load balancer probes every server every few seconds. After consecutive failed probes it removes the AZ-a targets from the pool. This typically takes 10–30 seconds; users may see a few errors in that window."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["lb", "a1"], "edges": ["hc-a1"] },
+      "nodeStates": {
+        "a1": { "status": "muted", "badge": "OUT" },
+        "a2": { "status": "muted", "badge": "OUT" }
+      },
+      "edgeStates": {
+        "hc-a1": { "status": "active" },
+        "lb-a1": { "status": "muted", "label": "" },
+        "lb-a2": { "status": "muted" }
+      },
+      "packets": [
+        { "edge": "hc-a1", "shape": "diamond", "label": "GET /health", "durationMs": 700, "repeat": 3, "repeatGapMs": 250 }
+      ],
+      "annotations": [
+        { "id": "hc-note", "x": 300, "y": 180, "text": { "tr": "3 ardışık başarısız → havuz dışı", "en": "3 consecutive failures → out of pool" }, "tone": "warning", "target": "lb" }
+      ]
+    },
+    {
+      "id": "shift",
+      "title": { "tr": "Trafik AZ-b'ye kayıyor", "en": "Traffic shifts to AZ-b" },
+      "narration": {
+        "tr": "Artık tüm istekler AZ-b'ye gider; kalan iki sunucu %100 yüke çıkar. Aynı anda RDS, senkron kopyası güncel olan standby'ı primary'ye terfi ettirir; failover 30–60 saniye sürer ve bu sırada yazmalar hata alır — uygulama retry yapmalıdır.",
+        "en": "All requests now go to AZ-b; the remaining two servers go to 100% load. Meanwhile RDS promotes the standby, whose synchronous copy is up to date, to primary; failover takes 30–60 seconds and writes fail during it — the application must retry."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["b1", "b2", "db-b"], "edges": ["lb-b1", "lb-b2", "b2-dbb"] },
+      "nodeStates": {
+        "b1": { "status": "busy", "progress": 1 },
+        "b2": { "status": "busy", "progress": 1 },
+        "db-b": { "status": "active", "badge": "primary", "label": "RDS primary (yeni)", "sublabel": { "tr": "standby terfi etti", "en": "standby promoted" } }
+      },
+      "edgeStates": {
+        "hc-a1": { "status": "idle" },
+        "b2-dbb": { "visible": true, "status": "active" },
+        "repl": { "status": "muted" }
+      },
+      "packets": [
+        { "edge": "u-lb", "shape": "envelope", "repeat": 4, "repeatGapMs": 150, "durationMs": 600 },
+        { "edge": "lb-b1", "startAt": 600, "durationMs": 700 },
+        { "edge": "lb-b2", "startAt": 850, "durationMs": 700 },
+        { "edge": "lb-b1", "startAt": 1100, "durationMs": 700 },
+        { "edge": "lb-b2", "startAt": 1350, "durationMs": 700 },
+        { "edge": "b2-dbb", "startAt": 2200, "durationMs": 600, "shape": "square", "label": "INSERT" }
+      ],
+      "annotations": [
+        { "id": "shift-note", "x": 400, "y": 540, "text": { "tr": "AZ-b: %50 → %100 yük (headroom gerekir)", "en": "AZ-b: 50% → 100% load (headroom needed)" }, "tone": "warning" }
+      ]
+    },
+    {
+      "id": "autoscale",
+      "title": { "tr": "AZ-b'de otomatik ölçekleme", "en": "Autoscaling in AZ-b" },
+      "narration": {
+        "tr": "CPU %80'i aştığı için otomatik ölçekleme AZ-b'de yeni bir sunucu başlatır. İmaj çekilip uygulama ayağa kalkana kadar 1–3 dakika geçer; bu yüzden AWS 'static stability' ilkesi gereği kritik servisleri yeni kaynak açmaya gerek kalmayacak kadar fazla kapasiteyle çalıştırır.",
+        "en": "Because CPU exceeded 80%, autoscaling starts a new server in AZ-b. Pulling the image and booting the app takes 1–3 minutes; that is why AWS's 'static stability' principle runs critical services with enough spare capacity that no new resources are needed."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["b3"], "edges": ["lb-b3"] },
+      "nodeStates": {
+        "b3": { "visible": true, "status": "active", "badge": "NEW", "progress": 0.3 },
+        "b1": { "status": "active", "progress": 0.7 },
+        "b2": { "status": "active", "progress": 0.7 }
+      },
+      "edgeStates": { "lb-b3": { "visible": true, "status": "active" } },
+      "packets": [
+        { "edge": "lb-b3", "startAt": 1200, "durationMs": 800 },
+        { "edge": "lb-b1", "startAt": 1500, "durationMs": 800 },
+        { "edge": "lb-b3", "startAt": 2000, "durationMs": 800 }
+      ],
+      "annotations": [
+        { "id": "scale-note", "x": 400, "y": 540, "text": { "tr": "Yeni örnek: 1–3 dk (imaj çek + boot + readiness)", "en": "New instance: 1–3 min (pull image + boot + readiness)" }, "tone": "success", "target": "b3" }
+      ]
+    },
+    {
+      "id": "recovery",
+      "title": { "tr": "AZ-a geri geliyor", "en": "AZ-a comes back" },
+      "narration": {
+        "tr": "Elektrik geri gelince AZ-a'daki sunucular açılır. Yük dengeleyici onları hemen değil, birkaç ardışık başarılı health check'ten sonra havuza alır (flapping'i önlemek için). Eski primary artık standby olarak senkronize edilir; kullanıcı tüm bu süreçte yalnızca birkaç saniyelik hata gördü.",
+        "en": "When power returns, the AZ-a servers boot. The load balancer adds them back only after several consecutive successful health checks (to avoid flapping). The old primary is now synced as a standby; throughout all of this the user saw only a few seconds of errors."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["az-a", "a1", "a2", "db-a"], "edges": ["hc-a1", "lb-a1", "lb-a2", "repl"] },
+      "nodeStates": {
+        "az-a": { "status": "success", "sublabel": { "tr": "elektrik geri geldi", "en": "power restored" } },
+        "a1": { "status": "active", "badge": "", "progress": 0.3 },
+        "a2": { "status": "active", "badge": "", "progress": 0.3 },
+        "db-a": { "status": "idle", "badge": "standby", "label": "RDS standby (eski primary)" },
+        "b1": { "status": "active", "progress": 0.4 },
+        "b2": { "status": "active", "progress": 0.4 },
+        "b3": { "status": "active", "badge": "", "progress": 0.4 }
+      },
+      "edgeStates": {
+        "lb-a1": { "status": "active" },
+        "lb-a2": { "status": "active" },
+        "hc-a1": { "status": "active" },
+        "repl": { "status": "active", "label": { "tr": "ters yönde sync", "en": "sync reversed" } }
+      },
+      "packets": [
+        { "edge": "hc-a1", "shape": "diamond", "label": "200 OK", "color": "success", "durationMs": 600, "repeat": 3, "repeatGapMs": 200 },
+        { "edge": "lb-a1", "startAt": 2400, "durationMs": 800 },
+        { "edge": "repl", "direction": "backward", "startAt": 2000, "durationMs": 800, "shape": "diamond", "color": "accent" }
+      ],
+      "annotations": [
+        { "id": "recover-note", "x": 300, "y": 180, "text": { "tr": "3 ardışık başarılı → havuza geri", "en": "3 consecutive successes → back in pool" }, "tone": "success", "target": "lb" }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["availability-zone", "multi-az", "failover", "region", "health-check"]
+}

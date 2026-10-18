@@ -1,0 +1,124 @@
+{
+  "$ref": "#/definitions/lesson-frontmatter",
+  "definitions": {
+    "lesson-frontmatter": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "slug": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "module": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "order": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "title": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "tr": {
+                  "type": "string"
+                },
+                "en": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "tr"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "summary": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "tr": {
+                  "type": "string"
+                },
+                "en": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "tr"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "durationMinutes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 240,
+          "default": 15
+        },
+        "level": {
+          "type": "string",
+          "enum": [
+            "beginner",
+            "intermediate",
+            "advanced"
+          ],
+          "default": "beginner"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "prerequisites": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "concepts": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "draft",
+            "published"
+          ],
+          "default": "published"
+        }
+      },
+      "required": [
+        "id",
+        "slug",
+        "module",
+        "order",
+        "title",
+        "summary"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

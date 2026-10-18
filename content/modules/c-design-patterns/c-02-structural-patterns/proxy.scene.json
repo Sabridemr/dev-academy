@@ -1,0 +1,363 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "c-02-proxy",
+  "title": {
+    "tr": "Proxy: Erişimi Kontrol Eden Vekil",
+    "en": "Proxy: A Stand-in that Controls Access"
+  },
+  "summary": {
+    "tr": "İstemci ImageService sanır ama CachingImageProxy ile konuşur; ilk çağrı cache miss ile S3'e gider ve sonuç saklanır, ikinci çağrı cache'ten döner; yetki kontrolü de aynı yerde yapılır.",
+    "en": "The client thinks it talks to ImageService but talks to CachingImageProxy; the first call misses the cache and goes to S3, the result is stored, the second call is served from cache; authorization is checked in the same place."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda GalleryController, ortada CachingImageProxy ve altında LRU cache, sağda gerçek S3ImageService. İlk getThumbnail çağrısında proxy cache'e bakar, bulamaz, gerçek servisi çağırır ve sonucu cache'e yazar. İkinci çağrıda aynı anahtar cache'te bulunur ve gerçek servis hiç çağrılmaz. Son adımda yetkisiz bir istek proxy tarafından reddedilir.",
+      "en": "GalleryController on the left, CachingImageProxy in the middle with an LRU cache below it, the real S3ImageService on the right. On the first getThumbnail call the proxy checks the cache, misses, calls the real service and writes the result to the cache. On the second call the key is found in the cache and the real service is never called. In the last step an unauthorized request is rejected by the proxy."
+    }
+  },
+  "canvas": {
+    "width": 1000,
+    "height": 600
+  },
+  "nodes": [
+    {
+      "id": "client",
+      "kind": "generic",
+      "label": "GalleryController",
+      "x": 120,
+      "y": 260,
+      "w": 180,
+      "h": 70,
+      "sublabel": {
+        "tr": "ImageService bekler",
+        "en": "expects ImageService"
+      }
+    },
+    {
+      "id": "proxy",
+      "kind": "generic",
+      "label": "CachingImageProxy",
+      "x": 480,
+      "y": 260,
+      "w": 210,
+      "h": 80,
+      "sublabel": {
+        "tr": "implements ImageService",
+        "en": "implements ImageService"
+      }
+    },
+    {
+      "id": "cache",
+      "kind": "generic",
+      "label": "LRU cache",
+      "x": 480,
+      "y": 480,
+      "w": 160,
+      "h": 60,
+      "sublabel": {
+        "tr": "boş",
+        "en": "empty"
+      }
+    },
+    {
+      "id": "real",
+      "kind": "generic",
+      "label": "S3ImageService",
+      "x": 850,
+      "y": 260,
+      "w": 190,
+      "h": 70,
+      "sublabel": {
+        "tr": "gerçek nesne · 120 ms",
+        "en": "real subject · 120 ms"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "c-p",
+      "from": "client",
+      "to": "proxy",
+      "kind": "request",
+      "label": "getThumbnail(\"img-7\")"
+    },
+    {
+      "id": "p-c",
+      "from": "proxy",
+      "to": "cache",
+      "kind": "data",
+      "label": "get / set"
+    },
+    {
+      "id": "p-r",
+      "from": "proxy",
+      "to": "real",
+      "kind": "request",
+      "label": "getThumbnail(\"img-7\")"
+    }
+  ],
+  "steps": [
+    {
+      "id": "miss",
+      "title": {
+        "tr": "1. İlk çağrı: cache miss",
+        "en": "1. First call: cache miss"
+      },
+      "narration": {
+        "tr": "Controller getThumbnail(\"img-7\") çağırır; elindeki referans proxy'dir ama tipi ImageService'tir. Proxy önce cache'e bakar: yok.",
+        "en": "The controller calls getThumbnail(\"img-7\"); its reference is the proxy but its type is ImageService. The proxy checks the cache first: nothing."
+      },
+      "durationMs": 3500,
+      "inherit": false,
+      "highlight": {
+        "nodes": [
+          "client",
+          "proxy",
+          "cache"
+        ],
+        "edges": [
+          "c-p",
+          "p-c"
+        ]
+      },
+      "nodeStates": {
+        "proxy": {
+          "status": "active"
+        },
+        "cache": {
+          "status": "warning",
+          "badge": "MISS"
+        }
+      },
+      "edgeStates": {},
+      "packets": [
+        {
+          "edge": "c-p",
+          "shape": "envelope",
+          "label": "getThumbnail(\"img-7\")",
+          "durationMs": 900
+        },
+        {
+          "edge": "p-c",
+          "startAt": 1000,
+          "shape": "diamond",
+          "label": "get",
+          "durationMs": 600
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "id": "forward",
+      "title": {
+        "tr": "2. Gerçek nesneye ilet, sonucu sakla",
+        "en": "2. Forward to the real subject, store the result"
+      },
+      "narration": {
+        "tr": "Proxy çağrıyı S3ImageService'e iletir (120 ms), dönen baytları cache'e yazar ve istemciye döner. İstemci S3'ün varlığını bile bilmez.",
+        "en": "The proxy forwards to S3ImageService (120 ms), writes the returned bytes to the cache and returns to the client. The client does not even know S3 exists."
+      },
+      "durationMs": 4000,
+      "highlight": {
+        "nodes": [
+          "real",
+          "cache"
+        ],
+        "edges": [
+          "p-r",
+          "p-c"
+        ]
+      },
+      "nodeStates": {
+        "real": {
+          "status": "active"
+        },
+        "cache": {
+          "status": "success",
+          "badge": "1",
+          "sublabel": {
+            "tr": "img-7 → 48 KB",
+            "en": "img-7 → 48 KB"
+          }
+        }
+      },
+      "edgeStates": {},
+      "packets": [
+        {
+          "edge": "p-r",
+          "shape": "envelope",
+          "durationMs": 900
+        },
+        {
+          "edge": "p-r",
+          "startAt": 1000,
+          "direction": "backward",
+          "color": "success",
+          "label": "48 KB · 120 ms",
+          "durationMs": 900
+        },
+        {
+          "edge": "p-c",
+          "startAt": 2000,
+          "shape": "square",
+          "label": "set",
+          "durationMs": 600
+        },
+        {
+          "edge": "c-p",
+          "startAt": 2600,
+          "direction": "backward",
+          "color": "success",
+          "durationMs": 700
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a2",
+          "x": 850,
+          "y": 380,
+          "text": {
+            "tr": "pahalı çağrı: ağ + S3",
+            "en": "expensive call: network + S3"
+          },
+          "tone": "warning",
+          "target": "real"
+        }
+      ]
+    },
+    {
+      "id": "hit",
+      "title": {
+        "tr": "3. İkinci çağrı: cache hit",
+        "en": "3. Second call: cache hit"
+      },
+      "narration": {
+        "tr": "Aynı anahtar tekrar istenir. Proxy cache'te bulur ve 0,2 ms'de döner; gerçek servis hiç çağrılmaz. Aynı yapı tembel yükleme (virtual proxy) ve uzak çağrı (remote proxy) için de kullanılır.",
+        "en": "The same key is requested again. The proxy finds it in the cache and returns in 0.2 ms; the real service is never called. The same structure serves lazy loading (virtual proxy) and remote calls (remote proxy)."
+      },
+      "durationMs": 3500,
+      "highlight": {
+        "nodes": [
+          "proxy",
+          "cache"
+        ],
+        "edges": [
+          "c-p",
+          "p-c"
+        ]
+      },
+      "nodeStates": {
+        "cache": {
+          "badge": "HIT"
+        },
+        "real": {
+          "status": "idle"
+        }
+      },
+      "edgeStates": {},
+      "packets": [
+        {
+          "edge": "c-p",
+          "shape": "envelope",
+          "label": "getThumbnail(\"img-7\")",
+          "durationMs": 800
+        },
+        {
+          "edge": "p-c",
+          "startAt": 900,
+          "shape": "diamond",
+          "label": "get",
+          "durationMs": 500
+        },
+        {
+          "edge": "c-p",
+          "startAt": 1500,
+          "direction": "backward",
+          "color": "success",
+          "label": "48 KB · 0,2 ms",
+          "durationMs": 700
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a3",
+          "x": 850,
+          "y": 380,
+          "text": {
+            "tr": "gerçek nesne çağrılmadı",
+            "en": "real subject not called"
+          },
+          "tone": "success",
+          "target": "real"
+        }
+      ]
+    },
+    {
+      "id": "protect",
+      "title": {
+        "tr": "4. Koruma proxy'si: yetkisiz istek",
+        "en": "4. Protection proxy: unauthorized request"
+      },
+      "narration": {
+        "tr": "Aynı proxy yetki de kontrol edebilir: istek sahibi görsele erişemiyorsa proxy 403 döner ve gerçek nesneye hiç gitmez. Decorator ile fark: proxy nesnenin yaşam döngüsünü ve erişimini yönetir; decorator yalnızca davranış ekler.",
+        "en": "The same proxy can also check authorization: if the requester may not access the image, the proxy returns 403 and never reaches the real subject. Difference from Decorator: a proxy manages the object's lifecycle and access; a decorator only adds behavior."
+      },
+      "durationMs": 3500,
+      "highlight": {
+        "nodes": [
+          "client",
+          "proxy"
+        ],
+        "edges": [
+          "c-p"
+        ]
+      },
+      "nodeStates": {
+        "proxy": {
+          "status": "error",
+          "badge": "403"
+        },
+        "cache": {
+          "badge": ""
+        }
+      },
+      "edgeStates": {},
+      "packets": [
+        {
+          "edge": "c-p",
+          "shape": "envelope",
+          "label": "getThumbnail(\"img-9\") · user B",
+          "durationMs": 900
+        },
+        {
+          "edge": "c-p",
+          "startAt": 1000,
+          "direction": "backward",
+          "color": "danger",
+          "label": "403 Forbidden",
+          "durationMs": 800
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a4",
+          "x": 480,
+          "y": 130,
+          "text": {
+            "tr": "proxy: erişim + yaşam döngüsü; decorator: davranış",
+            "en": "proxy: access + lifecycle; decorator: behavior"
+          },
+          "tone": "info",
+          "target": "proxy"
+        }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": [
+    "proxy",
+    "structural"
+  ]
+}

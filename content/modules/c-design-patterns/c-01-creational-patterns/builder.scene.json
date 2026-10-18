@@ -1,0 +1,315 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "c-01-builder",
+  "title": {
+    "tr": "Builder: Adım Adım Kurulum, Tek Doğrulama",
+    "en": "Builder: Step-by-Step Assembly, Single Validation"
+  },
+  "summary": {
+    "tr": "İstemci builder üzerinde zincirleme çağrılar yapar; build() doğrular ve değişmez HttpRequest üretir.",
+    "en": "The client chains calls on the builder; build() validates and produces an immutable HttpRequest."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda ApiClient, ortada HttpRequestBuilder ve alanları, sağda üretilecek HttpRequest. İstemci url, header ve timeout çağrılarını zincirler; her çağrı builder'ın iç durumunu doldurur ve kendini döner. build çağrısında builder zorunlu alanları doğrular, değişmez HttpRequest yaratır ve istemciye döner.",
+      "en": "ApiClient on the left, HttpRequestBuilder with its fields in the middle, the HttpRequest to be produced on the right. The client chains url, header and timeout calls; each fills the builder's state and returns itself. On build the builder validates required fields, creates an immutable HttpRequest and returns it to the client."
+    }
+  },
+  "canvas": {
+    "width": 1000,
+    "height": 600
+  },
+  "nodes": [
+    {
+      "id": "client",
+      "kind": "generic",
+      "label": "ApiClient",
+      "x": 120,
+      "y": 300,
+      "w": 150,
+      "h": 64,
+      "sublabel": {
+        "tr": "fetchOrders()",
+        "en": "fetchOrders()"
+      }
+    },
+    {
+      "id": "builder",
+      "kind": "generic",
+      "label": "HttpRequestBuilder",
+      "x": 480,
+      "y": 300,
+      "w": 260,
+      "h": 90,
+      "sublabel": {
+        "tr": "url: — · headers: {} · timeout: 30000",
+        "en": "url: — · headers: {} · timeout: 30000"
+      }
+    },
+    {
+      "id": "req",
+      "kind": "generic",
+      "label": "HttpRequest",
+      "x": 840,
+      "y": 300,
+      "w": 180,
+      "h": 80,
+      "sublabel": {
+        "tr": "henüz yok",
+        "en": "not yet created"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "cl-b",
+      "from": "client",
+      "to": "builder",
+      "kind": "request",
+      "label": ".url().header().timeout()"
+    },
+    {
+      "id": "b-self",
+      "from": "builder",
+      "to": "builder",
+      "kind": "control",
+      "label": "return this",
+      "style": "dotted",
+      "curvature": 0.8
+    },
+    {
+      "id": "b-req",
+      "from": "builder",
+      "to": "req",
+      "kind": "control",
+      "label": "build() → new"
+    }
+  ],
+  "steps": [
+    {
+      "id": "url",
+      "title": {
+        "tr": "1. .url(...)",
+        "en": "1. .url(...)"
+      },
+      "narration": {
+        "tr": "ApiClient zinciri başlatır: builder.url(\"/orders\"). Builder değeri saklar ve this döner; böylece bir sonraki çağrı aynı nesne üzerinde devam eder (fluent interface).",
+        "en": "ApiClient starts the chain: builder.url(\"/orders\"). The builder stores the value and returns this, so the next call continues on the same object (fluent interface)."
+      },
+      "durationMs": 3500,
+      "inherit": false,
+      "highlight": {
+        "nodes": [
+          "client",
+          "builder"
+        ],
+        "edges": [
+          "cl-b",
+          "b-self"
+        ]
+      },
+      "nodeStates": {
+        "builder": {
+          "status": "active",
+          "sublabel": {
+            "tr": "url: /orders · headers: {} · timeout: 30000",
+            "en": "url: /orders · headers: {} · timeout: 30000"
+          }
+        },
+        "req": {
+          "visible": false
+        }
+      },
+      "edgeStates": {},
+      "packets": [
+        {
+          "edge": "cl-b",
+          "shape": "envelope",
+          "label": "url(\"/orders\")",
+          "durationMs": 900
+        },
+        {
+          "edge": "b-self",
+          "startAt": 1000,
+          "shape": "dot",
+          "label": "this",
+          "durationMs": 700
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a1",
+          "x": 480,
+          "y": 150,
+          "text": {
+            "tr": "her adım isteğe bağlı, sırası serbest",
+            "en": "every step optional, any order"
+          },
+          "target": "builder"
+        }
+      ]
+    },
+    {
+      "id": "header",
+      "title": {
+        "tr": "2. .header(...).timeout(...)",
+        "en": "2. .header(...).timeout(...)"
+      },
+      "narration": {
+        "tr": "Zincir devam eder: header(\"Authorization\", token) ve timeout(5000). Telescoping constructor'daki new Request(url, null, null, 5000, null...) karmaşası yoktur; her parametre adıyla verilir.",
+        "en": "The chain continues: header(\"Authorization\", token) and timeout(5000). No telescoping constructor mess like new Request(url, null, null, 5000, null...); every parameter is named."
+      },
+      "durationMs": 3500,
+      "highlight": {
+        "nodes": [
+          "builder"
+        ],
+        "edges": [
+          "cl-b"
+        ]
+      },
+      "nodeStates": {
+        "builder": {
+          "sublabel": {
+            "tr": "url: /orders · headers: {Authorization} · timeout: 5000",
+            "en": "url: /orders · headers: {Authorization} · timeout: 5000"
+          }
+        }
+      },
+      "edgeStates": {},
+      "packets": [
+        {
+          "edge": "cl-b",
+          "shape": "envelope",
+          "label": "header(...)",
+          "durationMs": 800
+        },
+        {
+          "edge": "cl-b",
+          "startAt": 900,
+          "shape": "envelope",
+          "label": "timeout(5000)",
+          "durationMs": 800
+        },
+        {
+          "edge": "b-self",
+          "startAt": 1800,
+          "shape": "dot",
+          "label": "this",
+          "durationMs": 600
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "id": "build",
+      "title": {
+        "tr": "3. build(): doğrula ve üret",
+        "en": "3. build(): validate and produce"
+      },
+      "narration": {
+        "tr": "build() zorunlu alanları tek yerde kontrol eder (url yoksa hata), varsayılanları uygular ve değişmez (readonly) bir HttpRequest yaratır. Yarım kurulmuş nesne hiçbir zaman dışarı sızmaz.",
+        "en": "build() checks required fields in one place (error if url is missing), applies defaults and creates an immutable (readonly) HttpRequest. A half-built object never leaks out."
+      },
+      "durationMs": 3500,
+      "highlight": {
+        "nodes": [
+          "builder",
+          "req"
+        ],
+        "edges": [
+          "b-req"
+        ]
+      },
+      "nodeStates": {
+        "req": {
+          "visible": true,
+          "status": "success",
+          "badge": "immutable",
+          "sublabel": {
+            "tr": "GET /orders · 5000 ms",
+            "en": "GET /orders · 5000 ms"
+          }
+        },
+        "builder": {
+          "badge": "validate ✓"
+        }
+      },
+      "edgeStates": {},
+      "packets": [
+        {
+          "edge": "cl-b",
+          "shape": "envelope",
+          "label": "build()",
+          "durationMs": 700
+        },
+        {
+          "edge": "b-req",
+          "startAt": 800,
+          "shape": "square",
+          "color": "accent",
+          "label": "new HttpRequest(...)",
+          "durationMs": 1000
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a3",
+          "x": 840,
+          "y": 170,
+          "text": {
+            "tr": "doğrulama tek noktada: build()",
+            "en": "validation in one place: build()"
+          },
+          "tone": "success",
+          "target": "req"
+        }
+      ]
+    },
+    {
+      "id": "return",
+      "title": {
+        "tr": "4. Ürün istemciye döner",
+        "en": "4. The product returns to the client"
+      },
+      "narration": {
+        "tr": "ApiClient artık geçerli ve değişmez bir isteğe sahiptir. Builder yeniden kullanılabilir ya da atılabilir. Sık kurulumlar için bir \"director\" (RequestPresets.jsonGet) zinciri önceden hazırlar.",
+        "en": "ApiClient now owns a valid, immutable request. The builder can be reused or discarded. For frequent setups a \"director\" (RequestPresets.jsonGet) pre-assembles the chain."
+      },
+      "durationMs": 3500,
+      "highlight": {
+        "nodes": [
+          "client",
+          "req"
+        ],
+        "edges": [
+          "cl-b"
+        ]
+      },
+      "nodeStates": {
+        "builder": {
+          "status": "idle",
+          "badge": ""
+        }
+      },
+      "edgeStates": {},
+      "packets": [
+        {
+          "edge": "cl-b",
+          "direction": "backward",
+          "color": "success",
+          "label": "HttpRequest",
+          "durationMs": 900
+        }
+      ],
+      "annotations": []
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": [
+    "builder",
+    "creational"
+  ]
+}

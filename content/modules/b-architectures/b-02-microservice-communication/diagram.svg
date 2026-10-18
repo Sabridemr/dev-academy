@@ -1,0 +1,115 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 460" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Senkron istek-yanıt zinciri ile asenkron olay yayınının karşılaştırması</title>
+  <desc id="desc">Üst yarıda bir istemci Orders servisini çağırır; Orders sırayla Inventory ve Payments servislerini senkron REST veya gRPC ile çağırır ve Payments yavaş olduğu için tüm zincir zaman aşımına uğrar. Alt yarıda Orders bir olay broker'ına OrderPlaced olayını yayınlar ve hemen 202 döner; Inventory, Payments ve yeni eklenen Loyalty servisi olayı kendi hızlarında tüketir.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+    <marker id="arrow-d" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-danger, #ef4444)"/>
+    </marker>
+    <marker id="arrow-s" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-success, #10b981)"/>
+    </marker>
+    <marker id="arrow-p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-primary, #6366f1)"/>
+    </marker>
+  </defs>
+
+  <!-- ÜST: Senkron -->
+  <rect x="20" y="16" width="920" height="196" rx="14" fill="var(--da-danger, #ef4444)" fill-opacity="0.04" stroke="var(--da-border, #cbd5e1)" stroke-dasharray="6 6"/>
+  <text x="36" y="40" font-size="14" font-weight="700" fill="var(--da-fg, #0f172a)">A. Senkron zincir (REST / gRPC)</text>
+  <text x="36" y="58" font-size="11" fill="var(--da-muted, #64748b)">çağıran bekler · zamansal bağlaşıklık yüksek · gecikmeler toplanır</text>
+
+  <g fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5">
+    <rect x="50" y="90" width="110" height="50" rx="10"/>
+    <rect x="260" y="90" width="120" height="50" rx="10"/>
+    <rect x="480" y="90" width="120" height="50" rx="10"/>
+    <rect x="700" y="90" width="120" height="50" rx="10"/>
+  </g>
+  <g font-size="12" font-weight="600" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="105" y="111">İstemci</text>
+    <text x="320" y="111">Orders</text>
+    <text x="540" y="111">Inventory</text>
+    <text x="760" y="111">Payments</text>
+  </g>
+  <g font-size="10" fill="var(--da-muted, #64748b)" text-anchor="middle">
+    <text x="105" y="128">bekliyor...</text>
+    <text x="320" y="128">bekliyor...</text>
+    <text x="540" y="128">bekliyor...</text>
+    <text x="760" y="128" fill="var(--da-danger, #ef4444)">yavaş: 2,8 s</text>
+  </g>
+  <g stroke="var(--da-muted, #64748b)" stroke-width="1.6" fill="none" marker-end="url(#arrow)">
+    <path d="M 160 105 L 258 105"/>
+    <path d="M 380 105 L 478 105"/>
+    <path d="M 600 105 L 698 105"/>
+  </g>
+  <g font-size="10" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="209" y="98">POST /orders</text>
+    <text x="429" y="98">gRPC Reserve()</text>
+    <text x="649" y="98">gRPC Charge()</text>
+  </g>
+  <!-- geri dönen hata -->
+  <g stroke="var(--da-danger, #ef4444)" stroke-width="1.4" fill="none" stroke-dasharray="4 3" marker-end="url(#arrow-d)">
+    <path d="M 698 125 L 600 125"/>
+    <path d="M 478 125 L 380 125"/>
+    <path d="M 258 125 L 160 125"/>
+  </g>
+  <g font-size="10" fill="var(--da-danger, #ef4444)" text-anchor="middle">
+    <text x="649" y="140">timeout 1 s</text>
+    <text x="429" y="140">DEADLINE_EXCEEDED</text>
+    <text x="209" y="140">504 Gateway Timeout</text>
+  </g>
+  <text x="480" y="172" text-anchor="middle" font-size="11" fill="var(--da-fg, #0f172a)">erişilebilirlik: 0,999 × 0,999 × 0,999 ≈ %99,7 · gecikme: t₁ + t₂ + t₃ · zorunlu: timeout, retry (idempotent), circuit breaker</text>
+  <text x="480" y="192" text-anchor="middle" font-size="11" fill="var(--da-success, #10b981)">uygun: kullanıcı yanıtı beklerken gereken sorgular (fiyat, stok durumu, profil)</text>
+
+  <!-- ALT: Asenkron -->
+  <rect x="20" y="232" width="920" height="212" rx="14" fill="var(--da-success, #10b981)" fill-opacity="0.04" stroke="var(--da-border, #cbd5e1)" stroke-dasharray="6 6"/>
+  <text x="36" y="256" font-size="14" font-weight="700" fill="var(--da-fg, #0f172a)">B. Asenkron olay (Kafka / RabbitMQ / SQS)</text>
+  <text x="36" y="274" font-size="11" fill="var(--da-muted, #64748b)">üretici yayınlar ve devam eder · tüketici sonra işler · nihai tutarlılık · at-least-once → idempotent tüketici</text>
+
+  <g fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5">
+    <rect x="50" y="320" width="110" height="50" rx="10"/>
+    <rect x="260" y="320" width="120" height="50" rx="10"/>
+  </g>
+  <rect x="470" y="300" width="130" height="90" rx="10" fill="var(--da-primary, #6366f1)" fill-opacity="0.12" stroke="var(--da-primary, #6366f1)" stroke-width="1.5"/>
+  <g fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5">
+    <rect x="720" y="292" width="120" height="40" rx="10"/>
+    <rect x="720" y="344" width="120" height="40" rx="10"/>
+  </g>
+  <rect x="720" y="396" width="120" height="40" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-success, #10b981)" stroke-width="1.5" stroke-dasharray="5 3"/>
+  <g font-size="12" font-weight="600" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="105" y="341">İstemci</text>
+    <text x="320" y="341">Orders</text>
+    <text x="535" y="330">Event Broker</text>
+    <text x="780" y="316">Inventory</text>
+    <text x="780" y="368">Payments</text>
+    <text x="780" y="420" fill="var(--da-success, #10b981)">Loyalty (yeni)</text>
+  </g>
+  <g font-size="10" fill="var(--da-muted, #64748b)" text-anchor="middle">
+    <text x="105" y="358">202 aldı, devam</text>
+    <text x="320" y="358">yayınladı, boşta</text>
+    <text x="535" y="350">topic: orders</text>
+    <text x="535" y="366">partition · offset</text>
+    <text x="535" y="382">retention 7 gün</text>
+  </g>
+  <g stroke="var(--da-muted, #64748b)" stroke-width="1.6" fill="none" marker-end="url(#arrow)">
+    <path d="M 160 335 L 258 335"/>
+  </g>
+  <path d="M 258 355 L 160 355" stroke="var(--da-success, #10b981)" stroke-width="1.4" fill="none" marker-end="url(#arrow-s)"/>
+  <g font-size="10" text-anchor="middle">
+    <text x="209" y="328" fill="var(--da-fg, #0f172a)">POST /orders</text>
+    <text x="209" y="369" fill="var(--da-success, #10b981)">202 Accepted (40 ms)</text>
+  </g>
+  <path d="M 380 345 L 468 345" stroke="var(--da-primary, #6366f1)" stroke-width="1.8" fill="none" marker-end="url(#arrow-p)"/>
+  <text x="424" y="338" text-anchor="middle" font-size="10" fill="var(--da-primary, #6366f1)">OrderPlaced</text>
+  <g stroke="var(--da-primary, #6366f1)" stroke-width="1.4" fill="none" stroke-dasharray="5 3" marker-end="url(#arrow-p)">
+    <path d="M 600 325 L 718 312"/>
+    <path d="M 600 345 L 718 364"/>
+    <path d="M 600 365 L 718 416"/>
+  </g>
+  <text x="660" y="300" font-size="9.5" fill="var(--da-primary, #6366f1)">subscribe (kendi hızında)</text>
+  <text x="860" y="420" font-size="9.5" fill="var(--da-success, #10b981)">üreticiye dokunmadan eklendi</text>
+
+  <text x="480" y="432" text-anchor="middle" font-size="11" fill="var(--da-fg, #0f172a)">Payments yavaşsa kuyruk şişer ama Orders ve istemci etkilenmez · bedel: nihai tutarlılık, dağınık hata ayıklama, idempotency zorunluluğu</text>
+</svg>

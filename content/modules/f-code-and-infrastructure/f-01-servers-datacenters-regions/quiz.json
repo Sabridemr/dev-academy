@@ -1,0 +1,110 @@
+{
+  "id": "f-01-servers-datacenters-regions-quiz",
+  "title": { "tr": "Sunucu Türleri ve Fiziksel Yerleşim Quiz", "en": "Server Types and Physical Placement Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Container ile sanal makine (VM) arasındaki temel fark nedir?",
+        "en": "What is the fundamental difference between a container and a virtual machine (VM)?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Container'lar kendi çekirdeğini taşır ve hypervisor üzerinde çalışır; VM'ler host'un çekirdeğini paylaşır", "en": "Containers carry their own kernel and run on a hypervisor; VMs share the host's kernel" } },
+        { "id": "b", "text": { "tr": "Container'lar namespace ve cgroup ile VM'den daha güçlü izolasyon sağlar; VM'ler yalnızca süreç izolasyonu verir", "en": "Containers isolate more strongly than VMs via namespaces and cgroups; VMs only give process isolation" } },
+        { "id": "c", "text": { "tr": "Container'lar işletim sistemi çekirdeğini paylaşır, VM'ler donanımı hypervisor üzerinden paylaşır", "en": "Containers share the OS kernel, VMs share hardware through a hypervisor" } },
+        { "id": "d", "text": { "tr": "VM'ler saniyeler içinde açılır ve bir makineye onlarcası sığar; container'lar dakikalar sürer ve seyrek yerleşir", "en": "VMs start in seconds and dozens fit on one machine; containers take minutes and pack sparsely" } }
+      ],
+      "correct": ["c"],
+      "explanation": {
+        "tr": "Container'lar aynı çekirdeği namespace ve cgroup ile paylaşır; bu yüzden saniyeler içinde açılır ve yoğun yerleşir, ama izolasyonu VM'den zayıftır — VM hypervisor üzerinde kendi çekirdeğini taşır. Çekirdek ilişkisini, izolasyon gücünü ve başlatma sürelerini tersine çeviren seçenekler bu yüzden yanlıştır; çekirdek seviyesindeki bir açık tüm container'ları etkiler.",
+        "en": "Containers share the same kernel via namespaces and cgroups; that is why they start in seconds and pack densely, but they isolate less than VMs — a VM carries its own kernel on the hypervisor. The options that invert the kernel relationship, isolation strength or startup times are therefore wrong; a kernel-level vulnerability affects every container."
+      },
+      "difficulty": "easy",
+      "concepts": ["container", "virtual-machine"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "Bir availability zone (AZ) için aşağıdakilerden hangisi doğrudur?",
+        "en": "Which statement about an availability zone (AZ) is correct?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Aynı region içinde fiziksel olarak ayrı, düşük gecikmeli özel fiberle bağlı bir veya birkaç veri merkezidir", "en": "It is one or more data centers in the same region, physically separate but connected by low-latency private fiber" } },
+        { "id": "b", "text": { "tr": "Aynı region'daki diğer AZ'lerle aynı kampüsü ve elektrik şebekesini paylaşan, ayrı salonlara bölünmüş bir veri merkezidir", "en": "It is a data center split into separate halls that shares the same campus and power grid with the region's other AZs" } },
+        { "id": "c", "text": { "tr": "Bir veri merkezi içinde kendi ToR switch'i ve güç hattı olan, patlama yarıçapı ~40 sunucuyla sınırlı bir rack grubudur", "en": "It is a group of racks inside a data center with its own ToR switch and power line, with a blast radius of ~40 servers" } },
+        { "id": "d", "text": { "tr": "Yüzlerce kilometre uzaktaki başka bir region'a asenkron replikasyonla bağlı, felaket kurtarma için kullanılan bağımsız bölgedir", "en": "It is an independent site hundreds of kilometres away, linked to another region by asynchronous replication for disaster recovery" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "AZ'ler aynı region içinde kilometrelerce ayrı, ayrı elektrik ve soğutmaya sahip veri merkezleridir; aralarında 1–2 ms gecikme vardır. Aynı kampüsü ve şebekeyi paylaşsalardı tek bir kesinti hepsini vururdu; başka region'a asenkron bağlı bölge AZ değil multi-region kurgusudur; rack ise AZ'nin çok altında, ~40 sunuculuk bir hata alanıdır.",
+        "en": "AZs are data centers kilometres apart within the same region, with separate power and cooling, linked at 1–2 ms latency. If they shared a campus and grid, one outage would take them all down; a site linked asynchronously to another region is a multi-region setup, not an AZ; a rack is a ~40-server failure domain far below the AZ level."
+      },
+      "difficulty": "easy",
+      "concepts": ["availability-zone", "region", "data-center"]
+    },
+    {
+      "id": "q3",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Bir AZ kesintisinde kullanıcıların kesinti fark etmemesi için hangileri gereklidir? (Birden fazla seçin)",
+        "en": "Which of the following are needed so users do not notice an AZ outage? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Servisin en az iki AZ'de replikası olmalı", "en": "The service must have replicas in at least two AZs" } },
+        { "id": "b", "text": { "tr": "Kalan AZ'ler tüm trafiği taşıyacak kadar headroom'a sahip olmalı", "en": "The remaining AZs must have enough headroom to carry all traffic" } },
+        { "id": "c", "text": { "tr": "Veritabanının başka bir AZ'de senkron bir standby'ı olmalı", "en": "The database must have a synchronous standby in another AZ" } },
+        { "id": "d", "text": { "tr": "Tüm sunucular aynı AZ'de toplanmalı ki birbirleriyle hızlı konuşsun", "en": "All servers should be placed in the same AZ so they talk fast" } }
+      ],
+      "correct": ["a", "b", "c"],
+      "explanation": {
+        "tr": "Multi-AZ replika, headroom ve veritabanı standby'ı üçü birden gerekir. Tüm sunucuları tek AZ'ye koymak (d) gecikmeyi azaltır ama AZ düştüğünde her şey birlikte düşer — tam olarak kaçınılması gereken patlama yarıçapıdır.",
+        "en": "Multi-AZ replicas, headroom and a database standby are all required. Putting every server in one AZ (d) lowers latency but everything fails together when that AZ fails — exactly the blast radius to avoid."
+      },
+      "difficulty": "medium",
+      "concepts": ["multi-az-failover", "blast-radius"]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Serverless (FaaS) fonksiyonları her zaman container tabanlı bir API'den daha düşük gecikmeyle yanıt verir.",
+        "en": "Serverless (FaaS) functions always respond with lower latency than a container-based API."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "Yanlış. Serverless'ta uzun süre çağrılmayan bir fonksiyon 'soğuk başlangıç' (cold start) yaşar; runtime ve bağımlılıklar yüklenirken yüzlerce milisaniye ila birkaç saniye gecikme oluşur. Sürekli çalışan bir container bu maliyeti ödemez. Serverless'ın avantajı gecikme değil, boşta sıfır maliyet ve otomatik ölçeklemedir.",
+        "en": "False. A serverless function that has not been invoked for a while suffers a 'cold start'; loading the runtime and dependencies adds hundreds of milliseconds to a few seconds. A continuously running container does not pay that cost. Serverless's advantage is zero idle cost and automatic scaling, not latency."
+      },
+      "difficulty": "medium",
+      "concepts": ["serverless"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "İki AZ'li bir sistemde her AZ normalde %70 yükle çalışıyor. Bir AZ düşerse ne olur?",
+        "en": "In a two-AZ system each AZ normally runs at 70% load. What happens if one AZ fails?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Kalan AZ %100 yükte kararlı çalışır; AZ başına %70 hedefi tam da tek AZ kaybını karşılayacak şekilde seçilmiştir", "en": "The remaining AZ runs stably at 100%; the 70% per-AZ target is chosen precisely to absorb the loss of one AZ" } },
+        { "id": "b", "text": { "tr": "ALB health check'leri AZ-a'yı fark eder ve trafiği otomatik olarak en yakın başka region'daki AZ'lere yönlendirir", "en": "ALB health checks detect AZ-a and automatically route traffic to AZs in the nearest other region" } },
+        { "id": "c", "text": { "tr": "Kalan AZ %70 yükte kalır; düşen AZ'nin trafiği yük dengeleyici tarafından kuyruğa alınıp AZ dönene kadar bekletilir", "en": "The remaining AZ stays at 70%; the failed AZ's traffic is queued by the load balancer and held until the AZ returns" } },
+        { "id": "d", "text": { "tr": "Kalan AZ'ye %140 yük düşer; otomatik ölçekleme yetişene kadar istekler reddedilir veya yavaşlar", "en": "The remaining AZ receives 140% load; requests are rejected or slow down until autoscaling catches up" } }
+      ],
+      "correct": ["d"],
+      "explanation": {
+        "tr": "Her AZ'nin taşıdığı %70 toplanır: kalan AZ %140 kapasite ister ama %100'ü vardır; %70 hedefi tek AZ kaybını karşılamaz, bunun için AZ başına yük %50'nin altında tutulur ya da üç AZ kullanılır. LB istekleri kuyruğa alıp bekletmez, doğrudan reddeder ya da yavaşlatır; bir ALB region'lar arası yönlendirme de yapmaz — bunu Route 53 gibi DNS tabanlı failover yapar.",
+        "en": "The 70% of each AZ adds up: the remaining AZ needs 140% capacity but has 100%; a 70% target does not absorb the loss of one AZ, which is why per-AZ load is kept under 50% or three AZs are used. The LB does not queue and hold requests, it rejects or slows them; nor does an ALB route across regions — DNS-based failover such as Route 53 does that."
+      },
+      "difficulty": "hard",
+      "concepts": ["multi-az-failover", "blast-radius"]
+    }
+  ]
+}

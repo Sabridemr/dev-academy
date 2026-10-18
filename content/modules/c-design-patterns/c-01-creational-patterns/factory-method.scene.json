@@ -1,0 +1,306 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "c-01-factory-method",
+  "title": {
+    "tr": "Factory Method: Alt Sınıf Karar Verir",
+    "en": "Factory Method: The Subclass Decides"
+  },
+  "summary": {
+    "tr": "İstemci soyut creator üzerinden notify() çağırır; şablon metod createNotification() fabrika metodunu çağırır, alt sınıf SmsNotification üretir ve ürün send() ile kullanılır.",
+    "en": "The client calls notify() on the abstract creator; the template method calls the createNotification() factory method, the subclass produces an SmsNotification and the product is used via send()."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda istemci, ortada NotificationCreator soyut sınıfının notify metodu ve altında SmsCreator alt sınıfı, sağda üretilen SmsNotification ürünü. İstemci notify çağırır; notify, createNotification fabrika metodunu çağırır; çağrı SmsCreator'a düşer ve yeni bir SmsNotification oluşturulur; notify ürünün send metodunu çağırır.",
+      "en": "Client on the left, the notify method of the abstract NotificationCreator in the middle with the SmsCreator subclass below it, the produced SmsNotification on the right. The client calls notify; notify calls the createNotification factory method; the call dispatches to SmsCreator which creates a new SmsNotification; notify then calls send on the product."
+    }
+  },
+  "canvas": {
+    "width": 1000,
+    "height": 600
+  },
+  "nodes": [
+    {
+      "id": "client",
+      "kind": "generic",
+      "label": "OrderService",
+      "x": 110,
+      "y": 300,
+      "w": 150,
+      "h": 64,
+      "sublabel": {
+        "tr": "istemci",
+        "en": "client"
+      }
+    },
+    {
+      "id": "creator",
+      "kind": "generic",
+      "label": "NotificationCreator",
+      "x": 440,
+      "y": 170,
+      "w": 210,
+      "h": 70,
+      "sublabel": {
+        "tr": "notify() şablon metodu",
+        "en": "notify() template method"
+      }
+    },
+    {
+      "id": "sub",
+      "kind": "generic",
+      "label": "SmsCreator",
+      "x": 440,
+      "y": 440,
+      "w": 210,
+      "h": 70,
+      "sublabel": {
+        "tr": "createNotification() ezer",
+        "en": "overrides createNotification()"
+      }
+    },
+    {
+      "id": "product",
+      "kind": "generic",
+      "label": "SmsNotification",
+      "x": 820,
+      "y": 300,
+      "w": 190,
+      "h": 70,
+      "sublabel": {
+        "tr": "Notification arayüzü",
+        "en": "Notification interface"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "cl-cr",
+      "from": "client",
+      "to": "creator",
+      "kind": "request",
+      "label": "notify(user, msg)"
+    },
+    {
+      "id": "cr-sub",
+      "from": "creator",
+      "to": "sub",
+      "kind": "control",
+      "label": "this.createNotification()",
+      "style": "dashed"
+    },
+    {
+      "id": "sub-pr",
+      "from": "sub",
+      "to": "product",
+      "kind": "control",
+      "label": "new"
+    },
+    {
+      "id": "cr-pr",
+      "from": "creator",
+      "to": "product",
+      "kind": "request",
+      "label": "send()",
+      "curvature": -0.2
+    }
+  ],
+  "steps": [
+    {
+      "id": "call",
+      "title": {
+        "tr": "1. İstemci soyut tipe konuşur",
+        "en": "1. The client talks to the abstract type"
+      },
+      "narration": {
+        "tr": "OrderService elinde bir NotificationCreator referansı tutar; somut tipin SmsCreator olduğunu bilmez. notify(user, msg) çağırır.",
+        "en": "OrderService holds a NotificationCreator reference; it does not know the concrete type is SmsCreator. It calls notify(user, msg)."
+      },
+      "durationMs": 3500,
+      "inherit": false,
+      "highlight": {
+        "nodes": [
+          "client",
+          "creator"
+        ],
+        "edges": [
+          "cl-cr"
+        ]
+      },
+      "nodeStates": {
+        "creator": {
+          "status": "active"
+        }
+      },
+      "edgeStates": {},
+      "packets": [
+        {
+          "edge": "cl-cr",
+          "shape": "envelope",
+          "label": "notify()",
+          "durationMs": 1000
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a1",
+          "x": 110,
+          "y": 410,
+          "text": {
+            "tr": "bağımlılık: yalnızca soyut sınıf",
+            "en": "dependency: only the abstract class"
+          },
+          "target": "client"
+        }
+      ]
+    },
+    {
+      "id": "dispatch",
+      "title": {
+        "tr": "2. Şablon, fabrika metodunu çağırır",
+        "en": "2. The template calls the factory method"
+      },
+      "narration": {
+        "tr": "notify() içinde this.createNotification() çağrısı vardır. Metod soyuttur; çalışma zamanında sanal dağıtım (virtual dispatch) çağrıyı SmsCreator.createNotification() metoduna düşürür.",
+        "en": "Inside notify() there is a this.createNotification() call. The method is abstract; at runtime virtual dispatch sends the call to SmsCreator.createNotification()."
+      },
+      "durationMs": 3500,
+      "highlight": {
+        "nodes": [
+          "sub"
+        ],
+        "edges": [
+          "cr-sub"
+        ]
+      },
+      "nodeStates": {
+        "sub": {
+          "status": "active",
+          "badge": "override"
+        }
+      },
+      "edgeStates": {
+        "cr-sub": {
+          "status": "active"
+        }
+      },
+      "packets": [
+        {
+          "edge": "cr-sub",
+          "shape": "diamond",
+          "label": "createNotification()",
+          "durationMs": 900
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "id": "create",
+      "title": {
+        "tr": "3. Alt sınıf somut ürünü yaratır",
+        "en": "3. The subclass creates the concrete product"
+      },
+      "narration": {
+        "tr": "SmsCreator new SmsNotification(gateway) döner. Hangi sınıfın örnekleneceği kararı üst sınıftan alt sınıfa taşınmıştır; üst sınıf değişmeden yeni kanal (push, Slack) eklenebilir.",
+        "en": "SmsCreator returns new SmsNotification(gateway). The decision of which class to instantiate has moved from the superclass to the subclass; new channels (push, Slack) can be added without touching the superclass."
+      },
+      "durationMs": 3500,
+      "highlight": {
+        "nodes": [
+          "product"
+        ],
+        "edges": [
+          "sub-pr"
+        ]
+      },
+      "nodeStates": {
+        "product": {
+          "status": "success",
+          "badge": "new"
+        }
+      },
+      "edgeStates": {},
+      "packets": [
+        {
+          "edge": "sub-pr",
+          "shape": "square",
+          "color": "accent",
+          "label": "new SmsNotification()",
+          "durationMs": 1000
+        },
+        {
+          "edge": "cr-sub",
+          "startAt": 1100,
+          "direction": "backward",
+          "color": "success",
+          "label": "Notification",
+          "durationMs": 800
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a3",
+          "x": 440,
+          "y": 540,
+          "text": {
+            "tr": "yeni kanal = yeni alt sınıf; üst sınıf kapalı, genişlemeye açık",
+            "en": "new channel = new subclass; superclass closed, open for extension"
+          },
+          "tone": "success",
+          "target": "sub"
+        }
+      ]
+    },
+    {
+      "id": "use",
+      "title": {
+        "tr": "4. Şablon ürünü arayüz üzerinden kullanır",
+        "en": "4. The template uses the product via its interface"
+      },
+      "narration": {
+        "tr": "notify() elindeki Notification üzerinde send(user, msg) çağırır; loglama, yeniden deneme gibi ortak adımlar şablonda tek yerde kalır. Ürün tipi ne olursa olsun akış aynıdır.",
+        "en": "notify() calls send(user, msg) on the Notification it holds; shared steps like logging and retry stay in one place in the template. The flow is identical whatever the product type."
+      },
+      "durationMs": 3500,
+      "highlight": {
+        "nodes": [
+          "creator",
+          "product"
+        ],
+        "edges": [
+          "cr-pr"
+        ]
+      },
+      "nodeStates": {
+        "sub": {
+          "badge": ""
+        }
+      },
+      "edgeStates": {},
+      "packets": [
+        {
+          "edge": "cr-pr",
+          "shape": "envelope",
+          "label": "send(user, msg)",
+          "durationMs": 1000
+        },
+        {
+          "edge": "cl-cr",
+          "startAt": 1200,
+          "direction": "backward",
+          "color": "success",
+          "label": "ok",
+          "durationMs": 800
+        }
+      ],
+      "annotations": []
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": [
+    "factory-method",
+    "creational"
+  ]
+}

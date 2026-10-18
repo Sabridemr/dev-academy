@@ -1,0 +1,110 @@
+{
+  "id": "g-04-deep-learning-architectures-quiz",
+  "title": { "tr": "Derin Öğrenme Mimarileri Quiz", "en": "Deep Learning Architectures Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "multiple",
+      "prompt": {
+        "tr": "CNN'lerin görüntü verisinde tam bağlı ağlara göre avantaj sağlamasının nedenleri hangileridir? (Birden fazla seçin)",
+        "en": "Why do CNNs have an advantage over fully connected networks on image data? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Aynı filtre tüm görüntüde paylaşılır; parametre sayısı girdi boyutundan bağımsızdır", "en": "The same filter is shared across the image; the parameter count is independent of input size" } },
+        { "id": "b", "text": { "tr": "Her çıktı yalnızca yerel bir komşuluğa bakar", "en": "Each output looks only at a local neighbourhood" } },
+        { "id": "c", "text": { "tr": "Konvolüsyon, görüntüdeki tüm pikseller arasındaki ilişkiyi tek katmanda yakalar", "en": "Convolution captures relationships between all pixels in a single layer" } },
+        { "id": "d", "text": { "tr": "CNN'ler aktivasyon fonksiyonuna ihtiyaç duymaz", "en": "CNNs do not need activation functions" } }
+      ],
+      "correct": ["a", "b"],
+      "explanation": {
+        "tr": "Ağırlık paylaşımı ve yerellik CNN'in temel önselleridir. Küresel bağlam ancak katmanlar derinleştikçe büyüyen alıcı alanla gelir (c yanlış); konvolüsyon da doğrusaldır, ReLU şarttır (d yanlış).",
+        "en": "Weight sharing and locality are the CNN's core priors. Global context only arrives as the receptive field grows with depth (c is wrong); convolution is linear, so ReLU is still required (d is wrong)."
+      },
+      "difficulty": "medium",
+      "concepts": ["convolution", "receptive-field"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "LSTM, basit RNN'in uzun bağımlılıkları öğrenememe sorununu temelde nasıl hafifletir?",
+        "en": "How does an LSTM fundamentally mitigate the simple RNN's inability to learn long dependencies?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Her zaman adımında farklı bir W_h matrisi kullanarak aynı matrisin yüzlerce kez çarpılmasını önleyerek", "en": "By using a different W_h matrix at every time step so the same matrix is never multiplied hundreds of times" } },
+        { "id": "b", "text": { "tr": "Toplamayla güncellenen hücre durumu ve kapılar sayesinde gradyanın çarpılmadan akabildiği bir yol açarak", "en": "By opening a path where gradients flow without repeated multiplication, via an additively updated cell state and gates" } },
+        { "id": "c", "text": { "tr": "Gizli durumu her adımda tanh yerine sigmoid'den geçirerek doyumu ve gradyan sönmesini engelleyerek", "en": "By passing the hidden state through a sigmoid instead of tanh at every step, preventing saturation and vanishing gradients" } },
+        { "id": "d", "text": { "tr": "Geri yayılımı zaman boyunca açmak yerine yalnızca son k adımla sınırlayarak (truncated BPTT)", "en": "By limiting backpropagation to the last k steps instead of unrolling it through time (truncated BPTT)" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "c_t = f_t⊙c_{t−1} + i_t⊙c̃_t toplamsal bir güncellemedir; forget kapısı 1'e yakınken gradyan sönmeden geçer. LSTM de ağırlıkları zaman boyunca paylaşır, adım başına ayrı matris yoktur; truncated BPTT bir eğitim kısayoludur, uzun bağımlılığı öğretmez; sigmoid türevi ≤ 0.25 olduğundan sönmeyi azaltmaz, artırır.",
+        "en": "c_t = f_t⊙c_{t−1} + i_t⊙c̃_t is an additive update; with the forget gate near 1 the gradient passes without vanishing. An LSTM also shares weights across time, there is no separate matrix per step; truncated BPTT is a training shortcut that does not teach long dependencies; sigmoid's derivative is ≤ 0.25, so it worsens vanishing rather than curing it."
+      },
+      "difficulty": "medium",
+      "concepts": ["lstm", "rnn"]
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": {
+        "tr": "Self-attention'da skorlar neden √d_k ile bölünür?",
+        "en": "Why are the scores divided by √d_k in self-attention?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Kafa sayısı arttıkça skorların toplamı büyür; √d_k bölmesi kafaların katkısını eşitler (multi-head normalizasyonu)", "en": "As the number of heads grows the scores add up; dividing by √d_k equalises each head's contribution (multi-head normalisation)" } },
+        { "id": "b", "text": { "tr": "Q ve K vektörlerini birim uzunluğa normalize ederek skoru kosinüs benzerliğine çevirir; böylece ağırlıklar 0–1'e düşer", "en": "It normalises Q and K to unit length, turning the score into cosine similarity so the weights fall into 0–1" } },
+        { "id": "c", "text": { "tr": "Dizi uzunluğu n büyüdükçe O(n²) bellek maliyetini sabitlemek için skor matrisini √d_k faktörüyle sıkıştırır", "en": "It compresses the score matrix by a factor of √d_k to keep the O(n²) memory cost constant as sequence length n grows" } },
+        { "id": "d", "text": { "tr": "Yüksek boyutta nokta çarpımın varyansı büyür, softmax doyar ve gradyanlar söner; ölçekleme bunu önler", "en": "In high dimensions the dot product's variance grows, softmax saturates and gradients vanish; scaling prevents that" } }
+      ],
+      "correct": ["d"],
+      "explanation": {
+        "tr": "d_k bağımsız birim varyanslı bileşenin çarpımının varyansı d_k'dır; √d_k ile bölmek varyansı 1'e çeker. Bu kafa sayısıyla ilgili değildir; vektörleri birim uzunluğa getirmez (kosinüs için normlara bölmek gerekirdi); bellek maliyetine de dokunmaz — O(n²) aynen kalır. Toplamı 1 yapan softmax'tır, konum bilgisi gömmeye eklenir.",
+        "en": "The dot product of d_k independent unit-variance components has variance d_k; dividing by √d_k brings it back to 1. It has nothing to do with the number of heads; it does not make the vectors unit length (cosine would require dividing by the norms); it does not touch memory cost — O(n²) remains. Softmax is what makes weights sum to 1; position is added to the embedding."
+      },
+      "difficulty": "hard",
+      "concepts": ["self-attention", "transformer"]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Self-attention sıraya duyarsızdır; bu yüzden Transformer'lar konum bilgisini (positional encoding) ayrıca eklemek zorundadır.",
+        "en": "Self-attention is order-blind; therefore Transformers must add positional information (positional encoding) separately."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["t"],
+      "explanation": {
+        "tr": "Doğru. Attention bir küme işlemidir: tokenların yerini değiştirseniz çıktı aynı şekilde yer değiştirir. 'Köpek adamı ısırdı' ile 'Adam köpeği ısırdı' arasındaki farkı ancak konum kodlaması (sinüs tabloları, öğrenilmiş vektörler, RoPE) verir.",
+        "en": "True. Attention is a set operation: permute the tokens and the output permutes identically. Only positional encoding (sinusoids, learned vectors, RoPE) distinguishes 'dog bites man' from 'man bites dog'."
+      },
+      "difficulty": "easy",
+      "concepts": ["positional-encoding", "self-attention"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "GAN ile diffusion modellerini karşılaştıran ifadelerden hangisi doğrudur?",
+        "en": "Which statement correctly compares GANs and diffusion models?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "GAN eğitimi kararsız olabilir (mode collapse); diffusion kararlı eğitilir ama örnekleme çok adımlı ve yavaştır", "en": "GAN training can be unstable (mode collapse); diffusion trains stably but sampling is multi-step and slow" } },
+        { "id": "b", "text": { "tr": "Diffusion üretimi tek ileri geçişte yapar; GAN üretici ve ayırt edicinin sırayla onlarca kez çağrılmasını gerektirir", "en": "Diffusion generates in a single forward pass; a GAN needs the generator and discriminator to be called dozens of times in turn" } },
+        { "id": "c", "text": { "tr": "Her ikisi de etiketli veri ister: GAN sınıf etiketi, diffusion ise metin açıklaması olmadan eğitilemez", "en": "Both need labelled data: a GAN cannot be trained without class labels, diffusion without text captions" } },
+        { "id": "d", "text": { "tr": "GAN gürültü tahmini gibi basit bir regresyon kaybıyla eğitilir; diffusion'ın min-max oyunu mode collapse'a yatkındır", "en": "A GAN trains with a simple regression loss such as noise prediction; diffusion's min-max game is prone to mode collapse" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "GAN tek geçişte hızlı üretir ama min-max oyunu kararsızdır; diffusion gürültü tahmini gibi basit bir regresyon kaybıyla kararlı eğitilir, bedeli çok adımlı örneklemedir. Üretim adımı sayısını ve kayıp türlerini tersine çeviren seçenekler yanlıştır; ikisi de etiketsiz veriyle eğitilebilir, metin koşullandırması isteğe bağlıdır.",
+        "en": "A GAN generates fast in one pass but its min-max game is unstable; diffusion trains stably with a simple noise-regression loss at the cost of multi-step sampling. The options that swap the number of generation steps and the loss types are wrong; both can be trained on unlabelled data, and text conditioning is optional."
+      },
+      "difficulty": "medium",
+      "concepts": ["gan", "diffusion-model"]
+    }
+  ]
+}

@@ -1,0 +1,208 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "g-08-nn-playground-weights",
+  "title": { "tr": "Ağırlıklar Epoch'lar Boyunca", "en": "Weights Across Epochs" },
+  "summary": {
+    "tr": "XOR üzerinde 2-3-1'lik bir tanh ağı: beş anda dondurulmuş ağırlıklar, kayıp eğrisindeki plato, simetrinin kırılması ve son tahminler.",
+    "en": "A 2-3-1 tanh network on XOR: weights frozen at five moments, the plateau in the loss curve, symmetry breaking and the final predictions."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda XOR veri kümesi, ardından girdi nöronları x1 ve x2, ortada üç tanh gizli nöron, sağda sigmoid çıkış ve kayıp göstergesi. Kenar etiketleri ağırlıklardır ve her adımda güncellenir. Epoch 0'da ağırlıklar küçük ve rastgeledir, kayıp 0.69. Epoch 20'de neredeyse değişmemiştir (plato). Epoch 100'de ağırlıklar büyümeye başlar, kayıp 0.52. Epoch 300'de h2 negatif, h1 ve h3 pozitif dedektör olur, kayıp 0.21. Epoch 800'de kayıp 0.04. Son adımda dört XOR girdisi için tahminler 0.02, 0.97, 0.97, 0.03 gösterilir.",
+      "en": "The XOR dataset on the left, then input neurons x1 and x2, three tanh hidden neurons in the middle, a sigmoid output and a loss gauge on the right. Edge labels are weights and update at every step. At epoch 0 weights are small and random, loss 0.69. At epoch 20 they have barely changed (plateau). At epoch 100 weights start to grow, loss 0.52. At epoch 300 h2 becomes a negative detector and h1, h3 positive detectors, loss 0.21. At epoch 800 loss is 0.04. The final step shows predictions 0.02, 0.97, 0.97, 0.03 for the four XOR inputs."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "data", "kind": "storage", "label": "XOR", "sublabel": { "tr": "4 örnek", "en": "4 samples" }, "x": 90, "y": 300, "w": 100, "h": 70 },
+    { "id": "x1", "kind": "neuron", "label": "x₁", "x": 260, "y": 200, "w": 70, "h": 56 },
+    { "id": "x2", "kind": "neuron", "label": "x₂", "x": 260, "y": 400, "w": 70, "h": 56 },
+    { "id": "h1", "kind": "neuron", "label": "h₁", "sublabel": "tanh", "x": 500, "y": 120, "w": 80, "h": 60 },
+    { "id": "h2", "kind": "neuron", "label": "h₂", "sublabel": "tanh", "x": 500, "y": 300, "w": 80, "h": 60 },
+    { "id": "h3", "kind": "neuron", "label": "h₃", "sublabel": "tanh", "x": 500, "y": 480, "w": 80, "h": 60 },
+    { "id": "out", "kind": "neuron", "label": "ŷ", "sublabel": "sigmoid", "x": 740, "y": 300, "w": 80, "h": 60 },
+    { "id": "loss", "kind": "generic", "label": { "tr": "Kayıp", "en": "Loss" }, "sublabel": "BCE", "x": 910, "y": 300, "w": 110, "h": 70 }
+  ],
+  "edges": [
+    { "id": "d-x1", "from": "data", "to": "x1", "kind": "data", "curvature": -0.1 },
+    { "id": "d-x2", "from": "data", "to": "x2", "kind": "data", "curvature": 0.1 },
+    { "id": "x1-h1", "from": "x1", "to": "h1", "kind": "data", "label": "0.12" },
+    { "id": "x1-h2", "from": "x1", "to": "h2", "kind": "data", "label": "0.45" },
+    { "id": "x1-h3", "from": "x1", "to": "h3", "kind": "data", "label": "−0.22" },
+    { "id": "x2-h1", "from": "x2", "to": "h1", "kind": "data", "label": "−0.30" },
+    { "id": "x2-h2", "from": "x2", "to": "h2", "kind": "data", "label": "0.08" },
+    { "id": "x2-h3", "from": "x2", "to": "h3", "kind": "data", "label": "0.37" },
+    { "id": "h1-out", "from": "h1", "to": "out", "kind": "data", "label": "0.15" },
+    { "id": "h2-out", "from": "h2", "to": "out", "kind": "data", "label": "−0.40" },
+    { "id": "h3-out", "from": "h3", "to": "out", "kind": "data", "label": "0.28" },
+    { "id": "out-loss", "from": "out", "to": "loss", "kind": "response" }
+  ],
+  "steps": [
+    {
+      "id": "epoch-0",
+      "title": { "tr": "Epoch 0: rastgele başlangıç", "en": "Epoch 0: random initialisation" },
+      "narration": {
+        "tr": "Ağırlıklar Xavier başlangıcıyla küçük rastgele değerler alır (|w| < 0.5). Ağ dört girdiye de ≈ 0.5 der; kayıp ln 2 = 0.69, doğruluk %50 — yazı tura. Başlangıç ağırlıkları eşit olsaydı tüm gizli nöronlar aynı şeyi öğrenirdi; rastgelelik simetriyi kırmak için şarttır.",
+        "en": "Weights get small random values from Xavier initialisation (|w| < 0.5). The network says ≈ 0.5 for all four inputs; loss ln 2 = 0.69, accuracy 50% — a coin flip. If initial weights were equal, every hidden neuron would learn the same thing; randomness is required to break symmetry."
+      },
+      "durationMs": 3500,
+      "inherit": false,
+      "highlight": { "nodes": ["x1", "x2", "h1", "h2", "h3", "out"], "edges": [] },
+      "nodeStates": {
+        "data": { "status": "active" },
+        "out": { "badge": "≈ 0.50" },
+        "loss": { "status": "warning", "badge": "0.69", "progress": 0.69, "sublabel": { "tr": "doğruluk %50", "en": "accuracy 50%" } }
+      },
+      "packets": [
+        { "edge": "d-x1", "shape": "square", "durationMs": 800 },
+        { "edge": "d-x2", "shape": "square", "durationMs": 800 }
+      ],
+      "annotations": [
+        { "id": "init-note", "x": 500, "y": 40, "text": { "tr": "Xavier: w ~ U(−√(6/(n_in+n_out)), +√(…))", "en": "Xavier: w ~ U(−√(6/(n_in+n_out)), +√(…))" }, "tone": "info" }
+      ]
+    },
+    {
+      "id": "epoch-20",
+      "title": { "tr": "Epoch 20: plato", "en": "Epoch 20: plateau" },
+      "narration": {
+        "tr": "Yirmi epoch sonra ağırlıklar yalnızca yüzde birkaç oynamış, kayıp 0.68. Bu plato normaldir: gradyanlar küçük, nöronlar henüz 'iş bölümü' yapmamış. Öğrenme oranı 0.001 olsaydı burada yüzlerce epoch kalırdınız.",
+        "en": "After twenty epochs the weights have moved only a few percent, loss 0.68. This plateau is normal: gradients are small, the neurons have not yet 'divided the work'. With a learning rate of 0.001 you would sit here for hundreds of epochs."
+      },
+      "durationMs": 3500,
+      "highlight": { "nodes": ["loss"], "edges": ["x1-h1", "x2-h1", "x1-h2", "x2-h2", "x1-h3", "x2-h3"] },
+      "nodeStates": {
+        "loss": { "status": "warning", "badge": "0.68", "progress": 0.68, "sublabel": { "tr": "doğruluk %50", "en": "accuracy 50%" } }
+      },
+      "edgeStates": {
+        "x1-h1": { "label": "0.18" }, "x2-h1": { "label": "−0.35" },
+        "x1-h2": { "label": "0.52" }, "x2-h2": { "label": "0.14" },
+        "x1-h3": { "label": "−0.30" }, "x2-h3": { "label": "0.44" },
+        "h1-out": { "label": "0.21" }, "h2-out": { "label": "−0.47" }, "h3-out": { "label": "0.36" }
+      },
+      "packets": [
+        { "edge": "x1-h1", "durationMs": 700 }, { "edge": "x2-h2", "durationMs": 700, "startAt": 200 }, { "edge": "x1-h3", "durationMs": 700, "startAt": 400 },
+        { "edge": "h2-out", "durationMs": 700, "startAt": 900 }, { "edge": "out-loss", "durationMs": 600, "startAt": 1600, "color": "warning" }
+      ],
+      "annotations": [
+        { "id": "plateau-note", "x": 910, "y": 420, "text": { "tr": "Kayıp eğrisi düz: sabır ya da lr ↑", "en": "Flat loss curve: patience or raise lr" }, "tone": "warning", "target": "loss" }
+      ]
+    },
+    {
+      "id": "epoch-100",
+      "title": { "tr": "Epoch 100: simetri kırılıyor", "en": "Epoch 100: symmetry breaks" },
+      "narration": {
+        "tr": "Ağırlıklar birden büyümeye başlar: x₁→h₁ 0.9, x₂→h₁ −1.1. h₁ 'x₁ büyük, x₂ küçük' durumuna, h₃ tersine duyarlılaşıyor. Kayıp 0.52'ye düştü; doğruluk %75 — (1,1) hâlâ yanlış.",
+        "en": "Weights suddenly start to grow: x₁→h₁ 0.9, x₂→h₁ −1.1. h₁ is becoming sensitive to 'x₁ large, x₂ small', h₃ to the opposite. Loss dropped to 0.52; accuracy 75% — (1,1) is still wrong."
+      },
+      "durationMs": 3800,
+      "highlight": { "nodes": ["h1", "h3"], "edges": ["x1-h1", "x2-h1", "x1-h3", "x2-h3"] },
+      "nodeStates": {
+        "h1": { "status": "active", "badge": "+" }, "h3": { "status": "active", "badge": "+" }, "h2": { "status": "idle" },
+        "out": { "badge": "" },
+        "loss": { "status": "warning", "badge": "0.52", "progress": 0.52, "sublabel": { "tr": "doğruluk %75", "en": "accuracy 75%" } }
+      },
+      "edgeStates": {
+        "x1-h1": { "label": "0.9", "status": "active" }, "x2-h1": { "label": "−1.1", "status": "active" },
+        "x1-h2": { "label": "1.3" }, "x2-h2": { "label": "1.2" },
+        "x1-h3": { "label": "−1.0", "status": "active" }, "x2-h3": { "label": "1.1", "status": "active" },
+        "h1-out": { "label": "0.9" }, "h2-out": { "label": "−1.2" }, "h3-out": { "label": "1.0" }
+      },
+      "packets": [
+        { "edge": "x1-h1", "durationMs": 700 }, { "edge": "x2-h3", "durationMs": 700, "startAt": 200 },
+        { "edge": "h1-out", "durationMs": 700, "startAt": 900 }, { "edge": "h3-out", "durationMs": 700, "startAt": 900 },
+        { "edge": "out-loss", "durationMs": 600, "startAt": 1600, "color": "warning" }
+      ],
+      "annotations": [
+        { "id": "break-note", "x": 500, "y": 40, "text": { "tr": "Gradyan büyüdü → ağırlıklar hızla ayrışıyor", "en": "Gradient grew → weights diverge quickly" }, "tone": "info" }
+      ]
+    },
+    {
+      "id": "epoch-300",
+      "title": { "tr": "Epoch 300: iş bölümü", "en": "Epoch 300: division of labour" },
+      "narration": {
+        "tr": "Yapı netleşti: h₂ her iki girdiye pozitif ağırlıkla (2.4, 2.3) 'ikisi de 1' dedektörü oldu ve çıkışa güçlü NEGATİF (−3.1) bağlanıyor; h₁ ve h₃ 'yalnızca biri 1' durumunu yakalayıp pozitif katkı veriyor. XOR = (x₁ OR x₂) AND NOT (x₁ AND x₂). Kayıp 0.21, doğruluk %100.",
+        "en": "The structure is clear: h₂ became an 'both are 1' detector with positive weights on both inputs (2.4, 2.3) and connects to the output strongly NEGATIVELY (−3.1); h₁ and h₃ capture 'only one is 1' and contribute positively. XOR = (x₁ OR x₂) AND NOT (x₁ AND x₂). Loss 0.21, accuracy 100%."
+      },
+      "durationMs": 4200,
+      "highlight": { "nodes": ["h2", "out"], "edges": ["x1-h2", "x2-h2", "h2-out"] },
+      "nodeStates": {
+        "h1": { "badge": "OR" }, "h3": { "badge": "OR" },
+        "h2": { "status": "warning", "badge": "AND" },
+        "loss": { "status": "success", "badge": "0.21", "progress": 0.21, "sublabel": { "tr": "doğruluk %100", "en": "accuracy 100%" } }
+      },
+      "edgeStates": {
+        "x1-h1": { "label": "2.1", "status": "idle" }, "x2-h1": { "label": "−2.0", "status": "idle" },
+        "x1-h2": { "label": "2.4", "status": "active" }, "x2-h2": { "label": "2.3", "status": "active" },
+        "x1-h3": { "label": "−2.2", "status": "idle" }, "x2-h3": { "label": "2.1", "status": "idle" },
+        "h1-out": { "label": "2.3" }, "h2-out": { "label": "−3.1", "status": "error" }, "h3-out": { "label": "2.4" }
+      },
+      "packets": [
+        { "edge": "x1-h2", "durationMs": 700 }, { "edge": "x2-h2", "durationMs": 700 },
+        { "edge": "h2-out", "durationMs": 700, "startAt": 800, "color": "danger", "shape": "square" },
+        { "edge": "out-loss", "durationMs": 600, "startAt": 1600, "color": "success" }
+      ],
+      "annotations": [
+        { "id": "and-note", "x": 620, "y": 400, "text": { "tr": "h₂ → ŷ negatif: 'ikisi de 1' ise bastır", "en": "h₂ → ŷ negative: suppress when 'both are 1'" }, "tone": "warning", "target": "h2" }
+      ]
+    },
+    {
+      "id": "epoch-800",
+      "title": { "tr": "Epoch 800: keskinleşme", "en": "Epoch 800: sharpening" },
+      "narration": {
+        "tr": "Ağırlıklar büyümeye devam eder (|w| 3–5) ve tanh doyuma yaklaşır; karar sınırı keskinleşir, kayıp 0.04. Daha fazla epoch kaybı sıfıra yaklaştırır ama gürültülü gerçek veride bu nokta overfitting'in başladığı yerdir — doğrulama kaybına bakmanın tam zamanı.",
+        "en": "Weights keep growing (|w| 3–5) and tanh approaches saturation; the decision boundary sharpens, loss 0.04. More epochs push loss towards zero, but on noisy real data this is where overfitting begins — exactly the moment to watch validation loss."
+      },
+      "durationMs": 3800,
+      "highlight": { "nodes": ["loss"], "edges": ["h1-out", "h2-out", "h3-out"] },
+      "nodeStates": {
+        "h2": { "status": "idle" },
+        "loss": { "status": "success", "badge": "0.04", "progress": 0.04, "sublabel": { "tr": "doğruluk %100", "en": "accuracy 100%" } }
+      },
+      "edgeStates": {
+        "x1-h1": { "label": "3.4" }, "x2-h1": { "label": "−3.3" },
+        "x1-h2": { "label": "3.6", "status": "idle" }, "x2-h2": { "label": "3.5", "status": "idle" },
+        "x1-h3": { "label": "−3.5" }, "x2-h3": { "label": "3.4" },
+        "h1-out": { "label": "3.9", "status": "active" }, "h2-out": { "label": "−5.2", "status": "active" }, "h3-out": { "label": "4.0", "status": "active" }
+      },
+      "packets": [
+        { "edge": "h1-out", "durationMs": 700 }, { "edge": "h2-out", "durationMs": 700 }, { "edge": "h3-out", "durationMs": 700 },
+        { "edge": "out-loss", "durationMs": 600, "startAt": 900, "color": "success" }
+      ],
+      "annotations": [
+        { "id": "early-note", "x": 910, "y": 420, "text": { "tr": "Gerçek veride: doğrulama ↑ ise dur (early stopping)", "en": "On real data: stop when validation ↑ (early stopping)" }, "tone": "info", "target": "loss" }
+      ]
+    },
+    {
+      "id": "predict",
+      "title": { "tr": "Son tahminler", "en": "Final predictions" },
+      "narration": {
+        "tr": "Dört girdi: (0,0) → 0.02, (0,1) → 0.97, (1,0) → 0.97, (1,1) → 0.03. Tek katmanlı perceptron'un 1969'da yapamadığını 3 gizli nöron ve ~800 güncelleme yaptı. Playground'da aynı deneyi 'linear' aktivasyonla tekrarlayın: ağırlıklar ne kadar büyürse büyüsün kayıp 0.69'dan inmez.",
+        "en": "Four inputs: (0,0) → 0.02, (0,1) → 0.97, (1,0) → 0.97, (1,1) → 0.03. What the single-layer perceptron could not do in 1969, 3 hidden neurons and ~800 updates did. Repeat the experiment in the playground with 'linear' activation: however large the weights grow, the loss never drops below 0.69."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["data", "out"], "edges": ["d-x1", "d-x2"] },
+      "nodeStates": {
+        "data": { "status": "success", "badge": "4/4" },
+        "out": { "status": "success", "badge": "0.02 · 0.97 · 0.97 · 0.03" },
+        "loss": { "badge": "0.04" }
+      },
+      "edgeStates": {
+        "h1-out": { "status": "idle" }, "h2-out": { "status": "idle" }, "h3-out": { "status": "idle" }
+      },
+      "packets": [
+        { "edge": "d-x1", "shape": "square", "label": "(0,1)", "durationMs": 700 },
+        { "edge": "d-x2", "shape": "square", "durationMs": 700 },
+        { "edge": "x2-h1", "durationMs": 600, "startAt": 700 }, { "edge": "x2-h3", "durationMs": 600, "startAt": 700 },
+        { "edge": "h3-out", "durationMs": 600, "startAt": 1300 },
+        { "edge": "out-loss", "durationMs": 600, "startAt": 1900, "color": "success", "label": "0.97 ✓" }
+      ],
+      "annotations": [
+        { "id": "done-note", "x": 500, "y": 40, "text": { "tr": "Gizli katman + doğrusal olmayan aktivasyon = XOR çözülür", "en": "Hidden layer + non-linear activation = XOR solved" }, "tone": "success" }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["neural-network", "xor", "tensorflow-js", "training"]
+}

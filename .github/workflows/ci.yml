@@ -1,0 +1,171 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  TURBO_TELEMETRY_DISABLED: 1
+  NEXT_TELEMETRY_DISABLED: 1
+
+jobs:
+  # İçerik + ortak paket: hızlı geri bildirim
+  shared-and-content:
+    name: Ortak paket ve içerik doğrulama
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @devacademy/shared build
+      - run: pnpm --filter @devacademy/shared typecheck
+      - run: pnpm --filter @devacademy/shared test
+      - name: İçerik doğrulama (uyarılar da hata)
+        run: pnpm content:validate --strict
+
+  backend:
+    name: Backend (birim + e2e)
+    runs-on: ubuntu-latest
+    needs: shared-and-content
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: devacademy
+          POSTGRES_PASSWORD: devacademy
+          POSTGRES_DB: devacademy_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U devacademy" --health-interval 5s --health-timeout 3s --health-retries 20
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 3s --health-retries 20
+    env:
+      DATABASE_URL: postgresql://devacademy:devacademy@localhost:5432/devacademy_test?schema=public
+      REDIS_URL: redis://localhost:6379/1
+      JWT_ACCESS_SECRET: ci-access-secret-ci-access-secret-0123456
+      JWT_REFRESH_SECRET: ci-refresh-secret-ci-refresh-secret-01234
+      SEED_STRICT: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @devacademy/shared build
+      - run: pnpm --filter @devacademy/backend exec prisma generate
+      - run: pnpm --filter @devacademy/backend typecheck
+      - run: pnpm --filter @devacademy/backend test
+      - run: pnpm --filter @devacademy/backend exec prisma migrate deploy
+      - run: pnpm --filter @devacademy/backend prisma:seed
+      - run: pnpm --filter @devacademy/backend test:e2e
+      - run: pnpm --filter @devacademy/backend build
+
+  web:
+    name: Web (typecheck, birim, build, Playwright)
+    runs-on: ubuntu-latest
+    needs: shared-and-content
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: devacademy
+          POSTGRES_PASSWORD: devacademy
+          POSTGRES_DB: devacademy
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U devacademy" --health-interval 5s --health-timeout 3s --health-retries 20
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+    env:
+      DATABASE_URL: postgresql://devacademy:devacademy@localhost:5432/devacademy?schema=public
+      REDIS_URL: redis://localhost:6379
+      JWT_ACCESS_SECRET: ci-access-secret-ci-access-secret-0123456
+      JWT_REFRESH_SECRET: ci-refresh-secret-ci-refresh-secret-01234
+      NEXT_PUBLIC_API_URL: http://localhost:4000/api/v1
+      PLAYWRIGHT_BASE_URL: http://localhost:3000
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @devacademy/shared build
+      - run: pnpm --filter @devacademy/web typecheck
+      - run: pnpm --filter @devacademy/web test
+      - name: API'yi hazırla ve başlat
+        run: |
+          pnpm --filter @devacademy/backend exec prisma generate
+          pnpm --filter @devacademy/backend exec prisma migrate deploy
+          pnpm --filter @devacademy/backend prisma:seed
+          pnpm --filter @devacademy/backend build
+          (cd backend && PORT=4000 node dist/main.js > ../api.log 2>&1 &)
+          npx wait-on -t 60000 http://localhost:4000/health
+      - run: pnpm --filter @devacademy/web build
+      - run: pnpm --filter @devacademy/web exec playwright install --with-deps chromium
+      - name: Web sunucusunu başlat ve Playwright çalıştır
+        run: |
+          (cd web && pnpm start > ../web.log 2>&1 &)
+          npx wait-on -t 60000 http://localhost:3000
+          pnpm --filter @devacademy/web exec playwright test --project=chromium --project=mobile
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            web/playwright-report
+            api.log
+            web.log
+
+  mobile:
+    name: Mobil (typecheck + Jest)
+    runs-on: ubuntu-latest
+    needs: shared-and-content
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @devacademy/shared build
+      - run: pnpm --filter @devacademy/mobile typecheck
+      - run: pnpm --filter @devacademy/mobile test
+
+  docker:
+    name: Docker imajları
+    runs-on: ubuntu-latest
+    needs: [backend, web]
+    if: github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: backend/Dockerfile
+          push: false
+          tags: devacademy-api:${{ github.sha }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: web/Dockerfile
+          push: false
+          tags: devacademy-web:${{ github.sha }}

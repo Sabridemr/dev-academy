@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 420" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Gecikme dağılımı (yüzdelikler) ve CAP üçgeni</title>
+  <desc id="desc">Sol panel: sağa doğru uzun kuyruklu bir gecikme histogramı; p50, p95 ve p99 dikey çizgilerle işaretli, ortalama p50'nin sağında. Sağ panel: köşelerinde Consistency, Availability ve Partition tolerance yazan bir üçgen; kenarlarında CP (etcd, ZooKeeper), AP (Cassandra, DynamoDB) ve CA (tek düğümlü ilişkisel DB) örnekleri.</desc>
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+  </defs>
+
+  <!-- SOL: gecikme dağılımı -->
+  <rect x="20" y="20" width="440" height="380" rx="14" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+  <text x="240" y="48" text-anchor="middle" font-size="14" font-weight="600" fill="var(--da-fg, #0f172a)">Gecikme bir dağılımdır</text>
+  <text x="240" y="66" text-anchor="middle" font-size="11" fill="var(--da-muted, #64748b)">istek sayısı × yanıt süresi (ms)</text>
+
+  <!-- eksenler -->
+  <path d="M 60 330 L 60 100" stroke="var(--da-muted, #64748b)" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+  <path d="M 60 330 L 430 330" stroke="var(--da-muted, #64748b)" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+  <text x="430" y="350" text-anchor="end" font-size="10" fill="var(--da-muted, #64748b)">ms →</text>
+  <text x="48" y="104" text-anchor="end" font-size="10" fill="var(--da-muted, #64748b)">adet</text>
+
+  <!-- histogram çubukları (sağa uzun kuyruk) -->
+  <g fill="var(--da-primary, #6366f1)" opacity="0.85">
+    <rect x="70" y="300" width="18" height="30"/>
+    <rect x="90" y="220" width="18" height="110"/>
+    <rect x="110" y="130" width="18" height="200"/>
+    <rect x="130" y="150" width="18" height="180"/>
+    <rect x="150" y="200" width="18" height="130"/>
+    <rect x="170" y="240" width="18" height="90"/>
+    <rect x="190" y="268" width="18" height="62"/>
+    <rect x="210" y="288" width="18" height="42"/>
+    <rect x="230" y="300" width="18" height="30"/>
+    <rect x="250" y="308" width="18" height="22"/>
+    <rect x="270" y="314" width="18" height="16"/>
+    <rect x="290" y="318" width="18" height="12"/>
+    <rect x="310" y="321" width="18" height="9"/>
+    <rect x="330" y="323" width="18" height="7"/>
+    <rect x="350" y="325" width="18" height="5"/>
+    <rect x="370" y="326" width="18" height="4"/>
+    <rect x="390" y="327" width="18" height="3"/>
+  </g>
+
+  <!-- p50 / ortalama / p95 / p99 çizgileri -->
+  <g stroke-width="1.5" stroke-dasharray="4 3" fill="none">
+    <path d="M 139 100 L 139 330" stroke="var(--da-success, #10b981)"/>
+    <path d="M 180 100 L 180 330" stroke="var(--da-muted, #64748b)"/>
+    <path d="M 279 100 L 279 330" stroke="var(--da-accent, #f59e0b)"/>
+    <path d="M 379 100 L 379 330" stroke="var(--da-danger, #ef4444)"/>
+  </g>
+  <g font-size="11" text-anchor="middle">
+    <text x="139" y="92" fill="var(--da-success, #10b981)" font-weight="600">p50</text>
+    <text x="139" y="366" fill="var(--da-success, #10b981)">40 ms</text>
+    <text x="180" y="116" fill="var(--da-muted, #64748b)">ortalama</text>
+    <text x="279" y="92" fill="var(--da-accent, #f59e0b)" font-weight="600">p95</text>
+    <text x="279" y="366" fill="var(--da-accent, #f59e0b)">180 ms</text>
+    <text x="379" y="92" fill="var(--da-danger, #ef4444)" font-weight="600">p99</text>
+    <text x="379" y="366" fill="var(--da-danger, #ef4444)">900 ms</text>
+  </g>
+  <text x="240" y="390" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">SLO'yu yüzdelikle yazın: "isteklerin %99'u 300 ms altında"</text>
+
+  <!-- SAĞ: CAP üçgeni -->
+  <rect x="480" y="20" width="400" height="380" rx="14" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+  <text x="680" y="48" text-anchor="middle" font-size="14" font-weight="600" fill="var(--da-fg, #0f172a)">CAP: bölünme anında C mi A mı?</text>
+
+  <!-- üçgen -->
+  <path d="M 680 100 L 540 330 L 820 330 Z" fill="var(--da-primary, #6366f1)" opacity="0.08" stroke="var(--da-primary, #6366f1)" stroke-width="2"/>
+
+  <!-- köşeler -->
+  <circle cx="680" cy="100" r="22" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5"/>
+  <text x="680" y="105" text-anchor="middle" font-size="15" font-weight="700" fill="var(--da-fg, #0f172a)">C</text>
+  <text x="680" y="76" text-anchor="middle" font-size="11" fill="var(--da-muted, #64748b)">Consistency · her okuma en son yazma</text>
+
+  <circle cx="540" cy="330" r="22" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5"/>
+  <text x="540" y="335" text-anchor="middle" font-size="15" font-weight="700" fill="var(--da-fg, #0f172a)">A</text>
+  <text x="540" y="370" text-anchor="middle" font-size="11" fill="var(--da-muted, #64748b)">Availability</text>
+  <text x="540" y="384" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">her istek hatasız yanıt</text>
+
+  <circle cx="820" cy="330" r="22" fill="var(--da-danger, #ef4444)" opacity="0.15" stroke="var(--da-danger, #ef4444)" stroke-width="1.5"/>
+  <text x="820" y="335" text-anchor="middle" font-size="15" font-weight="700" fill="var(--da-danger, #ef4444)">P</text>
+  <text x="820" y="370" text-anchor="middle" font-size="11" fill="var(--da-danger, #ef4444)">Partition tolerance</text>
+  <text x="820" y="384" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">kaçınılmaz — seçim değil</text>
+
+  <!-- kenar etiketleri -->
+  <rect x="712" y="196" width="112" height="40" rx="8" fill="var(--da-surface, #ffffff)" stroke="var(--da-success, #10b981)"/>
+  <text x="768" y="212" text-anchor="middle" font-size="12" font-weight="600" fill="var(--da-success, #10b981)">CP</text>
+  <text x="768" y="228" text-anchor="middle" font-size="10" fill="var(--da-fg, #0f172a)">etcd · ZooKeeper · HBase</text>
+
+  <rect x="536" y="196" width="112" height="40" rx="8" fill="var(--da-surface, #ffffff)" stroke="var(--da-accent, #f59e0b)"/>
+  <text x="592" y="212" text-anchor="middle" font-size="12" font-weight="600" fill="var(--da-accent, #f59e0b)">CA</text>
+  <text x="592" y="228" text-anchor="middle" font-size="10" fill="var(--da-fg, #0f172a)">tek düğüm RDBMS (dağıtık değil)</text>
+
+  <rect x="624" y="300" width="112" height="40" rx="8" fill="var(--da-surface, #ffffff)" stroke="var(--da-primary, #6366f1)"/>
+  <text x="680" y="316" text-anchor="middle" font-size="12" font-weight="600" fill="var(--da-primary, #6366f1)">AP</text>
+  <text x="680" y="332" text-anchor="middle" font-size="10" fill="var(--da-fg, #0f172a)">Cassandra · DynamoDB · DNS</text>
+
+  <!-- orta not -->
+  <text x="680" y="268" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">PACELC: bölünme yokken</text>
+  <text x="680" y="281" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">gecikme (L) vs. tutarlılık (C)</text>
+</svg>

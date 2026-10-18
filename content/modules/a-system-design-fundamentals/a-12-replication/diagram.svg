@@ -1,0 +1,150 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 430" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Üç replikasyon mimarisi</title>
+  <desc id="desc">Üç panel. Leader-follower: istemci yazmayı tek lidere gönderir, lider günlüğü iki takipçiye kopyalar, okumalar takipçilerden yapılır. Multi-leader: iki bölgede iki lider birbirine asenkron kopyalar, aynı kaydın eşzamanlı güncellenmesi çakışma yaratır. Leaderless quorum: koordinatör yazmayı üç kopyaya gönderir ve iki onay bekler, okumada iki kopyadan okur; W artı R büyüktür N olduğu için kümeler kesişir.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+    <marker id="arrow-p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-primary, #6366f1)"/>
+    </marker>
+    <marker id="arrow-d" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-danger, #ef4444)"/>
+    </marker>
+  </defs>
+
+  <!-- Panel çerçeveleri -->
+  <g fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)" stroke-width="1.4">
+    <rect x="20" y="20" width="295" height="385" rx="14"/>
+    <rect x="332" y="20" width="295" height="385" rx="14"/>
+    <rect x="644" y="20" width="296" height="385" rx="14"/>
+  </g>
+  <g font-size="14" font-weight="600" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="167" y="46">1 · Leader-follower</text>
+    <text x="479" y="46">2 · Multi-leader</text>
+    <text x="792" y="46">3 · Leaderless quorum</text>
+  </g>
+  <g font-size="10" fill="var(--da-muted, #64748b)" text-anchor="middle">
+    <text x="167" y="62">PostgreSQL, MySQL, MongoDB, Kafka</text>
+    <text x="479" y="62">çok bölge, çevrimdışı istemci, CouchDB</text>
+    <text x="792" y="62">Dynamo, Cassandra, Riak</text>
+  </g>
+
+  <!-- ===== Panel 1 ===== -->
+  <rect x="40" y="170" width="70" height="40" rx="8" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.3"/>
+  <text x="75" y="194" text-anchor="middle" font-size="11" fill="var(--da-fg, #0f172a)">İstemci</text>
+  <!-- lider -->
+  <rect x="150" y="160" width="80" height="60" rx="10" fill="var(--da-primary, #6366f1)" opacity="0.15" stroke="var(--da-primary, #6366f1)" stroke-width="2"/>
+  <text x="190" y="185" text-anchor="middle" font-size="12" font-weight="600" fill="var(--da-primary, #6366f1)">Leader</text>
+  <text x="190" y="202" text-anchor="middle" font-size="9" fill="var(--da-fg, #0f172a)">tüm yazmalar</text>
+  <!-- takipçiler -->
+  <g fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.3">
+    <rect x="235" y="90" width="68" height="44" rx="8"/>
+    <rect x="235" y="250" width="68" height="44" rx="8"/>
+  </g>
+  <g font-size="11" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="269" y="109">Follower</text>
+    <text x="269" y="269">Follower</text>
+  </g>
+  <g font-size="9" fill="var(--da-muted, #64748b)" text-anchor="middle">
+    <text x="269" y="124">okuma</text>
+    <text x="269" y="284">okuma</text>
+  </g>
+  <!-- oklar -->
+  <path d="M 110 190 L 148 190" stroke="var(--da-muted, #64748b)" stroke-width="1.6" marker-end="url(#arrow)" fill="none"/>
+  <text x="128" y="182" text-anchor="middle" font-size="9" fill="var(--da-muted, #64748b)">write</text>
+  <g stroke="var(--da-primary, #6366f1)" stroke-width="1.6" fill="none" marker-end="url(#arrow-p)">
+    <path d="M 230 170 C 245 150, 250 125, 258 134"/>
+    <path d="M 230 210 C 245 230, 250 255, 258 250"/>
+  </g>
+  <text x="222" y="150" font-size="9" fill="var(--da-primary, #6366f1)">log</text>
+  <g stroke="var(--da-muted, #64748b)" stroke-width="1.2" fill="none" stroke-dasharray="3 3" marker-end="url(#arrow)">
+    <path d="M 75 170 C 75 100, 180 100, 233 104"/>
+    <path d="M 75 210 C 75 290, 180 290, 233 282"/>
+  </g>
+  <text x="120" y="96" font-size="9" fill="var(--da-muted, #64748b)">read</text>
+  <g font-size="10" fill="var(--da-fg, #0f172a)">
+    <text x="36" y="330">+ basit, tutarlı sıra</text>
+    <text x="36" y="346">+ okuma ölçeklenir</text>
+    <text x="36" y="366" fill="var(--da-danger, #ef4444)">− replication lag</text>
+    <text x="36" y="382" fill="var(--da-danger, #ef4444)">− lider düşünce seçim gerekir</text>
+  </g>
+
+  <!-- ===== Panel 2 ===== -->
+  <rect x="348" y="90" width="120" height="150" rx="10" fill="var(--da-accent, #f59e0b)" opacity="0.08" stroke="var(--da-accent, #f59e0b)" stroke-dasharray="5 4"/>
+  <rect x="492" y="90" width="120" height="150" rx="10" fill="var(--da-accent, #f59e0b)" opacity="0.08" stroke="var(--da-accent, #f59e0b)" stroke-dasharray="5 4"/>
+  <g font-size="10" fill="var(--da-accent, #f59e0b)" text-anchor="middle">
+    <text x="408" y="106">eu-west</text>
+    <text x="552" y="106">us-east</text>
+  </g>
+  <g fill="var(--da-primary, #6366f1)" opacity="0.15" stroke="var(--da-primary, #6366f1)" stroke-width="2">
+    <rect x="368" y="150" width="80" height="50" rx="10"/>
+    <rect x="512" y="150" width="80" height="50" rx="10"/>
+  </g>
+  <g font-size="12" font-weight="600" fill="var(--da-primary, #6366f1)" text-anchor="middle">
+    <text x="408" y="180">Leader A</text>
+    <text x="552" y="180">Leader B</text>
+  </g>
+  <!-- istemciler -->
+  <g font-size="10" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="408" y="128">istemci: x = 7</text>
+    <text x="552" y="128">istemci: x = 9</text>
+  </g>
+  <path d="M 408 132 L 408 148" stroke="var(--da-muted, #64748b)" stroke-width="1.4" marker-end="url(#arrow)" fill="none"/>
+  <path d="M 552 132 L 552 148" stroke="var(--da-muted, #64748b)" stroke-width="1.4" marker-end="url(#arrow)" fill="none"/>
+  <!-- çift yönlü asenkron -->
+  <path d="M 448 168 L 510 168" stroke="var(--da-primary, #6366f1)" stroke-width="1.6" marker-end="url(#arrow-p)" fill="none"/>
+  <path d="M 512 184 L 450 184" stroke="var(--da-primary, #6366f1)" stroke-width="1.6" marker-end="url(#arrow-p)" fill="none"/>
+  <text x="480" y="160" text-anchor="middle" font-size="9" fill="var(--da-primary, #6366f1)">async</text>
+  <!-- çakışma -->
+  <rect x="420" y="208" width="120" height="22" rx="6" fill="var(--da-danger, #ef4444)" opacity="0.15" stroke="var(--da-danger, #ef4444)"/>
+  <text x="480" y="223" text-anchor="middle" font-size="10" fill="var(--da-danger, #ef4444)">çakışma: 7 mi 9 mu?</text>
+  <g font-size="10" fill="var(--da-fg, #0f172a)">
+    <text x="348" y="270">Çözüm seçenekleri:</text>
+    <text x="348" y="288">• LWW (kaybeden silinir)</text>
+    <text x="348" y="304">• sibling sakla, uygulama birleştirir</text>
+    <text x="348" y="320">• CRDT</text>
+    <text x="348" y="336">• kaydı hep aynı lidere yönlendir</text>
+    <text x="348" y="366" fill="var(--da-success, #10b981)">+ her bölgede düşük gecikmeli yazma</text>
+    <text x="348" y="382" fill="var(--da-danger, #ef4444)">− çakışma çözümü karmaşık</text>
+  </g>
+
+  <!-- ===== Panel 3 ===== -->
+  <rect x="664" y="150" width="86" height="44" rx="8" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.3"/>
+  <text x="707" y="169" text-anchor="middle" font-size="11" fill="var(--da-fg, #0f172a)">Koordinatör</text>
+  <text x="707" y="184" text-anchor="middle" font-size="9" fill="var(--da-muted, #64748b)">N=3 W=2 R=2</text>
+  <!-- kopyalar -->
+  <g fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.3">
+    <rect x="820" y="86" width="90" height="40" rx="8"/>
+    <rect x="820" y="152" width="90" height="40" rx="8"/>
+    <rect x="820" y="218" width="90" height="40" rx="8"/>
+  </g>
+  <g font-size="11" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="865" y="103">Kopya 1</text>
+    <text x="865" y="169">Kopya 2</text>
+    <text x="865" y="235">Kopya 3</text>
+  </g>
+  <g font-size="9" text-anchor="middle">
+    <text x="865" y="118" fill="var(--da-success, #10b981)">v12 ✓ W</text>
+    <text x="865" y="184" fill="var(--da-success, #10b981)">v12 ✓ W · R</text>
+    <text x="865" y="250" fill="var(--da-muted, #64748b)">v11 (geç) · R</text>
+  </g>
+  <!-- yazma okları -->
+  <g stroke="var(--da-primary, #6366f1)" stroke-width="1.6" fill="none" marker-end="url(#arrow-p)">
+    <path d="M 750 160 C 780 150, 790 108, 818 106"/>
+    <path d="M 750 172 L 818 172"/>
+  </g>
+  <path d="M 750 184 C 780 194, 790 238, 818 238" stroke="var(--da-primary, #6366f1)" stroke-width="1.6" fill="none" stroke-dasharray="3 3" marker-end="url(#arrow-p)"/>
+  <text x="760" y="140" font-size="9" fill="var(--da-primary, #6366f1)">W = 2 onay</text>
+  <!-- okuma kesişimi -->
+  <ellipse cx="865" cy="205" rx="58" ry="40" fill="var(--da-success, #10b981)" opacity="0.10" stroke="var(--da-success, #10b981)" stroke-dasharray="4 3"/>
+  <text x="930" y="205" font-size="9" fill="var(--da-success, #10b981)" text-anchor="end">R=2</text>
+  <g font-size="10" fill="var(--da-fg, #0f172a)">
+    <text x="660" y="290">W + R &gt; N → okuma ve yazma</text>
+    <text x="660" y="306">kümeleri kesişir, en yüksek</text>
+    <text x="660" y="322">sürüm (v12) kazanır.</text>
+    <text x="660" y="346">read repair + anti-entropy</text>
+    <text x="660" y="366" fill="var(--da-success, #10b981)">+ lider yok, düğüm düşse de yazılır</text>
+    <text x="660" y="382" fill="var(--da-danger, #ef4444)">− eşzamanlı yazma sürümleri</text>
+  </g>
+</svg>

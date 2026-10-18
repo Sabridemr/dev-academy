@@ -1,0 +1,352 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "c-01-prototype",
+  "title": {
+    "tr": "Prototype: Sıfırdan Kurmak Yerine Kopyala",
+    "en": "Prototype: Copy Instead of Building from Scratch"
+  },
+  "summary": {
+    "tr": "Registry'de kayıtlı pahalı bir şablon belge clone() ile kopyalanır; istemci kopyayı değiştirir, şablon bozulmaz.",
+    "en": "An expensive template document registered in a registry is copied with clone(); the client mutates the copy, the template stays intact."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda InvoiceService istemcisi, ortada PrototypeRegistry, sağ üstte kayıtlı invoice-template prototipi ve sağ altta üretilen klon. Başlangıçta şablon pahalı biçimde kurulup registry'ye kaydedilir. İstemci create(\"invoice\") çağırır; registry şablonun clone metodunu çağırır; derin kopya oluşur ve istemciye döner; istemci kopyanın başlığını değiştirir, şablon değişmez.",
+      "en": "InvoiceService client on the left, PrototypeRegistry in the middle, the registered invoice-template prototype top right and the produced clone bottom right. Initially the template is built expensively and registered. The client calls create(\"invoice\"); the registry calls the template's clone method; a deep copy is created and returned; the client changes the copy's title while the template stays unchanged."
+    }
+  },
+  "canvas": {
+    "width": 1000,
+    "height": 600
+  },
+  "nodes": [
+    {
+      "id": "client",
+      "kind": "generic",
+      "label": "InvoiceService",
+      "x": 120,
+      "y": 300,
+      "w": 170,
+      "h": 70,
+      "sublabel": {
+        "tr": "newInvoice()",
+        "en": "newInvoice()"
+      }
+    },
+    {
+      "id": "registry",
+      "kind": "generic",
+      "label": "PrototypeRegistry",
+      "x": 470,
+      "y": 300,
+      "w": 220,
+      "h": 80,
+      "sublabel": {
+        "tr": "items: Map<key, Prototype>",
+        "en": "items: Map<key, Prototype>"
+      }
+    },
+    {
+      "id": "proto",
+      "kind": "generic",
+      "label": "invoice-template",
+      "x": 840,
+      "y": 140,
+      "w": 210,
+      "h": 80,
+      "sublabel": {
+        "tr": "12 stil, 40 blok, fontlar yüklü",
+        "en": "12 styles, 40 blocks, fonts loaded"
+      }
+    },
+    {
+      "id": "clone",
+      "kind": "generic",
+      "label": "invoice #1042",
+      "x": 840,
+      "y": 460,
+      "w": 210,
+      "h": 80,
+      "sublabel": {
+        "tr": "henüz yok",
+        "en": "not yet created"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "boot-reg",
+      "from": "proto",
+      "to": "registry",
+      "kind": "control",
+      "label": "register(\"invoice\", template)",
+      "style": "dotted",
+      "curvature": -0.25
+    },
+    {
+      "id": "cl-reg",
+      "from": "client",
+      "to": "registry",
+      "kind": "request",
+      "label": "create(\"invoice\")"
+    },
+    {
+      "id": "reg-proto",
+      "from": "registry",
+      "to": "proto",
+      "kind": "request",
+      "label": "clone()"
+    },
+    {
+      "id": "proto-clone",
+      "from": "proto",
+      "to": "clone",
+      "kind": "data",
+      "label": "deep copy"
+    },
+    {
+      "id": "cl-clone",
+      "from": "client",
+      "to": "clone",
+      "kind": "request",
+      "label": "setTitle(...)",
+      "style": "dashed",
+      "curvature": 0.3
+    }
+  ],
+  "steps": [
+    {
+      "id": "register",
+      "title": {
+        "tr": "1. Pahalı şablon bir kez kurulur",
+        "en": "1. The expensive template is built once"
+      },
+      "narration": {
+        "tr": "Uygulama açılışında fatura şablonu kurulur: fontlar diskten yüklenir, 12 stil çözümlenir, 40 blok dizilir (~300 ms). Nesne \"invoice\" anahtarıyla registry'ye prototip olarak kaydedilir.",
+        "en": "At startup the invoice template is built: fonts loaded from disk, 12 styles resolved, 40 blocks laid out (~300 ms). The object is registered in the registry as a prototype under the key \"invoice\"."
+      },
+      "durationMs": 3500,
+      "inherit": false,
+      "highlight": {
+        "nodes": [
+          "proto",
+          "registry"
+        ],
+        "edges": [
+          "boot-reg"
+        ]
+      },
+      "nodeStates": {
+        "proto": {
+          "status": "active",
+          "badge": "300 ms"
+        },
+        "clone": {
+          "visible": false
+        }
+      },
+      "edgeStates": {
+        "proto-clone": {
+          "visible": false
+        },
+        "cl-clone": {
+          "visible": false
+        }
+      },
+      "packets": [
+        {
+          "edge": "boot-reg",
+          "shape": "diamond",
+          "label": "register",
+          "durationMs": 1000
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a1",
+          "x": 840,
+          "y": 40,
+          "text": {
+            "tr": "kurulum maliyeti yüksek: I/O + hesaplama",
+            "en": "construction is costly: I/O + computation"
+          },
+          "tone": "warning",
+          "target": "proto"
+        }
+      ]
+    },
+    {
+      "id": "request",
+      "title": {
+        "tr": "2. İstemci yeni fatura ister",
+        "en": "2. The client asks for a new invoice"
+      },
+      "narration": {
+        "tr": "InvoiceService registry.create(\"invoice\") çağırır. Somut sınıfı (DocumentTemplate) bilmesine gerek yoktur; anahtar yeterlidir.",
+        "en": "InvoiceService calls registry.create(\"invoice\"). It does not need to know the concrete class (DocumentTemplate); the key is enough."
+      },
+      "durationMs": 3500,
+      "highlight": {
+        "nodes": [
+          "client",
+          "registry"
+        ],
+        "edges": [
+          "cl-reg"
+        ]
+      },
+      "nodeStates": {
+        "registry": {
+          "status": "active"
+        },
+        "proto": {
+          "badge": ""
+        }
+      },
+      "edgeStates": {},
+      "packets": [
+        {
+          "edge": "cl-reg",
+          "shape": "envelope",
+          "label": "create(\"invoice\")",
+          "durationMs": 900
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "id": "clone",
+      "title": {
+        "tr": "3. clone(): derin kopya",
+        "en": "3. clone(): deep copy"
+      },
+      "narration": {
+        "tr": "Registry prototipin clone() metodunu çağırır. clone, stil ve blok dizilerini de kopyalar (derin kopya); fontlar paylaşılır çünkü değişmezdir. Süre ~2 ms: sıfırdan kurmanın 150'de biri.",
+        "en": "The registry calls the prototype's clone(). clone copies the style and block arrays too (deep copy); fonts are shared because they are immutable. Time ~2 ms: 1/150th of building from scratch."
+      },
+      "durationMs": 3500,
+      "highlight": {
+        "nodes": [
+          "proto",
+          "clone"
+        ],
+        "edges": [
+          "reg-proto",
+          "proto-clone"
+        ]
+      },
+      "nodeStates": {
+        "clone": {
+          "visible": true,
+          "status": "success",
+          "badge": "2 ms",
+          "sublabel": {
+            "tr": "kopya: kendi stil ve blok dizileri",
+            "en": "copy: own style and block arrays"
+          }
+        }
+      },
+      "edgeStates": {
+        "proto-clone": {
+          "visible": true,
+          "status": "active"
+        }
+      },
+      "packets": [
+        {
+          "edge": "reg-proto",
+          "shape": "diamond",
+          "label": "clone()",
+          "durationMs": 800
+        },
+        {
+          "edge": "proto-clone",
+          "startAt": 900,
+          "shape": "square",
+          "color": "accent",
+          "label": "deep copy",
+          "durationMs": 1000
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a3",
+          "x": 840,
+          "y": 300,
+          "text": {
+            "tr": "sığ kopya tuzağı: diziler paylaşılırsa şablon bozulur",
+            "en": "shallow-copy trap: shared arrays corrupt the template"
+          },
+          "tone": "danger"
+        }
+      ]
+    },
+    {
+      "id": "mutate",
+      "title": {
+        "tr": "4. Kopya değişir, şablon korunur",
+        "en": "4. The copy changes, the template survives"
+      },
+      "narration": {
+        "tr": "Klon istemciye döner; istemci setTitle(\"Fatura #1042\") çağırır ve kalemleri ekler. Prototip olduğu gibi kalır ve bir sonraki create() için hazırdır.",
+        "en": "The clone returns to the client; the client calls setTitle(\"Invoice #1042\") and adds line items. The prototype remains untouched and ready for the next create()."
+      },
+      "durationMs": 3500,
+      "highlight": {
+        "nodes": [
+          "client",
+          "clone"
+        ],
+        "edges": [
+          "cl-clone"
+        ]
+      },
+      "nodeStates": {
+        "clone": {
+          "badge": "",
+          "sublabel": {
+            "tr": "başlık: Fatura #1042",
+            "en": "title: Invoice #1042"
+          }
+        },
+        "proto": {
+          "status": "success",
+          "sublabel": {
+            "tr": "değişmedi",
+            "en": "unchanged"
+          }
+        }
+      },
+      "edgeStates": {
+        "cl-clone": {
+          "visible": true,
+          "status": "active"
+        }
+      },
+      "packets": [
+        {
+          "edge": "cl-reg",
+          "direction": "backward",
+          "color": "success",
+          "label": "clone",
+          "durationMs": 800
+        },
+        {
+          "edge": "cl-clone",
+          "startAt": 900,
+          "shape": "envelope",
+          "label": "setTitle(...)",
+          "durationMs": 900
+        }
+      ],
+      "annotations": []
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": [
+    "prototype",
+    "creational"
+  ]
+}

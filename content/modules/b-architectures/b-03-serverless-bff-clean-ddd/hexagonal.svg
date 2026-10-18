@@ -1,0 +1,109 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 520" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Hexagonal (ports and adapters) ve Clean Architecture katmanları</title>
+  <desc id="desc">Merkezde iç içe iki altıgen: en içte domain (varlıklar, değer nesneleri, iş kuralları), çevresinde application (use case'ler ve port arayüzleri). Sol tarafta gelen (driving) adaptörler: REST controller, Lambda handler, Kafka consumer, test; sağ tarafta giden (driven) adaptörler: Postgres repository, Stripe istemcisi, e-posta gönderici, bellek içi test repository. Tüm oklar dıştan içe, çekirdeğe doğru bakar. Altta bağımlılık kuralı notu bulunur.</desc>
+  <defs>
+    <marker id="arrow-p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-primary, #6366f1)"/>
+    </marker>
+    <marker id="arrow-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-accent, #f59e0b)"/>
+    </marker>
+  </defs>
+
+  <!-- Dış altıgen: application -->
+  <polygon points="480,70 650,160 650,340 480,430 310,340 310,160" fill="var(--da-primary, #6366f1)" fill-opacity="0.08" stroke="var(--da-primary, #6366f1)" stroke-width="2"/>
+  <!-- İç altıgen: domain -->
+  <polygon points="480,150 570,200 570,300 480,350 390,300 390,200" fill="var(--da-accent, #f59e0b)" fill-opacity="0.14" stroke="var(--da-accent, #f59e0b)" stroke-width="2"/>
+
+  <g text-anchor="middle" fill="var(--da-fg, #0f172a)">
+    <text x="480" y="226" font-size="14" font-weight="700">DOMAIN</text>
+    <text x="480" y="246" font-size="10.5">Order, Money, OrderLine</text>
+    <text x="480" y="261" font-size="10.5">iş kuralları, durum geçişleri</text>
+    <text x="480" y="282" font-size="10" fill="var(--da-danger, #ef4444)">import: hiçbir çerçeve</text>
+
+    <text x="480" y="104" font-size="13" font-weight="700" fill="var(--da-primary, #6366f1)">APPLICATION</text>
+    <text x="480" y="122" font-size="10.5">PlaceOrder, RefundOrder (use case)</text>
+    <text x="480" y="137" font-size="10.5">port arayüzleri burada tanımlanır</text>
+    <text x="480" y="395" font-size="10.5">OrderRepository, PaymentGateway, Clock</text>
+    <text x="480" y="410" font-size="10.5" fill="var(--da-muted, #64748b)">(driven port'lar = arayüz)</text>
+  </g>
+
+  <!-- Port kutucukları (sol: driving, sağ: driven) -->
+  <g fill="var(--da-surface, #ffffff)" stroke="var(--da-primary, #6366f1)" stroke-width="1.5">
+    <rect x="300" y="236" width="24" height="28" rx="4"/>
+    <rect x="636" y="196" width="24" height="28" rx="4"/>
+    <rect x="636" y="276" width="24" height="28" rx="4"/>
+  </g>
+  <g font-size="8.5" fill="var(--da-primary, #6366f1)" text-anchor="middle">
+    <text x="312" y="253">in</text>
+    <text x="648" y="213">out</text>
+    <text x="648" y="293">out</text>
+  </g>
+
+  <!-- Sol: driving adaptörler -->
+  <text x="140" y="60" text-anchor="middle" font-size="12" font-weight="700" fill="var(--da-fg, #0f172a)">Gelen (driving) adaptörler</text>
+  <text x="140" y="76" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">use case'i çağırır</text>
+  <g fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.4">
+    <rect x="50" y="110" width="180" height="46" rx="8"/>
+    <rect x="50" y="190" width="180" height="46" rx="8"/>
+    <rect x="50" y="270" width="180" height="46" rx="8"/>
+    <rect x="50" y="350" width="180" height="46" rx="8"/>
+  </g>
+  <g font-size="11.5" font-weight="600" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="140" y="129">REST controller</text>
+    <text x="140" y="209">Lambda handler</text>
+    <text x="140" y="289">Kafka consumer</text>
+    <text x="140" y="369">Birim testi</text>
+  </g>
+  <g font-size="9.5" fill="var(--da-muted, #64748b)" text-anchor="middle">
+    <text x="140" y="146">POST /orders → PlaceOrder</text>
+    <text x="140" y="226">APIGatewayEvent → PlaceOrder</text>
+    <text x="140" y="306">OrderRequested → PlaceOrder</text>
+    <text x="140" y="386">placeOrder.execute() doğrudan</text>
+  </g>
+  <g stroke="var(--da-primary, #6366f1)" stroke-width="1.5" fill="none" marker-end="url(#arrow-p)">
+    <path d="M 230 133 C 270 133, 270 240, 298 246"/>
+    <path d="M 230 213 C 270 213, 270 245, 298 249"/>
+    <path d="M 230 293 C 270 293, 270 255, 298 252"/>
+    <path d="M 230 373 C 270 373, 270 262, 298 255"/>
+  </g>
+
+  <!-- Sağ: driven adaptörler -->
+  <text x="820" y="60" text-anchor="middle" font-size="12" font-weight="700" fill="var(--da-fg, #0f172a)">Giden (driven) adaptörler</text>
+  <text x="820" y="76" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">port'u implemente eder</text>
+  <g fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.4">
+    <rect x="730" y="110" width="180" height="46" rx="8"/>
+    <rect x="730" y="190" width="180" height="46" rx="8"/>
+    <rect x="730" y="270" width="180" height="46" rx="8"/>
+    <rect x="730" y="350" width="180" height="46" rx="8"/>
+  </g>
+  <g font-size="11.5" font-weight="600" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="820" y="129">PostgresOrderRepository</text>
+    <text x="820" y="209">StripePaymentGateway</text>
+    <text x="820" y="289">SesEmailSender</text>
+    <text x="820" y="369">InMemoryOrderRepository</text>
+  </g>
+  <g font-size="9.5" fill="var(--da-muted, #64748b)" text-anchor="middle">
+    <text x="820" y="146">implements OrderRepository</text>
+    <text x="820" y="226">implements PaymentGateway</text>
+    <text x="820" y="306">implements Notifier</text>
+    <text x="820" y="386">implements OrderRepository (test)</text>
+  </g>
+  <!-- oklar içeri bakar: adaptör → port -->
+  <g stroke="var(--da-primary, #6366f1)" stroke-width="1.5" fill="none" stroke-dasharray="5 4" marker-end="url(#arrow-p)">
+    <path d="M 730 133 C 690 133, 690 205, 662 208"/>
+    <path d="M 730 213 C 700 213, 690 212, 662 212"/>
+    <path d="M 730 293 C 700 293, 690 290, 662 290"/>
+    <path d="M 730 373 C 690 373, 690 300, 662 294"/>
+  </g>
+  <text x="700" y="330" text-anchor="middle" font-size="9" fill="var(--da-primary, #6366f1)">implements (kaynak kodu bağımlılığı içeri)</text>
+
+  <!-- Çalışma zamanı akışı -->
+  <path d="M 590 250 C 610 250, 620 250, 634 250" stroke="var(--da-accent, #f59e0b)" stroke-width="1.3" fill="none" marker-end="url(#arrow-a)"/>
+  <text x="612" y="243" text-anchor="middle" font-size="8.5" fill="var(--da-accent, #f59e0b)">çağrı</text>
+
+  <!-- Alt: bağımlılık kuralı -->
+  <rect x="120" y="450" width="720" height="52" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+  <text x="480" y="471" text-anchor="middle" font-size="11.5" font-weight="600" fill="var(--da-fg, #0f172a)">Bağımlılık kuralı: kaynak kodu bağımlılıkları yalnızca İÇERİ, iş alanına doğru işaret eder.</text>
+  <text x="480" y="490" text-anchor="middle" font-size="10.5" fill="var(--da-muted, #64748b)">Çekirdek Postgres'i, HTTP'yi, Kafka'yı bilmez. Adaptör değişir, çekirdek kalır. Testler adaptörsüz, milisaniyede çalışır.</text>
+</svg>

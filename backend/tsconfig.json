@@ -1,0 +1,21 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "target": "ES2022",
+    "outDir": "./dist",
+    "baseUrl": "./",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "strictPropertyInitialization": false,
+    "declaration": false,
+    "declarationMap": false,
+    "types": ["node", "jest"],
+    "paths": {
+      "@/*": ["src/*"]
+    }
+  },
+  "include": ["src/**/*.ts", "test/**/*.ts", "prisma/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}

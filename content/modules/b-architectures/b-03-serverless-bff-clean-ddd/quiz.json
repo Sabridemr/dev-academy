@@ -1,0 +1,110 @@
+{
+  "id": "b-03-serverless-bff-clean-ddd-quiz",
+  "title": { "tr": "Serverless, BFF, Clean Architecture, DDD Quiz", "en": "Serverless, BFF, Clean Architecture, DDD Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Bir Lambda fonksiyonunun cold start süresini düşürmek için hangileri etkilidir? (Birden fazla seçin)",
+        "en": "Which of these effectively reduce a Lambda function's cold start time? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "DB bağlantısını ve SDK istemcilerini handler dışında, init bloğunda bir kez oluşturmak", "en": "Create the DB connection and SDK clients once in the init block, outside the handler" } },
+        { "id": "b", "text": { "tr": "Kullanılmayan bağımlılıkları budayarak paket boyutunu küçültmek", "en": "Shrink the bundle by pruning unused dependencies" } },
+        { "id": "c", "text": { "tr": "Fonksiyona daha fazla eşzamanlı istek göndererek ortamların sıcak kalmasını sağlamak", "en": "Send more concurrent requests to the function so that environments stay warm" } },
+        { "id": "d", "text": { "tr": "Kritik yol için provisioned concurrency ayarlamak", "en": "Configure provisioned concurrency for the critical path" } }
+      ],
+      "correct": ["a", "b", "d"],
+      "explanation": {
+        "tr": "Init'i handler dışına almak her warm çağrıda tekrarı önler; küçük paket, yükleme süresini kısaltır; provisioned concurrency ortamları önceden ısıtır. Eşzamanlılığı artırmak (c) ise tam tersine daha fazla yeni ortam, dolayısıyla daha fazla cold start üretir.",
+        "en": "Moving init outside the handler avoids repeating it on warm calls; a smaller bundle loads faster; provisioned concurrency pre-warms environments. Increasing concurrency (c) does the opposite: more new environments, hence more cold starts."
+      },
+      "difficulty": "medium",
+      "concepts": ["cold-start", "serverless"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "Bir ekip indirim hesaplama kuralını mobil BFF'e koydu; web BFF'de farklı bir sürümü var. Bu neyin ihlalidir?",
+        "en": "A team put the discount calculation rule into the mobile BFF; the web BFF has a different version. What does this violate?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Ortak kesitlerin (auth, rate limit, logging) BFF'de değil API gateway'de olması ilkesi", "en": "The principle that cross-cutting concerns (auth, rate limit, logging) live in the API gateway, not the BFF" } },
+        { "id": "b", "text": { "tr": "Her istemci türü için ayrı BFF olması ve BFF'in o istemcinin frontend ekibine ait olması ilkesi", "en": "The principle of one BFF per client type, owned by that client's frontend team" } },
+        { "id": "c", "text": { "tr": "BFF'in yalnızca birleştirme ve biçimlendirme yapması; iş kuralının alan servisinde kalması", "en": "The BFF only aggregates and shapes; business rules stay in the domain service" } },
+        { "id": "d", "text": { "tr": "Hiçbir ilkeyi ihlal etmez; BFF istemciye özel mantık içerebilir ve fiyatlandırma da buna dahildir", "en": "Nothing; a BFF may contain client-specific logic and pricing is part of that" } }
+      ],
+      "correct": ["c"],
+      "explanation": {
+        "tr": "İstemciye özel olan sunum biçimidir, fiyat kuralı değil. İş kuralı BFF'e sızınca istemci başına kopyalanır ve tutarsızlaşır (web ve mobil farklı fiyat gösterir). Ortak kesit kuralı (a) ve istemci başına BFF / frontend sahipliği (b) bu senaryoda ihlal edilmemiştir; (d) yanlıştır çünkü 'istemciye özel mantık' sunum düzeyinde kalmalıdır, fiyatlandırma alan servisinin işidir.",
+        "en": "What is client-specific is presentation, not the pricing rule. When business rules leak into a BFF they get copied per client and diverge (web and mobile show different prices). The cross-cutting rule (a) and one BFF per client / frontend ownership (b) are not violated in this scenario; (d) is wrong because 'client-specific logic' must stay at the presentation level, pricing belongs to the domain service."
+      },
+      "difficulty": "easy",
+      "concepts": ["bff"]
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": {
+        "tr": "Hexagonal mimaride 'OrderRepository' arayüzü hangi katmanda tanımlanır ve kim implemente eder?",
+        "en": "In hexagonal architecture, in which layer is the 'OrderRepository' interface defined and who implements it?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Application/domain tarafında port olarak tanımlanır; altyapıdaki adaptör (Postgres) implemente eder", "en": "Defined as a port on the application/domain side; an infrastructure adapter (Postgres) implements it" } },
+        { "id": "b", "text": { "tr": "Altyapı katmanında tanımlanır; domain bu arayüzü import edip ihtiyaç duyduğu yerde implemente eder", "en": "Defined in the infrastructure layer; the domain imports the interface and implements it where needed" } },
+        { "id": "c", "text": { "tr": "ORM kütüphanesinin sağladığı generic Repository<T> arayüzüdür; domain varlıkları bunu doğrudan kullanır", "en": "It is the generic Repository<T> interface provided by the ORM; domain entities use it directly" } },
+        { "id": "d", "text": { "tr": "Gelen adaptörde (REST controller) tanımlanır; use case sınıfı controller'dan aldığı nesneyle implemente eder", "en": "Defined in the driving adapter (REST controller); the use case implements it with the object it receives from the controller" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "Bağımlılık kuralı gereği çekirdek dış dünyaya bağımlı olamaz; bu yüzden ihtiyacını bir port (arayüz) olarak kendisi tanımlar ve dış halka (adaptör) bu arayüzü implemente eder. Böylece Postgres yerine bellek içi bir repository takmak çekirdeğe dokunmaz. b, c ve d bağımlılığı dışarı doğru çevirir: domain altyapıyı import eder (b), ORM'e bağlanır (c) ya da controller'a bağımlı olur (d).",
+        "en": "By the dependency rule the core cannot depend on the outside world, so it declares its need as a port (interface) and the outer ring (adapter) implements it. That lets you plug an in-memory repository instead of Postgres without touching the core. b, c and d point dependencies outward: the domain imports infrastructure (b), binds to the ORM (c) or depends on the controller (d)."
+      },
+      "difficulty": "medium",
+      "concepts": ["ports-and-adapters", "dependency-rule", "hexagonal-architecture"]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "DDD'ye göre Catalog, Ordering ve Shipping bağlamlarının her birinde ayrı bir 'Product' sınıfı bulunması kod tekrarıdır ve tek bir paylaşılan Product sınıfıyla düzeltilmelidir.",
+        "en": "According to DDD, having a separate 'Product' class in each of the Catalog, Ordering and Shipping contexts is code duplication and should be fixed with one shared Product class."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "Yanlış. Aynı kelime her bounded context'te farklı anlam ve alan taşır (katalogda açıklama/görsel, depoda ağırlık/raf). Tek paylaşılan sınıf, bağlamları birbirine bağlar ve her değişikliği herkese yayar; ayrı modeller tekrar değil, doğruluktur.",
+        "en": "False. The same word carries different meaning and fields in each bounded context (description/image in catalog, weight/shelf in shipping). A single shared class couples the contexts and spreads every change to everyone; separate models are correctness, not duplication."
+      },
+      "difficulty": "medium",
+      "concepts": ["bounded-context", "ubiquitous-language"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "Yeni sipariş servisiniz 20 yıllık bir ERP'den müşteri verisi alıyor ve ERP'nin tuhaf alan adları kendi modelinize sızmaya başladı. DDD'de bunun için önerilen yapı hangisidir?",
+        "en": "Your new ordering service pulls customer data from a 20-year-old ERP and the ERP's odd field names are leaking into your model. Which DDD construct is recommended for this?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Shared kernel: ERP müşteri modelini iki sistemin ortak çekirdeği olarak paylaşmak", "en": "Shared kernel: share the ERP customer model as the common core of both systems" } },
+        { "id": "b", "text": { "tr": "Anti-corruption layer: ERP modelini kendi modelinize çeviren bir koruma katmanı", "en": "Anti-corruption layer: a translation layer that maps the ERP model into your own" } },
+        { "id": "c", "text": { "tr": "Conformist: ERP modelini olduğu gibi benimseyip kendi ubiquitous language'ınızı ona uydurmak", "en": "Conformist: adopt the ERP model as is and bend your own ubiquitous language to it" } },
+        { "id": "d", "text": { "tr": "Aggregate root: ERP müşterisini kök varlık yapıp tüm sipariş değişikliklerini üzerinden geçirmek", "en": "Aggregate root: make the ERP customer the root entity and route every order change through it" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "ACL, yukarı akıştaki (legacy/üçüncü taraf) modelin aşağı akıştaki temiz modeli kirletmesini önleyen çeviri katmanıdır. Conformist ve shared kernel tam tersine yabancı modeli içeri alır; conformist'te kendi diliniz ERP'ye teslim olur, shared kernel'de ise ERP'deki her değişiklik sizi de kırar (a, c yanlış). Aggregate root bir bağlam içindeki tutarlılık sınırıdır, bağlamlar arası entegrasyonla ilgili bir kavram değildir (d yanlış).",
+        "en": "An ACL is the translation layer that keeps an upstream (legacy/third-party) model from polluting the downstream clean model. Conformist and shared kernel do the opposite and let the foreign model in; with conformist your language surrenders to the ERP, with a shared kernel every ERP change breaks you too (a, c are wrong). An aggregate root is a consistency boundary inside one context, not a cross-context integration concept (d is wrong)."
+      },
+      "difficulty": "hard",
+      "concepts": ["anti-corruption-layer", "context-map"]
+    }
+  ]
+}

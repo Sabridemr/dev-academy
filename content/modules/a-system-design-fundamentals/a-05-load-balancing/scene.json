@@ -1,0 +1,136 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "load-balancer-round-robin",
+  "title": { "tr": "Round-Robin ile İstek Dağıtımı", "en": "Request Distribution with Round-Robin" },
+  "summary": {
+    "tr": "Üç sunuculu bir havuzda yük dengeleyicinin istekleri sırayla dağıtması, bir sunucunun düşmesi ve health check ile havuzdan çıkarılması.",
+    "en": "A load balancer distributing requests in turn across three servers, one server failing, and the health check removing it from the pool."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda kullanıcılar, ortada yük dengeleyici, sağda üç uygulama sunucusu bulunur. İstekler yük dengeleyiciden sırayla S1, S2, S3'e gider. Üçüncü adımda S2 çöker; health check bunu fark eder ve istekler yalnızca S1 ile S3'e dağıtılır.",
+      "en": "Users on the left, a load balancer in the middle and three application servers on the right. Requests go from the load balancer to S1, S2, S3 in turn. In step three S2 crashes; the health check notices and requests are only distributed to S1 and S3."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "users", "kind": "user", "label": { "tr": "Kullanıcılar", "en": "Users" }, "x": 110, "y": 300 },
+    { "id": "lb", "kind": "lb", "label": "Load Balancer", "sublabel": { "tr": "Round-robin", "en": "Round-robin" }, "x": 420, "y": 300, "w": 150, "h": 80 },
+    { "id": "s1", "kind": "server", "label": "S1", "sublabel": { "tr": "Uygulama sunucusu", "en": "App server" }, "x": 800, "y": 140, "w": 120, "h": 70 },
+    { "id": "s2", "kind": "server", "label": "S2", "sublabel": { "tr": "Uygulama sunucusu", "en": "App server" }, "x": 800, "y": 300, "w": 120, "h": 70 },
+    { "id": "s3", "kind": "server", "label": "S3", "sublabel": { "tr": "Uygulama sunucusu", "en": "App server" }, "x": 800, "y": 460, "w": 120, "h": 70 }
+  ],
+  "edges": [
+    { "id": "u-lb", "from": "users", "to": "lb", "kind": "request", "label": { "tr": "HTTP istekleri", "en": "HTTP requests" } },
+    { "id": "lb-s1", "from": "lb", "to": "s1", "kind": "request", "curvature": -0.15 },
+    { "id": "lb-s2", "from": "lb", "to": "s2", "kind": "request" },
+    { "id": "lb-s3", "from": "lb", "to": "s3", "kind": "request", "curvature": 0.15 },
+    { "id": "hc-s2", "from": "lb", "to": "s2", "kind": "control", "style": "dotted", "curvature": 0.4, "label": { "tr": "health check", "en": "health check" } }
+  ],
+  "steps": [
+    {
+      "id": "intro",
+      "title": { "tr": "Başlangıç", "en": "Start" },
+      "narration": {
+        "tr": "Kullanıcılar tek bir adrese (load balancer'ın IP'sine) istek gönderir. Arkadaki üç sunucu kullanıcıya görünmez.",
+        "en": "Users send requests to a single address (the load balancer's IP). The three servers behind it are invisible to the user."
+      },
+      "durationMs": 3000,
+      "inherit": false,
+      "highlight": { "nodes": ["users", "lb"], "edges": ["u-lb"] },
+      "packets": [
+        { "edge": "u-lb", "shape": "envelope", "label": "#1", "durationMs": 1000 },
+        { "edge": "u-lb", "shape": "envelope", "label": "#2", "startAt": 700, "durationMs": 1000 },
+        { "edge": "u-lb", "shape": "envelope", "label": "#3", "startAt": 1400, "durationMs": 1000 }
+      ]
+    },
+    {
+      "id": "round-robin",
+      "title": { "tr": "Sırayla dağıtım", "en": "Distribute in turn" },
+      "narration": {
+        "tr": "Round-robin, gelen her isteği listedeki bir sonraki sunucuya yollar: 1→S1, 2→S2, 3→S3, 4→S1... Sunucuların yüküne bakmaz; basit ve öngörülebilirdir.",
+        "en": "Round-robin sends each incoming request to the next server in the list: 1→S1, 2→S2, 3→S3, 4→S1... It ignores server load; simple and predictable."
+      },
+      "durationMs": 4200,
+      "highlight": { "nodes": ["lb", "s1", "s2", "s3"], "edges": ["lb-s1", "lb-s2", "lb-s3"] },
+      "nodeStates": {
+        "lb": { "status": "active" },
+        "s1": { "status": "active", "badge": "1" },
+        "s2": { "status": "active", "badge": "1" },
+        "s3": { "status": "active", "badge": "1" }
+      },
+      "packets": [
+        { "edge": "lb-s1", "label": "#1", "durationMs": 900 },
+        { "edge": "lb-s2", "label": "#2", "startAt": 900, "durationMs": 900 },
+        { "edge": "lb-s3", "label": "#3", "startAt": 1800, "durationMs": 900 },
+        { "edge": "lb-s1", "label": "#4", "startAt": 2700, "durationMs": 900 }
+      ],
+      "annotations": [
+        { "id": "rr-note", "x": 420, "y": 440, "text": { "tr": "sayaç: (i++) mod 3", "en": "counter: (i++) mod 3" }, "target": "lb" }
+      ]
+    },
+    {
+      "id": "failure",
+      "title": { "tr": "S2 çöküyor", "en": "S2 crashes" },
+      "narration": {
+        "tr": "S2 yanıt vermemeye başlar. Yük dengeleyici bunu henüz bilmediği için bir istek S2'ye gider ve zaman aşımına uğrar.",
+        "en": "S2 stops responding. The load balancer doesn't know yet, so one request goes to S2 and times out."
+      },
+      "durationMs": 3500,
+      "highlight": { "nodes": ["s2"], "edges": ["lb-s2"] },
+      "nodeStates": {
+        "s2": { "status": "down", "badge": "✕", "sublabel": { "tr": "yanıt yok", "en": "no response" } }
+      },
+      "edgeStates": { "lb-s2": { "status": "error", "label": { "tr": "timeout", "en": "timeout" } } },
+      "packets": [{ "edge": "lb-s2", "label": "#5", "color": "danger", "durationMs": 1200, "shape": "square" }],
+      "annotations": [
+        { "id": "fail-note", "x": 800, "y": 395, "text": { "tr": "503 / timeout", "en": "503 / timeout" }, "tone": "danger", "target": "s2" }
+      ]
+    },
+    {
+      "id": "health-check",
+      "title": { "tr": "Health check devrede", "en": "Health check kicks in" },
+      "narration": {
+        "tr": "Yük dengeleyici periyodik olarak /health uç noktasını yoklar. Arka arkaya başarısız yoklama sonrası S2'yi havuzdan çıkarır.",
+        "en": "The load balancer periodically probes the /health endpoint. After consecutive failed probes it removes S2 from the pool."
+      },
+      "durationMs": 3500,
+      "highlight": { "nodes": ["lb", "s2"], "edges": ["hc-s2"] },
+      "nodeStates": {
+        "s2": { "status": "muted", "badge": "OUT", "sublabel": { "tr": "havuz dışı", "en": "out of pool" } }
+      },
+      "edgeStates": {
+        "lb-s2": { "status": "muted", "label": "" },
+        "hc-s2": { "status": "active" }
+      },
+      "packets": [
+        { "edge": "hc-s2", "shape": "diamond", "durationMs": 700, "repeat": 3, "repeatGapMs": 300, "label": "GET /health" }
+      ]
+    },
+    {
+      "id": "recovered",
+      "title": { "tr": "Kalan sunucularla devam", "en": "Continue with remaining servers" },
+      "narration": {
+        "tr": "Artık istekler yalnızca S1 ve S3 arasında döner. Kullanıcı kesinti fark etmez; kapasite üçte bir azaldı, bu yüzden otomatik ölçekleme yeni bir replika başlatabilir.",
+        "en": "Requests now alternate only between S1 and S3. Users don't notice; capacity dropped by a third, so autoscaling may start a new replica."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["s1", "s3"], "edges": ["lb-s1", "lb-s3"] },
+      "nodeStates": {
+        "s1": { "status": "active", "badge": "3" },
+        "s3": { "status": "active", "badge": "3" }
+      },
+      "edgeStates": { "hc-s2": { "status": "idle" } },
+      "packets": [
+        { "edge": "lb-s1", "label": "#6", "durationMs": 800 },
+        { "edge": "lb-s3", "label": "#7", "startAt": 800, "durationMs": 800 },
+        { "edge": "lb-s1", "label": "#8", "startAt": 1600, "durationMs": 800 },
+        { "edge": "lb-s3", "label": "#9", "startAt": 2400, "durationMs": 800 }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["load-balancer", "round-robin", "health-check"]
+}

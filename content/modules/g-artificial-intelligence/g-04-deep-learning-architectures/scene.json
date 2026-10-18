@@ -1,0 +1,182 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "g-04-deep-learning-architectures-transformer",
+  "title": { "tr": "Transformer Bloğunda Token Akışı", "en": "Token Flow Through a Transformer Block" },
+  "summary": {
+    "tr": "\"The cat sat\" tokenları gömme, self-attention, residual + norm ve FFN katmanlarından geçerek bir sonraki token tahminine dönüşür.",
+    "en": "The tokens \"The cat sat\" pass through embedding, self-attention, residual + norm and FFN layers to become a next-token prediction."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda üç token düğümü (The, cat, sat) üst üste durur. Sağa doğru sırayla gömme + konum kodlama, multi-head self-attention, feed-forward (GELU) ve çıktı/softmax düğümleri dizilir. Gömmeden FFN'e ve attention'dan çıktıya kesikli residual kenarlar vardır. Adımlar: tokenlar vektöre çevrilir; Q, K, V üretilir; 'sat' tokenı için attention ağırlıkları The 0.1, cat 0.7, sat 0.2 olarak gösterilir; ağırlıklı toplam residual ile birleşir; FFN her tokenı ayrı işler; blok N kez yığılır ve softmax 'on' tokenını tahmin eder.",
+      "en": "Three token nodes (The, cat, sat) are stacked on the left. To the right follow embedding + positional encoding, multi-head self-attention, feed-forward (GELU) and output/softmax nodes. Dashed residual edges run from embedding to FFN and from attention to output. Steps: tokens become vectors; Q, K, V are produced; attention weights for the token 'sat' are shown as The 0.1, cat 0.7, sat 0.2; the weighted sum merges with the residual; the FFN processes each token separately; the block is stacked N times and softmax predicts the token 'on'."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "t1", "kind": "generic", "label": "The", "sublabel": "token 464", "x": 110, "y": 140, "w": 90, "h": 56 },
+    { "id": "t2", "kind": "generic", "label": "cat", "sublabel": "token 3797", "x": 110, "y": 300, "w": 90, "h": 56 },
+    { "id": "t3", "kind": "generic", "label": "sat", "sublabel": "token 3332", "x": 110, "y": 460, "w": 90, "h": 56 },
+    { "id": "emb", "kind": "model", "label": { "tr": "Gömme + Konum", "en": "Embedding + Position" }, "sublabel": "d_model = 512", "x": 320, "y": 300, "w": 150, "h": 80 },
+    { "id": "attn", "kind": "model", "label": { "tr": "Multi-head Self-Attention", "en": "Multi-head Self-Attention" }, "sublabel": "8 kafa", "x": 540, "y": 300, "w": 170, "h": 90 },
+    { "id": "ffn", "kind": "model", "label": "Feed-Forward", "sublabel": "512 → 2048 → 512, GELU", "x": 740, "y": 300, "w": 150, "h": 90 },
+    { "id": "out", "kind": "generic", "label": { "tr": "Softmax / çıktı", "en": "Softmax / output" }, "sublabel": { "tr": "sonraki token", "en": "next token" }, "x": 910, "y": 300, "w": 120, "h": 80 }
+  ],
+  "edges": [
+    { "id": "t1-emb", "from": "t1", "to": "emb", "kind": "data", "curvature": -0.1 },
+    { "id": "t2-emb", "from": "t2", "to": "emb", "kind": "data" },
+    { "id": "t3-emb", "from": "t3", "to": "emb", "kind": "data", "curvature": 0.1 },
+    { "id": "emb-attn", "from": "emb", "to": "attn", "kind": "data", "label": "x" },
+    { "id": "attn-ffn", "from": "attn", "to": "ffn", "kind": "data" },
+    { "id": "ffn-out", "from": "ffn", "to": "out", "kind": "data" },
+    { "id": "res1", "from": "emb", "to": "ffn", "kind": "control", "style": "dashed", "curvature": 0.45, "label": "residual" },
+    { "id": "res2", "from": "attn", "to": "out", "kind": "control", "style": "dashed", "curvature": -0.45, "label": "residual" }
+  ],
+  "steps": [
+    {
+      "id": "embed",
+      "title": { "tr": "1. Gömme + konum", "en": "1. Embedding + position" },
+      "narration": {
+        "tr": "Her token id'si bir gömme tablosundan 512 boyutlu vektöre çevrilir. Attention sıraya duyarsız olduğu için konum bilgisi (0, 1, 2) ayrı bir vektör olarak eklenir. Çıktı: 3 × 512'lik bir matris.",
+        "en": "Each token id is looked up in an embedding table as a 512-dimensional vector. Because attention is order-blind, position information (0, 1, 2) is added as a separate vector. Output: a 3 × 512 matrix."
+      },
+      "durationMs": 3500,
+      "inherit": false,
+      "highlight": { "nodes": ["t1", "t2", "t3", "emb"], "edges": ["t1-emb", "t2-emb", "t3-emb"] },
+      "nodeStates": {
+        "t1": { "status": "active", "badge": "pos 0" },
+        "t2": { "status": "active", "badge": "pos 1" },
+        "t3": { "status": "active", "badge": "pos 2" },
+        "emb": { "status": "active" }
+      },
+      "edgeStates": { "res1": { "status": "muted" }, "res2": { "status": "muted" } },
+      "packets": [
+        { "edge": "t1-emb", "shape": "square", "durationMs": 1000 },
+        { "edge": "t2-emb", "shape": "square", "startAt": 200, "durationMs": 1000 },
+        { "edge": "t3-emb", "shape": "square", "startAt": 400, "durationMs": 1000 }
+      ],
+      "annotations": [
+        { "id": "emb-note", "x": 320, "y": 400, "text": { "tr": "x = E[token] + P[pos]", "en": "x = E[token] + P[pos]" }, "tone": "info", "target": "emb" }
+      ]
+    },
+    {
+      "id": "qkv",
+      "title": { "tr": "2. Q, K, V izdüşümleri", "en": "2. Q, K, V projections" },
+      "narration": {
+        "tr": "Her token vektörü üç öğrenilmiş matrisle çarpılır: Query (ne arıyorum?), Key (bende ne var?), Value (ne taşıyorum?). 8 kafa için bu 8 farklı (Wq, Wk, Wv) üçlüsüyle paralel yapılır; her kafa 64 boyutta çalışır.",
+        "en": "Each token vector is multiplied by three learned matrices: Query (what am I looking for?), Key (what do I hold?), Value (what do I carry?). For 8 heads this happens in parallel with 8 different (Wq, Wk, Wv) triples; each head works in 64 dimensions."
+      },
+      "durationMs": 3500,
+      "highlight": { "nodes": ["emb", "attn"], "edges": ["emb-attn"] },
+      "nodeStates": {
+        "attn": { "status": "busy", "badge": "Q K V" }
+      },
+      "edgeStates": { "emb-attn": { "status": "active" } },
+      "packets": [
+        { "edge": "emb-attn", "label": "Q", "durationMs": 900 },
+        { "edge": "emb-attn", "label": "K", "startAt": 350, "durationMs": 900 },
+        { "edge": "emb-attn", "label": "V", "startAt": 700, "durationMs": 900 }
+      ],
+      "annotations": [
+        { "id": "qkv-note", "x": 540, "y": 420, "text": { "tr": "Q = xWq, K = xWk, V = xWv (kafa başına 64 boyut)", "en": "Q = xWq, K = xWk, V = xWv (64 dims per head)" }, "tone": "info", "target": "attn" }
+      ]
+    },
+    {
+      "id": "scores",
+      "title": { "tr": "3. Attention ağırlıkları", "en": "3. Attention weights" },
+      "narration": {
+        "tr": "'sat' tokenının sorgusu her anahtarla çarpılır, √64'e bölünür ve softmax'ten geçer: The 0.1, cat 0.7, sat 0.2. 'sat' en çok 'cat'e bakıyor — kim oturdu? Bu hesaplama üç token için aynı anda, 3×3'lük bir matris olarak yapılır.",
+        "en": "The query of the token 'sat' is dotted with every key, divided by √64 and passed through softmax: The 0.1, cat 0.7, sat 0.2. 'sat' attends mostly to 'cat' — who sat? This is computed for all three tokens at once as a 3×3 matrix."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["t1", "t2", "t3", "attn"], "edges": [] },
+      "nodeStates": {
+        "t1": { "status": "idle", "badge": "0.1", "progress": 0.1 },
+        "t2": { "status": "success", "badge": "0.7", "progress": 0.7 },
+        "t3": { "status": "active", "badge": "0.2", "progress": 0.2, "sublabel": { "tr": "sorgu: sat", "en": "query: sat" } },
+        "attn": { "status": "busy", "badge": "softmax(QKᵀ/√d)" }
+      },
+      "annotations": [
+        { "id": "score-note", "x": 540, "y": 170, "text": { "tr": "'sat' → 'cat': 0.7 — özneyi buldu", "en": "'sat' → 'cat': 0.7 — it found the subject" }, "tone": "success", "target": "t2" },
+        { "id": "mask-note", "x": 540, "y": 420, "text": { "tr": "Decoder'da causal mask: j > i skorları −∞", "en": "In a decoder, causal mask: scores with j > i are −∞" }, "tone": "warning", "target": "attn" }
+      ]
+    },
+    {
+      "id": "weighted-sum",
+      "title": { "tr": "4. Ağırlıklı toplam + residual + norm", "en": "4. Weighted sum + residual + norm" },
+      "narration": {
+        "tr": "Value vektörleri ağırlıklarla toplanır: 0.1·V_The + 0.7·V_cat + 0.2·V_sat. 8 kafanın çıktısı birleştirilir ve Wo ile izdüşürülür. Sonra residual: çıktıya orijinal x eklenir ve LayerNorm uygulanır — gradyan için kısa yol, eğitim için kararlılık.",
+        "en": "Value vectors are summed with the weights: 0.1·V_The + 0.7·V_cat + 0.2·V_sat. The 8 heads' outputs are concatenated and projected with Wo. Then the residual: the original x is added and LayerNorm applied — a shortcut for gradients, stability for training."
+      },
+      "durationMs": 3800,
+      "highlight": { "nodes": ["attn", "ffn"], "edges": ["attn-ffn", "res1"] },
+      "nodeStates": {
+        "t1": { "badge": "" }, "t2": { "status": "idle", "badge": "" }, "t3": { "status": "idle", "badge": "", "sublabel": "token 3332" },
+        "attn": { "status": "success", "badge": "Σ wⱼ·vⱼ" }
+      },
+      "edgeStates": {
+        "emb-attn": { "status": "idle" },
+        "attn-ffn": { "status": "active", "label": "x + Attn(x)" },
+        "res1": { "status": "active" }
+      },
+      "packets": [
+        { "edge": "attn-ffn", "shape": "square", "durationMs": 1000 },
+        { "edge": "res1", "label": "x", "shape": "dot", "durationMs": 1400, "color": "accent" }
+      ],
+      "annotations": [
+        { "id": "res-note", "x": 540, "y": 500, "text": { "tr": "LayerNorm(x + MultiHead(x))", "en": "LayerNorm(x + MultiHead(x))" }, "tone": "info" }
+      ]
+    },
+    {
+      "id": "ffn",
+      "title": { "tr": "5. Feed-forward (GELU)", "en": "5. Feed-forward (GELU)" },
+      "narration": {
+        "tr": "Her token, konumdan bağımsız aynı iki katmanlı MLP'den geçer: 512 → 2048 → GELU → 512. Attention tokenlar arası bilgiyi karıştırır; FFN token başına 'düşünür'. Parametrelerin üçte ikisi buradadır. Yine residual + norm.",
+        "en": "Each token passes through the same position-wise two-layer MLP: 512 → 2048 → GELU → 512. Attention mixes information between tokens; the FFN 'thinks' per token. Two thirds of the parameters live here. Residual + norm again."
+      },
+      "durationMs": 3500,
+      "highlight": { "nodes": ["ffn"], "edges": ["ffn-out", "res2"] },
+      "nodeStates": {
+        "ffn": { "status": "busy", "badge": "GELU" }
+      },
+      "edgeStates": {
+        "attn-ffn": { "status": "idle", "label": "" }, "res1": { "status": "idle" },
+        "ffn-out": { "status": "active" }, "res2": { "status": "active" }
+      },
+      "packets": [
+        { "edge": "ffn-out", "shape": "square", "startAt": 600, "durationMs": 1000 },
+        { "edge": "res2", "shape": "dot", "durationMs": 1600, "color": "accent" }
+      ],
+      "annotations": [
+        { "id": "ffn-note", "x": 740, "y": 430, "text": { "tr": "Her token ayrı, aynı ağırlıklarla", "en": "Each token separately, same weights" }, "tone": "info", "target": "ffn" }
+      ]
+    },
+    {
+      "id": "stack",
+      "title": { "tr": "6. N kez yığ, sonraki tokenı tahmin et", "en": "6. Stack N times, predict the next token" },
+      "narration": {
+        "tr": "Bu blok 12 (BERT-base) ile 100+ (büyük LLM'ler) kez üst üste gelir. Son katmanın 'sat' konumundaki vektörü kelime dağarcığı boyutuna izdüşürülür ve softmax uygulanır: 'on' %41, 'down' %22, 'quietly' %6... En yüksek olasılık ya da örnekleme ile bir sonraki token seçilir.",
+        "en": "This block is stacked 12 (BERT-base) to 100+ (large LLMs) times. The last layer's vector at the 'sat' position is projected to vocabulary size and softmaxed: 'on' 41%, 'down' 22%, 'quietly' 6%... The next token is picked by argmax or sampling."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["out"], "edges": ["ffn-out"] },
+      "nodeStates": {
+        "ffn": { "status": "success", "badge": "×N" },
+        "attn": { "badge": "×N" },
+        "out": { "status": "success", "badge": "\"on\" 0.41", "progress": 0.41 }
+      },
+      "edgeStates": { "res2": { "status": "idle" } },
+      "packets": [
+        { "edge": "ffn-out", "label": "logits", "shape": "envelope", "durationMs": 1000 }
+      ],
+      "annotations": [
+        { "id": "out-note", "x": 880, "y": 430, "text": { "tr": "on 0.41 · down 0.22 · quietly 0.06", "en": "on 0.41 · down 0.22 · quietly 0.06" }, "tone": "success", "target": "out" },
+        { "id": "cost-note", "x": 540, "y": 500, "text": { "tr": "Maliyet: attention O(n²), FFN O(n·d²)", "en": "Cost: attention O(n²), FFN O(n·d²)" }, "tone": "warning" }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["transformer", "self-attention", "deep-learning"]
+}

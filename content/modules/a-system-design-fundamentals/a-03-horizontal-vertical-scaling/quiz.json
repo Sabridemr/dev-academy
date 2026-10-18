@@ -1,0 +1,110 @@
+{
+  "id": "a-03-horizontal-vertical-scaling-quiz",
+  "title": { "tr": "Yatay ve Dikey Ölçekleme Quiz", "en": "Horizontal and Vertical Scaling Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Hangisi dikey ölçeklemenin (scale up) doğal bir sonucudur?",
+        "en": "Which is a natural consequence of vertical scaling (scale up)?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "SPOF sürer ve satın alınabilecek en büyük donanımda tavan yapar", "en": "The SPOF remains and it hits a ceiling at the largest hardware you can buy" } },
+        { "id": "b", "text": { "tr": "Yükseltmeler rolling deployment ile sıfır downtime olarak yapılabilir", "en": "Upgrades can be done with zero downtime via rolling deployment" } },
+        { "id": "c", "text": { "tr": "Maliyet eğrisi eklenen çekirdek sayısıyla yaklaşık doğrusal artar", "en": "The cost curve grows roughly linearly with the number of cores added" } },
+        { "id": "d", "text": { "tr": "Oturum bilgisi paylaşımlı bir depoya (Redis, JWT) taşınmak zorundadır", "en": "Session state must be moved to a shared store (Redis, JWT)" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "Dikey ölçekleme tek makineyi büyütür: kod değişmez, oturum yerinde kalabilir (d yatay ölçeklemenin ön koşuludur). Tek makinenin yükseltilmesi genellikle yeniden başlatma gerektirir; rolling deployment birden fazla replikanın ayrıcalığıdır (b yanlış). Maliyet eğrisi doğrusal değil üsteldir; premium donanım iki kat çekirdeğe iki kattan fazla ücret ister (c yanlış). Makine ne kadar büyürse büyüsün tek başınadır ve en büyük donanımda tavan yapar.",
+        "en": "Scaling up grows a single machine: no code change, session state can stay where it is (d is a prerequisite of scaling out). Upgrading a single machine usually needs a restart; rolling deployment is a privilege of having several replicas (b is wrong). The cost curve is exponential, not linear; premium hardware charges more than double for double the cores (c is wrong). However big it gets, the machine is still alone and hits a ceiling at the largest hardware available."
+      },
+      "difficulty": "easy",
+      "concepts": ["vertical-scaling", "single-point-of-failure"]
+    },
+    {
+      "id": "q2",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Bir web servisini yatay ölçeklemeden önce hangi ön koşullar sağlanmalıdır? (Birden fazla seçin)",
+        "en": "Which prerequisites must be met before horizontally scaling a web service? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Oturum/durum bilgisi sunucu belleğinden paylaşımlı bir depoya taşınmalı", "en": "Session/state must move from server memory to a shared store" } },
+        { "id": "b", "text": { "tr": "İstekleri dağıtacak bir load balancer olmalı", "en": "There must be a load balancer to distribute requests" } },
+        { "id": "c", "text": { "tr": "Her sunucunun kendi ayrı veritabanı kopyası olmalı", "en": "Each server must have its own separate copy of the database" } },
+        { "id": "d", "text": { "tr": "Mümkün olan en büyük sunucu tipi seçilmeli", "en": "The largest possible server type must be chosen" } }
+      ],
+      "correct": ["a", "b"],
+      "explanation": {
+        "tr": "Yatay ölçeklemede istek herhangi bir replikaya düşebilmeli (stateless) ve bir dağıtıcı (LB) olmalıdır. Her sunucuya ayrı DB kopyası vermek veriyi tutarsızlaştırır; replikalar paylaşımlı bir veri katmanı kullanır (c yanlış). En büyük sunucu tipi dikey ölçeklemenin düşüncesidir; yatayda orta boy, sıradan makineler tercih edilir (d yanlış).",
+        "en": "With horizontal scaling any replica must be able to serve any request (stateless) and a distributor (LB) is needed. Giving every server its own DB copy makes data inconsistent; replicas share a data layer (c is wrong). Picking the largest server type is scale-up thinking; scale-out prefers medium, commodity machines (d is wrong)."
+      },
+      "difficulty": "medium",
+      "concepts": ["horizontal-scaling", "stateless-prerequisite"]
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": {
+        "tr": "Bir autoscaling politikasında hedef CPU neden genellikle %90 değil de %50–65 civarında seçilir?",
+        "en": "Why is the target CPU in an autoscaling policy usually set around 50–65% rather than 90%?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Cooldown süresince metrik toplanamadığından, %90 hedef ölçekleme kararını her zaman bir tur geciktirir", "en": "Because no metrics are collected during cooldown, a 90% target always delays the scaling decision by one cycle" } },
+        { "id": "b", "text": { "tr": "Düşük hedef boşta kapasite tutulmasını önlediği için toplam bulut maliyetini her durumda düşürür", "en": "A lower target prevents idle capacity from being held, so it always lowers the total cloud bill" } },
+        { "id": "c", "text": { "tr": "CPU ortalaması %65'in üzerinde JIT ısınması ve cache doldurma yüzünden güvenilir biçimde ölçülemez", "en": "Above 65% the CPU average cannot be measured reliably because of JIT warm-up and cache filling" } },
+        { "id": "d", "text": { "tr": "Yüksek dolulukta kuyruk gecikmesi üstel artar; yeni sunucu açılana kadar geçen dakikalar için pay gerekir", "en": "Queueing latency grows exponentially at high utilisation; headroom is needed for the minutes until a new server is up" } }
+      ],
+      "correct": ["d"],
+      "explanation": {
+        "tr": "Hedef, iki gerçeğin bileşimidir: %80 üzeri dolulukta kuyruk gecikmesi patlar ve yeni kapasite anında gelmez (imaj açılışı, ısınma, health check); %60 hedef aradaki 1–3 dakikayı güvenle geçirmek içindir. Cooldown metrik toplamayı durdurmaz, yalnızca art arda kararları engeller (a yanlış); düşük hedef daha fazla boş kapasite demektir, yani daha pahalıdır (b yanlış); CPU metriği her seviyede ölçülür, soğuk başlangıç ölçümü değil yeni replikanın ilk dakikalardaki verimini etkiler (c yanlış).",
+        "en": "The target combines two facts: latency explodes above ~80% utilisation, and new capacity is not instant (image boot, warm-up, health checks); a 60% target safely covers the 1–3 minutes in between. Cooldown does not stop metric collection, it only prevents back-to-back decisions (a is wrong); a lower target means more idle capacity, i.e. more cost (b is wrong); CPU is measured at every level, and cold start affects the new replica's throughput in its first minutes, not the measurement (c is wrong)."
+      },
+      "difficulty": "medium",
+      "concepts": ["autoscaling", "capacity-planning"]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Bir isteğin işlenmesinin %20'si tek bir global kilit altında sırayla yapılmak zorundaysa, sonsuz sayıda sunucu eklenerek elde edilebilecek en yüksek hızlanma 5 kattır.",
+        "en": "If 20% of a request's processing must happen serially under a single global lock, the maximum speed-up achievable by adding infinitely many servers is 5×."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["t"],
+      "explanation": {
+        "tr": "Doğru. Amdahl yasasına göre hızlanma en fazla 1 / (seri oran) = 1 / 0,2 = 5'tir. Paralel kısım sıfıra inse bile seri %20 kalır. Yatay ölçekleme planlarken önce 'seri kalan parça ne?' sorusu sorulur; genelde cevap paylaşımlı veritabanı ya da global kilittir.",
+        "en": "True. By Amdahl's law the speed-up is at most 1 / (serial fraction) = 1 / 0.2 = 5. Even if the parallel part drops to zero, the serial 20% remains. When planning to scale out, first ask 'what part stays serial?'; usually the answer is the shared database or a global lock."
+      },
+      "difficulty": "hard",
+      "concepts": ["amdahl-law", "horizontal-scaling"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "Günde 86,4 milyon istek alan bir servis için zirve trafiğin ortalamanın 3 katı olduğunu ve bir sunucunun güvenli yükte 500 RPS kaldırdığını varsayın. N+1 yedeklilikle kaç sunucu gerekir?",
+        "en": "A service receives 86.4 million requests per day; assume peak traffic is 3× the average and one server safely handles 500 RPS. With N+1 redundancy, how many servers are needed?"
+      },
+      "options": [
+        { "id": "a", "text": "3" },
+        { "id": "b", "text": "4" },
+        { "id": "c", "text": "7" },
+        { "id": "d", "text": "10" }
+      ],
+      "correct": ["c"],
+      "explanation": {
+        "tr": "86,4 M / 86.400 s = 1.000 RPS ortalama; zirve 3.000 RPS; 3.000 / 500 = 6 sunucu; N+1 ile 7. 3 ya da 4 zirveyi göz ardı eder, 10 ise fazladan yedeklilik varsayar. Mülakatta bu zarf hesabını adım adım sesli yapmak beklenir.",
+        "en": "86.4 M / 86,400 s = 1,000 RPS average; peak 3,000 RPS; 3,000 / 500 = 6 servers; N+1 gives 7. 3 or 4 ignore the peak, 10 assumes extra redundancy. In interviews you are expected to do this back-of-the-envelope calculation out loud, step by step."
+      },
+      "difficulty": "medium",
+      "concepts": ["capacity-planning"]
+    }
+  ]
+}

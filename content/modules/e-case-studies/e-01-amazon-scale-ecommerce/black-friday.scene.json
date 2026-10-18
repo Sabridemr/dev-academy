@@ -1,0 +1,249 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "e-01-amazon-black-friday",
+  "title": { "tr": "Black Friday: Dalga, Autoscaling, Kuyruk, Rezervasyon", "en": "Black Friday: Wave, Autoscaling, Queue, Reservation" },
+  "summary": {
+    "tr": "Normalin 12 katı trafik geldiğinde pod'ların doyması, autoscaler'ın yeni pod'lar açması, checkout isteklerinin kuyruğa alınması ve envanter işçilerinin stoku koşullu güncellemeyle rezerve etmesi.",
+    "en": "When 12x normal traffic arrives: pods saturate, the autoscaler launches new pods, checkout requests are queued and inventory workers reserve stock with conditional updates."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda müşteri kalabalığı, CDN ve yük dengeleyici; ortada üç uygulama pod'u ile üstte bir autoscaler; sağda checkout kuyruğu, envanter işçileri ve envanter veritabanı. Trafik dalgası gelince pod'lar kırmızıya döner, autoscaler iki yeni pod ekler, istekler kuyruğa alınır, işçiler kuyruğu sabit hızda boşaltıp stoku düşürür; stok bitince kalan istekler anında 'tükendi' yanıtı alır ve dalga çekilince pod'lar azaltılır.",
+      "en": "A crowd of customers, the CDN and a load balancer on the left; three application pods with an autoscaler above in the middle; a checkout queue, inventory workers and the inventory database on the right. When the traffic wave hits, pods turn red, the autoscaler adds two pods, requests are queued, workers drain the queue at a steady rate and decrement stock; when stock runs out the remaining requests get an instant 'sold out' and pods are scaled back in when the wave recedes."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "users", "kind": "user", "label": { "tr": "Müşteriler", "en": "Customers" }, "sublabel": "5 K rps", "x": 80, "y": 300 },
+    { "id": "cdn", "kind": "cdn", "label": "CDN", "sublabel": { "tr": "ürün sayfaları", "en": "product pages" }, "x": 230, "y": 110, "w": 120, "h": 64 },
+    { "id": "lb", "kind": "lb", "label": "Load Balancer", "x": 230, "y": 300, "w": 130, "h": 70 },
+    { "id": "autoscaler", "kind": "generic", "label": "Autoscaler", "sublabel": { "tr": "hedef CPU %70", "en": "target CPU 70%" }, "x": 450, "y": 70, "w": 140, "h": 60 },
+    { "id": "pod1", "kind": "pod", "label": "pod-1", "sublabel": "checkout-api", "x": 400, "y": 200, "w": 110, "h": 60 },
+    { "id": "pod2", "kind": "pod", "label": "pod-2", "sublabel": "checkout-api", "x": 400, "y": 310, "w": 110, "h": 60 },
+    { "id": "pod3", "kind": "pod", "label": "pod-3", "sublabel": "checkout-api", "x": 400, "y": 420, "w": 110, "h": 60 },
+    { "id": "pod4", "kind": "pod", "label": "pod-4", "sublabel": { "tr": "yeni", "en": "new" }, "x": 530, "y": 255, "w": 110, "h": 60 },
+    { "id": "pod5", "kind": "pod", "label": "pod-5", "sublabel": { "tr": "yeni", "en": "new" }, "x": 530, "y": 365, "w": 110, "h": 60 },
+    { "id": "queue", "kind": "queue", "label": { "tr": "Checkout kuyruğu", "en": "Checkout queue" }, "sublabel": "SQS / Kafka", "x": 700, "y": 310, "w": 140, "h": 70 },
+    { "id": "workers", "kind": "worker", "label": { "tr": "Envanter işçileri", "en": "Inventory workers" }, "sublabel": "2 K/s", "x": 880, "y": 180, "w": 130, "h": 66 },
+    { "id": "invdb", "kind": "db", "label": { "tr": "Envanter DB", "en": "Inventory DB" }, "sublabel": "available = 1200", "x": 880, "y": 450, "w": 130, "h": 70 }
+  ],
+  "edges": [
+    { "id": "u-cdn", "from": "users", "to": "cdn", "kind": "request", "curvature": -0.1 },
+    { "id": "u-lb", "from": "users", "to": "lb", "kind": "request" },
+    { "id": "lb-p1", "from": "lb", "to": "pod1", "kind": "request", "curvature": -0.1 },
+    { "id": "lb-p2", "from": "lb", "to": "pod2", "kind": "request" },
+    { "id": "lb-p3", "from": "lb", "to": "pod3", "kind": "request", "curvature": 0.1 },
+    { "id": "lb-p4", "from": "lb", "to": "pod4", "kind": "request", "curvature": -0.25 },
+    { "id": "lb-p5", "from": "lb", "to": "pod5", "kind": "request", "curvature": 0.25 },
+    { "id": "as-p4", "from": "autoscaler", "to": "pod4", "kind": "control", "style": "dotted" },
+    { "id": "as-p5", "from": "autoscaler", "to": "pod5", "kind": "control", "style": "dotted", "curvature": 0.2 },
+    { "id": "p1-q", "from": "pod1", "to": "queue", "kind": "event", "curvature": -0.1 },
+    { "id": "p2-q", "from": "pod2", "to": "queue", "kind": "event" },
+    { "id": "p3-q", "from": "pod3", "to": "queue", "kind": "event", "curvature": 0.1 },
+    { "id": "p4-q", "from": "pod4", "to": "queue", "kind": "event" },
+    { "id": "p5-q", "from": "pod5", "to": "queue", "kind": "event" },
+    { "id": "q-w", "from": "queue", "to": "workers", "kind": "event" },
+    { "id": "w-db", "from": "workers", "to": "invdb", "kind": "data" }
+  ],
+  "steps": [
+    {
+      "id": "calm",
+      "title": { "tr": "1 · Normal gün", "en": "1 · A normal day" },
+      "narration": {
+        "tr": "Sıradan bir günde 5 K istek/sn üç pod tarafından %30 CPU ile karşılanır. Ürün sayfaları CDN'den servis edilir; checkout kuyruğu neredeyse boştur.",
+        "en": "On an ordinary day 5 K requests/s are handled by three pods at 30% CPU. Product pages are served from the CDN; the checkout queue is nearly empty."
+      },
+      "durationMs": 3200,
+      "inherit": false,
+      "highlight": { "nodes": ["users", "lb", "pod1", "pod2", "pod3"], "edges": ["u-lb", "lb-p1", "lb-p2", "lb-p3"] },
+      "nodeStates": {
+        "pod1": { "status": "active", "progress": 0.3 },
+        "pod2": { "status": "active", "progress": 0.3 },
+        "pod3": { "status": "active", "progress": 0.3 },
+        "pod4": { "visible": false },
+        "pod5": { "visible": false },
+        "queue": { "progress": 0.05 }
+      },
+      "edgeStates": { "lb-p4": { "visible": false }, "lb-p5": { "visible": false }, "as-p4": { "visible": false }, "as-p5": { "visible": false }, "p4-q": { "visible": false }, "p5-q": { "visible": false } },
+      "packets": [
+        { "edge": "u-lb", "shape": "dot", "durationMs": 800, "repeat": 3, "repeatGapMs": 300 },
+        { "edge": "lb-p1", "shape": "dot", "startAt": 800, "durationMs": 700 },
+        { "edge": "lb-p2", "shape": "dot", "startAt": 1300, "durationMs": 700 },
+        { "edge": "lb-p3", "shape": "dot", "startAt": 1800, "durationMs": 700 }
+      ],
+      "annotations": [
+        { "id": "cpu", "x": 400, "y": 520, "text": { "tr": "CPU %30 · p99 120 ms", "en": "CPU 30% · p99 120 ms" }, "tone": "success", "target": "pod3" }
+      ]
+    },
+    {
+      "id": "wave",
+      "title": { "tr": "2 · Dalga vuruyor", "en": "2 · The wave hits" },
+      "narration": {
+        "tr": "Saat 00:00: kampanya açılır, trafik 12 katına (60 K rps) çıkar. Pod'lar %95 CPU'ya dayanır, istek kuyrukları şişer, p99 saniyelere çıkar ve bazı istekler 503 alır. CDN sayfa görüntülemelerini emer ama checkout origin'e gelmek zorundadır.",
+        "en": "00:00: the sale opens and traffic jumps 12x (60 K rps). Pods hit 95% CPU, request queues grow, p99 climbs to seconds and some requests get 503. The CDN absorbs page views, but checkout must reach origin."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["users", "cdn", "lb", "pod1", "pod2", "pod3"], "edges": ["u-cdn", "u-lb", "lb-p1", "lb-p2", "lb-p3"] },
+      "nodeStates": {
+        "users": { "status": "warning", "sublabel": "60 K rps" },
+        "cdn": { "status": "active", "badge": "HIT %97" },
+        "lb": { "status": "warning" },
+        "pod1": { "status": "error", "progress": 0.95, "badge": "503" },
+        "pod2": { "status": "error", "progress": 0.95 },
+        "pod3": { "status": "error", "progress": 0.95, "badge": "503" }
+      },
+      "edgeStates": { "lb-p1": { "status": "error" }, "lb-p3": { "status": "error" } },
+      "packets": [
+        { "edge": "u-cdn", "shape": "dot", "durationMs": 500, "repeat": 6, "repeatGapMs": 100 },
+        { "edge": "u-lb", "shape": "dot", "durationMs": 500, "repeat": 8, "repeatGapMs": 80, "color": "danger" },
+        { "edge": "lb-p1", "shape": "dot", "startAt": 500, "durationMs": 500, "repeat": 4, "repeatGapMs": 120, "color": "danger" },
+        { "edge": "lb-p2", "shape": "dot", "startAt": 600, "durationMs": 500, "repeat": 4, "repeatGapMs": 120, "color": "danger" },
+        { "edge": "lb-p3", "shape": "dot", "startAt": 700, "durationMs": 500, "repeat": 4, "repeatGapMs": 120, "color": "danger" }
+      ],
+      "annotations": [
+        { "id": "cpu2", "x": 400, "y": 520, "text": { "tr": "CPU %95 · p99 4.2 s · hata %8", "en": "CPU 95% · p99 4.2 s · errors 8%" }, "tone": "danger", "target": "pod3" }
+      ]
+    },
+    {
+      "id": "scale-out",
+      "title": { "tr": "3 · Autoscaler devreye giriyor", "en": "3 · The autoscaler kicks in" },
+      "narration": {
+        "tr": "Autoscaler 60 saniyedir CPU'nun hedefin üstünde olduğunu görür ve istenen replika sayısını 5'e çıkarır. Yeni pod'ların imaj çekip ısınması ~90 s sürer; bu süre boyunca eski pod'lar hâlâ zorlanır. Bu gecikme yüzünden büyük kampanyalardan önce 'ön ısıtma' yapılır.",
+        "en": "The autoscaler sees CPU above target for 60 seconds and raises desired replicas to 5. New pods take ~90 s to pull images and warm up; the old pods keep struggling meanwhile. This lag is why teams pre-scale before big sales."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["autoscaler", "pod4", "pod5"], "edges": ["as-p4", "as-p5", "lb-p4", "lb-p5"] },
+      "nodeStates": {
+        "autoscaler": { "status": "active", "badge": "3 → 5" },
+        "pod4": { "visible": true, "status": "busy", "sublabel": { "tr": "ısınıyor", "en": "warming up" }, "progress": 0.1 },
+        "pod5": { "visible": true, "status": "busy", "sublabel": { "tr": "ısınıyor", "en": "warming up" }, "progress": 0.1 },
+        "pod1": { "status": "warning", "progress": 0.8, "badge": "" },
+        "pod2": { "status": "warning", "progress": 0.8 },
+        "pod3": { "status": "warning", "progress": 0.8, "badge": "" }
+      },
+      "edgeStates": { "as-p4": { "visible": true, "status": "active" }, "as-p5": { "visible": true, "status": "active" }, "lb-p4": { "visible": true }, "lb-p5": { "visible": true }, "lb-p1": { "status": "idle" }, "lb-p3": { "status": "idle" } },
+      "packets": [
+        { "edge": "as-p4", "shape": "diamond", "label": "scale", "durationMs": 900 },
+        { "edge": "as-p5", "shape": "diamond", "label": "scale", "startAt": 300, "durationMs": 900 },
+        { "edge": "lb-p4", "shape": "dot", "startAt": 2200, "durationMs": 700, "repeat": 2, "repeatGapMs": 200 },
+        { "edge": "lb-p5", "shape": "dot", "startAt": 2400, "durationMs": 700, "repeat": 2, "repeatGapMs": 200 }
+      ],
+      "annotations": [
+        { "id": "warm", "x": 530, "y": 470, "text": { "tr": "ısınma ≈ 90 s → önceden ölçekle", "en": "warm-up ≈ 90 s → pre-scale" }, "tone": "warning", "target": "pod5" }
+      ]
+    },
+    {
+      "id": "enqueue",
+      "title": { "tr": "4 · Checkout kuyruğa alınıyor", "en": "4 · Checkout goes through a queue" },
+      "narration": {
+        "tr": "Pod'lar checkout isteğini envantere senkron iletmek yerine kuyruğa yazar ve kullanıcıya hemen 202 'Sıradasınız' döner. Kuyruk, dalgayı envanterin kaldırabileceği hıza düzleştiren tampondur; veritabanı asla 60 K rps görmez.",
+        "en": "Instead of calling inventory synchronously, pods write the checkout request to a queue and immediately return 202 'You are in line'. The queue is the buffer that flattens the wave to a rate inventory can handle; the database never sees 60 K rps."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["pod1", "pod2", "pod3", "pod4", "pod5", "queue"], "edges": ["p1-q", "p2-q", "p3-q", "p4-q", "p5-q"] },
+      "nodeStates": {
+        "pod1": { "status": "active", "progress": 0.55 },
+        "pod2": { "status": "active", "progress": 0.55 },
+        "pod3": { "status": "active", "progress": 0.55 },
+        "pod4": { "status": "active", "progress": 0.55, "sublabel": "checkout-api" },
+        "pod5": { "status": "active", "progress": 0.55, "sublabel": "checkout-api" },
+        "queue": { "status": "warning", "progress": 0.7, "badge": "48 K" },
+        "users": { "badge": "202" }
+      },
+      "edgeStates": { "p4-q": { "visible": true }, "p5-q": { "visible": true } },
+      "packets": [
+        { "edge": "p1-q", "shape": "envelope", "durationMs": 700, "repeat": 3, "repeatGapMs": 150 },
+        { "edge": "p2-q", "shape": "envelope", "startAt": 100, "durationMs": 700, "repeat": 3, "repeatGapMs": 150 },
+        { "edge": "p3-q", "shape": "envelope", "startAt": 200, "durationMs": 700, "repeat": 3, "repeatGapMs": 150 },
+        { "edge": "p4-q", "shape": "envelope", "startAt": 300, "durationMs": 700, "repeat": 3, "repeatGapMs": 150 },
+        { "edge": "p5-q", "shape": "envelope", "startAt": 400, "durationMs": 700, "repeat": 3, "repeatGapMs": 150 }
+      ],
+      "annotations": [
+        { "id": "backpressure", "x": 700, "y": 420, "text": { "tr": "tampon: giriş 60 K/s, çıkış 2 K/s", "en": "buffer: in 60 K/s, out 2 K/s" }, "tone": "warning", "target": "queue" }
+      ]
+    },
+    {
+      "id": "reserve",
+      "title": { "tr": "5 · İşçiler stoku rezerve ediyor", "en": "5 · Workers reserve stock" },
+      "narration": {
+        "tr": "Envanter işçileri kuyruğu sabit 2 K/s hızında tüketir. Her mesaj için koşullu UPDATE çalışır: available >= 1 ise stok düşer ve kullanıcıya push bildirimiyle 'ödemeye geçin' denir. Sıra garantili, yazma hızı öngörülebilirdir.",
+        "en": "Inventory workers consume the queue at a steady 2 K/s. For each message a conditional UPDATE runs: if available >= 1 the stock is decremented and the user is pushed to 'proceed to payment'. Ordering is guaranteed and the write rate is predictable."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["queue", "workers", "invdb"], "edges": ["q-w", "w-db"] },
+      "nodeStates": {
+        "workers": { "status": "active", "badge": "2 K/s" },
+        "invdb": { "status": "active", "sublabel": "available = 1200 → 400" },
+        "queue": { "progress": 0.5, "badge": "31 K" }
+      },
+      "packets": [
+        { "edge": "q-w", "shape": "envelope", "durationMs": 600, "repeat": 4, "repeatGapMs": 200 },
+        { "edge": "w-db", "shape": "square", "label": "UPDATE … available >= 1", "startAt": 600, "durationMs": 700, "repeat": 3, "repeatGapMs": 250 },
+        { "edge": "w-db", "shape": "dot", "direction": "backward", "startAt": 1400, "durationMs": 600, "color": "success", "repeat": 3, "repeatGapMs": 350 }
+      ],
+      "annotations": [
+        { "id": "rows", "x": 880, "y": 540, "text": { "tr": "1 satır etkilendi → rezerve", "en": "1 row affected → reserved" }, "tone": "success", "target": "invdb" }
+      ]
+    },
+    {
+      "id": "sold-out",
+      "title": { "tr": "6 · Stok bitti", "en": "6 · Sold out" },
+      "narration": {
+        "tr": "available 0'a düşünce koşullu UPDATE 0 satır etkiler. İşçiler kalan 29 K mesajı DB'ye gitmeden 'tükendi' olarak işaretler; ürün sayfası CDN'de kısa TTL ile 'Tükendi' olarak önbelleğe alınır. Oversell olmadı, DB tek bir kilit beklemedi.",
+        "en": "When available reaches 0, the conditional UPDATE affects 0 rows. Workers mark the remaining 29 K messages 'sold out' without touching the DB; the product page is cached on the CDN as 'Sold out' with a short TTL. No oversell, and the DB never waited on a lock."
+      },
+      "durationMs": 3800,
+      "highlight": { "nodes": ["invdb", "workers", "cdn"], "edges": ["w-db"] },
+      "nodeStates": {
+        "invdb": { "status": "warning", "sublabel": "available = 0", "badge": "0 rows" },
+        "workers": { "badge": "SOLD OUT" },
+        "queue": { "status": "idle", "progress": 0.1, "badge": "fast reject" },
+        "cdn": { "badge": "SOLD OUT · ttl 30s" }
+      },
+      "packets": [
+        { "edge": "w-db", "shape": "square", "durationMs": 700, "color": "danger" },
+        { "edge": "w-db", "shape": "dot", "direction": "backward", "startAt": 800, "durationMs": 600, "color": "danger", "label": "0 rows" },
+        { "edge": "q-w", "shape": "envelope", "startAt": 1500, "durationMs": 500, "repeat": 4, "repeatGapMs": 120, "color": "muted" }
+      ],
+      "annotations": [
+        { "id": "nooversell", "x": 880, "y": 540, "text": { "tr": "oversell yok · kilit yok", "en": "no oversell · no locks" }, "tone": "success", "target": "invdb" }
+      ]
+    },
+    {
+      "id": "recede",
+      "title": { "tr": "7 · Dalga çekiliyor", "en": "7 · The wave recedes" },
+      "narration": {
+        "tr": "Trafik 8 K rps'ye iner. Autoscaler soğuma süresinden (cooldown) sonra replika sayısını tekrar 3'e çeker; ani indirim yapmaz çünkü ikinci bir dalga gelebilir. Ders: autoscaling kapasiteyi, kuyruk hızı, koşullu güncelleme doğruluğu sağlar.",
+        "en": "Traffic drops to 8 K rps. After a cooldown the autoscaler scales replicas back to 3; it does not scale in abruptly because a second wave may come. Lesson: autoscaling provides capacity, the queue provides pacing, the conditional update provides correctness."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["autoscaler", "pod1", "pod2", "pod3"], "edges": ["lb-p1", "lb-p2", "lb-p3"] },
+      "nodeStates": {
+        "users": { "status": "idle", "sublabel": "8 K rps", "badge": "" },
+        "lb": { "status": "idle" },
+        "autoscaler": { "badge": "5 → 3" },
+        "pod1": { "status": "active", "progress": 0.35 },
+        "pod2": { "status": "active", "progress": 0.35 },
+        "pod3": { "status": "active", "progress": 0.35 },
+        "pod4": { "status": "muted", "sublabel": { "tr": "kapatılıyor", "en": "terminating" }, "progress": 0 },
+        "pod5": { "status": "muted", "sublabel": { "tr": "kapatılıyor", "en": "terminating" }, "progress": 0 },
+        "invdb": { "status": "idle", "badge": "" },
+        "workers": { "status": "idle", "badge": "" }
+      },
+      "edgeStates": { "lb-p4": { "status": "muted" }, "lb-p5": { "status": "muted" }, "as-p4": { "status": "idle" }, "as-p5": { "status": "idle" } },
+      "packets": [
+        { "edge": "u-lb", "shape": "dot", "durationMs": 800, "repeat": 3, "repeatGapMs": 400 },
+        { "edge": "lb-p1", "shape": "dot", "startAt": 800, "durationMs": 700 },
+        { "edge": "lb-p2", "shape": "dot", "startAt": 1400, "durationMs": 700 },
+        { "edge": "lb-p3", "shape": "dot", "startAt": 2000, "durationMs": 700 }
+      ],
+      "annotations": [
+        { "id": "cooldown", "x": 450, "y": 150, "text": { "tr": "cooldown 5 dk, sonra scale-in", "en": "cooldown 5 min, then scale-in" }, "target": "autoscaler" }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["black-friday", "autoscaling", "queue", "inventory", "backpressure"]
+}

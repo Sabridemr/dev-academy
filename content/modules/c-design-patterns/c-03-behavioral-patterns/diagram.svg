@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 560" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Davranışsal kalıpların karşılaştırma haritası</title>
+  <desc id="desc">Üç grup: algoritma ve karar değişimi (Strategy, Template Method, State), iletişim (Observer, Mediator) ve istek yönetimi (Command, Chain of Responsibility). Her kartta çözülen problem, mekanizma ve tipik kullanım yeri. Altta hangi soruya hangi kalıbın cevap verdiğini gösteren karar akışı.</desc>
+  <defs>
+    <marker id="m-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+    <marker id="m-open" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M 1 1 L 9 5 L 1 9" fill="none" stroke="var(--da-fg, #0f172a)" stroke-width="1.4"/>
+    </marker>
+    <marker id="m-tri" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" orient="auto-start-reverse">
+      <path d="M 1 1 L 11 6 L 1 11 z" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.3"/>
+    </marker>
+    <marker id="m-dia" viewBox="0 0 14 10" refX="1" refY="5" markerWidth="14" markerHeight="10" orient="auto-start-reverse">
+      <path d="M 1 5 L 7 1 L 13 5 L 7 9 z" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.3"/>
+    </marker>
+    <marker id="m-diaf" viewBox="0 0 14 10" refX="1" refY="5" markerWidth="14" markerHeight="10" orient="auto-start-reverse">
+      <path d="M 1 5 L 7 1 L 13 5 L 7 9 z" fill="var(--da-fg, #0f172a)" stroke="var(--da-fg, #0f172a)" stroke-width="1.3"/>
+    </marker>
+    <marker id="m-primary" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-primary, #6366f1)"/>
+    </marker>
+    <marker id="m-danger" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-danger, #ef4444)"/>
+    </marker>
+    <marker id="m-success" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-success, #10b981)"/>
+    </marker>
+    <marker id="m-accent" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-accent, #f59e0b)"/>
+    </marker>
+  </defs>
+  <rect x="20" y="56" width="920" height="160" rx="14" fill="var(--da-primary, #6366f1)" fill-opacity="0.06" stroke="var(--da-primary, #6366f1)" stroke-dasharray="6 6" stroke-width="1"/>
+  <text x="34" y="76" font-size="12" font-weight="600" fill="var(--da-primary, #6366f1)">Değişen algoritma / davranış</text>
+  <rect x="20" y="236" width="450" height="160" rx="14" fill="var(--da-success, #10b981)" fill-opacity="0.06" stroke="var(--da-success, #10b981)" stroke-dasharray="6 6" stroke-width="1"/>
+  <text x="34" y="256" font-size="12" font-weight="600" fill="var(--da-success, #10b981)">İletişim: kim kimi bilir?</text>
+  <rect x="490" y="236" width="450" height="160" rx="14" fill="var(--da-accent, #f59e0b)" fill-opacity="0.06" stroke="var(--da-accent, #f59e0b)" stroke-dasharray="6 6" stroke-width="1"/>
+  <text x="504" y="256" font-size="12" font-weight="600" fill="var(--da-accent, #f59e0b)">İstek yönetimi: istek nereye gider?</text>
+  <rect x="40" y="90" width="290" height="110" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-primary, #6366f1)" stroke-width="1.5"/>
+  <rect x="40" y="90" width="290" height="26" rx="10" fill="var(--da-primary, #6366f1)" fill-opacity="0.16"/>
+  <text x="185" y="107" text-anchor="middle" font-size="12.5" font-weight="700" fill="var(--da-fg, #0f172a)">Strategy</text>
+  <text x="50" y="134" font-size="10.5" fill="var(--da-fg, #0f172a)">Algoritmayı nesneye koy, bileşimle takıp çıkar</text>
+  <text x="50" y="149" font-size="10.5" fill="var(--da-fg, #0f172a)">Çalışma zamanında değişir; bağlam seçmez, kullanır</text>
+  <text x="50" y="164" font-size="10.5" fill="var(--da-muted, #64748b)">Kullanım: fiyatlama, sıkıştırma, sıralama, auth yöntemi</text>
+  <text x="50" y="179" font-size="10.5" fill="var(--da-muted, #64748b)">Karşıtı: Template Method (kalıtım)</text>
+  <rect x="345" y="90" width="290" height="110" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-primary, #6366f1)" stroke-width="1.5"/>
+  <rect x="345" y="90" width="290" height="26" rx="10" fill="var(--da-primary, #6366f1)" fill-opacity="0.16"/>
+  <text x="490" y="107" text-anchor="middle" font-size="12.5" font-weight="700" fill="var(--da-fg, #0f172a)">Template Method</text>
+  <text x="355" y="134" font-size="10.5" fill="var(--da-fg, #0f172a)">İskelet üst sınıfta sabit, adımlar alt sınıfta</text>
+  <text x="355" y="149" font-size="10.5" fill="var(--da-fg, #0f172a)">Soyut adım zorunlu, kanca isteğe bağlı</text>
+  <text x="355" y="164" font-size="10.5" fill="var(--da-muted, #64748b)">Kullanım: import/export boru hattı, test yaşam döngüsü</text>
+  <text x="355" y="179" font-size="10.5" fill="var(--da-muted, #64748b)">Karşıtı: Strategy (bileşim)</text>
+  <rect x="650" y="90" width="270" height="110" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-primary, #6366f1)" stroke-width="1.5"/>
+  <rect x="650" y="90" width="270" height="26" rx="10" fill="var(--da-primary, #6366f1)" fill-opacity="0.16"/>
+  <text x="785" y="107" text-anchor="middle" font-size="12.5" font-weight="700" fill="var(--da-fg, #0f172a)">State</text>
+  <text x="660" y="134" font-size="10.5" fill="var(--da-fg, #0f172a)">Her durum bir sınıf; geçişler durumun içinde</text>
+  <text x="660" y="149" font-size="10.5" fill="var(--da-fg, #0f172a)">Aynı çağrı, duruma göre farklı davranış</text>
+  <text x="660" y="164" font-size="10.5" fill="var(--da-muted, #64748b)">Kullanım: sipariş/ödeme yaşam döngüsü, bağlantı,</text>
+  <text x="660" y="179" font-size="10.5" fill="var(--da-muted, #64748b)">belge onay akışı, oyun karakteri</text>
+  <rect x="40" y="270" width="205" height="110" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-success, #10b981)" stroke-width="1.5"/>
+  <rect x="40" y="270" width="205" height="26" rx="10" fill="var(--da-success, #10b981)" fill-opacity="0.16"/>
+  <text x="142.5" y="287" text-anchor="middle" font-size="12.5" font-weight="700" fill="var(--da-fg, #0f172a)">Observer</text>
+  <text x="50" y="314" font-size="10.5" fill="var(--da-fg, #0f172a)">1 yayıncı → N abone</text>
+  <text x="50" y="329" font-size="10.5" fill="var(--da-fg, #0f172a)">Yayıncı aboneleri tanımaz</text>
+  <text x="50" y="344" font-size="10.5" fill="var(--da-fg, #0f172a)">Abone ekle/çıkar: yayıncı değişmez</text>
+  <text x="50" y="359" font-size="10.5" fill="var(--da-muted, #64748b)">Risk: sızıntı, sıra, senkron yük</text>
+  <rect x="260" y="270" width="195" height="110" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-success, #10b981)" stroke-width="1.5"/>
+  <rect x="260" y="270" width="195" height="26" rx="10" fill="var(--da-success, #10b981)" fill-opacity="0.16"/>
+  <text x="357.5" y="287" text-anchor="middle" font-size="12.5" font-weight="700" fill="var(--da-fg, #0f172a)">Mediator</text>
+  <text x="270" y="314" font-size="10.5" fill="var(--da-fg, #0f172a)">N bileşen ↔ 1 aracı</text>
+  <text x="270" y="329" font-size="10.5" fill="var(--da-fg, #0f172a)">Bileşenler birbirini bilmez</text>
+  <text x="270" y="344" font-size="10.5" fill="var(--da-fg, #0f172a)">Koordinasyon tek yerde</text>
+  <text x="270" y="359" font-size="10.5" fill="var(--da-muted, #64748b)">Risk: "tanrı mediator"</text>
+  <rect x="510" y="270" width="205" height="110" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-accent, #f59e0b)" stroke-width="1.5"/>
+  <rect x="510" y="270" width="205" height="26" rx="10" fill="var(--da-accent, #f59e0b)" fill-opacity="0.16"/>
+  <text x="612.5" y="287" text-anchor="middle" font-size="12.5" font-weight="700" fill="var(--da-fg, #0f172a)">Command</text>
+  <text x="520" y="314" font-size="10.5" fill="var(--da-fg, #0f172a)">İstek = nesne (execute/undo)</text>
+  <text x="520" y="329" font-size="10.5" fill="var(--da-fg, #0f172a)">Kuyruk, log, undo, makro</text>
+  <text x="520" y="344" font-size="10.5" fill="var(--da-fg, #0f172a)">Çağıran alıcıyı bilmez</text>
+  <text x="520" y="359" font-size="10.5" fill="var(--da-muted, #64748b)">Kullanım: editör, CQRS, iş kuyruğu</text>
+  <rect x="730" y="270" width="190" height="110" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-accent, #f59e0b)" stroke-width="1.5"/>
+  <rect x="730" y="270" width="190" height="26" rx="10" fill="var(--da-accent, #f59e0b)" fill-opacity="0.16"/>
+  <text x="825" y="287" text-anchor="middle" font-size="12.5" font-weight="700" fill="var(--da-fg, #0f172a)">Chain of Resp.</text>
+  <text x="740" y="314" font-size="10.5" fill="var(--da-fg, #0f172a)">İstek halka halka ilerler</text>
+  <text x="740" y="329" font-size="10.5" fill="var(--da-fg, #0f172a)">Her halka: işle / ilet / kes</text>
+  <text x="740" y="344" font-size="10.5" fill="var(--da-fg, #0f172a)">Zincir çalışma zamanında</text>
+  <text x="740" y="359" font-size="10.5" fill="var(--da-muted, #64748b)">Kullanım: middleware, filter</text>
+  <text x="480" y="34" text-anchor="middle" font-size="15" font-weight="700" fill="var(--da-fg, #0f172a)">Behavioral kalıplar: nesneler arası sorumluluk ve iletişimi düzenlemek</text>
+  <text x="480" y="428" text-anchor="middle" font-size="12" font-weight="700" fill="var(--da-fg, #0f172a)">Karar akışı</text>
+  <text x="480" y="450" text-anchor="middle" font-size="11" font-weight="400" fill="var(--da-fg, #0f172a)">Aynı işin değiştirilebilir yolları → Strategy | İskelet sabit, adımlar değişken → Template Method | Davranış duruma bağlı → State</text>
+  <text x="480" y="470" text-anchor="middle" font-size="11" font-weight="400" fill="var(--da-fg, #0f172a)">Bir değişiklik N tarafı ilgilendiriyor → Observer | N bileşen karmaşık konuşuyor → Mediator</text>
+  <text x="480" y="490" text-anchor="middle" font-size="11" font-weight="400" fill="var(--da-fg, #0f172a)">İsteği sakla / ertele / geri al → Command | İsteği kim ele alacak belirsiz, sırayla dene → Chain of Responsibility</text>
+  <text x="480" y="528" text-anchor="middle" font-size="10.5" font-weight="400" fill="var(--da-muted, #64748b)">Ortak kazanç: "kim kimi çağırıyor" sorusunun cevabı tek yerde. Ortak risk: dolaylılık arttıkça akışı izlemek zorlaşır.</text>
+</svg>

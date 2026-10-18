@@ -1,0 +1,110 @@
+{
+  "id": "a-12-replication-quiz",
+  "title": { "tr": "Replication Quiz", "en": "Replication Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "N = 3 kopyalı lidersiz bir sistemde her okumanın en son onaylanmış yazmayı görmesini garanti eden W ve R değerleri hangileridir?",
+        "en": "In a leaderless system with N = 3 replicas, which W and R values guarantee that every read sees the latest acknowledged write?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "W = 1, R = 1", "en": "W = 1, R = 1" } },
+        { "id": "b", "text": { "tr": "W = 2, R = 1", "en": "W = 2, R = 1" } },
+        { "id": "c", "text": { "tr": "W = 2, R = 2", "en": "W = 2, R = 2" } },
+        { "id": "d", "text": { "tr": "W = 1, R = 2", "en": "W = 1, R = 2" } }
+      ],
+      "correct": ["c"],
+      "explanation": {
+        "tr": "Kural W + R > N'dir. 2 + 2 = 4 > 3 sağlar: herhangi iki okuma kopyası, yazmanın gittiği iki kopyayla en az bir yerde kesişir. (a) 2 ≤ 3, (b) ve (d) 3 ≤ 3 olduğu için bayat okuma mümkündür.",
+        "en": "The rule is W + R > N. 2 + 2 = 4 > 3 holds: any two read replicas overlap with the two write replicas in at least one place. (a) gives 2 ≤ 3, (b) and (d) give 3 ≤ 3, so stale reads are possible."
+      },
+      "difficulty": "easy",
+      "concepts": ["quorum", "leaderless"]
+    },
+    {
+      "id": "q2",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Asenkron replikasyonda lider, istemciye 'tamam' dedikten sonra takipçilere henüz kopyalanmamış yazmalar varken çökerse bu yazmalar kaybolabilir.",
+        "en": "With asynchronous replication, if the leader crashes after acknowledging a write to the client but before that write reached any follower, the write can be lost."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["t"],
+      "explanation": {
+        "tr": "Doğru. Asenkron modda onay takipçi beklenmeden verilir; failover'da yeni lider o yazmayı hiç görmemiştir. Bu yüzden kritik veriler için yarı senkron (en az bir takipçi onayı) tercih edilir.",
+        "en": "True. In asynchronous mode the ack is sent without waiting for followers; after failover the new leader has never seen that write. That is why semi-synchronous replication (at least one follower ack) is preferred for critical data."
+      },
+      "difficulty": "medium",
+      "concepts": ["sync-vs-async-replication", "failover"]
+    },
+    {
+      "id": "q3",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Raft tarzı lider seçimi için hangileri doğrudur? (Birden fazla seçin)",
+        "en": "Which statements are true for Raft-style leader election? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Bir aday lider olmak için düğümlerin çoğunluğunun oyunu almalıdır", "en": "A candidate needs votes from a majority of nodes to become leader" } },
+        { "id": "b", "text": { "tr": "Günlüğü oy veren düğümden daha geride olan aday oy alamaz", "en": "A candidate whose log is behind the voter's log is refused the vote" } },
+        { "id": "c", "text": { "tr": "Election timeout rastgele seçilir ki adaylar aynı anda çıkıp oyları bölmesin", "en": "Election timeouts are randomized so candidates do not start simultaneously and split the vote" } },
+        { "id": "d", "text": { "tr": "Eski lider geri gelince term numarasına bakmaksızın liderliği geri alır", "en": "A returning old leader reclaims leadership regardless of term numbers" } }
+      ],
+      "correct": ["a", "b", "c"],
+      "explanation": {
+        "tr": "Çoğunluk (a) split-brain'i önler; günlük güncellik kontrolü (b) onaylanmış verinin kaybını önler; rastgele timeout (c) split vote'u nadir kılar. Eski lider daha yüksek bir term gördüğünde takipçiye döner (d yanlış) — aksi hâlde iki lider olurdu.",
+        "en": "The majority rule (a) prevents split-brain; the log up-to-dateness check (b) prevents loss of committed data; randomized timeouts (c) make split votes rare. An old leader steps down when it sees a higher term (d is false) — otherwise there would be two leaders."
+      },
+      "difficulty": "hard",
+      "concepts": ["leader-election", "raft", "split-brain"]
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": {
+        "tr": "Multi-leader (master-master) replikasyonun en temel zorluğu nedir?",
+        "en": "What is the fundamental difficulty of multi-leader (master-master) replication?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Her yazmanın tüm liderlerden senkron onay beklemesi; bölgeler arası gecikme yazma yoluna girer", "en": "Every write waits for synchronous acks from all leaders; cross-region latency enters the write path" } },
+        { "id": "b", "text": { "tr": "Okumaların yalnızca kullanıcının 'ev' liderinden yapılabilmesi; diğer bölgelerden okuma ölçeklenemez", "en": "Reads can only be served by the user's 'home' leader; reads from other regions cannot scale" } },
+        { "id": "c", "text": { "tr": "Aynı kaydın iki liderde eşzamanlı güncellenmesiyle oluşan yazma çakışmalarının çözümü", "en": "Resolving write conflicts from concurrent updates of the same record on two leaders" } },
+        { "id": "d", "text": { "tr": "Liderler arasında sürekli Raft seçimi gerektirmesi; her term değişiminde yazmaların durması", "en": "It requires constant Raft elections between leaders; writes stop at every term change" } }
+      ],
+      "correct": ["c"],
+      "explanation": {
+        "tr": "Birden çok yazma noktası olunca aynı veri farklı yerlerde farklı değerlere güncellenebilir; LWW (veri kaybeder), sibling saklama, CRDT ya da çakışmadan kaçınma gerekir. Multi-leader'da liderler arası replikasyon asenkrondur ve bölgeler arası gecikme yazma yoluna girmez — bu zaten modelin varlık nedenidir (a yanlış). Okumalar her bölgenin kendi liderinden yapılır (b yanlış) ve lider seçimi gerekmez; her bölgenin lideri sabittir (d yanlış).",
+        "en": "With several write points the same data can be updated to different values in different places; you need LWW (loses data), sibling storage, CRDTs or conflict avoidance. In multi-leader, replication between leaders is asynchronous and cross-region latency stays out of the write path — that is the whole reason the model exists (a is wrong). Reads are served by each region's own leader (b is wrong) and no election is needed; each region's leader is fixed (d is wrong)."
+      },
+      "difficulty": "medium",
+      "concepts": ["multi-leader", "write-conflict"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "Kullanıcı profilini güncelledikten hemen sonra sayfayı yenilediğinde eski değeri görüyor çünkü okuma bir takipçiden yapılıyor. En uygun çözüm hangisidir?",
+        "en": "Right after updating their profile a user refreshes the page and sees the old value because the read is served from a follower. What is the most appropriate fix?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Kullanıcının kendi yazdığını kısa süre liderden okutmak (read-your-writes); diğer okumalar takipçide kalır", "en": "Serve the user's own writes from the leader for a short while (read-your-writes); other reads stay on followers" } },
+        { "id": "b", "text": { "tr": "Tüm okumaları lidere almak; takipçiler yalnızca failover için sıcak yedek olarak tutulur", "en": "Serve all reads from the leader; keep followers only as hot standbys for failover" } },
+        { "id": "c", "text": { "tr": "Replikasyonu senkrona çevirmek; her yazma tüm takipçiler onaylayana kadar bekler ve lag sıfırlanır", "en": "Switch replication to synchronous; every write waits for all followers to ack and lag drops to zero" } },
+        { "id": "d", "text": { "tr": "Kullanıcıyı hep aynı takipçiye yönlendirmek (monotonic reads); takipçi yetişince yeni değer görünür", "en": "Pin the user to the same follower (monotonic reads); the new value appears once that follower catches up" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "Read-your-writes tutarlılığı tam olarak bu sorunu hedefler ve okuma ölçeklemesini korur. Tüm okumaları lidere almak takipçilerin amacını yok eder (b). Senkron replikasyon lag'i kaldırır ama her yazmayı en yavaş takipçi kadar yavaşlatır ve bir takipçi düşünce yazmayı durdurur; bir profil sayfası için orantısız bir bedeldir (c). Monotonic reads zamanın geri gitmesini önler ama kullanıcı yeni değeri henüz hiç görmediği için bu senaryoyu çözmez (d).",
+        "en": "Read-your-writes consistency targets exactly this problem while preserving read scaling. Moving all reads to the leader defeats the purpose of followers (b). Synchronous replication removes lag but slows every write to the slowest follower and halts writes when a follower dies; a disproportionate price for a profile page (c). Monotonic reads prevents time from going backwards, but the user has not seen the new value at all yet, so it does not solve this scenario (d)."
+      },
+      "difficulty": "medium",
+      "concepts": ["replication-lag", "read-your-writes"]
+    }
+  ]
+}

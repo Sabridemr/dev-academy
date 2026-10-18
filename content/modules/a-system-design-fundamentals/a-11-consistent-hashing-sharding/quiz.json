@@ -1,0 +1,110 @@
+{
+  "id": "a-11-consistent-hashing-sharding-quiz",
+  "title": { "tr": "Consistent Hashing ve Sharding Quiz", "en": "Consistent Hashing and Sharding Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "4 düğümlü bir cache kümesine beşinci düğüm ekleniyor. hash(key) mod N ile ve consistent hashing ile yaklaşık ne kadar anahtar yer değiştirir?",
+        "en": "A fifth node is added to a 4-node cache cluster. Roughly what fraction of keys move with hash(key) mod N versus consistent hashing?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "mod N: ~%20, consistent hashing: ~%80", "en": "mod N: ~20%, consistent hashing: ~80%" } },
+        { "id": "b", "text": { "tr": "mod N: ~%80, consistent hashing: ~%20", "en": "mod N: ~80%, consistent hashing: ~20%" } },
+        { "id": "c", "text": { "tr": "İkisinde de ~%50; oran hash fonksiyonuna bağlıdır", "en": "~50% in both; the fraction depends on the hash function" } },
+        { "id": "d", "text": { "tr": "İkisinde de ~%20; yalnızca yeni düğümün payı taşınır", "en": "~20% in both; only the new node's share moves" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "mod 4'ten mod 5'e geçince anahtarların yaklaşık N/(N+1) = 4/5'i farklı bir düğüme düşer; hash fonksiyonu ne kadar iyi olursa olsun mod sonucu değişir (c yanlış). Consistent hashing'de yalnızca yeni düğümün payı, yani 1/(N+1) = %20 taşınır; diğer anahtarların sahibi değişmez. '%20 yalnızca yeni düğümün payı' tespiti consistent hashing için doğrudur ama mod N için geçerli değildir (d yanlış).",
+        "en": "Switching from mod 4 to mod 5 sends roughly N/(N+1) = 4/5 of keys to a different node; however good the hash function, the modulus result changes (c is wrong). With consistent hashing only the new node's share moves, 1/(N+1) = 20%; every other key keeps its owner. 'Only the new node's share moves' is true for consistent hashing but not for mod N (d is wrong)."
+      },
+      "difficulty": "easy",
+      "concepts": ["mod-n-problem", "consistent-hashing"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "Consistent hashing halkasında bir anahtarın sahibi nasıl bulunur?",
+        "en": "On a consistent hashing ring, how is a key's owner found?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Halkada anahtara her iki yönde de en yakın olan düğüm (mesafeler karşılaştırılır)", "en": "The node nearest to the key on the ring in either direction (distances are compared)" } },
+        { "id": "b", "text": { "tr": "Düğümlerin halkaya yerleşim sırasına göre round-robin; her yeni anahtar bir sonraki düğüme gider", "en": "Round-robin in the order nodes were placed on the ring; each new key goes to the next node" } },
+        { "id": "c", "text": { "tr": "hash(key) mod (fiziksel düğüm sayısı × sanal düğüm sayısı) ile bulunan nokta", "en": "The point found by hash(key) mod (physical node count × virtual node count)" } },
+        { "id": "d", "text": { "tr": "Anahtarın halkadaki konumundan saat yönünde ilerlerken karşılaşılan ilk düğüm", "en": "The first node encountered walking clockwise from the key's position on the ring" } }
+      ],
+      "correct": ["d"],
+      "explanation": {
+        "tr": "Kural tek yönlüdür: saat yönünde ilk düğüm (halkanın sonuna gelince başa sarılır). 'En yakın' (a) iki yönlü olurdu ve düğüm ekleyince iki komşunun da aralığını bozardı; round-robin (b) durum tutar ve aynı anahtarı ikinci kez bulamaz; (c) consistent hashing'in çözdüğü mod N yöntemidir, vnode sayısıyla çarpmak düğüm sayısı değişince eşlemenin bozulmasını engellemez.",
+        "en": "The rule is one-directional: the first node clockwise (wrapping to the start at the end of the ring). 'Nearest' (a) would be bidirectional and disturb both neighbours' ranges on node addition; round-robin (b) is stateful and cannot find the same key a second time; (c) is the mod-N method consistent hashing replaces, and multiplying by the vnode count does not stop the mapping from breaking when the node count changes."
+      },
+      "difficulty": "easy",
+      "concepts": ["hash-ring", "consistent-hashing"]
+    },
+    {
+      "id": "q3",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Sanal düğümlerin (vnodes) sağladığı faydalar hangileridir? (Birden fazla seçin)",
+        "en": "Which benefits do virtual nodes (vnodes) provide? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Düğümler arasında daha dengeli anahtar/yük dağılımı", "en": "More even key/load distribution across nodes" } },
+        { "id": "b", "text": { "tr": "Güçlü makinelere daha fazla sanal düğüm vererek heterojen kapasiteyi desteklemek", "en": "Supporting heterogeneous capacity by giving stronger machines more vnodes" } },
+        { "id": "c", "text": { "tr": "Bir düğüm düşünce yükünün tek komşuya değil tüm düğümlere yayılması", "en": "Spreading a failed node's load over all nodes rather than a single neighbour" } },
+        { "id": "d", "text": { "tr": "Lookup'ı O(1) yaparak ikili arama ve hash hesaplama ihtiyacını ortadan kaldırmak", "en": "Making lookups O(1) and removing the need for binary search and hash computation" } }
+      ],
+      "correct": ["a", "b", "c"],
+      "explanation": {
+        "tr": "Çok sayıda küçük yay dağılımı eşitler (a), ağırlıklandırmaya izin verir (b) ve düşen düğümün yaylarını halkanın her yerine dağıttığı için yükü herkese paylaştırır (c). Hash hesaplaması kalkmaz; aksine düğüm başına vnode sayısı kadar nokta hash'lenir ve lookup için sıralı tabloda ikili arama (O(log N·vnodes)) yapılır (d yanlış).",
+        "en": "Many small arcs even out the distribution (a), allow weighting (b) and, because a failed node's arcs are scattered around the ring, share its load with everyone (c). Hashing does not go away; on the contrary, one point per vnode is hashed and lookups use binary search over the sorted table (O(log N·vnodes)) (d is wrong)."
+      },
+      "difficulty": "medium",
+      "concepts": ["virtual-nodes"]
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": {
+        "tr": "Bir log tablosu `created_at` zaman damgasına göre range sharding ile bölünmüş. Yazma trafiği sürekli tek bir shard'a yığılıyor. Sebep ve en uygun çözüm nedir?",
+        "en": "A log table is range-sharded by its `created_at` timestamp. Write traffic keeps piling onto a single shard. What is the cause and the best fix?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Hot shard: tüm yeni kayıtlar son zaman aralığına düşer; anahtara hash öneki eklemek ya da hash sharding yazmayı yayar", "en": "Hot shard: all new rows land in the latest time range; prefixing the key with a hash or switching to hash sharding spreads the writes" } },
+        { "id": "b", "text": { "tr": "Shard sayısı yetersiz: aralık sınırlarını daraltıp daha çok shard eklemek yazmayı eşit dağıtır", "en": "Too few shards: narrowing the range boundaries and adding more shards spreads the writes evenly" } },
+        { "id": "c", "text": { "tr": "Range sharding aralık sorgularını tek shard'a yönlendirdiği için okumalar yazmayla çakışır; çözüm read replica eklemek", "en": "Range sharding routes range queries to one shard so reads collide with writes; the fix is adding read replicas" } },
+        { "id": "d", "text": { "tr": "Directory sharding'e geçip her yeni günün kayıtlarını dizinde o an en az dolu shard'a atamak", "en": "Switch to directory sharding and assign each new day's rows to whichever shard is least full at the time" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "Monoton artan bir anahtarla range sharding, yazmaları hep 'son' shard'a gönderir; shard eklemek sorunu yalnızca yeni son shard'a taşır (b). Dizinle günlük atama da o günün tüm yazmasını tek shard'a yığar, yalnızca hangi shard olduğunu değiştirir (d). Read replica okuma yükünü dağıtır, yazma yığılmasını çözmez (c). Hash öneki ya da hash sharding yazmayı dağıtır; bedeli aralık sorgularının birden çok shard'a gitmesidir (scatter-gather).",
+        "en": "Range sharding on a monotonically increasing key always sends writes to the 'last' shard; adding shards merely moves the problem to the new last shard (b). Per-day directory assignment still piles a whole day's writes onto one shard, it only changes which one (d). Read replicas spread read load and do nothing for write concentration (c). A hash prefix or hash sharding spreads writes; the price is that range queries fan out to several shards (scatter-gather)."
+      },
+      "difficulty": "medium",
+      "concepts": ["hot-shard", "range-partitioning", "hash-partitioning", "shard-key"]
+    },
+    {
+      "id": "q5",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Directory (dizin) tabanlı sharding, anahtarların istenen shard'a esnekçe yerleştirilmesine izin verir; karşılığında her istek için ek bir arama adımı gerektirir ve dizin servisi darboğaz / tek hata noktası olabilir.",
+        "en": "Directory-based sharding allows keys to be placed flexibly on any shard; in return it adds a lookup step to every request and the directory service can become a bottleneck / single point of failure."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["t"],
+      "explanation": {
+        "tr": "Doğru. Dizin yaklaşımının gücü esnekliktir (taşıma, çok kiracılı yerleşim), zayıflığı ise ekstra atlama ve dizinin kendisinin yüksek erişilebilir ve ölçeklenebilir tutulması zorunluluğudur; pratikte dizin agresif biçimde cache'lenir ve replike edilir.",
+        "en": "True. The strength of the directory approach is flexibility (migration, multi-tenant placement); its weakness is the extra hop and the need to keep the directory itself highly available and scalable; in practice it is aggressively cached and replicated."
+      },
+      "difficulty": "hard",
+      "concepts": ["directory-partitioning", "sharding"]
+    }
+  ]
+}

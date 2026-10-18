@@ -1,0 +1,219 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "a-02-cap-partition-cp-vs-ap",
+  "title": { "tr": "Ağ Bölünmesinde CP ve AP Davranışı", "en": "CP vs. AP Behaviour Under a Network Partition" },
+  "summary": {
+    "tr": "Üç replikalı bir veri sisteminde ağ bölünmesi yaşandığında CP yapılandırmasının azınlık taraftaki yazmayı reddetmesi, AP yapılandırmasının kabul edip bölünme sonrası uzlaştırması.",
+    "en": "When a three-replica data system suffers a network partition, the CP configuration rejects the write on the minority side while the AP configuration accepts it and reconciles after the partition heals."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Üst yarıda CP sistem, alt yarıda AP sistem; her birinde solda bir istemci ve sağda üç replika vardır. Replikalar arasındaki bağlantı kopunca üçüncü replika azınlıkta kalır. CP sistemde azınlık replikaya gelen yazma 'unavailable' hatasıyla reddedilir; çoğunluk taraf çalışmaya devam eder. AP sistemde her iki taraf da yazmayı kabul eder; değerler çakışır. Bölünme kapanınca AP sistem çakışmayı last-write-wins ile uzlaştırır ve tüm replikalar aynı değere yakınsar.",
+      "en": "The top half shows a CP system, the bottom half an AP system; each has a client on the left and three replicas on the right. When the link between replicas breaks, the third replica is left in the minority. In the CP system a write arriving at the minority replica is rejected with an 'unavailable' error while the majority side keeps working. In the AP system both sides accept the write and the values diverge. When the partition heals, the AP system reconciles with last-write-wins and all replicas converge to the same value."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "cp-group", "kind": "group", "label": { "tr": "CP sistem (ör. etcd, ZooKeeper)", "en": "CP system (e.g. etcd, ZooKeeper)" }, "x": 500, "y": 160, "w": 880, "h": 220 },
+    { "id": "cp-client", "kind": "client", "label": { "tr": "İstemci A", "en": "Client A" }, "x": 140, "y": 160, "w": 120, "h": 64, "parent": "cp-group" },
+    { "id": "cp-r1", "kind": "replica", "label": "R1", "sublabel": { "tr": "lider", "en": "leader" }, "x": 420, "y": 160, "w": 110, "h": 64, "parent": "cp-group" },
+    { "id": "cp-r2", "kind": "replica", "label": "R2", "sublabel": { "tr": "takipçi", "en": "follower" }, "x": 600, "y": 160, "w": 110, "h": 64, "parent": "cp-group" },
+    { "id": "cp-r3", "kind": "replica", "label": "R3", "sublabel": { "tr": "takipçi", "en": "follower" }, "x": 860, "y": 160, "w": 110, "h": 64, "parent": "cp-group" },
+    { "id": "ap-group", "kind": "group", "label": { "tr": "AP sistem (ör. Cassandra, Dynamo)", "en": "AP system (e.g. Cassandra, Dynamo)" }, "x": 500, "y": 440, "w": 880, "h": 220 },
+    { "id": "ap-client", "kind": "client", "label": { "tr": "İstemci B", "en": "Client B" }, "x": 140, "y": 440, "w": 120, "h": 64, "parent": "ap-group" },
+    { "id": "ap-r1", "kind": "replica", "label": "R1", "sublabel": "x = 1", "x": 420, "y": 440, "w": 110, "h": 64, "parent": "ap-group" },
+    { "id": "ap-r2", "kind": "replica", "label": "R2", "sublabel": "x = 1", "x": 600, "y": 440, "w": 110, "h": 64, "parent": "ap-group" },
+    { "id": "ap-r3", "kind": "replica", "label": "R3", "sublabel": "x = 1", "x": 860, "y": 440, "w": 110, "h": 64, "parent": "ap-group" }
+  ],
+  "edges": [
+    { "id": "cp-c-r1", "from": "cp-client", "to": "cp-r1", "kind": "request", "curvature": -0.15 },
+    { "id": "cp-c-r3", "from": "cp-client", "to": "cp-r3", "kind": "request", "curvature": -0.35 },
+    { "id": "cp-r1-r2", "from": "cp-r1", "to": "cp-r2", "kind": "replication", "bidirectional": true },
+    { "id": "cp-r2-r3", "from": "cp-r2", "to": "cp-r3", "kind": "replication", "bidirectional": true },
+    { "id": "ap-c-r1", "from": "ap-client", "to": "ap-r1", "kind": "request", "curvature": -0.15 },
+    { "id": "ap-c-r3", "from": "ap-client", "to": "ap-r3", "kind": "request", "curvature": -0.35 },
+    { "id": "ap-r1-r2", "from": "ap-r1", "to": "ap-r2", "kind": "replication", "bidirectional": true },
+    { "id": "ap-r2-r3", "from": "ap-r2", "to": "ap-r3", "kind": "replication", "bidirectional": true }
+  ],
+  "steps": [
+    {
+      "id": "healthy",
+      "title": { "tr": "Normal çalışma", "en": "Normal operation" },
+      "narration": {
+        "tr": "İki sistemde de üç replika birbirine bağlı ve x = 1 değerini taşıyor. Bölünme yokken ikisi de hem tutarlı hem erişilebilir görünür; fark yalnızca ağ koptuğunda ortaya çıkar.",
+        "en": "In both systems three replicas are connected and hold x = 1. Without a partition both look consistent and available; the difference only appears when the network breaks."
+      },
+      "durationMs": 3500,
+      "inherit": false,
+      "highlight": { "nodes": ["cp-r1", "cp-r2", "cp-r3", "ap-r1", "ap-r2", "ap-r3"], "edges": ["cp-r1-r2", "cp-r2-r3", "ap-r1-r2", "ap-r2-r3"] },
+      "nodeStates": {
+        "cp-r1": { "status": "active", "badge": "x=1" }, "cp-r2": { "status": "active", "badge": "x=1" }, "cp-r3": { "status": "active", "badge": "x=1" },
+        "ap-r1": { "status": "active", "badge": "x=1" }, "ap-r2": { "status": "active", "badge": "x=1" }, "ap-r3": { "status": "active", "badge": "x=1" }
+      },
+      "edgeStates": { "cp-c-r3": { "visible": false }, "ap-c-r3": { "visible": false } },
+      "packets": [
+        { "edge": "cp-r1-r2", "shape": "dot", "label": "heartbeat", "durationMs": 700, "repeat": 2, "repeatGapMs": 600 },
+        { "edge": "cp-r2-r3", "shape": "dot", "label": "heartbeat", "startAt": 300, "durationMs": 700, "repeat": 2, "repeatGapMs": 600 },
+        { "edge": "ap-r1-r2", "shape": "dot", "label": "gossip", "durationMs": 700, "repeat": 2, "repeatGapMs": 600 },
+        { "edge": "ap-r2-r3", "shape": "dot", "label": "gossip", "startAt": 300, "durationMs": 700, "repeat": 2, "repeatGapMs": 600 }
+      ],
+      "annotations": [
+        { "id": "ok-note", "x": 500, "y": 300, "text": { "tr": "Bölünme yokken PACELC'in 'else' kısmı geçerli: gecikme vs. tutarlılık", "en": "Without a partition PACELC's 'else' applies: latency vs. consistency" }, "tone": "info" }
+      ]
+    },
+    {
+      "id": "partition",
+      "title": { "tr": "Ağ bölünüyor", "en": "The network partitions" },
+      "narration": {
+        "tr": "R2 ile R3 arasındaki bağlantı kopar (switch arızası, kablo kesilmesi, uzun GC duraklaması). R3 artık diğerlerine ulaşamıyor: {R1, R2} çoğunluk, {R3} azınlık. Hiçbir düğüm çökmedi, sadece birbirlerini göremiyorlar.",
+        "en": "The link between R2 and R3 breaks (switch failure, cut cable, a long GC pause). R3 can no longer reach the others: {R1, R2} is the majority, {R3} the minority. No node crashed; they just cannot see each other."
+      },
+      "durationMs": 3500,
+      "highlight": { "nodes": ["cp-r3", "ap-r3"], "edges": ["cp-r2-r3", "ap-r2-r3"] },
+      "nodeStates": {
+        "cp-r3": { "status": "warning", "sublabel": { "tr": "azınlık", "en": "minority" } },
+        "ap-r3": { "status": "warning", "sublabel": { "tr": "izole", "en": "isolated" } }
+      },
+      "edgeStates": {
+        "cp-r2-r3": { "status": "error", "label": { "tr": "✕ bölünme", "en": "✕ partition" } },
+        "ap-r2-r3": { "status": "error", "label": { "tr": "✕ bölünme", "en": "✕ partition" } }
+      },
+      "packets": [
+        { "edge": "cp-r2-r3", "shape": "dot", "color": "danger", "label": "timeout", "durationMs": 1200 },
+        { "edge": "ap-r2-r3", "shape": "dot", "color": "danger", "label": "timeout", "durationMs": 1200 }
+      ],
+      "annotations": [
+        { "id": "p-note", "x": 730, "y": 300, "text": { "tr": "P sizin seçiminiz değil; artık C ya da A'dan biri gidecek", "en": "P is not your choice; now either C or A has to go" }, "tone": "danger" }
+      ]
+    },
+    {
+      "id": "cp-write",
+      "title": { "tr": "CP: azınlık yazmayı reddeder", "en": "CP: the minority rejects the write" },
+      "narration": {
+        "tr": "İstemci A, x = 2 yazmak için R3'e ulaşır. R3 çoğunluğun (quorum = 2) onayını alamayacağını bilir ve isteği 'unavailable' ile reddeder. Tutarlılık korunur: hiçbir istemci iki farklı 'gerçek' görmez. Bedeli erişilebilirlik: istemci hata aldı.",
+        "en": "Client A reaches R3 to write x = 2. R3 knows it cannot get a majority (quorum = 2) acknowledgement and rejects the request with 'unavailable'. Consistency is preserved: no client ever sees two different truths. The price is availability: the client got an error."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["cp-client", "cp-r3"], "edges": ["cp-c-r3"] },
+      "nodeStates": {
+        "cp-client": { "status": "active" },
+        "cp-r3": { "status": "error", "badge": "x=1", "sublabel": { "tr": "quorum yok → yazma kapalı", "en": "no quorum → writes off" } }
+      },
+      "edgeStates": { "cp-c-r3": { "visible": true, "status": "error" } },
+      "packets": [
+        { "edge": "cp-c-r3", "shape": "envelope", "label": "SET x=2", "durationMs": 1100 },
+        { "edge": "cp-c-r3", "shape": "square", "direction": "backward", "color": "danger", "label": "503 unavailable", "startAt": 1300, "durationMs": 1100 }
+      ],
+      "annotations": [
+        { "id": "cp-note", "x": 860, "y": 90, "text": { "tr": "Hata döner ama asla eski/çelişkili veri vermez", "en": "Returns an error but never stale or conflicting data" }, "tone": "warning", "target": "cp-r3" }
+      ]
+    },
+    {
+      "id": "cp-majority",
+      "title": { "tr": "CP: çoğunluk çalışmaya devam eder", "en": "CP: the majority keeps serving" },
+      "narration": {
+        "tr": "Aynı yazma R1'e (çoğunluk tarafı) gelirse kabul edilir: R1 ve R2 onaylar, quorum sağlanır, x = 2 taahhüt edilir. Yani CP sistem tamamen kapanmaz; yalnızca azınlık taraf hizmet dışı kalır. R3 bölünme boyunca x = 1'de 'donmuş' kalır ama bunu okutmaz.",
+        "en": "If the same write reaches R1 (majority side) it is accepted: R1 and R2 acknowledge, quorum is met, x = 2 is committed. So a CP system does not shut down entirely; only the minority side goes out of service. R3 stays 'frozen' at x = 1 during the partition but refuses to serve it."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["cp-client", "cp-r1", "cp-r2"], "edges": ["cp-c-r1", "cp-r1-r2"] },
+      "nodeStates": {
+        "cp-r1": { "status": "success", "badge": "x=2" },
+        "cp-r2": { "status": "success", "badge": "x=2" },
+        "cp-r3": { "status": "muted", "badge": "x=1" }
+      },
+      "edgeStates": { "cp-c-r3": { "status": "muted" }, "cp-c-r1": { "status": "active" }, "cp-r1-r2": { "status": "active" } },
+      "packets": [
+        { "edge": "cp-c-r1", "shape": "envelope", "label": "SET x=2", "durationMs": 1000 },
+        { "edge": "cp-r1-r2", "shape": "dot", "label": "replicate", "startAt": 1000, "durationMs": 700 },
+        { "edge": "cp-r1-r2", "shape": "dot", "direction": "backward", "color": "success", "label": "ack", "startAt": 1700, "durationMs": 700 },
+        { "edge": "cp-c-r1", "shape": "square", "direction": "backward", "color": "success", "label": "200 committed", "startAt": 2500, "durationMs": 1000 }
+      ],
+      "annotations": [
+        { "id": "quorum-note", "x": 510, "y": 90, "text": { "tr": "2 / 3 onay = quorum", "en": "2 / 3 acks = quorum" }, "tone": "success" }
+      ]
+    },
+    {
+      "id": "ap-write",
+      "title": { "tr": "AP: her taraf yazmayı kabul eder", "en": "AP: both sides accept the write" },
+      "narration": {
+        "tr": "AP sistemde İstemci B, R3'e x = 2 yazar; R3 tek başına kabul eder ve 200 döner. Aynı anda başka bir istemci R1'e x = 3 yazabilir. Sistem hep erişilebilirdir ama artık iki farklı değer vardır: tutarlılıktan vazgeçildi.",
+        "en": "In the AP system Client B writes x = 2 to R3; R3 accepts on its own and returns 200. At the same time another client may write x = 3 to R1. The system is always available but there are now two different values: consistency was given up."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["ap-client", "ap-r1", "ap-r3"], "edges": ["ap-c-r3", "ap-c-r1"] },
+      "nodeStates": {
+        "ap-client": { "status": "active" },
+        "ap-r3": { "status": "success", "badge": "x=2", "sublabel": { "tr": "tek başına kabul etti", "en": "accepted alone" } },
+        "ap-r1": { "status": "success", "badge": "x=3", "sublabel": "x = 3" },
+        "ap-r2": { "status": "success", "badge": "x=3", "sublabel": "x = 3" }
+      },
+      "edgeStates": { "ap-c-r3": { "visible": true, "status": "active" }, "ap-c-r1": { "status": "active" } },
+      "packets": [
+        { "edge": "ap-c-r3", "shape": "envelope", "label": "SET x=2", "durationMs": 1000 },
+        { "edge": "ap-c-r3", "shape": "square", "direction": "backward", "color": "success", "label": "200 OK", "startAt": 1100, "durationMs": 1000 },
+        { "edge": "ap-c-r1", "shape": "envelope", "label": "SET x=3", "startAt": 600, "durationMs": 1000 },
+        { "edge": "ap-r1-r2", "shape": "dot", "label": "x=3", "startAt": 1600, "durationMs": 700 },
+        { "edge": "ap-c-r1", "shape": "square", "direction": "backward", "color": "success", "label": "200 OK", "startAt": 1700, "durationMs": 1000 }
+      ],
+      "annotations": [
+        { "id": "ap-note", "x": 730, "y": 530, "text": { "tr": "İki 'gerçek' aynı anda: x=3 ve x=2 (split-brain)", "en": "Two truths at once: x=3 and x=2 (split-brain)" }, "tone": "danger" }
+      ]
+    },
+    {
+      "id": "heal",
+      "title": { "tr": "Bölünme kapanıyor, AP uzlaştırıyor", "en": "The partition heals, AP reconciles" },
+      "narration": {
+        "tr": "Ağ düzelince AP replikalar anti-entropy / gossip ile fark ettikleri çakışmayı bir kurala göre çözer: last-write-wins (zaman damgası), vector clock ile birleştirme ya da CRDT. Burada daha yeni olan x = 3 kazanır; R3'teki x = 2 yazması sessizce kaybolur. CP tarafında ise R3 yalnızca çoğunluktan günlüğü (log) çekip x = 2'ye yetişir — çakışma hiç oluşmamıştı.",
+        "en": "Once the network recovers, the AP replicas detect the conflict through anti-entropy / gossip and resolve it by a rule: last-write-wins (timestamp), vector-clock merge or a CRDT. Here the newer x = 3 wins; R3's write of x = 2 is silently lost. On the CP side R3 simply pulls the log from the majority and catches up to x = 2 — no conflict ever existed."
+      },
+      "durationMs": 5000,
+      "highlight": { "nodes": ["ap-r2", "ap-r3", "cp-r3"], "edges": ["ap-r2-r3", "cp-r2-r3"] },
+      "nodeStates": {
+        "ap-r3": { "status": "active", "badge": "x=3", "sublabel": { "tr": "LWW: x=2 kaybedildi", "en": "LWW: x=2 lost" } },
+        "ap-r1": { "status": "active", "sublabel": "x = 3" }, "ap-r2": { "status": "active", "sublabel": "x = 3" },
+        "cp-r3": { "status": "active", "badge": "x=2", "sublabel": { "tr": "log'dan yetişti", "en": "caught up from log" } },
+        "cp-r1": { "status": "active" }, "cp-r2": { "status": "active" }
+      },
+      "edgeStates": {
+        "cp-r2-r3": { "status": "active", "label": { "tr": "yeniden bağlandı", "en": "reconnected" } },
+        "ap-r2-r3": { "status": "active", "label": { "tr": "anti-entropy", "en": "anti-entropy" } },
+        "ap-c-r3": { "status": "idle" }, "ap-c-r1": { "status": "idle" }, "cp-c-r3": { "status": "idle" }, "cp-c-r1": { "status": "idle" }
+      },
+      "packets": [
+        { "edge": "ap-r2-r3", "shape": "diamond", "label": "x=3 @t2", "durationMs": 900 },
+        { "edge": "ap-r2-r3", "shape": "diamond", "direction": "backward", "label": "x=2 @t1", "startAt": 200, "durationMs": 900 },
+        { "edge": "ap-r2-r3", "shape": "dot", "color": "success", "label": { "tr": "uzlaştı: x=3", "en": "resolved: x=3" }, "startAt": 1500, "durationMs": 900 },
+        { "edge": "cp-r2-r3", "shape": "dot", "label": "log replay", "startAt": 400, "durationMs": 900, "repeat": 2, "repeatGapMs": 200 }
+      ],
+      "annotations": [
+        { "id": "heal-cp", "x": 730, "y": 90, "text": { "tr": "CP: veri kaybı yok, bölünme boyunca hata vardı", "en": "CP: no data loss, errors during the partition" }, "tone": "info" },
+        { "id": "heal-ap", "x": 730, "y": 530, "text": { "tr": "AP: hata yoktu, bir yazma kaybedildi", "en": "AP: no errors, one write was lost" }, "tone": "warning" }
+      ]
+    },
+    {
+      "id": "choose",
+      "title": { "tr": "Hangisi doğru? Veriye bağlı", "en": "Which is right? It depends on the data" },
+      "narration": {
+        "tr": "Banka bakiyesi, envanter, lider seçimi için CP: hata, yanlış veriden iyidir. Alışveriş sepeti, beğeni sayacı, oturum bilgisi için AP: hizmet vermek, geçici tutarsızlıktan önemlidir. Aynı ürün içinde farklı veriler farklı tarafı seçebilir.",
+        "en": "For bank balances, inventory and leader election choose CP: an error beats wrong data. For shopping carts, like counters and presence choose AP: serving beats temporary inconsistency. Different data inside the same product can pick different sides."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["cp-group", "ap-group"], "edges": [] },
+      "nodeStates": {
+        "cp-r1": { "status": "idle" }, "cp-r2": { "status": "idle" }, "cp-r3": { "status": "idle", "sublabel": { "tr": "takipçi", "en": "follower" } },
+        "ap-r1": { "status": "idle" }, "ap-r2": { "status": "idle" }, "ap-r3": { "status": "idle", "sublabel": "x = 3" },
+        "cp-client": { "status": "idle" }, "ap-client": { "status": "idle" }
+      },
+      "edgeStates": { "cp-r2-r3": { "status": "idle", "label": "" }, "ap-r2-r3": { "status": "idle", "label": "" } },
+      "annotations": [
+        { "id": "cp-use", "x": 280, "y": 90, "text": { "tr": "CP → para, envanter, kilit, konfigürasyon", "en": "CP → money, inventory, locks, configuration" }, "tone": "success" },
+        { "id": "ap-use", "x": 280, "y": 530, "text": { "tr": "AP → sepet, sayaç, presence, DNS", "en": "AP → cart, counters, presence, DNS" }, "tone": "success" }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["cap-theorem", "network-partition", "consistency", "availability"]
+}

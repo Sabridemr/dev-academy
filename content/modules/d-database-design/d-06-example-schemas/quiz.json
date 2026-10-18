@@ -1,0 +1,111 @@
+{
+  "id": "d-06-example-schemas-quiz",
+  "title": { "tr": "Örnek Şemalar Quiz", "en": "Example Schemas Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Ödeme sisteminde hesabın bakiyesini bir sütunda UPDATE etmek yerine append-only çift kayıtlı defter kullanmanın temel gerekçesi nedir?",
+        "en": "In a payments system, what is the main reason to use an append-only double-entry ledger instead of UPDATE-ing a balance column?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Yalnızca INSERT yapıldığı için indeks bakımı ve disk kullanımı azalır", "en": "Because only INSERTs happen, index maintenance and disk usage shrink" } },
+        { "id": "b", "text": { "tr": "Bakiye sorgusu SUM yerine tek satır okumaya indiği için her zaman daha hızlıdır", "en": "Balance queries are always faster because they drop from a SUM to a single-row read" } },
+        { "id": "c", "text": { "tr": "Her kuruşun geçmişi kanıtlanabilir; hatalar silinerek değil ters kayıtla düzeltilir", "en": "Every cent's history is provable; mistakes are corrected with reversing entries, not deletions" } },
+        { "id": "d", "text": { "tr": "Borç ve alacak ayrı satırlar olduğu için ikisini tek transaction'a sarmak gerekmez", "en": "Because debit and credit are separate rows, wrapping them in one transaction is unnecessary" } }
+      ],
+      "correct": ["c"],
+      "explanation": {
+        "tr": "Append-only defter denetlenebilirlik ve mutabakat içindir: bakiye her zaman kayıtlardan yeniden türetilebilir ve hiçbir hareket kaybolmaz. Tam tersine disk ve indeks büyür (a), bakiye tek satır değil SUM olur ve yavaşlar — bu yüzden snapshot/materialized view eklenir (b) — ve borç/alacak çifti yine tek transaction içinde yazılmalıdır, yoksa defter dengesiz kalır (d).",
+        "en": "An append-only ledger is for auditability and reconciliation: the balance can always be re-derived from entries and no movement is ever lost. On the contrary, disk and indexes grow (a), the balance becomes a SUM rather than a single row and gets slower — hence snapshots or materialized views (b) — and the debit/credit pair must still be written inside one transaction or the ledger goes out of balance (d)."
+      },
+      "difficulty": "medium",
+      "concepts": ["double-entry-ledger", "append-only"]
+    },
+    {
+      "id": "q2",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Sipariş oluşturma transaction'ı içinde hangileri YAPILMALIDIR? (Birden fazla seçin)",
+        "en": "Which of these SHOULD be done inside the order-creation transaction? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "inventory satırlarını product_id sırasıyla FOR UPDATE ile kilitlemek", "en": "Lock inventory rows with FOR UPDATE in product_id order" } },
+        { "id": "b", "text": { "tr": "Ödeme sağlayıcısına HTTP isteği gönderip yanıtını beklemek", "en": "Send the HTTP request to the payment provider and wait for its response" } },
+        { "id": "c", "text": { "tr": "outbox tablosuna order.created olayı eklemek", "en": "Insert an order.created event into the outbox table" } },
+        { "id": "d", "text": { "tr": "Idempotency anahtarını order_requests tablosuna yazmak", "en": "Write the idempotency key into order_requests" } }
+      ],
+      "correct": ["a", "c", "d"],
+      "explanation": {
+        "tr": "Kilit, outbox olayı ve idempotency kaydı siparişle birlikte atomik olmalıdır; aksi hâlde yarım durumlar oluşur (olay yok, sipariş var). Dış HTTP çağrısı ise transaction dışında outbox işleyicisi tarafından yapılır: kilit tutarken bekleyen bir ağ çağrısı tüm stok satırlarını kilitli tutar ve havuzu tüketir.",
+        "en": "The lock, the outbox event and the idempotency record must be atomic with the order; otherwise half-states appear (order without event). The external HTTP call belongs outside the transaction, made by the outbox worker: a network call stalling while locks are held keeps every inventory row locked and drains the pool."
+      },
+      "difficulty": "medium",
+      "concepts": ["order-transaction", "outbox-pattern"]
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": {
+        "tr": "Mesajlaşma şemasında bir konuşmadaki mesajları sıralamak için neden sent_at yerine konuşma içi seq sayacı kullanılır?",
+        "en": "In the messaging schema, why is a per-conversation seq counter used to order messages instead of sent_at?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Saatler kayabilir ve aynı milisaniyede birden çok mesaj gelebilir; seq monoton ve benzersizdir", "en": "Clocks can drift and several messages can arrive in the same millisecond; seq is monotonic and unique" } },
+        { "id": "b", "text": { "tr": "timestamptz 8 bayt, seq ise 4 bayt tutar; milyarlarca mesajda bu fark partition boyutunu belirler", "en": "timestamptz takes 8 bytes and seq 4; across billions of messages that gap decides partition size" } },
+        { "id": "c", "text": { "tr": "sent_at uçtan uca şifrelenemez; seq şifreli blob dışında kaldığı için sunucu yine sıralayabilir", "en": "sent_at cannot be end-to-end encrypted; seq stays outside the encrypted blob so the server can still order" } },
+        { "id": "d", "text": { "tr": "Cassandra'ya taşınırken clustering key timestamp olamaz; sayısal bir seq zorunludur", "en": "When moving to Cassandra the clustering key cannot be a timestamp; a numeric seq is mandatory" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "Zaman damgası bilgidir, kimlik ya da sıra garantisi değildir: saat kayması sırayı bozar, çakışma benzersizliği bozar. Konuşma başına atomik artan seq hem sıralamayı hem de 'okunmamış = last_seq − last_read_seq' hesabını güvenilir kılar. seq de bigint'tir (8 bayt), sent_at da seq gibi şifresiz meta veridir ve Cassandra timestamp'i clustering key olarak destekler; bunlar gerekçe değildir.",
+        "en": "A timestamp is information, not an identity or an ordering guarantee: clock drift breaks order, collisions break uniqueness. An atomically increasing per-conversation seq makes both ordering and 'unread = last_seq − last_read_seq' reliable. seq is a bigint too (8 bytes), sent_at is unencrypted metadata just like seq, and Cassandra does support timestamps as clustering keys; none of those is the reason."
+      },
+      "difficulty": "easy",
+      "concepts": ["conversation-model"]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Sosyal medya şemasında users.follower_count sütununu tutmak, 'her gerçek tek yerde durur' kuralını bozan ama bilinçli yapılan bir denormalizasyondur.",
+        "en": "Keeping a users.follower_count column in the social schema is a deliberate denormalization that breaks the 'every fact lives in one place' rule."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["t"],
+      "explanation": {
+        "tr": "Doğru. Takipçi sayısı follows tablosundan türetilebilir; ayrı sütunda tutmak kopya veridir. Bilinçlidir çünkü milyar satırlık tabloda her profil görüntülemede COUNT(*) çalıştırılamaz; bedeli, sayacın takip/takipten çıkma yazmasıyla aynı transaction'da ya da olayla güncel tutulması ve ara sıra yeniden hesaplanmasıdır.",
+        "en": "True. The follower count can be derived from the follows table; storing it separately is a copy. It is deliberate because COUNT(*) cannot run on a billion-row table for every profile view; the cost is keeping the counter current in the same transaction as follow/unfollow (or via events) and recomputing it occasionally."
+      },
+      "difficulty": "easy",
+      "concepts": ["schema-design", "fan-out"]
+    },
+    {
+      "id": "q5",
+      "type": "order",
+      "prompt": {
+        "tr": "Sipariş oluşturma transaction'ındaki adımları doğru sıraya koyun.",
+        "en": "Put the steps of the order-creation transaction in the correct order."
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "orders ve order_items satırlarını yaz (fiyat snapshot)", "en": "Write orders and order_items rows (price snapshot)" } },
+        { "id": "b", "text": { "tr": "Idempotency anahtarını kontrol et", "en": "Check the idempotency key" } },
+        { "id": "c", "text": { "tr": "inventory satırlarını sıralı FOR UPDATE ile kilitle ve stoğu doğrula", "en": "Lock inventory rows with ordered FOR UPDATE and verify stock" } },
+        { "id": "d", "text": { "tr": "COMMIT ve kilitleri bırak", "en": "COMMIT and release locks" } },
+        { "id": "e", "text": { "tr": "outbox'a order.created olayını ekle", "en": "Insert the order.created event into the outbox" } }
+      ],
+      "correct": ["b", "c", "a", "e", "d"],
+      "explanation": {
+        "tr": "Önce tekrar isteği elenir (gereksiz kilit alınmaz), sonra stok kilitlenip doğrulanır (yetersizse hemen ROLLBACK), ardından sipariş ve kalemler yazılır, olay outbox'a eklenir ve en son COMMIT ile her şey birlikte kalıcı olur. Outbox'ın COMMIT'ten önce olması, olay ile siparişin atomikliğini sağlar.",
+        "en": "First duplicates are rejected (no needless locks), then stock is locked and verified (ROLLBACK immediately if insufficient), then the order and lines are written, the event goes into the outbox and finally COMMIT makes everything durable together. Placing the outbox before COMMIT keeps the event atomic with the order."
+      },
+      "difficulty": "hard",
+      "concepts": ["order-transaction", "idempotency-key", "inventory-reservation"]
+    }
+  ]
+}

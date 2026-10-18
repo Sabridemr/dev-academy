@@ -1,0 +1,168 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "a-07-caching-cache-aside",
+  "title": { "tr": "Cache-aside: Miss → DB → Doldur → Hit", "en": "Cache-aside: Miss → DB → Populate → Hit" },
+  "summary": {
+    "tr": "Bir uygulama servisinin cache-aside deseniyle Redis ve veritabanını kullanması: ilk istek miss alır, DB'den okunur ve cache doldurulur; ikinci istek hit olur; güncellemede DB yazılır ve cache girdisi silinir.",
+    "en": "An application service using Redis and a database with the cache-aside pattern: the first request misses, reads the DB and fills the cache; the second request hits; on update the DB is written and the cache entry deleted."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda kullanıcı, ortada uygulama servisi, sağ üstte Redis cache, sağ altta PostgreSQL veritabanı. İlk istekte uygulama cache'e sorar, boş döner (miss), veritabanından okur, sonucu cache'e TTL ile yazar ve yanıtlar. İkinci istekte cache doğrudan yanıt verir (hit), veritabanına gidilmez. Son adımda bir güncelleme veritabanına yazılır ve cache'teki girdi silinir.",
+      "en": "User on the left, application service in the middle, Redis cache top right, PostgreSQL database bottom right. On the first request the app asks the cache, gets nothing (miss), reads the database, writes the result to the cache with a TTL and responds. On the second request the cache answers directly (hit) and the database is not touched. In the last step an update is written to the database and the cache entry is deleted."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "user", "kind": "user", "label": { "tr": "Kullanıcı", "en": "User" }, "x": 110, "y": 300 },
+    { "id": "app", "kind": "service", "label": { "tr": "Uygulama servisi", "en": "Application service" }, "sublabel": { "tr": "cache-aside mantığı burada", "en": "cache-aside logic lives here" }, "x": 420, "y": 300, "w": 170, "h": 84 },
+    { "id": "cache", "kind": "cache", "label": "Redis", "sublabel": { "tr": "~1 ms", "en": "~1 ms" }, "x": 760, "y": 140, "w": 150, "h": 76 },
+    { "id": "db", "kind": "db", "label": "PostgreSQL", "sublabel": { "tr": "~8 ms", "en": "~8 ms" }, "x": 760, "y": 470, "w": 150, "h": 76 }
+  ],
+  "edges": [
+    { "id": "u-app", "from": "user", "to": "app", "kind": "request", "label": "GET /products/42" },
+    { "id": "app-u", "from": "app", "to": "user", "kind": "response", "curvature": 0.35 },
+    { "id": "app-cache", "from": "app", "to": "cache", "kind": "request", "label": "GET product:42", "curvature": -0.1 },
+    { "id": "app-cache-set", "from": "app", "to": "cache", "kind": "data", "style": "dashed", "curvature": -0.5, "label": "SET product:42 EX 300" },
+    { "id": "app-db", "from": "app", "to": "db", "kind": "request", "label": "SELECT … WHERE id = 42", "curvature": 0.1 },
+    { "id": "app-db-write", "from": "app", "to": "db", "kind": "data", "style": "dashed", "curvature": 0.5, "label": "UPDATE products …" }
+  ],
+  "steps": [
+    {
+      "id": "request",
+      "title": { "tr": "İstek gelir", "en": "Request arrives" },
+      "narration": {
+        "tr": "Kullanıcı 42 numaralı ürünü ister. Uygulama servisi veritabanına gitmeden önce cache'e bakacak; bu karar uygulama kodunun içindedir (cache-aside).",
+        "en": "The user asks for product 42. Before going to the database the application will check the cache; that decision lives in application code (cache-aside)."
+      },
+      "durationMs": 2500,
+      "inherit": false,
+      "highlight": { "nodes": ["user", "app"], "edges": ["u-app"] },
+      "nodeStates": { "app": { "status": "active" } },
+      "edgeStates": { "app-cache-set": { "visible": false }, "app-db-write": { "visible": false } },
+      "packets": [{ "edge": "u-app", "shape": "envelope", "label": "#1", "durationMs": 1000 }]
+    },
+    {
+      "id": "miss",
+      "title": { "tr": "Cache MISS", "en": "Cache MISS" },
+      "narration": {
+        "tr": "Uygulama Redis'e product:42 anahtarını sorar. Anahtar yoktur (nil): bu bir miss'tir. Cache boşken ilk istek her zaman yavaş yolu izler (cold start).",
+        "en": "The app asks Redis for key product:42. The key does not exist (nil): a miss. While the cache is cold the first request always takes the slow path."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["app", "cache"], "edges": ["app-cache"] },
+      "nodeStates": { "cache": { "status": "warning", "badge": "MISS" } },
+      "packets": [
+        { "edge": "app-cache", "label": "GET", "durationMs": 800 },
+        { "edge": "app-cache", "direction": "backward", "label": "(nil)", "color": "danger", "shape": "square", "startAt": 900, "durationMs": 800 }
+      ],
+      "annotations": [
+        { "id": "miss-note", "x": 760, "y": 230, "text": { "tr": "miss → yavaş yola düş", "en": "miss → fall through to slow path" }, "tone": "warning", "target": "cache" }
+      ]
+    },
+    {
+      "id": "db-read",
+      "title": { "tr": "Veritabanından oku", "en": "Read from the database" },
+      "narration": {
+        "tr": "Uygulama sorguyu PostgreSQL'e gönderir. Disk, indeks ve ağ: ~8 ms. Bu aynı zamanda sistemin darboğazıdır; amaç bu yola olabildiğince az istek düşürmektir.",
+        "en": "The app sends the query to PostgreSQL. Disk, index and network: ~8 ms. This is also the system's bottleneck; the goal is to send as few requests down this path as possible."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["app", "db"], "edges": ["app-db"] },
+      "nodeStates": { "db": { "status": "busy", "badge": "8 ms" } },
+      "packets": [
+        { "edge": "app-db", "label": "SELECT", "durationMs": 1000 },
+        { "edge": "app-db", "direction": "backward", "label": { "tr": "satır", "en": "row" }, "shape": "square", "startAt": 1100, "durationMs": 1000 }
+      ],
+      "annotations": [
+        { "id": "db-note", "x": 560, "y": 540, "text": { "tr": "Yavaş yol: her miss buraya iner", "en": "Slow path: every miss lands here" }, "tone": "info", "target": "db" }
+      ]
+    },
+    {
+      "id": "populate",
+      "title": { "tr": "Cache'i doldur", "en": "Populate the cache" },
+      "narration": {
+        "tr": "Uygulama sonucu Redis'e 300 saniyelik TTL ile yazar. TTL olmadan girdi sonsuza dek kalır ve veri değişince bayatlar; TTL en kötü durumdaki bayatlığı sınırlar.",
+        "en": "The app writes the result to Redis with a 300-second TTL. Without a TTL the entry would live forever and go stale when data changes; the TTL bounds worst-case staleness."
+      },
+      "durationMs": 2600,
+      "highlight": { "nodes": ["app", "cache"], "edges": ["app-cache-set"] },
+      "nodeStates": {
+        "cache": { "status": "success", "badge": "product:42", "sublabel": { "tr": "TTL 300 s", "en": "TTL 300 s" } },
+        "db": { "status": "idle", "badge": "" }
+      },
+      "edgeStates": { "app-cache-set": { "visible": true, "status": "active" } },
+      "packets": [{ "edge": "app-cache-set", "label": "SET … EX 300", "shape": "square", "durationMs": 900 }],
+      "annotations": [
+        { "id": "ttl-note", "x": 560, "y": 70, "text": { "tr": "TTL'e ±%10 jitter ekle: 270–330 s", "en": "Add ±10% jitter to TTL: 270–330 s" }, "tone": "info", "target": "cache" }
+      ]
+    },
+    {
+      "id": "respond",
+      "title": { "tr": "Yanıt döner", "en": "Response returns" },
+      "narration": {
+        "tr": "Kullanıcıya 200 OK döner. Toplam ≈ 1 ms (cache sorgusu) + 8 ms (DB) + 1 ms (cache yazma) ≈ 10 ms. İlk istek bedelini ödedi; sonrakiler bundan faydalanacak.",
+        "en": "The user gets 200 OK. Total ≈ 1 ms (cache lookup) + 8 ms (DB) + 1 ms (cache write) ≈ 10 ms. The first request paid the price; the following ones benefit."
+      },
+      "durationMs": 2400,
+      "highlight": { "nodes": ["app", "user"], "edges": ["app-u"] },
+      "nodeStates": { "app": { "status": "active", "badge": "≈10 ms" } },
+      "edgeStates": { "app-cache-set": { "status": "idle" } },
+      "packets": [{ "edge": "app-u", "shape": "envelope", "label": "200 OK", "durationMs": 900 }]
+    },
+    {
+      "id": "hit",
+      "title": { "tr": "İkinci istek: HIT", "en": "Second request: HIT" },
+      "narration": {
+        "tr": "Başka bir kullanıcı aynı ürünü ister. Redis'te anahtar vardır: hit. Yanıt ≈ 1 ms'de döner ve veritabanına hiç dokunulmaz. %99 isabet oranı, DB yükünü 100 kat azaltır.",
+        "en": "Another user asks for the same product. The key is in Redis: a hit. The response returns in ≈ 1 ms and the database is not touched. A 99% hit ratio cuts DB load by 100x."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["user", "app", "cache"], "edges": ["u-app", "app-cache", "app-u"] },
+      "nodeStates": {
+        "cache": { "status": "success", "badge": "HIT" },
+        "db": { "status": "muted" },
+        "app": { "status": "active", "badge": "≈1 ms" }
+      },
+      "packets": [
+        { "edge": "u-app", "shape": "envelope", "label": "#2", "durationMs": 800 },
+        { "edge": "app-cache", "label": "GET", "startAt": 900, "durationMs": 700 },
+        { "edge": "app-cache", "direction": "backward", "label": "{…}", "color": "success", "shape": "square", "startAt": 1700, "durationMs": 700 },
+        { "edge": "app-u", "shape": "envelope", "label": "200 OK", "startAt": 2500, "durationMs": 700 }
+      ],
+      "annotations": [
+        { "id": "hit-note", "x": 560, "y": 540, "text": { "tr": "DB'ye gidilmedi", "en": "DB not touched" }, "tone": "success", "target": "db" }
+      ]
+    },
+    {
+      "id": "invalidate",
+      "title": { "tr": "Güncelleme: DB'ye yaz, cache'i sil", "en": "Update: write DB, delete cache" },
+      "narration": {
+        "tr": "Ürünün fiyatı değişir. Uygulama önce veritabanını günceller, sonra cache girdisini günceller değil SİLER. Bir sonraki okuma miss alır ve taze değeri DB'den çekip cache'i yeniden doldurur. Silmek, eşzamanlı güncellemelerin yarışında cache'te eski değer kalmasını önler.",
+        "en": "The product's price changes. The app first updates the database, then DELETES the cache entry rather than updating it. The next read misses, fetches the fresh value from the DB and refills the cache. Deleting avoids a stale value surviving a race between concurrent updates."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["app", "db", "cache"], "edges": ["app-db-write", "app-cache-set"] },
+      "nodeStates": {
+        "db": { "status": "active", "badge": "price=199" },
+        "cache": { "status": "idle", "badge": "", "sublabel": { "tr": "girdi silindi", "en": "entry deleted" } },
+        "app": { "status": "active", "badge": "" }
+      },
+      "edgeStates": {
+        "app-db-write": { "visible": true, "status": "active" },
+        "app-cache-set": { "status": "active", "label": "DEL product:42" }
+      },
+      "packets": [
+        { "edge": "app-db-write", "label": "UPDATE", "shape": "square", "durationMs": 1000 },
+        { "edge": "app-cache-set", "label": "DEL", "shape": "square", "color": "danger", "startAt": 1200, "durationMs": 900 }
+      ],
+      "annotations": [
+        { "id": "inv-note", "x": 420, "y": 470, "text": { "tr": "Sıra önemli: önce DB, sonra DEL", "en": "Order matters: DB first, then DEL" }, "tone": "warning", "target": "app" }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["cache", "cache-aside", "ttl", "invalidation"]
+}

@@ -1,0 +1,186 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Uber mimarisi: konum akışı, geo indeks, eşleştirme</title>
+  <desc id="desc">Solda sürücü uygulamaları WebSocket sunucularına konum gönderir; akış Kafka üzerinden bellek içi H3 geo indekse ve zaman serisi deposuna gider. Ortada altıgen ızgara ile geo indeks ve kRing sorgusu gösterilir. Sağda yolcu uygulaması API gateway üzerinden eşleştirme servisine ulaşır; servis fiyatlama (surge), ETA/routing ve trip veritabanı ile çalışır ve teklifi WebSocket üzerinden sürücüye iletir.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+    <marker id="arrow-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-accent, #f59e0b)"/>
+    </marker>
+    <marker id="arrow-p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-primary, #6366f1)"/>
+    </marker>
+  </defs>
+
+  <!-- Bölge etiketleri -->
+  <rect x="16" y="16" width="300" height="508" rx="14" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)" stroke-dasharray="6 5"/>
+  <text x="166" y="40" text-anchor="middle" font-size="12" font-weight="600" fill="var(--da-accent, #f59e0b)">KONUM AKIŞI — 1.25 M/s</text>
+  <rect x="332" y="16" width="290" height="508" rx="14" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)" stroke-dasharray="6 5"/>
+  <text x="477" y="40" text-anchor="middle" font-size="12" font-weight="600" fill="var(--da-success, #10b981)">GEO İNDEKS — H3, bellek içi</text>
+  <rect x="638" y="16" width="306" height="508" rx="14" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)" stroke-dasharray="6 5"/>
+  <text x="791" y="40" text-anchor="middle" font-size="12" font-weight="600" fill="var(--da-primary, #6366f1)">EŞLEŞTİRME — &lt; 2 s</text>
+
+  <!-- Sürücüler -->
+  <g fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.3">
+    <rect x="36" y="70" width="90" height="36" rx="8"/>
+    <rect x="36" y="114" width="90" height="36" rx="8"/>
+    <rect x="36" y="158" width="90" height="36" rx="8"/>
+  </g>
+  <g font-size="11" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="81" y="92">Sürücü app</text>
+    <text x="81" y="136">Sürücü app</text>
+    <text x="81" y="180">Sürücü app</text>
+  </g>
+  <text x="81" y="212" text-anchor="middle" font-size="9.5" fill="var(--da-muted, #64748b)">GPS her 4 s · ~100 B</text>
+
+  <!-- WebSocket sunucuları -->
+  <rect x="170" y="90" width="120" height="70" rx="10" fill="var(--da-primary, #6366f1)" opacity="0.12" stroke="var(--da-primary, #6366f1)" stroke-width="1.6"/>
+  <text x="230" y="113" text-anchor="middle" font-size="12" fill="var(--da-fg, #0f172a)">WebSocket</text>
+  <text x="230" y="128" text-anchor="middle" font-size="12" fill="var(--da-fg, #0f172a)">sunucuları</text>
+  <text x="230" y="146" text-anchor="middle" font-size="9.5" fill="var(--da-muted, #64748b)">100 K bağlantı / sunucu</text>
+
+  <g stroke="var(--da-muted, #64748b)" stroke-width="1.4" fill="none" marker-end="url(#arrow)">
+    <path d="M 126 88 C 150 88, 150 110, 170 112"/>
+    <path d="M 126 132 L 170 128"/>
+    <path d="M 126 176 C 150 176, 150 146, 170 142"/>
+  </g>
+
+  <!-- Kafka -->
+  <rect x="170" y="210" width="120" height="50" rx="10" fill="var(--da-accent, #f59e0b)" opacity="0.12" stroke="var(--da-accent, #f59e0b)" stroke-width="1.6"/>
+  <text x="230" y="231" text-anchor="middle" font-size="12" fill="var(--da-fg, #0f172a)">Kafka</text>
+  <text x="230" y="247" text-anchor="middle" font-size="9.5" fill="var(--da-muted, #64748b)">location-updates · key: driverId</text>
+  <g stroke="var(--da-accent, #f59e0b)" stroke-width="1.5" fill="none" marker-end="url(#arrow-a)">
+    <path d="M 230 160 L 230 210"/>
+    <path d="M 290 235 L 332 235" />
+    <path d="M 230 260 L 230 320"/>
+  </g>
+  <text x="248" y="190" font-size="9" fill="var(--da-accent, #f59e0b)">mikro-parti 100 ms</text>
+
+  <!-- Zaman serisi deposu -->
+  <rect x="170" y="320" width="120" height="50" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)" stroke-width="1.4"/>
+  <text x="230" y="341" text-anchor="middle" font-size="12" fill="var(--da-fg, #0f172a)">Zaman serisi</text>
+  <text x="230" y="357" text-anchor="middle" font-size="9.5" fill="var(--da-muted, #64748b)">yolculuk izi · 10 TB/gün</text>
+
+  <!-- Surge hesaplayıcı -->
+  <rect x="36" y="400" width="254" height="60" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)" stroke-width="1.4"/>
+  <text x="163" y="421" text-anchor="middle" font-size="12" fill="var(--da-fg, #0f172a)">Akış işleme: arz / talep per hücre</text>
+  <text x="163" y="438" text-anchor="middle" font-size="9.5" fill="var(--da-muted, #64748b)">5 dk pencere → surge çarpanı → komşularla yumuşat</text>
+  <text x="163" y="452" text-anchor="middle" font-size="9.5" fill="var(--da-muted, #64748b)">istekler + uygulama açılışları = talep</text>
+  <g stroke="var(--da-accent, #f59e0b)" stroke-width="1.3" fill="none" stroke-dasharray="4 3" marker-end="url(#arrow-a)">
+    <path d="M 200 260 C 150 290, 120 330, 110 400"/>
+  </g>
+
+  <!-- GEO İNDEKS: altıgen ızgara -->
+  <g fill="none" stroke="var(--da-border, #cbd5e1)" stroke-width="1.2">
+    <polygon points="477,86 500,99 500,125 477,138 454,125 454,99"/>
+    <polygon points="523,86 546,99 546,125 523,138 500,125 500,99"/>
+    <polygon points="431,86 454,99 454,125 431,138 408,125 408,99"/>
+    <polygon points="454,125 477,138 477,164 454,177 431,164 431,138"/>
+    <polygon points="500,125 523,138 523,164 500,177 477,164 477,138"/>
+    <polygon points="546,125 569,138 569,164 546,177 523,164 523,138"/>
+    <polygon points="408,125 431,138 431,164 408,177 385,164 385,138"/>
+    <polygon points="431,164 454,177 454,203 431,216 408,203 408,177"/>
+    <polygon points="477,164 500,177 500,203 477,216 454,203 454,177"/>
+    <polygon points="523,164 546,177 546,203 523,216 500,203 500,177"/>
+    <polygon points="454,203 477,216 477,242 454,255 431,242 431,216"/>
+    <polygon points="500,203 523,216 523,242 500,255 477,242 477,216"/>
+  </g>
+  <!-- merkez + halka vurgusu -->
+  <polygon points="477,164 500,177 500,203 477,216 454,203 454,177" fill="var(--da-primary, #6366f1)" opacity="0.35"/>
+  <g fill="var(--da-primary, #6366f1)" opacity="0.14">
+    <polygon points="454,125 477,138 477,164 454,177 431,164 431,138"/>
+    <polygon points="500,125 523,138 523,164 500,177 477,164 477,138"/>
+    <polygon points="431,164 454,177 454,203 431,216 408,203 408,177"/>
+    <polygon points="523,164 546,177 546,203 523,216 500,203 500,177"/>
+    <polygon points="454,203 477,216 477,242 454,255 431,242 431,216"/>
+    <polygon points="500,203 523,216 523,242 500,255 477,242 477,216"/>
+  </g>
+  <!-- yolcu ve sürücü noktaları -->
+  <circle cx="477" cy="190" r="5" fill="var(--da-danger, #ef4444)"/>
+  <text x="488" y="194" font-size="9" fill="var(--da-danger, #ef4444)">yolcu</text>
+  <g fill="var(--da-success, #10b981)">
+    <circle cx="462" cy="150" r="3.5"/>
+    <circle cx="512" cy="150" r="3.5"/>
+    <circle cx="445" cy="190" r="3.5"/>
+    <circle cx="520" cy="195" r="3.5"/>
+    <circle cx="468" cy="232" r="3.5"/>
+    <circle cx="535" cy="110" r="3.5"/>
+    <circle cx="420" cy="110" r="3.5"/>
+    <circle cx="500" cy="248" r="3.5"/>
+  </g>
+  <text x="477" y="276" text-anchor="middle" font-size="10" fill="var(--da-fg, #0f172a)">kRing(cell, 1) → 7 hücre · boşta sürücüler</text>
+  <text x="477" y="290" text-anchor="middle" font-size="9.5" fill="var(--da-muted, #64748b)">sınır problemi yok: komşular dahil</text>
+
+  <!-- indeks yapısı -->
+  <rect x="352" y="312" width="250" height="96" rx="10" fill="var(--da-success, #10b981)" opacity="0.1" stroke="var(--da-success, #10b981)" stroke-width="1.5"/>
+  <text x="477" y="333" text-anchor="middle" font-size="12" font-weight="600" fill="var(--da-fg, #0f172a)">Redis / Ringpop (şehir bazlı)</text>
+  <g font-size="10" fill="var(--da-fg, #0f172a)">
+    <text x="366" y="353">cell:{h3} → Set&lt;driverId&gt;      TTL 30 s</text>
+    <text x="366" y="370">driver:{id} → {lat, lng, cell, status, ts}</text>
+    <text x="366" y="387">status: IDLE → OFFERED → BUSY (CAS)</text>
+  </g>
+  <text x="477" y="432" text-anchor="middle" font-size="9.5" fill="var(--da-muted, #64748b)">yalnızca son konum · 15 s'de çürür</text>
+
+  <!-- karşılaştırma -->
+  <g font-size="9.5" fill="var(--da-muted, #64748b)">
+    <text x="352" y="462">geohash: base32 ön ek, kare, sınır problemi</text>
+    <text x="352" y="478">quadtree: yoğunluğa göre bölünür, güncellemesi zor</text>
+    <text x="352" y="494">H3: altıgen, eşit komşu uzaklığı, kRing basit</text>
+  </g>
+
+  <!-- EŞLEŞTİRME -->
+  <rect x="658" y="70" width="90" height="46" rx="8" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.3"/>
+  <text x="703" y="90" text-anchor="middle" font-size="11" fill="var(--da-fg, #0f172a)">Yolcu app</text>
+  <text x="703" y="105" text-anchor="middle" font-size="9.5" fill="var(--da-muted, #64748b)">POST /rides</text>
+
+  <rect x="774" y="70" width="110" height="46" rx="8" fill="var(--da-primary, #6366f1)" opacity="0.12" stroke="var(--da-primary, #6366f1)" stroke-width="1.5"/>
+  <text x="829" y="90" text-anchor="middle" font-size="11" fill="var(--da-fg, #0f172a)">API Gateway</text>
+  <text x="829" y="105" text-anchor="middle" font-size="9.5" fill="var(--da-muted, #64748b)">auth · idempotency</text>
+
+  <rect x="700" y="160" width="190" height="80" rx="10" fill="var(--da-primary, #6366f1)" opacity="0.12" stroke="var(--da-primary, #6366f1)" stroke-width="1.6"/>
+  <text x="795" y="181" text-anchor="middle" font-size="12" font-weight="600" fill="var(--da-fg, #0f172a)">Eşleştirme servisi</text>
+  <g font-size="9.5" fill="var(--da-muted, #64748b)" text-anchor="middle">
+    <text x="795" y="198">1. kRing adayları · 2. ETA sırala</text>
+    <text x="795" y="212">3. CAS ile teklif · 15 s zamanlayıcı</text>
+    <text x="795" y="226">toplu eşleştirme (2 s pencere)</text>
+  </g>
+
+  <rect x="658" y="280" width="110" height="50" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)" stroke-width="1.4"/>
+  <text x="713" y="300" text-anchor="middle" font-size="11.5" fill="var(--da-fg, #0f172a)">ETA / Routing</text>
+  <text x="713" y="316" text-anchor="middle" font-size="9.5" fill="var(--da-muted, #64748b)">yol grafı · ~2 ms</text>
+
+  <rect x="784" y="280" width="110" height="50" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)" stroke-width="1.4"/>
+  <text x="839" y="300" text-anchor="middle" font-size="11.5" fill="var(--da-fg, #0f172a)">Fiyatlama</text>
+  <text x="839" y="316" text-anchor="middle" font-size="9.5" fill="var(--da-muted, #64748b)">surge çarpanı · teklif kilidi</text>
+
+  <rect x="658" y="370" width="110" height="50" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)" stroke-width="1.4"/>
+  <text x="713" y="390" text-anchor="middle" font-size="11.5" fill="var(--da-fg, #0f172a)">Trip DB</text>
+  <text x="713" y="406" text-anchor="middle" font-size="9.5" fill="var(--da-muted, #64748b)">MATCHED · ödeme · geçmiş</text>
+
+  <rect x="784" y="370" width="110" height="50" rx="10" fill="var(--da-accent, #f59e0b)" opacity="0.12" stroke="var(--da-accent, #f59e0b)" stroke-width="1.5"/>
+  <text x="839" y="390" text-anchor="middle" font-size="11.5" fill="var(--da-fg, #0f172a)">Kafka</text>
+  <text x="839" y="406" text-anchor="middle" font-size="9.5" fill="var(--da-muted, #64748b)">trip-events</text>
+
+  <!-- eşleştirme okları -->
+  <g stroke="var(--da-primary, #6366f1)" stroke-width="1.5" fill="none" marker-end="url(#arrow-p)">
+    <path d="M 748 93 L 774 93"/>
+    <path d="M 829 116 L 810 160"/>
+    <path d="M 740 240 L 718 280"/>
+    <path d="M 850 240 L 842 280"/>
+    <path d="M 712 330 L 712 370"/>
+    <path d="M 839 330 L 839 370"/>
+  </g>
+  <!-- eşleştirme → geo indeks -->
+  <g stroke="var(--da-success, #10b981)" stroke-width="1.5" fill="none" marker-end="url(#arrow)">
+    <path d="M 700 200 C 660 200, 640 190, 602 185"/>
+  </g>
+  <text x="652" y="178" text-anchor="middle" font-size="9" fill="var(--da-success, #10b981)">kRing sorgusu</text>
+  <!-- Kafka → geo -->
+  <text x="300" y="226" font-size="9" fill="var(--da-accent, #f59e0b)">indeksle</text>
+  <!-- teklif → WebSocket -->
+  <g stroke="var(--da-primary, #6366f1)" stroke-width="1.4" fill="none" stroke-dasharray="5 3" marker-end="url(#arrow-p)">
+    <path d="M 700 230 C 560 470, 300 520, 230 160"/>
+  </g>
+  <text x="520" y="516" text-anchor="middle" font-size="9.5" fill="var(--da-primary, #6366f1)">teklif → sürücünün WebSocket bağlantısı → ACCEPT</text>
+</svg>

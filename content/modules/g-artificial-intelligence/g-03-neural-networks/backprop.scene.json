@@ -1,0 +1,190 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "g-03-neural-networks-backprop",
+  "title": { "tr": "Geri Yayılım: Hata Geriye Akar", "en": "Backpropagation: the Error Flows Back" },
+  "summary": {
+    "tr": "Aynı 2-3-1 ağda kaybın gradyanı zincir kuralıyla çıkıştan girişe taşınır, ağırlık gradyanları hesaplanır ve SGD ile güncellenir.",
+    "en": "On the same 2-3-1 network the loss gradient is carried from output to input with the chain rule, weight gradients are computed and updated with SGD."
+  },
+  "a11y": {
+    "description": {
+      "tr": "İleri yayılım sahnesindeki ağ. Önce çıkış hatası δ = ŷ − y = −0.386 hesaplanır. Sonra çıkış ağırlıklarının gradyanları (−0.174, 0, −0.174) bulunur. Hata gizli nöronlara ağırlıklarla çarpılarak taşınır: h1 için −0.386, h2 için 0 (ReLU kapalı), h3 için −0.270. Giriş ağırlıklarının gradyanları hesaplanır ve tüm ağırlıklar η = 0.1 ile güncellenir; yeni ileri geçişte kayıp 0.488'den 0.420'ye düşer.",
+      "en": "The network from the forward scene. First the output error δ = ŷ − y = −0.386 is computed. Then the output weight gradients (−0.174, 0, −0.174) are found. The error is carried to the hidden neurons multiplied by the weights: −0.386 for h1, 0 for h2 (ReLU closed), −0.270 for h3. Input weight gradients are computed and all weights updated with η = 0.1; a new forward pass lowers the loss from 0.488 to 0.420."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "x1", "kind": "neuron", "label": "x₁", "sublabel": "1.0", "x": 130, "y": 200, "w": 80, "h": 60 },
+    { "id": "x2", "kind": "neuron", "label": "x₂", "sublabel": "0.5", "x": 130, "y": 400, "w": 80, "h": 60 },
+    { "id": "h1", "kind": "neuron", "label": "h₁", "sublabel": "a = 0.45", "x": 430, "y": 120, "w": 90, "h": 64 },
+    { "id": "h2", "kind": "neuron", "label": "h₂", "sublabel": "a = 0", "x": 430, "y": 300, "w": 90, "h": 64 },
+    { "id": "h3", "kind": "neuron", "label": "h₃", "sublabel": "a = 0.45", "x": 430, "y": 480, "w": 90, "h": 64 },
+    { "id": "out", "kind": "neuron", "label": "ŷ", "sublabel": "0.614", "x": 720, "y": 300, "w": 90, "h": 64 },
+    { "id": "loss", "kind": "generic", "label": { "tr": "Kayıp", "en": "Loss" }, "sublabel": "L = 0.488", "x": 900, "y": 300, "w": 120, "h": 64 }
+  ],
+  "edges": [
+    { "id": "x1-h1", "from": "x1", "to": "h1", "kind": "data", "label": "w = 0.5" },
+    { "id": "x1-h2", "from": "x1", "to": "h2", "kind": "data", "label": "w = −0.8" },
+    { "id": "x1-h3", "from": "x1", "to": "h3", "kind": "data", "label": "w = 0.2" },
+    { "id": "x2-h1", "from": "x2", "to": "h1", "kind": "data", "label": "w = −0.3" },
+    { "id": "x2-h2", "from": "x2", "to": "h2", "kind": "data", "label": "w = 0.6" },
+    { "id": "x2-h3", "from": "x2", "to": "h3", "kind": "data", "label": "w = 0.9" },
+    { "id": "h1-out", "from": "h1", "to": "out", "kind": "data", "label": "v = 1.0" },
+    { "id": "h2-out", "from": "h2", "to": "out", "kind": "data", "label": "v = −0.5" },
+    { "id": "h3-out", "from": "h3", "to": "out", "kind": "data", "label": "v = 0.7" },
+    { "id": "out-loss", "from": "out", "to": "loss", "kind": "response" }
+  ],
+  "steps": [
+    {
+      "id": "output-delta",
+      "title": { "tr": "1. Çıkış hatası", "en": "1. Output error" },
+      "narration": {
+        "tr": "Sigmoid + BCE birleşiminde zincir kuralı güzelce sadeleşir: δ_out = ∂L/∂z = ŷ − y = 0.614 − 1 = −0.386. Negatif işaret 'z büyümeli' demek.",
+        "en": "With sigmoid + BCE the chain rule simplifies nicely: δ_out = ∂L/∂z = ŷ − y = 0.614 − 1 = −0.386. The negative sign means 'z should grow'."
+      },
+      "durationMs": 3500,
+      "inherit": false,
+      "highlight": { "nodes": ["loss", "out"], "edges": ["out-loss"] },
+      "nodeStates": {
+        "loss": { "status": "warning", "progress": 0.49 },
+        "out": { "status": "error", "badge": "δ = −0.386" }
+      },
+      "edgeStates": { "out-loss": { "status": "error" } },
+      "packets": [
+        { "edge": "out-loss", "direction": "backward", "label": "∂L/∂ŷ", "color": "danger", "shape": "diamond", "durationMs": 1200 }
+      ],
+      "annotations": [
+        { "id": "delta-note", "x": 720, "y": 420, "text": { "tr": "δ_out = ŷ − y (sigmoid·BCE sadeleşmesi)", "en": "δ_out = ŷ − y (sigmoid·BCE shortcut)" }, "tone": "danger", "target": "out" }
+      ]
+    },
+    {
+      "id": "output-grads",
+      "title": { "tr": "2. Çıkış ağırlıklarının gradyanı", "en": "2. Output weight gradients" },
+      "narration": {
+        "tr": "∂L/∂vⱼ = δ_out · aⱼ. v₁: −0.386·0.45 = −0.174. v₂: −0.386·0 = 0 (h₂ susuyordu). v₃: −0.386·0.45 = −0.174. Sapma: ∂L/∂b = δ_out = −0.386.",
+        "en": "∂L/∂vⱼ = δ_out · aⱼ. v₁: −0.386·0.45 = −0.174. v₂: −0.386·0 = 0 (h₂ was silent). v₃: −0.386·0.45 = −0.174. Bias: ∂L/∂b = δ_out = −0.386."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["out"], "edges": ["h1-out", "h2-out", "h3-out"] },
+      "edgeStates": {
+        "h1-out": { "status": "error", "label": "∂L/∂v₁ = −0.174" },
+        "h2-out": { "status": "muted", "label": "∂L/∂v₂ = 0" },
+        "h3-out": { "status": "error", "label": "∂L/∂v₃ = −0.174" }
+      },
+      "annotations": [
+        { "id": "grad-rule", "x": 580, "y": 560, "text": { "tr": "gradyan = hedefin hatası × kaynağın aktivasyonu", "en": "gradient = target's error × source's activation" }, "tone": "info" }
+      ]
+    },
+    {
+      "id": "hidden-delta",
+      "title": { "tr": "3. Hatayı gizli katmana taşı", "en": "3. Carry the error to the hidden layer" },
+      "narration": {
+        "tr": "δⱼ = φ'(zⱼ) · vⱼ · δ_out. h₁: 1·1.0·(−0.386) = −0.386. h₂: ReLU'(−0.5) = 0 → δ = 0, gradyan geçmez. h₃: 1·0.7·(−0.386) = −0.270.",
+        "en": "δⱼ = φ'(zⱼ) · vⱼ · δ_out. h₁: 1·1.0·(−0.386) = −0.386. h₂: ReLU'(−0.5) = 0 → δ = 0, no gradient passes. h₃: 1·0.7·(−0.386) = −0.270."
+      },
+      "durationMs": 4200,
+      "highlight": { "nodes": ["h1", "h2", "h3"], "edges": ["h1-out", "h3-out"] },
+      "nodeStates": {
+        "h1": { "status": "error", "badge": "δ = −0.386" },
+        "h2": { "status": "muted", "badge": "δ = 0" },
+        "h3": { "status": "error", "badge": "δ = −0.270" }
+      },
+      "packets": [
+        { "edge": "h1-out", "direction": "backward", "label": "×1.0", "color": "danger", "shape": "diamond", "durationMs": 1200 },
+        { "edge": "h3-out", "direction": "backward", "label": "×0.7", "color": "danger", "shape": "diamond", "startAt": 400, "durationMs": 1200 },
+        { "edge": "h2-out", "direction": "backward", "label": "×0", "color": "muted", "shape": "diamond", "startAt": 800, "durationMs": 1200 }
+      ],
+      "annotations": [
+        { "id": "dead-note", "x": 600, "y": 230, "text": { "tr": "ReLU kapalıysa türev 0: gradyan burada durur", "en": "Closed ReLU has derivative 0: the gradient stops here" }, "tone": "warning", "target": "h2" }
+      ]
+    },
+    {
+      "id": "input-grads",
+      "title": { "tr": "4. Giriş ağırlıklarının gradyanı", "en": "4. Input weight gradients" },
+      "narration": {
+        "tr": "Aynı kural: ∂L/∂wᵢⱼ = δⱼ · xᵢ. h₁'e gelenler: x₁ için −0.386·1.0 = −0.386, x₂ için −0.386·0.5 = −0.193. h₃'e gelenler: −0.270 ve −0.135. h₂'ye gelenler: 0.",
+        "en": "Same rule: ∂L/∂wᵢⱼ = δⱼ · xᵢ. Into h₁: −0.386·1.0 = −0.386 for x₁, −0.386·0.5 = −0.193 for x₂. Into h₃: −0.270 and −0.135. Into h₂: 0."
+      },
+      "durationMs": 4200,
+      "highlight": { "nodes": ["x1", "x2"], "edges": ["x1-h1", "x2-h1", "x1-h3", "x2-h3"] },
+      "edgeStates": {
+        "x1-h1": { "status": "error", "label": "∂ = −0.386" },
+        "x2-h1": { "status": "error", "label": "∂ = −0.193" },
+        "x1-h2": { "status": "muted", "label": "∂ = 0" },
+        "x2-h2": { "status": "muted", "label": "∂ = 0" },
+        "x1-h3": { "status": "error", "label": "∂ = −0.270" },
+        "x2-h3": { "status": "error", "label": "∂ = −0.135" }
+      },
+      "packets": [
+        { "edge": "x1-h1", "direction": "backward", "color": "danger", "shape": "diamond", "durationMs": 1100 },
+        { "edge": "x2-h1", "direction": "backward", "color": "danger", "shape": "diamond", "startAt": 300, "durationMs": 1100 },
+        { "edge": "x1-h3", "direction": "backward", "color": "danger", "shape": "diamond", "startAt": 600, "durationMs": 1100 },
+        { "edge": "x2-h3", "direction": "backward", "color": "danger", "shape": "diamond", "startAt": 900, "durationMs": 1100 }
+      ],
+      "annotations": [
+        { "id": "memory-note", "x": 280, "y": 560, "text": { "tr": "İleri geçişte saklanan a ve z değerleri burada kullanılır", "en": "The a and z values stored in the forward pass are used here" }, "tone": "info" }
+      ]
+    },
+    {
+      "id": "update",
+      "title": { "tr": "5. SGD güncellemesi (η = 0.1)", "en": "5. SGD update (η = 0.1)" },
+      "narration": {
+        "tr": "w ← w − η·∂L/∂w. v₁: 1.0 + 0.0174 = 1.017. v₃: 0.7 + 0.0174 = 0.717. w(x₁→h₁): 0.5 + 0.0386 = 0.539. w(x₂→h₁): −0.3 + 0.0193 = −0.281. w(x₁→h₃): 0.2 + 0.027 = 0.227. w(x₂→h₃): 0.9 + 0.0135 = 0.914. h₂'nin ağırlıkları değişmez.",
+        "en": "w ← w − η·∂L/∂w. v₁: 1.0 + 0.0174 = 1.017. v₃: 0.7 + 0.0174 = 0.717. w(x₁→h₁): 0.5 + 0.0386 = 0.539. w(x₂→h₁): −0.3 + 0.0193 = −0.281. w(x₁→h₃): 0.2 + 0.027 = 0.227. w(x₂→h₃): 0.9 + 0.0135 = 0.914. h₂'s weights do not change."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["h1", "h3", "out"], "edges": ["x1-h1", "x2-h1", "x1-h3", "x2-h3", "h1-out", "h3-out"] },
+      "nodeStates": {
+        "h1": { "status": "success", "badge": "b = 0.139" },
+        "h3": { "status": "success", "badge": "b = −0.173" },
+        "out": { "status": "success", "badge": "b = −0.261" }
+      },
+      "edgeStates": {
+        "x1-h1": { "status": "active", "label": "w = 0.539" },
+        "x2-h1": { "status": "active", "label": "w = −0.281" },
+        "x1-h2": { "status": "idle", "label": "w = −0.8" },
+        "x2-h2": { "status": "idle", "label": "w = 0.6" },
+        "x1-h3": { "status": "active", "label": "w = 0.227" },
+        "x2-h3": { "status": "active", "label": "w = 0.914" },
+        "h1-out": { "status": "active", "label": "v = 1.017" },
+        "h2-out": { "status": "idle", "label": "v = −0.5" },
+        "h3-out": { "status": "active", "label": "v = 0.717" }
+      },
+      "annotations": [
+        { "id": "update-note", "x": 280, "y": 560, "text": { "tr": "Gradyan negatif → ağırlık büyür; tüm adımlar küçük (η = 0.1)", "en": "Negative gradient → weight grows; all steps are small (η = 0.1)" }, "tone": "success" }
+      ]
+    },
+    {
+      "id": "new-forward",
+      "title": { "tr": "6. Yeni ileri geçiş", "en": "6. New forward pass" },
+      "narration": {
+        "tr": "Güncel ağırlıklarla aynı örnek: h₁ = 0.537, h₃ = 0.511, z_out = 0.652, ŷ = 0.657, L = 0.420. Tek adımda kayıp 0.488'den 0.420'ye düştü. Eğitim bu döngüyü milyonlarca kez, mini-batch'ler üzerinde tekrarlar.",
+        "en": "The same example with updated weights: h₁ = 0.537, h₃ = 0.511, z_out = 0.652, ŷ = 0.657, L = 0.420. One step lowered the loss from 0.488 to 0.420. Training repeats this loop millions of times over mini-batches."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["out", "loss"], "edges": ["out-loss"] },
+      "nodeStates": {
+        "h1": { "badge": "a = 0.537" },
+        "h3": { "badge": "a = 0.511" },
+        "out": { "badge": "ŷ = 0.657", "sublabel": "0.657" },
+        "loss": { "status": "success", "badge": "L = 0.420", "sublabel": "0.488 → 0.420", "progress": 0.42 }
+      },
+      "edgeStates": {
+        "x1-h1": { "status": "idle" }, "x2-h1": { "status": "idle" }, "x1-h3": { "status": "idle" }, "x2-h3": { "status": "idle" },
+        "h1-out": { "status": "idle" }, "h3-out": { "status": "idle" }, "out-loss": { "status": "active" }
+      },
+      "packets": [
+        { "edge": "x1-h1", "durationMs": 700 }, { "edge": "x2-h3", "durationMs": 700 },
+        { "edge": "h1-out", "startAt": 700, "durationMs": 700 }, { "edge": "h3-out", "startAt": 700, "durationMs": 700 },
+        { "edge": "out-loss", "startAt": 1400, "durationMs": 800, "color": "success", "shape": "envelope", "label": "0.420" }
+      ],
+      "annotations": [
+        { "id": "loop-note", "x": 880, "y": 420, "text": { "tr": "forward → loss → backward → update → tekrar", "en": "forward → loss → backward → update → repeat" }, "tone": "success", "target": "loss" }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["neural-network", "backpropagation", "chain-rule", "sgd"]
+}

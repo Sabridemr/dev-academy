@@ -1,0 +1,187 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "a-03-scale-up-vs-scale-out",
+  "title": { "tr": "Tek Sunucudan Replikalara: Dikey ve Yatay Ölçekleme", "en": "From One Server to Replicas: Vertical and Horizontal Scaling" },
+  "summary": {
+    "tr": "Trafik artınca tek sunucunun CPU'sunun %100'e dayanması, dikey büyütmenin geçici rahatlaması ve tavanı, ardından load balancer arkasına yatay replikalar eklenerek yükün paylaşılması ve bir replika düşse bile hizmetin sürmesi.",
+    "en": "A single server's CPU hitting 100% as traffic grows, the temporary relief and ceiling of scaling up, then horizontal replicas behind a load balancer sharing the load and service continuing even when a replica fails."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda kullanıcılar, ortada bir load balancer (başta gizli), sağda sunucular bulunur. Başlangıçta tek sunucu vardır ve trafik arttıkça doluluk çubuğu %100'e ulaşır, istekler zaman aşımına uğrar. Sunucu dikey olarak büyütülür; doluluk %45'e düşer ama trafik tekrar artınca yine dolar ve bu sefer daha büyük makine yoktur. Ardından load balancer görünür olur ve üç eş replika eklenir; her birinin doluluğu %35 civarına iner. Son adımda bir replika çöker, kalan ikisi yükü paylaşır ve kullanıcı kesinti görmez.",
+      "en": "Users on the left, a load balancer in the middle (hidden at first) and servers on the right. Initially there is a single server whose utilisation bar reaches 100% as traffic grows and requests time out. The server is scaled up vertically; utilisation drops to 45% but fills again when traffic rises and this time no bigger machine exists. Then the load balancer appears and three identical replicas are added; each sits at about 35%. In the final step one replica crashes, the remaining two share the load and users see no outage."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "users", "kind": "user", "label": { "tr": "Kullanıcılar", "en": "Users" }, "sublabel": "1.000 RPS", "x": 120, "y": 300, "w": 130, "h": 70 },
+    { "id": "lb", "kind": "lb", "label": "Load Balancer", "sublabel": { "tr": "henüz yok", "en": "not yet" }, "x": 440, "y": 300, "w": 150, "h": 76 },
+    { "id": "s1", "kind": "server", "label": "S1", "sublabel": "4 vCPU · 16 GB", "x": 800, "y": 300, "w": 150, "h": 80 },
+    { "id": "s2", "kind": "server", "label": "S2", "sublabel": "4 vCPU · 16 GB", "x": 800, "y": 140, "w": 150, "h": 80 },
+    { "id": "s3", "kind": "server", "label": "S3", "sublabel": "4 vCPU · 16 GB", "x": 800, "y": 460, "w": 150, "h": 80 }
+  ],
+  "edges": [
+    { "id": "u-s1", "from": "users", "to": "s1", "kind": "request", "label": { "tr": "doğrudan", "en": "direct" } },
+    { "id": "u-lb", "from": "users", "to": "lb", "kind": "request" },
+    { "id": "lb-s1", "from": "lb", "to": "s1", "kind": "request" },
+    { "id": "lb-s2", "from": "lb", "to": "s2", "kind": "request", "curvature": -0.15 },
+    { "id": "lb-s3", "from": "lb", "to": "s3", "kind": "request", "curvature": 0.15 }
+  ],
+  "steps": [
+    {
+      "id": "single-ok",
+      "title": { "tr": "Tek sunucu, rahat günler", "en": "One server, easy days" },
+      "narration": {
+        "tr": "Başlangıçta tek bir sunucu tüm trafiği karşılıyor. 1.000 istek/saniye ile CPU %40 civarında; gecikme düşük, kuyruk yok. Çoğu ürün bu aşamada başlar ve bu doğru bir tercihtir.",
+        "en": "At first a single server handles all traffic. At 1,000 requests/second the CPU sits around 40%; latency is low, there is no queue. Most products start here, and that is the right choice."
+      },
+      "durationMs": 3500,
+      "inherit": false,
+      "highlight": { "nodes": ["users", "s1"], "edges": ["u-s1"] },
+      "nodeStates": {
+        "users": { "status": "active", "sublabel": "1.000 RPS" },
+        "s1": { "status": "active", "progress": 0.4, "badge": "CPU 40%" },
+        "lb": { "visible": false },
+        "s2": { "visible": false },
+        "s3": { "visible": false }
+      },
+      "edgeStates": { "u-lb": { "visible": false }, "lb-s1": { "visible": false }, "lb-s2": { "visible": false }, "lb-s3": { "visible": false } },
+      "packets": [
+        { "edge": "u-s1", "shape": "envelope", "durationMs": 900, "repeat": 3, "repeatGapMs": 250 }
+      ],
+      "annotations": [
+        { "id": "ok-note", "x": 800, "y": 380, "text": { "tr": "p99: 80 ms", "en": "p99: 80 ms" }, "tone": "success", "target": "s1" }
+      ]
+    },
+    {
+      "id": "saturated",
+      "title": { "tr": "Trafik 3 kat arttı: CPU %100", "en": "Traffic tripled: CPU at 100%" },
+      "narration": {
+        "tr": "Bir kampanya ile trafik 3.000 RPS'ye çıkıyor. CPU %100'e yapışır; kuyruk teorisinin dediği gibi doluluk %80'i geçince gecikme üstel artar. İstekler zaman aşımına uğrar, kullanıcılar 503 görür.",
+        "en": "A campaign pushes traffic to 3,000 RPS. The CPU pins at 100%; as queueing theory predicts, latency grows exponentially past 80% utilisation. Requests time out and users see 503s."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["s1"], "edges": ["u-s1"] },
+      "nodeStates": {
+        "users": { "sublabel": "3.000 RPS" },
+        "s1": { "status": "error", "progress": 1, "badge": "CPU 100%" }
+      },
+      "edgeStates": { "u-s1": { "status": "error", "label": { "tr": "timeout", "en": "timeout" } } },
+      "packets": [
+        { "edge": "u-s1", "shape": "envelope", "durationMs": 700, "repeat": 4, "repeatGapMs": 120 },
+        { "edge": "u-s1", "shape": "square", "direction": "backward", "color": "danger", "label": "503", "startAt": 1600, "durationMs": 900, "repeat": 2, "repeatGapMs": 200 }
+      ],
+      "annotations": [
+        { "id": "sat-note", "x": 800, "y": 380, "text": { "tr": "p99: 4.200 ms · kuyruk şişiyor", "en": "p99: 4,200 ms · queue growing" }, "tone": "danger", "target": "s1" }
+      ]
+    },
+    {
+      "id": "scale-up",
+      "title": { "tr": "Dikey ölçekleme: makineyi büyüt", "en": "Scale up: a bigger machine" },
+      "narration": {
+        "tr": "En hızlı çözüm: sunucuyu 4 vCPU'dan 16 vCPU'ya yükseltmek. Kod değişmez, veri yerinde kalır. Kısa bir yeniden başlatma sonrası CPU %45'e düşer, gecikme normale döner. Ama hâlâ tek makine var: çökerse her şey durur.",
+        "en": "The quickest fix: upgrade the server from 4 to 16 vCPUs. No code change, data stays in place. After a short restart the CPU drops to 45% and latency returns to normal. But it is still one machine: if it dies, everything stops."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["s1"], "edges": ["u-s1"] },
+      "nodeStates": {
+        "s1": { "status": "success", "progress": 0.45, "badge": "CPU 45%", "sublabel": "16 vCPU · 64 GB", "label": "S1 (XL)" }
+      },
+      "edgeStates": { "u-s1": { "status": "active", "label": { "tr": "doğrudan", "en": "direct" } } },
+      "packets": [
+        { "edge": "u-s1", "shape": "envelope", "durationMs": 800, "repeat": 4, "repeatGapMs": 150 },
+        { "edge": "u-s1", "shape": "dot", "direction": "backward", "color": "success", "label": "200", "startAt": 900, "durationMs": 800, "repeat": 3, "repeatGapMs": 200 }
+      ],
+      "annotations": [
+        { "id": "up-note", "x": 800, "y": 380, "text": { "tr": "p99: 95 ms · ama hâlâ SPOF", "en": "p99: 95 ms · but still a SPOF" }, "tone": "warning", "target": "s1" },
+        { "id": "up-cost", "x": 440, "y": 480, "text": { "tr": "4 kat güç ≈ 5–6 kat fiyat; yükseltme için kısa downtime", "en": "4× power ≈ 5–6× price; short downtime for the upgrade" }, "tone": "info" }
+      ]
+    },
+    {
+      "id": "ceiling",
+      "title": { "tr": "Tavan: daha büyüğü yok", "en": "The ceiling: nothing bigger" },
+      "narration": {
+        "tr": "Büyüme sürer, trafik 9.000 RPS olur. Büyük makine de %100'e dayanır. Bir sonraki boy ya yoktur ya da fiyatı katlanmıştır; üstelik tek bir donanım arızası tüm kullanıcıları etkiler. Dikey ölçeklemenin yolu burada biter.",
+        "en": "Growth continues and traffic reaches 9,000 RPS. The big machine also hits 100%. The next size either does not exist or costs a fortune, and a single hardware fault still takes out every user. Scaling up ends here."
+      },
+      "durationMs": 3500,
+      "highlight": { "nodes": ["s1"], "edges": ["u-s1"] },
+      "nodeStates": {
+        "users": { "sublabel": "9.000 RPS" },
+        "s1": { "status": "error", "progress": 1, "badge": "CPU 100%" }
+      },
+      "edgeStates": { "u-s1": { "status": "error", "label": { "tr": "timeout", "en": "timeout" } } },
+      "packets": [
+        { "edge": "u-s1", "shape": "envelope", "durationMs": 600, "repeat": 5, "repeatGapMs": 80 },
+        { "edge": "u-s1", "shape": "square", "direction": "backward", "color": "danger", "label": "503", "startAt": 1500, "durationMs": 800, "repeat": 2, "repeatGapMs": 150 }
+      ],
+      "annotations": [
+        { "id": "ceil-note", "x": 800, "y": 380, "text": { "tr": "En büyük örnek tipi bu; sonrası yok", "en": "This is the largest instance type; nothing beyond" }, "tone": "danger", "target": "s1" }
+      ]
+    },
+    {
+      "id": "scale-out",
+      "title": { "tr": "Yatay ölçekleme: replikalar + load balancer", "en": "Scale out: replicas + load balancer" },
+      "narration": {
+        "tr": "Büyük makine yerine üç orta boy eş sunucu açılır ve önlerine bir load balancer konur. Kullanıcı artık tek adrese (LB) gider; yük üçe bölünür, her replika %35 civarında çalışır. Bunun için servisin stateless olması gerekir — oturum sunucuda kalamaz.",
+        "en": "Instead of one huge machine, three medium identical servers are launched with a load balancer in front. Users now hit a single address (the LB); the load splits three ways and each replica runs around 35%. This requires the service to be stateless — sessions cannot live on the server."
+      },
+      "durationMs": 5000,
+      "highlight": { "nodes": ["lb", "s1", "s2", "s3"], "edges": ["u-lb", "lb-s1", "lb-s2", "lb-s3"] },
+      "nodeStates": {
+        "lb": { "visible": true, "status": "active", "sublabel": "round-robin" },
+        "s1": { "status": "active", "progress": 0.35, "badge": "CPU 35%", "label": "S1", "sublabel": "8 vCPU · 32 GB" },
+        "s2": { "visible": true, "status": "active", "progress": 0.35, "badge": "CPU 35%", "sublabel": "8 vCPU · 32 GB" },
+        "s3": { "visible": true, "status": "active", "progress": 0.35, "badge": "CPU 35%", "sublabel": "8 vCPU · 32 GB" }
+      },
+      "edgeStates": {
+        "u-s1": { "visible": false },
+        "u-lb": { "visible": true, "status": "active" },
+        "lb-s1": { "visible": true, "status": "active" },
+        "lb-s2": { "visible": true, "status": "active" },
+        "lb-s3": { "visible": true, "status": "active" }
+      },
+      "packets": [
+        { "edge": "u-lb", "shape": "envelope", "durationMs": 800, "repeat": 3, "repeatGapMs": 300 },
+        { "edge": "lb-s2", "shape": "envelope", "label": "#1", "startAt": 800, "durationMs": 800 },
+        { "edge": "lb-s1", "shape": "envelope", "label": "#2", "startAt": 1900, "durationMs": 800 },
+        { "edge": "lb-s3", "shape": "envelope", "label": "#3", "startAt": 3000, "durationMs": 800 }
+      ],
+      "annotations": [
+        { "id": "out-note", "x": 440, "y": 480, "text": { "tr": "Ön koşul: stateless servis + paylaşımlı veri katmanı", "en": "Prerequisite: stateless service + shared data layer" }, "tone": "info", "target": "lb" },
+        { "id": "out-p99", "x": 620, "y": 60, "text": { "tr": "p99: 90 ms · yük 3'e bölündü", "en": "p99: 90 ms · load split three ways" }, "tone": "success" }
+      ]
+    },
+    {
+      "id": "resilience",
+      "title": { "tr": "Bir replika düşer, hizmet sürer", "en": "A replica dies, service continues" },
+      "narration": {
+        "tr": "S2 donanım arızasıyla çöker. Health check bunu fark eder, LB S2'yi havuzdan çıkarır; S1 ve S3 yükü paylaşır (%50'ye çıkar). Kullanıcı hiçbir şey fark etmez. Autoscaler yedek kapasiteyi geri kazanmak için yeni bir replika başlatır. Dikey dünyada bu senaryo tam kesintiydi.",
+        "en": "S2 dies of a hardware fault. The health check notices, the LB drops S2 from the pool; S1 and S3 share the load (up to 50%). Users notice nothing. The autoscaler launches a new replica to restore spare capacity. In the vertical world this scenario was a full outage."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["s2", "s1", "s3"], "edges": ["lb-s1", "lb-s3"] },
+      "nodeStates": {
+        "s2": { "status": "down", "progress": 0, "badge": "✕", "sublabel": { "tr": "havuz dışı", "en": "out of pool" } },
+        "s1": { "status": "active", "progress": 0.5, "badge": "CPU 50%" },
+        "s3": { "status": "active", "progress": 0.5, "badge": "CPU 50%" }
+      },
+      "edgeStates": { "lb-s2": { "status": "muted" } },
+      "packets": [
+        { "edge": "u-lb", "shape": "envelope", "durationMs": 700, "repeat": 4, "repeatGapMs": 200 },
+        { "edge": "lb-s1", "shape": "envelope", "startAt": 700, "durationMs": 700 },
+        { "edge": "lb-s3", "shape": "envelope", "startAt": 1600, "durationMs": 700 },
+        { "edge": "lb-s1", "shape": "envelope", "startAt": 2500, "durationMs": 700 },
+        { "edge": "lb-s3", "shape": "envelope", "startAt": 3400, "durationMs": 700 }
+      ],
+      "annotations": [
+        { "id": "res-note", "x": 800, "y": 60, "text": { "tr": "N−1 dayanıklılık: kapasitenin 1/3'ü gitti, hizmet değil", "en": "N−1 resilience: a third of capacity is gone, not the service" }, "tone": "success", "target": "s2" },
+        { "id": "res-auto", "x": 440, "y": 480, "text": { "tr": "autoscaler: yeni replika başlatılıyor (≈2 dk)", "en": "autoscaler: launching a new replica (≈2 min)" }, "tone": "info", "target": "lb" }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["scaling", "vertical-scaling", "horizontal-scaling", "autoscaling"]
+}

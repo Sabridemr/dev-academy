@@ -1,0 +1,309 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "c-03-command",
+  "title": {
+    "tr": "Command: İsteği Nesneye Çevir, Geri Al",
+    "en": "Command: Turn a Request into an Object, Undo It"
+  },
+  "summary": {
+    "tr": "UI bir AddItemCommand oluşturur; CommandHistory onu çalıştırır ve yığına koyar; alıcı Cart güncellenir; kullanıcı geri al deyince aynı komutun undo metodu çağrılır.",
+    "en": "The UI creates an AddItemCommand; CommandHistory executes it and pushes it on a stack; the receiver Cart is updated; when the user hits undo, the same command's undo method is called."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda kullanıcı arayüzü, ortada CommandHistory çağırıcısı ve altında komut nesnesi, sağda alıcı Cart. UI komutu oluşturup history.run çağırır; history komutun execute metodunu çağırır; komut cart.add çağırır; komut yığına konur. Geri al tıklanınca history yığından komutu çıkarıp undo çağırır; komut cart.remove çağırır.",
+      "en": "UI on the left, the CommandHistory invoker in the middle with the command object below it, the receiver Cart on the right. The UI creates the command and calls history.run; history calls the command's execute; the command calls cart.add; the command is pushed on the stack. When undo is clicked, history pops the command and calls undo; the command calls cart.remove."
+    }
+  },
+  "canvas": {
+    "width": 1000,
+    "height": 600
+  },
+  "nodes": [
+    {
+      "id": "ui",
+      "kind": "generic",
+      "label": "CartUI",
+      "x": 110,
+      "y": 240,
+      "w": 150,
+      "h": 70,
+      "sublabel": {
+        "tr": "tıklama / kısayol",
+        "en": "click / shortcut"
+      }
+    },
+    {
+      "id": "history",
+      "kind": "generic",
+      "label": "CommandHistory",
+      "x": 450,
+      "y": 240,
+      "w": 200,
+      "h": 80,
+      "sublabel": {
+        "tr": "done: []",
+        "en": "done: []"
+      }
+    },
+    {
+      "id": "cmd",
+      "kind": "generic",
+      "label": "AddItemCommand",
+      "x": 450,
+      "y": 470,
+      "w": 200,
+      "h": 70,
+      "sublabel": {
+        "tr": "sku: A1, qty: 2",
+        "en": "sku: A1, qty: 2"
+      }
+    },
+    {
+      "id": "cart",
+      "kind": "generic",
+      "label": "Cart",
+      "x": 840,
+      "y": 240,
+      "w": 160,
+      "h": 80,
+      "sublabel": {
+        "tr": "lines: {}",
+        "en": "lines: {}"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "ui-cmd",
+      "from": "ui",
+      "to": "cmd",
+      "kind": "control",
+      "label": "new",
+      "style": "dashed",
+      "curvature": 0.2
+    },
+    {
+      "id": "ui-h",
+      "from": "ui",
+      "to": "history",
+      "kind": "request",
+      "label": "run(cmd)"
+    },
+    {
+      "id": "h-cmd",
+      "from": "history",
+      "to": "cmd",
+      "kind": "request",
+      "label": "execute() / undo()"
+    },
+    {
+      "id": "cmd-cart",
+      "from": "cmd",
+      "to": "cart",
+      "kind": "request",
+      "label": "add() / remove()",
+      "curvature": 0.2
+    }
+  ],
+  "steps": [
+    {
+      "id": "create",
+      "title": {
+        "tr": "1. İstek bir nesne olur",
+        "en": "1. The request becomes an object"
+      },
+      "narration": {
+        "tr": "Kullanıcı \"sepete ekle\"ye tıklar. UI, ne yapılacağını bilen ama yapmayan bir AddItemCommand(cart, \"A1\", 2) oluşturur ve history.run(cmd) der. UI, Cart'ın API'sini bilmek zorunda değildir.",
+        "en": "The user clicks \"add to cart\". The UI creates an AddItemCommand(cart, \"A1\", 2) that knows what to do but does not do it yet, and calls history.run(cmd). The UI does not need to know Cart's API."
+      },
+      "durationMs": 3500,
+      "inherit": false,
+      "highlight": {
+        "nodes": [
+          "ui",
+          "cmd",
+          "history"
+        ],
+        "edges": [
+          "ui-cmd",
+          "ui-h"
+        ]
+      },
+      "nodeStates": {
+        "cmd": {
+          "status": "active"
+        }
+      },
+      "edgeStates": {},
+      "packets": [
+        {
+          "edge": "ui-cmd",
+          "shape": "square",
+          "color": "accent",
+          "label": "new AddItemCommand",
+          "durationMs": 800
+        },
+        {
+          "edge": "ui-h",
+          "startAt": 900,
+          "shape": "envelope",
+          "label": "run(cmd)",
+          "durationMs": 800
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a1",
+          "x": 110,
+          "y": 360,
+          "text": {
+            "tr": "çağıran, alıcıyı bilmez",
+            "en": "the invoker does not know the receiver"
+          },
+          "target": "ui"
+        }
+      ]
+    },
+    {
+      "id": "execute",
+      "title": {
+        "tr": "2. Çağırıcı çalıştırır, alıcı iş yapar",
+        "en": "2. The invoker executes, the receiver works"
+      },
+      "narration": {
+        "tr": "CommandHistory cmd.execute() çağırır; komut cart.add(\"A1\", 2) yapar ve kendini done yığınına koyar. Çağırıcı komutun içeriğini bilmez; aynı history klavye kısayolu, makro ya da ağ üzerinden gelen komutları da çalıştırır.",
+        "en": "CommandHistory calls cmd.execute(); the command does cart.add(\"A1\", 2) and is pushed on the done stack. The invoker knows nothing about the command's content; the same history runs commands from shortcuts, macros or the network."
+      },
+      "durationMs": 3500,
+      "highlight": {
+        "nodes": [
+          "history",
+          "cmd",
+          "cart"
+        ],
+        "edges": [
+          "h-cmd",
+          "cmd-cart"
+        ]
+      },
+      "nodeStates": {
+        "history": {
+          "status": "active",
+          "sublabel": {
+            "tr": "done: [AddItem A1×2]",
+            "en": "done: [AddItem A1×2]"
+          }
+        },
+        "cart": {
+          "status": "success",
+          "sublabel": {
+            "tr": "lines: {A1: 2}",
+            "en": "lines: {A1: 2}"
+          }
+        }
+      },
+      "edgeStates": {},
+      "packets": [
+        {
+          "edge": "h-cmd",
+          "shape": "envelope",
+          "label": "execute()",
+          "durationMs": 800
+        },
+        {
+          "edge": "cmd-cart",
+          "startAt": 900,
+          "shape": "envelope",
+          "label": "add(\"A1\", 2)",
+          "durationMs": 800
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "id": "undo",
+      "title": {
+        "tr": "3. Geri al",
+        "en": "3. Undo"
+      },
+      "narration": {
+        "tr": "Kullanıcı Ctrl+Z'ye basar. history.undo() yığından son komutu alır ve cmd.undo() çağırır; komut cart.remove(\"A1\", 2) yapar. Geri alma mantığı komutun içindedir; UI ve Cart bundan habersizdir.",
+        "en": "The user presses Ctrl+Z. history.undo() pops the last command and calls cmd.undo(); the command does cart.remove(\"A1\", 2). Undo logic lives inside the command; UI and Cart know nothing about it."
+      },
+      "durationMs": 3500,
+      "highlight": {
+        "nodes": [
+          "history",
+          "cmd",
+          "cart"
+        ],
+        "edges": [
+          "ui-h",
+          "h-cmd",
+          "cmd-cart"
+        ]
+      },
+      "nodeStates": {
+        "history": {
+          "sublabel": {
+            "tr": "done: [] · undone: [AddItem]",
+            "en": "done: [] · undone: [AddItem]"
+          }
+        },
+        "cart": {
+          "status": "warning",
+          "sublabel": {
+            "tr": "lines: {}",
+            "en": "lines: {}"
+          }
+        }
+      },
+      "edgeStates": {},
+      "packets": [
+        {
+          "edge": "ui-h",
+          "shape": "envelope",
+          "label": "undo()",
+          "durationMs": 700
+        },
+        {
+          "edge": "h-cmd",
+          "startAt": 800,
+          "shape": "envelope",
+          "color": "warning",
+          "label": "undo()",
+          "durationMs": 800
+        },
+        {
+          "edge": "cmd-cart",
+          "startAt": 1700,
+          "shape": "envelope",
+          "color": "warning",
+          "label": "remove(\"A1\", 2)",
+          "durationMs": 800
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a3",
+          "x": 450,
+          "y": 120,
+          "text": {
+            "tr": "undo/redo, kuyruk, log, makro: hepsi aynı kalıp",
+            "en": "undo/redo, queue, log, macro: all the same pattern"
+          },
+          "tone": "success",
+          "target": "history"
+        }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": [
+    "command",
+    "behavioral"
+  ]
+}

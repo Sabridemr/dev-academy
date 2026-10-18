@@ -1,0 +1,112 @@
+{
+  "id": "f-05-physical-request-path-quiz",
+  "title": { "tr": "Bir İsteğin Fiziksel Yolu Quiz", "en": "The Physical Path of a Request Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "İstanbul'daki bir kullanıcının Frankfurt'taki origin'e giden isteğinde, 80 ms'lik toplam gecikmenin en büyük kalemi tipik olarak nedir?",
+        "en": "For a user in Istanbul calling an origin in Frankfurt, what is typically the largest item in an 80 ms total latency?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Edge'de yapılan TLS el sıkışması; üç gidiş-dönüş origin mesafesiyle çarpıldığı için tek başına 50 ms'yi aşar", "en": "The TLS handshake done at the edge; three round trips multiplied by the origin distance exceed 50 ms on their own" } },
+        { "id": "b", "text": { "tr": "İstanbul ile Frankfurt arasındaki fiziksel mesafenin fiber üzerindeki gidiş-dönüş süresi", "en": "The round-trip time over fiber for the physical distance between Istanbul and Frankfurt" } },
+        { "id": "c", "text": { "tr": "ALB'nin üç AZ'deki hedef gruplar arasında sağlıklı pod seçip çapraz AZ'ye yönlendirmesi; her atlama 5–10 ms ekler", "en": "The ALB picking a healthy pod among target groups in three AZs and routing cross-AZ; each hop adds 5–10 ms" } },
+        { "id": "d", "text": { "tr": "Postgres sorgusu; senkron standby'a AZ-b'ye yazma onayı beklendiği için her sorgu 20–30 ms sürer", "en": "The Postgres query; because the synchronous standby in AZ-b must acknowledge, every query takes 20–30 ms" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Işık fiberde yaklaşık 200 km/ms gider; 1.900 km için gidiş-dönüş ~30 ms'dir ve edge cache dışında hiçbir yazılım bunu azaltamaz. TLS el sıkışması edge'de 10 ms'lik RTT ile yapılır, origin mesafesiyle çarpılmaz; indeksli DB sorgusu senkron standby dâhil 2–5 ms, ALB kararı 1 ms'nin altındadır. Bu yüzden edge cache ve kullanıcıya yakın region seçimi koddan daha etkilidir.",
+        "en": "Light travels about 200 km/ms in fiber; for 1,900 km the round trip is ~30 ms and no software short of an edge cache can reduce it. The TLS handshake happens at the edge with a 10 ms RTT and is not multiplied by the origin distance; an indexed DB query is 2–5 ms even with the synchronous standby, and the ALB decision is under 1 ms. That is why edge caching and choosing a region near users matters more than code."
+      },
+      "difficulty": "easy",
+      "concepts": ["latency-budget", "edge-pop"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "TLS el sıkışması neden origin'de değil, CDN edge PoP'unda sonlandırılır?",
+        "en": "Why is the TLS handshake terminated at the CDN edge PoP rather than at the origin?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Edge'de sonlandırınca edge → origin arası trafik özel omurgada düz metin gider; yeniden şifreleme olmadığı için gecikme düşer", "en": "Terminating at the edge lets edge → origin traffic travel in plaintext over the private backbone; with no re-encryption, latency drops" } },
+        { "id": "b", "text": { "tr": "Edge sunucuları TLS hızlandırma donanımı taşır; origin'deki pod'lar asimetrik şifrelemeyi yapamayacak kadar az CPU'ya sahiptir", "en": "Edge servers carry TLS acceleration hardware; the pods at the origin have too little CPU to do asymmetric encryption" } },
+        { "id": "c", "text": { "tr": "El sıkışma birkaç gidiş-dönüş ister; kullanıcıya 10 ms uzaklıktaki edge'de yapmak, 35 ms'deki origin'e göre onlarca ms kazandırır", "en": "The handshake needs several round trips; doing it at an edge 10 ms away saves tens of ms compared with an origin 35 ms away" } },
+        { "id": "d", "text": { "tr": "Sertifika yalnızca tek bir yerde kurulabilir; CDN kullanıldığında ACM sertifikayı edge'e bağlar, origin'de TLS devre dışı kalır", "en": "A certificate can only be installed in one place; with a CDN, ACM binds it to the edge and TLS is disabled at the origin" } }
+      ],
+      "correct": ["c"],
+      "explanation": {
+        "tr": "TCP + TLS el sıkışması 2–3 gidiş-dönüş alır; her gidiş-dönüş mesafeye bağlıdır, bu yüzden kullanıcıya en yakın noktada yapılır. Edge, origin'e önceden açılmış sıcak bağlantılar kullanır ve edge–origin arası yeniden şifrelenir, düz metin gitmez. CPU gücü asıl neden değildir; sertifika hem edge'de hem origin'de bulunur, origin TLS'i kapatılmaz.",
+        "en": "The TCP + TLS handshake takes 2–3 round trips, each bound by distance, which is why it is done at the point nearest the user. The edge reuses pre-opened warm connections to the origin, and edge–origin traffic is re-encrypted, never plaintext. CPU power is not the real reason; a certificate lives at both the edge and the origin, and origin TLS is not disabled."
+      },
+      "difficulty": "medium",
+      "concepts": ["tls-termination", "edge-pop", "cdn-cache"]
+    },
+    {
+      "id": "q3",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Redis cache düğümünü servis pod'uyla aynı AZ'ye koymanın sonuçları hangileridir? (Birden fazla seçin)",
+        "en": "What are the consequences of placing the Redis cache node in the same AZ as the service pod? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Çağrı başına RTT yaklaşık 0,3–0,5 ms olur; çapraz AZ'de 1–2 ms olurdu", "en": "Per-call RTT is about 0.3–0.5 ms; cross-AZ it would be 1–2 ms" } },
+        { "id": "b", "text": { "tr": "Çapraz AZ veri transfer ücreti ödenmez", "en": "No cross-AZ data transfer fee is paid" } },
+        { "id": "c", "text": { "tr": "O AZ düşerse cache primary'si de düşer; replikanın başka AZ'de olması gerekir", "en": "If that AZ fails the cache primary fails too; the replica must be in another AZ" } },
+        { "id": "d", "text": { "tr": "Redis artık RAM yerine diske yazar ve veri kalıcı hâle gelir", "en": "Redis now writes to disk instead of RAM and the data becomes durable" } }
+      ],
+      "correct": ["a", "b", "c"],
+      "explanation": {
+        "tr": "Aynı AZ yerleşimi gecikme ve ücret kazandırır, ama hata alanını paylaşır; bu yüzden replika komşu AZ'de tutulur ve failover planlanır. Yerleşim Redis'in bellek içi çalışmasını değiştirmez (d yanlış).",
+        "en": "Same-AZ placement saves latency and fees but shares the failure domain, so the replica is kept in a neighbouring AZ with failover planned. Placement does not change Redis's in-memory nature (d is wrong)."
+      },
+      "difficulty": "medium",
+      "concepts": ["cache-node", "load-balancer-placement"]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Route 53 ve CDN'in anycast kullanması, aynı IP adresinin dünyanın birçok noktasından yayınlanıp BGP'nin kullanıcıyı en yakın noktaya yönlendirmesi demektir.",
+        "en": "Route 53 and the CDN using anycast means the same IP address is announced from many locations worldwide and BGP routes the user to the nearest one."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["t"],
+      "explanation": {
+        "tr": "Doğru. Anycast sayesinde kullanıcı özel bir yönlendirme mantığı olmadan en yakın DNS PoP'una ve edge PoP'una düşer; bir PoP düşerse BGP trafiği otomatik olarak bir sonrakine taşır. Bu, f-07'de DDoS dağıtımı için de kullanılacak.",
+        "en": "True. With anycast the user lands on the nearest DNS PoP and edge PoP without special routing logic; if a PoP fails BGP automatically moves traffic to the next one. This will also be used in f-07 to spread DDoS traffic."
+      },
+      "difficulty": "easy",
+      "concepts": ["anycast", "dns-resolution"]
+    },
+    {
+      "id": "q5",
+      "type": "order",
+      "prompt": {
+        "tr": "Cache miss'li bir /api/cart isteğinin geçtiği katmanları kullanıcıdan veritabanına doğru sıralayın.",
+        "en": "Order the layers a /api/cart request with a cache miss passes through, from the user to the database."
+      },
+      "options": [
+        { "id": "lb", "text": { "tr": "ALB (Frankfurt, her AZ'de düğüm)", "en": "ALB (Frankfurt, a node in every AZ)" } },
+        { "id": "edge", "text": { "tr": "CDN edge PoP (İstanbul, TLS sonlanır)", "en": "CDN edge PoP (Istanbul, TLS terminates)" } },
+        { "id": "db", "text": { "tr": "RDS primary (AZ-a)", "en": "RDS primary (AZ-a)" } },
+        { "id": "gw", "text": { "tr": "API gateway pod (EKS)", "en": "API gateway pod (EKS)" } },
+        { "id": "cache", "text": { "tr": "Redis (servisle aynı AZ) — miss", "en": "Redis (same AZ as the service) — miss" } },
+        { "id": "svc", "text": { "tr": "cart-service pod (AZ-a, node ip-10-0-12-34)", "en": "cart-service pod (AZ-a, node ip-10-0-12-34)" } }
+      ],
+      "correct": ["edge", "lb", "gw", "svc", "cache", "db"],
+      "explanation": {
+        "tr": "Kullanıcı önce en yakın edge'e düşer (DNS zaten çözülmüştür), istek omurga üzerinden region'daki ALB'ye, oradan gateway pod'una ve servise gider; servis önce cache'e, miss olunca veritabanına başvurur. Cache'in veritabanından sonra gelmesi mantıksızdır: amaç DB'ye gitmemektir.",
+        "en": "The user first lands on the nearest edge (DNS already resolved), the request crosses the backbone to the ALB in the region, then the gateway pod and the service; the service checks the cache first and only on a miss hits the database. Putting the cache after the database makes no sense: the point is to avoid the DB."
+      },
+      "difficulty": "hard",
+      "concepts": ["api-gateway", "service-pod", "cache-node", "database-instance"]
+    }
+  ]
+}

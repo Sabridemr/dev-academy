@@ -1,0 +1,310 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "c-03-mediator",
+  "title": {
+    "tr": "Mediator: Bileşenler Birbirini Değil, Aracıyı Bilir",
+    "en": "Mediator: Components Know the Mediator, Not Each Other"
+  },
+  "summary": {
+    "tr": "Adres alanı değişince mediator kargo seçeneklerini yeniletir, fiyat özetini güncelletir ve gönder düğmesini etkinleştirir; dört bileşen birbirini hiç tanımaz.",
+    "en": "When the address field changes, the mediator reloads shipping options, recalculates the price summary and enables the submit button; the four components never know each other."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Ortada CheckoutFormMediator, çevresinde AddressField, ShippingSelector, PriceSummary ve SubmitButton bileşenleri. Adres değişince AddressField mediator'a bildirir; mediator ShippingSelector'a reload, PriceSummary'ye recalc ve SubmitButton'a setEnabled çağrıları yapar. Son adım bileşenler arası doğrudan bağlantı olmadığını vurgular.",
+      "en": "CheckoutFormMediator in the middle, surrounded by AddressField, ShippingSelector, PriceSummary and SubmitButton components. When the address changes, AddressField notifies the mediator; the mediator calls reload on ShippingSelector, recalc on PriceSummary and setEnabled on SubmitButton. The last step stresses that there are no direct links between components."
+    }
+  },
+  "canvas": {
+    "width": 1000,
+    "height": 600
+  },
+  "nodes": [
+    {
+      "id": "med",
+      "kind": "generic",
+      "label": "CheckoutFormMediator",
+      "x": 500,
+      "y": 300,
+      "w": 230,
+      "h": 80,
+      "sublabel": {
+        "tr": "notify(sender, event)",
+        "en": "notify(sender, event)"
+      }
+    },
+    {
+      "id": "addr",
+      "kind": "generic",
+      "label": "AddressField",
+      "x": 150,
+      "y": 130,
+      "w": 170,
+      "h": 60,
+      "sublabel": {
+        "tr": "onChange",
+        "en": "onChange"
+      }
+    },
+    {
+      "id": "ship",
+      "kind": "generic",
+      "label": "ShippingSelector",
+      "x": 850,
+      "y": 130,
+      "w": 170,
+      "h": 60,
+      "sublabel": {
+        "tr": "reload(opts)",
+        "en": "reload(opts)"
+      }
+    },
+    {
+      "id": "price",
+      "kind": "generic",
+      "label": "PriceSummary",
+      "x": 850,
+      "y": 470,
+      "w": 170,
+      "h": 60,
+      "sublabel": {
+        "tr": "recalc()",
+        "en": "recalc()"
+      }
+    },
+    {
+      "id": "submit",
+      "kind": "generic",
+      "label": "SubmitButton",
+      "x": 150,
+      "y": 470,
+      "w": 170,
+      "h": 60,
+      "sublabel": {
+        "tr": "setEnabled(b)",
+        "en": "setEnabled(b)"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "addr-med",
+      "from": "addr",
+      "to": "med",
+      "kind": "request",
+      "label": "notify(address, \"changed\")"
+    },
+    {
+      "id": "med-ship",
+      "from": "med",
+      "to": "ship",
+      "kind": "request",
+      "label": "reload(opts)"
+    },
+    {
+      "id": "ship-med",
+      "from": "ship",
+      "to": "med",
+      "kind": "request",
+      "label": "notify(shipping, \"selected\")",
+      "curvature": 0.35,
+      "style": "dashed"
+    },
+    {
+      "id": "med-price",
+      "from": "med",
+      "to": "price",
+      "kind": "request",
+      "label": "recalc()"
+    },
+    {
+      "id": "med-submit",
+      "from": "med",
+      "to": "submit",
+      "kind": "request",
+      "label": "setEnabled(true)"
+    }
+  ],
+  "steps": [
+    {
+      "id": "change",
+      "title": {
+        "tr": "1. Bileşen yalnızca aracıya bildirir",
+        "en": "1. A component notifies only the mediator"
+      },
+      "narration": {
+        "tr": "Kullanıcı il alanını değiştirir. AddressField kargo seçicisini ya da fiyatı bilmez; yalnızca mediator.notify(this, \"changed\") der.",
+        "en": "The user changes the city field. AddressField knows nothing about the shipping selector or the price; it only says mediator.notify(this, \"changed\")."
+      },
+      "durationMs": 3500,
+      "inherit": false,
+      "highlight": {
+        "nodes": [
+          "addr",
+          "med"
+        ],
+        "edges": [
+          "addr-med"
+        ]
+      },
+      "nodeStates": {
+        "addr": {
+          "status": "active"
+        },
+        "med": {
+          "status": "active"
+        }
+      },
+      "edgeStates": {
+        "ship-med": {
+          "status": "muted"
+        }
+      },
+      "packets": [
+        {
+          "edge": "addr-med",
+          "shape": "envelope",
+          "label": "changed",
+          "durationMs": 900
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a1",
+          "x": 150,
+          "y": 40,
+          "text": {
+            "tr": "bileşen: 1 bağımlılık (mediator)",
+            "en": "component: 1 dependency (the mediator)"
+          },
+          "target": "addr"
+        }
+      ]
+    },
+    {
+      "id": "coordinate",
+      "title": {
+        "tr": "2. Aracı koordine eder",
+        "en": "2. The mediator coordinates"
+      },
+      "narration": {
+        "tr": "Koordinasyon kuralı mediator'dadır: \"adres değiştiyse kargo seçeneklerini yeniden yükle ve fiyatı yeniden hesapla\". Mediator ShippingSelector.reload(opts) ve PriceSummary.recalc() çağırır.",
+        "en": "The coordination rule lives in the mediator: \"if the address changed, reload shipping options and recalculate the price\". The mediator calls ShippingSelector.reload(opts) and PriceSummary.recalc()."
+      },
+      "durationMs": 4000,
+      "highlight": {
+        "nodes": [
+          "ship",
+          "price"
+        ],
+        "edges": [
+          "med-ship",
+          "med-price"
+        ]
+      },
+      "nodeStates": {
+        "ship": {
+          "status": "success",
+          "badge": "3 opsiyon"
+        },
+        "price": {
+          "status": "success",
+          "badge": "₺"
+        }
+      },
+      "edgeStates": {},
+      "packets": [
+        {
+          "edge": "med-ship",
+          "shape": "envelope",
+          "label": "reload(opts)",
+          "durationMs": 800
+        },
+        {
+          "edge": "med-price",
+          "startAt": 600,
+          "shape": "envelope",
+          "label": "recalc()",
+          "durationMs": 800
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "id": "enable",
+      "title": {
+        "tr": "3. Zincirleme etkiler de aracıdan geçer",
+        "en": "3. Knock-on effects also go through the mediator"
+      },
+      "narration": {
+        "tr": "Kullanıcı kargo seçeneği seçer; ShippingSelector yine mediator'a bildirir; mediator fiyatı günceller ve form tamamlandığı için SubmitButton.setEnabled(true) der. Dört bileşen arasında 6 olası doğrudan bağ yerine 4 bağ var.",
+        "en": "The user picks a shipping option; ShippingSelector again notifies the mediator; the mediator updates the price and, since the form is complete, calls SubmitButton.setEnabled(true). Instead of 6 possible direct links between four components there are 4."
+      },
+      "durationMs": 4000,
+      "highlight": {
+        "nodes": [
+          "ship",
+          "submit"
+        ],
+        "edges": [
+          "ship-med",
+          "med-price",
+          "med-submit"
+        ]
+      },
+      "nodeStates": {
+        "submit": {
+          "status": "success",
+          "badge": "ON"
+        }
+      },
+      "edgeStates": {
+        "ship-med": {
+          "status": "active"
+        }
+      },
+      "packets": [
+        {
+          "edge": "ship-med",
+          "shape": "envelope",
+          "label": "selected",
+          "durationMs": 800
+        },
+        {
+          "edge": "med-price",
+          "startAt": 900,
+          "shape": "envelope",
+          "label": "recalc()",
+          "durationMs": 700
+        },
+        {
+          "edge": "med-submit",
+          "startAt": 1000,
+          "shape": "envelope",
+          "label": "setEnabled(true)",
+          "durationMs": 800
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a3",
+          "x": 500,
+          "y": 560,
+          "text": {
+            "tr": "N² yerine N bağlantı; risk: \"tanrı mediator\"",
+            "en": "N links instead of N²; risk: the \"god mediator\""
+          },
+          "tone": "warning",
+          "target": "med"
+        }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": [
+    "mediator",
+    "behavioral"
+  ]
+}

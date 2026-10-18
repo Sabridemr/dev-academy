@@ -1,0 +1,180 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "e-06-rate-limiter-journey",
+  "title": { "tr": "Dağıtık Rate Limiter: Sliding Window Counter", "en": "Distributed Rate Limiter: Sliding Window Counter" },
+  "summary": {
+    "tr": "İsteğin gateway düğümünde kural bulması, paylaşımlı Redis'te Lua ile atomik sayım, farklı düğümlere dağılan patlamanın aynı anahtarda sayılması, 429 ve Retry-After, pencerenin kayması ve Redis düşünce fail-open.",
+    "en": "A request finding its rule at a gateway node, atomic counting in shared Redis via Lua, a burst spread across nodes counted on the same key, 429 with Retry-After, the window sliding and fail-open when Redis is down."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda API anahtarı k1 olan istemci; ortada iki gateway düğümü ve üstte kural servisi; sağda sayaçları tutan Redis ve en sağda korunan API. İstek gateway 1'e gelir, kural 100 istek/dakika olarak bulunur, Redis'te Lua betiğiyle ağırlıklı sayım yapılır ve izin verilirse API'ye iletilir. Patlama iki düğüme dağılsa da aynı Redis anahtarı sayıldığı için limit tutarlıdır; aşılınca 429 ve Retry-After döner, API'ye gidilmez. Pencere kaydıkça önceki pencerenin ağırlığı azalır ve istekler kademeli olarak yeniden geçer. Redis düşerse düğümler yerel yaklaşık sayaçla fail-open çalışır ve alarm üretir.",
+      "en": "A client with API key k1 on the left; two gateway nodes in the middle with a rules service above; Redis holding the counters on the right and the protected API at the far right. A request reaches gateway 1, the rule is found as 100 requests/minute, a weighted count is computed in Redis via a Lua script and the request is forwarded to the API if allowed. Even though a burst is spread across both nodes, the same Redis key is counted so the limit stays consistent; once exceeded, 429 with Retry-After is returned without touching the API. As the window slides, the previous window's weight shrinks and requests gradually pass again. If Redis goes down the nodes fail open with local approximate counters and raise an alarm."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "client", "kind": "client", "label": { "tr": "İstemci", "en": "Client" }, "sublabel": "API key k1", "x": 80, "y": 300, "w": 110, "h": 70 },
+    { "id": "rules", "kind": "generic", "label": { "tr": "Kural servisi", "en": "Rules service" }, "sublabel": "plan → limit", "x": 310, "y": 70, "w": 130, "h": 60 },
+    { "id": "gw1", "kind": "gateway", "label": { "tr": "Gateway 1", "en": "Gateway 1" }, "sublabel": "limiter middleware", "x": 310, "y": 210, "w": 140, "h": 70 },
+    { "id": "gw2", "kind": "gateway", "label": { "tr": "Gateway 2", "en": "Gateway 2" }, "sublabel": "limiter middleware", "x": 310, "y": 410, "w": 140, "h": 70 },
+    { "id": "redis", "kind": "cache", "label": "Redis", "sublabel": "rl:k1:{window}", "x": 580, "y": 300, "w": 130, "h": 76 },
+    { "id": "api", "kind": "service", "label": { "tr": "Korunan API", "en": "Protected API" }, "x": 850, "y": 300, "w": 130, "h": 70 }
+  ],
+  "edges": [
+    { "id": "c-gw1", "from": "client", "to": "gw1", "kind": "request", "curvature": -0.15 },
+    { "id": "c-gw2", "from": "client", "to": "gw2", "kind": "request", "curvature": 0.15 },
+    { "id": "rules-gw1", "from": "rules", "to": "gw1", "kind": "control", "style": "dotted" },
+    { "id": "rules-gw2", "from": "rules", "to": "gw2", "kind": "control", "style": "dotted", "curvature": 0.4 },
+    { "id": "gw1-redis", "from": "gw1", "to": "redis", "kind": "data", "label": "EVAL lua" },
+    { "id": "gw2-redis", "from": "gw2", "to": "redis", "kind": "data" },
+    { "id": "gw1-api", "from": "gw1", "to": "api", "kind": "request", "curvature": -0.3 },
+    { "id": "gw2-api", "from": "gw2", "to": "api", "kind": "request", "curvature": 0.3 }
+  ],
+  "steps": [
+    {
+      "id": "rule",
+      "title": { "tr": "1 · İstek ve kural", "en": "1 · Request and rule" },
+      "narration": {
+        "tr": "İstemci k1 anahtarıyla istek gönderir; LB onu gateway 1'e düşürür. Limiter middleware anahtarın planını bulur: 100 istek/dakika, sliding window counter. Kurallar kural servisinden çekilip gateway'de 30 s cache'lenir; değişiklik yeniden başlatma gerektirmez.",
+        "en": "The client sends a request with key k1; the LB lands it on gateway 1. The limiter middleware finds the key's plan: 100 requests/minute, sliding window counter. Rules are pulled from the rules service and cached on the gateway for 30 s; changes need no restart."
+      },
+      "durationMs": 3000,
+      "inherit": false,
+      "highlight": { "nodes": ["client", "gw1", "rules"], "edges": ["c-gw1", "rules-gw1"] },
+      "nodeStates": { "client": { "status": "active" }, "gw1": { "status": "active" }, "rules": { "status": "active", "badge": "100/dk" } },
+      "packets": [
+        { "edge": "c-gw1", "shape": "envelope", "label": "#1", "durationMs": 800 },
+        { "edge": "rules-gw1", "shape": "diamond", "startAt": 900, "durationMs": 600 }
+      ],
+      "annotations": [
+        { "id": "plan", "x": 310, "y": 150, "text": { "tr": "k1 → plan: pro · 100 req/dk", "en": "k1 → plan: pro · 100 req/min" }, "target": "rules" }
+      ]
+    },
+    {
+      "id": "lua",
+      "title": { "tr": "2 · Lua ile atomik sayım", "en": "2 · Atomic count via Lua" },
+      "narration": {
+        "tr": "Gateway tek bir EVAL ile Redis'e gider. Betik önceki ve mevcut pencere sayaçlarını okur, ağırlıklı toplamı hesaplar (önceki × kalan oran + mevcut = 36.4), limitin altındaysa INCR yapar ve TTL koyar. Oku-hesapla-yaz tek atomik adımdır; iki düğüm aynı anda gelse de sayım bozulmaz.",
+        "en": "The gateway makes a single EVAL to Redis. The script reads the previous and current window counters, computes the weighted sum (previous × remaining fraction + current = 36.4), INCRs if below the limit and sets a TTL. Read-compute-write is one atomic step; even if two nodes arrive simultaneously the count stays correct."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["gw1", "redis"], "edges": ["gw1-redis"] },
+      "nodeStates": { "redis": { "status": "active", "badge": "37 / 100" }, "rules": { "status": "idle" } },
+      "packets": [
+        { "edge": "gw1-redis", "shape": "square", "label": "EVAL", "durationMs": 700 },
+        { "edge": "gw1-redis", "shape": "dot", "direction": "backward", "startAt": 800, "durationMs": 600, "color": "success", "label": "allow · 63" }
+      ],
+      "annotations": [
+        { "id": "formula", "x": 580, "y": 400, "text": { "tr": "prev × (1 − t/win) + cur < limit → INCR", "en": "prev × (1 − t/win) + cur < limit → INCR" }, "tone": "info", "target": "redis" }
+      ]
+    },
+    {
+      "id": "forward",
+      "title": { "tr": "3 · İzin ve başlıklar", "en": "3 · Allow and headers" },
+      "narration": {
+        "tr": "Karar 'izin ver': istek korunan API'ye iletilir, yanıt X-RateLimit-Limit: 100, X-RateLimit-Remaining: 63 başlıklarıyla döner. Limiter'ın eklediği gecikme tek Redis gidiş-dönüşüdür: ~1 ms.",
+        "en": "Decision: allow. The request is forwarded to the protected API and the response returns with X-RateLimit-Limit: 100 and X-RateLimit-Remaining: 63 headers. The latency added by the limiter is one Redis round trip: ~1 ms."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["gw1", "api", "client"], "edges": ["gw1-api", "c-gw1"] },
+      "nodeStates": { "api": { "status": "active", "badge": "200" }, "client": { "status": "success", "badge": "200 · 63" } },
+      "packets": [
+        { "edge": "gw1-api", "shape": "envelope", "durationMs": 800 },
+        { "edge": "gw1-api", "shape": "envelope", "direction": "backward", "startAt": 900, "durationMs": 700, "color": "success" },
+        { "edge": "c-gw1", "shape": "envelope", "direction": "backward", "startAt": 1700, "durationMs": 700, "color": "success" }
+      ],
+      "annotations": [
+        { "id": "hdr", "x": 80, "y": 400, "text": { "tr": "X-RateLimit-Remaining: 63", "en": "X-RateLimit-Remaining: 63" }, "tone": "success", "target": "client" }
+      ]
+    },
+    {
+      "id": "burst",
+      "title": { "tr": "4 · Patlama iki düğüme dağılıyor", "en": "4 · A burst spreads over two nodes" },
+      "narration": {
+        "tr": "İstemci 80 isteği art arda gönderir; LB bunları gateway 1 ve 2 arasında paylaştırır. Sayaç gateway'de değil Redis'te yaşadığı için iki düğüm aynı rl:k1 anahtarını artırır: dağıtık sayım tutarlıdır. Düğüm başına yerel sayaç olsaydı limit fiilen 200 olurdu.",
+        "en": "The client fires 80 requests in a row; the LB spreads them over gateways 1 and 2. Because the counter lives in Redis, not on the gateway, both nodes increment the same rl:k1 key: the distributed count is consistent. With per-node local counters the effective limit would have been 200."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["client", "gw1", "gw2", "redis"], "edges": ["c-gw1", "c-gw2", "gw1-redis", "gw2-redis"] },
+      "nodeStates": { "gw2": { "status": "active" }, "redis": { "status": "warning", "badge": "98 / 100" }, "client": { "status": "active", "badge": "" }, "api": { "badge": "" } },
+      "packets": [
+        { "edge": "c-gw1", "shape": "dot", "durationMs": 500, "repeat": 6, "repeatGapMs": 120 },
+        { "edge": "c-gw2", "shape": "dot", "startAt": 60, "durationMs": 500, "repeat": 6, "repeatGapMs": 120 },
+        { "edge": "gw1-redis", "shape": "dot", "startAt": 550, "durationMs": 450, "repeat": 6, "repeatGapMs": 120 },
+        { "edge": "gw2-redis", "shape": "dot", "startAt": 610, "durationMs": 450, "repeat": 6, "repeatGapMs": 120 }
+      ],
+      "annotations": [
+        { "id": "shared", "x": 580, "y": 400, "text": { "tr": "tek anahtar → düğüm sayısından bağımsız limit", "en": "one key → limit independent of node count" }, "tone": "warning", "target": "redis" }
+      ]
+    },
+    {
+      "id": "reject",
+      "title": { "tr": "5 · 429 Too Many Requests", "en": "5 · 429 Too Many Requests" },
+      "narration": {
+        "tr": "101. istek gateway 2'ye düşer; Lua ağırlıklı toplamı 100.3 bulur ve INCR yapmadan reddeder. Gateway 429 ile Retry-After: 12 döner; korunan API'ye hiç dokunulmaz — reddetmek ucuzdur, asıl amaç da budur.",
+        "en": "Request #101 lands on gateway 2; Lua finds a weighted sum of 100.3 and rejects without INCR. The gateway returns 429 with Retry-After: 12; the protected API is never touched — rejecting is cheap, which is the whole point."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["gw2", "redis", "client"], "edges": ["c-gw2", "gw2-redis"] },
+      "nodeStates": { "redis": { "status": "error", "badge": "100 / 100" }, "client": { "status": "error", "badge": "429" }, "gw2": { "status": "warning" } },
+      "edgeStates": { "gw2-api": { "status": "muted" } },
+      "packets": [
+        { "edge": "c-gw2", "shape": "envelope", "label": "#101", "durationMs": 700 },
+        { "edge": "gw2-redis", "shape": "square", "startAt": 800, "durationMs": 500 },
+        { "edge": "gw2-redis", "shape": "dot", "direction": "backward", "startAt": 1350, "durationMs": 500, "color": "danger", "label": "deny" },
+        { "edge": "c-gw2", "shape": "envelope", "direction": "backward", "startAt": 1950, "durationMs": 700, "color": "danger", "label": "429 · Retry-After 12" }
+      ],
+      "annotations": [
+        { "id": "cheap", "x": 850, "y": 400, "text": { "tr": "API'ye istek gitmedi", "en": "no request reached the API" }, "tone": "success", "target": "api" }
+      ]
+    },
+    {
+      "id": "slide",
+      "title": { "tr": "6 · Pencere kayıyor", "en": "6 · The window slides" },
+      "narration": {
+        "tr": "Yeni dakika başlar: mevcut sayaç 0'dan başlar ama önceki pencerenin 100'ü ağırlıkla sayılmaya devam eder (ilk saniyede ~98, 30. saniyede 50). Böylece sabit penceredeki 'sınırda 200 istek' patlaması olmaz; izin kademeli geri gelir. Eski anahtarlar TTL ile kendiliğinden silinir.",
+        "en": "A new minute begins: the current counter starts at 0, but the previous window's 100 keeps counting with a weight (~98 in the first second, 50 at second 30). So the fixed window's '200 requests at the boundary' burst cannot happen; permission returns gradually. Old keys expire on their own via TTL."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["redis", "gw1", "client"], "edges": ["gw1-redis", "c-gw1", "gw1-api"] },
+      "nodeStates": { "redis": { "status": "active", "badge": "50 + 1" }, "client": { "status": "success", "badge": "200" }, "gw2": { "status": "idle" }, "api": { "status": "active" } },
+      "edgeStates": { "gw2-api": { "status": "idle" } },
+      "packets": [
+        { "edge": "c-gw1", "shape": "envelope", "durationMs": 600 },
+        { "edge": "gw1-redis", "shape": "square", "startAt": 700, "durationMs": 500 },
+        { "edge": "gw1-redis", "shape": "dot", "direction": "backward", "startAt": 1250, "durationMs": 500, "color": "success", "label": "allow · 49" },
+        { "edge": "gw1-api", "shape": "envelope", "startAt": 1850, "durationMs": 700 },
+        { "edge": "gw1-api", "shape": "envelope", "direction": "backward", "startAt": 2600, "durationMs": 600, "color": "success" }
+      ],
+      "annotations": [
+        { "id": "noburst", "x": 580, "y": 400, "text": { "tr": "t = 30 s: 100 × 0.5 + 1 = 51 → izin", "en": "t = 30 s: 100 × 0.5 + 1 = 51 → allow" }, "tone": "info", "target": "redis" }
+      ]
+    },
+    {
+      "id": "fail-open",
+      "title": { "tr": "7 · Redis düştü: fail-open", "en": "7 · Redis is down: fail-open" },
+      "narration": {
+        "tr": "Redis'e ulaşılamıyor. Limiter'ın kendisi kesinti nedeni olmamalı: gateway yerel, yaklaşık bir sayaca düşer (limit / düğüm sayısı) ve istekleri geçirmeye devam eder; alarm üretilir. Ödeme gibi hassas uçlarda tersi (fail-closed) tercih edilebilir — bu bir ürün kararıdır.",
+        "en": "Redis is unreachable. The limiter itself must not become the outage: the gateway falls back to a local, approximate counter (limit / node count) and keeps letting requests through; an alarm is raised. For sensitive endpoints such as payments the opposite (fail-closed) may be preferred — that is a product decision."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["redis", "gw1", "gw2", "api"], "edges": ["gw1-redis", "gw2-redis", "gw1-api"] },
+      "nodeStates": { "redis": { "status": "down", "badge": "✕" }, "gw1": { "status": "warning", "badge": "local 50/dk" }, "gw2": { "status": "warning", "badge": "local 50/dk" }, "client": { "badge": "" } },
+      "edgeStates": { "gw1-redis": { "status": "error" }, "gw2-redis": { "status": "error" } },
+      "packets": [
+        { "edge": "gw1-redis", "shape": "square", "durationMs": 600, "color": "danger" },
+        { "edge": "c-gw1", "shape": "envelope", "startAt": 1000, "durationMs": 600 },
+        { "edge": "gw1-api", "shape": "envelope", "startAt": 1700, "durationMs": 700, "color": "warning" },
+        { "edge": "gw1-api", "shape": "envelope", "direction": "backward", "startAt": 2500, "durationMs": 600, "color": "success" }
+      ],
+      "annotations": [
+        { "id": "alarm", "x": 580, "y": 400, "text": { "tr": "alarm: limiter degraded · fail-open", "en": "alarm: limiter degraded · fail-open" }, "tone": "danger", "target": "redis" }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["rate-limiter", "sliding-window", "redis", "lua", "distributed"]
+}

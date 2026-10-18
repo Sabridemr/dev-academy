@@ -1,0 +1,212 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "f-04-terraform-plan-apply",
+  "title": { "tr": "Terraform Plan / Apply İş Akışı", "en": "The Terraform Plan / Apply Workflow" },
+  "summary": {
+    "tr": "Bir HCL değişikliğinin PR'dan plan'a, incelemeden apply'a, state kilidinden bulut API'sine ve güncellenmiş state'e yolculuğu; sonunda drift tespiti.",
+    "en": "An HCL change travelling from PR to plan, from review to apply, through the state lock to the cloud API and the updated state; ending with drift detection."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda geliştirici ve Git deposu, ortada CI runner ve bir inceleyici, sağ üstte uzak state deposu (S3 ve DynamoDB kilidi), sağ altta bulut API'si ve yaratılan RDS, güvenlik grubu, secret kaynakları. Adımlar: HCL değişikliği PR olarak gelir; CI state'i okuyup plan üretir (+2 ekle, ~1 güncelle); plan PR'a yorum olarak düşer ve inceleyici onaylar; merge sonrası apply state'i kilitler; bulut API'si kaynakları yaratır; state güncellenip kilit açılır; son adımda konsoldan elle yapılan bir değişiklik drift olarak tespit edilir.",
+      "en": "Developer and Git repository on the left, a CI runner and a reviewer in the middle, the remote state store (S3 and a DynamoDB lock) top right, and the cloud API with the created RDS, security group and secret resources bottom right. Steps: an HCL change arrives as a PR; CI reads state and produces a plan (+2 add, ~1 change); the plan is posted on the PR and the reviewer approves; after merge, apply locks the state; the cloud API creates resources; state is updated and unlocked; in the last step a manual console change is detected as drift."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "dev", "kind": "client", "label": { "tr": "Geliştirici", "en": "Developer" }, "sublabel": "rds.tf · +multi_az", "x": 90, "y": 300, "w": 110, "h": 70 },
+    { "id": "git", "kind": "storage", "label": "Git PR #318", "sublabel": { "tr": "infra/prod/cart", "en": "infra/prod/cart" }, "x": 260, "y": 300, "w": 130, "h": 70 },
+    { "id": "ci", "kind": "worker", "label": "CI runner", "sublabel": "terraform plan / apply", "x": 450, "y": 300, "w": 150, "h": 76 },
+    { "id": "reviewer", "kind": "user", "label": { "tr": "İnceleyici", "en": "Reviewer" }, "sublabel": { "tr": "platform ekibi", "en": "platform team" }, "x": 260, "y": 110 },
+    { "id": "state", "kind": "storage", "label": "Remote state", "sublabel": { "tr": "S3 · terraform.tfstate", "en": "S3 · terraform.tfstate" }, "x": 760, "y": 110, "w": 150, "h": 70 },
+    { "id": "lock", "kind": "db", "label": { "tr": "Kilit", "en": "Lock" }, "sublabel": "DynamoDB", "x": 920, "y": 230, "w": 100, "h": 60 },
+    { "id": "cloud", "kind": "gateway", "label": "AWS API", "sublabel": { "tr": "eu-central-1", "en": "eu-central-1" }, "x": 700, "y": 300, "w": 130, "h": 70 },
+    { "id": "rds", "kind": "db", "label": "RDS cart", "sublabel": { "tr": "multi_az: false → true", "en": "multi_az: false → true" }, "x": 620, "y": 490, "w": 130, "h": 64 },
+    { "id": "sg", "kind": "generic", "label": "Security group", "sublabel": { "tr": "5432 yalnızca pod'lardan", "en": "5432 only from pods" }, "x": 790, "y": 490, "w": 140, "h": 64 },
+    { "id": "secret", "kind": "storage", "label": "Secrets Manager", "sublabel": "prod/cart/db", "x": 450, "y": 490, "w": 140, "h": 64, "status": "muted" }
+  ],
+  "edges": [
+    { "id": "dev-git", "from": "dev", "to": "git", "kind": "data", "label": "git push" },
+    { "id": "git-ci", "from": "git", "to": "ci", "kind": "event", "label": "webhook" },
+    { "id": "ci-state", "from": "ci", "to": "state", "kind": "data", "curvature": -0.2, "label": { "tr": "state oku/yaz", "en": "read/write state" } },
+    { "id": "ci-lock", "from": "ci", "to": "lock", "kind": "control", "style": "dotted", "curvature": -0.1, "label": { "tr": "kilit", "en": "lock" } },
+    { "id": "ci-git", "from": "ci", "to": "git", "kind": "response", "style": "dashed", "curvature": 0.35, "label": { "tr": "plan yorumu", "en": "plan comment" } },
+    { "id": "rev-git", "from": "reviewer", "to": "git", "kind": "control", "label": { "tr": "approve", "en": "approve" } },
+    { "id": "ci-cloud", "from": "ci", "to": "cloud", "kind": "request", "label": { "tr": "API çağrıları", "en": "API calls" } },
+    { "id": "cloud-rds", "from": "cloud", "to": "rds", "kind": "control", "curvature": 0.1 },
+    { "id": "cloud-sg", "from": "cloud", "to": "sg", "kind": "control", "curvature": -0.1 },
+    { "id": "cloud-secret", "from": "cloud", "to": "secret", "kind": "control", "curvature": 0.25 },
+    { "id": "cloud-state", "from": "cloud", "to": "state", "kind": "data", "style": "dotted", "label": { "tr": "gerçek durum", "en": "actual state" } }
+  ],
+  "steps": [
+    {
+      "id": "change",
+      "title": { "tr": "1 · HCL değişikliği PR olur", "en": "1 · HCL change becomes a PR" },
+      "narration": {
+        "tr": "Geliştirici rds.tf dosyasında multi_az = true yapar ve bir güvenlik grubu kuralı ekler. Altyapı değişikliği de kod gibi bir PR'dır: aynı inceleme, aynı CI.",
+        "en": "The developer sets multi_az = true in rds.tf and adds a security group rule. An infrastructure change is a PR like any code change: same review, same CI."
+      },
+      "durationMs": 3500,
+      "inherit": false,
+      "highlight": { "nodes": ["dev", "git"], "edges": ["dev-git"] },
+      "nodeStates": {
+        "dev": { "status": "active" },
+        "git": { "status": "active", "badge": "open" },
+        "rds": { "status": "idle", "sublabel": { "tr": "multi_az: false", "en": "multi_az: false" } },
+        "sg": { "status": "idle" },
+        "secret": { "status": "idle" }
+      },
+      "packets": [{ "edge": "dev-git", "shape": "envelope", "label": "rds.tf", "durationMs": 1200 }],
+      "annotations": [
+        { "id": "diff", "x": 90, "y": 420, "text": { "tr": "+ multi_az = true · + ingress 5432 from pods", "en": "+ multi_az = true · + ingress 5432 from pods" }, "target": "dev" }
+      ]
+    },
+    {
+      "id": "plan",
+      "title": { "tr": "2 · CI: terraform plan", "en": "2 · CI: terraform plan" },
+      "narration": {
+        "tr": "CI, uzak state'i S3'ten okur, AWS API'sinden gerçek kaynakları sorgular ve tanım ile karşılaştırır. Hiçbir şey değiştirmez; yalnızca ne yapacağını hesaplar: 1 kaynak yerinde güncellenecek, 1 kaynak eklenecek, 0 silinecek.",
+        "en": "CI reads the remote state from S3, queries the real resources through the AWS API and compares them with the definition. It changes nothing; it only computes what it would do: 1 resource updated in place, 1 added, 0 destroyed."
+      },
+      "durationMs": 4200,
+      "highlight": { "nodes": ["ci", "state", "cloud"], "edges": ["git-ci", "ci-state", "cloud-state"] },
+      "nodeStates": {
+        "ci": { "status": "busy", "badge": "plan" },
+        "state": { "status": "active" },
+        "cloud": { "status": "active" }
+      },
+      "edgeStates": { "ci-state": { "status": "active" }, "cloud-state": { "status": "active" } },
+      "packets": [
+        { "edge": "git-ci", "shape": "diamond", "durationMs": 800 },
+        { "edge": "ci-state", "shape": "square", "label": "GET tfstate", "startAt": 800, "durationMs": 900 },
+        { "edge": "ci-state", "shape": "square", "direction": "backward", "startAt": 1700, "durationMs": 900, "color": "accent" },
+        { "edge": "cloud-state", "shape": "dot", "label": "describe", "startAt": 2000, "durationMs": 900 }
+      ],
+      "annotations": [
+        { "id": "plan-out", "x": 450, "y": 420, "text": { "tr": "Plan: 1 to add, 1 to change, 0 to destroy", "en": "Plan: 1 to add, 1 to change, 0 to destroy" }, "tone": "info", "target": "ci" }
+      ]
+    },
+    {
+      "id": "review",
+      "title": { "tr": "3 · Plan PR'da incelenir", "en": "3 · Plan is reviewed on the PR" },
+      "narration": {
+        "tr": "Plan çıktısı PR'a yorum olarak düşer. İnceleyici özellikle '-/+ replace' ve '- destroy' satırlarını arar: bir RDS'in yeniden yaratılması veri kaybı demektir. Burada yalnızca yerinde güncelleme ('~') ve ekleme ('+') var; onaylanır.",
+        "en": "The plan output is posted as a PR comment. The reviewer looks especially for '-/+ replace' and '- destroy' lines: recreating an RDS means data loss. Here there is only an in-place update ('~') and an addition ('+'); it is approved."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["git", "reviewer"], "edges": ["ci-git", "rev-git"] },
+      "nodeStates": {
+        "ci": { "status": "success", "badge": "plan ✓" },
+        "reviewer": { "status": "active" },
+        "git": { "status": "success", "badge": "approved" }
+      },
+      "edgeStates": { "ci-git": { "status": "active" }, "rev-git": { "status": "active" } },
+      "packets": [
+        { "edge": "ci-git", "shape": "envelope", "label": "plan.txt", "durationMs": 1000 },
+        { "edge": "rev-git", "shape": "diamond", "label": "LGTM", "startAt": 1800, "durationMs": 900, "color": "success" }
+      ],
+      "annotations": [
+        { "id": "review-note", "x": 450, "y": 60, "text": { "tr": "~ aws_db_instance.cart (multi_az)  + aws_security_group_rule.db", "en": "~ aws_db_instance.cart (multi_az)  + aws_security_group_rule.db" }, "tone": "success" }
+      ]
+    },
+    {
+      "id": "lock-step",
+      "title": { "tr": "4 · Merge → apply, state kilitlenir", "en": "4 · Merge → apply, state is locked" },
+      "narration": {
+        "tr": "PR main'e birleşince CI bu kez terraform apply çalıştırır. İlk iş DynamoDB'de bir kilit almaktır: aynı anda başka bir apply çalışıyorsa bekler. Kilit olmasaydı iki pipeline aynı kaynağı iki kez yaratır ya da state'i bozardı.",
+        "en": "Once the PR merges to main, CI now runs terraform apply. Its first job is to take a lock in DynamoDB: if another apply is running it waits. Without the lock, two pipelines could create the same resource twice or corrupt the state."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["ci", "lock"], "edges": ["ci-lock"] },
+      "nodeStates": {
+        "git": { "badge": "merged" },
+        "ci": { "status": "busy", "badge": "apply" },
+        "lock": { "status": "warning", "badge": "LOCKED" }
+      },
+      "edgeStates": { "ci-lock": { "status": "active" }, "ci-git": { "status": "idle" }, "rev-git": { "status": "idle" } },
+      "packets": [{ "edge": "ci-lock", "shape": "diamond", "label": "PutItem lock", "durationMs": 1000, "color": "accent" }],
+      "annotations": [
+        { "id": "lock-note", "x": 920, "y": 330, "text": { "tr": "LockID: prod/cart · owner: ci-run-5521", "en": "LockID: prod/cart · owner: ci-run-5521" }, "tone": "warning", "target": "lock" }
+      ]
+    },
+    {
+      "id": "apply",
+      "title": { "tr": "5 · AWS API kaynakları değiştirir", "en": "5 · The AWS API changes resources" },
+      "narration": {
+        "tr": "Terraform, plandaki her satır için AWS API'sini çağırır: ModifyDBInstance ile Multi-AZ açılır (AZ-b'de standby kurulur, birkaç dakika sürer), AuthorizeSecurityGroupIngress ile kural eklenir. Üretilen DB parolası Secrets Manager'da saklanır; Git'te ya da logda hiç görünmez.",
+        "en": "For each line in the plan Terraform calls the AWS API: ModifyDBInstance turns on Multi-AZ (a standby is built in AZ-b, taking a few minutes), AuthorizeSecurityGroupIngress adds the rule. The generated DB password is stored in Secrets Manager; it never appears in Git or logs."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["cloud", "rds", "sg", "secret"], "edges": ["ci-cloud", "cloud-rds", "cloud-sg", "cloud-secret"] },
+      "nodeStates": {
+        "cloud": { "status": "busy" },
+        "rds": { "status": "warning", "badge": "modifying", "sublabel": { "tr": "multi_az: false → true", "en": "multi_az: false → true" } },
+        "sg": { "status": "active", "badge": "+1 rule" },
+        "secret": { "status": "active", "badge": "v2" }
+      },
+      "edgeStates": { "ci-cloud": { "status": "active" }, "cloud-rds": { "status": "active" }, "cloud-sg": { "status": "active" }, "cloud-secret": { "status": "active" } },
+      "packets": [
+        { "edge": "ci-cloud", "shape": "envelope", "label": "ModifyDBInstance", "durationMs": 900 },
+        { "edge": "cloud-rds", "shape": "diamond", "startAt": 900, "durationMs": 1000 },
+        { "edge": "ci-cloud", "shape": "envelope", "label": "AuthorizeSG", "startAt": 1500, "durationMs": 900 },
+        { "edge": "cloud-sg", "shape": "diamond", "startAt": 2400, "durationMs": 900 },
+        { "edge": "cloud-secret", "shape": "square", "label": "PutSecretValue", "startAt": 2800, "durationMs": 1000, "color": "accent" }
+      ],
+      "annotations": [
+        { "id": "secret-note", "x": 450, "y": 580, "text": { "tr": "parola: Git'te yok, logda yok, yalnızca KMS ile şifreli", "en": "password: not in Git, not in logs, only KMS-encrypted" }, "tone": "info", "target": "secret" }
+      ]
+    },
+    {
+      "id": "state-update",
+      "title": { "tr": "6 · State güncellenir, kilit açılır", "en": "6 · State updated, lock released" },
+      "narration": {
+        "tr": "Her kaynağın gerçek ID'si ve son hâli state dosyasına yazılır ve S3'e yüklenir; ardından kilit bırakılır. State artık 'ne istedim' ile 'ne var' arasındaki köprüdür; bir sonraki plan buradan başlayacak.",
+        "en": "Each resource's real ID and final attributes are written to the state file and uploaded to S3; then the lock is released. The state is now the bridge between 'what I asked for' and 'what exists'; the next plan will start from here."
+      },
+      "durationMs": 3800,
+      "highlight": { "nodes": ["ci", "state", "lock"], "edges": ["ci-state", "ci-lock"] },
+      "nodeStates": {
+        "ci": { "status": "success", "badge": "apply ✓" },
+        "state": { "status": "success", "badge": "serial 42" },
+        "lock": { "status": "idle", "badge": "" },
+        "rds": { "status": "success", "badge": "multi-AZ", "sublabel": { "tr": "standby: AZ-b", "en": "standby: AZ-b" } },
+        "cloud": { "status": "idle" }
+      },
+      "edgeStates": { "ci-cloud": { "status": "idle" }, "cloud-rds": { "status": "idle" }, "cloud-sg": { "status": "idle" }, "cloud-secret": { "status": "idle" } },
+      "packets": [
+        { "edge": "ci-state", "shape": "square", "label": "PUT tfstate", "durationMs": 1000, "color": "success" },
+        { "edge": "ci-lock", "shape": "diamond", "label": "DeleteItem", "startAt": 1200, "durationMs": 900 }
+      ],
+      "annotations": [
+        { "id": "state-note", "x": 760, "y": 40, "text": { "tr": "Apply complete! 1 added, 1 changed, 0 destroyed", "en": "Apply complete! 1 added, 1 changed, 0 destroyed" }, "tone": "success", "target": "state" }
+      ]
+    },
+    {
+      "id": "drift",
+      "title": { "tr": "7 · Drift: konsoldan elle değişiklik", "en": "7 · Drift: a manual console change" },
+      "narration": {
+        "tr": "Bir hafta sonra biri acil durumda AWS konsolundan güvenlik grubuna 0.0.0.0/0 için port açar. Gece çalışan drift tespiti (terraform plan) gerçek durumun state'ten saptığını görür ve uyarı üretir: ya değişiklik PR ile koda alınır ya da bir sonraki apply onu geri alır.",
+        "en": "A week later someone opens a port for 0.0.0.0/0 on the security group from the AWS console in an emergency. The nightly drift detection (terraform plan) sees that reality diverged from state and raises an alert: either the change is brought into code via a PR, or the next apply reverts it."
+      },
+      "durationMs": 4200,
+      "highlight": { "nodes": ["sg", "cloud", "ci"], "edges": ["cloud-state", "ci-cloud"] },
+      "nodeStates": {
+        "sg": { "status": "error", "badge": "DRIFT", "sublabel": { "tr": "+ 5432 from 0.0.0.0/0 (konsol)", "en": "+ 5432 from 0.0.0.0/0 (console)" } },
+        "ci": { "status": "warning", "badge": "drift check" },
+        "state": { "status": "warning" }
+      },
+      "edgeStates": { "ci-cloud": { "status": "active" }, "cloud-state": { "status": "error" } },
+      "packets": [
+        { "edge": "ci-cloud", "shape": "dot", "label": "describe", "durationMs": 900 },
+        { "edge": "cloud-state", "shape": "square", "label": "≠ state", "startAt": 1000, "durationMs": 1000, "color": "danger" }
+      ],
+      "annotations": [
+        { "id": "drift-note", "x": 450, "y": 420, "text": { "tr": "Plan: ~ aws_security_group.db (1 rule not in config) → PR aç ya da geri al", "en": "Plan: ~ aws_security_group.db (1 rule not in config) → open a PR or revert" }, "tone": "danger", "target": "ci" }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["terraform", "iac", "state", "drift", "secrets"]
+}

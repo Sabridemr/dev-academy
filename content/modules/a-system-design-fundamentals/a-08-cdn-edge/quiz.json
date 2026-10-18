@@ -1,0 +1,110 @@
+{
+  "id": "a-08-cdn-edge-quiz",
+  "title": { "tr": "CDN ve Edge Computing Quiz", "en": "CDN and Edge Computing Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Bir CDN'in gecikmeyi düşürmesinin temel nedeni nedir?",
+        "en": "What is the fundamental reason a CDN reduces latency?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "PoP'ların HTTP yerine UDP tabanlı QUIC kullanarak paket kaybında yeniden iletimi atlaması", "en": "PoPs use UDP-based QUIC instead of HTTP and skip retransmission on packet loss" } },
+        { "id": "b", "text": { "tr": "Origin'in önünde TLS'i sonlandırarak şifreleme CPU yükünü origin sunucusundan alması", "en": "It terminates TLS in front of the origin and takes the encryption CPU load off the origin server" } },
+        { "id": "c", "text": { "tr": "İçeriği ve TCP/TLS el sıkışmalarını kullanıcıya yakın bir PoP'a taşıyıp RTT'yi kısaltması", "en": "It moves content and the TCP/TLS handshakes to a PoP near the user, shortening the RTT" } },
+        { "id": "d", "text": { "tr": "Çok çekirdekli PoP sunucularının dosyaları origin'den daha hızlı diskten okuyabilmesi", "en": "Multi-core PoP servers can read files from disk faster than the origin" } }
+      ],
+      "correct": ["c"],
+      "explanation": {
+        "tr": "Işık hızı sabittir; CDN mesafeyi kısaltır. İlk isteğin 3–4 RTT'si yakın PoP ile 8–20 ms üzerinden yapılır ve içerik cache'ten yakından gelir. QUIC kayıp paketi atlamaz, yalnızca stream'leri bağımsız kurtarır ve CDN'siz de kullanılabilir (a yanlış); TLS'i origin'den almak origin CPU'sunu rahatlatır ama kullanıcının gördüğü gecikmeyi mesafe belirler (b yanlış); disk okuma süresi onlarca milisaniyelik RTT'lerin yanında ihmal edilebilir (d yanlış).",
+        "en": "The speed of light is fixed; a CDN shortens the distance. The 3–4 RTTs of a first request happen against a nearby PoP at 8–20 ms, and content is served from a nearby cache. QUIC does not skip lost packets, it only recovers streams independently, and it works without a CDN (a is wrong); offloading TLS relieves the origin's CPU but the latency the user sees is set by distance (b is wrong); disk read time is negligible next to RTTs of tens of milliseconds (d is wrong)."
+      },
+      "difficulty": "easy",
+      "concepts": ["cdn", "point-of-presence"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "Popüler bir dosyanın yayınlanma anında yüzlerce PoP'un aynı anda origin'e miss göndermesini (thundering herd) hangi mekanizma önler?",
+        "en": "Which mechanism prevents hundreds of PoPs from sending a miss to the origin at the same moment a popular file is published (thundering herd)?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Dosyaya max-age=0 verip her PoP'u ETag ile koşullu istek yapmaya zorlamak", "en": "Give the file max-age=0 and force every PoP to make a conditional request with ETag" } },
+        { "id": "b", "text": { "tr": "Origin shield / tiered cache ile request coalescing yapmak", "en": "Doing request coalescing with an origin shield / tiered cache" } },
+        { "id": "c", "text": { "tr": "GeoDNS ile PoP'ları bölgelere ayırıp miss'leri zamana yaymak", "en": "Split PoPs into regions with GeoDNS and spread the misses over time" } },
+        { "id": "d", "text": { "tr": "Cache-Control: private ile dosyayı yalnızca tarayıcıda saklatmak", "en": "Store the file only in the browser with Cache-Control: private" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Origin shield, tüm PoP miss'lerini önce tek bir ara katmana yönlendirir; shield aynı nesneye gelen eş zamanlı istekleri tek bir origin çağrısında birleştirir. max-age=0 ile koşullu istek her PoP'u yine origin'e götürür ve dalgayı büyütür (a); GeoDNS yalnızca PoP seçer, miss'leri zamana yaymaz (c); private ise CDN'in hiç saklamamasına, yani her isteğin origin'e gitmesine yol açar (d).",
+        "en": "An origin shield routes every PoP miss to a single intermediate layer first; the shield collapses concurrent requests for the same object into one origin call. Conditional requests with max-age=0 still send every PoP to the origin and enlarge the wave (a); GeoDNS only picks a PoP and does not spread misses over time (c); private stops the CDN from caching at all, so every request hits the origin (d)."
+      },
+      "difficulty": "medium",
+      "concepts": ["origin-shield", "edge-cache-hit-miss"]
+    },
+    {
+      "id": "q3",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Aşağıdaki Cache-Control kullanımlarından hangileri doğrudur? (Birden fazla seçin)",
+        "en": "Which of the following Cache-Control usages are correct? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Hash'li dosya adı (app.3f9a2c.js) için `public, max-age=31536000, immutable`", "en": "`public, max-age=31536000, immutable` for a hashed filename (app.3f9a2c.js)" } },
+        { "id": "b", "text": { "tr": "Giriş yapmış kullanıcının hesap sayfası için `public, s-maxage=600`", "en": "`public, s-maxage=600` for a logged-in user's account page" } },
+        { "id": "c", "text": { "tr": "Origin 5xx dönerse eski kopyayı sunmak için `stale-if-error=86400`", "en": "`stale-if-error=86400` to serve the old copy when the origin returns 5xx" } },
+        { "id": "d", "text": { "tr": "Tarayıcının 1 dk, CDN'in 10 dk saklaması için `max-age=60, s-maxage=600`", "en": "`max-age=60, s-maxage=600` so the browser keeps it 1 min and the CDN 10 min" } }
+      ],
+      "correct": ["a", "c", "d"],
+      "explanation": {
+        "tr": "Sürümlü URL'ler 1 yıl immutable saklanabilir (a); stale-if-error dayanıklılık sağlar (c); s-maxage yalnızca paylaşımlı cache'leri (CDN) etkiler, max-age tarayıcıyı (d). Kullanıcıya özel bir sayfayı public işaretlemek, A'nın hesabını B'ye göstermek demektir — veri sızıntısıdır; `private, no-store` olmalıdır (b yanlış).",
+        "en": "Versioned URLs can be cached immutable for a year (a); stale-if-error provides resilience (c); s-maxage affects only shared caches (CDN) while max-age affects the browser (d). Marking a user-specific page public means showing A's account to B — a data leak; it must be `private, no-store` (b is wrong)."
+      },
+      "difficulty": "medium",
+      "concepts": ["cache-control-headers", "cache-invalidation"]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Anycast ile tüm PoP'lar aynı IP adresini duyurur; bir PoP devre dışı kaldığında BGP rotayı çeker ve trafik DNS değişikliğine gerek kalmadan komşu PoP'a akar.",
+        "en": "With anycast all PoPs announce the same IP address; when a PoP goes down BGP withdraws the route and traffic flows to a neighbouring PoP without any DNS change."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["t"],
+      "explanation": {
+        "tr": "Doğru. Anycast'te yönlendirme internetin BGP tablosuyla yapılır; aynı prefix birçok yerden duyurulur ve her kullanıcı topolojik olarak en yakın PoP'a gider. DNS TTL'lerini beklemek gerekmez; failover saniyeler içindedir. GeoDNS ise resolver konumuna göre farklı IP döner ve TTL'e bağımlıdır.",
+        "en": "True. In anycast, routing is done by the internet's BGP table; the same prefix is announced from many places and each user reaches the topologically nearest PoP. No DNS TTLs need to expire; failover takes seconds. GeoDNS, by contrast, returns different IPs based on resolver location and depends on TTLs."
+      },
+      "difficulty": "medium",
+      "concepts": ["anycast-routing"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "Hangi iş yükü edge fonksiyonundan EN AZ fayda görür?",
+        "en": "Which workload benefits LEAST from an edge function?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Tek bölgedeki merkezi veritabanına her istekte 5 sorgu atan kişiselleştirilmiş sayfa üretmek", "en": "Rendering a personalised page that issues 5 queries per request to a single-region central database" } },
+        { "id": "b", "text": { "tr": "İstek başlığına göre A/B varyantı atayıp çerezi Set-Cookie ile kenarda yazmak", "en": "Assigning an A/B variant from request headers and writing the cookie with Set-Cookie at the edge" } },
+        { "id": "c", "text": { "tr": "Origin'deki orijinal görseli istenen genişlikte boyutlandırıp PoP cache'ine koymak", "en": "Resizing the original image from the origin to the requested width and storing it in the PoP cache" } },
+        { "id": "d", "text": { "tr": "JWT imzasını yerel açık anahtarla doğrulayıp yetkisiz isteği 401 ile kenarda reddetmek", "en": "Verifying the JWT signature with a local public key and rejecting unauthorised requests with 401 at the edge" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "Edge'in kazancı, işin kullanıcıya yakın ve veriden bağımsız (ya da edge'de cache'lenmiş veriyle) yapılabilmesidir. Durum tek bölgedeki merkezi veritabanındaysa fonksiyon her sorgu için o bölgeye gider ve 5 sorgu × 150 ms ile kazanım erir, hatta kötüleşir. A/B atama, görsel boyutlandırma (orijinal bir kez çekilir, sonrası PoP cache'inden) ve JWT doğrulama ise tamamen yerel bilgiyle yapılabilir.",
+        "en": "The edge wins when the work can be done close to the user and independently of data (or with data cached at the edge). If state lives in a single-region central database, the function travels to that region for every query and 5 queries × 150 ms erases the gain, possibly making things worse. A/B assignment, image resizing (the original is fetched once, then served from the PoP cache) and JWT verification can all be done with purely local information."
+      },
+      "difficulty": "hard",
+      "concepts": ["edge-functions", "dynamic-content-cdn"]
+    }
+  ]
+}

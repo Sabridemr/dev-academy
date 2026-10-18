@@ -1,0 +1,110 @@
+{
+  "id": "e-03-twitter-timeline-quiz",
+  "title": { "tr": "Twitter Timeline Quiz", "en": "Twitter Timeline Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Saf fan-out on write (push) yaklaşımının temel zayıflığı nedir?",
+        "en": "What is the fundamental weakness of pure fan-out on write (push)?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Her timeline okumasında takip edilen tüm hesapların son tweet'lerinin ayrı ayrı sorgulanması gerekir", "en": "Every timeline read has to query the latest tweets of every followed account separately" } },
+        { "id": "b", "text": { "tr": "Tweet gövdesi her takipçinin listesine kopyalandığı için bellek takipçi sayısıyla çarpılır", "en": "Because the tweet body is copied into every follower's list, memory is multiplied by follower count" } },
+        { "id": "c", "text": { "tr": "Çok takipçili bir kullanıcının tek tweet'i milyonlarca cache yazması üretir ve dakikalar sürer", "en": "A single tweet from a user with many followers produces millions of cache writes and takes minutes" } },
+        { "id": "d", "text": { "tr": "Takipçi listesi değiştiğinde daha önce itilmiş tüm timeline'ların yeniden hesaplanması gerekir", "en": "When the follower list changes, every previously pushed timeline has to be recomputed" } }
+      ],
+      "correct": ["c"],
+      "explanation": {
+        "tr": "Push modelinde okuma zaten ucuzdur (tek liste okuması); okurken tüm hesapları sorgulamak pull modelinin zayıflığıdır. Listelerde gövde değil yalnızca id tutulur, bellek gövdeyle çarpılmaz; takip değişikliği de geçmiş listeleri yeniden hesaplatmaz. Asıl maliyet yazma tarafındadır ve takipçi sayısıyla doğrusal büyür — bu yüzden hibrit model gerekir.",
+        "en": "In the push model reads are already cheap (a single list read); querying every account at read time is the weakness of the pull model. Lists hold only ids, not bodies, so memory is not multiplied by the body; a follow change does not recompute past lists either. The real cost is on the write side and grows linearly with follower count — that is why the hybrid model is needed."
+      },
+      "difficulty": "easy",
+      "concepts": ["fan-out-on-write", "celebrity-problem"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "Hibrit modelde bir takipçi timeline'ını açtığında, takip ettiği ünlülerin tweet'leri nasıl görünür?",
+        "en": "In the hybrid model, when a follower opens their timeline, how do tweets from the celebrities they follow appear?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Okuma anında ünlülerin son tweet'leri çekilip cache listesiyle zaman sırasına göre birleştirilir", "en": "At read time the celebrities' latest tweets are pulled and merged with the cache list in time order" } },
+        { "id": "b", "text": { "tr": "Ünlü tweet'leri de takipçinin cache listesine itilir, ancak düşük öncelikli ayrı bir fan-out kuyruğundan geçer", "en": "Celebrity tweets are pushed into the follower's cache list too, but through a separate low-priority fan-out queue" } },
+        { "id": "c", "text": { "tr": "Takipçi timeline'ı açtığında tüm takip ettiği hesapların son tweet'leri sorgulanır (fan-out on read'e düşülür)", "en": "When the follower opens the timeline, the latest tweets of every followed account are queried (falling back to fan-out on read)" } },
+        { "id": "d", "text": { "tr": "Ünlü tweet'leri ayrı bir 'ünlüler' sekmesinde gösterilir; home timeline yalnızca cache listesini içerir", "en": "Celebrity tweets are shown in a separate 'celebrities' tab; the home timeline contains only the cache list" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "Hibrit modelin özü budur: eşik üstü hesaplar için push yapılmaz; okurken yalnızca az sayıda ünlünün son tweet'leri çekilip Snowflake id'ye göre birleştirilir. Düşük öncelikli kuyruk yine milyonlarca yazma üretir; ayrı sekme ürün deneyimini bozar; tüm hesapları sorgulamak saf pull modelidir ve 145 K QPS'de sürdürülemez. Kullanıcı başına takip edilen ünlü sayısı küçük olduğundan bu okuma maliyeti kabul edilebilir.",
+        "en": "That is the essence of the hybrid model: no push for accounts above the threshold; at read time only a handful of celebrities' latest tweets are pulled and merged by Snowflake id. A low-priority queue still produces millions of writes; a separate tab breaks the product experience; querying every account is the pure pull model and is unsustainable at 145 K QPS. Since each user follows few celebrities, this read cost is acceptable."
+      },
+      "difficulty": "medium",
+      "concepts": ["hybrid-fan-out", "fan-out-on-read"]
+    },
+    {
+      "id": "q3",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Timeline cache'inin bellek maliyetini düşüren tasarım kararları hangileridir? (Birden fazla seçin)",
+        "en": "Which design decisions reduce the memory cost of the timeline cache? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Listede tweet gövdesi değil yalnızca tweet id'si tutmak", "en": "Keeping only tweet ids in the list, not tweet bodies" } },
+        { "id": "b", "text": { "tr": "Listeyi ~800 girdiyle sınırlamak (LTRIM)", "en": "Capping the list at ~800 entries (LTRIM)" } },
+        { "id": "c", "text": { "tr": "30 gündür girmeyen pasif kullanıcılar için liste oluşturmamak", "en": "Not materializing lists for users inactive for 30 days" } },
+        { "id": "d", "text": { "tr": "Her tweet'i tüm takipçilerin listesine tam gövdesiyle kopyalamak", "en": "Copying every tweet with its full body into every follower's list" } }
+      ],
+      "correct": ["a", "b", "c"],
+      "explanation": {
+        "tr": "Id tutmak gövdenin bir kez tweet cache'inde saklanmasını sağlar; 800 sınırı liste boyutunu sabitler; pasif kullanıcıları atlamak kullanılmayan belleği keser. Tam gövde kopyalamak (d) tam tersine bellek maliyetini patlatır.",
+        "en": "Storing ids lets the body live once in the tweet cache; the 800 cap bounds list size; skipping inactive users cuts unused memory. Copying full bodies (d) does the opposite and explodes memory cost."
+      },
+      "difficulty": "medium",
+      "concepts": ["timeline-cache"]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Count-Min Sketch bir etiketin sayısını asla gerçek değerinden düşük raporlamaz, ancak hash çakışmaları nedeniyle daha yüksek raporlayabilir.",
+        "en": "A Count-Min Sketch never reports a tag's count lower than its true value, but it may report higher due to hash collisions."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["t"],
+      "explanation": {
+        "tr": "Doğru. Her gelişte d sayaç artırılır, sorguda bu sayaçların minimumu alınır. Sayaçlar yalnızca artar, dolayısıyla eksik sayma imkânsızdır; başka etiketlerin aynı hücreye düşmesi ise fazla saymaya yol açabilir. Trending gibi 'yaklaşık en büyükler' problemlerinde bu hata kabul edilebilir ve bellek kazancı devasadır.",
+        "en": "True. On each arrival d counters are incremented and the query takes their minimum. Counters only grow, so undercounting is impossible; other tags landing in the same cell can cause overcounting. For 'approximate heavy hitters' problems like trending this error is acceptable and the memory savings are enormous."
+      },
+      "difficulty": "hard",
+      "concepts": ["count-min-sketch", "trending-topics"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "Tweet id'lerinin Snowflake gibi zaman sıralı üretilmesi timeline tasarımına ne kazandırır?",
+        "en": "What does generating tweet ids time-ordered, as with Snowflake, buy the timeline design?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Tweet'ler id'ye göre shard'landığında aynı kullanıcının tweet'leri aynı shard'a düşer ve profil sorgusu tek shard'da kalır", "en": "When tweets are sharded by id, the same user's tweets land on the same shard and the profile query stays on one shard" } },
+        { "id": "b", "text": { "tr": "Cache listesi ile ünlü tweet'lerini birleştirirken ayrı bir zaman alanı okumadan id karşılaştırması yeterli olur", "en": "Merging the cache list with celebrity tweets needs only id comparison, no separate timestamp lookup" } },
+        { "id": "c", "text": { "tr": "Id'nin üst bitleri zaman olduğundan timeline cache'inde LTRIM yerine girdi bazlı TTL ile otomatik süre aşımı kullanılabilir", "en": "Because the id's high bits are time, the timeline cache can use per-entry TTL expiry instead of LTRIM" } },
+        { "id": "d", "text": { "tr": "Fan-out işçisi id'deki makine bitlerinden takipçi listesini çıkarır ve sosyal graf sorgusunu tamamen atlar", "en": "The fan-out worker derives the follower list from the id's machine bits and skips the social graph query entirely" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Snowflake id'nin üst bitleri zaman damgasıdır; bu yüzden büyük id = yeni tweet. Birleştirme ve sıralama yalnızca id'lerle yapılır, hidrasyondan önce hiçbir gövde okunmaz. Id'ye göre shard'lama kullanıcıya göre gruplama sağlamaz; makine bitleri yalnızca üretici düğümü tanımlar, takipçi bilgisi içermez; Redis listelerinde girdi bazlı TTL yoktur, sınır yine LTRIM ile tutulur.",
+        "en": "The high bits of a Snowflake id are a timestamp, so a larger id means a newer tweet. Merging and sorting are done with ids alone, with no body reads before hydration. Sharding by id does not group by user; the machine bits only identify the generating node and carry no follower information; Redis lists have no per-entry TTL, the cap is still enforced with LTRIM."
+      },
+      "difficulty": "medium",
+      "concepts": ["timeline-cache", "hybrid-fan-out"]
+    }
+  ]
+}

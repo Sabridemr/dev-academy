@@ -1,0 +1,472 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "c-04-circuit-breaker",
+  "title": {
+    "tr": "Circuit Breaker: Kapalı → Açık → Yarı Açık",
+    "en": "Circuit Breaker: Closed → Open → Half-Open"
+  },
+  "summary": {
+    "tr": "Çağrılar breaker üzerinden geçer; ardışık hatalar eşiği aşınca breaker açılır ve istekleri ağa çıkmadan reddeder; süre dolunca tek bir deneme yapar; başarılıysa kapanır.",
+    "en": "Calls pass through the breaker; when consecutive failures exceed the threshold the breaker opens and rejects requests without touching the network; after the timeout it makes one trial call; on success it closes."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda OrderService, ortada CircuitBreaker, sağda PaymentService. Başta breaker kapalıdır ve çağrılar geçer. PaymentService hata vermeye başlar; beş hatadan sonra breaker açılır ve çağrıları anında reddeder. 30 saniye sonra yarı açık duruma geçer ve bir deneme çağrısı gönderir; başarılı olunca kapanır.",
+      "en": "OrderService on the left, CircuitBreaker in the middle, PaymentService on the right. Initially the breaker is closed and calls pass. PaymentService starts failing; after five failures the breaker opens and rejects calls instantly. After 30 seconds it moves to half-open and sends one trial call; on success it closes."
+    }
+  },
+  "canvas": {
+    "width": 1000,
+    "height": 600
+  },
+  "nodes": [
+    {
+      "id": "client",
+      "kind": "generic",
+      "label": "OrderService",
+      "x": 110,
+      "y": 300,
+      "w": 160,
+      "h": 70,
+      "sublabel": {
+        "tr": "charge()",
+        "en": "charge()"
+      }
+    },
+    {
+      "id": "cb",
+      "kind": "generic",
+      "label": "CircuitBreaker",
+      "x": 480,
+      "y": 300,
+      "w": 220,
+      "h": 90,
+      "sublabel": {
+        "tr": "CLOSED · failures: 0/5",
+        "en": "CLOSED · failures: 0/5"
+      }
+    },
+    {
+      "id": "svc",
+      "kind": "generic",
+      "label": "PaymentService",
+      "x": 850,
+      "y": 300,
+      "w": 180,
+      "h": 70,
+      "sublabel": {
+        "tr": "sağlıklı",
+        "en": "healthy"
+      }
+    },
+    {
+      "id": "fallback",
+      "kind": "generic",
+      "label": "Fallback",
+      "x": 480,
+      "y": 520,
+      "w": 240,
+      "h": 56,
+      "sublabel": {
+        "tr": "kuyruğa al / 503 + Retry-After",
+        "en": "enqueue / 503 + Retry-After"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "c-cb",
+      "from": "client",
+      "to": "cb",
+      "kind": "request",
+      "label": "call()"
+    },
+    {
+      "id": "cb-svc",
+      "from": "cb",
+      "to": "svc",
+      "kind": "request",
+      "label": "POST /charges"
+    },
+    {
+      "id": "cb-fb",
+      "from": "cb",
+      "to": "fallback",
+      "kind": "control",
+      "label": "fail fast",
+      "style": "dashed"
+    }
+  ],
+  "steps": [
+    {
+      "id": "closed",
+      "title": {
+        "tr": "1. CLOSED: her şey normal",
+        "en": "1. CLOSED: all normal"
+      },
+      "narration": {
+        "tr": "Breaker kapalıyken çağrılar aynen geçer; yalnızca sonuçları sayar. Başarı sayaçları sıfırlar.",
+        "en": "While closed, the breaker passes calls through and only counts results. A success resets the counter."
+      },
+      "durationMs": 3500,
+      "inherit": false,
+      "highlight": {
+        "nodes": [
+          "cb",
+          "svc"
+        ],
+        "edges": [
+          "c-cb",
+          "cb-svc"
+        ]
+      },
+      "nodeStates": {
+        "cb": {
+          "status": "success",
+          "badge": "CLOSED"
+        },
+        "svc": {
+          "status": "success"
+        }
+      },
+      "edgeStates": {
+        "cb-fb": {
+          "status": "muted"
+        }
+      },
+      "packets": [
+        {
+          "edge": "c-cb",
+          "shape": "envelope",
+          "durationMs": 700,
+          "repeat": 2,
+          "repeatGapMs": 400
+        },
+        {
+          "edge": "cb-svc",
+          "startAt": 700,
+          "shape": "envelope",
+          "durationMs": 700,
+          "repeat": 2,
+          "repeatGapMs": 400
+        },
+        {
+          "edge": "cb-svc",
+          "startAt": 1500,
+          "direction": "backward",
+          "color": "success",
+          "label": "200",
+          "durationMs": 600
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "id": "failing",
+      "title": {
+        "tr": "2. Hatalar birikiyor",
+        "en": "2. Failures accumulate"
+      },
+      "narration": {
+        "tr": "PaymentService yavaşlar; çağrılar zaman aşımına uğrar. Her hata sayacı artırır: 1/5, 2/5... Henüz her istek ağa çıkıyor ve 2 saniye bekleyip başarısız oluyor; iş parçacıkları tükenmeye başlar.",
+        "en": "PaymentService slows down; calls time out. Each failure increments the counter: 1/5, 2/5... Every request still goes out, waits 2 seconds and fails; threads start to run out."
+      },
+      "durationMs": 4500,
+      "highlight": {
+        "nodes": [
+          "svc"
+        ],
+        "edges": [
+          "cb-svc"
+        ]
+      },
+      "nodeStates": {
+        "svc": {
+          "status": "error",
+          "sublabel": {
+            "tr": "p99 > 2 s",
+            "en": "p99 > 2 s"
+          }
+        },
+        "cb": {
+          "status": "warning",
+          "sublabel": {
+            "tr": "CLOSED · failures: 4/5",
+            "en": "CLOSED · failures: 4/5"
+          }
+        }
+      },
+      "edgeStates": {
+        "cb-svc": {
+          "status": "error",
+          "label": "timeout 2 s"
+        }
+      },
+      "packets": [
+        {
+          "edge": "c-cb",
+          "shape": "envelope",
+          "durationMs": 500,
+          "repeat": 4,
+          "repeatGapMs": 300
+        },
+        {
+          "edge": "cb-svc",
+          "startAt": 500,
+          "shape": "envelope",
+          "color": "danger",
+          "durationMs": 900,
+          "repeat": 4,
+          "repeatGapMs": 0
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a2",
+          "x": 480,
+          "y": 160,
+          "text": {
+            "tr": "her başarısız çağrı 2 s iş parçacığı tutar",
+            "en": "every failed call holds a thread for 2 s"
+          },
+          "tone": "danger",
+          "target": "cb"
+        }
+      ]
+    },
+    {
+      "id": "open",
+      "title": {
+        "tr": "3. OPEN: hızlı hata",
+        "en": "3. OPEN: fail fast"
+      },
+      "narration": {
+        "tr": "5. hata eşiği aşar; breaker AÇILIR. Sonraki 30 saniye boyunca çağrılar ağa hiç çıkmadan anında reddedilir ve fallback çalışır: siparişi \"ödeme bekliyor\" kuyruğuna al. Hasta servis nefes alır, çağıran çökmez.",
+        "en": "The 5th failure crosses the threshold; the breaker OPENS. For the next 30 seconds calls are rejected instantly without touching the network and the fallback runs: put the order in a \"payment pending\" queue. The sick service gets room to breathe, the caller does not collapse."
+      },
+      "durationMs": 4500,
+      "highlight": {
+        "nodes": [
+          "cb",
+          "fallback"
+        ],
+        "edges": [
+          "c-cb",
+          "cb-fb"
+        ]
+      },
+      "nodeStates": {
+        "cb": {
+          "status": "error",
+          "badge": "OPEN",
+          "sublabel": {
+            "tr": "OPEN · 30 s · ret: 0 ms",
+            "en": "OPEN · 30 s · reject: 0 ms"
+          }
+        },
+        "fallback": {
+          "status": "active"
+        }
+      },
+      "edgeStates": {
+        "cb-svc": {
+          "status": "muted",
+          "label": ""
+        },
+        "cb-fb": {
+          "status": "active"
+        }
+      },
+      "packets": [
+        {
+          "edge": "c-cb",
+          "shape": "envelope",
+          "durationMs": 500,
+          "repeat": 3,
+          "repeatGapMs": 400
+        },
+        {
+          "edge": "cb-fb",
+          "startAt": 500,
+          "shape": "diamond",
+          "color": "warning",
+          "durationMs": 500,
+          "repeat": 3,
+          "repeatGapMs": 400
+        },
+        {
+          "edge": "c-cb",
+          "startAt": 600,
+          "direction": "backward",
+          "color": "warning",
+          "label": "CircuitOpenError → fallback",
+          "durationMs": 500,
+          "repeat": 3,
+          "repeatGapMs": 400
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a3",
+          "x": 850,
+          "y": 170,
+          "text": {
+            "tr": "ağ trafiği 0: servis toparlanabilir",
+            "en": "zero network traffic: the service can recover"
+          },
+          "tone": "success",
+          "target": "svc"
+        }
+      ]
+    },
+    {
+      "id": "half-open",
+      "title": {
+        "tr": "4. HALF-OPEN: tek deneme",
+        "en": "4. HALF-OPEN: one trial"
+      },
+      "narration": {
+        "tr": "30 saniye dolar; breaker YARI AÇIK olur ve yalnızca BİR isteğin geçmesine izin verir. Diğerleri hâlâ reddedilir. Bu istek başarılıysa breaker kapanır; başarısızsa tekrar açılır ve süre yeniden başlar.",
+        "en": "The 30 seconds pass; the breaker becomes HALF-OPEN and lets exactly ONE request through. Others are still rejected. If that request succeeds the breaker closes; if it fails, it reopens and the timer restarts."
+      },
+      "durationMs": 3500,
+      "highlight": {
+        "nodes": [
+          "cb",
+          "svc"
+        ],
+        "edges": [
+          "cb-svc"
+        ]
+      },
+      "nodeStates": {
+        "cb": {
+          "status": "warning",
+          "badge": "HALF-OPEN",
+          "sublabel": {
+            "tr": "HALF-OPEN · 1 deneme",
+            "en": "HALF-OPEN · 1 trial"
+          }
+        },
+        "svc": {
+          "status": "active",
+          "sublabel": {
+            "tr": "toparlanıyor",
+            "en": "recovering"
+          }
+        },
+        "fallback": {
+          "status": "idle"
+        }
+      },
+      "edgeStates": {
+        "cb-svc": {
+          "status": "active"
+        },
+        "cb-fb": {
+          "status": "idle"
+        }
+      },
+      "packets": [
+        {
+          "edge": "c-cb",
+          "shape": "envelope",
+          "durationMs": 600
+        },
+        {
+          "edge": "cb-svc",
+          "startAt": 700,
+          "shape": "envelope",
+          "label": "probe",
+          "durationMs": 800
+        },
+        {
+          "edge": "cb-svc",
+          "startAt": 1600,
+          "direction": "backward",
+          "color": "success",
+          "label": "200 · 80 ms",
+          "durationMs": 700
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "id": "closed-again",
+      "title": {
+        "tr": "5. CLOSED: normale dönüş",
+        "en": "5. CLOSED: back to normal"
+      },
+      "narration": {
+        "tr": "Deneme başarılı: breaker kapanır, sayaç sıfırlanır, trafik akar. Kuyruğa alınan ödemeler şimdi işlenir. Üretimde eşik \"ardışık 5 hata\" yerine \"son 10 s'de %50 hata ve en az 20 istek\" gibi oransal tanımlanır.",
+        "en": "The trial succeeded: the breaker closes, the counter resets, traffic flows. Queued payments are processed now. In production the threshold is defined as a rate, \"50% failures over the last 10 s with at least 20 requests\", rather than \"5 consecutive failures\"."
+      },
+      "durationMs": 4000,
+      "highlight": {
+        "nodes": [
+          "cb",
+          "svc"
+        ],
+        "edges": [
+          "c-cb",
+          "cb-svc"
+        ]
+      },
+      "nodeStates": {
+        "cb": {
+          "status": "success",
+          "badge": "CLOSED",
+          "sublabel": {
+            "tr": "CLOSED · failures: 0/5",
+            "en": "CLOSED · failures: 0/5"
+          }
+        },
+        "svc": {
+          "status": "success",
+          "sublabel": {
+            "tr": "sağlıklı",
+            "en": "healthy"
+          }
+        }
+      },
+      "edgeStates": {},
+      "packets": [
+        {
+          "edge": "c-cb",
+          "shape": "envelope",
+          "durationMs": 600,
+          "repeat": 3,
+          "repeatGapMs": 300
+        },
+        {
+          "edge": "cb-svc",
+          "startAt": 600,
+          "shape": "envelope",
+          "durationMs": 600,
+          "repeat": 3,
+          "repeatGapMs": 300
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a5",
+          "x": 480,
+          "y": 160,
+          "text": {
+            "tr": "metrik yayınla: durum geçişleri alarm kaynağıdır",
+            "en": "publish metrics: state transitions are alert sources"
+          },
+          "tone": "info",
+          "target": "cb"
+        }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": [
+    "circuit-breaker",
+    "resilience"
+  ]
+}

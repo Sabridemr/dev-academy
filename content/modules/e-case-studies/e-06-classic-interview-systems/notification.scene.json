@@ -1,0 +1,205 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "e-06-notification-journey",
+  "title": { "tr": "Notification Servisi: Fan-out, Retry, DLQ", "en": "Notification Service: Fan-out, Retry, DLQ" },
+  "summary": {
+    "tr": "OrderConfirmed olayının tekilleştirilmesi, kullanıcı tercihlerine göre kanal seçimi, şablon render, kanal kuyruklarına fan-out, push'un başarılı teslimi, e-posta sağlayıcısının 503 vermesi, üstel geri çekilmeyle yeniden denemeler, DLQ'ya düşme ve yeniden oynatma.",
+    "en": "An OrderConfirmed event deduplicated, channels chosen by user preferences, template rendering, fan-out to channel queues, successful push delivery, the email provider returning 503, retries with exponential backoff, landing in the DLQ and replay."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda sipariş servisi ve giriş kuyruğu; ortada notification servisi, üstte tercih veritabanı, altta şablon deposu; sağda push ve e-posta kuyrukları, işçileri ve sağlayıcıları (APNs/FCM ve SES), ortada DLQ. Olay tekilleştirilir, tercihler push ve e-postayı açık, SMS'i kapalı gösterir, şablon render edilir ve iki kuyruğa yazılır. Push işçisi APNs'e başarıyla gönderir. E-posta işçisi SES'ten 503 alır, 1, 4 ve 16 saniye bekleyerek üç kez dener, sonra mesajı DLQ'ya taşır ve alarm üretir; sağlayıcı düzelince DLQ yeniden oynatılır ve e-posta teslim edilir.",
+      "en": "Order service and ingest queue on the left; notification service in the middle with the preferences database above and the template store below; push and email queues, workers and providers (APNs/FCM and SES) on the right, with the DLQ in the middle. The event is deduplicated, preferences show push and email enabled and SMS disabled, the template is rendered and written to both queues. The push worker delivers to APNs successfully. The email worker gets 503 from SES, retries three times waiting 1, 4 and 16 seconds, then moves the message to the DLQ and raises an alarm; when the provider recovers the DLQ is replayed and the email is delivered."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "producer", "kind": "service", "label": { "tr": "Sipariş servisi", "en": "Order service" }, "sublabel": "OrderConfirmed", "x": 80, "y": 300, "w": 120, "h": 70 },
+    { "id": "ingest", "kind": "queue", "label": "Kafka", "sublabel": "notification-requests", "x": 240, "y": 300, "w": 130, "h": 60 },
+    { "id": "notif", "kind": "service", "label": { "tr": "Notification servisi", "en": "Notification service" }, "sublabel": { "tr": "tekilleştir · yönlendir", "en": "dedupe · route" }, "x": 420, "y": 300, "w": 150, "h": 76 },
+    { "id": "prefs", "kind": "db", "label": { "tr": "Tercihler", "en": "Preferences" }, "sublabel": { "tr": "kanal · sessiz saat", "en": "channels · quiet hours" }, "x": 420, "y": 100, "w": 130, "h": 64 },
+    { "id": "templates", "kind": "storage", "label": { "tr": "Şablonlar", "en": "Templates" }, "sublabel": "order_confirmed v3 · tr", "x": 420, "y": 500, "w": 140, "h": 64 },
+    { "id": "qpush", "kind": "queue", "label": { "tr": "Push kuyruğu", "en": "Push queue" }, "x": 600, "y": 170, "w": 120, "h": 56 },
+    { "id": "qemail", "kind": "queue", "label": { "tr": "E-posta kuyruğu", "en": "Email queue" }, "x": 600, "y": 430, "w": 130, "h": 56 },
+    { "id": "wpush", "kind": "worker", "label": { "tr": "Push işçisi", "en": "Push worker" }, "x": 760, "y": 170, "w": 110, "h": 56 },
+    { "id": "wemail", "kind": "worker", "label": { "tr": "E-posta işçisi", "en": "Email worker" }, "sublabel": "backoff + jitter", "x": 760, "y": 430, "w": 120, "h": 60 },
+    { "id": "dlq", "kind": "queue", "label": "DLQ", "sublabel": { "tr": "ölü mektup", "en": "dead letter" }, "x": 760, "y": 300, "w": 100, "h": 56 },
+    { "id": "apns", "kind": "generic", "label": "APNs / FCM", "x": 910, "y": 170, "w": 110, "h": 56 },
+    { "id": "ses", "kind": "generic", "label": "SES", "sublabel": { "tr": "e-posta sağlayıcısı", "en": "email provider" }, "x": 910, "y": 430, "w": 110, "h": 60 }
+  ],
+  "edges": [
+    { "id": "p-ingest", "from": "producer", "to": "ingest", "kind": "event" },
+    { "id": "ingest-notif", "from": "ingest", "to": "notif", "kind": "event" },
+    { "id": "notif-prefs", "from": "notif", "to": "prefs", "kind": "data", "style": "dashed" },
+    { "id": "notif-templates", "from": "notif", "to": "templates", "kind": "data", "style": "dashed" },
+    { "id": "notif-qpush", "from": "notif", "to": "qpush", "kind": "event", "curvature": -0.1 },
+    { "id": "notif-qemail", "from": "notif", "to": "qemail", "kind": "event", "curvature": 0.1 },
+    { "id": "qpush-wpush", "from": "qpush", "to": "wpush", "kind": "event" },
+    { "id": "qemail-wemail", "from": "qemail", "to": "wemail", "kind": "event" },
+    { "id": "wpush-apns", "from": "wpush", "to": "apns", "kind": "request" },
+    { "id": "wemail-ses", "from": "wemail", "to": "ses", "kind": "request" },
+    { "id": "wemail-dlq", "from": "wemail", "to": "dlq", "kind": "event", "style": "dotted" },
+    { "id": "dlq-qemail", "from": "dlq", "to": "qemail", "kind": "event", "style": "dotted", "curvature": 0.3, "label": { "tr": "yeniden oynat", "en": "replay" } }
+  ],
+  "steps": [
+    {
+      "id": "event",
+      "title": { "tr": "1 · Olay ve tekilleştirme", "en": "1 · Event and deduplication" },
+      "narration": {
+        "tr": "Sipariş servisi OrderConfirmed olayını Kafka'ya yazar; notification servisi tüketir. İlk iş tekilleştirme: idempotency anahtarı (eventId + userId) 24 saatlik bir tabloda aranır. Aynı olay yeniden gelirse (üretici retry) sessizce atlanır — kullanıcı iki bildirim almaz.",
+        "en": "The order service writes an OrderConfirmed event to Kafka; the notification service consumes it. First job: deduplication — the idempotency key (eventId + userId) is looked up in a 24-hour table. If the same event arrives again (producer retry) it is skipped silently — the user never gets two notifications."
+      },
+      "durationMs": 3200,
+      "inherit": false,
+      "highlight": { "nodes": ["producer", "ingest", "notif"], "edges": ["p-ingest", "ingest-notif"] },
+      "nodeStates": { "producer": { "status": "active" }, "ingest": { "status": "active" }, "notif": { "status": "busy", "badge": "dedupe ✓" } },
+      "packets": [
+        { "edge": "p-ingest", "shape": "diamond", "label": "OrderConfirmed", "durationMs": 800 },
+        { "edge": "ingest-notif", "shape": "diamond", "startAt": 900, "durationMs": 800 }
+      ],
+      "annotations": [
+        { "id": "idem", "x": 420, "y": 400, "text": { "tr": "key: evt_91a + u42 → yeni", "en": "key: evt_91a + u42 → new" }, "tone": "success", "target": "notif" }
+      ]
+    },
+    {
+      "id": "prefs",
+      "title": { "tr": "2 · Tercihler", "en": "2 · Preferences" },
+      "narration": {
+        "tr": "Servis kullanıcının tercihlerini sorar (kısa TTL'li cache arkasında): push açık, e-posta açık, SMS kapalı; sessiz saat yok; bugünkü pazarlama kotası ilgisiz çünkü bu işlemsel bir bildirim. Kanal listesi: [push, email].",
+        "en": "The service asks for the user's preferences (behind a short-TTL cache): push on, email on, SMS off; no quiet hours; today's marketing quota is irrelevant because this is a transactional notification. Channel list: [push, email]."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["notif", "prefs"], "edges": ["notif-prefs"] },
+      "nodeStates": { "prefs": { "status": "active", "badge": "push · email" }, "producer": { "status": "idle" }, "ingest": { "status": "idle" } },
+      "packets": [
+        { "edge": "notif-prefs", "shape": "dot", "label": "prefs(u42)", "durationMs": 600 },
+        { "edge": "notif-prefs", "shape": "dot", "direction": "backward", "startAt": 700, "durationMs": 600, "color": "success" }
+      ],
+      "annotations": [
+        { "id": "sms", "x": 420, "y": 30, "text": { "tr": "SMS kapalı → atlanır", "en": "SMS off → skipped" }, "tone": "warning", "target": "prefs" }
+      ]
+    },
+    {
+      "id": "template",
+      "title": { "tr": "3 · Şablon render", "en": "3 · Template rendering" },
+      "narration": {
+        "tr": "order_confirmed şablonunun v3 sürümü kullanıcının dilinde (tr) yüklenir ve değişkenler doldurulur: sipariş no, tutar, tahmini teslim. Push için 120 karakterlik metin, e-posta için HTML gövde üretilir. Şablonlar versiyonludur; yayınlanmış bir sürüm değiştirilmez.",
+        "en": "Version v3 of the order_confirmed template is loaded in the user's locale (tr) and variables are filled: order number, amount, estimated delivery. A 120-character text is produced for push and an HTML body for email. Templates are versioned; a published version is never modified."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["notif", "templates"], "edges": ["notif-templates"] },
+      "nodeStates": { "templates": { "status": "active", "badge": "v3 · tr" }, "prefs": { "status": "idle" } },
+      "packets": [
+        { "edge": "notif-templates", "shape": "dot", "durationMs": 600 },
+        { "edge": "notif-templates", "shape": "square", "direction": "backward", "startAt": 700, "durationMs": 700, "color": "success", "label": "text + html" }
+      ],
+      "annotations": [
+        { "id": "i18n", "x": 420, "y": 570, "text": { "tr": "yerelleştirme + değişkenler", "en": "localization + variables" }, "target": "templates" }
+      ]
+    },
+    {
+      "id": "fanout",
+      "title": { "tr": "4 · Kanal kuyruklarına fan-out", "en": "4 · Fan-out to channel queues" },
+      "narration": {
+        "tr": "Her kanal için ayrı bir mesaj üretilir ve ilgili kuyruğa yazılır. Kuyruklar kanal ve öncelik bazında ayrıdır: işlemsel push, pazarlama push'uyla aynı kuyrukta beklemez. Bu andan itibaren kanallar birbirinden bağımsız ilerler.",
+        "en": "A separate message is produced for each channel and written to its queue. Queues are split by channel and priority: a transactional push never waits behind marketing push in the same queue. From here on the channels proceed independently."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["notif", "qpush", "qemail"], "edges": ["notif-qpush", "notif-qemail"] },
+      "nodeStates": { "qpush": { "status": "active", "badge": "+1" }, "qemail": { "status": "active", "badge": "+1" }, "templates": { "status": "idle" }, "notif": { "status": "success", "badge": "" } },
+      "packets": [
+        { "edge": "notif-qpush", "shape": "envelope", "durationMs": 800 },
+        { "edge": "notif-qemail", "shape": "envelope", "startAt": 200, "durationMs": 800 }
+      ],
+      "annotations": [
+        { "id": "prio", "x": 600, "y": 300, "text": { "tr": "işlemsel ≠ pazarlama kuyruğu", "en": "transactional ≠ marketing queue" }, "tone": "info", "target": "qpush" }
+      ]
+    },
+    {
+      "id": "push-ok",
+      "title": { "tr": "5 · Push teslim edildi", "en": "5 · Push delivered" },
+      "narration": {
+        "tr": "Push işçisi mesajı alır, APNs/FCM'e gönderir ve 200 alır; durum tablosuna SENT yazılır. Sağlayıcının önünde kendi rate limiter'ı vardır (ör. 5 K/s); kampanya patlamalarında bu limiter kuyruğun boşalma hızını belirler.",
+        "en": "The push worker takes the message, sends it to APNs/FCM and gets 200; SENT is written to the status table. The provider has its own rate limiter in front (e.g. 5 K/s); during campaign bursts that limiter dictates how fast the queue drains."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["qpush", "wpush", "apns"], "edges": ["qpush-wpush", "wpush-apns"] },
+      "nodeStates": { "wpush": { "status": "active" }, "apns": { "status": "success", "badge": "200" }, "qpush": { "status": "idle", "badge": "0" } },
+      "packets": [
+        { "edge": "qpush-wpush", "shape": "envelope", "durationMs": 600 },
+        { "edge": "wpush-apns", "shape": "envelope", "startAt": 700, "durationMs": 700 },
+        { "edge": "wpush-apns", "shape": "dot", "direction": "backward", "startAt": 1500, "durationMs": 600, "color": "success" }
+      ],
+      "annotations": [
+        { "id": "status", "x": 760, "y": 100, "text": { "tr": "durum: QUEUED → SENT", "en": "status: QUEUED → SENT" }, "tone": "success", "target": "wpush" }
+      ]
+    },
+    {
+      "id": "email-fail",
+      "title": { "tr": "6 · E-posta: 503 ve backoff", "en": "6 · Email: 503 and backoff" },
+      "narration": {
+        "tr": "E-posta işçisi SES'e gönderir ama 503 alır (geçici hata). Üstel geri çekilme + jitter ile yeniden dener: 1 s, 4 s, 16 s. Her deneme aynı idempotency anahtarını taşır; sağlayıcı ilkini aslında işlediyse bile çift e-posta gitmez. 4xx (geçersiz adres) olsaydı hiç denemezdi.",
+        "en": "The email worker sends to SES but gets 503 (transient error). It retries with exponential backoff + jitter: 1 s, 4 s, 16 s. Every attempt carries the same idempotency key; even if the provider actually processed the first one, no duplicate email goes out. A 4xx (invalid address) would not be retried at all."
+      },
+      "durationMs": 4200,
+      "highlight": { "nodes": ["qemail", "wemail", "ses"], "edges": ["qemail-wemail", "wemail-ses"] },
+      "nodeStates": { "wemail": { "status": "warning", "badge": "retry 3/3" }, "ses": { "status": "error", "badge": "503" }, "qemail": { "badge": "0" }, "wpush": { "status": "idle" }, "apns": { "status": "idle", "badge": "" } },
+      "edgeStates": { "wemail-ses": { "status": "error" } },
+      "packets": [
+        { "edge": "qemail-wemail", "shape": "envelope", "durationMs": 500 },
+        { "edge": "wemail-ses", "shape": "envelope", "startAt": 600, "durationMs": 500 },
+        { "edge": "wemail-ses", "shape": "dot", "direction": "backward", "startAt": 1150, "durationMs": 400, "color": "danger", "label": "503" },
+        { "edge": "wemail-ses", "shape": "envelope", "startAt": 1900, "durationMs": 500 },
+        { "edge": "wemail-ses", "shape": "dot", "direction": "backward", "startAt": 2450, "durationMs": 400, "color": "danger", "label": "503" },
+        { "edge": "wemail-ses", "shape": "envelope", "startAt": 3200, "durationMs": 500 },
+        { "edge": "wemail-ses", "shape": "dot", "direction": "backward", "startAt": 3750, "durationMs": 400, "color": "danger", "label": "503" }
+      ],
+      "annotations": [
+        { "id": "backoff", "x": 760, "y": 530, "text": { "tr": "1 s → 4 s → 16 s (+ jitter)", "en": "1 s → 4 s → 16 s (+ jitter)" }, "tone": "warning", "target": "wemail" }
+      ]
+    },
+    {
+      "id": "dlq",
+      "title": { "tr": "7 · DLQ ve alarm", "en": "7 · DLQ and alarm" },
+      "narration": {
+        "tr": "Üçüncü deneme de başarısız: mesaj, hata geçmişiyle birlikte DLQ'ya taşınır ve durum FAILED olur. DLQ derinliği bir metriktir; eşik aşılınca alarm çalar. Mesaj kaybolmadı, sadece ana akıştan çıkarıldı ki arkasındaki sağlıklı mesajları bloke etmesin.",
+        "en": "The third attempt fails too: the message is moved to the DLQ along with its error history and the status becomes FAILED. DLQ depth is a metric; an alarm fires when it crosses a threshold. The message is not lost, only taken out of the main flow so it does not block the healthy messages behind it."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["wemail", "dlq"], "edges": ["wemail-dlq"] },
+      "nodeStates": { "dlq": { "status": "error", "badge": "1" }, "wemail": { "status": "idle", "badge": "" }, "ses": { "status": "down" } },
+      "edgeStates": { "wemail-dlq": { "status": "active" }, "wemail-ses": { "status": "muted" } },
+      "packets": [
+        { "edge": "wemail-dlq", "shape": "square", "durationMs": 900, "color": "danger" }
+      ],
+      "annotations": [
+        { "id": "alarm", "x": 760, "y": 230, "text": { "tr": "alarm: dlq_depth > 0 · head-of-line yok", "en": "alarm: dlq_depth > 0 · no head-of-line blocking" }, "tone": "danger", "target": "dlq" }
+      ]
+    },
+    {
+      "id": "replay",
+      "title": { "tr": "8 · Yeniden oynatma", "en": "8 · Replay" },
+      "narration": {
+        "tr": "SES toparlanınca (health check yeşil) DLQ otomatik ya da elle e-posta kuyruğuna geri oynatılır. İşçi aynı idempotency anahtarıyla gönderir, 200 alır, durum DELIVERED olur. Kullanıcı e-postayı 3 dakika geç ama tam olarak bir kez aldı.",
+        "en": "When SES recovers (health check green) the DLQ is replayed into the email queue automatically or by hand. The worker sends with the same idempotency key, gets 200 and the status becomes DELIVERED. The user received the email 3 minutes late but exactly once."
+      },
+      "durationMs": 3800,
+      "highlight": { "nodes": ["dlq", "qemail", "wemail", "ses"], "edges": ["dlq-qemail", "qemail-wemail", "wemail-ses"] },
+      "nodeStates": { "dlq": { "status": "idle", "badge": "0" }, "ses": { "status": "success", "badge": "200" }, "wemail": { "status": "active", "badge": "" }, "qemail": { "status": "active", "badge": "" } },
+      "edgeStates": { "dlq-qemail": { "status": "active" }, "wemail-ses": { "status": "idle" }, "wemail-dlq": { "status": "idle" } },
+      "packets": [
+        { "edge": "dlq-qemail", "shape": "square", "label": "replay", "durationMs": 900 },
+        { "edge": "qemail-wemail", "shape": "envelope", "startAt": 1000, "durationMs": 500 },
+        { "edge": "wemail-ses", "shape": "envelope", "startAt": 1600, "durationMs": 600 },
+        { "edge": "wemail-ses", "shape": "dot", "direction": "backward", "startAt": 2300, "durationMs": 500, "color": "success", "label": "200" }
+      ],
+      "annotations": [
+        { "id": "once", "x": 910, "y": 530, "text": { "tr": "geç ama tam olarak bir kez", "en": "late, but exactly once" }, "tone": "success", "target": "ses" }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["notification", "fan-out", "retry", "backoff", "dlq", "idempotency"]
+}

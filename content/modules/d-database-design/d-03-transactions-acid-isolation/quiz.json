@@ -1,0 +1,110 @@
+{
+  "id": "d-03-transactions-acid-isolation-quiz",
+  "title": { "tr": "Transaction ve İzolasyon Quiz", "en": "Transactions and Isolation Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "T1 bir satırı okur (bakiye 500), T2 aynı satırı 400 yapıp commit eder, T1 aynı satırı tekrar okur ve 400 görür. Bu anomalinin adı nedir?",
+        "en": "T1 reads a row (balance 500), T2 sets it to 400 and commits, T1 reads the same row again and sees 400. What is this anomaly called?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Non-repeatable read (tekrarsız okuma)", "en": "Non-repeatable read" } },
+        { "id": "b", "text": { "tr": "Phantom read (hayalet okuma)", "en": "Phantom read" } },
+        { "id": "c", "text": { "tr": "Lost update (kayıp güncelleme)", "en": "Lost update" } },
+        { "id": "d", "text": { "tr": "Write skew (yazma çarpıklığı)", "en": "Write skew" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "Aynı satırın iki okuması arasında commit edilmiş bir değişiklik görülüyor: non-repeatable read. Phantom read satır kümesinin (yeni satır) değişmesidir; lost update T1'in de yazıp T2'nin yazdığını ezmesini gerektirir; write skew ise iki işlemin ayrı satırlara yazıp ortak bir kuralı bozmasıdır. Dirty read olması için T2'nin henüz commit etmemiş olması gerekirdi.",
+        "en": "A committed change is seen between two reads of the same row: non-repeatable read. A phantom read is a change in the set of rows (new rows); a lost update would require T1 to write and overwrite T2's write; write skew is two transactions writing different rows and breaking a shared rule. A dirty read would require T2 not to have committed yet."
+      },
+      "difficulty": "easy",
+      "concepts": ["non-repeatable-read", "isolation-level"]
+    },
+    {
+      "id": "q2",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Deadlock olasılığını azaltan ya da sonuçlarını yöneten uygulamalar hangileridir? (Birden fazla seçin)",
+        "en": "Which practices reduce the likelihood of deadlocks or handle their consequences? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Kaynakları her işlemde aynı sırada kilitlemek", "en": "Locking resources in the same order in every transaction" } },
+        { "id": "b", "text": { "tr": "Transaction içinde dış HTTP çağrısı yaparak kilidi uzun tutmak", "en": "Holding locks longer by making external HTTP calls inside the transaction" } },
+        { "id": "c", "text": { "tr": "40P01 / 40001 hatalarında üstel geri çekilmeyle yeniden denemek", "en": "Retrying with exponential backoff on 40P01 / 40001 errors" } },
+        { "id": "d", "text": { "tr": "Transaction'ları kısa tutmak", "en": "Keeping transactions short" } }
+      ],
+      "correct": ["a", "c", "d"],
+      "explanation": {
+        "tr": "Tutarlı kilit sırası döngü oluşmasını imkânsız kılar, kısa işlemler bekleme penceresini daraltır, yeniden deneme ise kaçınılmaz iptalleri kullanıcıya yansıtmadan çözer. Kilit tutarken dış çağrı yapmak tam tersine bekleme zincirlerini uzatır ve havuzu tüketir.",
+        "en": "A consistent lock order makes cycles impossible, short transactions shrink the waiting window, and retries resolve the inevitable aborts without surfacing them to users. Making external calls while holding locks does the opposite: it lengthens wait chains and exhausts the pool."
+      },
+      "difficulty": "medium",
+      "concepts": ["deadlock", "lock"]
+    },
+    {
+      "id": "q3",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "ACID'deki 'Consistency', CAP teoremindeki 'Consistency' ile aynı şeyi ifade eder.",
+        "en": "'Consistency' in ACID means the same thing as 'Consistency' in the CAP theorem."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "Yanlış. ACID'de tutarlılık, işlem öncesi geçerli olan kısıtların (FK, UNIQUE, CHECK, iş kuralları) işlem sonrasında da geçerli kalmasıdır. CAP'te tutarlılık ise tüm replikaların aynı anda aynı veriyi göstermesi (linearizability) demektir; ikisi farklı kavramlardır.",
+        "en": "False. In ACID, consistency means constraints that held before the transaction (FK, UNIQUE, CHECK, business rules) still hold after it. In CAP, consistency means all replicas show the same data at the same time (linearizability); they are different concepts."
+      },
+      "difficulty": "medium",
+      "concepts": ["acid"]
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": {
+        "tr": "Hastanede 'en az bir doktor nöbette kalmalı' kuralı var. İki nöbetçi doktor aynı anda kendi satırlarını 'izinli' yapar; her ikisi de diğerini nöbette görmüştü. Bu anomali hangi izolasyon seviyesinde kesin olarak engellenir?",
+        "en": "A hospital rule says 'at least one doctor must stay on call'. Two on-call doctors simultaneously set their own rows to 'off'; each saw the other still on call. Which isolation level definitely prevents this anomaly?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Read Committed", "en": "Read Committed" } },
+        { "id": "b", "text": { "tr": "Repeatable Read", "en": "Repeatable Read" } },
+        { "id": "c", "text": { "tr": "Serializable", "en": "Serializable" } },
+        { "id": "d", "text": { "tr": "Hiçbiri; bu uygulama hatasıdır", "en": "None; this is an application bug" } }
+      ],
+      "correct": ["c"],
+      "explanation": {
+        "tr": "Bu bir write skew örneğidir: işlemler farklı satırlara yazar ama kararlarını birbirinin değiştirdiği veriye dayandırır. Snapshot tabanlı Repeatable Read bunu yakalayamaz çünkü hiçbir satırda yazma çakışması yoktur. Serializable (PostgreSQL'de SSI) okuma-yazma bağımlılığını tespit edip işlemlerden birini iptal eder.",
+        "en": "This is write skew: the transactions write different rows but base their decisions on data the other one changes. Snapshot-based Repeatable Read cannot catch it because no row has a write-write conflict. Serializable (SSI in PostgreSQL) detects the read-write dependency and aborts one of the transactions."
+      },
+      "difficulty": "hard",
+      "concepts": ["serializable", "isolation-level"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "Çakışmanın seyrek olduğu bir sepet güncelleme akışında lost update'i önlemek için en hafif yöntem hangisidir?",
+        "en": "In a cart update flow where conflicts are rare, what is the lightest method to prevent lost updates?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Her okumada SELECT ... FOR UPDATE NOWAIT ile satırı kilitlemek", "en": "Lock the row with SELECT ... FOR UPDATE NOWAIT on every read" } },
+        { "id": "b", "text": { "tr": "Sepet tablosunu LOCK TABLE ... IN EXCLUSIVE MODE ile kilitlemek", "en": "Lock the cart table with LOCK TABLE ... IN EXCLUSIVE MODE" } },
+        { "id": "c", "text": { "tr": "İzolasyonu Read Uncommitted'a düşürüp okuma-yazma aralığını kısaltmak", "en": "Lower isolation to Read Uncommitted and shorten the read-write gap" } },
+        { "id": "d", "text": { "tr": "version ile optimistic locking: UPDATE ... WHERE id = $1 AND version = $2", "en": "Optimistic locking with version: UPDATE ... WHERE id = $1 AND version = $2" } }
+      ],
+      "correct": ["d"],
+      "explanation": {
+        "tr": "Optimistic locking çakışma yokken hiçbir kilit maliyeti ödemez; çakışma olursa etkilenen satır sayısı 0 döner ve uygulama yeniden okuyup dener. FOR UPDATE (NOWAIT olsa da) ve tablo kilidi seyrek çakışma için gereksiz bekleme ya da hata üretir; izolasyonu düşürmek lost update'i önlemez, PostgreSQL'de Read Uncommitted zaten Read Committed gibi davranır.",
+        "en": "Optimistic locking pays no locking cost when there is no conflict; on conflict the affected row count is 0 and the application re-reads and retries. FOR UPDATE (even with NOWAIT) and table locks create needless waiting or errors for rare conflicts; lowering isolation does not prevent lost updates, and in PostgreSQL Read Uncommitted behaves like Read Committed anyway."
+      },
+      "difficulty": "medium",
+      "concepts": ["lost-update", "optimistic-locking"]
+    }
+  ]
+}

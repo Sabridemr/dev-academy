@@ -1,0 +1,365 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "c-02-composite",
+  "title": {
+    "tr": "Composite: Ağaçta Tek Tip Çağrı",
+    "en": "Composite: One Uniform Call over a Tree"
+  },
+  "summary": {
+    "tr": "İstemci kök dizine size() der; dizin çocuklarına aynı çağrıyı yapar; dosyalar baytlarını döner; toplamlar yukarı akar.",
+    "en": "The client calls size() on the root directory; the directory makes the same call on its children; files return their bytes; totals flow upward."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda DiskUsageReport istemcisi, ortada kök dizin, sağında src dizini ve altında üç dosya. İstemci kök üzerinde size çağırır; kök src dizinine ve README dosyasına aynı çağrıyı yapar; src içindeki iki dosya boyutlarını döner; src toplar; kök toplar ve 23 KB döner.",
+      "en": "DiskUsageReport client on the left, the root directory in the middle, the src directory to its right and three files below. The client calls size on root; root makes the same call on the src directory and the README file; the two files inside src return their sizes; src sums; root sums and returns 23 KB."
+    }
+  },
+  "canvas": {
+    "width": 1000,
+    "height": 600
+  },
+  "nodes": [
+    {
+      "id": "client",
+      "kind": "generic",
+      "label": "DiskUsageReport",
+      "x": 110,
+      "y": 300,
+      "w": 170,
+      "h": 70,
+      "sublabel": {
+        "tr": "FsNode bekler",
+        "en": "expects FsNode"
+      }
+    },
+    {
+      "id": "root",
+      "kind": "generic",
+      "label": "/ (Directory)",
+      "x": 400,
+      "y": 300,
+      "w": 190,
+      "h": 70,
+      "sublabel": {
+        "tr": "children: [src, README]",
+        "en": "children: [src, README]"
+      }
+    },
+    {
+      "id": "src",
+      "kind": "generic",
+      "label": "src (Directory)",
+      "x": 700,
+      "y": 160,
+      "w": 190,
+      "h": 70,
+      "sublabel": {
+        "tr": "children: [a.ts, b.ts]",
+        "en": "children: [a.ts, b.ts]"
+      }
+    },
+    {
+      "id": "readme",
+      "kind": "generic",
+      "label": "README.md (File)",
+      "x": 700,
+      "y": 460,
+      "w": 190,
+      "h": 60,
+      "sublabel": {
+        "tr": "3 KB",
+        "en": "3 KB"
+      }
+    },
+    {
+      "id": "a",
+      "kind": "generic",
+      "label": "a.ts (File)",
+      "x": 920,
+      "y": 80,
+      "w": 140,
+      "h": 56,
+      "sublabel": {
+        "tr": "8 KB",
+        "en": "8 KB"
+      }
+    },
+    {
+      "id": "b",
+      "kind": "generic",
+      "label": "b.ts (File)",
+      "x": 920,
+      "y": 240,
+      "w": 140,
+      "h": 56,
+      "sublabel": {
+        "tr": "12 KB",
+        "en": "12 KB"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "c-root",
+      "from": "client",
+      "to": "root",
+      "kind": "request",
+      "label": "size()"
+    },
+    {
+      "id": "root-src",
+      "from": "root",
+      "to": "src",
+      "kind": "request",
+      "label": "size()"
+    },
+    {
+      "id": "root-readme",
+      "from": "root",
+      "to": "readme",
+      "kind": "request",
+      "label": "size()"
+    },
+    {
+      "id": "src-a",
+      "from": "src",
+      "to": "a",
+      "kind": "request",
+      "label": "size()"
+    },
+    {
+      "id": "src-b",
+      "from": "src",
+      "to": "b",
+      "kind": "request",
+      "label": "size()"
+    }
+  ],
+  "steps": [
+    {
+      "id": "call",
+      "title": {
+        "tr": "1. İstemci kökü bir FsNode olarak görür",
+        "en": "1. The client sees the root as an FsNode"
+      },
+      "narration": {
+        "tr": "DiskUsageReport elindeki düğümün dosya mı dizin mi olduğunu bilmez; size() çağırır. Yaprak ve bileşik aynı arayüzü paylaştığı için istemcide if (isDirectory) yoktur.",
+        "en": "DiskUsageReport does not know whether its node is a file or a directory; it calls size(). Because leaf and composite share one interface, there is no if (isDirectory) in the client."
+      },
+      "durationMs": 3500,
+      "inherit": false,
+      "highlight": {
+        "nodes": [
+          "client",
+          "root"
+        ],
+        "edges": [
+          "c-root"
+        ]
+      },
+      "nodeStates": {
+        "root": {
+          "status": "active"
+        }
+      },
+      "edgeStates": {},
+      "packets": [
+        {
+          "edge": "c-root",
+          "shape": "envelope",
+          "label": "size()",
+          "durationMs": 900
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a1",
+          "x": 110,
+          "y": 420,
+          "text": {
+            "tr": "istemcide özyineleme ya da tip kontrolü yok",
+            "en": "no recursion or type check in the client"
+          },
+          "target": "client"
+        }
+      ]
+    },
+    {
+      "id": "recurse",
+      "title": {
+        "tr": "2. Dizin çocuklarına aynı çağrıyı yapar",
+        "en": "2. The directory makes the same call on its children"
+      },
+      "narration": {
+        "tr": "Directory.size() çocuklarını dolaşır ve her birine size() der. src bir dizin olduğu için aynı şeyi kendi çocuklarına yapar: özyineleme yapının içinde, tek bir metotta.",
+        "en": "Directory.size() iterates its children and calls size() on each. Because src is a directory it does the same for its own children: recursion lives inside the structure, in one method."
+      },
+      "durationMs": 4000,
+      "highlight": {
+        "nodes": [
+          "src",
+          "readme",
+          "a",
+          "b"
+        ],
+        "edges": [
+          "root-src",
+          "root-readme",
+          "src-a",
+          "src-b"
+        ]
+      },
+      "nodeStates": {
+        "src": {
+          "status": "active"
+        },
+        "readme": {
+          "status": "active"
+        },
+        "a": {
+          "status": "active"
+        },
+        "b": {
+          "status": "active"
+        }
+      },
+      "edgeStates": {},
+      "packets": [
+        {
+          "edge": "root-src",
+          "shape": "envelope",
+          "label": "size()",
+          "durationMs": 700
+        },
+        {
+          "edge": "root-readme",
+          "shape": "envelope",
+          "label": "size()",
+          "durationMs": 700
+        },
+        {
+          "edge": "src-a",
+          "startAt": 800,
+          "shape": "envelope",
+          "durationMs": 600
+        },
+        {
+          "edge": "src-b",
+          "startAt": 800,
+          "shape": "envelope",
+          "durationMs": 600
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "id": "leaves",
+      "title": {
+        "tr": "3. Yapraklar değer döner, toplamlar yukarı akar",
+        "en": "3. Leaves return values, totals flow up"
+      },
+      "narration": {
+        "tr": "a.ts 8 KB, b.ts 12 KB döner; src 20 KB olur. README 3 KB döner; kök 23 KB döner. Yeni bir düğüm türü (SymbolicLink) eklemek istemciyi değiştirmez.",
+        "en": "a.ts returns 8 KB, b.ts 12 KB; src becomes 20 KB. README returns 3 KB; root returns 23 KB. Adding a new node type (SymbolicLink) does not change the client."
+      },
+      "durationMs": 4500,
+      "highlight": {
+        "nodes": [
+          "root",
+          "client"
+        ],
+        "edges": [
+          "src-a",
+          "src-b",
+          "root-src",
+          "root-readme",
+          "c-root"
+        ]
+      },
+      "nodeStates": {
+        "a": {
+          "status": "success",
+          "badge": "8"
+        },
+        "b": {
+          "status": "success",
+          "badge": "12"
+        },
+        "src": {
+          "status": "success",
+          "badge": "20"
+        },
+        "readme": {
+          "status": "success",
+          "badge": "3"
+        },
+        "root": {
+          "status": "success",
+          "badge": "23 KB"
+        }
+      },
+      "edgeStates": {},
+      "packets": [
+        {
+          "edge": "src-a",
+          "direction": "backward",
+          "color": "success",
+          "label": "8",
+          "durationMs": 600
+        },
+        {
+          "edge": "src-b",
+          "direction": "backward",
+          "color": "success",
+          "label": "12",
+          "durationMs": 600
+        },
+        {
+          "edge": "root-src",
+          "startAt": 700,
+          "direction": "backward",
+          "color": "success",
+          "label": "20",
+          "durationMs": 700
+        },
+        {
+          "edge": "root-readme",
+          "startAt": 700,
+          "direction": "backward",
+          "color": "success",
+          "label": "3",
+          "durationMs": 700
+        },
+        {
+          "edge": "c-root",
+          "startAt": 1500,
+          "direction": "backward",
+          "color": "success",
+          "label": "23 KB",
+          "durationMs": 800
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a3",
+          "x": 400,
+          "y": 440,
+          "text": {
+            "tr": "dikkat: derin ağaçta yığın derinliği, döngü koruması",
+            "en": "beware: stack depth on deep trees, cycle protection"
+          },
+          "tone": "warning",
+          "target": "root"
+        }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": [
+    "composite",
+    "structural"
+  ]
+}

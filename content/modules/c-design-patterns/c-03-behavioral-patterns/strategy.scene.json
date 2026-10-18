@@ -1,0 +1,344 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "c-03-strategy",
+  "title": {
+    "tr": "Strategy: Algoritmayı Takılıp Çıkarılabilir Yapmak",
+    "en": "Strategy: Making the Algorithm Pluggable"
+  },
+  "summary": {
+    "tr": "ShippingCalculator bağlamı fiyatı seçili stratejiye hesaplatır; strateji çalışma zamanında ByWeight'ten Express'e değişir; bağlam kodu değişmez.",
+    "en": "The ShippingCalculator context delegates pricing to the selected strategy; the strategy switches from ByWeight to Express at runtime; the context code does not change."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda istemci, ortada ShippingCalculator bağlamı, sağda FlatRate, ByWeight ve Express strateji nesneleri. İstemci bağlama ByWeight stratejisini verir ve price çağırır; bağlam hesaplamayı ByWeight'e devreder. Sonra istemci Express'e geçer ve aynı price çağrısı Express'e gider.",
+      "en": "Client on the left, the ShippingCalculator context in the middle, FlatRate, ByWeight and Express strategy objects on the right. The client gives the context the ByWeight strategy and calls price; the context delegates to ByWeight. Then the client switches to Express and the same price call goes to Express."
+    }
+  },
+  "canvas": {
+    "width": 1000,
+    "height": 600
+  },
+  "nodes": [
+    {
+      "id": "client",
+      "kind": "generic",
+      "label": "CheckoutPage",
+      "x": 110,
+      "y": 300,
+      "w": 160,
+      "h": 70,
+      "sublabel": {
+        "tr": "kullanıcı seçimi",
+        "en": "user choice"
+      }
+    },
+    {
+      "id": "ctx",
+      "kind": "generic",
+      "label": "ShippingCalculator",
+      "x": 450,
+      "y": 300,
+      "w": 210,
+      "h": 80,
+      "sublabel": {
+        "tr": "strategy: —",
+        "en": "strategy: —"
+      }
+    },
+    {
+      "id": "flat",
+      "kind": "generic",
+      "label": "FlatRate",
+      "x": 840,
+      "y": 130,
+      "w": 160,
+      "h": 60,
+      "sublabel": {
+        "tr": "sabit 49 ₺",
+        "en": "flat 49 ₺"
+      }
+    },
+    {
+      "id": "weight",
+      "kind": "generic",
+      "label": "ByWeight",
+      "x": 840,
+      "y": 300,
+      "w": 160,
+      "h": 60,
+      "sublabel": {
+        "tr": "12 ₺/kg",
+        "en": "12 ₺/kg"
+      }
+    },
+    {
+      "id": "express",
+      "kind": "generic",
+      "label": "Express",
+      "x": 840,
+      "y": 470,
+      "w": 160,
+      "h": 60,
+      "sublabel": {
+        "tr": "ByWeight × 1,8",
+        "en": "ByWeight × 1.8"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "c-ctx",
+      "from": "client",
+      "to": "ctx",
+      "kind": "request",
+      "label": "price(parcel)"
+    },
+    {
+      "id": "ctx-flat",
+      "from": "ctx",
+      "to": "flat",
+      "kind": "request",
+      "label": "price()",
+      "curvature": -0.1
+    },
+    {
+      "id": "ctx-weight",
+      "from": "ctx",
+      "to": "weight",
+      "kind": "request",
+      "label": "price()"
+    },
+    {
+      "id": "ctx-express",
+      "from": "ctx",
+      "to": "express",
+      "kind": "request",
+      "label": "price()",
+      "curvature": 0.1
+    }
+  ],
+  "steps": [
+    {
+      "id": "select",
+      "title": {
+        "tr": "1. Strateji dışarıdan seçilir",
+        "en": "1. The strategy is chosen from outside"
+      },
+      "narration": {
+        "tr": "Kullanıcı \"standart kargo\" seçer. CheckoutPage bağlama setStrategy(new ByWeight(12)) verir. Bağlam algoritmayı seçmez; yalnızca kullanır.",
+        "en": "The user picks \"standard shipping\". CheckoutPage gives the context setStrategy(new ByWeight(12)). The context does not choose the algorithm; it only uses it."
+      },
+      "durationMs": 3500,
+      "inherit": false,
+      "highlight": {
+        "nodes": [
+          "client",
+          "ctx",
+          "weight"
+        ],
+        "edges": [
+          "c-ctx"
+        ]
+      },
+      "nodeStates": {
+        "ctx": {
+          "status": "active",
+          "sublabel": {
+            "tr": "strategy: ByWeight",
+            "en": "strategy: ByWeight"
+          }
+        },
+        "weight": {
+          "status": "active"
+        },
+        "flat": {
+          "status": "muted"
+        },
+        "express": {
+          "status": "muted"
+        }
+      },
+      "edgeStates": {
+        "ctx-flat": {
+          "status": "muted"
+        },
+        "ctx-express": {
+          "status": "muted"
+        }
+      },
+      "packets": [
+        {
+          "edge": "c-ctx",
+          "shape": "diamond",
+          "label": "setStrategy(ByWeight)",
+          "durationMs": 900
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a1",
+          "x": 450,
+          "y": 170,
+          "text": {
+            "tr": "bağlamda if (type === ...) yok",
+            "en": "no if (type === ...) in the context"
+          },
+          "target": "ctx"
+        }
+      ]
+    },
+    {
+      "id": "delegate",
+      "title": {
+        "tr": "2. Bağlam devreder",
+        "en": "2. The context delegates"
+      },
+      "narration": {
+        "tr": "price(parcel{3 kg}) çağrılır. Bağlam this.strategy.price(parcel) der; ByWeight 36 ₺ döner. Bağlam, vergi ve yuvarlama gibi ortak işleri kendi yapar; değişen kısım stratejidedir.",
+        "en": "price(parcel{3 kg}) is called. The context says this.strategy.price(parcel); ByWeight returns 36 ₺. The context does shared work such as tax and rounding itself; the varying part lives in the strategy."
+      },
+      "durationMs": 3500,
+      "highlight": {
+        "nodes": [
+          "weight"
+        ],
+        "edges": [
+          "c-ctx",
+          "ctx-weight"
+        ]
+      },
+      "nodeStates": {
+        "weight": {
+          "status": "success",
+          "badge": "36 ₺"
+        }
+      },
+      "edgeStates": {},
+      "packets": [
+        {
+          "edge": "c-ctx",
+          "shape": "envelope",
+          "label": "price(3 kg)",
+          "durationMs": 800
+        },
+        {
+          "edge": "ctx-weight",
+          "startAt": 900,
+          "shape": "envelope",
+          "durationMs": 700
+        },
+        {
+          "edge": "ctx-weight",
+          "startAt": 1700,
+          "direction": "backward",
+          "color": "success",
+          "label": "36 ₺",
+          "durationMs": 700
+        },
+        {
+          "edge": "c-ctx",
+          "startAt": 2500,
+          "direction": "backward",
+          "color": "success",
+          "label": "36 ₺",
+          "durationMs": 700
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "id": "swap",
+      "title": {
+        "tr": "3. Çalışma zamanında değiştir",
+        "en": "3. Swap at runtime"
+      },
+      "narration": {
+        "tr": "Kullanıcı \"ekspres\" seçer. setStrategy(new Express(byWeight, 1.8)) ve aynı price çağrısı artık Express'e gider: 64,80 ₺. Bağlamın tek satırı değişmedi. Yeni bir fiyatlama (kampanya) eklemek = yeni sınıf.",
+        "en": "The user picks \"express\". setStrategy(new Express(byWeight, 1.8)) and the same price call now goes to Express: 64.80 ₺. Not one line of the context changed. Adding a new pricing (campaign) = a new class."
+      },
+      "durationMs": 4000,
+      "highlight": {
+        "nodes": [
+          "express"
+        ],
+        "edges": [
+          "ctx-express"
+        ]
+      },
+      "nodeStates": {
+        "ctx": {
+          "sublabel": {
+            "tr": "strategy: Express",
+            "en": "strategy: Express"
+          }
+        },
+        "weight": {
+          "status": "idle",
+          "badge": ""
+        },
+        "express": {
+          "status": "success",
+          "badge": "64,80 ₺"
+        }
+      },
+      "edgeStates": {
+        "ctx-weight": {
+          "status": "idle"
+        },
+        "ctx-express": {
+          "status": "active"
+        }
+      },
+      "packets": [
+        {
+          "edge": "c-ctx",
+          "shape": "diamond",
+          "label": "setStrategy(Express)",
+          "durationMs": 800
+        },
+        {
+          "edge": "c-ctx",
+          "startAt": 900,
+          "shape": "envelope",
+          "label": "price(3 kg)",
+          "durationMs": 700
+        },
+        {
+          "edge": "ctx-express",
+          "startAt": 1700,
+          "shape": "envelope",
+          "durationMs": 700
+        },
+        {
+          "edge": "ctx-express",
+          "startAt": 2500,
+          "direction": "backward",
+          "color": "success",
+          "label": "64,80 ₺",
+          "durationMs": 700
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a3",
+          "x": 450,
+          "y": 440,
+          "text": {
+            "tr": "TS/Python'da strateji çoğu zaman bir fonksiyondur",
+            "en": "in TS/Python a strategy is often just a function"
+          },
+          "tone": "info",
+          "target": "ctx"
+        }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": [
+    "strategy",
+    "behavioral"
+  ]
+}

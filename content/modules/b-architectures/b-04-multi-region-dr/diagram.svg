@@ -1,0 +1,136 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 520" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Disaster recovery katmanları ve aktif-pasif / aktif-aktif topolojileri</title>
+  <desc id="desc">Üstte soldan sağa dört DR katmanı kartı: backup-restore, pilot light, warm standby ve aktif-aktif; her kartta RPO, RTO ve maliyet değerleri. Üzerlerinde maliyet artarken RPO ve RTO'nun küçüldüğünü gösteren bir ok. Altta iki topoloji: solda aktif-pasif, kullanıcı trafiği yalnızca birincil region'a gider ve veri tek yönlü asenkron replike edilir; sağda aktif-aktif, kullanıcılar en yakın region'a gider ve veri çift yönlü replike edilir, çatışma çözümü notu vardır.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+    <marker id="arrow-p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-primary, #6366f1)"/>
+    </marker>
+    <marker id="arrow-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-accent, #f59e0b)"/>
+    </marker>
+  </defs>
+
+  <!-- Üst: DR katmanları -->
+  <text x="30" y="30" font-size="14" font-weight="700" fill="var(--da-fg, #0f172a)">DR katmanları: sağa gittikçe RPO/RTO ↓, maliyet ↑</text>
+  <path d="M 30 44 L 920 44" stroke="var(--da-primary, #6366f1)" stroke-width="2" fill="none" marker-end="url(#arrow-p)"/>
+
+  <g fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)" stroke-width="1.5">
+    <rect x="30" y="60" width="205" height="150" rx="12"/>
+    <rect x="258" y="60" width="205" height="150" rx="12"/>
+    <rect x="486" y="60" width="205" height="150" rx="12"/>
+    <rect x="714" y="60" width="205" height="150" rx="12"/>
+  </g>
+  <g fill-opacity="0.18">
+    <rect x="30" y="60" width="205" height="28" rx="12" fill="var(--da-muted, #64748b)"/>
+    <rect x="258" y="60" width="205" height="28" rx="12" fill="var(--da-accent, #f59e0b)"/>
+    <rect x="486" y="60" width="205" height="28" rx="12" fill="var(--da-primary, #6366f1)"/>
+    <rect x="714" y="60" width="205" height="28" rx="12" fill="var(--da-success, #10b981)"/>
+  </g>
+  <g font-size="12.5" font-weight="700" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="132" y="79">1. Backup &amp; Restore</text>
+    <text x="360" y="79">2. Pilot Light</text>
+    <text x="588" y="79">3. Warm Standby</text>
+    <text x="816" y="79">4. Aktif-Aktif</text>
+  </g>
+  <g font-size="10.5" fill="var(--da-fg, #0f172a)">
+    <text x="42" y="108">Yedek region'da: S3 yedekleri</text>
+    <text x="42" y="124">RPO: saatler</text>
+    <text x="42" y="140">RTO: saatler – günler</text>
+    <text x="42" y="156">Maliyet: çok düşük</text>
+    <text x="42" y="180" fill="var(--da-muted, #64748b)">dahili araçlar, raporlama</text>
+
+    <text x="270" y="108">Yedek region'da: DB replikası açık,</text>
+    <text x="270" y="122">uygulama kapalı (image hazır)</text>
+    <text x="270" y="140">RPO: dakikalar</text>
+    <text x="270" y="156">RTO: 10 dk – 1 saat</text>
+    <text x="270" y="180" fill="var(--da-muted, #64748b)">çoğu B2B SaaS</text>
+
+    <text x="498" y="108">Yedek region'da: küçültülmüş</text>
+    <text x="498" y="122">ama çalışan tam kopya</text>
+    <text x="498" y="140">RPO: saniyeler – dakikalar</text>
+    <text x="498" y="156">RTO: dakikalar</text>
+    <text x="498" y="180" fill="var(--da-muted, #64748b)">e-ticaret, fintech başlangıcı</text>
+
+    <text x="726" y="108">Her region tam kapasite,</text>
+    <text x="726" y="122">trafik alıyor ve yazıyor</text>
+    <text x="726" y="140">RPO: ≈ 0 (çatışma çözümüne bağlı)</text>
+    <text x="726" y="156">RTO: ≈ 0, otomatik</text>
+    <text x="726" y="180" fill="var(--da-muted, #64748b)">Netflix, ödeme ağları, DNS</text>
+  </g>
+
+  <!-- Alt: topolojiler -->
+  <line x1="30" y1="232" x2="920" y2="232" stroke="var(--da-border, #cbd5e1)"/>
+
+  <!-- Aktif-pasif -->
+  <text x="30" y="258" font-size="13" font-weight="700" fill="var(--da-fg, #0f172a)">Aktif-Pasif</text>
+  <text x="30" y="274" font-size="10" fill="var(--da-muted, #64748b)">tek yazar · tek yönlü asenkron replikasyon · DNS failover</text>
+  <circle cx="60" cy="360" r="16" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5"/>
+  <text x="60" y="364" text-anchor="middle" font-size="10" fill="var(--da-fg, #0f172a)">👤</text>
+  <text x="60" y="394" text-anchor="middle" font-size="9.5" fill="var(--da-muted, #64748b)">tüm kullanıcılar</text>
+
+  <rect x="130" y="300" width="140" height="120" rx="12" fill="var(--da-primary, #6366f1)" fill-opacity="0.08" stroke="var(--da-primary, #6366f1)" stroke-width="1.5"/>
+  <text x="200" y="320" text-anchor="middle" font-size="11.5" font-weight="700" fill="var(--da-primary, #6366f1)">eu-west-1 · birincil</text>
+  <g font-size="10" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="200" y="344">LB → App x6</text>
+    <text x="200" y="366">DB (yazma + okuma)</text>
+    <text x="200" y="400" fill="var(--da-success, #10b981)">trafik %100</text>
+  </g>
+  <rect x="310" y="300" width="140" height="120" rx="12" fill="var(--da-muted, #64748b)" fill-opacity="0.06" stroke="var(--da-muted, #64748b)" stroke-width="1.5" stroke-dasharray="6 4"/>
+  <text x="380" y="320" text-anchor="middle" font-size="11.5" font-weight="700" fill="var(--da-muted, #64748b)">us-east-1 · bekleme</text>
+  <g font-size="10" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="380" y="344">LB → App x2</text>
+    <text x="380" y="366">DB replika (salt okunur)</text>
+    <text x="380" y="400" fill="var(--da-muted, #64748b)">trafik %0</text>
+  </g>
+  <path d="M 76 360 L 128 360" stroke="var(--da-muted, #64748b)" stroke-width="1.8" fill="none" marker-end="url(#arrow)"/>
+  <path d="M 270 366 L 308 366" stroke="var(--da-accent, #f59e0b)" stroke-width="1.6" fill="none" stroke-dasharray="5 3" marker-end="url(#arrow-a)"/>
+  <text x="289" y="358" text-anchor="middle" font-size="8.5" fill="var(--da-accent, #f59e0b)">async</text>
+  <g font-size="10" fill="var(--da-fg, #0f172a)">
+    <text x="30" y="446">+ basit, çatışma yok, ucuz yedek</text>
+    <text x="30" y="462">− RTO dakikalar, yedek kapasite boşta,</text>
+    <text x="30" y="476">  gecikme kazancı yok, failback zor</text>
+  </g>
+
+  <!-- Aktif-aktif -->
+  <text x="500" y="258" font-size="13" font-weight="700" fill="var(--da-fg, #0f172a)">Aktif-Aktif</text>
+  <text x="500" y="274" font-size="10" fill="var(--da-muted, #64748b)">her region yazar · çift yönlü replikasyon · en yakına yönlendirme (GeoDNS/anycast)</text>
+  <g fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5">
+    <circle cx="530" cy="330" r="16"/>
+    <circle cx="530" cy="392" r="16"/>
+  </g>
+  <g font-size="10" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="530" y="334">👤</text>
+    <text x="530" y="396">👤</text>
+  </g>
+  <g font-size="9" fill="var(--da-muted, #64748b)" text-anchor="middle">
+    <text x="530" y="306">Avrupa</text>
+    <text x="530" y="424">Amerika</text>
+  </g>
+  <rect x="600" y="300" width="140" height="120" rx="12" fill="var(--da-success, #10b981)" fill-opacity="0.08" stroke="var(--da-success, #10b981)" stroke-width="1.5"/>
+  <text x="670" y="320" text-anchor="middle" font-size="11.5" font-weight="700" fill="var(--da-success, #10b981)">eu-west-1 · aktif</text>
+  <rect x="780" y="300" width="140" height="120" rx="12" fill="var(--da-success, #10b981)" fill-opacity="0.08" stroke="var(--da-success, #10b981)" stroke-width="1.5"/>
+  <text x="850" y="320" text-anchor="middle" font-size="11.5" font-weight="700" fill="var(--da-success, #10b981)">us-east-1 · aktif</text>
+  <g font-size="10" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="670" y="344">LB → App x4</text>
+    <text x="670" y="366">DB (yazma + okuma)</text>
+    <text x="670" y="400" fill="var(--da-success, #10b981)">trafik %50</text>
+    <text x="850" y="344">LB → App x4</text>
+    <text x="850" y="366">DB (yazma + okuma)</text>
+    <text x="850" y="400" fill="var(--da-success, #10b981)">trafik %50</text>
+  </g>
+  <path d="M 546 330 L 598 330" stroke="var(--da-muted, #64748b)" stroke-width="1.8" fill="none" marker-end="url(#arrow)"/>
+  <path d="M 546 392 C 640 440, 720 440, 778 400" stroke="var(--da-muted, #64748b)" stroke-width="1.8" fill="none" marker-end="url(#arrow)"/>
+  <path d="M 740 360 L 778 360" stroke="var(--da-accent, #f59e0b)" stroke-width="1.6" fill="none" stroke-dasharray="5 3" marker-end="url(#arrow-a)"/>
+  <path d="M 778 372 L 740 372" stroke="var(--da-accent, #f59e0b)" stroke-width="1.6" fill="none" stroke-dasharray="5 3" marker-end="url(#arrow-a)"/>
+  <text x="759" y="352" text-anchor="middle" font-size="8.5" fill="var(--da-accent, #f59e0b)">çift yönlü</text>
+  <g font-size="10" fill="var(--da-fg, #0f172a)">
+    <text x="500" y="446">+ RTO ≈ 0, düşük gecikme, kapasite boşta değil</text>
+    <text x="500" y="462">− çatışma: ev region bölümleme / CRDT / LWW (veri kaybı riski) / konsensüs (RTT gecikme)</text>
+    <text x="500" y="476">− idempotency ve çift yönlü replikasyon karmaşıklığı, maliyet</text>
+  </g>
+
+  <text x="480" y="506" text-anchor="middle" font-size="10.5" fill="var(--da-muted, #64748b)">Region ≠ AZ: çoklu AZ bir veri merkezi arızasını, çoklu region bölgesel kesintiyi ve yerleşim (GDPR) gereksinimlerini karşılar.</text>
+</svg>

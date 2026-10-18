@@ -1,0 +1,203 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "d-06-order-transaction-journey",
+  "title": { "tr": "Sipariş Oluşturma Transaction'ının Tablolar Arası Yolculuğu", "en": "An Order-Creation Transaction's Journey Across Tables" },
+  "summary": {
+    "tr": "Tek bir 'Satın al' isteğinin idempotency kontrolü, stok kilidi ve rezervasyonu, orders ve order_items ekleme, payments kaydı, outbox olayı ve COMMIT adımlarıyla tablolar arasında ilerlemesi; stok yetersizliğinde ROLLBACK.",
+    "en": "A single 'Buy' request moving across tables through idempotency check, inventory lock and reservation, orders and order_items inserts, a payments row, an outbox event and COMMIT; ROLLBACK when stock is insufficient."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda sipariş servisi, ortada ve sağda altı tablo: order_requests, inventory, orders, order_items, payments, outbox; altta ödeme sağlayıcısına giden outbox işleyicisi. Adımlar BEGIN ile başlar, idempotency anahtarı kontrol edilir, inventory satırları FOR UPDATE ile kilitlenip reserved artırılır, orders ve order_items yazılır, payments satırı eklenir, outbox olayı yazılır ve COMMIT ile kilitler bırakılır. Son adım outbox işleyicisinin olayı ödeme sağlayıcısına transaction dışında ilettiğini gösterir.",
+      "en": "The order service on the left; six tables in the middle and right: order_requests, inventory, orders, order_items, payments, outbox; the outbox worker to the payment provider at the bottom. Steps start with BEGIN, check the idempotency key, lock inventory rows FOR UPDATE and increase reserved, write orders and order_items, add a payments row, write an outbox event and release locks at COMMIT. The last step shows the outbox worker delivering the event to the payment provider outside the transaction."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "svc", "kind": "service", "label": { "tr": "Sipariş servisi", "en": "Order service" }, "sublabel": "POST /orders", "x": 130, "y": 240, "w": 180, "h": 80 },
+    { "id": "req", "kind": "db", "label": "order_requests", "sublabel": "idempotency_key UNIQUE", "x": 430, "y": 80, "w": 190, "h": 64 },
+    { "id": "inv", "kind": "db", "label": "inventory", "sublabel": "on_hand · reserved", "x": 430, "y": 220, "w": 190, "h": 64 },
+    { "id": "orders", "kind": "db", "label": "orders", "sublabel": "status = pending", "x": 430, "y": 360, "w": 190, "h": 64 },
+    { "id": "items", "kind": "db", "label": "order_items", "sublabel": "unit_price_cents (snapshot)", "x": 760, "y": 360, "w": 200, "h": 64 },
+    { "id": "pay", "kind": "db", "label": "payments", "sublabel": "status = initiated", "x": 760, "y": 220, "w": 200, "h": 64 },
+    { "id": "outbox", "kind": "queue", "label": "outbox", "sublabel": "order.created", "x": 760, "y": 80, "w": 200, "h": 64 },
+    { "id": "worker", "kind": "worker", "label": { "tr": "Outbox işleyici", "en": "Outbox worker" }, "sublabel": { "tr": "transaction dışında", "en": "outside the transaction" }, "x": 430, "y": 520, "w": 190, "h": 64 },
+    { "id": "psp", "kind": "gateway", "label": { "tr": "Ödeme sağlayıcı", "en": "Payment provider" }, "sublabel": "HTTPS", "x": 760, "y": 520, "w": 200, "h": 64 }
+  ],
+  "edges": [
+    { "id": "svc-req", "from": "svc", "to": "req", "kind": "request", "curvature": -0.2 },
+    { "id": "svc-inv", "from": "svc", "to": "inv", "kind": "request" },
+    { "id": "svc-orders", "from": "svc", "to": "orders", "kind": "request", "curvature": 0.2 },
+    { "id": "orders-items", "from": "orders", "to": "items", "kind": "data" },
+    { "id": "orders-pay", "from": "orders", "to": "pay", "kind": "data", "curvature": -0.2 },
+    { "id": "svc-outbox", "from": "svc", "to": "outbox", "kind": "event", "curvature": -0.45 },
+    { "id": "outbox-worker", "from": "outbox", "to": "worker", "kind": "event", "style": "dashed", "curvature": 0.5 },
+    { "id": "worker-psp", "from": "worker", "to": "psp", "kind": "request", "style": "dashed" }
+  ],
+  "steps": [
+    {
+      "id": "begin",
+      "title": { "tr": "BEGIN ve idempotency kontrolü", "en": "BEGIN and the idempotency check" },
+      "narration": {
+        "tr": "İstemci 'Satın al' isteğini benzersiz bir Idempotency-Key ile gönderir. Transaction açılır ve ilk iş order_requests tablosuna bakmaktır: bu anahtar daha önce geldiyse yeni sipariş yaratılmaz, eskisi döndürülür.",
+        "en": "The client sends the 'Buy' request with a unique Idempotency-Key. The transaction opens and the first job is to check order_requests: if this key was seen before, no new order is created and the old one is returned."
+      },
+      "durationMs": 4000,
+      "inherit": false,
+      "highlight": { "nodes": ["svc", "req"], "edges": ["svc-req"] },
+      "nodeStates": {
+        "svc": { "status": "active", "badge": "BEGIN" },
+        "req": { "status": "active" },
+        "inv": { "status": "idle" }, "orders": { "status": "idle" }, "items": { "status": "idle" }, "pay": { "status": "idle" }, "outbox": { "status": "idle" },
+        "worker": { "status": "muted" }, "psp": { "status": "muted" }
+      },
+      "edgeStates": { "outbox-worker": { "status": "muted" }, "worker-psp": { "status": "muted" } },
+      "packets": [
+        { "edge": "svc-req", "shape": "envelope", "label": "SELECT … WHERE key = 'k-91f'", "durationMs": 1000 },
+        { "edge": "svc-req", "shape": "dot", "direction": "backward", "label": "0 rows", "startAt": 1200, "durationMs": 800, "color": "success" }
+      ],
+      "annotations": [
+        { "id": "idem", "x": 430, "y": 20, "text": { "tr": "ağ tekrarı → aynı anahtar → aynı sipariş (çift sipariş yok)", "en": "network retry → same key → same order (no duplicate)" }, "target": "req" }
+      ]
+    },
+    {
+      "id": "lock",
+      "title": { "tr": "Stok satırlarını kilitle", "en": "Lock the inventory rows" },
+      "narration": {
+        "tr": "Sepetteki ürünlerin inventory satırları product_id sırasına göre SELECT … FOR UPDATE ile kilitlenir. Sıralama deadlock'u önler; kilit, iki müşterinin son ürünü aynı anda almasını engeller. available = on_hand − reserved kontrol edilir.",
+        "en": "The inventory rows for the cart's products are locked with SELECT … FOR UPDATE in product_id order. The ordering prevents deadlocks; the lock stops two customers from buying the last unit at once. available = on_hand − reserved is checked."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["svc", "inv"], "edges": ["svc-inv"] },
+      "nodeStates": {
+        "req": { "status": "idle" },
+        "inv": { "status": "busy", "badge": "🔒 ×2", "sublabel": "sku-17: 5 − 2 = 3 ✓ · sku-42: 1 − 0 = 1 ✓" }
+      },
+      "packets": [
+        { "edge": "svc-inv", "shape": "envelope", "label": "FOR UPDATE (17, 42)", "durationMs": 1000 },
+        { "edge": "svc-inv", "shape": "dot", "direction": "backward", "label": "available", "startAt": 1200, "durationMs": 800, "color": "success" }
+      ],
+      "annotations": [
+        { "id": "order-note", "x": 430, "y": 290, "text": { "tr": "kilit sırası: product_id artan → çapraz bekleme imkânsız", "en": "lock order: ascending product_id → no cross-wait" }, "tone": "info", "target": "inv" }
+      ]
+    },
+    {
+      "id": "reserve",
+      "title": { "tr": "Rezerve et", "en": "Reserve" },
+      "narration": {
+        "tr": "on_hand değişmez; reserved artırılır. Ödeme gelince ikisi birlikte düşecek, 15 dakikada ödenmezse rezerv geri verilecek. CHECK (reserved <= on_hand) kısıtı aşırı satışı veritabanı seviyesinde yasaklar.",
+        "en": "on_hand stays the same; reserved increases. On payment both will decrease together; if unpaid within 15 minutes the reservation is released. The CHECK (reserved <= on_hand) constraint forbids overselling at the database level."
+      },
+      "durationMs": 3500,
+      "highlight": { "nodes": ["inv"], "edges": ["svc-inv"] },
+      "nodeStates": { "inv": { "status": "busy", "badge": "🔒 ×2", "sublabel": "sku-17: reserved 2→3 · sku-42: reserved 0→1" } },
+      "packets": [
+        { "edge": "svc-inv", "shape": "square", "label": "UPDATE reserved +1", "durationMs": 900 },
+        { "edge": "svc-inv", "shape": "square", "label": "UPDATE reserved +1", "startAt": 600, "durationMs": 900 }
+      ],
+      "annotations": [
+        { "id": "check", "x": 430, "y": 290, "text": { "tr": "CHECK (reserved <= on_hand) → son ürün iki kişiye satılamaz", "en": "CHECK (reserved <= on_hand) → the last unit cannot be sold twice" }, "tone": "success", "target": "inv" }
+      ]
+    },
+    {
+      "id": "order-rows",
+      "title": { "tr": "orders ve order_items", "en": "orders and order_items" },
+      "narration": {
+        "tr": "orders satırı pending durumunda, teslimat adresi JSON snapshot olarak yazılır. Her kalem order_items'a şu anki fiyatla eklenir: yarın fiyat değişse de bu sipariş aynı kalır.",
+        "en": "The orders row is written as pending with the shipping address as a JSON snapshot. Each line goes into order_items at the current price: even if the price changes tomorrow, this order stays the same."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["orders", "items"], "edges": ["svc-orders", "orders-items"] },
+      "nodeStates": {
+        "orders": { "status": "active", "badge": "#90817", "sublabel": "pending · total 1.299,00 · address snapshot" },
+        "items": { "status": "active", "badge": "×2", "sublabel": "(90817, 17, 1, 99900) · (90817, 42, 1, 29900)" }
+      },
+      "packets": [
+        { "edge": "svc-orders", "shape": "envelope", "label": "INSERT orders RETURNING id", "durationMs": 1000 },
+        { "edge": "orders-items", "shape": "square", "label": "INSERT item 17", "startAt": 1200, "durationMs": 800 },
+        { "edge": "orders-items", "shape": "square", "label": "INSERT item 42", "startAt": 1700, "durationMs": 800 }
+      ],
+      "annotations": [
+        { "id": "snapshot", "x": 760, "y": 430, "text": { "tr": "unit_price_cents = o anki fiyat (tarihsel gerçek)", "en": "unit_price_cents = the price right now (historical fact)" }, "tone": "info", "target": "items" }
+      ]
+    },
+    {
+      "id": "payment-outbox",
+      "title": { "tr": "payments ve outbox — hâlâ aynı transaction", "en": "payments and outbox — still the same transaction" },
+      "narration": {
+        "tr": "payments satırı 'initiated' olarak yazılır; ödeme sağlayıcısına HTTP çağrısı YAPILMAZ. Bunun yerine outbox tablosuna order.created olayı eklenir. İdempotency kaydı da bu transaction'dadır: ya hepsi ya hiçbiri.",
+        "en": "The payments row is written as 'initiated'; no HTTP call to the payment provider is made. Instead an order.created event is inserted into the outbox table. The idempotency record is also in this transaction: all or nothing."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["pay", "outbox", "req"], "edges": ["orders-pay", "svc-outbox", "svc-req"] },
+      "nodeStates": {
+        "pay": { "status": "active", "badge": "initiated" },
+        "outbox": { "status": "active", "badge": "+1", "sublabel": "order.created {orderId: 90817}" },
+        "req": { "status": "active", "badge": "+1", "sublabel": "k-91f → 90817" }
+      },
+      "packets": [
+        { "edge": "orders-pay", "shape": "envelope", "label": "INSERT payments", "durationMs": 900 },
+        { "edge": "svc-outbox", "shape": "diamond", "label": "INSERT outbox", "startAt": 700, "durationMs": 1100 },
+        { "edge": "svc-req", "shape": "dot", "label": "INSERT key", "startAt": 1500, "durationMs": 900 }
+      ],
+      "annotations": [
+        { "id": "no-http", "x": 760, "y": 20, "text": { "tr": "kilit tutarken dış çağrı yok: 30 s takılan HTTP = tüm stok satırları kilitli", "en": "no external call while holding locks: a 30 s HTTP stall = all inventory rows locked" }, "tone": "danger", "target": "outbox" }
+      ]
+    },
+    {
+      "id": "commit",
+      "title": { "tr": "COMMIT: kilitler bırakılır", "en": "COMMIT: locks released" },
+      "narration": {
+        "tr": "WAL'a yazılır, fsync, COMMIT. inventory kilitleri bırakılır; bekleyen diğer müşterilerin transaction'ları devam eder. Toplam kilit süresi birkaç milisaniyedir. Stok yetersiz olsaydı aynı noktada ROLLBACK ile hiçbir tablo değişmemiş olurdu.",
+        "en": "Written to WAL, fsync, COMMIT. The inventory locks are released; other customers' waiting transactions proceed. Total lock time is a few milliseconds. Had stock been insufficient, a ROLLBACK at this point would have left every table untouched."
+      },
+      "durationMs": 3500,
+      "highlight": { "nodes": ["svc", "inv", "orders", "items", "pay", "outbox", "req"] },
+      "nodeStates": {
+        "svc": { "status": "success", "badge": "COMMIT" },
+        "inv": { "status": "success", "badge": "", "sublabel": "on_hand · reserved" },
+        "orders": { "status": "success", "badge": "" },
+        "items": { "status": "success", "badge": "" },
+        "pay": { "status": "success", "badge": "" },
+        "outbox": { "status": "success", "badge": "1 pending" },
+        "req": { "status": "success", "badge": "" }
+      },
+      "packets": [
+        { "edge": "svc-inv", "shape": "dot", "direction": "backward", "label": "201 Created", "durationMs": 900, "color": "success" }
+      ],
+      "annotations": [
+        { "id": "atomic", "x": 130, "y": 330, "text": { "tr": "6 tablo, 1 atomik birim · kilit süresi ≈ 5 ms", "en": "6 tables, 1 atomic unit · lock time ≈ 5 ms" }, "tone": "success", "target": "svc" }
+      ]
+    },
+    {
+      "id": "outbox-delivery",
+      "title": { "tr": "Outbox işleyici: dış dünya, transaction dışında", "en": "Outbox worker: the outside world, outside the transaction" },
+      "narration": {
+        "tr": "Ayrı bir işleyici outbox'tan bekleyen olayları okur, ödeme sağlayıcısını çağırır ve olayı işlendi olarak işaretler. Sağlayıcı düşerse olay bekler ve tekrar denenir; sipariş kaydı zaten güvendedir. Webhook geldiğinde payments 'captured' olur ve reserved ile on_hand birlikte düşer.",
+        "en": "A separate worker reads pending events from the outbox, calls the payment provider and marks the event processed. If the provider is down the event waits and is retried; the order record is already safe. When the webhook arrives payments becomes 'captured' and reserved and on_hand decrease together."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["outbox", "worker", "psp"], "edges": ["outbox-worker", "worker-psp"] },
+      "nodeStates": {
+        "svc": { "status": "idle", "badge": "" },
+        "worker": { "status": "active" },
+        "psp": { "status": "active" },
+        "outbox": { "status": "success", "badge": "0 pending" },
+        "pay": { "status": "success", "badge": "→ captured" }
+      },
+      "edgeStates": { "outbox-worker": { "status": "active" }, "worker-psp": { "status": "active" } },
+      "packets": [
+        { "edge": "outbox-worker", "shape": "diamond", "label": "order.created", "durationMs": 1000 },
+        { "edge": "worker-psp", "shape": "envelope", "label": "POST /charges (idempotent)", "startAt": 1100, "durationMs": 1100 },
+        { "edge": "worker-psp", "shape": "dot", "direction": "backward", "label": "webhook: captured", "startAt": 2500, "durationMs": 1000, "color": "success" }
+      ],
+      "annotations": [
+        { "id": "atleast", "x": 430, "y": 460, "text": { "tr": "en az bir kez teslim → sağlayıcı çağrısı idempotent olmalı", "en": "at-least-once delivery → the provider call must be idempotent" }, "tone": "warning", "target": "worker" }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["schema-design", "order-transaction", "outbox-pattern", "idempotency-key"]
+}

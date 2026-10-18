@@ -1,0 +1,441 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "c-03-observer",
+  "title": {
+    "tr": "Observer: Yayınla, Kimin Dinlediğini Bilme",
+    "en": "Observer: Publish Without Knowing Who Listens"
+  },
+  "summary": {
+    "tr": "Gözlemciler OrderEvents konusuna abone olur; OrderPaid olayı tüm abonelere iletilir; yeni bir abone konuya dokunmadan eklenir; abonelik iptali sızıntıyı önler.",
+    "en": "Observers subscribe to the OrderEvents subject; the OrderPaid event is delivered to all subscribers; a new subscriber is added without touching the subject; unsubscribing prevents leaks."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda OrderService, ortada OrderEvents konusu, sağda EmailObserver, AnalyticsObserver ve sonradan eklenen LoyaltyObserver. Gözlemciler abone olur; OrderService notify çağırır; konu her gözlemcinin update metodunu çağırır; yeni gözlemci eklenir ve sonraki olayda o da bildirim alır; son adımda bir gözlemci aboneliğini iptal eder.",
+      "en": "OrderService on the left, the OrderEvents subject in the middle, EmailObserver, AnalyticsObserver and a later-added LoyaltyObserver on the right. Observers subscribe; OrderService calls notify; the subject calls update on each observer; a new observer is added and receives the next event; in the last step one observer unsubscribes."
+    }
+  },
+  "canvas": {
+    "width": 1000,
+    "height": 600
+  },
+  "nodes": [
+    {
+      "id": "svc",
+      "kind": "generic",
+      "label": "OrderService",
+      "x": 110,
+      "y": 300,
+      "w": 160,
+      "h": 70,
+      "sublabel": {
+        "tr": "yayıncı",
+        "en": "publisher"
+      }
+    },
+    {
+      "id": "subject",
+      "kind": "generic",
+      "label": "OrderEvents",
+      "x": 450,
+      "y": 300,
+      "w": 190,
+      "h": 80,
+      "sublabel": {
+        "tr": "observers: []",
+        "en": "observers: []"
+      }
+    },
+    {
+      "id": "email",
+      "kind": "generic",
+      "label": "EmailObserver",
+      "x": 840,
+      "y": 130,
+      "w": 180,
+      "h": 60,
+      "sublabel": {
+        "tr": "update(evt)",
+        "en": "update(evt)"
+      }
+    },
+    {
+      "id": "analytics",
+      "kind": "generic",
+      "label": "AnalyticsObserver",
+      "x": 840,
+      "y": 300,
+      "w": 180,
+      "h": 60,
+      "sublabel": {
+        "tr": "update(evt)",
+        "en": "update(evt)"
+      }
+    },
+    {
+      "id": "loyalty",
+      "kind": "generic",
+      "label": "LoyaltyObserver",
+      "x": 840,
+      "y": 470,
+      "w": 180,
+      "h": 60,
+      "sublabel": {
+        "tr": "henüz yok",
+        "en": "not yet"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "svc-sub",
+      "from": "svc",
+      "to": "subject",
+      "kind": "request",
+      "label": "notify(OrderPaid)"
+    },
+    {
+      "id": "sub-email",
+      "from": "subject",
+      "to": "email",
+      "kind": "request",
+      "label": "update()",
+      "curvature": -0.1
+    },
+    {
+      "id": "sub-an",
+      "from": "subject",
+      "to": "analytics",
+      "kind": "request",
+      "label": "update()"
+    },
+    {
+      "id": "sub-loy",
+      "from": "subject",
+      "to": "loyalty",
+      "kind": "request",
+      "label": "update()",
+      "curvature": 0.1
+    },
+    {
+      "id": "email-sub",
+      "from": "email",
+      "to": "subject",
+      "kind": "control",
+      "label": "subscribe()",
+      "style": "dashed",
+      "curvature": -0.35
+    },
+    {
+      "id": "an-sub",
+      "from": "analytics",
+      "to": "subject",
+      "kind": "control",
+      "label": "subscribe()",
+      "style": "dashed",
+      "curvature": -0.3
+    },
+    {
+      "id": "loy-sub",
+      "from": "loyalty",
+      "to": "subject",
+      "kind": "control",
+      "label": "subscribe()",
+      "style": "dashed",
+      "curvature": 0.35
+    }
+  ],
+  "steps": [
+    {
+      "id": "subscribe",
+      "title": {
+        "tr": "1. Abonelik",
+        "en": "1. Subscription"
+      },
+      "narration": {
+        "tr": "Açılışta EmailObserver ve AnalyticsObserver konuya abone olur. Konu yalnızca OrderObserver arayüzünü bilir; somut sınıfları tanımaz. Her subscribe() bir iptal fonksiyonu döner.",
+        "en": "At startup EmailObserver and AnalyticsObserver subscribe to the subject. The subject knows only the OrderObserver interface, not the concrete classes. Each subscribe() returns an unsubscribe function."
+      },
+      "durationMs": 3500,
+      "inherit": false,
+      "highlight": {
+        "nodes": [
+          "subject",
+          "email",
+          "analytics"
+        ],
+        "edges": [
+          "email-sub",
+          "an-sub"
+        ]
+      },
+      "nodeStates": {
+        "subject": {
+          "status": "active",
+          "sublabel": {
+            "tr": "observers: [email, analytics]",
+            "en": "observers: [email, analytics]"
+          }
+        },
+        "loyalty": {
+          "visible": false
+        }
+      },
+      "edgeStates": {
+        "sub-loy": {
+          "visible": false
+        },
+        "loy-sub": {
+          "visible": false
+        }
+      },
+      "packets": [
+        {
+          "edge": "email-sub",
+          "shape": "diamond",
+          "durationMs": 900
+        },
+        {
+          "edge": "an-sub",
+          "startAt": 300,
+          "shape": "diamond",
+          "durationMs": 900
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a1",
+          "x": 450,
+          "y": 170,
+          "text": {
+            "tr": "konu somut gözlemcileri bilmez",
+            "en": "the subject knows no concrete observer"
+          },
+          "target": "subject"
+        }
+      ]
+    },
+    {
+      "id": "publish",
+      "title": {
+        "tr": "2. Olay yayınlanır",
+        "en": "2. The event is published"
+      },
+      "narration": {
+        "tr": "Ödeme alınınca OrderService notify(OrderPaid) çağırır. Konu listesini dolaşıp her gözlemcinin update(evt) metodunu çağırır. OrderService e-posta ya da analitik kodundan habersizdir.",
+        "en": "When payment succeeds OrderService calls notify(OrderPaid). The subject iterates its list and calls update(evt) on each observer. OrderService knows nothing about email or analytics code."
+      },
+      "durationMs": 4000,
+      "highlight": {
+        "nodes": [
+          "svc",
+          "email",
+          "analytics"
+        ],
+        "edges": [
+          "svc-sub",
+          "sub-email",
+          "sub-an"
+        ]
+      },
+      "nodeStates": {
+        "email": {
+          "status": "success",
+          "badge": "mail"
+        },
+        "analytics": {
+          "status": "success",
+          "badge": "track"
+        }
+      },
+      "edgeStates": {},
+      "packets": [
+        {
+          "edge": "svc-sub",
+          "shape": "envelope",
+          "label": "OrderPaid #42",
+          "durationMs": 900
+        },
+        {
+          "edge": "sub-email",
+          "startAt": 1000,
+          "shape": "envelope",
+          "durationMs": 800
+        },
+        {
+          "edge": "sub-an",
+          "startAt": 1100,
+          "shape": "envelope",
+          "durationMs": 800
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "id": "extend",
+      "title": {
+        "tr": "3. Yeni gözlemci, konuya dokunmadan",
+        "en": "3. New observer, subject untouched"
+      },
+      "narration": {
+        "tr": "Sadakat puanı ekibi LoyaltyObserver yazar ve abone olur. OrderEvents ve OrderService değişmez. Sonraki OrderPaid üç gözlemciye gider. Open/Closed ilkesinin en saf örneği.",
+        "en": "The loyalty team writes LoyaltyObserver and subscribes. OrderEvents and OrderService do not change. The next OrderPaid reaches three observers. The purest example of the Open/Closed principle."
+      },
+      "durationMs": 4500,
+      "highlight": {
+        "nodes": [
+          "loyalty"
+        ],
+        "edges": [
+          "loy-sub",
+          "sub-loy"
+        ]
+      },
+      "nodeStates": {
+        "loyalty": {
+          "visible": true,
+          "status": "active",
+          "sublabel": {
+            "tr": "update(evt)",
+            "en": "update(evt)"
+          }
+        },
+        "subject": {
+          "sublabel": {
+            "tr": "observers: [email, analytics, loyalty]",
+            "en": "observers: [email, analytics, loyalty]"
+          }
+        },
+        "email": {
+          "badge": ""
+        },
+        "analytics": {
+          "badge": ""
+        }
+      },
+      "edgeStates": {
+        "loy-sub": {
+          "visible": true
+        },
+        "sub-loy": {
+          "visible": true
+        }
+      },
+      "packets": [
+        {
+          "edge": "loy-sub",
+          "shape": "diamond",
+          "durationMs": 800
+        },
+        {
+          "edge": "svc-sub",
+          "startAt": 1000,
+          "shape": "envelope",
+          "label": "OrderPaid #43",
+          "durationMs": 800
+        },
+        {
+          "edge": "sub-email",
+          "startAt": 1900,
+          "shape": "envelope",
+          "durationMs": 700
+        },
+        {
+          "edge": "sub-an",
+          "startAt": 2000,
+          "shape": "envelope",
+          "durationMs": 700
+        },
+        {
+          "edge": "sub-loy",
+          "startAt": 2100,
+          "shape": "envelope",
+          "durationMs": 700
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a3",
+          "x": 840,
+          "y": 560,
+          "text": {
+            "tr": "yayıncı değişmedi: Open/Closed",
+            "en": "publisher unchanged: Open/Closed"
+          },
+          "tone": "success",
+          "target": "loyalty"
+        }
+      ]
+    },
+    {
+      "id": "unsubscribe",
+      "title": {
+        "tr": "4. Abonelik iptali ve tuzaklar",
+        "en": "4. Unsubscribe and pitfalls"
+      },
+      "narration": {
+        "tr": "AnalyticsObserver kapatılırken aboneliğini iptal eder; aksi hâlde konu ona referans tutar ve bellek sızar. Diğer tuzaklar: bir gözlemcinin istisnası diğerlerini engellememeli (try/catch), sıraya güvenilmemeli, senkron ağır iş yapılmamalı (kuyruğa at).",
+        "en": "AnalyticsObserver unsubscribes on shutdown; otherwise the subject keeps a reference and memory leaks. Other pitfalls: one observer's exception must not block the others (try/catch), never rely on order, no heavy synchronous work (enqueue instead)."
+      },
+      "durationMs": 3500,
+      "highlight": {
+        "nodes": [
+          "analytics",
+          "subject"
+        ],
+        "edges": [
+          "an-sub"
+        ]
+      },
+      "nodeStates": {
+        "analytics": {
+          "status": "muted",
+          "sublabel": {
+            "tr": "unsubscribe()",
+            "en": "unsubscribe()"
+          }
+        },
+        "subject": {
+          "sublabel": {
+            "tr": "observers: [email, loyalty]",
+            "en": "observers: [email, loyalty]"
+          }
+        }
+      },
+      "edgeStates": {
+        "sub-an": {
+          "status": "muted"
+        }
+      },
+      "packets": [
+        {
+          "edge": "an-sub",
+          "shape": "diamond",
+          "color": "warning",
+          "label": "unsubscribe()",
+          "durationMs": 900
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a4",
+          "x": 450,
+          "y": 440,
+          "text": {
+            "tr": "iptal edilmeyen abonelik = bellek sızıntısı",
+            "en": "an unsubscribed-never subscription = memory leak"
+          },
+          "tone": "warning",
+          "target": "subject"
+        }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": [
+    "observer",
+    "behavioral"
+  ]
+}

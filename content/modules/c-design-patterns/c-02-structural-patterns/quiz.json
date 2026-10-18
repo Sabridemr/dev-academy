@@ -1,0 +1,243 @@
+{
+  "id": "c-02-structural-patterns-quiz",
+  "title": {
+    "tr": "Structural Kalıplar Quiz",
+    "en": "Structural Patterns Quiz"
+  },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Bir Notifier'a loglama ve yeniden deneme eklemek istiyorsunuz; bazı ortamlarda yalnızca loglama, bazılarında ikisi birden gerekiyor ve Notifier'ın alt sınıflarını çoğaltmak istemiyorsunuz. Hangi kalıp?",
+        "en": "You want to add logging and retry to a Notifier; some environments need only logging, others both, and you do not want to multiply Notifier subclasses. Which pattern?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Adapter",
+            "en": "Adapter"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Decorator",
+            "en": "Decorator"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "Facade",
+            "en": "Facade"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Composite",
+            "en": "Composite"
+          }
+        }
+      ],
+      "correct": [
+        "b"
+      ],
+      "explanation": {
+        "tr": "Decorator aynı arayüzü koruyarak davranışı çalışma zamanında, istenen kombinasyonda katmanlar; kalıtımla 4 alt sınıf (log, retry, log+retry, hiçbiri) yerine 2 decorator yeter. Adapter arayüz çevirir, Facade basitleştirir, Composite ağaç kurar.",
+        "en": "Decorator layers behavior at runtime in any combination while keeping the interface; instead of 4 subclasses (log, retry, log+retry, none) two decorators suffice. Adapter translates interfaces, Facade simplifies, Composite builds trees."
+      },
+      "difficulty": "easy",
+      "concepts": [
+        "decorator"
+      ]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "Decorator ile Proxy yapısal olarak neredeyse aynıdır (aynı arayüz, sarılan nesne). Temel fark nedir?",
+        "en": "Decorator and Proxy are structurally almost identical (same interface, wrapped object). What is the key difference?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Decorator davranış ekler ve zinciri istemci kurar; Proxy erişimi ve yaşam döngüsünü yönetir, çağrıyı iletmeyebilir",
+            "en": "A decorator adds behavior and the client builds the chain; a proxy manages access and lifecycle and may not forward the call"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Proxy sarılan nesneden farklı bir arayüz sunar; Decorator aynı arayüzü koruduğu için yalnızca o zincirlenebilir",
+            "en": "A proxy exposes a different interface than the wrapped object; only a decorator can be chained because it keeps the same interface"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "Decorator kalıtımla, Proxy bileşimle uygulanır; bu yüzden Decorator çalışma zamanında takılıp çıkarılamaz",
+            "en": "A decorator is implemented with inheritance and a proxy with composition, so a decorator cannot be attached or removed at runtime"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Proxy yalnızca uzak çağrılar (gRPC stub) içindir; cache, yetki ve tembel yükleme Decorator'ın sorumluluğudur",
+            "en": "A proxy is only for remote calls (gRPC stubs); caching, authorization and lazy loading are the decorator's responsibility"
+          }
+        }
+      ],
+      "correct": [
+        "a"
+      ],
+      "explanation": {
+        "tr": "İkisi de aynı arayüzü uygular (b yanlış) ve bileşimle kurulur (c yanlış). Cache, yetki ve tembel yükleme birer proxy türüdür, uzak çağrı yalnızca biridir (d yanlış). Niyet farklıdır: Decorator genişletir ve dışarıdan zincirlenir; Proxy kontrol eder, gerçek nesneyi kendisi yaratabilir ve çağrıyı reddedebilir.",
+        "en": "Both implement the same interface (b is wrong) and are built with composition (c is wrong). Caching, protection and virtual proxies are proxy kinds; remote is only one of them (d is wrong). The intent differs: Decorator extends and is chained from outside; Proxy controls, may create the real object itself and may reject the call."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "proxy",
+        "decorator"
+      ]
+    },
+    {
+      "id": "q3",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Facade kalıbı için hangileri doğrudur? (Birden fazla seçin)",
+        "en": "Which statements about the Facade pattern are true? (Select all that apply)"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Alt sistemin karmaşıklığını daha basit, yeni bir arayüz arkasına gizler",
+            "en": "It hides subsystem complexity behind a new, simpler interface"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Alt sistemlere doğrudan erişimi yasaklar; istemci yalnızca facade üzerinden geçebilir",
+            "en": "It forbids direct access to the subsystems; clients may only go through the facade"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "Modüler monolitte bir modülün public API'si tipik bir facade'dır",
+            "en": "A module's public API in a modular monolith is a typical facade"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "İndirim hesabı gibi iş kurallarını barındırmak için doğru yerdir",
+            "en": "It is the right place to hold business rules such as discount calculation"
+          }
+        }
+      ],
+      "correct": [
+        "a",
+        "c"
+      ],
+      "explanation": {
+        "tr": "Facade basitleştirir ama zorunlu kılmaz; ihtiyacı olan alt sisteme doğrudan gidebilir (b yanlış). Koordinasyon yapar, iş kuralı barındırmaz; kural alan nesnelerinde kalır (d yanlış). b-01'deki modül facade'ı bu kalıbın doğrudan uygulamasıdır.",
+        "en": "A facade simplifies but does not enforce; anyone who needs a subsystem can go directly (b is wrong). It coordinates and holds no business rules; rules stay in domain objects (d is wrong). The module facade in b-01 is a direct application of this pattern."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "facade"
+      ]
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": {
+        "tr": "3 rapor türü ve 4 çıktı formatı var; her kombinasyon için ayrı sınıf yazmak 12 sınıf demek. Hangi kalıp bunu 3 + 4 = 7 sınıfa indirir?",
+        "en": "There are 3 report types and 4 output formats; a class per combination means 12 classes. Which pattern reduces this to 3 + 4 = 7 classes?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Composite",
+            "en": "Composite"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Adapter",
+            "en": "Adapter"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "Bridge",
+            "en": "Bridge"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Proxy",
+            "en": "Proxy"
+          }
+        }
+      ],
+      "correct": [
+        "c"
+      ],
+      "explanation": {
+        "tr": "Bridge, soyutlamayı (rapor: ne) ve uygulamayı (format: nasıl) ayrı hiyerarşiler olarak tutar ve bileşimle bağlar; her eksen bağımsız büyür. Composite ağaç yapıları, Adapter arayüz uyumu, Proxy erişim kontrolü içindir.",
+        "en": "Bridge keeps the abstraction (report: what) and the implementation (format: how) as separate hierarchies joined by composition; each axis grows independently. Composite is for trees, Adapter for interface fit, Proxy for access control."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "bridge"
+      ]
+    },
+    {
+      "id": "q5",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Composite kalıbında istemci, elindeki düğümün yaprak mı bileşik mi olduğunu kontrol etmek zorunda kalmadan aynı işlemi çağırabilir.",
+        "en": "In the Composite pattern the client can invoke the same operation without checking whether its node is a leaf or a composite."
+      },
+      "options": [
+        {
+          "id": "t",
+          "text": {
+            "tr": "Doğru",
+            "en": "True"
+          }
+        },
+        {
+          "id": "f",
+          "text": {
+            "tr": "Yanlış",
+            "en": "False"
+          }
+        }
+      ],
+      "correct": [
+        "t"
+      ],
+      "explanation": {
+        "tr": "Doğru; kalıbın amacı tam olarak budur: yaprak ve bileşik aynı arayüzü uygular, özyineleme bileşiğin içinde kalır. Bedeli, yaprakta anlamsız olan add/remove gibi metodların arayüzde nasıl ele alınacağı (hata fırlatma ya da ayrı arayüz) kararıdır.",
+        "en": "True; that is precisely the point: leaf and composite implement the same interface and recursion stays inside the composite. The cost is deciding how to handle methods like add/remove that make no sense on a leaf (throw or a separate interface)."
+      },
+      "difficulty": "easy",
+      "concepts": [
+        "composite"
+      ]
+    }
+  ]
+}

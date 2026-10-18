@@ -1,0 +1,178 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "e-06-url-shortener-journey",
+  "title": { "tr": "URL Kısaltıcı: Kısaltma ve Yönlendirme", "en": "URL Shortener: Shorten and Redirect" },
+  "summary": {
+    "tr": "Uzun URL'nin aralık tabanlı id üretici ve base62 ile kısa koda çevrilip KV depoya yazılması; ardından kısa koda gelen isteğin cache'ten 302 ile yönlendirilmesi, tıklama olayının Kafka'ya düşmesi ve cache ıskalamasında KV sorgusu.",
+    "en": "A long URL turned into a short code with a range-based id generator and base62 and written to the KV store; then a request for the short code redirected with a 302 from cache, the click event landing in Kafka, and a KV lookup on a cache miss."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda tarayıcı, ortada yük dengeleyici ve kısaltma API'si; üstte id üretici ve ZooKeeper aralık servisi; sağda Redis cache ve KV depo; altta Kafka tıklama olayları ve hedef site. Kısaltma isteği id üreticiden yerel aralıktan bir sayı alır, base62'ye çevrilir, KV ve cache'e yazılır ve 201 döner. Yönlendirme isteği cache'te bulunur, 302 ile tarayıcı hedef siteye gider, tıklama olayı asenkron olarak Kafka'ya yazılır; cache'te olmayan bir kod KV'den okunup cache'e alınır.",
+      "en": "Browser on the left, load balancer and shorten API in the middle; id generator and ZooKeeper range service at the top; Redis cache and KV store on the right; Kafka click events and the target site at the bottom. A shorten request takes a number from the id generator's local range, converts it to base62, writes it to KV and cache and returns 201. A redirect request hits the cache, the browser follows a 302 to the target site and the click event is written asynchronously to Kafka; a code missing from cache is read from KV and cached."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "browser", "kind": "browser", "label": { "tr": "Tarayıcı", "en": "Browser" }, "x": 80, "y": 300 },
+    { "id": "lb", "kind": "lb", "label": "LB", "x": 230, "y": 300, "w": 90, "h": 60 },
+    { "id": "api", "kind": "service", "label": "Shorten API", "sublabel": { "tr": "durumsuz", "en": "stateless" }, "x": 400, "y": 300, "w": 130, "h": 70 },
+    { "id": "idgen", "kind": "service", "label": { "tr": "ID üretici", "en": "ID generator" }, "sublabel": { "tr": "yerel aralık", "en": "local range" }, "x": 400, "y": 100, "w": 130, "h": 64 },
+    { "id": "zk", "kind": "generic", "label": "ZooKeeper", "sublabel": { "tr": "aralık tahsisi", "en": "range allocation" }, "x": 640, "y": 100, "w": 130, "h": 64 },
+    { "id": "cache", "kind": "cache", "label": "Redis", "sublabel": "code → url", "x": 640, "y": 300, "w": 120, "h": 64 },
+    { "id": "kv", "kind": "db", "label": "KV depo", "sublabel": "DynamoDB / Cassandra", "x": 860, "y": 300, "w": 130, "h": 70 },
+    { "id": "kafka", "kind": "queue", "label": "Kafka", "sublabel": "click-events", "x": 640, "y": 500, "w": 120, "h": 60 },
+    { "id": "site", "kind": "generic", "label": { "tr": "Hedef site", "en": "Target site" }, "sublabel": "example.com/…", "x": 230, "y": 500, "w": 130, "h": 60 }
+  ],
+  "edges": [
+    { "id": "b-lb", "from": "browser", "to": "lb", "kind": "request" },
+    { "id": "lb-api", "from": "lb", "to": "api", "kind": "request" },
+    { "id": "api-idgen", "from": "api", "to": "idgen", "kind": "request", "style": "dashed" },
+    { "id": "idgen-zk", "from": "idgen", "to": "zk", "kind": "control", "style": "dotted", "label": { "tr": "aralık al", "en": "get range" } },
+    { "id": "api-cache", "from": "api", "to": "cache", "kind": "data" },
+    { "id": "api-kv", "from": "api", "to": "kv", "kind": "data", "curvature": 0.25 },
+    { "id": "api-kafka", "from": "api", "to": "kafka", "kind": "event", "style": "dotted", "curvature": 0.15 },
+    { "id": "b-site", "from": "browser", "to": "site", "kind": "request", "style": "dashed", "curvature": 0.15 }
+  ],
+  "steps": [
+    {
+      "id": "shorten",
+      "title": { "tr": "1 · POST /shorten", "en": "1 · POST /shorten" },
+      "narration": {
+        "tr": "Kullanıcı 180 karakterlik bir URL'yi kısaltmak ister. İstek LB üzerinden durumsuz API düğümlerinden birine gelir; URL doğrulanır (şema, kara liste) ve kullanıcı başına kısaltma limiti kontrol edilir.",
+        "en": "The user wants to shorten a 180-character URL. The request reaches one of the stateless API nodes via the LB; the URL is validated (scheme, blocklist) and the per-user shortening limit is checked."
+      },
+      "durationMs": 3000,
+      "inherit": false,
+      "highlight": { "nodes": ["browser", "lb", "api"], "edges": ["b-lb", "lb-api"] },
+      "nodeStates": { "browser": { "status": "active" }, "api": { "status": "busy" } },
+      "packets": [
+        { "edge": "b-lb", "shape": "envelope", "label": "POST", "durationMs": 800 },
+        { "edge": "lb-api", "shape": "envelope", "startAt": 900, "durationMs": 800 }
+      ],
+      "annotations": [
+        { "id": "body", "x": 80, "y": 400, "text": { "tr": "{ longUrl, ttl?: 30d }", "en": "{ longUrl, ttl?: 30d }" }, "target": "browser" }
+      ]
+    },
+    {
+      "id": "id",
+      "title": { "tr": "2 · Aralıktan id, base62'ye çevir", "en": "2 · Id from range, convert to base62" },
+      "narration": {
+        "tr": "API, aynı düğümdeki id üreticiden bir sayı ister. Üretici daha önce ZooKeeper'dan [3 000 000, 3 999 999] aralığını almıştır; sayacı ilerletir: 3 417 206. Sayı bijektif olarak karıştırılıp base62'ye çevrilir → aB3x9Q. Ağ gidiş-dönüşü yok; aralık bitince yenisi istenir.",
+        "en": "The API asks the id generator on the same node for a number. The generator previously obtained the range [3,000,000, 3,999,999] from ZooKeeper; it advances its counter: 3,417,206. The number is bijectively scrambled and converted to base62 → aB3x9Q. No network round trip; a new range is requested when this one runs out."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["api", "idgen", "zk"], "edges": ["api-idgen", "idgen-zk"] },
+      "nodeStates": { "idgen": { "status": "active", "badge": "3 417 206" }, "zk": { "status": "idle", "badge": "ranges" } },
+      "packets": [
+        { "edge": "api-idgen", "shape": "dot", "durationMs": 500 },
+        { "edge": "api-idgen", "shape": "dot", "direction": "backward", "startAt": 600, "durationMs": 500, "color": "success", "label": "aB3x9Q" }
+      ],
+      "annotations": [
+        { "id": "range", "x": 640, "y": 180, "text": { "tr": "aralık 1 M · yalnızca bitince ZooKeeper", "en": "range of 1 M · ZooKeeper only when exhausted" }, "target": "zk" }
+      ]
+    },
+    {
+      "id": "persist",
+      "title": { "tr": "3 · KV + cache, 201", "en": "3 · KV + cache, 201" },
+      "narration": {
+        "tr": "Kayıt KV depoya yazılır: aB3x9Q → {longUrl, owner, expiresAt}. Aynı anda Redis'e de konur (yeni linkler hemen tıklanır). Kullanıcıya 201 ve https://sho.rt/aB3x9Q döner. Yazma yolu saniyede yalnızca ~40 kez çalışır.",
+        "en": "The record is written to the KV store: aB3x9Q → {longUrl, owner, expiresAt}. It is also put in Redis (new links get clicked right away). The user receives 201 and https://sho.rt/aB3x9Q. The write path runs only ~40 times per second."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["api", "kv", "cache", "browser"], "edges": ["api-kv", "api-cache", "lb-api", "b-lb"] },
+      "nodeStates": { "kv": { "status": "active", "badge": "PUT" }, "cache": { "status": "active", "badge": "SET" }, "browser": { "status": "success", "badge": "201" }, "idgen": { "status": "idle", "badge": "" } },
+      "packets": [
+        { "edge": "api-kv", "shape": "square", "durationMs": 800 },
+        { "edge": "api-cache", "shape": "dot", "startAt": 200, "durationMs": 600 },
+        { "edge": "lb-api", "shape": "envelope", "direction": "backward", "startAt": 1500, "durationMs": 500, "color": "success" },
+        { "edge": "b-lb", "shape": "envelope", "direction": "backward", "startAt": 2050, "durationMs": 600, "color": "success", "label": "sho.rt/aB3x9Q" }
+      ],
+      "annotations": [
+        { "id": "kvnote", "x": 860, "y": 390, "text": { "tr": "anahtar = kod → otomatik dağılım", "en": "key = code → automatic distribution" }, "target": "kv" }
+      ]
+    },
+    {
+      "id": "redirect-hit",
+      "title": { "tr": "4 · GET /aB3x9Q → cache HIT", "en": "4 · GET /aB3x9Q → cache HIT" },
+      "narration": {
+        "tr": "Başka bir kullanıcı linke tıklar. API kodu önce Redis'te arar: HIT. Sıcak linklerin %90'ından fazlası buradan karşılanır; KV deposuna hiç gidilmez. Yönlendirme yolu saniyede binlerce kez çalışır ve p99 < 50 ms hedefini cache tutturur.",
+        "en": "Another user clicks the link. The API looks the code up in Redis first: HIT. More than 90% of hot links are served from here; the KV store is never touched. The redirect path runs thousands of times per second and the cache is what meets the p99 < 50 ms target."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["browser", "lb", "api", "cache"], "edges": ["b-lb", "lb-api", "api-cache"] },
+      "nodeStates": { "browser": { "status": "active", "badge": "" }, "cache": { "status": "success", "badge": "HIT" }, "kv": { "status": "idle", "badge": "" } },
+      "packets": [
+        { "edge": "b-lb", "shape": "envelope", "label": "GET /aB3x9Q", "durationMs": 700 },
+        { "edge": "lb-api", "shape": "envelope", "startAt": 750, "durationMs": 500 },
+        { "edge": "api-cache", "shape": "dot", "startAt": 1300, "durationMs": 500 },
+        { "edge": "api-cache", "shape": "dot", "direction": "backward", "startAt": 1850, "durationMs": 500, "color": "success", "label": "longUrl" }
+      ],
+      "annotations": [
+        { "id": "hot", "x": 640, "y": 390, "text": { "tr": "80/20: sıcak kodlar bellekte", "en": "80/20: hot codes in memory" }, "tone": "success", "target": "cache" }
+      ]
+    },
+    {
+      "id": "302",
+      "title": { "tr": "5 · 302 Found", "en": "5 · 302 Found" },
+      "narration": {
+        "tr": "API 302 Found + Location başlığı döner; tarayıcı hedef siteye gider. 301 yerine 302 seçildi: tarayıcı yanıtı önbelleğe almaz, böylece her tıklama sunucuya uğrar ve sayılabilir; hedef URL değişirse anında geçerli olur.",
+        "en": "The API returns 302 Found with a Location header; the browser goes to the target site. 302 was chosen over 301: the browser does not cache the response, so every click passes through the server and can be counted; if the target URL changes it takes effect immediately."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["api", "browser", "site"], "edges": ["lb-api", "b-lb", "b-site"] },
+      "nodeStates": { "browser": { "status": "success", "badge": "302" }, "site": { "status": "active" } },
+      "packets": [
+        { "edge": "lb-api", "shape": "envelope", "direction": "backward", "durationMs": 500, "color": "success" },
+        { "edge": "b-lb", "shape": "envelope", "direction": "backward", "startAt": 550, "durationMs": 600, "color": "success", "label": "302 · Location" },
+        { "edge": "b-site", "shape": "envelope", "startAt": 1400, "durationMs": 900 }
+      ],
+      "annotations": [
+        { "id": "vs301", "x": 230, "y": 420, "text": { "tr": "301 olsaydı: tarayıcı cache'ler, tıklama sayılmaz", "en": "with 301: browser caches, click not counted" }, "tone": "warning", "target": "site" }
+      ]
+    },
+    {
+      "id": "analytics",
+      "title": { "tr": "6 · Tıklama olayı (asenkron)", "en": "6 · Click event (async)" },
+      "narration": {
+        "tr": "Yönlendirme yanıtı gönderildikten sonra API tıklama olayını Kafka'ya bırakır: kod, zaman, ülke, referrer. Analitik tüketicisi toplu olarak sayar. Senkron bir veritabanı yazması olsaydı yönlendirme gecikmesi iki katına çıkardı.",
+        "en": "After the redirect response is sent, the API drops a click event into Kafka: code, time, country, referrer. An analytics consumer aggregates in batches. A synchronous database write would have doubled the redirect latency."
+      },
+      "durationMs": 2800,
+      "highlight": { "nodes": ["api", "kafka"], "edges": ["api-kafka"] },
+      "nodeStates": { "kafka": { "status": "active", "badge": "+1" }, "site": { "status": "idle" } },
+      "edgeStates": { "api-kafka": { "status": "active" } },
+      "packets": [
+        { "edge": "api-kafka", "shape": "diamond", "label": "click", "durationMs": 900 }
+      ],
+      "annotations": [
+        { "id": "async", "x": 640, "y": 570, "text": { "tr": "fire-and-forget; yönlendirmeyi bekletmez", "en": "fire-and-forget; never delays the redirect" }, "target": "kafka" }
+      ]
+    },
+    {
+      "id": "miss",
+      "title": { "tr": "7 · Cache MISS → KV", "en": "7 · Cache MISS → KV" },
+      "narration": {
+        "tr": "Eski bir linke tıklanır: Redis'te yok. API KV depodan okur (tek anahtar, ~5 ms), süresi dolmamışsa cache'e koyar ve 302 döner. Kod hiç yoksa 404 — ve bu 'yok' sonucu da kısa süre cache'lenir ki tahminle tarama saldırısı KV'yi yormasın.",
+        "en": "An old link is clicked: not in Redis. The API reads the KV store (single key, ~5 ms), caches it if not expired and returns 302. If the code does not exist at all, 404 — and that negative result is cached briefly too, so enumeration attacks do not hammer KV."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["api", "cache", "kv"], "edges": ["api-cache", "api-kv"] },
+      "nodeStates": { "cache": { "status": "warning", "badge": "MISS" }, "kv": { "status": "active", "badge": "GET" }, "kafka": { "status": "idle", "badge": "" }, "browser": { "badge": "" } },
+      "packets": [
+        { "edge": "api-cache", "shape": "dot", "durationMs": 500 },
+        { "edge": "api-cache", "shape": "dot", "direction": "backward", "startAt": 550, "durationMs": 500, "color": "warning", "label": "nil" },
+        { "edge": "api-kv", "shape": "square", "startAt": 1200, "durationMs": 800 },
+        { "edge": "api-kv", "shape": "square", "direction": "backward", "startAt": 2050, "durationMs": 800, "color": "success", "label": "longUrl" },
+        { "edge": "api-cache", "shape": "dot", "startAt": 2950, "durationMs": 500, "label": "SET" }
+      ],
+      "annotations": [
+        { "id": "neg", "x": 640, "y": 390, "text": { "tr": "negatif cache: 404 de 60 s saklanır", "en": "negative cache: 404 kept for 60 s too" }, "tone": "info", "target": "cache" }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["url-shortener", "base62", "cache", "redirect", "id-generation"]
+}

@@ -1,0 +1,105 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 460" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">LLM yaşam döngüsü, BPE tokenization ve agent döngüsü</title>
+  <desc id="desc">Üstte dört aşamalı boru hattı: pretraining (trilyonlarca token, sonraki token tahmini), SFT (talimat-cevap çiftleri), RLHF/DPO (insan tercihleri) ve dağıtım (RAG, araçlar, önbellek). Sol altta BPE örneği: 'unbelievable' kelimesi 'un', 'believ', 'able' tokenlarına ayrılır ve id'ler alır. Sağ altta agent döngüsü: plan, araç çağrısı, gözlem adımlarını birbirine bağlayan dairesel oklar.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+    <marker id="arrow-p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-primary, #6366f1)"/>
+    </marker>
+  </defs>
+
+  <!-- Üst: yaşam döngüsü -->
+  <text x="450" y="28" text-anchor="middle" font-size="14" font-weight="600" fill="var(--da-fg, #0f172a)">LLM yaşam döngüsü: maliyetin %99'u ilk kutuda, davranışın çoğu sonrakilerde</text>
+
+  <g>
+    <rect x="30" y="50" width="190" height="110" rx="12" fill="var(--da-primary, #6366f1)" opacity="0.14" stroke="var(--da-primary, #6366f1)" stroke-width="2"/>
+    <text x="125" y="74" text-anchor="middle" font-size="13" font-weight="600" fill="var(--da-primary, #6366f1)">1. Pretraining</text>
+    <text x="125" y="94" text-anchor="middle" font-size="10.5" fill="var(--da-fg, #0f172a)">trilyonlarca token web/kod</text>
+    <text x="125" y="110" text-anchor="middle" font-size="10.5" fill="var(--da-fg, #0f172a)">hedef: sonraki token</text>
+    <text x="125" y="126" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">binlerce GPU · haftalar</text>
+    <text x="125" y="146" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">→ base model</text>
+  </g>
+  <path d="M 222 105 L 252 105" stroke="var(--da-muted, #64748b)" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <g>
+    <rect x="254" y="50" width="180" height="110" rx="12" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)" stroke-width="1.5"/>
+    <text x="344" y="74" text-anchor="middle" font-size="13" font-weight="600" fill="var(--da-fg, #0f172a)">2. SFT</text>
+    <text x="344" y="94" text-anchor="middle" font-size="10.5" fill="var(--da-fg, #0f172a)">on binlerce talimat → cevap</text>
+    <text x="344" y="110" text-anchor="middle" font-size="10.5" fill="var(--da-fg, #0f172a)">aynı kayıp, küratörlü veri</text>
+    <text x="344" y="146" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">→ talimat izleyen model</text>
+  </g>
+  <path d="M 436 105 L 466 105" stroke="var(--da-muted, #64748b)" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <g>
+    <rect x="468" y="50" width="180" height="110" rx="12" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)" stroke-width="1.5"/>
+    <text x="558" y="74" text-anchor="middle" font-size="13" font-weight="600" fill="var(--da-fg, #0f172a)">3. RLHF / DPO</text>
+    <text x="558" y="94" text-anchor="middle" font-size="10.5" fill="var(--da-fg, #0f172a)">insan tercihi: A &gt; B</text>
+    <text x="558" y="110" text-anchor="middle" font-size="10.5" fill="var(--da-fg, #0f172a)">ödül modeli + PPO ya da DPO</text>
+    <text x="558" y="146" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">→ yardımcı, güvenli davranış</text>
+  </g>
+  <path d="M 650 105 L 680 105" stroke="var(--da-muted, #64748b)" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <g>
+    <rect x="682" y="50" width="190" height="110" rx="12" fill="var(--da-success, #10b981)" opacity="0.12" stroke="var(--da-success, #10b981)" stroke-width="2"/>
+    <text x="777" y="74" text-anchor="middle" font-size="13" font-weight="600" fill="var(--da-success, #10b981)">4. Dağıtım</text>
+    <text x="777" y="94" text-anchor="middle" font-size="10.5" fill="var(--da-fg, #0f172a)">RAG · araçlar · guardrail</text>
+    <text x="777" y="110" text-anchor="middle" font-size="10.5" fill="var(--da-fg, #0f172a)">KV-cache · prompt cache</text>
+    <text x="777" y="126" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">streaming · batching</text>
+    <text x="777" y="146" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">+ LoRA ile alan uyarlama</text>
+  </g>
+
+  <!-- Ayırıcı -->
+  <line x1="30" y1="185" x2="870" y2="185" stroke="var(--da-border, #cbd5e1)" stroke-dasharray="4 4"/>
+
+  <!-- Sol alt: BPE -->
+  <text x="230" y="212" text-anchor="middle" font-size="13" font-weight="600" fill="var(--da-fg, #0f172a)">BPE tokenization</text>
+  <rect x="60" y="228" width="340" height="40" rx="8" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+  <text x="230" y="254" text-anchor="middle" font-size="16" fill="var(--da-fg, #0f172a)" font-family="monospace">"unbelievable"</text>
+  <path d="M 230 270 L 230 294" stroke="var(--da-muted, #64748b)" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="250" y="286" font-size="9.5" fill="var(--da-muted, #64748b)">en sık çiftleri birleştir</text>
+  <g font-family="monospace" font-size="14" text-anchor="middle">
+    <rect x="80" y="298" width="70" height="34" rx="6" fill="var(--da-primary, #6366f1)" opacity="0.18" stroke="var(--da-primary, #6366f1)"/>
+    <text x="115" y="320" fill="var(--da-fg, #0f172a)">un</text>
+    <rect x="160" y="298" width="130" height="34" rx="6" fill="var(--da-accent, #f59e0b)" opacity="0.18" stroke="var(--da-accent, #f59e0b)"/>
+    <text x="225" y="320" fill="var(--da-fg, #0f172a)">believ</text>
+    <rect x="300" y="298" width="90" height="34" rx="6" fill="var(--da-success, #10b981)" opacity="0.18" stroke="var(--da-success, #10b981)"/>
+    <text x="345" y="320" fill="var(--da-fg, #0f172a)">able</text>
+  </g>
+  <g font-size="10" text-anchor="middle" fill="var(--da-muted, #64748b)">
+    <text x="115" y="348">id 403</text><text x="225" y="348">id 27 996</text><text x="345" y="348">id 540</text>
+  </g>
+  <g font-size="10.5" fill="var(--da-fg, #0f172a)">
+    <text x="60" y="378">• sık kelime = 1 token, nadir kelime = parçalar, bilinmeyen yok</text>
+    <text x="60" y="396">• Türkçe (eklemeli) aynı cümle için %30–60 daha çok token</text>
+    <text x="60" y="414">• fiyat, bağlam penceresi ve gecikme token cinsinden</text>
+    <text x="60" y="432">• her id → öğrenilmiş gömme vektörü (ör. 4096 boyut)</text>
+  </g>
+
+  <!-- Sağ alt: agent döngüsü -->
+  <text x="660" y="212" text-anchor="middle" font-size="13" font-weight="600" fill="var(--da-fg, #0f172a)">Agent döngüsü</text>
+  <!-- üç kutu bir daire üzerinde -->
+  <rect x="600" y="228" width="120" height="44" rx="10" fill="var(--da-primary, #6366f1)" opacity="0.16" stroke="var(--da-primary, #6366f1)" stroke-width="1.5"/>
+  <text x="660" y="247" text-anchor="middle" font-size="12" font-weight="600" fill="var(--da-fg, #0f172a)">Plan</text>
+  <text x="660" y="262" text-anchor="middle" font-size="9.5" fill="var(--da-muted, #64748b)">LLM: sonraki adım ne?</text>
+
+  <rect x="740" y="330" width="130" height="44" rx="10" fill="var(--da-accent, #f59e0b)" opacity="0.16" stroke="var(--da-accent, #f59e0b)" stroke-width="1.5"/>
+  <text x="805" y="349" text-anchor="middle" font-size="12" font-weight="600" fill="var(--da-fg, #0f172a)">Araç çağrısı</text>
+  <text x="805" y="364" text-anchor="middle" font-size="9.5" fill="var(--da-muted, #64748b)">arama · SQL · HTTP · kod</text>
+
+  <rect x="470" y="330" width="120" height="44" rx="10" fill="var(--da-success, #10b981)" opacity="0.16" stroke="var(--da-success, #10b981)" stroke-width="1.5"/>
+  <text x="530" y="349" text-anchor="middle" font-size="12" font-weight="600" fill="var(--da-fg, #0f172a)">Gözlem</text>
+  <text x="530" y="364" text-anchor="middle" font-size="9.5" fill="var(--da-muted, #64748b)">sonuç bağlama eklenir</text>
+
+  <g stroke="var(--da-primary, #6366f1)" stroke-width="1.8" fill="none" marker-end="url(#arrow-p)">
+    <path d="M 722 256 C 780 270, 800 300, 804 328"/>
+    <path d="M 738 356 L 594 356"/>
+    <path d="M 528 328 C 526 300, 560 270, 598 256"/>
+  </g>
+  <text x="790" y="296" font-size="9.5" fill="var(--da-primary, #6366f1)">function calling (JSON)</text>
+  <text x="666" y="348" text-anchor="middle" font-size="9.5" fill="var(--da-primary, #6366f1)">araç çıktısı</text>
+  <text x="520" y="296" text-anchor="middle" font-size="9.5" fill="var(--da-primary, #6366f1)">tekrar düşün</text>
+
+  <g font-size="10.5" fill="var(--da-fg, #0f172a)">
+    <text x="470" y="404">Durma koşulu: hedefe ulaşıldı · adım/bütçe limiti · insan onayı gerekiyor</text>
+    <text x="470" y="422" fill="var(--da-danger, #ef4444)">Araç çıktıları veridir, talimat değil → prompt injection'a dikkat</text>
+  </g>
+</svg>

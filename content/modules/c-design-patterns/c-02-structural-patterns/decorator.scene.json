@@ -1,0 +1,331 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "c-02-decorator",
+  "title": {
+    "tr": "Decorator: Aynı Arayüz, Katman Katman Davranış",
+    "en": "Decorator: Same Interface, Layered Behavior"
+  },
+  "summary": {
+    "tr": "İstemci dıştaki LoggingDecorator'ı çağırır; çağrı RetryDecorator üzerinden EmailNotifier'a iner; ilk deneme başarısız olur, retry tekrar dener, başarı loglanır.",
+    "en": "The client calls the outer LoggingDecorator; the call descends through RetryDecorator to EmailNotifier; the first attempt fails, retry tries again, success is logged."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Soldan sağa dört düğüm: istemci, LoggingDecorator, RetryDecorator ve EmailNotifier. İstemci send çağırır; logging başlangıcı kaydedip çağrıyı retry'a iletir; retry e-posta göndericiye iletir; ilk deneme hata verir, retry ikinci kez dener ve başarılı olur; sonuç geri dönerken logging süreyi kaydeder.",
+      "en": "Four nodes left to right: client, LoggingDecorator, RetryDecorator and EmailNotifier. The client calls send; logging records the start and forwards to retry; retry forwards to the email sender; the first attempt fails, retry tries a second time and succeeds; as the result returns, logging records the duration."
+    }
+  },
+  "canvas": {
+    "width": 1000,
+    "height": 600
+  },
+  "nodes": [
+    {
+      "id": "client",
+      "kind": "generic",
+      "label": "OrderService",
+      "x": 100,
+      "y": 300,
+      "w": 150,
+      "h": 70,
+      "sublabel": {
+        "tr": "Notifier bekler",
+        "en": "expects Notifier"
+      }
+    },
+    {
+      "id": "log",
+      "kind": "generic",
+      "label": "LoggingDecorator",
+      "x": 360,
+      "y": 300,
+      "w": 190,
+      "h": 80,
+      "sublabel": {
+        "tr": "Notifier · inner: retry",
+        "en": "Notifier · inner: retry"
+      }
+    },
+    {
+      "id": "retry",
+      "kind": "generic",
+      "label": "RetryDecorator",
+      "x": 630,
+      "y": 300,
+      "w": 190,
+      "h": 80,
+      "sublabel": {
+        "tr": "Notifier · inner: email",
+        "en": "Notifier · inner: email"
+      }
+    },
+    {
+      "id": "email",
+      "kind": "generic",
+      "label": "EmailNotifier",
+      "x": 880,
+      "y": 300,
+      "w": 160,
+      "h": 70,
+      "sublabel": {
+        "tr": "Notifier · SMTP",
+        "en": "Notifier · SMTP"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "c-l",
+      "from": "client",
+      "to": "log",
+      "kind": "request",
+      "label": "send(msg)"
+    },
+    {
+      "id": "l-r",
+      "from": "log",
+      "to": "retry",
+      "kind": "request",
+      "label": "inner.send(msg)"
+    },
+    {
+      "id": "r-e",
+      "from": "retry",
+      "to": "email",
+      "kind": "request",
+      "label": "inner.send(msg)"
+    }
+  ],
+  "steps": [
+    {
+      "id": "outer",
+      "title": {
+        "tr": "1. İstemci yalnızca en dış katmanı görür",
+        "en": "1. The client sees only the outermost layer"
+      },
+      "narration": {
+        "tr": "Kompozisyon kökünde zincir kuruldu: new LoggingDecorator(new RetryDecorator(new EmailNotifier(smtp))). İstemci için bu sadece bir Notifier'dır. send(msg) çağrılır; logging zamanı kaydeder ve çağrıyı içeriye iletir.",
+        "en": "The composition root built the chain: new LoggingDecorator(new RetryDecorator(new EmailNotifier(smtp))). To the client it is just a Notifier. send(msg) is called; logging records the time and forwards inward."
+      },
+      "durationMs": 3500,
+      "inherit": false,
+      "highlight": {
+        "nodes": [
+          "client",
+          "log"
+        ],
+        "edges": [
+          "c-l"
+        ]
+      },
+      "nodeStates": {
+        "log": {
+          "status": "active",
+          "badge": "t0"
+        }
+      },
+      "edgeStates": {},
+      "packets": [
+        {
+          "edge": "c-l",
+          "shape": "envelope",
+          "label": "send(msg)",
+          "durationMs": 900
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a1",
+          "x": 360,
+          "y": 170,
+          "text": {
+            "tr": "hepsi aynı arayüz: Notifier",
+            "en": "all share one interface: Notifier"
+          },
+          "target": "log"
+        }
+      ]
+    },
+    {
+      "id": "retry1",
+      "title": {
+        "tr": "2. Retry katmanı ilk denemeyi yapar",
+        "en": "2. The retry layer makes the first attempt"
+      },
+      "narration": {
+        "tr": "RetryDecorator çağrıyı EmailNotifier'a iletir. SMTP geçici hata döner (421). Retry bunu yakalar; istemci ve logging hiçbir şey fark etmez.",
+        "en": "RetryDecorator forwards to EmailNotifier. SMTP returns a transient error (421). Retry catches it; the client and logging notice nothing."
+      },
+      "durationMs": 3500,
+      "highlight": {
+        "nodes": [
+          "retry",
+          "email"
+        ],
+        "edges": [
+          "l-r",
+          "r-e"
+        ]
+      },
+      "nodeStates": {
+        "retry": {
+          "status": "active",
+          "badge": "1/3"
+        },
+        "email": {
+          "status": "error"
+        }
+      },
+      "edgeStates": {},
+      "packets": [
+        {
+          "edge": "l-r",
+          "shape": "envelope",
+          "durationMs": 700
+        },
+        {
+          "edge": "r-e",
+          "startAt": 800,
+          "shape": "envelope",
+          "durationMs": 700
+        },
+        {
+          "edge": "r-e",
+          "startAt": 1600,
+          "direction": "backward",
+          "color": "danger",
+          "label": "421",
+          "durationMs": 700
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "id": "retry2",
+      "title": {
+        "tr": "3. İkinci deneme başarılı",
+        "en": "3. Second attempt succeeds"
+      },
+      "narration": {
+        "tr": "Retry 100 ms bekler ve tekrar dener; bu kez 250 OK. Yeniden deneme davranışı EmailNotifier'a yazılmadı, miras da alınmadı: çalışma zamanında sarıldı. Aynı decorator SmsNotifier'ı da sarabilir.",
+        "en": "Retry waits 100 ms and tries again; this time 250 OK. The retry behavior was neither written into EmailNotifier nor inherited: it was wrapped at runtime. The same decorator can wrap SmsNotifier too."
+      },
+      "durationMs": 3500,
+      "highlight": {
+        "nodes": [
+          "retry",
+          "email"
+        ],
+        "edges": [
+          "r-e"
+        ]
+      },
+      "nodeStates": {
+        "retry": {
+          "badge": "2/3"
+        },
+        "email": {
+          "status": "success"
+        }
+      },
+      "edgeStates": {},
+      "packets": [
+        {
+          "edge": "r-e",
+          "shape": "envelope",
+          "durationMs": 700
+        },
+        {
+          "edge": "r-e",
+          "startAt": 800,
+          "direction": "backward",
+          "color": "success",
+          "label": "250 OK",
+          "durationMs": 700
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a3",
+          "x": 630,
+          "y": 430,
+          "text": {
+            "tr": "davranış ekleme: kalıtımsız, çalışma zamanında",
+            "en": "adding behavior: no inheritance, at runtime"
+          },
+          "tone": "success",
+          "target": "retry"
+        }
+      ]
+    },
+    {
+      "id": "unwind",
+      "title": {
+        "tr": "4. Katmanlar geri sarılır",
+        "en": "4. The layers unwind"
+      },
+      "narration": {
+        "tr": "Sonuç retry'dan logging'e döner; logging süreyi (t1 − t0 = 340 ms) ve sonucu kaydeder, istemciye döner. Katman sırası önemlidir: Logging dışta olduğu için toplam süreyi ölçer; içte olsaydı yalnızca son denemeyi ölçerdi.",
+        "en": "The result returns from retry to logging; logging records the duration (t1 − t0 = 340 ms) and the outcome, then returns to the client. Layer order matters: with Logging outermost it measures total time; innermost it would measure only the last attempt."
+      },
+      "durationMs": 3500,
+      "highlight": {
+        "nodes": [
+          "log",
+          "client"
+        ],
+        "edges": [
+          "l-r",
+          "c-l"
+        ]
+      },
+      "nodeStates": {
+        "retry": {
+          "status": "idle",
+          "badge": ""
+        },
+        "log": {
+          "badge": "340 ms",
+          "status": "success"
+        }
+      },
+      "edgeStates": {},
+      "packets": [
+        {
+          "edge": "l-r",
+          "direction": "backward",
+          "color": "success",
+          "durationMs": 700
+        },
+        {
+          "edge": "c-l",
+          "startAt": 800,
+          "direction": "backward",
+          "color": "success",
+          "label": "ok",
+          "durationMs": 700
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a4",
+          "x": 360,
+          "y": 430,
+          "text": {
+            "tr": "sıra önemli: dıştaki içtekini ölçer",
+            "en": "order matters: the outer layer measures the inner"
+          },
+          "tone": "warning",
+          "target": "log"
+        }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": [
+    "decorator",
+    "structural"
+  ]
+}

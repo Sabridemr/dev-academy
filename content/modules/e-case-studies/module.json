@@ -1,0 +1,13 @@
+{
+  "id": "e-case-studies",
+  "slug": "case-studies",
+  "code": "E",
+  "order": 5,
+  "title": { "tr": "Yüksek Trafikli Sistem Vaka Çalışmaları", "en": "High-Traffic System Case Studies" },
+  "description": {
+    "tr": "Gereksinim → kapasite → mimari → darboğaz → animasyonlu istek yolculuğu.",
+    "en": "Requirements → capacity → architecture → bottlenecks → animated request journey."
+  },
+  "icon": "rocket",
+  "color": "#ef4444"
+}

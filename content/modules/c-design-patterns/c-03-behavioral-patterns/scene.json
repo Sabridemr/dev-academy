@@ -1,0 +1,472 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "c-03-behavioral-overview",
+  "title": {
+    "tr": "Bir İstek, Beş Davranışsal Kalıp",
+    "en": "One Request, Five Behavioral Patterns"
+  },
+  "summary": {
+    "tr": "Bir \"sipariş ver\" isteği middleware zincirinden (Chain of Responsibility) geçer, komut nesnesine dönüşür (Command), fiyat stratejiyle hesaplanır (Strategy), sipariş durum geçişi yapar (State) ve olay gözlemcilere yayılır (Observer). Son adım Mediator ve Template Method'u konumlandırır.",
+    "en": "A \"place order\" request passes through a middleware chain (Chain of Responsibility), becomes a command object (Command), gets priced by a strategy (Strategy), the order transitions state (State) and the event fans out to observers (Observer). The last step positions Mediator and Template Method."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Soldan sağa: istemci, middleware zinciri, komut veri yolu, Order bağlamı, fiyat stratejisi ve sağda olay yayıncısı ile iki gözlemci. İstek sırayla bu düğümlerden geçer; her adım o düğümdeki kalıbın adını ve rolünü açıklar.",
+      "en": "Left to right: client, middleware chain, command bus, Order context, pricing strategy, and on the right an event publisher with two observers. The request passes through these nodes in turn; each step names the pattern at that node and its role."
+    }
+  },
+  "canvas": {
+    "width": 1000,
+    "height": 600
+  },
+  "nodes": [
+    {
+      "id": "client",
+      "kind": "generic",
+      "label": "Client",
+      "x": 80,
+      "y": 300,
+      "w": 110,
+      "h": 60
+    },
+    {
+      "id": "chain",
+      "kind": "generic",
+      "label": "Middleware",
+      "x": 270,
+      "y": 300,
+      "w": 170,
+      "h": 70,
+      "sublabel": {
+        "tr": "Chain of Responsibility",
+        "en": "Chain of Responsibility"
+      }
+    },
+    {
+      "id": "bus",
+      "kind": "generic",
+      "label": "CommandBus",
+      "x": 480,
+      "y": 300,
+      "w": 160,
+      "h": 70,
+      "sublabel": {
+        "tr": "Command",
+        "en": "Command"
+      }
+    },
+    {
+      "id": "order",
+      "kind": "generic",
+      "label": "Order",
+      "x": 690,
+      "y": 300,
+      "w": 140,
+      "h": 70,
+      "sublabel": {
+        "tr": "State",
+        "en": "State"
+      }
+    },
+    {
+      "id": "pricing",
+      "kind": "generic",
+      "label": "PricingStrategy",
+      "x": 690,
+      "y": 110,
+      "w": 170,
+      "h": 64,
+      "sublabel": {
+        "tr": "Strategy",
+        "en": "Strategy"
+      }
+    },
+    {
+      "id": "events",
+      "kind": "generic",
+      "label": "OrderEvents",
+      "x": 900,
+      "y": 300,
+      "w": 160,
+      "h": 70,
+      "sublabel": {
+        "tr": "Observer",
+        "en": "Observer"
+      }
+    },
+    {
+      "id": "obs1",
+      "kind": "generic",
+      "label": "Email",
+      "x": 900,
+      "y": 130,
+      "w": 110,
+      "h": 50
+    },
+    {
+      "id": "obs2",
+      "kind": "generic",
+      "label": "Analytics",
+      "x": 900,
+      "y": 470,
+      "w": 110,
+      "h": 50
+    }
+  ],
+  "edges": [
+    {
+      "id": "c-ch",
+      "from": "client",
+      "to": "chain",
+      "kind": "request",
+      "label": "POST /orders"
+    },
+    {
+      "id": "ch-bus",
+      "from": "chain",
+      "to": "bus",
+      "kind": "request",
+      "label": "PlaceOrderCommand"
+    },
+    {
+      "id": "bus-order",
+      "from": "bus",
+      "to": "order",
+      "kind": "request",
+      "label": "execute()"
+    },
+    {
+      "id": "order-pricing",
+      "from": "order",
+      "to": "pricing",
+      "kind": "request",
+      "label": "price()"
+    },
+    {
+      "id": "order-events",
+      "from": "order",
+      "to": "events",
+      "kind": "request",
+      "label": "OrderPlaced"
+    },
+    {
+      "id": "ev-1",
+      "from": "events",
+      "to": "obs1",
+      "kind": "request",
+      "style": "dashed"
+    },
+    {
+      "id": "ev-2",
+      "from": "events",
+      "to": "obs2",
+      "kind": "request",
+      "style": "dashed"
+    }
+  ],
+  "steps": [
+    {
+      "id": "chain",
+      "title": {
+        "tr": "1. Chain of Responsibility: halkalar",
+        "en": "1. Chain of Responsibility: the links"
+      },
+      "narration": {
+        "tr": "İstek auth → rate limit → validation halkalarından geçer. Her halka işler, iletir ya da keser; zincir çalışma zamanında kurulur. Soru: \"isteği KİM ele alacak belli değil mi?\"",
+        "en": "The request passes through auth → rate limit → validation links. Each link handles, forwards or stops; the chain is built at runtime. The question: \"is it unclear WHO will handle the request?\""
+      },
+      "durationMs": 3500,
+      "inherit": false,
+      "highlight": {
+        "nodes": [
+          "chain"
+        ],
+        "edges": [
+          "c-ch"
+        ]
+      },
+      "nodeStates": {
+        "chain": {
+          "status": "active",
+          "badge": "3 halka"
+        }
+      },
+      "edgeStates": {},
+      "packets": [
+        {
+          "edge": "c-ch",
+          "shape": "envelope",
+          "label": "POST /orders",
+          "durationMs": 1000
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a1",
+          "x": 270,
+          "y": 180,
+          "text": {
+            "tr": "işle / ilet / kes",
+            "en": "handle / forward / stop"
+          },
+          "target": "chain"
+        }
+      ]
+    },
+    {
+      "id": "command",
+      "title": {
+        "tr": "2. Command: istek nesneleşir",
+        "en": "2. Command: the request becomes an object"
+      },
+      "narration": {
+        "tr": "Controller isteği PlaceOrderCommand nesnesine çevirir ve CommandBus'a verir. Komut loglanabilir, kuyruğa alınabilir, yeniden denenebilir. Soru: \"isteği saklamak, ertelemek ya da geri almak gerekiyor mu?\"",
+        "en": "The controller turns the request into a PlaceOrderCommand and hands it to the CommandBus. The command can be logged, queued, retried. The question: \"do I need to store, defer or undo the request?\""
+      },
+      "durationMs": 3500,
+      "highlight": {
+        "nodes": [
+          "bus"
+        ],
+        "edges": [
+          "ch-bus"
+        ]
+      },
+      "nodeStates": {
+        "bus": {
+          "status": "active"
+        }
+      },
+      "edgeStates": {},
+      "packets": [
+        {
+          "edge": "ch-bus",
+          "shape": "square",
+          "color": "accent",
+          "label": "PlaceOrderCommand",
+          "durationMs": 1000
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "id": "strategy",
+      "title": {
+        "tr": "3. Strategy: değişen algoritma",
+        "en": "3. Strategy: the varying algorithm"
+      },
+      "narration": {
+        "tr": "Komut çalışırken Order fiyatı sorar; kargo ücreti seçili stratejiyle (ByWeight, Express, kampanya) hesaplanır. Soru: \"aynı işin birden çok değiştirilebilir yolu var mı?\"",
+        "en": "As the command runs, Order asks for the price; the shipping fee is computed by the selected strategy (ByWeight, Express, campaign). The question: \"are there several interchangeable ways to do the same job?\""
+      },
+      "durationMs": 3500,
+      "highlight": {
+        "nodes": [
+          "order",
+          "pricing"
+        ],
+        "edges": [
+          "bus-order",
+          "order-pricing"
+        ]
+      },
+      "nodeStates": {
+        "order": {
+          "status": "active"
+        },
+        "pricing": {
+          "status": "active"
+        }
+      },
+      "edgeStates": {},
+      "packets": [
+        {
+          "edge": "bus-order",
+          "shape": "envelope",
+          "label": "execute()",
+          "durationMs": 700
+        },
+        {
+          "edge": "order-pricing",
+          "startAt": 800,
+          "shape": "envelope",
+          "label": "price()",
+          "durationMs": 700
+        },
+        {
+          "edge": "order-pricing",
+          "startAt": 1600,
+          "direction": "backward",
+          "color": "success",
+          "label": "36 ₺",
+          "durationMs": 700
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "id": "state",
+      "title": {
+        "tr": "4. State: duruma bağlı davranış",
+        "en": "4. State: behavior depends on state"
+      },
+      "narration": {
+        "tr": "Order Pending durumundan Paid durumuna geçer; hangi geçişlerin geçerli olduğunu durum sınıfları bilir. Soru: \"nesnenin davranışı içinde bulunduğu duruma göre köklü biçimde değişiyor mu?\"",
+        "en": "Order transitions from Pending to Paid; the state classes know which transitions are valid. The question: \"does the object's behavior change fundamentally with its state?\""
+      },
+      "durationMs": 3500,
+      "highlight": {
+        "nodes": [
+          "order"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "order": {
+          "status": "success",
+          "badge": "Pending → Paid"
+        },
+        "pricing": {
+          "status": "idle"
+        }
+      },
+      "edgeStates": {},
+      "packets": [],
+      "annotations": [
+        {
+          "id": "a4",
+          "x": 690,
+          "y": 420,
+          "text": {
+            "tr": "switch(status) yerine durum nesneleri",
+            "en": "state objects instead of switch(status)"
+          },
+          "tone": "info",
+          "target": "order"
+        }
+      ]
+    },
+    {
+      "id": "observer",
+      "title": {
+        "tr": "5. Observer: olay yayılır",
+        "en": "5. Observer: the event fans out"
+      },
+      "narration": {
+        "tr": "OrderPlaced olayı yayınlanır; e-posta ve analitik gözlemcileri bağımsızca tepki verir, yayıncı onları tanımaz. Soru: \"bir değişiklikten KAÇ tarafın haberi olmalı, sayı değişebilir mi?\"",
+        "en": "The OrderPlaced event is published; email and analytics observers react independently, the publisher does not know them. The question: \"HOW MANY parties must learn about a change, and can that number vary?\""
+      },
+      "durationMs": 4000,
+      "highlight": {
+        "nodes": [
+          "events",
+          "obs1",
+          "obs2"
+        ],
+        "edges": [
+          "order-events",
+          "ev-1",
+          "ev-2"
+        ]
+      },
+      "nodeStates": {
+        "events": {
+          "status": "active"
+        },
+        "obs1": {
+          "status": "success"
+        },
+        "obs2": {
+          "status": "success"
+        }
+      },
+      "edgeStates": {},
+      "packets": [
+        {
+          "edge": "order-events",
+          "shape": "envelope",
+          "label": "OrderPlaced",
+          "durationMs": 800
+        },
+        {
+          "edge": "ev-1",
+          "startAt": 900,
+          "shape": "envelope",
+          "durationMs": 700
+        },
+        {
+          "edge": "ev-2",
+          "startAt": 1000,
+          "shape": "envelope",
+          "durationMs": 700
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "id": "others",
+      "title": {
+        "tr": "6. Mediator ve Template Method",
+        "en": "6. Mediator and Template Method"
+      },
+      "narration": {
+        "tr": "Mediator, birbirleriyle konuşması gereken çok sayıda bileşenin iletişimini tek merkeze toplar (form bileşenleri, uçak kulesi). Template Method, bir algoritmanın iskeletini üst sınıfta sabitleyip adımları alt sınıfa bırakır (import boru hattı, test yaşam döngüsü). Birlikte: \"kim, kimi, ne zaman çağırıyor?\" sorusunun yedi cevabı.",
+        "en": "Mediator centralizes communication among many components that must talk to each other (form widgets, air traffic control). Template Method fixes an algorithm's skeleton in the superclass and leaves steps to subclasses (import pipeline, test lifecycle). Together: seven answers to \"who calls whom, and when?\""
+      },
+      "durationMs": 6000,
+      "highlight": {
+        "nodes": [],
+        "edges": []
+      },
+      "nodeStates": {
+        "chain": {
+          "badge": ""
+        },
+        "order": {
+          "badge": ""
+        }
+      },
+      "edgeStates": {},
+      "packets": [],
+      "annotations": [
+        {
+          "id": "g1",
+          "x": 300,
+          "y": 500,
+          "text": {
+            "tr": "Mediator: N bileşen, N² yerine N bağ",
+            "en": "Mediator: N components, N links instead of N²"
+          },
+          "tone": "info"
+        },
+        {
+          "id": "g2",
+          "x": 300,
+          "y": 560,
+          "text": {
+            "tr": "Template Method: iskelet sabit, adımlar alt sınıfta",
+            "en": "Template Method: fixed skeleton, steps in subclasses"
+          },
+          "tone": "info"
+        },
+        {
+          "id": "g3",
+          "x": 480,
+          "y": 60,
+          "text": {
+            "tr": "Davranışsal kalıplar = sorumluluk ve iletişim dağıtımı",
+            "en": "Behavioral patterns = distributing responsibility and communication"
+          },
+          "tone": "success"
+        }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": [
+    "behavioral",
+    "overview"
+  ]
+}

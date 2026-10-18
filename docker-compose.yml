@@ -1,0 +1,133 @@
+# DevAcademy yerel geliştirme ortamı
+#
+#   docker compose up -d postgres redis minio      # yalnızca altyapı (uygulamaları pnpm dev ile çalıştırın)
+#   docker compose --profile app up -d --build     # altyapı + API + web (tam yığın)
+#   docker compose run --rm seed                   # content/ klasörünü veritabanına yükle
+#
+# Varsayılan kimlik bilgileri yalnızca yerel geliştirme içindir.
+
+name: devacademy
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: devacademy
+      POSTGRES_PASSWORD: devacademy
+      POSTGRES_DB: devacademy
+    ports:
+      - '5432:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U devacademy -d devacademy']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    command: ['redis-server', '--appendonly', 'yes', '--maxmemory', '256mb', '--maxmemory-policy', 'allkeys-lru']
+    ports:
+      - '6379:6379'
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # S3 uyumlu nesne depolama (görsel / animasyon dosyaları)
+  minio:
+    # Yalnızca yerel geliştirme içindir; üretimde belirli bir RELEASE.* etiketine sabitleyin
+    image: minio/minio:latest
+    command: server /data --console-address ':9001'
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    volumes:
+      - miniodata:/data
+    healthcheck:
+      test: ['CMD', 'mc', 'ready', 'local']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # Bucket'ı oluşturur ve herkese açık okuma izni verir (tek seferlik)
+  minio-init:
+    image: minio/mc:latest
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 minioadmin minioadmin &&
+      mc mb --ignore-existing local/devacademy-media &&
+      mc anonymous set download local/devacademy-media
+      "
+
+  api:
+    profiles: ['app']
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    environment: &api-env
+      NODE_ENV: production
+      PORT: 4000
+      API_PREFIX: api/v1
+      CORS_ORIGINS: http://localhost:3000,http://localhost:8081
+      LOG_LEVEL: info
+      DATABASE_URL: postgresql://devacademy:devacademy@postgres:5432/devacademy?schema=public
+      REDIS_URL: redis://redis:6379
+      JWT_ACCESS_SECRET: local-dev-access-secret-change-me-0123456789
+      JWT_REFRESH_SECRET: local-dev-refresh-secret-change-me-012345678
+      S3_ENDPOINT: http://minio:9000
+      S3_PUBLIC_URL: http://localhost:9000/devacademy-media
+      S3_BUCKET: devacademy-media
+      S3_ACCESS_KEY: minioadmin
+      S3_SECRET_KEY: minioadmin
+      CONTENT_DIR: ../content
+      SEED_ADMIN_EMAIL: admin@devacademy.local
+      SEED_ADMIN_PASSWORD: Admin123!
+    ports:
+      - '4000:4000'
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # İçerik yükleyici: docker compose run --rm seed
+  seed:
+    profiles: ['app', 'seed']
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    environment: *api-env
+    command: ['sh', '-c', 'npx prisma migrate deploy && npx tsx prisma/seed.ts']
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  web:
+    profiles: ['app']
+    build:
+      context: .
+      dockerfile: web/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:4000/api/v1
+    environment:
+      API_URL_INTERNAL: http://api:4000/api/v1
+    ports:
+      - '3000:3000'
+    depends_on:
+      - api
+
+volumes:
+  pgdata:
+  redisdata:
+  miniodata:

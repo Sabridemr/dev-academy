@@ -1,0 +1,148 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "f-08-devacademy-content-pipeline",
+  "title": { "tr": "DevAcademy içerik hattı", "en": "DevAcademy content pipeline" },
+  "summary": {
+    "tr": "Bir dersin Markdown dosyasından öğrencinin ekranına yolculuğu.",
+    "en": "A lesson's journey from a Markdown file to the learner's screen."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda içerik yazarı ve content klasörü, ortada CI doğrulama ve seed adımları, sağda PostgreSQL, Redis ve API, en sağda web ve mobil istemciler bulunur. İçerik doğrulanır, veritabanına yazılır, yayınlanınca Redis'e alınır ve istemcilere ETag ile sunulur; mobil uygulama modülü SQLite'a indirir.",
+      "en": "On the left the content author and the content folder, in the middle CI validation and seed steps, on the right PostgreSQL, Redis and the API, and far right the web and mobile clients. Content is validated, written to the database, cached in Redis when published and served to clients with ETags; the mobile app downloads the module into SQLite."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "author", "kind": "user", "label": { "tr": "İçerik yazarı", "en": "Content author" }, "x": 90, "y": 140 },
+    { "id": "content", "kind": "storage", "label": "content/", "sublabel": { "tr": "Markdown + JSON", "en": "Markdown + JSON" }, "x": 90, "y": 330, "w": 120, "h": 70 },
+    { "id": "ci", "kind": "worker", "label": "CI", "sublabel": "content:validate", "x": 290, "y": 330, "w": 130, "h": 70 },
+    { "id": "seed", "kind": "function", "label": "Seed", "sublabel": { "tr": "idempotent", "en": "idempotent" }, "x": 290, "y": 500, "w": 120, "h": 64 },
+    { "id": "db", "kind": "db", "label": "PostgreSQL", "sublabel": "Lesson + LessonVersion", "x": 500, "y": 500, "w": 150, "h": 70 },
+    { "id": "api", "kind": "service", "label": "NestJS API", "sublabel": "REST + WebSocket", "x": 560, "y": 300, "w": 150, "h": 74 },
+    { "id": "redis", "kind": "cache", "label": "Redis", "sublabel": { "tr": "yayınlanmış içerik", "en": "published content" }, "x": 560, "y": 120, "w": 140, "h": 64 },
+    { "id": "admin", "kind": "browser", "label": { "tr": "Admin paneli", "en": "Admin panel" }, "x": 330, "y": 120, "w": 130, "h": 64 },
+    { "id": "web", "kind": "browser", "label": "Web", "sublabel": "Next.js", "x": 850, "y": 200, "w": 120, "h": 64 },
+    { "id": "mobile", "kind": "mobile", "label": { "tr": "Mobil", "en": "Mobile" }, "sublabel": "SQLite", "x": 850, "y": 420 }
+  ],
+  "edges": [
+    { "id": "author-content", "from": "author", "to": "content", "kind": "data", "label": "git push" },
+    { "id": "content-ci", "from": "content", "to": "ci", "kind": "data" },
+    { "id": "ci-seed", "from": "ci", "to": "seed", "kind": "control" },
+    { "id": "seed-db", "from": "seed", "to": "db", "kind": "data" },
+    { "id": "admin-api", "from": "admin", "to": "api", "kind": "request", "label": "publish" },
+    { "id": "api-db", "from": "api", "to": "db", "kind": "data", "bidirectional": true },
+    { "id": "api-redis", "from": "api", "to": "redis", "kind": "data", "bidirectional": true },
+    { "id": "api-web", "from": "api", "to": "web", "kind": "response", "label": "ETag / 304" },
+    { "id": "api-mobile", "from": "api", "to": "mobile", "kind": "response", "label": { "tr": "offline paket", "en": "offline bundle" } },
+    { "id": "api-ws", "from": "api", "to": "web", "kind": "event", "style": "dashed", "curvature": 0.35, "label": "WebSocket" }
+  ],
+  "steps": [
+    {
+      "id": "write",
+      "title": { "tr": "Ders yazılır", "en": "A lesson is written" },
+      "narration": {
+        "tr": "Yazar `lesson.md`, `scene.json` ve `quiz.json` dosyalarını hazırlayıp bir pull request açar. İçerik, kodla aynı depoda yaşar.",
+        "en": "The author prepares `lesson.md`, `scene.json` and `quiz.json` and opens a pull request. Content lives in the same repository as the code."
+      },
+      "durationMs": 2800,
+      "inherit": false,
+      "highlight": { "nodes": ["author", "content"], "edges": ["author-content"] },
+      "nodeStates": { "content": { "status": "active" } },
+      "packets": [{ "edge": "author-content", "shape": "envelope", "label": "PR", "durationMs": 1200 }]
+    },
+    {
+      "id": "validate",
+      "title": { "tr": "CI doğrular", "en": "CI validates" },
+      "narration": {
+        "tr": "CI, her sahneyi ve quizi zod şemalarıyla doğrular. Var olmayan bir düğüme işaret eden kenar ya da eksik bir SVG, PR'ı kırmızıya çevirir.",
+        "en": "CI validates every scene and quiz with zod schemas. An edge pointing at a missing node or a missing SVG turns the PR red."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["ci"], "edges": ["content-ci"] },
+      "nodeStates": { "ci": { "status": "success", "badge": "✓" } },
+      "packets": [{ "edge": "content-ci", "label": "zod", "durationMs": 1100 }],
+      "annotations": [{ "id": "ci-note", "x": 290, "y": 240, "text": { "tr": "0 hata → merge", "en": "0 errors → merge" }, "tone": "success", "target": "ci" }]
+    },
+    {
+      "id": "seed",
+      "title": { "tr": "Seed veritabanına yazar", "en": "Seed writes to the database" },
+      "narration": {
+        "tr": "Seed scripti içeriği yeni bir `LessonVersion` olarak yayınlar. İçerik değişmediyse hiçbir şey yazmaz (kanonik JSON özeti karşılaştırılır).",
+        "en": "The seed script publishes content as a new `LessonVersion`. If nothing changed it writes nothing (a canonical JSON hash is compared)."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["seed", "db"], "edges": ["ci-seed", "seed-db"] },
+      "nodeStates": { "db": { "status": "active", "badge": "v2" } },
+      "packets": [
+        { "edge": "ci-seed", "shape": "diamond", "durationMs": 900 },
+        { "edge": "seed-db", "label": "v2", "startAt": 900, "durationMs": 1100 }
+      ]
+    },
+    {
+      "id": "publish",
+      "title": { "tr": "Admin yayınlar, cache temizlenir", "en": "Admin publishes, cache is cleared" },
+      "narration": {
+        "tr": "Admin panelinden bir düzeltme yayınlanır: taslak `published` olur, eski sürüm arşive düşer, ilgili Redis anahtarları silinir ve istemcilere WebSocket ile `content.published` olayı gider.",
+        "en": "A fix is published from the admin panel: the draft becomes `published`, the old version is archived, related Redis keys are deleted and clients get a `content.published` event over WebSocket."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["admin", "api", "redis"], "edges": ["admin-api", "api-redis", "api-ws"] },
+      "nodeStates": { "redis": { "status": "warning", "badge": "DEL" }, "api": { "status": "active" } },
+      "packets": [
+        { "edge": "admin-api", "shape": "envelope", "label": "publish", "durationMs": 1000 },
+        { "edge": "api-redis", "label": "DEL", "startAt": 1000, "durationMs": 800, "color": "warning" },
+        { "edge": "api-ws", "label": "event", "startAt": 1800, "durationMs": 1100, "shape": "diamond" }
+      ]
+    },
+    {
+      "id": "miss",
+      "title": { "tr": "İlk istek: cache miss", "en": "First request: cache miss" },
+      "narration": {
+        "tr": "Bir öğrenci dersi açar. Redis'te kayıt yok (miss); API PostgreSQL'den yayınlanmış sürümü okur, Redis'e yazar ve yanıtı ETag ile döner.",
+        "en": "A learner opens the lesson. Redis has no entry (miss); the API reads the published version from PostgreSQL, writes it to Redis and responds with an ETag."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["api", "db", "redis", "web"], "edges": ["api-db", "api-redis", "api-web"] },
+      "nodeStates": { "redis": { "status": "active", "badge": "MISS" } },
+      "packets": [
+        { "edge": "api-redis", "label": "GET", "durationMs": 700 },
+        { "edge": "api-db", "label": "SELECT", "startAt": 700, "durationMs": 900 },
+        { "edge": "api-redis", "label": "SET", "startAt": 1600, "durationMs": 700 },
+        { "edge": "api-web", "label": "200 + ETag", "startAt": 2300, "durationMs": 1000 }
+      ]
+    },
+    {
+      "id": "hit",
+      "title": { "tr": "Sonraki istekler: hit ve 304", "en": "Next requests: hit and 304" },
+      "narration": {
+        "tr": "Sonraki öğrenciler için içerik Redis'ten gelir. Aynı tarayıcı tekrar sorduğunda `If-None-Match` gönderir; içerik değişmediyse gövdesiz 304 döner.",
+        "en": "For the next learners content comes from Redis. When the same browser asks again it sends `If-None-Match`; if nothing changed a body-less 304 comes back."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["redis", "web"], "edges": ["api-redis", "api-web"] },
+      "nodeStates": { "redis": { "status": "success", "badge": "HIT" }, "db": { "status": "idle", "badge": "" } },
+      "packets": [
+        { "edge": "api-redis", "label": "GET", "durationMs": 600 },
+        { "edge": "api-web", "label": "304", "startAt": 700, "durationMs": 900, "color": "success" }
+      ],
+      "annotations": [{ "id": "hit-note", "x": 700, "y": 40, "text": { "tr": "DB'ye dokunulmadı", "en": "DB untouched" }, "tone": "success", "target": "redis" }]
+    },
+    {
+      "id": "offline",
+      "title": { "tr": "Mobil modülü indirir", "en": "Mobile downloads the module" },
+      "narration": {
+        "tr": "Mobil uygulama bir modülün tüm derslerini, sahnelerini ve quizlerini tek pakette indirip SQLite'a yazar. Çevrimdışıyken ilerleme güncellemeleri kuyruğa alınır ve bağlantı gelince gönderilir.",
+        "en": "The mobile app downloads all lessons, scenes and quizzes of a module in one bundle and writes them to SQLite. While offline, progress updates are queued and sent when the connection returns."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["mobile", "api"], "edges": ["api-mobile"] },
+      "nodeStates": { "mobile": { "status": "success", "badge": "✓" } },
+      "packets": [{ "edge": "api-mobile", "shape": "square", "label": "bundle", "durationMs": 1400 }]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["architecture", "content-pipeline", "cache", "etag", "offline"]
+}

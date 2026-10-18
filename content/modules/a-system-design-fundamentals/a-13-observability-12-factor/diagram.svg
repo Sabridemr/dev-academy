@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 430" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Gözlemlenebilirlik boru hattı: üç sütun ve trace-id ile korelasyon</title>
+  <desc id="desc">Solda üç mikroservis (gateway, order, payment) her biri log, metrik ve trace üretir. Ortada bir OpenTelemetry collector sinyalleri alır ve üç depoya dağıtır: loglar için Loki, metrikler için Prometheus, trace'ler için Tempo. Sağda tek bir Grafana paneli üç depodan okur. Alt şeritte aynı trace_id'yi taşıyan bir log satırı, bir metrik örneği ve bir trace'in birbirine bağlandığı gösterilir.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+    <marker id="arrow-p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-primary, #6366f1)"/>
+    </marker>
+  </defs>
+
+  <!-- Servisler -->
+  <text x="110" y="42" text-anchor="middle" font-size="12" fill="var(--da-muted, #64748b)">Servisler (12-factor: log → stdout)</text>
+  <g fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.4">
+    <rect x="40" y="60" width="140" height="54" rx="10"/>
+    <rect x="40" y="134" width="140" height="54" rx="10"/>
+    <rect x="40" y="208" width="140" height="54" rx="10"/>
+  </g>
+  <g font-size="12" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="110" y="82">API Gateway</text>
+    <text x="110" y="156">Order Service</text>
+    <text x="110" y="230">Payment Service</text>
+  </g>
+  <g font-size="9" fill="var(--da-muted, #64748b)" text-anchor="middle">
+    <text x="110" y="100">log · metrik · span</text>
+    <text x="110" y="174">log · metrik · span</text>
+    <text x="110" y="248">log · metrik · span</text>
+  </g>
+  <!-- traceparent zinciri -->
+  <g stroke="var(--da-primary, #6366f1)" stroke-width="1.4" fill="none" stroke-dasharray="4 3" marker-end="url(#arrow-p)">
+    <path d="M 70 114 L 70 132"/>
+    <path d="M 70 188 L 70 206"/>
+  </g>
+  <text x="76" y="127" font-size="8" fill="var(--da-primary, #6366f1)">traceparent</text>
+  <text x="76" y="201" font-size="8" fill="var(--da-primary, #6366f1)">traceparent</text>
+
+  <!-- Servis → collector okları -->
+  <g stroke="var(--da-muted, #64748b)" stroke-width="1.6" fill="none" marker-end="url(#arrow)">
+    <path d="M 180 87 C 230 87, 240 150, 288 150"/>
+    <path d="M 180 161 L 288 161"/>
+    <path d="M 180 235 C 230 235, 240 172, 288 172"/>
+  </g>
+  <text x="234" y="128" text-anchor="middle" font-size="9" fill="var(--da-muted, #64748b)">OTLP (asenkron)</text>
+
+  <!-- Collector -->
+  <rect x="290" y="112" width="150" height="100" rx="12" fill="var(--da-primary, #6366f1)" opacity="0.12" stroke="var(--da-primary, #6366f1)" stroke-width="2"/>
+  <text x="365" y="146" text-anchor="middle" font-size="13" font-weight="600" fill="var(--da-primary, #6366f1)">OTel Collector</text>
+  <text x="365" y="166" text-anchor="middle" font-size="10" fill="var(--da-fg, #0f172a)">al · zenginleştir · örnekle</text>
+  <text x="365" y="182" text-anchor="middle" font-size="10" fill="var(--da-fg, #0f172a)">yönlendir</text>
+  <text x="365" y="200" text-anchor="middle" font-size="9" fill="var(--da-muted, #64748b)">env, service, region etiketleri</text>
+
+  <!-- Depolar -->
+  <g fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)" stroke-width="1.4">
+    <rect x="530" y="60" width="160" height="54" rx="10"/>
+    <rect x="530" y="134" width="160" height="54" rx="10"/>
+    <rect x="530" y="208" width="160" height="54" rx="10"/>
+  </g>
+  <g font-size="12" font-weight="600" text-anchor="middle">
+    <text x="610" y="82" fill="var(--da-accent, #f59e0b)">Loglar</text>
+    <text x="610" y="156" fill="var(--da-success, #10b981)">Metrikler</text>
+    <text x="610" y="230" fill="var(--da-primary, #6366f1)">Trace'ler</text>
+  </g>
+  <g font-size="9" fill="var(--da-muted, #64748b)" text-anchor="middle">
+    <text x="610" y="100">Loki / Elasticsearch · JSON olaylar</text>
+    <text x="610" y="174">Prometheus · RED, p99, düşük kardinalite</text>
+    <text x="610" y="248">Tempo / Jaeger · span ağacı, %10 örnek</text>
+  </g>
+  <!-- Collector → depolar -->
+  <g stroke="var(--da-muted, #64748b)" stroke-width="1.6" fill="none" marker-end="url(#arrow)">
+    <path d="M 440 150 C 480 150, 490 87, 528 87"/>
+    <path d="M 440 161 L 528 161"/>
+    <path d="M 440 172 C 480 172, 490 235, 528 235"/>
+  </g>
+
+  <!-- Panel -->
+  <rect x="770" y="112" width="160" height="100" rx="12" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.4"/>
+  <text x="850" y="140" text-anchor="middle" font-size="13" font-weight="600" fill="var(--da-fg, #0f172a)">Grafana</text>
+  <text x="850" y="160" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">tek panel, üç kaynak</text>
+  <text x="850" y="180" text-anchor="middle" font-size="10" fill="var(--da-danger, #ef4444)">alarm: SLO burn rate</text>
+  <text x="850" y="198" text-anchor="middle" font-size="9" fill="var(--da-muted, #64748b)">(belirti, sebep değil)</text>
+  <g stroke="var(--da-muted, #64748b)" stroke-width="1.4" fill="none" stroke-dasharray="4 3" marker-end="url(#arrow)">
+    <path d="M 690 87 C 730 87, 740 150, 768 150"/>
+    <path d="M 690 161 L 768 161"/>
+    <path d="M 690 235 C 730 235, 740 172, 768 172"/>
+  </g>
+
+  <!-- Korelasyon şeridi -->
+  <rect x="40" y="296" width="890" height="112" rx="12" fill="var(--da-primary, #6366f1)" opacity="0.06" stroke="var(--da-primary, #6366f1)" stroke-dasharray="6 5"/>
+  <text x="485" y="318" text-anchor="middle" font-size="12" font-weight="600" fill="var(--da-primary, #6366f1)">Korelasyon anahtarı: trace_id = 4bf92f3577b34da6a3ce929d0e0e4736</text>
+  <g font-size="10" font-family="monospace" fill="var(--da-fg, #0f172a)">
+    <text x="60" y="346">LOG    {"level":"warn","service":"payment","msg":"provider timeout, retried","trace_id":"4bf92f35…","duration_ms":812}</text>
+    <text x="60" y="368">METRİK http_request_duration_seconds{service="gateway",route="/checkout",le="0.3"}  p99 = 0.90 s  exemplar: trace_id=4bf92f35…</text>
+    <text x="60" y="390">TRACE  4bf92f35…  gateway 900 ms ─ order 860 ms ─ payment 820 ms   ·   inventory 35 ms</text>
+  </g>
+
+  <text x="485" y="424" text-anchor="middle" font-size="11" fill="var(--da-muted, #64748b)">Metrik "yavaş" der, trace "nerede" der, log "neden" der — üçü tek kimlikle bağlıysa gözlemlenebilirlik vardır.</text>
+</svg>

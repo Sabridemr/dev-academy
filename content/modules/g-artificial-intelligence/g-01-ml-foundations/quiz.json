@@ -1,0 +1,110 @@
+{
+  "id": "g-01-ml-foundations-quiz",
+  "title": { "tr": "ML Temelleri Quiz", "en": "ML Foundations Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Müşterileri etiket olmadan davranışlarına göre segmentlere ayırmak hangi öğrenme türüne girer?",
+        "en": "Grouping customers into segments by behaviour without any labels belongs to which learning type?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Supervised (gözetimli)", "en": "Supervised" } },
+        { "id": "b", "text": { "tr": "Unsupervised (gözetimsiz)", "en": "Unsupervised" } },
+        { "id": "c", "text": { "tr": "Reinforcement (pekiştirmeli)", "en": "Reinforcement" } },
+        { "id": "d", "text": { "tr": "Hiçbiri; bu bir kural tabanlı sistemdir", "en": "None; this is a rule-based system" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Etiket (doğru cevap) olmadığı için gözetimli öğrenme uygulanamaz; ödül sinyali de yoktur, dolayısıyla pekiştirmeli de değildir. Kümeleme (k-means gibi) tipik bir gözetimsiz görevdir.",
+        "en": "There are no labels, so supervised learning does not apply; there is no reward signal either, so it is not reinforcement. Clustering (e.g. k-means) is a classic unsupervised task."
+      },
+      "difficulty": "easy",
+      "concepts": ["unsupervised-learning", "supervised-learning"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "Eğitim hatası 0.02, doğrulama hatası 0.58. En olası teşhis nedir?",
+        "en": "Training error is 0.02, validation error is 0.58. What is the most likely diagnosis?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Underfitting — model eğitim verisini bile açıklayamıyor", "en": "Underfitting — the model cannot even explain the training data" } },
+        { "id": "b", "text": { "tr": "Veri sızıntısı — doğrulama kümesi eğitimde görülmüş", "en": "Data leakage — the validation set was seen during training" } },
+        { "id": "c", "text": { "tr": "Öğrenme oranı çok düşük — model henüz yakınsamadı", "en": "The learning rate is too low — the model has not converged yet" } },
+        { "id": "d", "text": { "tr": "Overfitting — model eğitim verisini ezberlemiş", "en": "Overfitting — the model memorised the training data" } }
+      ],
+      "correct": ["d"],
+      "explanation": {
+        "tr": "Eğitim hatası neredeyse sıfırken doğrulama hatasının yüksek olması yüksek varyansın, yani overfitting'in imzasıdır. Underfitting'de ve düşük öğrenme oranında eğitim hatası da yüksek kalırdı; veri sızıntısı ise tam tersine doğrulama hatasını yapay biçimde düşük gösterirdi.",
+        "en": "Near-zero training error with high validation error is the signature of high variance, i.e. overfitting. Underfitting and a too-low learning rate would leave training error high too; data leakage would do the opposite and make validation error artificially low."
+      },
+      "difficulty": "easy",
+      "concepts": ["overfitting", "bias-variance"]
+    },
+    {
+      "id": "q3",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Hangileri overfitting'i azaltmaya yardımcı olur? (Birden fazla seçin)",
+        "en": "Which of these help reduce overfitting? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "L2 regularization eklemek", "en": "Adding L2 regularisation" } },
+        { "id": "b", "text": { "tr": "Daha fazla eğitim verisi toplamak", "en": "Collecting more training data" } },
+        { "id": "c", "text": { "tr": "Ağacın maksimum derinliğini ve yaprak sayısını artırmak", "en": "Increasing the tree's maximum depth and number of leaves" } },
+        { "id": "d", "text": { "tr": "Doğrulama hatası yükselmeye başlayınca eğitimi durdurmak", "en": "Stopping training once validation error starts rising" } }
+      ],
+      "correct": ["a", "b", "d"],
+      "explanation": {
+        "tr": "Regularization, daha fazla veri ve early stopping varyansı düşürür. Ağaç derinliğini artırmak modeli daha karmaşık yapar ve overfitting'i artırır (c yanlış).",
+        "en": "Regularisation, more data and early stopping all lower variance. Increasing tree depth makes the model more complex and worsens overfitting (c is wrong)."
+      },
+      "difficulty": "medium",
+      "concepts": ["regularization", "overfitting"]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "En iyi hiperparametreleri seçmek için test kümesindeki başarıyı karşılaştırmak doğru bir yaklaşımdır.",
+        "en": "Comparing performance on the test set to choose the best hyperparameters is a sound approach."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "Yanlış. Hiperparametre seçimi doğrulama kümesiyle yapılır; test kümesine her bakış onu da 'eğitimin' parçası hâline getirir ve nihai rapor iyimser olur. Test kümesi yalnızca bir kez, en sonda kullanılır.",
+        "en": "False. Hyperparameters are chosen with the validation set; every look at the test set makes it part of 'training' and biases the final report upward. The test set is used once, at the very end."
+      },
+      "difficulty": "medium",
+      "concepts": ["train-validation-test"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "Gradient descent'te öğrenme oranı (η) çok büyük seçilirse tipik olarak ne olur?",
+        "en": "In gradient descent, what typically happens if the learning rate (η) is set too large?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Kayıp minimumun etrafında zıplar ya da ıraksar", "en": "The loss bounces around the minimum or diverges" } },
+        { "id": "b", "text": { "tr": "Yakınsama çok yavaşlar; kayıp eğrisi platoda kalır", "en": "Convergence becomes very slow; the loss curve stays on a plateau" } },
+        { "id": "c", "text": { "tr": "Mini-batch gürültüsü artar; model sığ minimumlardan kaçar", "en": "Mini-batch noise increases; the model escapes shallow minima" } },
+        { "id": "d", "text": { "tr": "L2 cezası devreye girer; ağırlıklar sıfıra doğru küçülür", "en": "The L2 penalty kicks in; weights shrink towards zero" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "Büyük adımlar minimumun üzerinden atlar; kayıp salınır ya da sonsuza gider. Çok küçük öğrenme oranı ise yavaş yakınsamaya ve platoya yol açar. Gürültü mini-batch boyutunun, ağırlıkların küçülmesi ise regularization'ın sonucudur; ikisi de adım boyuyla ilgili değildir.",
+        "en": "Large steps overshoot the minimum; the loss oscillates or blows up. A too-small learning rate instead causes slow convergence and plateaus. Noise comes from the mini-batch size and shrinking weights from regularisation; neither is an effect of the step size."
+      },
+      "difficulty": "hard",
+      "concepts": ["gradient-descent"]
+    }
+  ]
+}

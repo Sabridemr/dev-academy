@@ -1,0 +1,110 @@
+{
+  "id": "e-06-classic-interview-systems-quiz",
+  "title": { "tr": "Klasik Mülakat Sistemleri Quiz", "en": "Classic Interview Systems Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Tıklama istatistiği sunan bir URL kısaltıcı yönlendirme için neden 301 yerine 302 tercih eder?",
+        "en": "Why does a URL shortener that offers click analytics prefer 302 over 301 for redirects?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "301 arama motorlarının kısa linki hedef sayfanın kopyası saymasına yol açar; 302 bu SEO cezasını önler", "en": "301 makes search engines treat the short link as a duplicate of the target page; 302 avoids that SEO penalty" } },
+        { "id": "b", "text": { "tr": "301 yanıtı Referer başlığını düşürür, 302 korur; tıklama kaynağı ancak 302 ile analitiğe yazılabilir", "en": "A 301 response drops the Referer header while 302 keeps it; the click source can only be logged with 302" } },
+        { "id": "c", "text": { "tr": "301 tarayıcıda önbelleğe alınır, sonraki tıklamalar sunucuya gelmez ve sayılamaz; 302 her tıklamayı sunucudan geçirir", "en": "301 is cached by the browser, later clicks never reach the server and cannot be counted; 302 routes every click through the server" } },
+        { "id": "d", "text": { "tr": "302 geçici olduğu için tarayıcı hedef URL'yi adres çubuğunda göstermez ve kısa link paylaşılabilir kalır", "en": "Because 302 is temporary the browser does not show the target URL in the address bar, so the short link stays shareable" } }
+      ],
+      "correct": ["c"],
+      "explanation": {
+        "tr": "Fark hız ya da güvenlik değil, önbellekleme davranışıdır: 301 'kalıcı' olduğu için tarayıcı bir daha sormaz — yük azalır ama analitik kaybolur ve hedef değişikliği gecikir. Her iki yönlendirme de adres çubuğunda hedefi gösterir, Referer davranışları aynıdır ve SEO farkı tıklama sayımıyla ilgisizdir. Analitik ürün değeriyse 302 (ya da 307) doğru seçimdir.",
+        "en": "The difference is caching behaviour, not speed or security: because 301 is 'permanent' the browser never asks again — load drops but analytics are lost and target changes lag. Both redirects show the target in the address bar, their Referer behaviour is identical, and any SEO difference is unrelated to counting clicks. If analytics are product value, 302 (or 307) is the right choice."
+      },
+      "difficulty": "easy",
+      "concepts": ["redirect-301-vs-302"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "Çok sayıda API düğümünün koordinasyon olmadan benzersiz kısa kod üretmesini sağlayan yaklaşım hangisidir?",
+        "en": "Which approach lets many API nodes generate unique short codes without coordination on every request?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Her düğümün `SELECT ... FOR UPDATE` ile merkezi sayaç satırını kilitleyip artırması; kilit kısa sürdüğü için darboğaz oluşmaz", "en": "Each node locking and incrementing the central counter row with `SELECT ... FOR UPDATE`; the lock is brief so no bottleneck forms" } },
+        { "id": "b", "text": { "tr": "Her düğümün kendi başına 7 karakterlik rastgele base62 kod üretmesi; 3.5 trilyon olasılıkta çakışma pratikte imkânsızdır", "en": "Each node generating a random 7-character base62 code on its own; with 3.5 trillion possibilities a collision is practically impossible" } },
+        { "id": "c", "text": { "tr": "Her düğümün uzun URL'nin MD5 özetinin ilk 7 karakterini kod olarak kullanması; aynı URL aynı kodu alır, koordinasyon gerekmez", "en": "Each node using the first 7 characters of the long URL's MD5 digest as the code; the same URL gets the same code, no coordination needed" } },
+        { "id": "d", "text": { "tr": "Her düğümün ZooKeeper/DB'den önceden bir sayı aralığı alıp yerel sayaçla ilerlemesi; aralık bitince yenisini istemesi", "en": "Each node pre-allocating a number range from ZooKeeper/DB and advancing a local counter; requesting a new range when exhausted" } }
+      ],
+      "correct": ["d"],
+      "explanation": {
+        "tr": "Aralık tahsisi koordinasyonu istek başına değil milyon istekte bire indirir; düğüm düşerse kaybolan aralık önemsizdir. Merkezi satır kilidi her istekte tek noktaya gider — darboğaz ve tek hata noktasıdır. Kesilmiş hash ve rastgele kod çakışabilir: 6 milyar URL'de doğum günü paradoksu milyonlarca çakışma üretir, her yazmada çakışma kontrolü gerekir ve koordinasyon geri gelir.",
+        "en": "Range allocation reduces coordination from once per request to once per million; a range lost when a node dies is negligible. A central row lock hits a single point on every request — a bottleneck and a single point of failure. Truncated hashes and random codes collide: at 6 billion URLs the birthday paradox yields millions of collisions, every write needs a collision check and coordination comes back."
+      },
+      "difficulty": "medium",
+      "concepts": ["id-generation", "base62-encoding"]
+    },
+    {
+      "id": "q3",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Birden fazla gateway düğümünde tutarlı bir rate limit uygulamak için hangileri gereklidir? (Birden fazla seçin)",
+        "en": "Which are needed to enforce a consistent rate limit across multiple gateway nodes? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Sayaçların düğüm belleğinde değil paylaşımlı bir depoda (Redis) tutulması", "en": "Keeping counters in a shared store (Redis), not in node memory" } },
+        { "id": "b", "text": { "tr": "Oku-hesapla-yaz adımlarının Lua betiğiyle atomik yapılması", "en": "Making read-compute-write atomic with a Lua script" } },
+        { "id": "c", "text": { "tr": "Her düğümün kendi bellek içi sayacını tutması; Redis'e gidiş-dönüş olmadığı için gecikme hedefi korunur", "en": "Each node keeping its own in-memory counter; with no Redis round trip the latency target is preserved" } },
+        { "id": "d", "text": { "tr": "Depo erişilemezse ne olacağına (fail-open / fail-closed) bilinçli karar verilmesi", "en": "A deliberate decision on what happens when the store is unreachable (fail-open / fail-closed)" } }
+      ],
+      "correct": ["a", "b", "d"],
+      "explanation": {
+        "tr": "Paylaşımlı depo düğüm sayısından bağımsız tek bir limit verir; Lua atomikliği aynı anda gelen isteklerin sayımı bozmasını önler; fail-open/closed kararı limiter'ın kendisinin kesinti nedeni olmamasını sağlar. Düğüm başına bağımsız sayaç ise limiti fiilen N katına çıkarır.",
+        "en": "A shared store gives one limit independent of node count; Lua atomicity prevents simultaneous requests corrupting the count; the fail-open/closed decision keeps the limiter from becoming the outage itself. Independent per-node counters effectively multiply the limit by N."
+      },
+      "difficulty": "medium",
+      "concepts": ["distributed-rate-limiting", "sliding-window-counter"]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Sliding window counter, önceki pencerenin sayacını kalan süreyle ağırlıklandırarak sabit pencerenin sınırında oluşan 'iki kat istek' patlamasını engeller ve bunun için yalnızca iki sayaç saklar.",
+        "en": "The sliding window counter prevents the 'double requests' burst at a fixed window boundary by weighting the previous window's counter by the remaining time, and it stores only two counters to do so."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["t"],
+      "explanation": {
+        "tr": "Doğru. Sabit pencerede 59. saniyede 100 ve 61. saniyede 100 istek geçebilir (2 saniyede 200). Sliding window counter yeni pencerede önceki sayacı (1 − geçen/pencere) oranıyla ekler; log tutan sürümden farklı olarak bellek sabittir ve yaklaşıklık üretimde kabul edilebilir.",
+        "en": "True. With a fixed window, 100 requests at second 59 and 100 at second 61 can both pass (200 in 2 seconds). The sliding window counter adds the previous counter weighted by (1 − elapsed/window) in the new window; unlike the log-based variant its memory is constant and the approximation is acceptable in production."
+      },
+      "difficulty": "medium",
+      "concepts": ["sliding-window-counter"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "Notification servisinde e-posta sağlayıcısı 503 döndürüyor. Hem mesajı kaybetmemek hem de kullanıcıya çift e-posta göndermemek için doğru kombinasyon nedir?",
+        "en": "In the notification service the email provider returns 503. What is the right combination to neither lose the message nor send the user a duplicate email?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Sağlayıcı 503 dönünce circuit breaker'ı açıp bekleyen tüm e-posta mesajlarını başarısız işaretlemek ve kuyruğu boşaltmak", "en": "Opening the circuit breaker on 503, marking all pending email messages failed and draining the queue" } },
+        { "id": "b", "text": { "tr": "Üstel geri çekilme + jitter ile sınırlı yeniden deneme, her denemede aynı idempotency anahtarı, bitince DLQ ve yeniden oynatma", "en": "Bounded retries with exponential backoff + jitter, the same idempotency key on every attempt, then DLQ and later replay" } },
+        { "id": "c", "text": { "tr": "Sabit 1 saniye aralıkla sınırsız yeniden deneme; her denemede yeni bir istek id'si üretip sağlayıcının tekilleştirmesine güvenmek", "en": "Unlimited retries at a fixed 1-second interval; generating a new request id per attempt and relying on the provider's deduplication" } },
+        { "id": "d", "text": { "tr": "Mesajı hemen DLQ'ya alıp e-posta yerine SMS kanalından göndermek; kullanıcı bildirimi mutlaka alır, çift e-posta oluşmaz", "en": "Moving the message straight to the DLQ and sending over SMS instead of email; the user surely gets it and no duplicate email occurs" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Yeni id ile yeniden denemek sağlayıcıda çift gönderime kapı açar; sınırsız anında deneme sağlayıcıyı daha da boğar ve kuyruğun başını tıkar. Kanal değiştirmek kullanıcı tercihini çiğner; kuyruğu başarısız sayıp boşaltmak mesajı kaybeder (circuit breaker denemeyi durdurur, mesajı atmaz). Backoff + aynı idempotency anahtarı + DLQ üçlüsü hem dayanıklılık hem 'tam olarak bir kez' etkisi sağlar.",
+        "en": "Retrying with a fresh id opens the door to duplicate sends at the provider; unlimited instant retries choke the provider further and block the head of the queue. Switching channels violates the user's preference; marking the queue failed and draining it loses the message (a circuit breaker pauses attempts, it does not discard messages). Backoff + the same idempotency key + DLQ delivers both durability and an exactly-once effect."
+      },
+      "difficulty": "easy",
+      "concepts": ["retry-backoff-dlq", "notification-fan-out"]
+    }
+  ]
+}

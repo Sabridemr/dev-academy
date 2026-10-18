@@ -1,0 +1,181 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "a-07-caching-lru-eviction",
+  "title": { "tr": "LRU Eviction: Yer Bitince Kim Çıkar?", "en": "LRU Eviction: Who Leaves When Space Runs Out?" },
+  "summary": {
+    "tr": "Kapasitesi 3 olan bir LRU cache'e A, B, C anahtarları girer; A'ya tekrar erişilince en yeni olur; D gelince en uzun süredir kullanılmayan B tahliye edilir.",
+    "en": "Keys A, B, C enter an LRU cache with capacity 3; A becomes most recent when accessed again; when D arrives the least recently used key B is evicted."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda uygulama, üstte yan yana üç cache yuvası, altta veritabanı. Uygulama sırasıyla A, B ve C anahtarlarını ister; her biri miss olur, veritabanından okunur ve boş bir yuvaya yerleşir. A tekrar istenince hit olur ve en son kullanılan anahtar olur. D istenince cache doludur; en uzun süredir kullanılmayan B tahliye edilir ve D onun yuvasına yerleşir.",
+      "en": "Application on the left, three cache slots side by side at the top, database at the bottom. The app requests keys A, B and C in turn; each misses, is read from the database and placed in an empty slot. When A is requested again it hits and becomes the most recently used key. When D is requested the cache is full; the least recently used key B is evicted and D takes its slot."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "app", "kind": "service", "label": { "tr": "Uygulama", "en": "Application" }, "sublabel": { "tr": "get(anahtar)", "en": "get(key)" }, "x": 120, "y": 300, "w": 140, "h": 76 },
+    { "id": "slot1", "kind": "cache", "label": { "tr": "Yuva 1", "en": "Slot 1" }, "sublabel": { "tr": "boş", "en": "empty" }, "x": 400, "y": 170, "w": 140, "h": 70 },
+    { "id": "slot2", "kind": "cache", "label": { "tr": "Yuva 2", "en": "Slot 2" }, "sublabel": { "tr": "boş", "en": "empty" }, "x": 640, "y": 170, "w": 140, "h": 70 },
+    { "id": "slot3", "kind": "cache", "label": { "tr": "Yuva 3", "en": "Slot 3" }, "sublabel": { "tr": "boş", "en": "empty" }, "x": 880, "y": 170, "w": 140, "h": 70 },
+    { "id": "db", "kind": "db", "label": { "tr": "Veritabanı", "en": "Database" }, "sublabel": { "tr": "miss'te okunur", "en": "read on miss" }, "x": 640, "y": 480, "w": 150, "h": 72 }
+  ],
+  "edges": [
+    { "id": "app-s1", "from": "app", "to": "slot1", "kind": "request", "curvature": -0.1 },
+    { "id": "app-s2", "from": "app", "to": "slot2", "kind": "request", "curvature": -0.15 },
+    { "id": "app-s3", "from": "app", "to": "slot3", "kind": "request", "curvature": -0.2 },
+    { "id": "app-db", "from": "app", "to": "db", "kind": "request", "style": "dashed", "curvature": 0.15, "label": { "tr": "miss → SELECT", "en": "miss → SELECT" } }
+  ],
+  "steps": [
+    {
+      "id": "empty",
+      "title": { "tr": "Boş cache", "en": "Empty cache" },
+      "narration": {
+        "tr": "Kapasite 3, politika LRU (Least Recently Used). Cache her anahtar için son erişim zamanını tutar; dolunca en uzun süredir erişilmeyen anahtarı çıkarır.",
+        "en": "Capacity 3, policy LRU (Least Recently Used). The cache tracks the last access time of each key; when full it evicts the key that has gone longest without access."
+      },
+      "durationMs": 2500,
+      "inherit": false,
+      "highlight": { "nodes": ["slot1", "slot2", "slot3"] },
+      "nodeStates": {
+        "slot1": { "status": "muted" },
+        "slot2": { "status": "muted" },
+        "slot3": { "status": "muted" }
+      },
+      "annotations": [
+        { "id": "cap-note", "x": 640, "y": 70, "text": { "tr": "kapasite = 3 · politika = LRU", "en": "capacity = 3 · policy = LRU" }, "tone": "info" }
+      ]
+    },
+    {
+      "id": "get-a",
+      "title": { "tr": "get(A) → miss", "en": "get(A) → miss" },
+      "narration": {
+        "tr": "A istenir, cache'te yoktur. Veritabanından okunur ve Yuva 1'e yerleşir. Erişim sırası (eski → yeni): A.",
+        "en": "A is requested and is not cached. It is read from the database and placed in Slot 1. Access order (old → new): A."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["app", "db", "slot1"], "edges": ["app-db", "app-s1"] },
+      "nodeStates": {
+        "slot1": { "status": "active", "badge": "A", "sublabel": { "tr": "son erişim t=1", "en": "last access t=1" } }
+      },
+      "packets": [
+        { "edge": "app-db", "label": "A?", "durationMs": 800 },
+        { "edge": "app-db", "direction": "backward", "shape": "square", "startAt": 900, "durationMs": 800 },
+        { "edge": "app-s1", "label": "A", "shape": "square", "startAt": 1800, "durationMs": 800 }
+      ],
+      "annotations": [
+        { "id": "order-a", "x": 640, "y": 70, "text": { "tr": "sıra (eski → yeni): A", "en": "order (old → new): A" }, "tone": "info" }
+      ]
+    },
+    {
+      "id": "get-b",
+      "title": { "tr": "get(B) → miss", "en": "get(B) → miss" },
+      "narration": {
+        "tr": "B de miss alır; veritabanından okunup Yuva 2'ye konur. Sıra: A, B.",
+        "en": "B also misses; it is read from the database and placed in Slot 2. Order: A, B."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["app", "db", "slot2"], "edges": ["app-db", "app-s2"] },
+      "nodeStates": {
+        "slot1": { "status": "idle" },
+        "slot2": { "status": "active", "badge": "B", "sublabel": { "tr": "son erişim t=2", "en": "last access t=2" } }
+      },
+      "packets": [
+        { "edge": "app-db", "label": "B?", "durationMs": 800 },
+        { "edge": "app-db", "direction": "backward", "shape": "square", "startAt": 900, "durationMs": 800 },
+        { "edge": "app-s2", "label": "B", "shape": "square", "startAt": 1800, "durationMs": 800 }
+      ],
+      "annotations": [
+        { "id": "order-b", "x": 640, "y": 70, "text": { "tr": "sıra: A, B", "en": "order: A, B" }, "tone": "info" }
+      ]
+    },
+    {
+      "id": "get-c",
+      "title": { "tr": "get(C) → miss, cache doldu", "en": "get(C) → miss, cache full" },
+      "narration": {
+        "tr": "C miss alır ve son boş yuvaya girer. Cache artık dolu; bundan sonraki her yeni anahtar bir tahliye gerektirir. Sıra: A, B, C.",
+        "en": "C misses and takes the last empty slot. The cache is now full; every new key from here on requires an eviction. Order: A, B, C."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["app", "db", "slot3"], "edges": ["app-db", "app-s3"] },
+      "nodeStates": {
+        "slot2": { "status": "idle" },
+        "slot3": { "status": "active", "badge": "C", "sublabel": { "tr": "son erişim t=3", "en": "last access t=3" } }
+      },
+      "packets": [
+        { "edge": "app-db", "label": "C?", "durationMs": 800 },
+        { "edge": "app-db", "direction": "backward", "shape": "square", "startAt": 900, "durationMs": 800 },
+        { "edge": "app-s3", "label": "C", "shape": "square", "startAt": 1800, "durationMs": 800 }
+      ],
+      "annotations": [
+        { "id": "order-c", "x": 640, "y": 70, "text": { "tr": "sıra: A, B, C — DOLU", "en": "order: A, B, C — FULL" }, "tone": "warning" }
+      ]
+    },
+    {
+      "id": "get-a-hit",
+      "title": { "tr": "get(A) → hit, A en yeni olur", "en": "get(A) → hit, A becomes most recent" },
+      "narration": {
+        "tr": "A tekrar istenir: hit. Veritabanına gidilmez. LRU, A'nın son erişim zamanını günceller; A artık en yeni anahtardır ve tahliye sırasının en sonuna geçer. Sıra: B, C, A.",
+        "en": "A is requested again: a hit. No database access. LRU updates A's last access time; A is now the most recent key and moves to the end of the eviction order. Order: B, C, A."
+      },
+      "durationMs": 2800,
+      "highlight": { "nodes": ["app", "slot1"], "edges": ["app-s1"] },
+      "nodeStates": {
+        "slot3": { "status": "idle" },
+        "slot1": { "status": "success", "badge": "A ✓", "sublabel": { "tr": "son erişim t=4", "en": "last access t=4" } },
+        "db": { "status": "muted" }
+      },
+      "packets": [
+        { "edge": "app-s1", "label": "A?", "durationMs": 700 },
+        { "edge": "app-s1", "direction": "backward", "label": "HIT", "color": "success", "shape": "square", "startAt": 800, "durationMs": 700 }
+      ],
+      "annotations": [
+        { "id": "order-a2", "x": 640, "y": 70, "text": { "tr": "sıra: B, C, A — B en eski", "en": "order: B, C, A — B is oldest" }, "tone": "success" }
+      ]
+    },
+    {
+      "id": "evict-b",
+      "title": { "tr": "get(D) → miss, B tahliye", "en": "get(D) → miss, evict B" },
+      "narration": {
+        "tr": "D istenir, miss. Cache dolu olduğu için yer açılmalı. LRU en uzun süredir erişilmeyen anahtarı seçer: B (t=2). B atılır. LFU olsaydı sayaçlara bakardı: A=2, B=1, C=1 — eşitlikte yine en eski olan B giderdi; ama C'ye bir kez daha erişilmiş olsaydı LFU ile LRU farklı karar verirdi.",
+        "en": "D is requested: a miss. The cache is full, so room must be made. LRU picks the key that has gone longest without access: B (t=2). B is dropped. LFU would look at counters instead: A=2, B=1, C=1 — on a tie the oldest, B, goes too; but had C been accessed once more, LFU and LRU would decide differently."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["app", "db", "slot2"], "edges": ["app-db"] },
+      "nodeStates": {
+        "slot1": { "status": "idle" },
+        "slot2": { "status": "error", "badge": "B ✕", "sublabel": { "tr": "tahliye edildi", "en": "evicted" } },
+        "db": { "status": "active" }
+      },
+      "packets": [
+        { "edge": "app-db", "label": "D?", "durationMs": 800 },
+        { "edge": "app-db", "direction": "backward", "shape": "square", "startAt": 900, "durationMs": 800 }
+      ],
+      "annotations": [
+        { "id": "evict-note", "x": 640, "y": 270, "text": { "tr": "LRU kurbanı: en eski erişim (t=2)", "en": "LRU victim: oldest access (t=2)" }, "tone": "danger", "target": "slot2" }
+      ]
+    },
+    {
+      "id": "insert-d",
+      "title": { "tr": "D yerleşir", "en": "D is inserted" },
+      "narration": {
+        "tr": "D, B'den boşalan Yuva 2'ye yerleşir. Sıra: C, A, D. Bir sonraki tahliye kurbanı C olacaktır — ta ki birisi C'yi tekrar okuyana kadar. Erişim örüntüsü değiştikçe LRU kendini uyarlar; bu yüzden genel amaçlı varsayılandır.",
+        "en": "D takes Slot 2 freed by B. Order: C, A, D. The next eviction victim will be C — unless someone reads C again. LRU adapts as the access pattern changes, which is why it is the general-purpose default."
+      },
+      "durationMs": 2800,
+      "highlight": { "nodes": ["slot2"], "edges": ["app-s2"] },
+      "nodeStates": {
+        "slot2": { "status": "active", "badge": "D", "sublabel": { "tr": "son erişim t=5", "en": "last access t=5" } },
+        "db": { "status": "idle" }
+      },
+      "packets": [{ "edge": "app-s2", "label": "D", "shape": "square", "durationMs": 800 }],
+      "annotations": [
+        { "id": "order-d", "x": 640, "y": 70, "text": { "tr": "sıra: C, A, D — sıradaki kurban C", "en": "order: C, A, D — next victim C" }, "tone": "info" }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["cache", "eviction", "lru", "lfu"]
+}

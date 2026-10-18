@@ -1,0 +1,383 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "c-01-abstract-factory",
+  "title": {
+    "tr": "Abstract Factory: Tutarlı Ürün Ailesi",
+    "en": "Abstract Factory: A Consistent Product Family"
+  },
+  "summary": {
+    "tr": "Uygulama işletim sistemine göre bir fabrika seçer; ekran aynı fabrikadan düğme ve onay kutusu ister, böylece aile karışmaz.",
+    "en": "The app picks a factory based on the OS; the screen asks the same factory for a button and a checkbox, so families never mix."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda SettingsScreen istemcisi, ortada seçilen MacFactory, sağda üstte MacButton ve altta MacCheckbox ürünleri. İstemci createButton ve createCheckbox çağırır, fabrika aynı aileden iki ürün döner. Son adımda fabrika WindowsFactory ile değiştirilir ve istemci koduna dokunmadan tüm aile değişir.",
+      "en": "SettingsScreen client on the left, the chosen MacFactory in the middle, MacButton top right and MacCheckbox bottom right. The client calls createButton and createCheckbox and the factory returns two products from the same family. In the last step the factory is swapped for WindowsFactory and the whole family changes without touching the client."
+    }
+  },
+  "canvas": {
+    "width": 1000,
+    "height": 600
+  },
+  "nodes": [
+    {
+      "id": "app",
+      "kind": "generic",
+      "label": "main()",
+      "x": 110,
+      "y": 120,
+      "w": 150,
+      "h": 64,
+      "sublabel": {
+        "tr": "OS'e göre fabrika seç",
+        "en": "pick factory by OS"
+      }
+    },
+    {
+      "id": "client",
+      "kind": "generic",
+      "label": "SettingsScreen",
+      "x": 110,
+      "y": 400,
+      "w": 170,
+      "h": 70,
+      "sublabel": {
+        "tr": "yalnızca arayüzleri bilir",
+        "en": "knows only interfaces"
+      }
+    },
+    {
+      "id": "factory",
+      "kind": "generic",
+      "label": "MacFactory",
+      "x": 480,
+      "y": 300,
+      "w": 180,
+      "h": 80,
+      "sublabel": {
+        "tr": "UIFactory",
+        "en": "UIFactory"
+      }
+    },
+    {
+      "id": "btn",
+      "kind": "generic",
+      "label": "MacButton",
+      "x": 840,
+      "y": 170,
+      "w": 150,
+      "h": 64,
+      "sublabel": {
+        "tr": "Button",
+        "en": "Button"
+      }
+    },
+    {
+      "id": "cb",
+      "kind": "generic",
+      "label": "MacCheckbox",
+      "x": 840,
+      "y": 430,
+      "w": 150,
+      "h": 64,
+      "sublabel": {
+        "tr": "Checkbox",
+        "en": "Checkbox"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "app-fac",
+      "from": "app",
+      "to": "factory",
+      "kind": "control",
+      "label": "new MacFactory()",
+      "style": "dashed"
+    },
+    {
+      "id": "app-cl",
+      "from": "app",
+      "to": "client",
+      "kind": "control",
+      "label": "inject(factory)",
+      "style": "dotted"
+    },
+    {
+      "id": "cl-fac",
+      "from": "client",
+      "to": "factory",
+      "kind": "request",
+      "label": "createButton() / createCheckbox()"
+    },
+    {
+      "id": "fac-btn",
+      "from": "factory",
+      "to": "btn",
+      "kind": "control",
+      "label": "new"
+    },
+    {
+      "id": "fac-cb",
+      "from": "factory",
+      "to": "cb",
+      "kind": "control",
+      "label": "new"
+    }
+  ],
+  "steps": [
+    {
+      "id": "choose",
+      "title": {
+        "tr": "1. Fabrika bir kez seçilir",
+        "en": "1. The factory is chosen once"
+      },
+      "narration": {
+        "tr": "Uygulama başlangıcında platform okunur: macOS ise MacFactory, Windows ise WindowsFactory. Bu, if/else'in kodda bulunduğu TEK yerdir; fabrika istemciye enjekte edilir.",
+        "en": "At startup the platform is read: MacFactory on macOS, WindowsFactory on Windows. This is the ONLY place an if/else lives; the factory is injected into the client."
+      },
+      "durationMs": 3500,
+      "inherit": false,
+      "highlight": {
+        "nodes": [
+          "app",
+          "factory",
+          "client"
+        ],
+        "edges": [
+          "app-fac",
+          "app-cl"
+        ]
+      },
+      "nodeStates": {
+        "factory": {
+          "status": "active"
+        }
+      },
+      "edgeStates": {},
+      "packets": [
+        {
+          "edge": "app-fac",
+          "shape": "square",
+          "color": "accent",
+          "label": "new MacFactory()",
+          "durationMs": 900
+        },
+        {
+          "edge": "app-cl",
+          "startAt": 1000,
+          "shape": "diamond",
+          "label": "factory",
+          "durationMs": 800
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a1",
+          "x": 110,
+          "y": 40,
+          "text": {
+            "tr": "platform === \"darwin\" ? Mac : Windows",
+            "en": "platform === \"darwin\" ? Mac : Windows"
+          },
+          "target": "app"
+        }
+      ]
+    },
+    {
+      "id": "button",
+      "title": {
+        "tr": "2. createButton()",
+        "en": "2. createButton()"
+      },
+      "narration": {
+        "tr": "SettingsScreen render sırasında factory.createButton() çağırır. Dönen tip Button arayüzüdür; istemci MacButton adını hiç görmez.",
+        "en": "During render SettingsScreen calls factory.createButton(). The returned type is the Button interface; the client never sees the name MacButton."
+      },
+      "durationMs": 3500,
+      "highlight": {
+        "nodes": [
+          "client",
+          "btn"
+        ],
+        "edges": [
+          "cl-fac",
+          "fac-btn"
+        ]
+      },
+      "nodeStates": {
+        "btn": {
+          "status": "success",
+          "badge": "new"
+        }
+      },
+      "edgeStates": {},
+      "packets": [
+        {
+          "edge": "cl-fac",
+          "shape": "envelope",
+          "label": "createButton()",
+          "durationMs": 800
+        },
+        {
+          "edge": "fac-btn",
+          "startAt": 900,
+          "shape": "square",
+          "color": "accent",
+          "durationMs": 800
+        },
+        {
+          "edge": "cl-fac",
+          "startAt": 1800,
+          "direction": "backward",
+          "color": "success",
+          "label": "Button",
+          "durationMs": 800
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "id": "checkbox",
+      "title": {
+        "tr": "3. createCheckbox(): aynı aile",
+        "en": "3. createCheckbox(): same family"
+      },
+      "narration": {
+        "tr": "Aynı fabrikadan onay kutusu istenir; MacCheckbox gelir. Fabrika nesnesi tek olduğu için MacButton + WinCheckbox gibi tutarsız bir karışım imkânsızdır. Abstract Factory'nin asıl amacı budur.",
+        "en": "A checkbox is requested from the same factory; MacCheckbox arrives. Because there is one factory object, an inconsistent mix like MacButton + WinCheckbox is impossible. That is the real purpose of Abstract Factory."
+      },
+      "durationMs": 3500,
+      "highlight": {
+        "nodes": [
+          "client",
+          "cb"
+        ],
+        "edges": [
+          "cl-fac",
+          "fac-cb"
+        ]
+      },
+      "nodeStates": {
+        "cb": {
+          "status": "success",
+          "badge": "new"
+        }
+      },
+      "edgeStates": {},
+      "packets": [
+        {
+          "edge": "cl-fac",
+          "shape": "envelope",
+          "label": "createCheckbox()",
+          "durationMs": 800
+        },
+        {
+          "edge": "fac-cb",
+          "startAt": 900,
+          "shape": "square",
+          "color": "accent",
+          "durationMs": 800
+        },
+        {
+          "edge": "cl-fac",
+          "startAt": 1800,
+          "direction": "backward",
+          "color": "success",
+          "label": "Checkbox",
+          "durationMs": 800
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a3",
+          "x": 840,
+          "y": 300,
+          "text": {
+            "tr": "aile tutarlılığı garanti",
+            "en": "family consistency guaranteed"
+          },
+          "tone": "success"
+        }
+      ]
+    },
+    {
+      "id": "swap",
+      "title": {
+        "tr": "4. Fabrikayı değiştir, aile değişsin",
+        "en": "4. Swap the factory, the family changes"
+      },
+      "narration": {
+        "tr": "Windows'ta çalıştırıldığında main() WindowsFactory enjekte eder. SettingsScreen kodu tek satır bile değişmeden WinButton ve WinCheckbox üretir. Bedel: aileye yeni bir ürün türü (ör. Slider) eklemek tüm fabrikaları değiştirir.",
+        "en": "When run on Windows, main() injects WindowsFactory. SettingsScreen produces WinButton and WinCheckbox without a single line changing. The cost: adding a new product kind to the family (e.g. Slider) changes every factory."
+      },
+      "durationMs": 4500,
+      "highlight": {
+        "nodes": [
+          "factory",
+          "btn",
+          "cb"
+        ],
+        "edges": [
+          "app-fac"
+        ]
+      },
+      "nodeStates": {
+        "factory": {
+          "label": "WindowsFactory",
+          "status": "warning"
+        },
+        "btn": {
+          "label": "WinButton",
+          "badge": ""
+        },
+        "cb": {
+          "label": "WinCheckbox",
+          "badge": ""
+        }
+      },
+      "edgeStates": {},
+      "packets": [
+        {
+          "edge": "app-fac",
+          "shape": "square",
+          "color": "accent",
+          "label": "new WindowsFactory()",
+          "durationMs": 900
+        },
+        {
+          "edge": "fac-btn",
+          "startAt": 1000,
+          "shape": "square",
+          "durationMs": 700
+        },
+        {
+          "edge": "fac-cb",
+          "startAt": 1000,
+          "shape": "square",
+          "durationMs": 700
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a4",
+          "x": 480,
+          "y": 520,
+          "text": {
+            "tr": "yeni ürün türü eklemek zor; yeni aile eklemek kolay",
+            "en": "adding a product kind is hard; adding a family is easy"
+          },
+          "tone": "warning",
+          "target": "factory"
+        }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": [
+    "abstract-factory",
+    "creational"
+  ]
+}

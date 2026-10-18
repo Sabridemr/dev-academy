@@ -1,0 +1,156 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Twitter timeline mimarisi: hibrit fan-out</title>
+  <desc id="desc">Üstte yazma yolu: tweet servisi tweet deposuna yazar ve Kafka'ya olay yayınlar; fan-out işçileri sosyal graftan takipçi listesini alıp sıradan kullanıcılar için Redis timeline listelerine tweet id'si iter, ünlüler için push yapmaz. Altta okuma yolu: timeline servisi cache'ten id listesini alır, ünlülerin son tweet'lerini okurken birleştirir ve gövdeleri tweet cache'inden hidrate eder. Sağda trending için akış işleme ve Count-Min Sketch.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+    <marker id="arrow-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-accent, #f59e0b)"/>
+    </marker>
+    <marker id="arrow-p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-primary, #6366f1)"/>
+    </marker>
+    <marker id="arrow-d" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-danger, #ef4444)"/>
+    </marker>
+  </defs>
+
+  <!-- Bölgeler -->
+  <rect x="16" y="16" width="690" height="236" rx="14" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)" stroke-dasharray="6 5"/>
+  <text x="32" y="40" font-size="12" font-weight="600" fill="var(--da-accent, #f59e0b)">YAZMA YOLU — 5.8 K tweet/s → 1.2 M cache yazması/s</text>
+  <rect x="16" y="270" width="690" height="254" rx="14" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)" stroke-dasharray="6 5"/>
+  <text x="32" y="294" font-size="12" font-weight="600" fill="var(--da-primary, #6366f1)">OKUMA YOLU — 145 K QPS, veritabanı yok</text>
+  <rect x="724" y="16" width="220" height="508" rx="14" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)" stroke-dasharray="6 5"/>
+  <text x="834" y="40" text-anchor="middle" font-size="12" font-weight="600" fill="var(--da-fg, #0f172a)">TRENDING</text>
+
+  <!-- Yazma yolu düğümleri -->
+  <rect x="36" y="120" width="90" height="50" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.4"/>
+  <text x="81" y="141" text-anchor="middle" font-size="12" fill="var(--da-fg, #0f172a)">Yazar</text>
+  <text x="81" y="157" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">POST /tweets</text>
+
+  <rect x="160" y="120" width="120" height="50" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-primary, #6366f1)" stroke-width="1.5"/>
+  <text x="220" y="141" text-anchor="middle" font-size="12" fill="var(--da-fg, #0f172a)">Tweet servisi</text>
+  <text x="220" y="157" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">Snowflake id</text>
+
+  <rect x="160" y="195" width="120" height="44" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)" stroke-width="1.4"/>
+  <text x="220" y="214" text-anchor="middle" font-size="12" fill="var(--da-fg, #0f172a)">Tweet deposu</text>
+  <text x="220" y="229" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">shard: tweet_id</text>
+
+  <rect x="320" y="120" width="100" height="50" rx="10" fill="var(--da-accent, #f59e0b)" opacity="0.12" stroke="var(--da-accent, #f59e0b)" stroke-width="1.6"/>
+  <text x="370" y="141" text-anchor="middle" font-size="12" fill="var(--da-fg, #0f172a)">Kafka</text>
+  <text x="370" y="157" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">tweet-created</text>
+
+  <rect x="460" y="120" width="120" height="50" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-primary, #6366f1)" stroke-width="1.5"/>
+  <text x="520" y="141" text-anchor="middle" font-size="12" fill="var(--da-fg, #0f172a)">Fan-out işçileri</text>
+  <text x="520" y="157" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">takipçi &lt; 10 K → push</text>
+
+  <rect x="460" y="195" width="120" height="44" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)" stroke-width="1.4"/>
+  <text x="520" y="214" text-anchor="middle" font-size="12" fill="var(--da-fg, #0f172a)">Sosyal graf</text>
+  <text x="520" y="229" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">followers / following</text>
+
+  <!-- Redis timeline cache'leri (ortak) -->
+  <rect x="600" y="60" width="96" height="180" rx="10" fill="var(--da-danger, #ef4444)" opacity="0.08" stroke="var(--da-danger, #ef4444)" stroke-width="1.6"/>
+  <text x="648" y="82" text-anchor="middle" font-size="12" font-weight="600" fill="var(--da-fg, #0f172a)">Redis</text>
+  <text x="648" y="97" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">timeline:{uid}</text>
+  <g font-size="9.5" fill="var(--da-muted, #64748b)" text-anchor="middle">
+    <text x="648" y="120">[id, id, id …]</text>
+    <text x="648" y="134">≤ 800 girdi</text>
+    <text x="648" y="156">yalnızca aktif</text>
+    <text x="648" y="170">kullanıcılar</text>
+    <text x="648" y="194">~3 TB RAM</text>
+    <text x="648" y="208">consistent hash</text>
+    <text x="648" y="222">+ replika</text>
+  </g>
+
+  <!-- Yazma okları -->
+  <g stroke="var(--da-muted, #64748b)" stroke-width="1.5" fill="none" marker-end="url(#arrow)">
+    <path d="M 126 145 L 160 145"/>
+    <path d="M 220 170 L 220 195"/>
+  </g>
+  <g stroke="var(--da-accent, #f59e0b)" stroke-width="1.5" fill="none" marker-end="url(#arrow-a)">
+    <path d="M 280 145 L 320 145"/>
+    <path d="M 420 145 L 460 145"/>
+    <path d="M 580 145 L 600 145"/>
+    <path d="M 420 150 C 440 190, 700 190, 724 120" stroke-dasharray="3 3"/>
+  </g>
+  <g stroke="var(--da-muted, #64748b)" stroke-width="1.3" fill="none" stroke-dasharray="4 3" marker-end="url(#arrow)">
+    <path d="M 520 195 L 520 170"/>
+  </g>
+  <text x="590" y="135" text-anchor="middle" font-size="9" fill="var(--da-accent, #f59e0b)">LPUSH</text>
+  <text x="300" y="135" text-anchor="middle" font-size="9" fill="var(--da-accent, #f59e0b)">olay</text>
+  <!-- Ünlü notu -->
+  <rect x="300" y="190" width="140" height="48" rx="8" fill="var(--da-danger, #ef4444)" opacity="0.08" stroke="var(--da-danger, #ef4444)" stroke-dasharray="3 3"/>
+  <text x="370" y="209" text-anchor="middle" font-size="10" font-weight="600" fill="var(--da-danger, #ef4444)">Ünlü (&gt; 10 K takipçi)</text>
+  <text x="370" y="224" text-anchor="middle" font-size="9.5" fill="var(--da-fg, #0f172a)">push yok → okurken çek</text>
+
+  <!-- Okuma yolu düğümleri -->
+  <rect x="36" y="380" width="90" height="50" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.4"/>
+  <text x="81" y="401" text-anchor="middle" font-size="12" fill="var(--da-fg, #0f172a)">Takipçi</text>
+  <text x="81" y="417" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">GET /home</text>
+
+  <rect x="160" y="370" width="130" height="70" rx="10" fill="var(--da-primary, #6366f1)" opacity="0.12" stroke="var(--da-primary, #6366f1)" stroke-width="1.6"/>
+  <text x="225" y="392" text-anchor="middle" font-size="12" fill="var(--da-fg, #0f172a)">Timeline servisi</text>
+  <text x="225" y="408" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">1. LRANGE id listesi</text>
+  <text x="225" y="421" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">2. ünlüleri birleştir</text>
+  <text x="225" y="434" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">3. MGET hidrate · 4. sırala</text>
+
+  <rect x="340" y="320" width="130" height="44" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)" stroke-width="1.4"/>
+  <text x="405" y="339" text-anchor="middle" font-size="12" fill="var(--da-fg, #0f172a)">Ünlü indeksi</text>
+  <text x="405" y="354" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">latest(celebId, 5)</text>
+
+  <rect x="340" y="390" width="130" height="44" rx="10" fill="var(--da-danger, #ef4444)" opacity="0.08" stroke="var(--da-danger, #ef4444)" stroke-width="1.5"/>
+  <text x="405" y="409" text-anchor="middle" font-size="12" fill="var(--da-fg, #0f172a)">Tweet cache</text>
+  <text x="405" y="424" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">gövde bir kez · MGET</text>
+
+  <rect x="340" y="460" width="130" height="44" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)" stroke-width="1.4"/>
+  <text x="405" y="479" text-anchor="middle" font-size="12" fill="var(--da-fg, #0f172a)">Ranking (ML)</text>
+  <text x="405" y="494" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">zaman sınırlı; aşarsa kronolojik</text>
+
+  <!-- Okuma okları -->
+  <g stroke="var(--da-primary, #6366f1)" stroke-width="1.5" fill="none" marker-end="url(#arrow-p)">
+    <path d="M 126 405 L 160 405"/>
+    <path d="M 290 390 C 310 390, 320 342, 340 342"/>
+    <path d="M 290 410 L 340 412"/>
+    <path d="M 290 425 C 310 425, 320 482, 340 482"/>
+    <path d="M 290 380 C 400 300, 560 290, 630 240"/>
+  </g>
+  <text x="470" y="296" font-size="9" fill="var(--da-primary, #6366f1)">LRANGE timeline:{uid} 0 39</text>
+
+  <!-- Trending -->
+  <rect x="744" y="110" width="180" height="50" rx="10" fill="var(--da-accent, #f59e0b)" opacity="0.12" stroke="var(--da-accent, #f59e0b)" stroke-width="1.5"/>
+  <text x="834" y="131" text-anchor="middle" font-size="12" fill="var(--da-fg, #0f172a)">Akış işleme</text>
+  <text x="834" y="147" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">Flink / Heron · 10 dk pencere</text>
+
+  <rect x="744" y="190" width="180" height="150" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)" stroke-width="1.4"/>
+  <text x="834" y="210" text-anchor="middle" font-size="12" font-weight="600" fill="var(--da-fg, #0f172a)">Count-Min Sketch</text>
+  <g fill="var(--da-primary, #6366f1)" opacity="0.25">
+    <rect x="764" y="222" width="140" height="18" rx="3"/>
+    <rect x="764" y="244" width="140" height="18" rx="3"/>
+    <rect x="764" y="266" width="140" height="18" rx="3"/>
+  </g>
+  <g fill="var(--da-primary, #6366f1)" opacity="0.9">
+    <rect x="792" y="222" width="14" height="18" rx="2"/>
+    <rect x="848" y="244" width="14" height="18" rx="2"/>
+    <rect x="820" y="266" width="14" height="18" rx="2"/>
+  </g>
+  <g font-size="9.5" fill="var(--da-muted, #64748b)" text-anchor="middle">
+    <text x="834" y="304">d hash × w sayaç</text>
+    <text x="834" y="318">count = min(h1, h2, h3)</text>
+    <text x="834" y="332">asla eksik saymaz</text>
+  </g>
+
+  <rect x="744" y="370" width="180" height="50" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)" stroke-width="1.4"/>
+  <text x="834" y="391" text-anchor="middle" font-size="12" fill="var(--da-fg, #0f172a)">Top-k + z-skoru</text>
+  <text x="834" y="407" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">geçen haftanın aynı saatine göre</text>
+
+  <rect x="744" y="450" width="180" height="50" rx="10" fill="var(--da-success, #10b981)" opacity="0.12" stroke="var(--da-success, #10b981)" stroke-width="1.5"/>
+  <text x="834" y="471" text-anchor="middle" font-size="12" fill="var(--da-fg, #0f172a)">Trending cache</text>
+  <text x="834" y="487" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">bölge bazlı · 60 s yenile</text>
+
+  <g stroke="var(--da-muted, #64748b)" stroke-width="1.4" fill="none" marker-end="url(#arrow)">
+    <path d="M 834 160 L 834 190"/>
+    <path d="M 834 340 L 834 370"/>
+    <path d="M 834 420 L 834 450"/>
+  </g>
+</svg>

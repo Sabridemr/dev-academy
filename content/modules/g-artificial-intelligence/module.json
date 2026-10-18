@@ -1,0 +1,13 @@
+{
+  "id": "g-artificial-intelligence",
+  "slug": "artificial-intelligence",
+  "code": "G",
+  "order": 7,
+  "title": { "tr": "Yapay Zekâ: ML ve DL", "en": "Artificial Intelligence: ML and DL" },
+  "description": {
+    "tr": "Makine öğrenmesi temellerinden LLM’lere ve üretimde AI sistem tasarımına.",
+    "en": "From machine learning fundamentals to LLMs and production AI system design."
+  },
+  "icon": "brain",
+  "color": "#ec4899"
+}

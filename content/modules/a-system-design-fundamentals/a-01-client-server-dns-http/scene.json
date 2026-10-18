@@ -1,0 +1,218 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "a-01-url-to-websocket-journey",
+  "title": { "tr": "URL'den WebSocket'e: Bir İsteğin Yolculuğu", "en": "From URL to WebSocket: The Journey of a Request" },
+  "summary": {
+    "tr": "Tarayıcıya yazılan bir adresin DNS çözümleme, TCP el sıkışma, TLS el sıkışma, HTTP istek/yanıt ve WebSocket yükseltme adımlarından geçişi.",
+    "en": "An address typed into the browser passing through DNS resolution, the TCP handshake, the TLS handshake, HTTP request/response and the WebSocket upgrade."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda tarayıcı, üstte recursive DNS çözümleyici ve yetkili DNS sunucusu, sağda web sunucusu bulunur. Tarayıcı önce çözümleyiciden IP adresini öğrenir; çözümleyici gerekirse yetkili sunucuya sorar. Sonra tarayıcı ile web sunucusu arasında üç paketlik TCP el sıkışması, ardından TLS el sıkışması yapılır. HTTP isteği gider, 200 yanıtı döner. Son adımlarda bağlantı WebSocket'e yükseltilir ve iki yönlü çerçeveler akar.",
+      "en": "A browser on the left, a recursive DNS resolver and an authoritative DNS server at the top, and a web server on the right. The browser first learns the IP address from the resolver, which asks the authoritative server if needed. Then a three-packet TCP handshake and a TLS handshake run between the browser and the web server. An HTTP request is sent and a 200 response returns. In the final steps the connection is upgraded to WebSocket and frames flow in both directions."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "browser", "kind": "browser", "label": { "tr": "Tarayıcı", "en": "Browser" }, "sublabel": "shop.example.com/urun/42", "x": 140, "y": 330, "w": 150, "h": 80 },
+    { "id": "resolver", "kind": "dns", "label": { "tr": "Recursive Resolver", "en": "Recursive Resolver" }, "sublabel": "1.1.1.1 · UDP/53", "x": 400, "y": 110, "w": 170, "h": 70 },
+    { "id": "authdns", "kind": "dns", "label": { "tr": "Yetkili DNS", "en": "Authoritative DNS" }, "sublabel": "ns1.example.com", "x": 740, "y": 110, "w": 170, "h": 70 },
+    { "id": "server", "kind": "server", "label": { "tr": "Web Sunucusu", "en": "Web Server" }, "sublabel": "203.0.113.10 · TCP/443", "x": 820, "y": 330, "w": 160, "h": 80 },
+    { "id": "ca", "kind": "generic", "label": { "tr": "Kök Sertifika Deposu", "en": "Root CA Store" }, "sublabel": { "tr": "tarayıcıda yerleşik", "en": "built into the browser" }, "x": 140, "y": 520, "w": 170, "h": 60, "status": "muted" }
+  ],
+  "edges": [
+    { "id": "b-resolver", "from": "browser", "to": "resolver", "kind": "request", "label": { "tr": "A kaydı?", "en": "A record?" }, "curvature": -0.1 },
+    { "id": "resolver-auth", "from": "resolver", "to": "authdns", "kind": "request", "label": { "tr": "root → .com → example.com", "en": "root → .com → example.com" } },
+    { "id": "tcp", "from": "browser", "to": "server", "kind": "control", "label": "TCP", "curvature": -0.25 },
+    { "id": "tls", "from": "browser", "to": "server", "kind": "control", "style": "dashed", "label": "TLS 1.3", "curvature": -0.08 },
+    { "id": "http", "from": "browser", "to": "server", "kind": "request", "label": "HTTP", "curvature": 0.1 },
+    { "id": "ws", "from": "browser", "to": "server", "kind": "data", "bidirectional": true, "label": "WebSocket", "curvature": 0.3 },
+    { "id": "b-ca", "from": "browser", "to": "ca", "kind": "control", "style": "dotted", "label": { "tr": "zinciri doğrula", "en": "verify chain" } }
+  ],
+  "steps": [
+    {
+      "id": "typed",
+      "title": { "tr": "URL yazıldı", "en": "URL typed" },
+      "narration": {
+        "tr": "Kullanıcı https://shop.example.com/urun/42 yazıp Enter'a bastı. Tarayıcı önce kendi DNS cache'ine bakar; kayıt yoksa dışarı çıkmak zorundadır. Henüz hiçbir paket ağa çıkmadı.",
+        "en": "The user typed https://shop.example.com/urun/42 and pressed Enter. The browser first checks its own DNS cache; if there is no entry it has to go out. No packet has left the machine yet."
+      },
+      "durationMs": 3000,
+      "inherit": false,
+      "highlight": { "nodes": ["browser"], "edges": [] },
+      "nodeStates": {
+        "browser": { "status": "active", "badge": "?" },
+        "ca": { "status": "muted" }
+      },
+      "edgeStates": {
+        "tcp": { "visible": false }, "tls": { "visible": false }, "http": { "visible": false }, "ws": { "visible": false }, "b-ca": { "visible": false }
+      },
+      "annotations": [
+        { "id": "cache-miss", "x": 140, "y": 240, "text": { "tr": "tarayıcı cache: MISS", "en": "browser cache: MISS" }, "tone": "warning", "target": "browser" }
+      ]
+    },
+    {
+      "id": "dns",
+      "title": { "tr": "DNS çözümleme", "en": "DNS resolution" },
+      "narration": {
+        "tr": "Tarayıcı recursive resolver'a UDP ile 'shop.example.com için A kaydı?' diye sorar. Resolver cevabı cache'inde bulamazsa root → .com TLD → yetkili sunucu zincirini sizin adınıza dolaşır ve IP'yi TTL ile birlikte döner.",
+        "en": "The browser asks the recursive resolver over UDP: 'A record for shop.example.com?'. If the resolver has no cached answer it walks root → .com TLD → authoritative server on your behalf and returns the IP along with a TTL."
+      },
+      "durationMs": 5000,
+      "highlight": { "nodes": ["browser", "resolver", "authdns"], "edges": ["b-resolver", "resolver-auth"] },
+      "nodeStates": {
+        "browser": { "status": "active", "badge": "" },
+        "resolver": { "status": "active" },
+        "authdns": { "status": "active" }
+      },
+      "edgeStates": { "b-resolver": { "status": "active" }, "resolver-auth": { "status": "active" } },
+      "packets": [
+        { "edge": "b-resolver", "shape": "diamond", "label": "A?", "durationMs": 900 },
+        { "edge": "resolver-auth", "shape": "diamond", "label": "A?", "startAt": 900, "durationMs": 900 },
+        { "edge": "resolver-auth", "shape": "diamond", "direction": "backward", "label": "203.0.113.10", "color": "success", "startAt": 1800, "durationMs": 900 },
+        { "edge": "b-resolver", "shape": "diamond", "direction": "backward", "label": "203.0.113.10 · TTL 300", "color": "success", "startAt": 2700, "durationMs": 900 }
+      ],
+      "annotations": [
+        { "id": "dns-udp", "x": 400, "y": 190, "text": { "tr": "UDP: bağlantı kurmadan tek soru, tek cevap", "en": "UDP: one question, one answer, no connection" }, "target": "resolver" }
+      ]
+    },
+    {
+      "id": "tcp",
+      "title": { "tr": "TCP el sıkışma", "en": "TCP handshake" },
+      "narration": {
+        "tr": "IP biliniyor; şimdi 443 portuna güvenilir bir kanal açılır. SYN → SYN-ACK → ACK üç paketi bir RTT sürer. Henüz tek byte uygulama verisi gönderilmedi.",
+        "en": "The IP is known; now a reliable channel is opened to port 443. The three packets SYN → SYN-ACK → ACK take one RTT. Not a single byte of application data has been sent yet."
+      },
+      "durationMs": 4200,
+      "highlight": { "nodes": ["browser", "server"], "edges": ["tcp"] },
+      "nodeStates": {
+        "resolver": { "status": "idle" }, "authdns": { "status": "idle" },
+        "server": { "status": "active" }
+      },
+      "edgeStates": {
+        "b-resolver": { "status": "idle" }, "resolver-auth": { "status": "idle" },
+        "tcp": { "visible": true, "status": "active" }
+      },
+      "packets": [
+        { "edge": "tcp", "shape": "square", "label": "SYN", "durationMs": 900 },
+        { "edge": "tcp", "shape": "square", "direction": "backward", "label": "SYN-ACK", "startAt": 1000, "durationMs": 900 },
+        { "edge": "tcp", "shape": "square", "label": "ACK", "startAt": 2000, "durationMs": 900 }
+      ],
+      "annotations": [
+        { "id": "rtt1", "x": 480, "y": 250, "text": { "tr": "1 RTT (ör. 40 ms)", "en": "1 RTT (e.g. 40 ms)" }, "tone": "info" }
+      ]
+    },
+    {
+      "id": "tls",
+      "title": { "tr": "TLS el sıkışma", "en": "TLS handshake" },
+      "narration": {
+        "tr": "https olduğu için kanal şifrelenir. ClientHello (SNI + anahtar payı) gider, ServerHello + sertifika döner. Tarayıcı sertifikayı yerleşik kök CA deposuna kadar zincirleyip doğrular; iki taraf oturum anahtarını türetir. TLS 1.3'te bu da tek RTT'dir.",
+        "en": "Because it is https, the channel is encrypted. ClientHello (SNI + key share) goes out, ServerHello + certificate come back. The browser verifies the certificate chain up to its built-in root CA store; both sides derive the session key. In TLS 1.3 this is also one RTT."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["browser", "server", "ca"], "edges": ["tls", "b-ca"] },
+      "nodeStates": {
+        "ca": { "status": "active" },
+        "server": { "status": "active", "badge": "🔒" }
+      },
+      "edgeStates": {
+        "tcp": { "status": "idle" },
+        "tls": { "visible": true, "status": "active" },
+        "b-ca": { "visible": true, "status": "active" }
+      },
+      "packets": [
+        { "edge": "tls", "shape": "envelope", "label": "ClientHello · SNI", "durationMs": 900 },
+        { "edge": "tls", "shape": "envelope", "direction": "backward", "label": "ServerHello · cert", "startAt": 1000, "durationMs": 900 },
+        { "edge": "b-ca", "shape": "dot", "label": { "tr": "zincir OK", "en": "chain OK" }, "color": "success", "startAt": 2000, "durationMs": 600 },
+        { "edge": "tls", "shape": "envelope", "label": "Finished", "startAt": 2700, "durationMs": 900 }
+      ],
+      "annotations": [
+        { "id": "rtt2", "x": 480, "y": 250, "text": { "tr": "+1 RTT → toplam 2 RTT, hâlâ HTTP yok", "en": "+1 RTT → 2 RTT total, still no HTTP" }, "tone": "warning" }
+      ]
+    },
+    {
+      "id": "http",
+      "title": { "tr": "HTTP istek / yanıt", "en": "HTTP request / response" },
+      "narration": {
+        "tr": "Nihayet uygulama konuşur: GET /urun/42 şifreli kanaldan gider, 200 OK ve HTML gövdesi döner. Sayfa içindeki CSS, JS, görseller aynı bağlantı üzerinden (HTTP/2 multiplexing) paralel akar.",
+        "en": "Finally the application speaks: GET /urun/42 travels over the encrypted channel, 200 OK and the HTML body return. The page's CSS, JS and images flow in parallel over the same connection (HTTP/2 multiplexing)."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["browser", "server"], "edges": ["http"] },
+      "nodeStates": {
+        "ca": { "status": "muted" },
+        "browser": { "status": "success", "badge": "200" },
+        "server": { "status": "busy", "badge": "" }
+      },
+      "edgeStates": {
+        "tls": { "status": "idle" }, "b-ca": { "status": "muted" },
+        "http": { "visible": true, "status": "active", "label": "HTTP/2" }
+      },
+      "packets": [
+        { "edge": "http", "shape": "envelope", "label": "GET /urun/42", "durationMs": 900 },
+        { "edge": "http", "shape": "envelope", "direction": "backward", "label": "200 OK · text/html", "color": "success", "startAt": 1100, "durationMs": 900 },
+        { "edge": "http", "shape": "dot", "label": "app.css", "startAt": 2100, "durationMs": 700 },
+        { "edge": "http", "shape": "dot", "label": "app.js", "startAt": 2200, "durationMs": 700 },
+        { "edge": "http", "shape": "dot", "label": "hero.webp", "startAt": 2300, "durationMs": 700 },
+        { "edge": "http", "shape": "dot", "direction": "backward", "color": "success", "startAt": 3000, "durationMs": 700, "repeat": 3, "repeatGapMs": 100 }
+      ],
+      "annotations": [
+        { "id": "ttfb", "x": 480, "y": 250, "text": { "tr": "3 RTT sonra ilk byte (TTFB)", "en": "First byte after 3 RTT (TTFB)" }, "tone": "success" }
+      ]
+    },
+    {
+      "id": "upgrade",
+      "title": { "tr": "WebSocket yükseltme", "en": "WebSocket upgrade" },
+      "narration": {
+        "tr": "Sayfadaki sohbet bileşeni sunucunun da konuşabildiği bir kanal ister. Normal bir GET isteği 'Upgrade: websocket' başlığıyla gönderilir; sunucu 101 Switching Protocols dönerse aynı TCP bağlantısı artık HTTP değil WebSocket çerçeveleri taşır.",
+        "en": "The page's chat widget wants a channel on which the server can also speak. An ordinary GET is sent with the 'Upgrade: websocket' header; if the server answers 101 Switching Protocols, the same TCP connection now carries WebSocket frames instead of HTTP."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["browser", "server"], "edges": ["ws"] },
+      "nodeStates": {
+        "browser": { "status": "active", "badge": "101" },
+        "server": { "status": "active" }
+      },
+      "edgeStates": {
+        "http": { "status": "idle" },
+        "ws": { "visible": true, "status": "active", "label": { "tr": "Upgrade: websocket", "en": "Upgrade: websocket" } }
+      },
+      "packets": [
+        { "edge": "ws", "shape": "envelope", "label": "GET /chat · Upgrade", "durationMs": 1000 },
+        { "edge": "ws", "shape": "envelope", "direction": "backward", "label": "101 Switching Protocols", "color": "success", "startAt": 1200, "durationMs": 1000 }
+      ],
+      "annotations": [
+        { "id": "upg-note", "x": 480, "y": 470, "text": { "tr": "El sıkışma HTTP, sonrası ikili çerçeveler", "en": "Handshake is HTTP, afterwards binary frames" }, "tone": "info" }
+      ]
+    },
+    {
+      "id": "duplex",
+      "title": { "tr": "Çift yönlü akış", "en": "Full-duplex flow" },
+      "narration": {
+        "tr": "Artık sunucu istemci sormadan mesaj gönderebilir: yeni sohbet mesajı, fiyat güncellemesi, bildirim. Bağlantı açık kaldığı sürece ne DNS, ne TCP, ne TLS el sıkışması tekrarlanır — bu yüzden ilk bağlantının maliyeti amorti edilir.",
+        "en": "Now the server can push messages without being asked: a new chat message, a price update, a notification. While the connection stays open no DNS, TCP or TLS handshake is repeated — the cost of the first connection is amortised."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["browser", "server"], "edges": ["ws"] },
+      "nodeStates": {
+        "browser": { "status": "success", "badge": "" },
+        "server": { "status": "success" }
+      },
+      "edgeStates": { "ws": { "status": "active", "label": "WebSocket · full-duplex" } },
+      "packets": [
+        { "edge": "ws", "shape": "dot", "direction": "backward", "label": { "tr": "yeni mesaj", "en": "new message" }, "color": "accent", "durationMs": 800 },
+        { "edge": "ws", "shape": "dot", "label": { "tr": "yazıyor...", "en": "typing..." }, "startAt": 500, "durationMs": 800 },
+        { "edge": "ws", "shape": "dot", "direction": "backward", "label": { "tr": "fiyat ↓", "en": "price ↓" }, "color": "accent", "startAt": 1400, "durationMs": 800 },
+        { "edge": "ws", "shape": "dot", "label": { "tr": "mesaj gönder", "en": "send message" }, "startAt": 2200, "durationMs": 800 },
+        { "edge": "ws", "shape": "dot", "direction": "backward", "label": "ping/pong", "color": "muted", "startAt": 3100, "durationMs": 800 }
+      ],
+      "annotations": [
+        { "id": "duplex-note", "x": 480, "y": 470, "text": { "tr": "Sunucu artık ilk konuşan taraf olabilir", "en": "The server can now speak first" }, "tone": "success", "target": "server" }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["dns", "tcp", "tls", "http", "websocket"]
+}

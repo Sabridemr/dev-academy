@@ -1,0 +1,171 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "e-02-video-playback-journey",
+  "title": { "tr": "\"Oynat\" Tıklamasının Yolculuğu", "en": "The Journey of a \"Play\" Click" },
+  "summary": {
+    "tr": "Oynat isteğinin playback servisi ve metadata veritabanından manifest alması, CDN edge'de segment ıskalaması, origin shield ve object storage'dan doldurma ve ABR istemcinin kaliteyi yükseltmesi.",
+    "en": "A play request fetching the manifest via the playback service and metadata DB, a segment miss at the CDN edge, fill from origin shield and object storage, and the ABR client stepping up quality."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda oynatıcı, ortada API gateway, playback servisi ve metadata veritabanı; sağ tarafta CDN edge, origin shield ve object storage. Oynatıcı önce gateway üzerinden playback servisinden manifest URL'si ve DRM lisansı alır; servis metadata DB'yi okur. Ardından oynatıcı CDN edge'den manifest ve segment ister; ilk segment edge'de yoktur, shield'dan ve object storage'dan doldurulur, sonraki segmentler edge'den isabetle gelir ve oynatıcı tampon dolunca 480p'den 1080p'ye geçer.",
+      "en": "A player on the left; API gateway, playback service and metadata database in the middle; CDN edge, origin shield and object storage on the right. The player first obtains the manifest URL and a DRM license from the playback service through the gateway; the service reads the metadata DB. Then the player requests the manifest and segments from the CDN edge; the first segment misses at the edge and is filled from the shield and object storage, later segments hit at the edge and the player steps from 480p to 1080p once the buffer fills."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "player", "kind": "client", "label": { "tr": "Oynatıcı", "en": "Player" }, "sublabel": "ABR", "x": 90, "y": 300, "w": 110, "h": 70 },
+    { "id": "gateway", "kind": "gateway", "label": "API Gateway", "sublabel": { "tr": "auth · JWT", "en": "auth · JWT" }, "x": 300, "y": 120, "w": 130, "h": 66 },
+    { "id": "playback", "kind": "service", "label": { "tr": "Playback servisi", "en": "Playback service" }, "sublabel": { "tr": "manifest · DRM", "en": "manifest · DRM" }, "x": 530, "y": 120, "w": 150, "h": 70 },
+    { "id": "metadb", "kind": "db", "label": { "tr": "Metadata DB", "en": "Metadata DB" }, "sublabel": "videos · status", "x": 780, "y": 120, "w": 130, "h": 70 },
+    { "id": "edge", "kind": "cdn", "label": "CDN Edge", "sublabel": { "tr": "ISP içi PoP", "en": "PoP inside ISP" }, "x": 300, "y": 440, "w": 130, "h": 70 },
+    { "id": "shield", "kind": "cdn", "label": "Origin Shield", "sublabel": { "tr": "bölgesel", "en": "regional" }, "x": 540, "y": 440, "w": 140, "h": 70 },
+    { "id": "storage", "kind": "storage", "label": "Object Storage", "sublabel": "segments · v2", "x": 800, "y": 440, "w": 140, "h": 70 }
+  ],
+  "edges": [
+    { "id": "p-gw", "from": "player", "to": "gateway", "kind": "request", "label": "GET /play/{id}", "curvature": -0.15 },
+    { "id": "gw-pb", "from": "gateway", "to": "playback", "kind": "request" },
+    { "id": "pb-db", "from": "playback", "to": "metadb", "kind": "data" },
+    { "id": "p-edge", "from": "player", "to": "edge", "kind": "request", "label": { "tr": "manifest · segmentler", "en": "manifest · segments" }, "curvature": 0.15 },
+    { "id": "edge-shield", "from": "edge", "to": "shield", "kind": "request", "style": "dashed" },
+    { "id": "shield-storage", "from": "shield", "to": "storage", "kind": "request", "style": "dashed" }
+  ],
+  "steps": [
+    {
+      "id": "play-click",
+      "title": { "tr": "1 · Oynat", "en": "1 · Play" },
+      "narration": {
+        "tr": "Kullanıcı Oynat'a basar. Oynatıcı video baytı değil, önce küçük bir API çağrısı yapar: GET /play/{videoId}. Gateway JWT'yi doğrular ve isteği playback servisine iletir.",
+        "en": "The user presses Play. The player does not ask for video bytes yet; it first makes a small API call: GET /play/{videoId}. The gateway validates the JWT and forwards the request to the playback service."
+      },
+      "durationMs": 3200,
+      "inherit": false,
+      "highlight": { "nodes": ["player", "gateway", "playback"], "edges": ["p-gw", "gw-pb"] },
+      "nodeStates": { "player": { "status": "active" }, "gateway": { "status": "active", "badge": "JWT ✓" } },
+      "packets": [
+        { "edge": "p-gw", "shape": "envelope", "durationMs": 1000 },
+        { "edge": "gw-pb", "shape": "envelope", "startAt": 1100, "durationMs": 800 }
+      ],
+      "annotations": [
+        { "id": "small", "x": 90, "y": 400, "text": { "tr": "~1 KB istek, henüz video yok", "en": "~1 KB request, no video yet" }, "target": "player" }
+      ]
+    },
+    {
+      "id": "metadata",
+      "title": { "tr": "2 · Metadata ve DRM", "en": "2 · Metadata and DRM" },
+      "narration": {
+        "tr": "Playback servisi metadata DB'den videonun hazır olduğunu (status = READY), manifest yolunu ve hangi kademelerin mevcut olduğunu okur; kullanıcının abonelik/bölge hakkını kontrol eder ve DRM lisans anahtarını üretir.",
+        "en": "The playback service reads from the metadata DB that the video is READY, where its manifest lives and which renditions exist; it checks the user's subscription/region entitlement and issues a DRM license key."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["playback", "metadb"], "edges": ["pb-db"] },
+      "nodeStates": { "playback": { "status": "busy" }, "metadb": { "status": "active", "badge": "READY" } },
+      "packets": [
+        { "edge": "pb-db", "shape": "dot", "label": "SELECT …", "durationMs": 700 },
+        { "edge": "pb-db", "shape": "dot", "direction": "backward", "startAt": 800, "durationMs": 700, "color": "success" }
+      ],
+      "annotations": [
+        { "id": "cached", "x": 780, "y": 40, "text": { "tr": "sıcak başlıklar Redis'te", "en": "hot titles cached in Redis" }, "target": "metadb" }
+      ]
+    },
+    {
+      "id": "manifest-url",
+      "title": { "tr": "3 · Yanıt: manifest URL'si", "en": "3 · Response: manifest URL" },
+      "narration": {
+        "tr": "Yanıt küçüktür: CDN üzerindeki master manifest URL'si, DRM lisansı ve kaldığı konum (resume position). Bundan sonra uygulama sunucuları devreden çıkar; tüm ağır trafik CDN ile oynatıcı arasında akar.",
+        "en": "The response is tiny: the master manifest URL on the CDN, the DRM license and the resume position. From here on the application servers step aside; all heavy traffic flows between the CDN and the player."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["playback", "gateway", "player"], "edges": ["gw-pb", "p-gw"] },
+      "nodeStates": { "playback": { "status": "success" }, "player": { "badge": "manifest ✓" } },
+      "packets": [
+        { "edge": "gw-pb", "shape": "envelope", "direction": "backward", "durationMs": 700, "color": "success" },
+        { "edge": "p-gw", "shape": "envelope", "direction": "backward", "startAt": 800, "durationMs": 900, "color": "success", "label": "200 · m3u8 url" }
+      ],
+      "annotations": [
+        { "id": "offload", "x": 300, "y": 230, "text": { "tr": "uygulama katmanı işi bitti (~60 ms)", "en": "application layer is done (~60 ms)" }, "tone": "success", "target": "gateway" }
+      ]
+    },
+    {
+      "id": "edge-miss",
+      "title": { "tr": "4 · Edge'de ıskalama", "en": "4 · Miss at the edge" },
+      "narration": {
+        "tr": "Oynatıcı manifest'i ve ilk segmenti (480p, seg_0001) ISP içindeki CDN edge'inden ister. Video yeni yayınlandığı için edge'de henüz yoktur: MISS. Edge isteği doğrudan origin'e değil, bölgesel origin shield'a yollar.",
+        "en": "The player requests the manifest and the first segment (480p, seg_0001) from the CDN edge inside the ISP. The video was just published, so the edge does not have it yet: MISS. The edge forwards the request to the regional origin shield, not straight to origin."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["player", "edge", "shield"], "edges": ["p-edge", "edge-shield"] },
+      "nodeStates": { "player": { "status": "busy", "sublabel": "480p · buffer 0 s" }, "edge": { "status": "warning", "badge": "MISS" }, "gateway": { "status": "idle", "badge": "" }, "playback": { "status": "idle" }, "metadb": { "status": "idle", "badge": "" } },
+      "packets": [
+        { "edge": "p-edge", "shape": "square", "label": "seg_0001 480p", "durationMs": 900 },
+        { "edge": "edge-shield", "shape": "square", "startAt": 1000, "durationMs": 900, "color": "warning" }
+      ],
+      "annotations": [
+        { "id": "coalesce", "x": 300, "y": 540, "text": { "tr": "aynı segment için 1 origin isteği (coalescing)", "en": "one origin request per segment (coalescing)" }, "tone": "warning", "target": "edge" }
+      ]
+    },
+    {
+      "id": "origin-fill",
+      "title": { "tr": "5 · Shield ve object storage", "en": "5 · Shield and object storage" },
+      "narration": {
+        "tr": "Shield'da da yoktur; segment object storage'dan okunur ve geri dönüş yolunda hem shield'a hem edge'e yazılır. Bu anda aynı segmenti isteyen bin başka edge, shield sayesinde origin'e yalnızca bir istek üretir.",
+        "en": "The shield misses too; the segment is read from object storage and written into both the shield and the edge on the way back. Thanks to the shield, a thousand other edges requesting the same segment generate only one request to origin."
+      },
+      "durationMs": 3800,
+      "highlight": { "nodes": ["shield", "storage", "edge"], "edges": ["shield-storage", "edge-shield"] },
+      "nodeStates": { "shield": { "status": "active", "badge": "FILL" }, "storage": { "status": "active" }, "edge": { "status": "active", "badge": "FILL" } },
+      "packets": [
+        { "edge": "shield-storage", "shape": "square", "durationMs": 800 },
+        { "edge": "shield-storage", "shape": "square", "direction": "backward", "startAt": 900, "durationMs": 800, "color": "success", "label": "2 MB" },
+        { "edge": "edge-shield", "shape": "square", "direction": "backward", "startAt": 1800, "durationMs": 800, "color": "success" }
+      ],
+      "annotations": [
+        { "id": "immutable", "x": 800, "y": 540, "text": { "tr": "/v2/480p/seg_0001.ts — immutable, TTL sonsuz", "en": "/v2/480p/seg_0001.ts — immutable, infinite TTL" }, "target": "storage" }
+      ]
+    },
+    {
+      "id": "first-frame",
+      "title": { "tr": "6 · İlk kare", "en": "6 · First frame" },
+      "narration": {
+        "tr": "İlk segment oynatıcıya ulaşır ve ilk kare ~1.4 s'de ekrana gelir. Oynatıcı düşük kademeyle başlamıştır çünkü hedef hızlı başlamaktır, en iyi görüntü değil. Arka planda seg_0002 ve seg_0003 hemen istenir.",
+        "en": "The first segment reaches the player and the first frame appears at ~1.4 s. The player started on a low rendition because the goal is a fast start, not the best picture. seg_0002 and seg_0003 are requested immediately in the background."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["edge", "player"], "edges": ["p-edge"] },
+      "nodeStates": { "player": { "status": "success", "badge": "▶ 1.4 s", "sublabel": "480p · buffer 4 s" }, "edge": { "status": "success", "badge": "HIT" }, "shield": { "status": "idle", "badge": "" }, "storage": { "status": "idle" } },
+      "packets": [
+        { "edge": "p-edge", "shape": "square", "direction": "backward", "durationMs": 800, "color": "success", "label": "seg_0001" },
+        { "edge": "p-edge", "shape": "square", "startAt": 900, "durationMs": 600, "label": "seg_0002" },
+        { "edge": "p-edge", "shape": "square", "direction": "backward", "startAt": 1600, "durationMs": 600, "color": "success" },
+        { "edge": "p-edge", "shape": "square", "startAt": 2300, "durationMs": 600, "label": "seg_0003" }
+      ],
+      "annotations": [
+        { "id": "ttff", "x": 90, "y": 400, "text": { "tr": "ilk kare < 2 s hedefi tutturuldu", "en": "first-frame < 2 s target met" }, "tone": "success", "target": "player" }
+      ]
+    },
+    {
+      "id": "abr-up",
+      "title": { "tr": "7 · ABR kaliteyi yükseltiyor", "en": "7 · ABR steps quality up" },
+      "narration": {
+        "tr": "Son üç segment 18 Mbps hızla indi ve tampon 20 saniyeyi aştı. ABR algoritması bir sonraki segmenti 1080p (5 Mbps) kademesinden ister. Hız düşerse tampon erimeden kademe düşürülür; karar tamamen istemcidedir, sunucu hiçbir durum tutmaz.",
+        "en": "The last three segments downloaded at 18 Mbps and the buffer passed 20 seconds. The ABR algorithm requests the next segment from the 1080p (5 Mbps) rendition. If throughput drops, it steps down before the buffer drains; the decision is entirely client-side, the server holds no state."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["player", "edge"], "edges": ["p-edge"] },
+      "nodeStates": { "player": { "status": "success", "badge": "1080p", "sublabel": "1080p · buffer 22 s" }, "edge": { "badge": "HIT 96%" } },
+      "packets": [
+        { "edge": "p-edge", "shape": "square", "label": "seg_0007 1080p", "durationMs": 700 },
+        { "edge": "p-edge", "shape": "square", "direction": "backward", "startAt": 800, "durationMs": 700, "color": "success", "label": "4 MB" },
+        { "edge": "p-edge", "shape": "square", "startAt": 1700, "durationMs": 700, "label": "seg_0008 1080p" },
+        { "edge": "p-edge", "shape": "square", "direction": "backward", "startAt": 2500, "durationMs": 700, "color": "success" }
+      ],
+      "annotations": [
+        { "id": "abr", "x": 90, "y": 400, "text": { "tr": "throughput 18 Mbps × 0.7 > 5 Mbps → yükselt", "en": "throughput 18 Mbps × 0.7 > 5 Mbps → step up" }, "tone": "info", "target": "player" }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["video", "cdn", "abr", "origin-shield", "playback"]
+}

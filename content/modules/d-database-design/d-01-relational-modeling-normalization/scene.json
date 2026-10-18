@@ -1,0 +1,225 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "d-01-normalization-steps",
+  "title": { "tr": "Tek Tablodan 3NF'ye: Adım Adım Normalizasyon", "en": "From One Table to 3NF: Step-by-Step Normalization" },
+  "summary": {
+    "tr": "Tekrar eden gruplar içeren düz bir sipariş tablosunun anomalileri; 1NF, 2NF, 3NF ve BCNF adımlarıyla dört tabloya ayrıştırılması.",
+    "en": "The anomalies of a flat order table with repeating groups, and its decomposition into four tables through 1NF, 2NF, 3NF and BCNF."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda tüm sipariş bilgisini tek başına tutan orders_flat tablosu vardır. Adımlar ilerledikçe sağ tarafta products, orders, customers ve order_items tabloları belirir; her adım hangi fonksiyonel bağımlılığın hangi tabloyu doğurduğunu anlatır. Son adımda yabancı anahtar okları dört tabloyu birbirine bağlar.",
+      "en": "On the left is the orders_flat table holding all order information by itself. As the steps progress, products, orders, customers and order_items tables appear on the right; each step explains which functional dependency produced which table. In the final step foreign key arrows connect the four tables."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "flat", "kind": "storage", "label": "orders_flat", "sublabel": { "tr": "tek tablo, 9 sütun", "en": "one table, 9 columns" }, "x": 170, "y": 300, "w": 220, "h": 110 },
+    { "id": "order-items", "kind": "db", "label": "order_items", "sublabel": "PK(order_id, product_id)", "x": 520, "y": 300, "w": 190, "h": 80 },
+    { "id": "products", "kind": "db", "label": "products", "sublabel": "PK product_id", "x": 520, "y": 520, "w": 170, "h": 70 },
+    { "id": "orders", "kind": "db", "label": "orders", "sublabel": "PK order_id", "x": 520, "y": 90, "w": 170, "h": 70 },
+    { "id": "customers", "kind": "db", "label": "customers", "sublabel": "PK customer_id", "x": 850, "y": 90, "w": 170, "h": 70 },
+    { "id": "shelves", "kind": "db", "label": "shelves", "sublabel": "PK shelf_code", "x": 850, "y": 520, "w": 150, "h": 60 }
+  ],
+  "edges": [
+    { "id": "flat-items", "from": "flat", "to": "order-items", "kind": "data", "style": "dashed", "label": { "tr": "1NF: satır/ürün", "en": "1NF: row per product" } },
+    { "id": "flat-products", "from": "flat", "to": "products", "kind": "data", "style": "dashed", "curvature": 0.2, "label": { "tr": "2NF", "en": "2NF" } },
+    { "id": "flat-orders", "from": "flat", "to": "orders", "kind": "data", "style": "dashed", "curvature": -0.2, "label": { "tr": "2NF", "en": "2NF" } },
+    { "id": "orders-customers", "from": "orders", "to": "customers", "kind": "data", "style": "dashed", "label": { "tr": "3NF", "en": "3NF" } },
+    { "id": "fk-items-orders", "from": "order-items", "to": "orders", "kind": "generic", "label": "FK order_id" },
+    { "id": "fk-items-products", "from": "order-items", "to": "products", "kind": "generic", "label": "FK product_id" },
+    { "id": "fk-orders-customers", "from": "orders", "to": "customers", "kind": "generic", "curvature": 0.35, "label": "FK customer_id" },
+    { "id": "products-shelves", "from": "products", "to": "shelves", "kind": "data", "style": "dashed", "label": { "tr": "BCNF", "en": "BCNF" } }
+  ],
+  "steps": [
+    {
+      "id": "flat-table",
+      "title": { "tr": "Başlangıç: her şey tek tabloda", "en": "Start: everything in one table" },
+      "narration": {
+        "tr": "orders_flat tablosu sipariş, müşteri ve ürün bilgisini aynı satırda tutar; product sütunu '12, 15, 33' gibi virgüllü listeler içerir. Çalışır ama kırılgandır.",
+        "en": "The orders_flat table keeps order, customer and product data in the same row; the product column holds comma-separated lists like '12, 15, 33'. It works, but it is fragile."
+      },
+      "durationMs": 3500,
+      "inherit": false,
+      "highlight": { "nodes": ["flat"] },
+      "nodeStates": {
+        "flat": { "status": "warning", "badge": "0NF" },
+        "order-items": { "visible": false },
+        "products": { "visible": false },
+        "orders": { "visible": false },
+        "customers": { "visible": false },
+        "shelves": { "visible": false }
+      },
+      "edgeStates": {
+        "flat-items": { "visible": false },
+        "flat-products": { "visible": false },
+        "flat-orders": { "visible": false },
+        "orders-customers": { "visible": false },
+        "fk-items-orders": { "visible": false },
+        "fk-items-products": { "visible": false },
+        "fk-orders-customers": { "visible": false },
+        "products-shelves": { "visible": false }
+      },
+      "annotations": [
+        { "id": "cols", "x": 170, "y": 420, "text": { "tr": "order_id, date, customer_id, name, city, products=[12,15,33], qty", "en": "order_id, date, customer_id, name, city, products=[12,15,33], qty" }, "target": "flat" }
+      ]
+    },
+    {
+      "id": "anomalies",
+      "title": { "tr": "Üç anomali", "en": "Three anomalies" },
+      "narration": {
+        "tr": "Müşteri şehir değiştirince 40 satır güncellenmeli (update anomaly). Satılmamış ürün eklenemez (insert anomaly). Tek siparişi silinen müşteri kaybolur (delete anomaly).",
+        "en": "When a customer moves, 40 rows must change (update anomaly). An unsold product cannot be added (insert anomaly). A customer whose only order is deleted disappears (delete anomaly)."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["flat"] },
+      "nodeStates": { "flat": { "status": "error", "badge": "!" } },
+      "annotations": [
+        { "id": "upd", "x": 170, "y": 150, "text": { "tr": "UPDATE city: 39 satır güncel, 1 satır eski", "en": "UPDATE city: 39 rows fresh, 1 row stale" }, "tone": "danger", "target": "flat" },
+        { "id": "ins", "x": 170, "y": 200, "text": { "tr": "INSERT ürün: order_id NULL olamaz", "en": "INSERT product: order_id cannot be NULL" }, "tone": "danger" },
+        { "id": "del", "x": 170, "y": 430, "text": { "tr": "DELETE sipariş: müşteri de gitti", "en": "DELETE order: customer gone too" }, "tone": "danger", "target": "flat" }
+      ]
+    },
+    {
+      "id": "first-nf",
+      "title": { "tr": "1NF: atomik hücreler", "en": "1NF: atomic cells" },
+      "narration": {
+        "tr": "Virgüllü ürün listesi parçalanır: her ürün için ayrı satır. Artık satırı (order_id, product_id) bileşik anahtarı tanımlar; sipariş ve müşteri bilgisi her satırda tekrarlanır.",
+        "en": "The comma-separated product list is split: one row per product. The row is now identified by the composite key (order_id, product_id); order and customer data repeats in every row."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["flat", "order-items"], "edges": ["flat-items"] },
+      "nodeStates": {
+        "flat": { "status": "active", "badge": "1NF" },
+        "order-items": { "visible": true, "status": "active", "label": "orders_1nf", "sublabel": { "tr": "satır başına tek ürün", "en": "one product per row" } }
+      },
+      "edgeStates": { "flat-items": { "visible": true, "status": "active" } },
+      "packets": [
+        { "edge": "flat-items", "shape": "square", "label": "(1, 12)", "durationMs": 900 },
+        { "edge": "flat-items", "shape": "square", "label": "(1, 15)", "startAt": 700, "durationMs": 900 },
+        { "edge": "flat-items", "shape": "square", "label": "(1, 33)", "startAt": 1400, "durationMs": 900 }
+      ],
+      "annotations": [
+        { "id": "ck", "x": 520, "y": 390, "text": { "tr": "bileşik anahtar: (order_id, product_id)", "en": "composite key: (order_id, product_id)" }, "target": "order-items" }
+      ]
+    },
+    {
+      "id": "second-nf",
+      "title": { "tr": "2NF: kısmi bağımlılıkları ayır", "en": "2NF: remove partial dependencies" },
+      "narration": {
+        "tr": "product_name ve unit_price yalnızca product_id'ye, order_date yalnızca order_id'ye bağlıdır — anahtarın yarısına. Bunlar products ve orders tablolarına taşınır; geriye order_items(order_id, product_id, qty) kalır.",
+        "en": "product_name and unit_price depend only on product_id, order_date only on order_id — half of the key. They move to products and orders; order_items(order_id, product_id, qty) remains."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["order-items", "products", "orders"], "edges": ["flat-products", "flat-orders"] },
+      "nodeStates": {
+        "flat": { "status": "muted", "badge": "" },
+        "order-items": { "status": "success", "label": "order_items", "sublabel": "PK(order_id, product_id), qty", "badge": "2NF" },
+        "products": { "visible": true, "status": "active", "sublabel": "product_id → name, unit_price" },
+        "orders": { "visible": true, "status": "active", "sublabel": "order_id → date, customer_id, name, city" }
+      },
+      "edgeStates": {
+        "flat-items": { "status": "muted" },
+        "flat-products": { "visible": true, "status": "active" },
+        "flat-orders": { "visible": true, "status": "active" }
+      },
+      "packets": [
+        { "edge": "flat-products", "shape": "envelope", "label": "product_name, unit_price", "durationMs": 1200 },
+        { "edge": "flat-orders", "shape": "envelope", "label": "order_date, customer_*", "startAt": 600, "durationMs": 1200 }
+      ],
+      "annotations": [
+        { "id": "partial", "x": 345, "y": 470, "text": { "tr": "product_id → product_name (anahtarın parçası)", "en": "product_id → product_name (part of the key)" }, "tone": "warning" }
+      ]
+    },
+    {
+      "id": "third-nf",
+      "title": { "tr": "3NF: geçişli bağımlılığı ayır", "en": "3NF: remove transitive dependency" },
+      "narration": {
+        "tr": "orders içinde order_id → customer_id → customer_city zinciri var. Şehir müşterinin özelliğidir; customers tablosuna taşınır ve orders yalnızca customer_id tutar.",
+        "en": "Inside orders there is a chain order_id → customer_id → customer_city. City is a property of the customer; it moves to customers and orders keeps only customer_id."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["orders", "customers"], "edges": ["orders-customers"] },
+      "nodeStates": {
+        "products": { "status": "success", "badge": "3NF" },
+        "orders": { "status": "success", "sublabel": "order_id → date, customer_id", "badge": "3NF" },
+        "customers": { "visible": true, "status": "active", "sublabel": "customer_id → name, city" }
+      },
+      "edgeStates": {
+        "flat-products": { "status": "muted" },
+        "flat-orders": { "status": "muted" },
+        "orders-customers": { "visible": true, "status": "active" }
+      },
+      "packets": [
+        { "edge": "orders-customers", "shape": "envelope", "label": "name, city", "durationMs": 1100 }
+      ],
+      "annotations": [
+        { "id": "transitive", "x": 685, "y": 40, "text": { "tr": "geçişli: order_id → customer_id → city", "en": "transitive: order_id → customer_id → city" }, "tone": "warning" }
+      ]
+    },
+    {
+      "id": "bcnf",
+      "title": { "tr": "BCNF: her belirleyici aday anahtar", "en": "BCNF: every determinant is a candidate key" },
+      "narration": {
+        "tr": "Ürün stoğu için (product_id, warehouse_id, shelf_code) tutsaydık, shelf_code → warehouse_id bağımlılığı 3NF'yi geçer ama BCNF'yi geçmez: shelf_code aday anahtar değildir. Raf bilgisi shelves tablosuna ayrılır.",
+        "en": "If we stored (product_id, warehouse_id, shelf_code) for stock, the dependency shelf_code → warehouse_id passes 3NF but not BCNF: shelf_code is not a candidate key. Shelf data is split into shelves."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["products", "shelves"], "edges": ["products-shelves"] },
+      "nodeStates": {
+        "customers": { "status": "success", "badge": "3NF" },
+        "shelves": { "visible": true, "status": "active", "sublabel": "shelf_code → warehouse_id" }
+      },
+      "edgeStates": {
+        "orders-customers": { "status": "muted" },
+        "products-shelves": { "visible": true, "status": "active" }
+      },
+      "packets": [
+        { "edge": "products-shelves", "shape": "envelope", "label": "shelf_code, warehouse_id", "durationMs": 1000 }
+      ],
+      "annotations": [
+        { "id": "bcnf-note", "x": 700, "y": 460, "text": { "tr": "belirleyici shelf_code, anahtar değil → ayır", "en": "determinant shelf_code is not a key → split" }, "tone": "info" }
+      ]
+    },
+    {
+      "id": "final",
+      "title": { "tr": "Sonuç: yabancı anahtarlarla bağlı tablolar", "en": "Result: tables linked by foreign keys" },
+      "narration": {
+        "tr": "Her gerçek tek yerde durur. Müşteri taşınınca bir satır güncellenir, satılmamış ürün eklenebilir, sipariş silinince müşteri kalır. Okuma tarafında bedeli JOIN'lerdir.",
+        "en": "Every fact lives in one place. A move updates one row, an unsold product can be added, deleting an order keeps the customer. The cost on the read side is JOINs."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["order-items", "orders", "products", "customers"], "edges": ["fk-items-orders", "fk-items-products", "fk-orders-customers"] },
+      "nodeStates": {
+        "flat": { "visible": false },
+        "shelves": { "status": "idle", "badge": "" },
+        "order-items": { "status": "success", "badge": "" },
+        "products": { "status": "success", "badge": "" },
+        "orders": { "status": "success", "badge": "" },
+        "customers": { "status": "success", "badge": "" }
+      },
+      "edgeStates": {
+        "flat-items": { "visible": false },
+        "flat-products": { "visible": false },
+        "flat-orders": { "visible": false },
+        "orders-customers": { "visible": false },
+        "products-shelves": { "status": "muted" },
+        "fk-items-orders": { "visible": true, "status": "active" },
+        "fk-items-products": { "visible": true, "status": "active" },
+        "fk-orders-customers": { "visible": true, "status": "active" }
+      },
+      "packets": [
+        { "edge": "fk-items-orders", "shape": "dot", "label": "JOIN", "durationMs": 900 },
+        { "edge": "fk-orders-customers", "shape": "dot", "label": "JOIN", "startAt": 900, "durationMs": 900 },
+        { "edge": "fk-items-products", "shape": "dot", "label": "JOIN", "startAt": 1800, "durationMs": 900 }
+      ],
+      "annotations": [
+        { "id": "done", "x": 300, "y": 300, "text": { "tr": "SELECT ... FROM order_items JOIN orders JOIN customers JOIN products", "en": "SELECT ... FROM order_items JOIN orders JOIN customers JOIN products" }, "tone": "success" }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["normalization", "relational-model", "er-diagram"]
+}

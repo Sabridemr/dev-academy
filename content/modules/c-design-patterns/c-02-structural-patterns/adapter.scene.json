@@ -1,0 +1,248 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "c-02-adapter",
+  "title": {
+    "tr": "Adapter: Uyumsuz Arayüzü Çevirmek",
+    "en": "Adapter: Translating an Incompatible Interface"
+  },
+  "summary": {
+    "tr": "İstemci PaymentGateway.charge çağırır; adapter kuruşu liraya, parametreleri SDK biçimine çevirir, LegacyBankSdk.makePayment çağırır ve dönen Receipt'i Result'a dönüştürür.",
+    "en": "The client calls PaymentGateway.charge; the adapter converts minor units to lira and parameters to SDK shape, calls LegacyBankSdk.makePayment and maps the returned Receipt to a Result."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda CheckoutService, ortada BankSdkAdapter, sağda LegacyBankSdk. İstemci charge(1999, TRY) çağırır; adapter çağrıyı makePayment(19.99, token) biçimine çevirir; SDK Receipt döner; adapter bunu Result nesnesine çevirip istemciye verir.",
+      "en": "CheckoutService on the left, BankSdkAdapter in the middle, LegacyBankSdk on the right. The client calls charge(1999, TRY); the adapter translates it into makePayment(19.99, token); the SDK returns a Receipt; the adapter maps it to a Result and returns it to the client."
+    }
+  },
+  "canvas": {
+    "width": 1000,
+    "height": 600
+  },
+  "nodes": [
+    {
+      "id": "client",
+      "kind": "generic",
+      "label": "CheckoutService",
+      "x": 130,
+      "y": 300,
+      "w": 180,
+      "h": 70,
+      "sublabel": {
+        "tr": "PaymentGateway bekler",
+        "en": "expects PaymentGateway"
+      }
+    },
+    {
+      "id": "adapter",
+      "kind": "generic",
+      "label": "BankSdkAdapter",
+      "x": 500,
+      "y": 300,
+      "w": 210,
+      "h": 80,
+      "sublabel": {
+        "tr": "implements PaymentGateway",
+        "en": "implements PaymentGateway"
+      }
+    },
+    {
+      "id": "adaptee",
+      "kind": "generic",
+      "label": "LegacyBankSdk",
+      "x": 850,
+      "y": 300,
+      "w": 190,
+      "h": 70,
+      "sublabel": {
+        "tr": "3. parti, değiştirilemez",
+        "en": "3rd party, unchangeable"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "cl-ad",
+      "from": "client",
+      "to": "adapter",
+      "kind": "request",
+      "label": "charge(1999, \"TRY\")"
+    },
+    {
+      "id": "ad-sdk",
+      "from": "adapter",
+      "to": "adaptee",
+      "kind": "request",
+      "label": "makePayment(19.99, token)"
+    }
+  ],
+  "steps": [
+    {
+      "id": "call",
+      "title": {
+        "tr": "1. İstemci hedef arayüzü çağırır",
+        "en": "1. The client calls the target interface"
+      },
+      "narration": {
+        "tr": "CheckoutService elinde bir PaymentGateway tutar ve charge(1999, \"TRY\") çağırır. SDK'nın varlığından haberi yoktur; kuruş cinsinden tam sayı gönderir.",
+        "en": "CheckoutService holds a PaymentGateway and calls charge(1999, \"TRY\"). It knows nothing about the SDK; it sends an integer in minor units."
+      },
+      "durationMs": 3500,
+      "inherit": false,
+      "highlight": {
+        "nodes": [
+          "client",
+          "adapter"
+        ],
+        "edges": [
+          "cl-ad"
+        ]
+      },
+      "nodeStates": {
+        "adapter": {
+          "status": "active"
+        }
+      },
+      "edgeStates": {},
+      "packets": [
+        {
+          "edge": "cl-ad",
+          "shape": "envelope",
+          "label": "charge(1999, \"TRY\")",
+          "durationMs": 1000
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a1",
+          "x": 130,
+          "y": 420,
+          "text": {
+            "tr": "bağımlılık: yalnızca PaymentGateway",
+            "en": "dependency: only PaymentGateway"
+          },
+          "target": "client"
+        }
+      ]
+    },
+    {
+      "id": "translate",
+      "title": {
+        "tr": "2. Adapter çevirir",
+        "en": "2. The adapter translates"
+      },
+      "narration": {
+        "tr": "Adapter kuruşu liraya böler (1999 → 19.99), para birimini SDK'nın beklediği hesap ayarına eşler ve kart token'ını oturumdan alır. Sonra LegacyBankSdk.makePayment(19.99, token) çağırır. Tüm çeviri mantığı tek sınıfta toplanır.",
+        "en": "The adapter divides minor units into lira (1999 → 19.99), maps the currency to the SDK account setting and fetches the card token from the session. Then it calls LegacyBankSdk.makePayment(19.99, token). All translation logic lives in one class."
+      },
+      "durationMs": 3500,
+      "highlight": {
+        "nodes": [
+          "adapter",
+          "adaptee"
+        ],
+        "edges": [
+          "ad-sdk"
+        ]
+      },
+      "nodeStates": {
+        "adaptee": {
+          "status": "active"
+        },
+        "adapter": {
+          "badge": "÷100"
+        }
+      },
+      "edgeStates": {},
+      "packets": [
+        {
+          "edge": "ad-sdk",
+          "shape": "envelope",
+          "label": "makePayment(19.99, token)",
+          "durationMs": 1000
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a2",
+          "x": 500,
+          "y": 170,
+          "text": {
+            "tr": "kuruş → lira, Result ← Receipt: çeviri tek yerde",
+            "en": "minor → lira, Result ← Receipt: translation in one place"
+          },
+          "tone": "info",
+          "target": "adapter"
+        }
+      ]
+    },
+    {
+      "id": "return",
+      "title": {
+        "tr": "3. Yanıt geri çevrilir",
+        "en": "3. The response is translated back"
+      },
+      "narration": {
+        "tr": "SDK bir Receipt nesnesi döner (status: \"00\", refNo). Adapter bunu istemcinin anladığı Result'a çevirir: { ok: true, paymentId: refNo }. Yarın SDK değişirse yalnızca adapter değişir; CheckoutService ve testleri aynı kalır.",
+        "en": "The SDK returns a Receipt (status: \"00\", refNo). The adapter maps it to the Result the client understands: { ok: true, paymentId: refNo }. If the SDK changes tomorrow only the adapter changes; CheckoutService and its tests stay the same."
+      },
+      "durationMs": 3500,
+      "highlight": {
+        "nodes": [
+          "client"
+        ],
+        "edges": [
+          "ad-sdk",
+          "cl-ad"
+        ]
+      },
+      "nodeStates": {
+        "adapter": {
+          "badge": "",
+          "status": "success"
+        },
+        "adaptee": {
+          "status": "idle"
+        }
+      },
+      "edgeStates": {},
+      "packets": [
+        {
+          "edge": "ad-sdk",
+          "direction": "backward",
+          "color": "success",
+          "label": "Receipt{status:\"00\"}",
+          "durationMs": 900
+        },
+        {
+          "edge": "cl-ad",
+          "startAt": 1000,
+          "direction": "backward",
+          "color": "success",
+          "label": "Result{ok:true}",
+          "durationMs": 900
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a3",
+          "x": 850,
+          "y": 420,
+          "text": {
+            "tr": "SDK değişirse: yalnızca adapter yeniden yazılır",
+            "en": "SDK changes: only the adapter is rewritten"
+          },
+          "tone": "success",
+          "target": "adaptee"
+        }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": [
+    "adapter",
+    "structural"
+  ]
+}

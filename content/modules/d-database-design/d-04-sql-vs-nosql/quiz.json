@@ -1,0 +1,110 @@
+{
+  "id": "d-04-sql-vs-nosql-quiz",
+  "title": { "tr": "SQL vs NoSQL Quiz", "en": "SQL vs NoSQL Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Bir sosyal uygulamada 'takip ettiğim kişilerin takip ettiklerinin beğendiği gönderiler' sorgusu en verimli hangi modelde çalışır?",
+        "en": "In a social app, in which model does the query 'posts liked by the people followed by the people I follow' run most efficiently?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Key-value", "en": "Key-value" } },
+        { "id": "b", "text": { "tr": "Wide-column", "en": "Wide-column" } },
+        { "id": "c", "text": { "tr": "Time-series", "en": "Time-series" } },
+        { "id": "d", "text": { "tr": "Graph", "en": "Graph" } }
+      ],
+      "correct": ["d"],
+      "explanation": {
+        "tr": "Bu üç atlamalı bir ilişki gezintisidir; graf veritabanı ilişkileri işaretçi olarak sakladığı için (index-free adjacency) atlama sayısıyla orantılı çalışır. Key-value'da yalnızca anahtarla erişilir, wide-column partition key ister, time-series zaman damgalı ölçümler içindir.",
+        "en": "This is a three-hop relationship traversal; a graph database stores relationships as pointers (index-free adjacency) so cost scales with the number of hops. Key-value only offers key access, wide-column requires a partition key, and time-series is for timestamped measurements."
+      },
+      "difficulty": "easy",
+      "concepts": ["graph-database"]
+    },
+    {
+      "id": "q2",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Doküman veritabanında bir gönderi dokümanına hangi verileri GÖMMEK (embed) uygundur? (Birden fazla seçin)",
+        "en": "In a document database, which data is appropriate to EMBED inside a post document? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Yazarın adı ve avatar URL'si (küçük özet)", "en": "The author's name and avatar URL (a small summary)" } },
+        { "id": "b", "text": { "tr": "Gönderiyi beğenen 1.2 milyon kullanıcının tam listesi", "en": "The full list of 1.2 million users who liked the post" } },
+        { "id": "c", "text": { "tr": "Son 20 yorum", "en": "The latest 20 comments" } },
+        { "id": "d", "text": { "tr": "Beğeni sayacı (likeCount)", "en": "The like counter (likeCount)" } }
+      ],
+      "correct": ["a", "c", "d"],
+      "explanation": {
+        "tr": "Gömme kuralı: birlikte okunan, sınırlı büyüyen ve bağımsız güncellenmeyen veri gömülür. Yazar özeti, son 20 yorum ve sayaç bu kurala uyar. Beğenenlerin tam listesi sınırsız büyür ve dokümanı (16 MB sınırı, yazma maliyeti) şişirir; ayrı koleksiyonda referansla tutulur.",
+        "en": "The embedding rule: embed data that is read together, grows within bounds and is not updated independently. The author summary, latest 20 comments and the counter fit. The full list of likers grows without bound and bloats the document (16 MB limit, write cost); it belongs in a separate collection by reference."
+      },
+      "difficulty": "medium",
+      "concepts": ["document-store", "access-pattern-modeling"]
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": {
+        "tr": "Cassandra'da timeline_by_user(user_id, posted_at, post_id) tablosunda partition key user_id'dir. Hangi sorgu bu tabloda verimli çalışmaz?",
+        "en": "In Cassandra's timeline_by_user(user_id, posted_at, post_id) with partition key user_id, which query does NOT run efficiently on this table?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Tüm kullanıcılar arasında son 1 saatte atılan gönderiler", "en": "Posts from all users in the last hour" } },
+        { "id": "b", "text": { "tr": "Belirli bir kullanıcının son 50 gönderisi", "en": "A given user's latest 50 posts" } },
+        { "id": "c", "text": { "tr": "Belirli bir kullanıcının belirli tarih aralığındaki gönderileri", "en": "A given user's posts within a date range" } },
+        { "id": "d", "text": { "tr": "Belirli bir kullanıcının en eski gönderisi", "en": "A given user's oldest post" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "Wide-column depolarda her sorgu partition key ile başlamalıdır; 'tüm kullanıcılar' demek tüm partition'ları taramak demektir (ALLOW FILTERING ile bile üretimde kabul edilemez). Bu sorgu için zaman dilimini partition key yapan ayrı bir tablo (posts_by_hour) tasarlanır: sorgu başına tablo.",
+        "en": "In wide-column stores every query must start with the partition key; 'all users' means scanning every partition (unacceptable in production even with ALLOW FILTERING). That query needs a separate table whose partition key is the time bucket (posts_by_hour): one table per query."
+      },
+      "difficulty": "medium",
+      "concepts": ["wide-column-store", "access-pattern-modeling"]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Doküman veritabanı kullanmak, uygulamayı şema yönetimi ve veri göçü (migration) sorumluluğundan kurtarır.",
+        "en": "Using a document database frees the application from schema management and data migration responsibilities."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "Yanlış. Şema ortadan kalkmaz, veritabanından uygulama koduna taşınır (schema-on-read). Eski dokümanları bugünkü kodun okuyabilmesi için alan sürümleme, varsayılan değerler ve arka plan göç işleri gerekir; bu sorumluluk azalmaz, yer değiştirir.",
+        "en": "False. The schema does not disappear; it moves from the database into application code (schema-on-read). Reading old documents with today's code requires field versioning, defaults and background migration jobs; the responsibility is relocated, not reduced."
+      },
+      "difficulty": "easy",
+      "concepts": ["schema-on-read", "document-store"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "Üç replikalı bir Cassandra kümesinde her okumanın en son commit edilmiş yazmayı görmesini garanti etmek için W ve R değerleri ne olmalıdır?",
+        "en": "In a three-replica Cassandra cluster, what should W and R be to guarantee every read sees the latest committed write?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "W=1, R=1", "en": "W=1, R=1" } },
+        { "id": "b", "text": { "tr": "W=2, R=2", "en": "W=2, R=2" } },
+        { "id": "c", "text": { "tr": "W=1, R=2", "en": "W=1, R=2" } },
+        { "id": "d", "text": { "tr": "W=3, R=0", "en": "W=3, R=0" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Quorum koşulu W + R > N'dir; N=3 için W=2, R=2 (2+2=4>3) her okuma kümesinin en az bir güncel replikayı içermesini garanti eder. W=1,R=1 ve W=1,R=2 koşulu sağlamaz (bayat okuma mümkün); W=3,R=0 geçersizdir ve tek replika düşünce yazmayı durdurur.",
+        "en": "The quorum condition is W + R > N; for N=3, W=2, R=2 (2+2=4>3) guarantees every read set contains at least one up-to-date replica. W=1,R=1 and W=1,R=2 fail the condition (stale reads possible); W=3,R=0 is invalid and halts writes when a single replica is down."
+      },
+      "difficulty": "hard",
+      "concepts": ["cap-theorem"]
+    }
+  ]
+}

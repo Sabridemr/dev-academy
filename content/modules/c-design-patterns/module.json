@@ -1,0 +1,13 @@
+{
+  "id": "c-design-patterns",
+  "slug": "design-patterns",
+  "code": "C",
+  "order": 3,
+  "title": { "tr": "Tasarım Kalıpları", "en": "Design Patterns" },
+  "description": {
+    "tr": "GoF kalıpları ve dağıtık sistem kalıpları: UML, animasyonlu nesne etkileşimi, üç dilde kod.",
+    "en": "GoF and distributed-system patterns: UML, animated object interaction, code in three languages."
+  },
+  "icon": "puzzle",
+  "color": "#f59e0b"
+}

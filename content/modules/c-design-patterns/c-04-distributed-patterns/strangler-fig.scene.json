@@ -1,0 +1,507 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "c-04-strangler-fig",
+  "title": {
+    "tr": "Strangler Fig: Monoliti Yol Yol Boğmak",
+    "en": "Strangler Fig: Strangling the Monolith Route by Route"
+  },
+  "summary": {
+    "tr": "Monolitin önüne bir facade konur; /products yolu önce %10, sonra %100 yeni servise yönlendirilir; veri senkronize edilir; monolitteki kod kaldırılır; facade sonunda kalkar.",
+    "en": "A facade goes in front of the monolith; the /products route is sent to the new service first at 10%, then 100%; data is synced; the monolith's code is removed; eventually the facade itself goes."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda istemciler, ortada StranglerFacade yönlendiricisi, sağda üstte LegacyMonolith ve altta yeni CatalogService, en altta veri senkronizasyon işi. Başta tüm trafik monolite gider. /products yolu için yüzde 10 trafik yeni servise açılır, sonra yüzde 100'e çıkarılır. Veri senkronizasyonu kesilir, monolitteki ürün kodu silinir. Son adımda monolit küçülmüş, facade'ın görevi bitmiştir.",
+      "en": "Clients on the left, the StranglerFacade router in the middle, LegacyMonolith top right and the new CatalogService bottom right, a data sync job at the bottom. Initially all traffic goes to the monolith. For /products, 10% of traffic is opened to the new service, then raised to 100%. Data sync is cut, the product code in the monolith is deleted. In the last step the monolith has shrunk and the facade's job is done."
+    }
+  },
+  "canvas": {
+    "width": 1000,
+    "height": 600
+  },
+  "nodes": [
+    {
+      "id": "client",
+      "kind": "generic",
+      "label": "Clients",
+      "x": 100,
+      "y": 300,
+      "w": 120,
+      "h": 60
+    },
+    {
+      "id": "facade",
+      "kind": "generic",
+      "label": "StranglerFacade",
+      "x": 400,
+      "y": 300,
+      "w": 220,
+      "h": 80,
+      "sublabel": {
+        "tr": "/products → legacy 100%",
+        "en": "/products → legacy 100%"
+      }
+    },
+    {
+      "id": "legacy",
+      "kind": "generic",
+      "label": "LegacyMonolith",
+      "x": 820,
+      "y": 140,
+      "w": 220,
+      "h": 70,
+      "sublabel": {
+        "tr": "products + orders + users",
+        "en": "products + orders + users"
+      }
+    },
+    {
+      "id": "newsvc",
+      "kind": "generic",
+      "label": "CatalogService",
+      "x": 820,
+      "y": 400,
+      "w": 200,
+      "h": 70,
+      "sublabel": {
+        "tr": "henüz boş",
+        "en": "empty yet"
+      }
+    },
+    {
+      "id": "sync",
+      "kind": "generic",
+      "label": "CDC / SyncJob",
+      "x": 560,
+      "y": 520,
+      "w": 200,
+      "h": 56,
+      "sublabel": {
+        "tr": "legacy-db → catalog-db",
+        "en": "legacy-db → catalog-db"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "c-f",
+      "from": "client",
+      "to": "facade",
+      "kind": "request",
+      "label": "GET /products"
+    },
+    {
+      "id": "f-legacy",
+      "from": "facade",
+      "to": "legacy",
+      "kind": "request",
+      "label": "100%"
+    },
+    {
+      "id": "f-new",
+      "from": "facade",
+      "to": "newsvc",
+      "kind": "request",
+      "label": "0%"
+    },
+    {
+      "id": "sync-new",
+      "from": "sync",
+      "to": "newsvc",
+      "kind": "replication",
+      "style": "dashed",
+      "curvature": 0.2
+    },
+    {
+      "id": "legacy-sync",
+      "from": "legacy",
+      "to": "sync",
+      "kind": "replication",
+      "style": "dashed",
+      "curvature": 0.2
+    }
+  ],
+  "steps": [
+    {
+      "id": "facade",
+      "title": {
+        "tr": "1. Önce facade, hiçbir şey değişmeden",
+        "en": "1. First the facade, nothing else changes"
+      },
+      "narration": {
+        "tr": "Monolitin önüne bir yönlendirici (API gateway, reverse proxy) konur. Tüm yollar hâlâ monolite gider; istemciler fark etmez. Bu adım tek başına risksizdir ve sonraki her adımın kontrol noktasıdır.",
+        "en": "A router (API gateway, reverse proxy) is placed in front of the monolith. All routes still go to the monolith; clients notice nothing. This step alone is risk-free and becomes the control point for every step that follows."
+      },
+      "durationMs": 3500,
+      "inherit": false,
+      "highlight": {
+        "nodes": [
+          "facade",
+          "legacy"
+        ],
+        "edges": [
+          "c-f",
+          "f-legacy"
+        ]
+      },
+      "nodeStates": {
+        "facade": {
+          "status": "active"
+        },
+        "legacy": {
+          "status": "active"
+        },
+        "newsvc": {
+          "status": "muted"
+        },
+        "sync": {
+          "visible": false
+        }
+      },
+      "edgeStates": {
+        "f-new": {
+          "status": "muted"
+        },
+        "sync-new": {
+          "visible": false
+        },
+        "legacy-sync": {
+          "visible": false
+        }
+      },
+      "packets": [
+        {
+          "edge": "c-f",
+          "shape": "envelope",
+          "durationMs": 700,
+          "repeat": 3,
+          "repeatGapMs": 300
+        },
+        {
+          "edge": "f-legacy",
+          "startAt": 700,
+          "shape": "envelope",
+          "durationMs": 700,
+          "repeat": 3,
+          "repeatGapMs": 300
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a1",
+          "x": 400,
+          "y": 170,
+          "text": {
+            "tr": "yönlendirme kuralı = tablo satırı; geri dönüş 1 satır",
+            "en": "routing rule = a table row; rollback is one row"
+          },
+          "target": "facade"
+        }
+      ]
+    },
+    {
+      "id": "build",
+      "title": {
+        "tr": "2. Yeni servisi kur, veriyi akıt",
+        "en": "2. Build the new service, stream the data"
+      },
+      "narration": {
+        "tr": "CatalogService yazılır ve kendi veritabanını alır. Geçiş süresince legacy-db'deki ürün değişiklikleri CDC (Debezium) ya da zamanlanmış senkronizasyonla catalog-db'ye akar. Henüz trafik yok; gölge trafik (shadow) ile yanıtlar karşılaştırılabilir.",
+        "en": "CatalogService is written and gets its own database. During migration, product changes in legacy-db flow to catalog-db via CDC (Debezium) or scheduled sync. No traffic yet; shadow traffic can be used to compare responses."
+      },
+      "durationMs": 4000,
+      "highlight": {
+        "nodes": [
+          "newsvc",
+          "sync"
+        ],
+        "edges": [
+          "legacy-sync",
+          "sync-new"
+        ]
+      },
+      "nodeStates": {
+        "newsvc": {
+          "status": "active",
+          "sublabel": {
+            "tr": "catalog-db dolduruluyor",
+            "en": "catalog-db filling"
+          }
+        },
+        "sync": {
+          "visible": true,
+          "status": "active"
+        }
+      },
+      "edgeStates": {
+        "sync-new": {
+          "visible": true,
+          "status": "active"
+        },
+        "legacy-sync": {
+          "visible": true,
+          "status": "active"
+        }
+      },
+      "packets": [
+        {
+          "edge": "legacy-sync",
+          "shape": "square",
+          "color": "accent",
+          "durationMs": 900,
+          "repeat": 2,
+          "repeatGapMs": 400
+        },
+        {
+          "edge": "sync-new",
+          "startAt": 900,
+          "shape": "square",
+          "color": "accent",
+          "durationMs": 900,
+          "repeat": 2,
+          "repeatGapMs": 400
+        }
+      ],
+      "annotations": []
+    },
+    {
+      "id": "canary",
+      "title": {
+        "tr": "3. %10 canary",
+        "en": "3. 10% canary"
+      },
+      "narration": {
+        "tr": "Facade /products isteklerinin %10'unu yeni servise gönderir. Hata oranı, gecikme ve iş metrikleri (sepete ekleme oranı) karşılaştırılır. Sorun olursa yüzdeyi 0 yapmak saniyeler sürer.",
+        "en": "The facade sends 10% of /products requests to the new service. Error rate, latency and business metrics (add-to-cart rate) are compared. If anything is wrong, setting the percentage back to 0 takes seconds."
+      },
+      "durationMs": 4500,
+      "highlight": {
+        "nodes": [
+          "facade",
+          "newsvc"
+        ],
+        "edges": [
+          "f-new",
+          "f-legacy"
+        ]
+      },
+      "nodeStates": {
+        "facade": {
+          "sublabel": {
+            "tr": "/products → new 10% · legacy 90%",
+            "en": "/products → new 10% · legacy 90%"
+          }
+        },
+        "newsvc": {
+          "status": "success",
+          "badge": "10%",
+          "sublabel": {
+            "tr": "p99 ok · hata 0",
+            "en": "p99 ok · errors 0"
+          }
+        }
+      },
+      "edgeStates": {
+        "f-new": {
+          "status": "active",
+          "label": "10%"
+        },
+        "f-legacy": {
+          "label": "90%"
+        }
+      },
+      "packets": [
+        {
+          "edge": "c-f",
+          "shape": "envelope",
+          "durationMs": 500,
+          "repeat": 5,
+          "repeatGapMs": 250
+        },
+        {
+          "edge": "f-legacy",
+          "startAt": 500,
+          "shape": "envelope",
+          "durationMs": 600,
+          "repeat": 4,
+          "repeatGapMs": 300
+        },
+        {
+          "edge": "f-new",
+          "startAt": 2100,
+          "shape": "envelope",
+          "color": "success",
+          "durationMs": 600
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a3",
+          "x": 820,
+          "y": 500,
+          "text": {
+            "tr": "metrikler eşit mi? değilse %0",
+            "en": "metrics equal? if not, back to 0%"
+          },
+          "tone": "info",
+          "target": "newsvc"
+        }
+      ]
+    },
+    {
+      "id": "full",
+      "title": {
+        "tr": "4. %100 ve monolitten kodu sök",
+        "en": "4. 100% and remove the code from the monolith"
+      },
+      "narration": {
+        "tr": "Kademeli olarak %50, %100. Artık yazmalar da yeni serviste olduğundan senkronizasyon kesilir ve yön ters çevrilmez. Monolitteki ürün modülü ve tabloları silinir: monolit küçülür, build hızlanır.",
+        "en": "Gradually 50%, 100%. Since writes now land in the new service too, sync is cut (not reversed). The product module and tables in the monolith are deleted: the monolith shrinks, builds get faster."
+      },
+      "durationMs": 4500,
+      "highlight": {
+        "nodes": [
+          "newsvc",
+          "legacy"
+        ],
+        "edges": [
+          "f-new"
+        ]
+      },
+      "nodeStates": {
+        "facade": {
+          "sublabel": {
+            "tr": "/products → new 100%",
+            "en": "/products → new 100%"
+          }
+        },
+        "newsvc": {
+          "badge": "100%",
+          "sublabel": {
+            "tr": "catalog-db · tek yazar",
+            "en": "catalog-db · sole writer"
+          }
+        },
+        "legacy": {
+          "status": "idle",
+          "sublabel": {
+            "tr": "orders + users (products silindi)",
+            "en": "orders + users (products removed)"
+          }
+        },
+        "sync": {
+          "status": "muted",
+          "sublabel": {
+            "tr": "kapatıldı",
+            "en": "turned off"
+          }
+        }
+      },
+      "edgeStates": {
+        "f-new": {
+          "label": "100%"
+        },
+        "f-legacy": {
+          "status": "idle",
+          "label": {
+            "tr": "diğer yollar",
+            "en": "other routes"
+          }
+        },
+        "sync-new": {
+          "status": "muted"
+        },
+        "legacy-sync": {
+          "status": "muted"
+        }
+      },
+      "packets": [
+        {
+          "edge": "c-f",
+          "shape": "envelope",
+          "durationMs": 500,
+          "repeat": 4,
+          "repeatGapMs": 300
+        },
+        {
+          "edge": "f-new",
+          "startAt": 500,
+          "shape": "envelope",
+          "color": "success",
+          "durationMs": 600,
+          "repeat": 4,
+          "repeatGapMs": 300
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a4",
+          "x": 820,
+          "y": 40,
+          "text": {
+            "tr": "kodu silmeyi unutan ekipler iki sistemi sonsuza dek taşır",
+            "en": "teams that forget to delete code carry two systems forever"
+          },
+          "tone": "warning",
+          "target": "legacy"
+        }
+      ]
+    },
+    {
+      "id": "repeat",
+      "title": {
+        "tr": "5. Tekrarla; incir ağacı kuruyana kadar",
+        "en": "5. Repeat until the fig tree withers"
+      },
+      "narration": {
+        "tr": "Sıradaki yetenek (/search, /orders) için aynı döngü: kur → senkronize et → canary → %100 → sil. Monolit kuruyup bittiğinde facade'ın yönlendirme tablosu da sadeleşir; gateway kalır, \"strangler\" rolü biter. Büyük patlama yok, her adım geri alınabilir.",
+        "en": "The same loop for the next capability (/search, /orders): build → sync → canary → 100% → delete. When the monolith has withered away, the facade's routing table simplifies too; the gateway stays, the \"strangler\" role ends. No big bang, every step reversible."
+      },
+      "durationMs": 4000,
+      "highlight": {
+        "nodes": [
+          "facade"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "facade": {
+          "status": "success",
+          "sublabel": {
+            "tr": "/products → new · /search → new 10% · /orders → legacy",
+            "en": "/products → new · /search → new 10% · /orders → legacy"
+          }
+        },
+        "legacy": {
+          "sublabel": {
+            "tr": "küçülüyor...",
+            "en": "shrinking..."
+          }
+        }
+      },
+      "edgeStates": {},
+      "packets": [],
+      "annotations": [
+        {
+          "id": "a5",
+          "x": 400,
+          "y": 170,
+          "text": {
+            "tr": "kur → senkronize et → canary → %100 → sil",
+            "en": "build → sync → canary → 100% → delete"
+          },
+          "tone": "success",
+          "target": "facade"
+        }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": [
+    "strangler-fig",
+    "migration",
+    "monolith"
+  ]
+}

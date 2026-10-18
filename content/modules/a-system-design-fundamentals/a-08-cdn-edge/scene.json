@@ -1,0 +1,196 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "a-08-cdn-pop-miss-hit-edge",
+  "title": { "tr": "CDN: PoP'ta Miss, Hit ve Edge Fonksiyonu", "en": "CDN: Miss, Hit and an Edge Function at the PoP" },
+  "summary": {
+    "tr": "İstanbul'daki ilk kullanıcının isteğinin PoP'ta cache miss ile origin shield üzerinden Virginia'daki origin'e gitmesi; ikinci kullanıcının aynı PoP'tan hit alması; bir edge fonksiyonunun görseli origin'e dokunmadan yeniden boyutlandırması; purge ile cache'in temizlenmesi ve stale-while-revalidate davranışı.",
+    "en": "The first user's request from Istanbul missing at the PoP and travelling through the origin shield to the origin in Virginia; a second user hitting the same PoP's cache; an edge function resizing an image without touching the origin; a purge clearing the cache and stale-while-revalidate behaviour."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda İstanbul'dan iki kullanıcı ve Berlin'den bir kullanıcı; ortada İstanbul PoP'u ve Frankfurt PoP'u, her birinde cache ve edge fonksiyonu; sağda origin shield ve en sağda Virginia'daki origin sunucusu. İlk istek İstanbul PoP'unda miss olur, shield'e gider, shield origin'den dosyayı alır (150 ms), yol boyunca cache'lenir. İkinci kullanıcı aynı dosyayı ister ve PoP'tan 8 ms'de hit alır. Berlin kullanıcısı Frankfurt PoP'unda miss yaşar ama shield'de hit olur; origin'e gidilmez. Edge fonksiyonu, genişlik parametreli görsel isteğini PoP'ta yeniden boyutlandırıp döner. Son adımda purge komutu tüm PoP'lardaki kopyayı siler ve sonraki istek stale-while-revalidate ile eski kopyayı anında alırken arka planda yenisi çekilir.",
+      "en": "Two users from Istanbul and one from Berlin on the left; the Istanbul PoP and the Frankfurt PoP in the middle, each with a cache and an edge function; an origin shield on the right and the origin server in Virginia at the far right. The first request misses at the Istanbul PoP, goes to the shield, the shield fetches the file from the origin (150 ms) and it is cached along the way. The second user asks for the same file and hits the PoP in 8 ms. The Berlin user misses at the Frankfurt PoP but hits the shield; the origin is not contacted. The edge function resizes an image request with a width parameter at the PoP and returns it. In the final step a purge removes the copy from all PoPs and the next request receives the stale copy immediately via stale-while-revalidate while a fresh one is fetched in the background."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "u1", "kind": "user", "label": { "tr": "Kullanıcı 1 · İstanbul", "en": "User 1 · Istanbul" }, "sublabel": "GET /img/hero.webp", "x": 110, "y": 120, "w": 150, "h": 64 },
+    { "id": "u2", "kind": "user", "label": { "tr": "Kullanıcı 2 · İstanbul", "en": "User 2 · Istanbul" }, "sublabel": "GET /img/hero.webp", "x": 110, "y": 260, "w": 150, "h": 64 },
+    { "id": "u3", "kind": "user", "label": { "tr": "Kullanıcı 3 · Berlin", "en": "User 3 · Berlin" }, "sublabel": "GET /img/hero.webp", "x": 110, "y": 460, "w": 150, "h": 64 },
+    { "id": "pop-ist", "kind": "cdn", "label": { "tr": "PoP İstanbul", "en": "PoP Istanbul" }, "sublabel": { "tr": "cache: boş", "en": "cache: empty" }, "x": 380, "y": 190, "w": 160, "h": 76 },
+    { "id": "pop-fra", "kind": "cdn", "label": { "tr": "PoP Frankfurt", "en": "PoP Frankfurt" }, "sublabel": { "tr": "cache: boş", "en": "cache: empty" }, "x": 380, "y": 460, "w": 160, "h": 76 },
+    { "id": "shield", "kind": "proxy", "label": "Origin Shield", "sublabel": { "tr": "katmanlı cache · Frankfurt", "en": "tiered cache · Frankfurt" }, "x": 640, "y": 320, "w": 160, "h": 76 },
+    { "id": "origin", "kind": "server", "label": "Origin", "sublabel": { "tr": "Virginia · RTT 150 ms", "en": "Virginia · RTT 150 ms" }, "x": 890, "y": 320, "w": 140, "h": 80 }
+  ],
+  "edges": [
+    { "id": "u1-ist", "from": "u1", "to": "pop-ist", "kind": "request", "label": "RTT 8 ms", "curvature": -0.1 },
+    { "id": "u2-ist", "from": "u2", "to": "pop-ist", "kind": "request", "curvature": 0.1 },
+    { "id": "u3-fra", "from": "u3", "to": "pop-fra", "kind": "request", "label": "RTT 12 ms" },
+    { "id": "ist-shield", "from": "pop-ist", "to": "shield", "kind": "request", "style": "dashed", "curvature": -0.1 },
+    { "id": "fra-shield", "from": "pop-fra", "to": "shield", "kind": "request", "style": "dashed", "curvature": 0.1 },
+    { "id": "shield-origin", "from": "shield", "to": "origin", "kind": "request", "label": "RTT 150 ms" },
+    { "id": "purge", "from": "origin", "to": "shield", "kind": "control", "style": "dotted", "curvature": 0.45, "label": "PURGE" }
+  ],
+  "steps": [
+    {
+      "id": "miss",
+      "title": { "tr": "İlk istek: cache MISS", "en": "First request: cache MISS" },
+      "narration": {
+        "tr": "İstanbul'daki ilk kullanıcı hero.webp ister. Anycast onu 8 ms uzaklıktaki İstanbul PoP'una götürür; PoP TCP ve TLS'i yakından kurar ama dosya cache'inde yoktur: MISS. PoP doğrudan Virginia'ya gitmez; önce origin shield'e sorar.",
+        "en": "The first user in Istanbul requests hero.webp. Anycast takes them to the Istanbul PoP 8 ms away; the PoP terminates TCP and TLS nearby but the file is not in its cache: MISS. The PoP does not go straight to Virginia; it asks the origin shield first."
+      },
+      "durationMs": 3500,
+      "inherit": false,
+      "highlight": { "nodes": ["u1", "pop-ist"], "edges": ["u1-ist", "ist-shield"] },
+      "nodeStates": {
+        "u1": { "status": "active" },
+        "pop-ist": { "status": "warning", "badge": "MISS" },
+        "shield": { "status": "idle", "badge": "" },
+        "origin": { "status": "idle" }
+      },
+      "edgeStates": { "purge": { "visible": false } },
+      "packets": [
+        { "edge": "u1-ist", "shape": "envelope", "label": "GET hero.webp", "durationMs": 700 },
+        { "edge": "ist-shield", "shape": "envelope", "label": "miss → shield", "startAt": 900, "durationMs": 900 }
+      ],
+      "annotations": [
+        { "id": "miss-note", "x": 380, "y": 110, "text": { "tr": "TCP+TLS yakın PoP ile: el sıkışma 8 ms", "en": "TCP+TLS with the nearby PoP: handshakes at 8 ms" }, "tone": "info", "target": "pop-ist" }
+      ]
+    },
+    {
+      "id": "origin-fetch",
+      "title": { "tr": "Shield → origin: dosya bir kez üretilir", "en": "Shield → origin: the file is produced once" },
+      "narration": {
+        "tr": "Shield'de de yok. Shield origin'e gider (150 ms RTT), dosyayı Cache-Control: public, max-age=86400 başlığıyla alır ve saklar. Yanıt İstanbul PoP'una, oradan kullanıcıya iner; her katman kendi kopyasını tutar. İlk kullanıcı yaklaşık 200 ms bekledi — bedeli o ödedi.",
+        "en": "Not in the shield either. The shield goes to the origin (150 ms RTT), receives the file with Cache-Control: public, max-age=86400 and stores it. The response flows down to the Istanbul PoP and on to the user; every layer keeps a copy. The first user waited about 200 ms — they paid the price."
+      },
+      "durationMs": 5000,
+      "highlight": { "nodes": ["shield", "origin", "pop-ist"], "edges": ["shield-origin", "ist-shield", "u1-ist"] },
+      "nodeStates": {
+        "shield": { "status": "active", "badge": "MISS" },
+        "origin": { "status": "busy", "badge": "1 istek" }
+      },
+      "edgeStates": { "shield-origin": { "status": "active" } },
+      "packets": [
+        { "edge": "shield-origin", "shape": "envelope", "label": "GET hero.webp", "durationMs": 1100 },
+        { "edge": "shield-origin", "shape": "square", "direction": "backward", "color": "success", "label": "200 · max-age=86400", "startAt": 1300, "durationMs": 1100 },
+        { "edge": "ist-shield", "shape": "square", "direction": "backward", "color": "success", "label": "store", "startAt": 2500, "durationMs": 800 },
+        { "edge": "u1-ist", "shape": "square", "direction": "backward", "color": "success", "label": "200 · X-Cache: MISS", "startAt": 3400, "durationMs": 700 }
+      ],
+      "annotations": [
+        { "id": "fetch-note", "x": 890, "y": 420, "text": { "tr": "Origin bu dosyayı bir kez verir", "en": "The origin serves this file once" }, "tone": "warning", "target": "origin" },
+        { "id": "ttl-note", "x": 640, "y": 230, "text": { "tr": "shield + PoP: kopya saklandı, TTL 24 s", "en": "shield + PoP: copy stored, TTL 24 h" }, "tone": "success", "target": "shield" }
+      ]
+    },
+    {
+      "id": "hit",
+      "title": { "tr": "İkinci kullanıcı: HIT, 8 ms", "en": "Second user: HIT, 8 ms" },
+      "narration": {
+        "tr": "Aynı şehirden ikinci kullanıcı aynı dosyayı ister. PoP cache'inde taze kopya var: X-Cache: HIT, Age: 42. Yanıt 8 ms'de döner; ne shield ne origin haberdar olur. Bir milyon kullanıcı için origin yükü hâlâ 1 istektir.",
+        "en": "A second user from the same city asks for the same file. The PoP has a fresh copy: X-Cache: HIT, Age: 42. The response returns in 8 ms; neither shield nor origin is involved. For a million users the origin load is still 1 request."
+      },
+      "durationMs": 3500,
+      "highlight": { "nodes": ["u2", "pop-ist"], "edges": ["u2-ist"] },
+      "nodeStates": {
+        "u1": { "status": "idle" },
+        "u2": { "status": "active" },
+        "pop-ist": { "status": "success", "badge": "HIT", "sublabel": { "tr": "cache: hero.webp (Age 42)", "en": "cache: hero.webp (Age 42)" } },
+        "shield": { "status": "idle", "badge": "" },
+        "origin": { "status": "idle", "badge": "1 istek" }
+      },
+      "edgeStates": { "shield-origin": { "status": "idle" }, "ist-shield": { "status": "idle" } },
+      "packets": [
+        { "edge": "u2-ist", "shape": "envelope", "label": "GET hero.webp", "durationMs": 700 },
+        { "edge": "u2-ist", "shape": "square", "direction": "backward", "color": "success", "label": "200 · X-Cache: HIT", "startAt": 800, "durationMs": 700 }
+      ],
+      "annotations": [
+        { "id": "hit-note", "x": 380, "y": 110, "text": { "tr": "Hit oranı %95+ → origin trafiğin %5'ini görür", "en": "95%+ hit ratio → origin sees 5% of traffic" }, "tone": "success", "target": "pop-ist" }
+      ]
+    },
+    {
+      "id": "shield-hit",
+      "title": { "tr": "Başka PoP, shield'de HIT", "en": "Another PoP, HIT at the shield" },
+      "narration": {
+        "tr": "Berlin'deki kullanıcı Frankfurt PoP'una düşer; bu PoP'un cache'i boştur, MISS. Ama shield'de kopya var: shield 12 ms'de yanıtlar, origin'e yine gidilmez. Shield olmasaydı 300 PoP'un her biri origin'e ayrı miss gönderirdi (thundering herd).",
+        "en": "The user in Berlin lands on the Frankfurt PoP; its cache is empty, MISS. But the shield has a copy: it answers in 12 ms and the origin is again untouched. Without the shield each of 300 PoPs would send its own miss to the origin (thundering herd)."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["u3", "pop-fra", "shield"], "edges": ["u3-fra", "fra-shield"] },
+      "nodeStates": {
+        "u2": { "status": "idle" },
+        "u3": { "status": "active" },
+        "pop-fra": { "status": "warning", "badge": "MISS" },
+        "shield": { "status": "success", "badge": "HIT" }
+      },
+      "edgeStates": { "fra-shield": { "status": "active" } },
+      "packets": [
+        { "edge": "u3-fra", "shape": "envelope", "label": "GET hero.webp", "durationMs": 700 },
+        { "edge": "fra-shield", "shape": "envelope", "label": "miss → shield", "startAt": 800, "durationMs": 800 },
+        { "edge": "fra-shield", "shape": "square", "direction": "backward", "color": "success", "label": "200 (shield HIT)", "startAt": 1700, "durationMs": 800 },
+        { "edge": "u3-fra", "shape": "square", "direction": "backward", "color": "success", "label": "200", "startAt": 2600, "durationMs": 700 }
+      ],
+      "annotations": [
+        { "id": "shield-note", "x": 640, "y": 230, "text": { "tr": "Eş zamanlı miss'ler tek origin isteğine birleşir", "en": "Concurrent misses collapse into one origin request" }, "tone": "info", "target": "shield" }
+      ]
+    },
+    {
+      "id": "edge-fn",
+      "title": { "tr": "Edge fonksiyonu: origin'e dokunmadan iş yap", "en": "Edge function: do work without touching the origin" },
+      "narration": {
+        "tr": "Mobil istemci küçük bir sürüm ister: /img/hero.webp?w=400. İstanbul PoP'unda çalışan edge fonksiyonu cache'teki orijinali alır, 400 px'e yeniden boyutlandırır, sonucu w=400 anahtarıyla cache'ler ve döner. Origin bu isteği hiç görmez. Aynı mekanizma A/B yönlendirme, JWT doğrulama, coğrafi engelleme için kullanılır.",
+        "en": "A mobile client asks for a small version: /img/hero.webp?w=400. The edge function running at the Istanbul PoP takes the cached original, resizes it to 400 px, caches the result under the w=400 key and returns it. The origin never sees this request. The same mechanism serves A/B routing, JWT verification and geo-blocking."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["u2", "pop-ist"], "edges": ["u2-ist"] },
+      "nodeStates": {
+        "u3": { "status": "idle" },
+        "pop-fra": { "status": "idle", "badge": "", "sublabel": { "tr": "cache: hero.webp", "en": "cache: hero.webp" } },
+        "shield": { "status": "idle", "badge": "" },
+        "u2": { "status": "active", "sublabel": "GET /img/hero.webp?w=400" },
+        "pop-ist": { "status": "busy", "badge": "edge fn", "sublabel": { "tr": "resize(hero.webp, 400) → cache", "en": "resize(hero.webp, 400) → cache" } }
+      },
+      "edgeStates": { "fra-shield": { "status": "idle" } },
+      "packets": [
+        { "edge": "u2-ist", "shape": "envelope", "label": "?w=400", "durationMs": 700 },
+        { "edge": "u2-ist", "shape": "square", "direction": "backward", "color": "accent", "label": "200 · 400px · 18 KB", "startAt": 1900, "durationMs": 700 }
+      ],
+      "annotations": [
+        { "id": "fn-note", "x": 380, "y": 110, "text": { "tr": "V8 isolate: soğuk başlangıç ~5 ms, CPU sınırı 50 ms", "en": "V8 isolate: cold start ~5 ms, CPU limit 50 ms" }, "tone": "info", "target": "pop-ist" },
+        { "id": "fn-origin", "x": 890, "y": 420, "text": { "tr": "origin: hâlâ 1 istek", "en": "origin: still 1 request" }, "tone": "success", "target": "origin" }
+      ]
+    },
+    {
+      "id": "purge",
+      "title": { "tr": "Purge ve stale-while-revalidate", "en": "Purge and stale-while-revalidate" },
+      "narration": {
+        "tr": "Tasarım ekibi görseli değiştirir. Sürümlü URL kullanılsaydı purge gerekmezdi; ama bu URL sabit, bu yüzden origin CDN API'sine PURGE tag:hero gönderir ve kopyalar saniyeler içinde tüm PoP'lardan düşer. Sonraki istekte PoP, stale-while-revalidate sayesinde eski kopyayı anında verir ve arka planda shield üzerinden yenisini çeker; kullanıcı 150 ms'lik miss'i hissetmez.",
+        "en": "The design team changes the image. With a versioned URL no purge would be needed; but this URL is fixed, so the origin sends PURGE tag:hero to the CDN API and the copies drop from every PoP within seconds. On the next request the PoP, thanks to stale-while-revalidate, serves the old copy instantly and fetches the new one through the shield in the background; the user never feels the 150 ms miss."
+      },
+      "durationMs": 5500,
+      "highlight": { "nodes": ["origin", "shield", "pop-ist", "pop-fra"], "edges": ["purge", "ist-shield", "shield-origin"] },
+      "nodeStates": {
+        "u2": { "status": "idle", "sublabel": "GET /img/hero.webp" },
+        "origin": { "status": "active", "badge": "PURGE" },
+        "shield": { "status": "warning", "badge": "purged" },
+        "pop-ist": { "status": "warning", "badge": "STALE", "sublabel": { "tr": "eski kopya servis, arkada yenile", "en": "serve stale, revalidate behind" } },
+        "pop-fra": { "status": "warning", "badge": "purged", "sublabel": { "tr": "cache: boş", "en": "cache: empty" } }
+      },
+      "edgeStates": { "purge": { "visible": true, "status": "active" }, "ist-shield": { "status": "active" }, "shield-origin": { "status": "active" } },
+      "packets": [
+        { "edge": "purge", "shape": "diamond", "color": "danger", "label": "PURGE tag:hero", "durationMs": 1000 },
+        { "edge": "u1-ist", "shape": "envelope", "label": "GET hero.webp", "startAt": 1200, "durationMs": 600 },
+        { "edge": "u1-ist", "shape": "square", "direction": "backward", "color": "warning", "label": "200 · stale (anında)", "startAt": 1900, "durationMs": 600 },
+        { "edge": "ist-shield", "shape": "dot", "label": "revalidate", "startAt": 2000, "durationMs": 800 },
+        { "edge": "shield-origin", "shape": "dot", "label": "GET (yeni)", "startAt": 2800, "durationMs": 1000 },
+        { "edge": "shield-origin", "shape": "dot", "direction": "backward", "color": "success", "label": "200 v2", "startAt": 3900, "durationMs": 1000 }
+      ],
+      "annotations": [
+        { "id": "purge-note", "x": 640, "y": 230, "text": { "tr": "Statik varlıkta altın kural: hash'li URL → purge gerekmez", "en": "Golden rule for static assets: hashed URL → no purge needed" }, "tone": "warning", "target": "shield" }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["cdn", "edge", "cache-hit", "cache-miss", "origin-shield", "edge-function"]
+}

@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 520" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Yapısal kalıpların karşılaştırma haritası</title>
+  <desc id="desc">Üstte sarmalayıcı ailesi: Adapter, Decorator, Proxy ve Facade kartları; her biri için arayüz aynı mı farklı mı, amaç ve tipik kullanım. Altta yapı ailesi: Composite ve Bridge. Oklar Decorator ile Proxy arasındaki benzerliği ve Facade ile Adapter arasındaki farkı belirtir.</desc>
+  <defs>
+    <marker id="m-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+    <marker id="m-open" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M 1 1 L 9 5 L 1 9" fill="none" stroke="var(--da-fg, #0f172a)" stroke-width="1.4"/>
+    </marker>
+    <marker id="m-tri" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" orient="auto-start-reverse">
+      <path d="M 1 1 L 11 6 L 1 11 z" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.3"/>
+    </marker>
+    <marker id="m-dia" viewBox="0 0 14 10" refX="1" refY="5" markerWidth="14" markerHeight="10" orient="auto-start-reverse">
+      <path d="M 1 5 L 7 1 L 13 5 L 7 9 z" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.3"/>
+    </marker>
+    <marker id="m-diaf" viewBox="0 0 14 10" refX="1" refY="5" markerWidth="14" markerHeight="10" orient="auto-start-reverse">
+      <path d="M 1 5 L 7 1 L 13 5 L 7 9 z" fill="var(--da-fg, #0f172a)" stroke="var(--da-fg, #0f172a)" stroke-width="1.3"/>
+    </marker>
+    <marker id="m-primary" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-primary, #6366f1)"/>
+    </marker>
+    <marker id="m-danger" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-danger, #ef4444)"/>
+    </marker>
+    <marker id="m-success" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-success, #10b981)"/>
+    </marker>
+    <marker id="m-accent" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-accent, #f59e0b)"/>
+    </marker>
+  </defs>
+  <rect x="20" y="56" width="920" height="190" rx="14" fill="var(--da-primary, #6366f1)" fill-opacity="0.06" stroke="var(--da-primary, #6366f1)" stroke-dasharray="6 6" stroke-width="1"/>
+  <text x="34" y="76" font-size="12" font-weight="600" fill="var(--da-primary, #6366f1)">Sarmalayıcı ailesi: bir nesneyi sarıp çağrıyı iletir. Soru: NEDEN sarıyorsun?</text>
+  <rect x="20" y="270" width="920" height="150" rx="14" fill="var(--da-success, #10b981)" fill-opacity="0.06" stroke="var(--da-success, #10b981)" stroke-dasharray="6 6" stroke-width="1"/>
+  <text x="34" y="290" font-size="12" font-weight="600" fill="var(--da-success, #10b981)">Yapı ailesi: nesneleri ağaç ya da iki eksende düzenler</text>
+  <rect x="40" y="90" width="210" height="140" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-primary, #6366f1)" stroke-width="1.5"/>
+  <rect x="40" y="90" width="210" height="26" rx="10" fill="var(--da-primary, #6366f1)" fill-opacity="0.16"/>
+  <text x="145" y="107" text-anchor="middle" font-size="12.5" font-weight="700" fill="var(--da-fg, #0f172a)">Adapter</text>
+  <text x="50" y="134" font-size="10.5" fill="var(--da-fg, #0f172a)">Arayüz: FARKLI (hedef ≠ adaptee)</text>
+  <text x="50" y="149" font-size="10.5" fill="var(--da-fg, #0f172a)">Amaç: uyumsuz arayüzü çevirmek</text>
+  <text x="50" y="164" font-size="10.5" fill="var(--da-fg, #0f172a)">Davranış: değişmez, çeviri yapar</text>
+  <text x="50" y="179" font-size="10.5" fill="var(--da-muted, #64748b)">Kullanım: 3. parti SDK, legacy</text>
+  <text x="50" y="194" font-size="10.5" fill="var(--da-muted, #64748b)">API, veri biçimi dönüşümü</text>
+  <text x="50" y="209" font-size="10.5" fill="var(--da-muted, #64748b)">İpucu: sonradan, uyum için</text>
+  <rect x="270" y="90" width="210" height="140" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-primary, #6366f1)" stroke-width="1.5"/>
+  <rect x="270" y="90" width="210" height="26" rx="10" fill="var(--da-primary, #6366f1)" fill-opacity="0.16"/>
+  <text x="375" y="107" text-anchor="middle" font-size="12.5" font-weight="700" fill="var(--da-fg, #0f172a)">Decorator</text>
+  <text x="280" y="134" font-size="10.5" fill="var(--da-fg, #0f172a)">Arayüz: AYNI</text>
+  <text x="280" y="149" font-size="10.5" fill="var(--da-fg, #0f172a)">Amaç: davranış eklemek</text>
+  <text x="280" y="164" font-size="10.5" fill="var(--da-fg, #0f172a)">Zincirlenir, sırası önemli</text>
+  <text x="280" y="179" font-size="10.5" fill="var(--da-muted, #64748b)">Kullanım: logging, retry, cache,</text>
+  <text x="280" y="194" font-size="10.5" fill="var(--da-muted, #64748b)">sıkıştırma, yetki katmanı</text>
+  <text x="280" y="209" font-size="10.5" fill="var(--da-muted, #64748b)">İpucu: istemci zinciri kurar</text>
+  <rect x="500" y="90" width="210" height="140" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-primary, #6366f1)" stroke-width="1.5"/>
+  <rect x="500" y="90" width="210" height="26" rx="10" fill="var(--da-primary, #6366f1)" fill-opacity="0.16"/>
+  <text x="605" y="107" text-anchor="middle" font-size="12.5" font-weight="700" fill="var(--da-fg, #0f172a)">Proxy</text>
+  <text x="510" y="134" font-size="10.5" fill="var(--da-fg, #0f172a)">Arayüz: AYNI</text>
+  <text x="510" y="149" font-size="10.5" fill="var(--da-fg, #0f172a)">Amaç: erişimi kontrol etmek</text>
+  <text x="510" y="164" font-size="10.5" fill="var(--da-fg, #0f172a)">Gerçek nesneyi yönetir / gizler</text>
+  <text x="510" y="179" font-size="10.5" fill="var(--da-muted, #64748b)">Türler: virtual, protection,</text>
+  <text x="510" y="194" font-size="10.5" fill="var(--da-muted, #64748b)">caching, remote, smart ref</text>
+  <text x="510" y="209" font-size="10.5" fill="var(--da-muted, #64748b)">İpucu: proxy gerçek nesneyi yaratır</text>
+  <rect x="730" y="90" width="190" height="140" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-accent, #f59e0b)" stroke-width="1.5"/>
+  <rect x="730" y="90" width="190" height="26" rx="10" fill="var(--da-accent, #f59e0b)" fill-opacity="0.16"/>
+  <text x="825" y="107" text-anchor="middle" font-size="12.5" font-weight="700" fill="var(--da-fg, #0f172a)">Facade</text>
+  <text x="740" y="134" font-size="10.5" fill="var(--da-fg, #0f172a)">Arayüz: YENİ, daha basit</text>
+  <text x="740" y="149" font-size="10.5" fill="var(--da-fg, #0f172a)">Amaç: alt sistemi basitleştirmek</text>
+  <text x="740" y="164" font-size="10.5" fill="var(--da-fg, #0f172a)">Birçok nesneyi koordine eder</text>
+  <text x="740" y="179" font-size="10.5" fill="var(--da-muted, #64748b)">Kullanım: modül public API,</text>
+  <text x="740" y="194" font-size="10.5" fill="var(--da-muted, #64748b)">SDK giriş noktası, checkout</text>
+  <text x="740" y="209" font-size="10.5" fill="var(--da-muted, #64748b)">İpucu: iş kuralı barındırmaz</text>
+  <rect x="150" y="300" width="300" height="105" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-success, #10b981)" stroke-width="1.5"/>
+  <rect x="150" y="300" width="300" height="26" rx="10" fill="var(--da-success, #10b981)" fill-opacity="0.16"/>
+  <text x="300" y="317" text-anchor="middle" font-size="12.5" font-weight="700" fill="var(--da-fg, #0f172a)">Composite</text>
+  <text x="160" y="344" font-size="10.5" fill="var(--da-fg, #0f172a)">Yaprak ve dal aynı arayüz; dal çocuk listesi tutar</text>
+  <text x="160" y="359" font-size="10.5" fill="var(--da-fg, #0f172a)">İstemci özyinelemeyi ve türü bilmez</text>
+  <text x="160" y="374" font-size="10.5" fill="var(--da-muted, #64748b)">Kullanım: dosya ağacı, UI bileşen ağacı, org şeması,</text>
+  <text x="160" y="389" font-size="10.5" fill="var(--da-muted, #64748b)">ifade ağacı, menüler</text>
+  <rect x="510" y="300" width="300" height="105" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-success, #10b981)" stroke-width="1.5"/>
+  <rect x="510" y="300" width="300" height="26" rx="10" fill="var(--da-success, #10b981)" fill-opacity="0.16"/>
+  <text x="660" y="317" text-anchor="middle" font-size="12.5" font-weight="700" fill="var(--da-fg, #0f172a)">Bridge</text>
+  <text x="520" y="344" font-size="10.5" fill="var(--da-fg, #0f172a)">İki hiyerarşiyi ayır: soyutlama (ne) × uygulama (nasıl)</text>
+  <text x="520" y="359" font-size="10.5" fill="var(--da-fg, #0f172a)">Bileşimle bağla; N×M yerine N+M sınıf</text>
+  <text x="520" y="374" font-size="10.5" fill="var(--da-muted, #64748b)">Kullanım: rapor × format, şekil × renderer,</text>
+  <text x="520" y="389" font-size="10.5" fill="var(--da-muted, #64748b)">cihaz × uzaktan kumanda, sürücü API'leri</text>
+  <path d="M 480 220 L 500 220" fill="none" stroke="var(--da-muted, #64748b)" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#m-arrow)"/>
+  <text x="490" y="243" text-anchor="middle" font-size="10.5" fill="var(--da-muted, #64748b)">aynı yapı, farklı niyet</text>
+  <text x="480" y="34" text-anchor="middle" font-size="15" font-weight="700" fill="var(--da-fg, #0f172a)">Structural kalıplar: sınıf ve nesneleri daha büyük yapılarda birleştirmek</text>
+  <text x="480" y="446" text-anchor="middle" font-size="12" font-weight="700" fill="var(--da-fg, #0f172a)">Karar akışı</text>
+  <text x="480" y="468" text-anchor="middle" font-size="11" font-weight="400" fill="var(--da-fg, #0f172a)">Arayüz uymuyor → Adapter | Davranış ekle → Decorator | Erişimi yönet → Proxy | Çok karmaşık → Facade</text>
+  <text x="480" y="488" text-anchor="middle" font-size="11" font-weight="400" fill="var(--da-fg, #0f172a)">Parça-bütün hiyerarşisi → Composite | İki bağımsız değişim ekseni → Bridge</text>
+  <text x="480" y="510" text-anchor="middle" font-size="10.5" font-weight="400" fill="var(--da-muted, #64748b)">Ortak risk: her katman bir dolaylılık; hata ayıklarken 6 sarmalayıcı içinden geçmek zorunda kalmayın.</text>
+</svg>

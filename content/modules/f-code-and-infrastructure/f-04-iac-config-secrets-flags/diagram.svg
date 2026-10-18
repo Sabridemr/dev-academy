@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 480" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Kod, altyapı, konfigürasyon, secret ve feature flag katmanları</title>
+  <desc id="desc">Beş yatay şerit. Her şeritte katmanın adı, nerede yaşadığı (Git ve imaj; Git ve Terraform state ve bulut; ConfigMap ve ortam değişkeni; Vault veya Secrets Manager; flag servisi), kimin değiştirdiği ve değişim hızı gösterilir. Sağda bir pod, bu beş kaynaktan nasıl beslendiğini oklarla gösterir. Altta değişim hızı ekseni: altyapı en yavaş, feature flag en hızlı.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+  </defs>
+
+  <!-- Başlıklar -->
+  <g font-size="11" font-weight="600" fill="var(--da-muted, #64748b)">
+    <text x="30" y="36">KATMAN</text>
+    <text x="190" y="36">NEREDE YAŞAR?</text>
+    <text x="470" y="36">KİM / NASIL DEĞİŞTİRİR?</text>
+    <text x="660" y="36">HIZ</text>
+  </g>
+  <line x1="20" y1="44" x2="740" y2="44" stroke="var(--da-border, #cbd5e1)"/>
+
+  <!-- Şeritler -->
+  <g font-size="12" fill="var(--da-fg, #0f172a)">
+    <!-- Altyapı -->
+    <rect x="20" y="56" width="720" height="60" rx="10" fill="var(--da-primary, #6366f1)" opacity="0.08"/>
+    <text x="30" y="80" font-weight="600">Altyapı (IaC)</text>
+    <text x="30" y="98" font-size="10" fill="var(--da-muted, #64748b)">VPC · EKS · RDS · IAM</text>
+    <text x="190" y="80">Git (.tf) → Terraform state (S3) → bulut</text>
+    <text x="190" y="98" font-size="10" fill="var(--da-muted, #64748b)">drift: konsol ≠ state</text>
+    <text x="470" y="80">PR + plan incelemesi → apply</text>
+    <text x="470" y="98" font-size="10" fill="var(--da-muted, #64748b)">yalnızca pipeline, konsol salt okunur</text>
+    <text x="660" y="88">haftalık</text>
+
+    <!-- Kod -->
+    <rect x="20" y="124" width="720" height="60" rx="10" fill="var(--da-primary, #6366f1)" opacity="0.14"/>
+    <text x="30" y="148" font-weight="600">Kod</text>
+    <text x="30" y="166" font-size="10" fill="var(--da-muted, #64748b)">uygulama mantığı</text>
+    <text x="190" y="148">Git → CI → imaj:SHA → registry</text>
+    <text x="190" y="166" font-size="10" fill="var(--da-muted, #64748b)">değişmez artifact</text>
+    <text x="470" y="148">Geliştirici, PR + CI yeşil</text>
+    <text x="470" y="166" font-size="10" fill="var(--da-muted, #64748b)">canary ile kademeli</text>
+    <text x="660" y="156">günde N kez</text>
+
+    <!-- Konfig -->
+    <rect x="20" y="192" width="720" height="60" rx="10" fill="var(--da-success, #10b981)" opacity="0.12"/>
+    <text x="30" y="216" font-weight="600">Konfigürasyon</text>
+    <text x="30" y="234" font-size="10" fill="var(--da-muted, #64748b)">DB host · log seviyesi · URL'ler</text>
+    <text x="190" y="216">Ortam değişkeni · ConfigMap · Parameter Store</text>
+    <text x="190" y="234" font-size="10" fill="var(--da-muted, #64748b)">12-factor: imajın dışında</text>
+    <text x="470" y="216">Pipeline, ortam başına</text>
+    <text x="470" y="234" font-size="10" fill="var(--da-muted, #64748b)">açılışta doğrulanır (fail fast)</text>
+    <text x="660" y="224">deploy'da</text>
+
+    <!-- Secret -->
+    <rect x="20" y="260" width="720" height="60" rx="10" fill="var(--da-danger, #ef4444)" opacity="0.10"/>
+    <text x="30" y="284" font-weight="600">Secret</text>
+    <text x="30" y="302" font-size="10" fill="var(--da-muted, #64748b)">DB parolası · API anahtarı · TLS key</text>
+    <text x="190" y="284">Vault · Secrets Manager (KMS ile şifreli)</text>
+    <text x="190" y="302" font-size="10" fill="var(--da-muted, #64748b)">asla Git, asla imaj, asla log</text>
+    <text x="470" y="284">Kimlikle erişim (IAM rolü / IRSA)</text>
+    <text x="470" y="302" font-size="10" fill="var(--da-muted, #64748b)">otomatik rotasyon, denetim kaydı</text>
+    <text x="660" y="292">30–90 gün</text>
+
+    <!-- Flag -->
+    <rect x="20" y="328" width="720" height="60" rx="10" fill="var(--da-accent, #f59e0b)" opacity="0.14"/>
+    <text x="30" y="352" font-weight="600">Feature flag</text>
+    <text x="30" y="370" font-size="10" fill="var(--da-muted, #64748b)">özellik kime açık?</text>
+    <text x="190" y="352">Flag servisi (AppConfig · LaunchDarkly)</text>
+    <text x="190" y="370" font-size="10" fill="var(--da-muted, #64748b)">SDK bellekte tutar, 5 sn'de yeniler</text>
+    <text x="470" y="352">Ürün / ops, UI'dan — deploy yok</text>
+    <text x="470" y="370" font-size="10" fill="var(--da-muted, #64748b)">%1 → %10 → %100 · kill switch</text>
+    <text x="660" y="360">saniyeler</text>
+  </g>
+
+  <!-- Hız ekseni -->
+  <path d="M 700 400 L 700 60" stroke="var(--da-muted, #64748b)" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="712" y="70" font-size="9" fill="var(--da-muted, #64748b)">yavaş</text>
+  <text x="712" y="395" font-size="9" fill="var(--da-muted, #64748b)">hızlı</text>
+
+  <!-- Pod: beş kaynaktan beslenir -->
+  <rect x="790" y="140" width="150" height="170" rx="14" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5"/>
+  <text x="865" y="165" font-size="13" font-weight="600" fill="var(--da-fg, #0f172a)" text-anchor="middle">pod cart-service</text>
+  <g font-size="10" fill="var(--da-fg, #0f172a)">
+    <text x="802" y="190">image: cart:a1b2c3d</text>
+    <text x="802" y="210">env: DB_HOST=…</text>
+    <text x="802" y="230">secret: IRSA → SM</text>
+    <text x="802" y="250">flags: SDK cache</text>
+    <text x="802" y="270">node: EC2 (Terraform)</text>
+    <text x="802" y="295" fill="var(--da-muted, #64748b)">hepsi dışarıdan enjekte</text>
+  </g>
+  <g stroke="var(--da-border, #cbd5e1)" stroke-width="1.5" fill="none" marker-end="url(#arrow)">
+    <path d="M 740 86 C 770 86, 775 262, 788 268"/>
+    <path d="M 740 154 C 765 154, 770 185, 788 186"/>
+    <path d="M 740 222 C 765 222, 770 206, 788 206"/>
+    <path d="M 740 290 C 765 290, 770 226, 788 226"/>
+    <path d="M 740 358 C 770 358, 775 248, 788 246"/>
+  </g>
+
+  <!-- Alt not -->
+  <rect x="20" y="412" width="920" height="50" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+  <text x="480" y="433" font-size="11" fill="var(--da-fg, #0f172a)" text-anchor="middle">Ortak kural: hiçbiri elle değiştirilmez. Tanım → inceleme → otomasyon → denetim kaydı.</text>
+  <text x="480" y="451" font-size="10" fill="var(--da-muted, #64748b)" text-anchor="middle">Aynı imaj her ortamda; ortamı farklı kılan yalnızca config, secret ve flag değerleridir.</text>
+</svg>

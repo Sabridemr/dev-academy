@@ -1,0 +1,110 @@
+{
+  "id": "g-06-mlops-quiz",
+  "title": { "tr": "MLOps Quiz", "en": "MLOps Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Bir feature store'un çözdüğü temel problem nedir?",
+        "en": "What is the core problem a feature store solves?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Model ağırlıklarını ve eğitim verisi sürümünü birlikte saklayarak üretimdeki modelin nasıl üretildiğini izlenebilir kılmak", "en": "Storing model weights together with the training data version so how the production model was produced is traceable" } },
+        { "id": "b", "text": { "tr": "Kullanıcıları hash(userId) ile sabit gruplara atayarak A/B testinde aynı kullanıcının hep aynı modeli görmesini garanti etmek", "en": "Assigning users to sticky groups via hash(userId) so the same user always sees the same model in an A/B test" } },
+        { "id": "c", "text": { "tr": "Özellik dağılımlarını eğitim profiliyle karşılaştırıp PSI eşiği aşıldığında yeniden eğitim pipeline'ını tetiklemek", "en": "Comparing feature distributions with the training profile and triggering the retraining pipeline when the PSI threshold is exceeded" } },
+        { "id": "d", "text": { "tr": "Aynı özellik tanımını eğitim (offline, geçmiş) ve serving (online, güncel) için tek yerden sunarak training-serving skew'u önlemek", "en": "Serving the same feature definition for training (offline, historical) and serving (online, current) from one place to prevent training-serving skew" } }
+      ],
+      "correct": ["d"],
+      "explanation": {
+        "tr": "Feature store özellik tanımını bir kez yazdırır ve iki erişim deseni (toplu/point-in-time ve düşük gecikmeli anahtar araması) sunar. Ağırlıkları ve veri sürümünü saklayan model registry'dir; sabit grup ataması deney platformunun işidir; PSI ile drift tespiti izleme katmanına aittir — feature store bunların hiçbirini yapmaz, girdiyi tutarlı kılar.",
+        "en": "A feature store defines a feature once and offers two access patterns (batch/point-in-time and low-latency key lookup). Storing weights and data versions is the model registry's job; sticky group assignment belongs to the experimentation platform; PSI-based drift detection belongs to monitoring — the feature store does none of these, it keeps the inputs consistent."
+      },
+      "difficulty": "easy",
+      "concepts": ["feature-store", "training-serving-skew"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "Dolandırıcılar taktik değiştirdiği için aynı girdi özellikleri artık farklı sonuçlara karşılık geliyor. Bu hangi tür drift'tir ve ne zaman fark edilir?",
+        "en": "Fraudsters changed tactics, so the same input features now correspond to different outcomes. What kind of drift is this and when is it noticed?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Data drift; özellik dağılımındaki kaymadan PSI ile anında", "en": "Data drift; immediately, from the shift in the feature distribution via PSI" } },
+        { "id": "b", "text": { "tr": "Concept drift; ancak gerçek etiketler geldikten sonra", "en": "Concept drift; only after true labels arrive" } },
+        { "id": "c", "text": { "tr": "Concept drift; girdi dağılımındaki kaymadan PSI ile anında", "en": "Concept drift; immediately, from the shift in the input distribution via PSI" } },
+        { "id": "d", "text": { "tr": "Training-serving skew; dağıtım anında shadow karşılaştırmasıyla", "en": "Training-serving skew; at deployment time, via the shadow comparison" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Girdi–çıktı ilişkisinin değişmesi concept drift'tir; girdi dağılımı aynı kalabileceği için PSI gibi testler yakalamaz, gecikmeli gelen gerçek etiketlerle ölçülen AUC/precision düşüşü gösterir. Data drift girdi dağılımının değişmesidir ve anında görülür; training-serving skew ise aynı özelliğin eğitim ve serving'de farklı hesaplanmasıdır, dolandırıcı davranışıyla ilgisi yoktur.",
+        "en": "A change in the input–output relationship is concept drift; since the input distribution may stay the same, tests like PSI miss it, and it shows up as a drop in AUC/precision measured with delayed true labels. Data drift is a change in the input distribution and is visible immediately; training-serving skew is the same feature being computed differently in training and serving, unrelated to fraudster behaviour."
+      },
+      "difficulty": "medium",
+      "concepts": ["concept-drift", "data-drift"]
+    },
+    {
+      "id": "q3",
+      "type": "order",
+      "prompt": {
+        "tr": "Yeni bir modeli üretime güvenli biçimde almak için aşamaları en düşük riskten tam yayına doğru sıralayın.",
+        "en": "Order the stages for safely releasing a new model, from lowest risk to full rollout."
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Shadow: tahmin üret ama cevabı eski modelden dön", "en": "Shadow: produce predictions but serve the old model's answer" } },
+        { "id": "b", "text": { "tr": "Canary: trafiğin %5'i, otomatik geri alma", "en": "Canary: 5% of traffic, automatic rollback" } },
+        { "id": "c", "text": { "tr": "A/B testi: kullanıcı bazlı sabit gruplar, iş metriği anlamlılığı", "en": "A/B test: sticky user groups, business-metric significance" } },
+        { "id": "d", "text": { "tr": "Tam yayın, eski model sıcak yedek", "en": "Full rollout, old model as warm standby" } }
+      ],
+      "correct": ["a", "b", "c", "d"],
+      "explanation": {
+        "tr": "Shadow kullanıcıyı hiç etkilemez; canary küçük bir dilimi etkiler ve hızlı geri alınır; A/B iş etkisini istatistiksel olarak kanıtlar; sonra tam yayın. Sırayı atlamak (doğrudan %100) çevrimdışı metriğe körü körüne güvenmek demektir.",
+        "en": "Shadow affects no user; canary affects a small slice and rolls back quickly; A/B proves business impact statistically; then full rollout. Skipping the ladder (straight to 100%) means trusting the offline metric blindly."
+      },
+      "difficulty": "medium",
+      "concepts": ["canary-deployment", "ab-testing"]
+    },
+    {
+      "id": "q4",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Hangi durumlarda batch serving online serving'e tercih edilir? (Birden fazla seçin)",
+        "en": "In which situations is batch serving preferred over online serving? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Tahmin, istek anındaki bilgiye bağlı değilse (gece hesaplanan churn skoru)", "en": "When the prediction does not depend on request-time information (a nightly churn score)" } },
+        { "id": "b", "text": { "tr": "Arama sorgusu gibi istek anında gelen girdiyle skorlama gerekiyorsa (sorgu önceden bilinmez)", "en": "When scoring needs a request-time input such as a search query (the query is not known in advance)" } },
+        { "id": "c", "text": { "tr": "Milyonlarca kullanıcı için tahminler önceden hesaplanıp cache'e yazılabiliyorsa", "en": "When predictions for millions of users can be precomputed and written to a cache" } },
+        { "id": "d", "text": { "tr": "Fraud kararı kart ağı zaman aşımı nedeniyle 50 ms içinde verilmek zorundaysa", "en": "When a fraud decision must be made within 50 ms because of the card network timeout" } }
+      ],
+      "correct": ["a", "c"],
+      "explanation": {
+        "tr": "Batch, girdiler önceden biliniyorsa ucuz ve verimlidir. Arama sorgusu (b) ve gerçek zamanlı fraud (d) istek anındaki bilgiye bağlıdır; online serving şarttır.",
+        "en": "Batch is cheap and efficient when inputs are known in advance. A search query (b) and real-time fraud (d) depend on request-time information; online serving is required."
+      },
+      "difficulty": "easy",
+      "concepts": ["batch-vs-online-serving"]
+    },
+    {
+      "id": "q5",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Eğitim setini oluştururken, bir örneğin özelliklerini o örneğin zamanından sonraki verilerle hesaplamak (point-in-time doğruluğunu ihlal etmek) çevrimdışı metrikleri iyimser gösterir.",
+        "en": "When building a training set, computing an example's features with data from after that example's timestamp (violating point-in-time correctness) makes offline metrics look optimistic."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["t"],
+      "explanation": {
+        "tr": "Doğru. Gelecekten sızan bilgi (leakage) modele üretimde asla sahip olmayacağı ipuçları verir; çevrimdışı AUC yükselir, üretimde çöker. Feature store'ların point-in-time join'leri tam olarak bunu engeller.",
+        "en": "True. Information leaking from the future gives the model hints it will never have in production; offline AUC rises, production performance collapses. Feature stores' point-in-time joins exist precisely to prevent this."
+      },
+      "difficulty": "hard",
+      "concepts": ["feature-store", "data-pipeline"]
+    }
+  ]
+}

@@ -1,0 +1,225 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "d-04-same-data-different-models",
+  "title": { "tr": "Aynı Veri, Altı Model", "en": "Same Data, Six Models" },
+  "summary": {
+    "tr": "Bir sosyal gönderinin (yazar, metin, yorumlar, beğeniler, görüntülenmeler) ilişkisel, doküman, key-value, wide-column, graf ve zaman serisi modellerinde nasıl yerleştiğini ve her modelin hangi sorguyu kolaylaştırdığını gösterir.",
+    "en": "Shows how a social post (author, body, comments, likes, views) is laid out in relational, document, key-value, wide-column, graph and time-series models, and which query each model makes easy."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda uygulama düğümü bir gönderi verisini tutar. Sağda iki sütun hâlinde altı veri deposu vardır: ilişkisel, doküman, key-value, wide-column, graf, zaman serisi. Her adımda veri bir depoya gönderilir ve o deponun verileri nasıl böldüğü ya da birleştirdiği, hangi sorgunun hızlandığı ve hangisinin zorlaştığı açıklanır. Son adım, seçim kuralını özetler.",
+      "en": "On the left an application node holds a post's data. On the right, in two columns, are six data stores: relational, document, key-value, wide-column, graph and time-series. In each step the data is sent to one store and the narration explains how that store splits or merges the data, which query becomes fast and which becomes hard. The last step summarizes the selection rule."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "app", "kind": "service", "label": { "tr": "Gönderi #42", "en": "Post #42" }, "sublabel": { "tr": "yazar, metin, 3 yorum, 1280 beğeni", "en": "author, body, 3 comments, 1280 likes" }, "x": 140, "y": 300, "w": 200, "h": 90 },
+    { "id": "rel", "kind": "db", "label": { "tr": "İlişkisel", "en": "Relational" }, "sublabel": "PostgreSQL", "x": 450, "y": 100, "w": 180, "h": 74 },
+    { "id": "doc", "kind": "storage", "label": "Document", "sublabel": "MongoDB", "x": 450, "y": 300, "w": 180, "h": 74 },
+    { "id": "kv", "kind": "cache", "label": "Key-value", "sublabel": "Redis", "x": 450, "y": 500, "w": 180, "h": 74 },
+    { "id": "wide", "kind": "shard", "label": "Wide-column", "sublabel": "Cassandra", "x": 800, "y": 100, "w": 180, "h": 74 },
+    { "id": "graph", "kind": "generic", "label": "Graph", "sublabel": "Neo4j", "x": 800, "y": 300, "w": 180, "h": 74 },
+    { "id": "ts", "kind": "generic", "label": "Time-series", "sublabel": "TimescaleDB", "x": 800, "y": 500, "w": 180, "h": 74 }
+  ],
+  "edges": [
+    { "id": "app-rel", "from": "app", "to": "rel", "kind": "data", "curvature": -0.2 },
+    { "id": "app-doc", "from": "app", "to": "doc", "kind": "data" },
+    { "id": "app-kv", "from": "app", "to": "kv", "kind": "data", "curvature": 0.2 },
+    { "id": "app-wide", "from": "app", "to": "wide", "kind": "data", "curvature": -0.3 },
+    { "id": "app-graph", "from": "app", "to": "graph", "kind": "data", "curvature": -0.12 },
+    { "id": "app-ts", "from": "app", "to": "ts", "kind": "data", "curvature": 0.3 }
+  ],
+  "steps": [
+    {
+      "id": "entity",
+      "title": { "tr": "Veri: tek bir gönderi", "en": "The data: a single post" },
+      "narration": {
+        "tr": "Elimizde bir gönderi var: yazar Ayşe, metin, üç yorum, 1280 beğeni, dakikalık görüntülenme sayıları. Soru 'hangi veritabanı?' değil; 'bu veriye hangi sorularla erişeceğiz?'",
+        "en": "We have one post: author Ayşe, body, three comments, 1,280 likes, per-minute view counts. The question is not 'which database?' but 'what questions will we ask of this data?'"
+      },
+      "durationMs": 3500,
+      "inherit": false,
+      "highlight": { "nodes": ["app"] },
+      "nodeStates": {
+        "app": { "status": "active" },
+        "rel": { "status": "muted" }, "doc": { "status": "muted" }, "kv": { "status": "muted" },
+        "wide": { "status": "muted" }, "graph": { "status": "muted" }, "ts": { "status": "muted" }
+      },
+      "edgeStates": {
+        "app-rel": { "status": "muted" }, "app-doc": { "status": "muted" }, "app-kv": { "status": "muted" },
+        "app-wide": { "status": "muted" }, "app-graph": { "status": "muted" }, "app-ts": { "status": "muted" }
+      },
+      "annotations": [
+        { "id": "q", "x": 140, "y": 420, "text": { "tr": "Sorgular: gönderiyi göster · akışı listele · kim beğendi · görüntülenme eğrisi", "en": "Queries: show post · list feed · who liked · view curve" }, "target": "app" }
+      ]
+    },
+    {
+      "id": "relational",
+      "title": { "tr": "İlişkisel: dört tablo, bir JOIN", "en": "Relational: four tables, one JOIN" },
+      "narration": {
+        "tr": "Veri posts, users, comments ve likes tablolarına normalize edilir. Her soru sorulabilir (kim en çok beğenildi? hangi yorumlar silindi?), ama gönderi sayfası için 3–4 tablo JOIN edilir. Çok satırlı ACID garantisi burada.",
+        "en": "The data is normalized into posts, users, comments and likes. Any question can be asked (who got the most likes? which comments were deleted?), but the post page needs a 3–4 table JOIN. Multi-row ACID lives here."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["app", "rel"], "edges": ["app-rel"] },
+      "nodeStates": { "rel": { "status": "active", "badge": "4 tablo", "sublabel": "posts · users · comments · likes" } },
+      "edgeStates": { "app-rel": { "status": "active" } },
+      "packets": [
+        { "edge": "app-rel", "shape": "square", "label": "posts", "durationMs": 900 },
+        { "edge": "app-rel", "shape": "square", "label": "comments ×3", "startAt": 500, "durationMs": 900 },
+        { "edge": "app-rel", "shape": "square", "label": "likes ×1280", "startAt": 1000, "durationMs": 900 }
+      ],
+      "annotations": [
+        { "id": "rel-note", "x": 450, "y": 40, "text": { "tr": "+ ad-hoc sorgu, ACID   − gönderi sayfası = JOIN ×3", "en": "+ ad-hoc queries, ACID   − post page = 3 JOINs" } }
+      ]
+    },
+    {
+      "id": "document",
+      "title": { "tr": "Document: tek doküman, tek okuma", "en": "Document: one document, one read" },
+      "narration": {
+        "tr": "Gönderi, yazar özeti ve son 20 yorum tek JSON dokümana gömülür; sayfa tek okumayla gelir. Beğenenlerin tam listesi gömülmez (sınırsız büyür), yalnızca sayaç tutulur. Çapraz doküman transaction sınırlıdır.",
+        "en": "The post, an author summary and the latest 20 comments are embedded in one JSON document; the page arrives in one read. The full list of likers is not embedded (it grows without bound), only a counter is kept. Cross-document transactions are limited."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["app", "doc"], "edges": ["app-doc"] },
+      "nodeStates": {
+        "rel": { "status": "success", "badge": "" },
+        "doc": { "status": "active", "badge": "1 doc", "sublabel": "{ post, author, comments[20], likeCount }" }
+      },
+      "edgeStates": { "app-rel": { "status": "idle" }, "app-doc": { "status": "active" } },
+      "packets": [
+        { "edge": "app-doc", "shape": "envelope", "label": "{ … } 4 KB", "durationMs": 1100 }
+      ],
+      "annotations": [
+        { "id": "doc-note", "x": 450, "y": 380, "text": { "tr": "+ tek okuma, esnek alanlar   − sınırsız dizi gömme yasak, çoka-çok zayıf", "en": "+ one read, flexible fields   − never embed unbounded arrays, weak many-to-many" }, "target": "doc" }
+      ]
+    },
+    {
+      "id": "key-value",
+      "title": { "tr": "Key-value: hazır sayfa, TTL ile", "en": "Key-value: a rendered page with a TTL" },
+      "narration": {
+        "tr": "post:42:view anahtarına render edilmiş gönderi yazılır, 5 dakika TTL. post:42:views sayacı INCR ile atomik artar. Mikro-saniye okuma; ama 'Ayşe'nin tüm gönderileri' gibi bir sorgu yoktur — anahtarı bilmiyorsanız veri yok demektir.",
+        "en": "The rendered post is written under post:42:view with a 5-minute TTL. The post:42:views counter increments atomically with INCR. Microsecond reads; but there is no query like 'all of Ayşe's posts' — if you don't know the key, the data doesn't exist."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["app", "kv"], "edges": ["app-kv"] },
+      "nodeStates": {
+        "doc": { "status": "success", "badge": "" },
+        "kv": { "status": "active", "badge": "GET/SET", "sublabel": "post:42:view → blob · post:42:views → 9031" }
+      },
+      "edgeStates": { "app-doc": { "status": "idle" }, "app-kv": { "status": "active" } },
+      "packets": [
+        { "edge": "app-kv", "shape": "dot", "label": "SET EX 300", "durationMs": 700 },
+        { "edge": "app-kv", "shape": "dot", "label": "INCR", "startAt": 500, "durationMs": 700 },
+        { "edge": "app-kv", "shape": "dot", "label": "GET", "startAt": 1000, "durationMs": 700, "direction": "backward", "color": "success" }
+      ],
+      "annotations": [
+        { "id": "kv-note", "x": 450, "y": 575, "text": { "tr": "+ µs gecikme, atomik sayaç   − yalnızca anahtarla erişim", "en": "+ µs latency, atomic counters   − key-only access" }, "target": "kv" }
+      ]
+    },
+    {
+      "id": "wide-column",
+      "title": { "tr": "Wide-column: partition + sıralı satırlar", "en": "Wide-column: partition + sorted rows" },
+      "narration": {
+        "tr": "timeline_by_user tablosunda partition key user_id, clustering key posted_at DESC. Ayşe'nin akışı tek partition'dan sıralı okunur, saniyede yüz binlerce yazma düğümlere dağılır. Ama 'en çok beğenilen gönderi' sorusu için ayrı bir tablo gerekir: sorgu başına tablo.",
+        "en": "In timeline_by_user the partition key is user_id and the clustering key posted_at DESC. Ayşe's feed is read in order from a single partition; hundreds of thousands of writes per second spread across nodes. But 'most liked post' needs a separate table: one table per query."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["app", "wide"], "edges": ["app-wide"] },
+      "nodeStates": {
+        "kv": { "status": "success", "badge": "" },
+        "wide": { "status": "active", "badge": "partition", "sublabel": "PK (user_id), CK (posted_at DESC)" }
+      },
+      "edgeStates": { "app-kv": { "status": "idle" }, "app-wide": { "status": "active" } },
+      "packets": [
+        { "edge": "app-wide", "shape": "square", "label": "(ayse, t3, #42)", "durationMs": 1000 },
+        { "edge": "app-wide", "shape": "square", "label": "(ayse, t2, #41)", "startAt": 300, "durationMs": 1000 },
+        { "edge": "app-wide", "shape": "square", "label": "(ayse, t1, #40)", "startAt": 600, "durationMs": 1000 }
+      ],
+      "annotations": [
+        { "id": "wide-note", "x": 800, "y": 40, "text": { "tr": "+ dev yazma, çok bölge, sıralı akış   − partition key olmadan sorgu yok", "en": "+ massive writes, multi-region, ordered feed   − no query without the partition key" } }
+      ]
+    },
+    {
+      "id": "graph",
+      "title": { "tr": "Graph: ilişkinin kendisi veri", "en": "Graph: the relationship is the data" },
+      "narration": {
+        "tr": "Kullanıcılar ve gönderi düğüm, FOLLOWS ve LIKED kenar olur. 'Takip ettiklerimin beğendiği gönderiler' iki atlamalık gezinmedir; ilişkisel modelde üç tabloluk kendi kendine JOIN olurdu. Toplu rapor ve basit CRUD için ise fazla ağırdır.",
+        "en": "Users and the post become nodes; FOLLOWS and LIKED become edges. 'Posts liked by people I follow' is a two-hop traversal; relationally it would be a three-table self-JOIN. For bulk reports and simple CRUD it is overkill."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["app", "graph"], "edges": ["app-graph"] },
+      "nodeStates": {
+        "wide": { "status": "success", "badge": "" },
+        "graph": { "status": "active", "badge": "2 hop", "sublabel": "(me)-[:FOLLOWS]->()-[:LIKED]->(post)" }
+      },
+      "edgeStates": { "app-wide": { "status": "idle" }, "app-graph": { "status": "active" } },
+      "packets": [
+        { "edge": "app-graph", "shape": "diamond", "label": "FOLLOWS", "durationMs": 900 },
+        { "edge": "app-graph", "shape": "diamond", "label": "LIKED ×1280", "startAt": 600, "durationMs": 900 }
+      ],
+      "annotations": [
+        { "id": "graph-note", "x": 800, "y": 380, "text": { "tr": "+ çok atlamalı sorgu ms'de   − grafı bölmek (shard) zor", "en": "+ multi-hop queries in ms   − hard to shard a graph" }, "target": "graph" }
+      ]
+    },
+    {
+      "id": "time-series",
+      "title": { "tr": "Time-series: dakikalık görüntülenme", "en": "Time-series: views per minute" },
+      "narration": {
+        "tr": "Her görüntülenme (post_id, ts) olarak eklenir; veritabanı zamana göre parçalar, sıkıştırır ve 30 gün sonra saatlik özete indirger. time_bucket('1 minute') ile eğri tek sorguda gelir. Kayıtlar güncellenmez; yalnızca eklenir.",
+        "en": "Every view is appended as (post_id, ts); the database partitions by time, compresses, and downsamples to hourly after 30 days. time_bucket('1 minute') returns the curve in a single query. Records are never updated, only appended."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["app", "ts"], "edges": ["app-ts"] },
+      "nodeStates": {
+        "graph": { "status": "success", "badge": "" },
+        "ts": { "status": "active", "badge": "append", "sublabel": "post_views(post_id, ts) · chunk/gün" }
+      },
+      "edgeStates": { "app-graph": { "status": "idle" }, "app-ts": { "status": "active" } },
+      "packets": [
+        { "edge": "app-ts", "shape": "dot", "label": "view", "durationMs": 700, "repeat": 4, "repeatGapMs": 250 }
+      ],
+      "annotations": [
+        { "id": "ts-note", "x": 800, "y": 575, "text": { "tr": "+ sıkıştırma, pencere agregasyonu, retention   − güncellenen kayıtlar için değil", "en": "+ compression, window aggregation, retention   − not for mutable records" }, "target": "ts" }
+      ]
+    },
+    {
+      "id": "summary",
+      "title": { "tr": "Seçim kuralı", "en": "The selection rule" },
+      "narration": {
+        "tr": "Gerçek sistemler birkaçını birlikte kullanır (polyglot persistence): doğruluk kaynağı ilişkisel, sıcak okuma key-value, akış wide-column, öneri graf, metrik zaman serisi. Her ek depo bir operasyon ve tutarlılık maliyetidir; ölçülmüş bir gereksinim olmadan açılmaz.",
+        "en": "Real systems combine several (polyglot persistence): relational as the source of truth, key-value for hot reads, wide-column for feeds, graph for recommendations, time-series for metrics. Each extra store is an operational and consistency cost; open one only for a measured need."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["rel", "doc", "kv", "wide", "graph", "ts"] },
+      "nodeStates": {
+        "app": { "status": "success" },
+        "ts": { "status": "success", "badge": "" },
+        "rel": { "status": "success", "badge": "truth" },
+        "kv": { "status": "success", "badge": "hot" },
+        "wide": { "status": "success", "badge": "feed" },
+        "graph": { "status": "success", "badge": "reco" },
+        "doc": { "status": "success", "badge": "profile" }
+      },
+      "edgeStates": {
+        "app-rel": { "status": "active" }, "app-doc": { "status": "active" }, "app-kv": { "status": "active" },
+        "app-wide": { "status": "active" }, "app-graph": { "status": "active" }, "app-ts": { "status": "active" }
+      },
+      "packets": [
+        { "edge": "app-rel", "shape": "dot", "durationMs": 1200 },
+        { "edge": "app-kv", "shape": "dot", "startAt": 300, "durationMs": 1200 },
+        { "edge": "app-wide", "shape": "dot", "startAt": 600, "durationMs": 1200 },
+        { "edge": "app-graph", "shape": "dot", "startAt": 900, "durationMs": 1200 },
+        { "edge": "app-ts", "shape": "dot", "startAt": 1200, "durationMs": 1200 }
+      ],
+      "annotations": [
+        { "id": "rule", "x": 140, "y": 420, "text": { "tr": "Varsayılan: ilişkisel. Ayrılmak için ölçülmüş gerekçe: yazma hacmi, gecikme, çok bölge, çok atlama.", "en": "Default: relational. Leave it only for a measured reason: write volume, latency, multi-region, multi-hop." }, "tone": "success", "target": "app" }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["nosql", "data-modeling", "polyglot-persistence", "cap-theorem"]
+}

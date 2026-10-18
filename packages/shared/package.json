@@ -1,0 +1,72 @@
+{
+  "name": "@devacademy/shared",
+  "version": "0.1.0",
+  "description": "DevAcademy ortak tipler, animasyon sahne şeması, içerik ayrıştırıcı ve simülatör mantığı",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./scene": {
+      "types": "./dist/scene/index.d.ts",
+      "import": "./dist/scene/index.js",
+      "require": "./dist/scene/index.cjs"
+    },
+    "./content": {
+      "types": "./dist/content/index.d.ts",
+      "import": "./dist/content/index.js",
+      "require": "./dist/content/index.cjs"
+    },
+    "./simulators": {
+      "types": "./dist/simulators/index.d.ts",
+      "import": "./dist/simulators/index.js",
+      "require": "./dist/simulators/index.cjs"
+    },
+    "./node": {
+      "types": "./dist/node/index.d.ts",
+      "import": "./dist/node/index.js",
+      "require": "./dist/node/index.cjs"
+    },
+    "./examples/*": "./examples/*",
+    "./schema/*": "./schema/*",
+    "./package.json": "./package.json"
+  },
+  "typesVersions": {
+    "*": {
+      "scene": ["./dist/scene/index.d.ts"],
+      "content": ["./dist/content/index.d.ts"],
+      "simulators": ["./dist/simulators/index.d.ts"],
+      "node": ["./dist/node/index.d.ts"]
+    }
+  },
+  "files": ["dist", "examples", "schema"],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "tsc --noEmit -p tsconfig.json",
+    "content:validate": "tsx scripts/validate-content.ts",
+    "schema:export": "tsx scripts/export-json-schema.ts",
+    "clean": "rm -rf dist .turbo"
+  },
+  "dependencies": {
+    "gray-matter": "^4.0.3",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "tsup": "^8.4.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.8.3",
+    "vitest": "^3.1.0",
+    "zod-to-json-schema": "^3.24.0"
+  }
+}

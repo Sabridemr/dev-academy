@@ -1,0 +1,120 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 520" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Kubernetes nesne hiyerarşisi ve HPA döngüsü</title>
+  <desc id="desc">Solda kullanıcı, Ingress ve Service. Sağda iki worker node (farklı AZ'lerde) ve içlerinde cart-service pod'ları. Deployment bir ReplicaSet'i, ReplicaSet pod'ları yönetir. Altta HPA, metrics-server'dan CPU okur ve Deployment'ın replika sayısını günceller; bu bir kontrol döngüsü olarak oklarla gösterilir.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+    <marker id="arrow-p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-primary, #6366f1)"/>
+    </marker>
+    <marker id="arrow-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-accent, #f59e0b)"/>
+    </marker>
+  </defs>
+
+  <!-- Küme sınırı -->
+  <rect x="200" y="20" width="740" height="480" rx="16" fill="var(--da-primary, #6366f1)" opacity="0.05" stroke="var(--da-primary, #6366f1)" stroke-dasharray="8 6"/>
+  <text x="216" y="44" font-size="13" font-weight="600" fill="var(--da-primary, #6366f1)">Kubernetes kümesi (EKS) · namespace: shop</text>
+
+  <!-- Kullanıcı -->
+  <circle cx="60" cy="150" r="18" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5"/>
+  <path d="M 30 200 C 30 175, 90 175, 90 200" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5"/>
+  <text x="60" y="222" font-size="11" fill="var(--da-fg, #0f172a)" text-anchor="middle">Kullanıcı</text>
+  <path d="M 95 160 L 218 160" stroke="var(--da-muted, #64748b)" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="155" y="150" font-size="10" fill="var(--da-muted, #64748b)" text-anchor="middle">HTTPS</text>
+
+  <!-- Ingress -->
+  <rect x="220" y="125" width="110" height="70" rx="12" fill="var(--da-accent, #f59e0b)" opacity="0.15" stroke="var(--da-accent, #f59e0b)" stroke-width="2"/>
+  <text x="275" y="152" font-size="13" font-weight="600" fill="var(--da-fg, #0f172a)" text-anchor="middle">Ingress</text>
+  <text x="275" y="168" font-size="10" fill="var(--da-muted, #64748b)" text-anchor="middle">L7 · TLS · /cart</text>
+  <text x="275" y="182" font-size="10" fill="var(--da-muted, #64748b)" text-anchor="middle">ALB controller</text>
+  <path d="M 330 160 L 378 160" stroke="var(--da-muted, #64748b)" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Service -->
+  <rect x="380" y="125" width="120" height="70" rx="12" fill="var(--da-primary, #6366f1)" opacity="0.15" stroke="var(--da-primary, #6366f1)" stroke-width="2"/>
+  <text x="440" y="152" font-size="13" font-weight="600" fill="var(--da-fg, #0f172a)" text-anchor="middle">Service</text>
+  <text x="440" y="168" font-size="10" fill="var(--da-muted, #64748b)" text-anchor="middle">ClusterIP 10.100.4.7</text>
+  <text x="440" y="182" font-size="10" fill="var(--da-muted, #64748b)" text-anchor="middle">selector: app=cart</text>
+
+  <!-- Node'lar -->
+  <g fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)" stroke-width="1.5">
+    <rect x="560" y="70" width="170" height="200" rx="12"/>
+    <rect x="750" y="70" width="170" height="200" rx="12"/>
+  </g>
+  <g font-size="11" font-weight="600" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="645" y="90">node-1 · EC2 m6g.xlarge</text>
+    <text x="835" y="90">node-2 · EC2 m6g.xlarge</text>
+  </g>
+  <g font-size="9" fill="var(--da-muted, #64748b)" text-anchor="middle">
+    <text x="645" y="104">AZ-a · kubelet · containerd</text>
+    <text x="835" y="104">AZ-b · kubelet · containerd</text>
+  </g>
+  <!-- Pod'lar -->
+  <g fill="var(--da-success, #10b981)" opacity="0.18" stroke="var(--da-success, #10b981)" stroke-width="1.5">
+    <rect x="575" y="118" width="140" height="44" rx="8"/>
+    <rect x="575" y="172" width="140" height="44" rx="8"/>
+    <rect x="765" y="118" width="140" height="44" rx="8"/>
+  </g>
+  <rect x="765" y="172" width="140" height="44" rx="8" fill="var(--da-border, #cbd5e1)" opacity="0.25" stroke="var(--da-muted, #64748b)" stroke-dasharray="4 3"/>
+  <g font-size="11" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="645" y="136">pod cart-7f9c-a1</text>
+    <text x="645" y="190">pod cart-7f9c-b2</text>
+    <text x="835" y="136">pod cart-7f9c-c3</text>
+    <text x="835" y="190">pod (HPA ekler)</text>
+  </g>
+  <g font-size="9" fill="var(--da-muted, #64748b)" text-anchor="middle">
+    <text x="645" y="150">10.0.1.5 · req 250m · CPU 45%</text>
+    <text x="645" y="204">10.0.1.12 · req 250m · CPU 45%</text>
+    <text x="835" y="150">10.0.2.9 · req 250m · CPU 45%</text>
+    <text x="835" y="204">Pending → Running</text>
+  </g>
+  <!-- sidecar notu -->
+  <text x="645" y="240" font-size="9" fill="var(--da-muted, #64748b)" text-anchor="middle">her pod: app + envoy sidecar</text>
+  <text x="835" y="240" font-size="9" fill="var(--da-muted, #64748b)" text-anchor="middle">topologySpread: AZ başına eşit</text>
+
+  <!-- Service → pod okları -->
+  <g stroke="var(--da-primary, #6366f1)" stroke-width="1.8" fill="none" marker-end="url(#arrow-p)">
+    <path d="M 500 150 C 530 150, 545 140, 573 140"/>
+    <path d="M 500 165 C 530 165, 545 194, 573 194"/>
+    <path d="M 500 158 C 600 60, 700 60, 763 130"/>
+  </g>
+  <text x="530" y="128" font-size="9" fill="var(--da-primary, #6366f1)">endpoints (ready)</text>
+
+  <!-- Deployment / ReplicaSet -->
+  <rect x="380" y="300" width="120" height="56" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5"/>
+  <text x="440" y="323" font-size="12" font-weight="600" fill="var(--da-fg, #0f172a)" text-anchor="middle">Deployment</text>
+  <text x="440" y="340" font-size="10" fill="var(--da-muted, #64748b)" text-anchor="middle">replicas: 3 · rolling</text>
+  <rect x="560" y="300" width="130" height="56" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5"/>
+  <text x="625" y="323" font-size="12" font-weight="600" fill="var(--da-fg, #0f172a)" text-anchor="middle">ReplicaSet</text>
+  <text x="625" y="340" font-size="10" fill="var(--da-muted, #64748b)" text-anchor="middle">cart-7f9c · 3/3 ready</text>
+  <path d="M 500 328 L 558 328" stroke="var(--da-muted, #64748b)" stroke-width="1.8" marker-end="url(#arrow)"/>
+  <text x="529" y="320" font-size="9" fill="var(--da-muted, #64748b)" text-anchor="middle">yönetir</text>
+  <path d="M 690 328 C 760 328, 780 300, 790 272" stroke="var(--da-muted, #64748b)" stroke-width="1.8" fill="none" marker-end="url(#arrow)"/>
+  <path d="M 690 320 C 720 300, 700 280, 660 272" stroke="var(--da-muted, #64748b)" stroke-width="1.8" fill="none" marker-end="url(#arrow)"/>
+  <text x="735" y="310" font-size="9" fill="var(--da-muted, #64748b)" text-anchor="middle">N pod çalışır tut</text>
+
+  <!-- HPA döngüsü -->
+  <rect x="220" y="400" width="130" height="64" rx="12" fill="var(--da-accent, #f59e0b)" opacity="0.15" stroke="var(--da-accent, #f59e0b)" stroke-width="2"/>
+  <text x="285" y="425" font-size="13" font-weight="600" fill="var(--da-fg, #0f172a)" text-anchor="middle">HPA</text>
+  <text x="285" y="441" font-size="10" fill="var(--da-muted, #64748b)" text-anchor="middle">hedef CPU %50</text>
+  <text x="285" y="454" font-size="10" fill="var(--da-muted, #64748b)" text-anchor="middle">min 2 · max 20</text>
+
+  <rect x="580" y="408" width="150" height="50" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)" stroke-width="1.5"/>
+  <text x="655" y="429" font-size="12" font-weight="600" fill="var(--da-fg, #0f172a)" text-anchor="middle">metrics-server</text>
+  <text x="655" y="445" font-size="10" fill="var(--da-muted, #64748b)" text-anchor="middle">kubelet'ten CPU/bellek</text>
+
+  <g stroke="var(--da-accent, #f59e0b)" stroke-width="2" fill="none" marker-end="url(#arrow-a)">
+    <!-- pod'lar → metrics-server -->
+    <path d="M 740 275 C 740 350, 700 380, 680 406" stroke-dasharray="5 4"/>
+    <!-- metrics-server → HPA -->
+    <path d="M 578 440 L 352 440" stroke-dasharray="5 4"/>
+    <!-- HPA → Deployment -->
+    <path d="M 300 398 C 320 370, 350 350, 378 340"/>
+  </g>
+  <text x="465" y="432" font-size="10" fill="var(--da-accent, #f59e0b)" text-anchor="middle">② ort. CPU %85 (her 15 sn)</text>
+  <text x="760" y="350" font-size="10" fill="var(--da-accent, #f59e0b)" text-anchor="middle">① kubelet /metrics</text>
+  <text x="310" y="372" font-size="10" fill="var(--da-accent, #f59e0b)" text-anchor="middle">③ replicas = ceil(3 × 85/50) = 6</text>
+
+  <text x="570" y="488" font-size="11" fill="var(--da-muted, #64748b)" text-anchor="middle">Kontrol döngüsü: gözle → karşılaştır → uzlaştır (reconcile) — sonsuza dek</text>
+</svg>

@@ -1,0 +1,13 @@
+{
+  "id": "f-code-and-infrastructure",
+  "slug": "code-and-infrastructure",
+  "code": "F",
+  "order": 6,
+  "title": { "tr": "Kod ve Altyapı: Kod Nerede, Nasıl Tutulur, Nasıl Çalışır?", "en": "Code and Infrastructure: Where Code Lives and How It Runs" },
+  "description": {
+    "tr": "Amazon benzeri bir şirkette kodun yaşam döngüsü: geliştirici makinesinden production’a.",
+    "en": "The lifecycle of code at an Amazon-like company: from a developer laptop to production."
+  },
+  "icon": "server",
+  "color": "#8b5cf6"
+}

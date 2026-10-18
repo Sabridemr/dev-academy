@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 360" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">State UML sınıf diyagramı</title>
+  <desc id="desc">Order bağlamı bir OrderState referansı tutar ve pay, ship, cancel çağrılarını ona devreder. OrderState arayüzünü Pending, Paid, Shipped ve Cancelled durum sınıfları uygular; her biri geçerli geçişleri kendisi bilir ve bağlamın durumunu değiştirir.</desc>
+  <defs>
+    <marker id="m-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+    <marker id="m-open" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M 1 1 L 9 5 L 1 9" fill="none" stroke="var(--da-fg, #0f172a)" stroke-width="1.4"/>
+    </marker>
+    <marker id="m-tri" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" orient="auto-start-reverse">
+      <path d="M 1 1 L 11 6 L 1 11 z" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.3"/>
+    </marker>
+    <marker id="m-dia" viewBox="0 0 14 10" refX="1" refY="5" markerWidth="14" markerHeight="10" orient="auto-start-reverse">
+      <path d="M 1 5 L 7 1 L 13 5 L 7 9 z" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.3"/>
+    </marker>
+    <marker id="m-diaf" viewBox="0 0 14 10" refX="1" refY="5" markerWidth="14" markerHeight="10" orient="auto-start-reverse">
+      <path d="M 1 5 L 7 1 L 13 5 L 7 9 z" fill="var(--da-fg, #0f172a)" stroke="var(--da-fg, #0f172a)" stroke-width="1.3"/>
+    </marker>
+    <marker id="m-primary" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-primary, #6366f1)"/>
+    </marker>
+    <marker id="m-danger" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-danger, #ef4444)"/>
+    </marker>
+    <marker id="m-success" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-success, #10b981)"/>
+    </marker>
+    <marker id="m-accent" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-accent, #f59e0b)"/>
+    </marker>
+  </defs>
+  <rect x="40" y="60" width="220" height="117" rx="4" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.4"/>
+  <text x="150" y="78" text-anchor="middle" font-size="12" font-weight="700"  fill="var(--da-fg, #0f172a)">Order</text>
+  <line x1="40" y1="86" x2="260" y2="86" stroke="var(--da-fg, #0f172a)" stroke-width="1"/>
+  <text x="46" y="102" font-size="10.5" fill="var(--da-fg, #0f172a)">-state: OrderState</text>
+  <line x1="40" y1="109" x2="260" y2="109" stroke="var(--da-fg, #0f172a)" stroke-width="1"/>
+  <text x="46" y="125" font-size="10.5"  fill="var(--da-fg, #0f172a)">+pay() { state.pay(this) }</text>
+  <text x="46" y="140" font-size="10.5"  fill="var(--da-fg, #0f172a)">+ship() { state.ship(this) }</text>
+  <text x="46" y="155" font-size="10.5"  fill="var(--da-fg, #0f172a)">+cancel()</text>
+  <text x="46" y="170" font-size="10.5"  fill="var(--da-fg, #0f172a)">~setState(s)</text>
+  <rect x="440" y="40" width="220" height="116" rx="4" fill="var(--da-surface, #ffffff)" stroke="var(--da-primary, #6366f1)" stroke-width="1.4"/>
+  <text x="550" y="54" text-anchor="middle" font-size="10" fill="var(--da-primary, #6366f1)">«interface»</text>
+  <text x="550" y="70" text-anchor="middle" font-size="12" font-weight="700"  fill="var(--da-fg, #0f172a)">OrderState</text>
+  <line x1="440" y1="80" x2="660" y2="80" stroke="var(--da-primary, #6366f1)" stroke-width="1"/>
+  <line x1="440" y1="103" x2="660" y2="103" stroke="var(--da-primary, #6366f1)" stroke-width="1"/>
+  <text x="446" y="119" font-size="10.5"  fill="var(--da-fg, #0f172a)">+pay(o: Order)</text>
+  <text x="446" y="134" font-size="10.5"  fill="var(--da-fg, #0f172a)">+ship(o: Order)</text>
+  <text x="446" y="149" font-size="10.5"  fill="var(--da-fg, #0f172a)">+cancel(o: Order)</text>
+  <rect x="300" y="240" width="130" height="87" rx="4" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.4"/>
+  <text x="365" y="258" text-anchor="middle" font-size="12" font-weight="700"  fill="var(--da-fg, #0f172a)">Pending</text>
+  <line x1="300" y1="266" x2="430" y2="266" stroke="var(--da-fg, #0f172a)" stroke-width="1"/>
+  <line x1="300" y1="289" x2="430" y2="289" stroke="var(--da-fg, #0f172a)" stroke-width="1"/>
+  <text x="306" y="305" font-size="10.5"  fill="var(--da-fg, #0f172a)">pay → Paid</text>
+  <text x="306" y="320" font-size="10.5"  fill="var(--da-fg, #0f172a)">cancel → Cancelled</text>
+  <rect x="450" y="240" width="130" height="87" rx="4" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.4"/>
+  <text x="515" y="258" text-anchor="middle" font-size="12" font-weight="700"  fill="var(--da-fg, #0f172a)">Paid</text>
+  <line x1="450" y1="266" x2="580" y2="266" stroke="var(--da-fg, #0f172a)" stroke-width="1"/>
+  <line x1="450" y1="289" x2="580" y2="289" stroke="var(--da-fg, #0f172a)" stroke-width="1"/>
+  <text x="456" y="305" font-size="10.5"  fill="var(--da-fg, #0f172a)">ship → Shipped</text>
+  <text x="456" y="320" font-size="10.5"  fill="var(--da-fg, #0f172a)">cancel → refund</text>
+  <rect x="600" y="240" width="130" height="72" rx="4" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.4"/>
+  <text x="665" y="258" text-anchor="middle" font-size="12" font-weight="700"  fill="var(--da-fg, #0f172a)">Shipped</text>
+  <line x1="600" y1="266" x2="730" y2="266" stroke="var(--da-fg, #0f172a)" stroke-width="1"/>
+  <line x1="600" y1="289" x2="730" y2="289" stroke="var(--da-fg, #0f172a)" stroke-width="1"/>
+  <text x="606" y="305" font-size="10.5"  fill="var(--da-fg, #0f172a)">cancel → hata</text>
+  <rect x="750" y="240" width="130" height="72" rx="4" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.4"/>
+  <text x="815" y="258" text-anchor="middle" font-size="12" font-weight="700"  fill="var(--da-fg, #0f172a)">Cancelled</text>
+  <line x1="750" y1="266" x2="880" y2="266" stroke="var(--da-fg, #0f172a)" stroke-width="1"/>
+  <line x1="750" y1="289" x2="880" y2="289" stroke="var(--da-fg, #0f172a)" stroke-width="1"/>
+  <text x="756" y="305" font-size="10.5"  fill="var(--da-fg, #0f172a)">hepsi → hata</text>
+  <path d="M 260 118.5 L 440 98" stroke="var(--da-fg, #0f172a)" stroke-width="1.3" fill="none" marker-start="url(#m-dia)" marker-end="url(#m-open)"/>
+  <text x="350" y="103.25" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">state 1</text>
+  <path d="M 365 240 L 550 156" stroke="var(--da-fg, #0f172a)" stroke-width="1.3" fill="none" stroke-dasharray="5 4" marker-end="url(#m-tri)"/>
+  <path d="M 515 240 L 550 156" stroke="var(--da-fg, #0f172a)" stroke-width="1.3" fill="none" stroke-dasharray="5 4" marker-end="url(#m-tri)"/>
+  <path d="M 665 240 L 550 156" stroke="var(--da-fg, #0f172a)" stroke-width="1.3" fill="none" stroke-dasharray="5 4" marker-end="url(#m-tri)"/>
+  <path d="M 815 240 L 550 156" stroke="var(--da-fg, #0f172a)" stroke-width="1.3" fill="none" stroke-dasharray="5 4" marker-end="url(#m-tri)"/>
+  <path d="M 40 230 L 250 230 L 260 240 L 260 286 L 40 286 z" fill="var(--da-accent, #f59e0b)" fill-opacity="0.12" stroke="var(--da-accent, #f59e0b)" stroke-width="1"/>
+  <text x="48" y="246" font-size="10.5" fill="var(--da-fg, #0f172a)">Geçiş kuralları durum sınıfında;</text>
+  <text x="48" y="260" font-size="10.5" fill="var(--da-fg, #0f172a)">Order içinde switch(status) yok.</text>
+  <text x="48" y="274" font-size="10.5" fill="var(--da-fg, #0f172a)">Yeni durum = yeni sınıf.</text>
+</svg>

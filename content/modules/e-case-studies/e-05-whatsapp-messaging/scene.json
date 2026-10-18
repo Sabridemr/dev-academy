@@ -1,0 +1,204 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "e-05-whatsapp-message-journey",
+  "title": { "tr": "Bir Mesajın Yolculuğu: ✓, ✓✓, Mavi ✓✓", "en": "The Journey of a Message: ✓, ✓✓, Blue ✓✓" },
+  "summary": {
+    "tr": "Alice'in cihazında şifrelenen mesajın bağlantı sunucusu ve yönlendiriciden geçip kalıcı yazılması (✓), çevrimdışı Bob için kuyruğa alınıp push ile uyandırılması, Bob bağlanınca teslim edilmesi (✓✓) ve okunması; sonunda presence aboneliği.",
+    "en": "A message encrypted on Alice's device passes the connection server and router and is durably stored (✓), queued for offline Bob with a push wake-up, delivered when Bob connects (✓✓) and read; finally a presence subscription."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda Alice'in telefonu ve altında anahtar sunucusu; ortada Alice'in bağlantı sunucusu, mesaj yönlendirici, üstte oturum kayıt servisi, altta çevrimdışı kuyruk; sağda Bob'un bağlantı sunucusu, üstte presence servisi, altta APNs/FCM push köprüsü ve en sağda Bob'un telefonu. Alice önce Bob'un açık anahtar paketini alır ve mesajı cihazında şifreler; mesaj bağlantı sunucusu üzerinden yönlendiriciye gelir, çevrimdışı kuyruğa kalıcı yazılır ve Alice'e tek tik gider. Bob çevrimdışı olduğu için push ile uyandırılır; bağlanınca kuyruk boşaltılır, Bob'un cihazı teslim onayı verir, sunucu kopyayı siler ve Alice'e çift tik gider. Bob mesajı okuyunca mavi tik, sonra Bob'un çevrimiçi durumu presence aboneliğiyle Alice'e iletilir.",
+      "en": "Alice's phone on the left with the key server below it; Alice's connection server, the message router, the session registry above and the offline queue below in the middle; Bob's connection server on the right with the presence service above, the APNs/FCM push bridge below and Bob's phone at the far right. Alice first fetches Bob's public key bundle and encrypts the message on her device; the message reaches the router via the connection server, is durably written to the offline queue and Alice gets one tick. Bob is offline, so he is woken by a push; when he connects the queue is drained, Bob's device acknowledges delivery, the server deletes its copy and Alice gets two ticks. When Bob reads the message the ticks turn blue, then Bob's online status reaches Alice through a presence subscription."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "alice", "kind": "mobile", "label": "Alice", "sublabel": { "tr": "gönderen", "en": "sender" }, "x": 80, "y": 230 },
+    { "id": "keysvc", "kind": "service", "label": { "tr": "Anahtar sunucusu", "en": "Key server" }, "sublabel": "prekey bundles", "x": 250, "y": 470, "w": 140, "h": 64 },
+    { "id": "connA", "kind": "server", "label": { "tr": "Bağlantı sunucusu A", "en": "Connection server A" }, "sublabel": "2 M conn · Erlang", "x": 260, "y": 230, "w": 150, "h": 70 },
+    { "id": "router", "kind": "service", "label": { "tr": "Mesaj yönlendirici", "en": "Message router" }, "x": 490, "y": 230, "w": 140, "h": 70 },
+    { "id": "registry", "kind": "cache", "label": { "tr": "Oturum kaydı", "en": "Session registry" }, "sublabel": "userId → connServer", "x": 490, "y": 70, "w": 150, "h": 64 },
+    { "id": "offline", "kind": "db", "label": { "tr": "Çevrimdışı kuyruk", "en": "Offline queue" }, "sublabel": { "tr": "alıcı başına · ≤ 30 gün", "en": "per recipient · ≤ 30 days" }, "x": 490, "y": 400, "w": 150, "h": 70 },
+    { "id": "push", "kind": "generic", "label": "APNs / FCM", "sublabel": { "tr": "içeriksiz uyandırma", "en": "content-free wake" }, "x": 720, "y": 460, "w": 130, "h": 60 },
+    { "id": "connB", "kind": "server", "label": { "tr": "Bağlantı sunucusu B", "en": "Connection server B" }, "x": 720, "y": 230, "w": 150, "h": 70 },
+    { "id": "presence", "kind": "service", "label": "Presence", "sublabel": { "tr": "heartbeat 30 s · abonelik", "en": "heartbeat 30 s · subscriptions" }, "x": 720, "y": 70, "w": 150, "h": 64 },
+    { "id": "bob", "kind": "mobile", "label": "Bob", "sublabel": { "tr": "çevrimdışı", "en": "offline" }, "x": 910, "y": 230 }
+  ],
+  "edges": [
+    { "id": "a-key", "from": "alice", "to": "keysvc", "kind": "request", "style": "dashed", "curvature": 0.15 },
+    { "id": "a-connA", "from": "alice", "to": "connA", "kind": "data", "label": "WebSocket" },
+    { "id": "connA-router", "from": "connA", "to": "router", "kind": "data" },
+    { "id": "router-registry", "from": "router", "to": "registry", "kind": "data", "style": "dashed" },
+    { "id": "router-offline", "from": "router", "to": "offline", "kind": "data" },
+    { "id": "router-push", "from": "router", "to": "push", "kind": "control", "style": "dotted", "curvature": 0.2 },
+    { "id": "router-connB", "from": "router", "to": "connB", "kind": "data" },
+    { "id": "connB-bob", "from": "connB", "to": "bob", "kind": "data", "label": "WebSocket" },
+    { "id": "push-bob", "from": "push", "to": "bob", "kind": "control", "style": "dotted", "curvature": 0.2 },
+    { "id": "connB-presence", "from": "connB", "to": "presence", "kind": "control", "style": "dashed" },
+    { "id": "presence-connA", "from": "presence", "to": "connA", "kind": "event", "style": "dashed", "curvature": -0.2 }
+  ],
+  "steps": [
+    {
+      "id": "prekeys",
+      "title": { "tr": "1 · Anahtar paketi ve cihazda şifreleme", "en": "1 · Key bundle and on-device encryption" },
+      "narration": {
+        "tr": "Alice, Bob'la ilk kez yazışıyor. Anahtar sunucusundan Bob'un açık anahtar paketini (kimlik, imzalı ön anahtar, tek kullanımlık ön anahtar) indirir; X3DH ile paylaşılan gizli türetilir ve Double Ratchet başlar. Mesaj daha telefondan çıkmadan şifrelenir: sunucular yalnızca şifreli yük görecek.",
+        "en": "Alice is messaging Bob for the first time. She downloads Bob's public key bundle (identity, signed prekey, one-time prekey) from the key server; X3DH derives a shared secret and the Double Ratchet starts. The message is encrypted before it leaves the phone: servers will only ever see ciphertext."
+      },
+      "durationMs": 3600,
+      "inherit": false,
+      "highlight": { "nodes": ["alice", "keysvc"], "edges": ["a-key"] },
+      "nodeStates": { "alice": { "status": "active" }, "keysvc": { "status": "active", "badge": "bundle" }, "bob": { "status": "muted" } },
+      "packets": [
+        { "edge": "a-key", "shape": "dot", "label": "GET keys(bob)", "durationMs": 800 },
+        { "edge": "a-key", "shape": "diamond", "direction": "backward", "startAt": 900, "durationMs": 800, "color": "success", "label": "IK · SPK · OPK" }
+      ],
+      "annotations": [
+        { "id": "e2e", "x": 80, "y": 340, "text": { "tr": "X3DH → Double Ratchet · mesaj anahtarı tek kullanımlık", "en": "X3DH → Double Ratchet · one-time message key" }, "tone": "info", "target": "alice" }
+      ]
+    },
+    {
+      "id": "send",
+      "title": { "tr": "2 · Gönder", "en": "2 · Send" },
+      "narration": {
+        "tr": "Alice \"Gönder\"e basar. ~200 baytlık şifreli yük (başlıkta alıcı, msgId, sayaç ve DH açık anahtarı) zaten açık olan WebSocket üzerinden bağlantı sunucusu A'ya, oradan mesaj yönlendiriciye gider. Yeni TCP/TLS el sıkışması yok; gecikme tek yön ~40 ms.",
+        "en": "Alice taps \"Send\". The ~200-byte ciphertext (header: recipient, msgId, counter, DH public key) travels over the already-open WebSocket to connection server A and on to the message router. No new TCP/TLS handshake; one-way latency ~40 ms."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["alice", "connA", "router"], "edges": ["a-connA", "connA-router"] },
+      "nodeStates": { "connA": { "status": "active" }, "router": { "status": "busy" }, "keysvc": { "status": "idle", "badge": "" } },
+      "packets": [
+        { "edge": "a-connA", "shape": "envelope", "label": "msgId 8b1f", "durationMs": 800 },
+        { "edge": "connA-router", "shape": "envelope", "startAt": 900, "durationMs": 800 }
+      ],
+      "annotations": [
+        { "id": "cipher", "x": 260, "y": 330, "text": { "tr": "sunucu düz metni göremez", "en": "server cannot read plaintext" }, "tone": "success", "target": "connA" }
+      ]
+    },
+    {
+      "id": "durable-ack",
+      "title": { "tr": "3 · Kalıcı yaz, sonra ✓", "en": "3 · Persist first, then ✓" },
+      "narration": {
+        "tr": "Yönlendirici mesajı önce Bob'un çevrimdışı kuyruğuna kalıcı yazar (anahtar: recipientId + msgId, idempotent). Ancak bu yazma tamamlandıktan sonra Alice'e tek tik (SERVER_ACK) döner. Tik gelmezse Alice'in cihazı aynı msgId ile yeniden gönderir; çift kayıt oluşmaz.",
+        "en": "The router first durably writes the message to Bob's offline queue (key: recipientId + msgId, idempotent). Only after that write completes does Alice get the single tick (SERVER_ACK). If the tick never arrives, Alice's device resends with the same msgId; no duplicate record is created."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["router", "offline", "alice"], "edges": ["router-offline", "connA-router", "a-connA"] },
+      "nodeStates": { "offline": { "status": "active", "badge": "+1" }, "alice": { "status": "success", "badge": "✓" } },
+      "packets": [
+        { "edge": "router-offline", "shape": "square", "label": "append", "durationMs": 700 },
+        { "edge": "router-offline", "shape": "dot", "direction": "backward", "startAt": 800, "durationMs": 500, "color": "success" },
+        { "edge": "connA-router", "shape": "dot", "direction": "backward", "startAt": 1500, "durationMs": 500, "color": "success", "label": "✓" },
+        { "edge": "a-connA", "shape": "dot", "direction": "backward", "startAt": 2050, "durationMs": 600, "color": "success", "label": "✓" }
+      ],
+      "annotations": [
+        { "id": "order", "x": 490, "y": 500, "text": { "tr": "önce dayanıklılık, sonra onay", "en": "durability first, then the ack" }, "tone": "success", "target": "offline" }
+      ]
+    },
+    {
+      "id": "lookup",
+      "title": { "tr": "4 · Bob nerede?", "en": "4 · Where is Bob?" },
+      "narration": {
+        "tr": "Yönlendirici oturum kaydına sorar: Bob hangi bağlantı sunucusunda? Cevap: kayıt yok, son görülme 2 saat önce — Bob çevrimdışı. Çevrimiçi olsaydı mesaj doğrudan onun bağlantı sunucusuna itilecekti.",
+        "en": "The router asks the session registry: which connection server is Bob on? Answer: no record, last seen 2 hours ago — Bob is offline. Had he been online, the message would have been pushed straight to his connection server."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["router", "registry"], "edges": ["router-registry"] },
+      "nodeStates": { "registry": { "status": "warning", "badge": "miss" }, "offline": { "badge": "1 bekliyor" } },
+      "packets": [
+        { "edge": "router-registry", "shape": "dot", "label": "lookup(bob)", "durationMs": 600 },
+        { "edge": "router-registry", "shape": "dot", "direction": "backward", "startAt": 700, "durationMs": 600, "color": "warning", "label": "offline" }
+      ],
+      "annotations": [
+        { "id": "reg", "x": 490, "y": 150, "text": { "tr": "bellek içi, userId ile bölümlenmiş", "en": "in-memory, partitioned by userId" }, "target": "registry" }
+      ]
+    },
+    {
+      "id": "push-wake",
+      "title": { "tr": "5 · Push ile uyandır", "en": "5 · Wake with a push" },
+      "narration": {
+        "tr": "Bob çevrimdışı olduğu için yönlendirici APNs/FCM üzerinden içeriksiz bir uyandırma bildirimi gönderir: \"yeni mesajın var\". Mesajın kendisi push sağlayıcısına verilmez; şifreli yük sunucudaki kuyrukta Bob'u bekler.",
+        "en": "Because Bob is offline, the router sends a content-free wake-up notification via APNs/FCM: \"you have a new message\". The message itself is never handed to the push provider; the ciphertext waits for Bob in the server-side queue."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["router", "push", "bob"], "edges": ["router-push", "push-bob"] },
+      "nodeStates": { "push": { "status": "active" }, "bob": { "status": "warning", "sublabel": { "tr": "uyanıyor", "en": "waking up" } }, "registry": { "status": "idle", "badge": "" } },
+      "packets": [
+        { "edge": "router-push", "shape": "diamond", "label": "wake(bob)", "durationMs": 900 },
+        { "edge": "push-bob", "shape": "diamond", "startAt": 1000, "durationMs": 1000, "color": "warning" }
+      ],
+      "annotations": [
+        { "id": "nocontent", "x": 720, "y": 540, "text": { "tr": "push'ta içerik yok, yalnızca sinyal", "en": "no content in the push, only a signal" }, "tone": "warning", "target": "push" }
+      ]
+    },
+    {
+      "id": "deliver",
+      "title": { "tr": "6 · Bob bağlanır: teslim ve ✓✓", "en": "6 · Bob connects: delivery and ✓✓" },
+      "narration": {
+        "tr": "Bob'un uygulaması bağlantı sunucusu B'ye bağlanır ve oturum kaydı güncellenir. Yönlendirici Bob'un kuyruğunu sırayla boşaltır; cihaz mesajı çözer ve DELIVERED onayı yollar. Sunucu ancak bu onaydan sonra kopyayı siler ve Alice'e çift tik gönderir.",
+        "en": "Bob's app connects to connection server B and the session registry is updated. The router drains Bob's queue in order; the device decrypts the message and sends a DELIVERED receipt. Only after that receipt does the server delete its copy and send Alice the double tick."
+      },
+      "durationMs": 4400,
+      "highlight": { "nodes": ["bob", "connB", "router", "offline", "alice"], "edges": ["connB-bob", "router-connB", "router-offline", "connA-router", "a-connA"] },
+      "nodeStates": { "bob": { "status": "active", "sublabel": { "tr": "çevrimiçi", "en": "online" }, "badge": "1 yeni" }, "connB": { "status": "active" }, "registry": { "status": "success", "badge": "bob → B" }, "offline": { "status": "success", "badge": "0" }, "alice": { "badge": "✓✓" }, "push": { "status": "idle" } },
+      "packets": [
+        { "edge": "connB-bob", "shape": "dot", "direction": "backward", "label": "connect", "durationMs": 600 },
+        { "edge": "router-offline", "shape": "dot", "label": "scan(bob)", "startAt": 700, "durationMs": 500 },
+        { "edge": "router-connB", "shape": "envelope", "startAt": 1300, "durationMs": 600 },
+        { "edge": "connB-bob", "shape": "envelope", "startAt": 1950, "durationMs": 600 },
+        { "edge": "connB-bob", "shape": "dot", "direction": "backward", "label": "DELIVERED", "startAt": 2600, "durationMs": 500, "color": "success" },
+        { "edge": "router-connB", "shape": "dot", "direction": "backward", "startAt": 3150, "durationMs": 400, "color": "success" },
+        { "edge": "connA-router", "shape": "dot", "direction": "backward", "startAt": 3600, "durationMs": 400, "color": "success", "label": "✓✓" },
+        { "edge": "a-connA", "shape": "dot", "direction": "backward", "startAt": 4000, "durationMs": 500, "color": "success" }
+      ],
+      "annotations": [
+        { "id": "delete", "x": 490, "y": 500, "text": { "tr": "DELIVERED → sunucu kopyası silinir", "en": "DELIVERED → server copy deleted" }, "tone": "success", "target": "offline" }
+      ]
+    },
+    {
+      "id": "read",
+      "title": { "tr": "7 · Okundu: mavi ✓✓", "en": "7 · Read: blue ✓✓" },
+      "narration": {
+        "tr": "Bob sohbeti açınca cihazı READ onayı gönderir; aynı yoldan Alice'e ulaşır ve tikler maviye döner. Bu onay yalnızca kullanıcı deneyimi içindir, teslim garantisinin parçası değildir ve kullanıcı tarafından kapatılabilir.",
+        "en": "When Bob opens the chat his device sends a READ receipt; it reaches Alice over the same path and the ticks turn blue. This receipt is purely for user experience, not part of the delivery guarantee, and can be turned off by the user."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["bob", "connB", "router", "connA", "alice"], "edges": ["connB-bob", "router-connB", "connA-router", "a-connA"] },
+      "nodeStates": { "bob": { "badge": "" }, "alice": { "badge": "✓✓ mavi" } },
+      "packets": [
+        { "edge": "connB-bob", "shape": "dot", "direction": "backward", "label": "READ", "durationMs": 500, "color": "primary" },
+        { "edge": "router-connB", "shape": "dot", "direction": "backward", "startAt": 550, "durationMs": 400, "color": "primary" },
+        { "edge": "connA-router", "shape": "dot", "direction": "backward", "startAt": 1000, "durationMs": 400, "color": "primary" },
+        { "edge": "a-connA", "shape": "dot", "direction": "backward", "startAt": 1450, "durationMs": 500, "color": "primary" }
+      ],
+      "annotations": [
+        { "id": "ux", "x": 80, "y": 340, "text": { "tr": "okundu bilgisi = UX, garanti değil", "en": "read receipt = UX, not a guarantee" }, "target": "alice" }
+      ]
+    },
+    {
+      "id": "presence",
+      "title": { "tr": "8 · Presence: 'çevrimiçi'", "en": "8 · Presence: 'online'" },
+      "narration": {
+        "tr": "Bob'un bağlantı sunucusu presence servisine 'bob çevrimiçi' yazar. Alice, Bob'un sohbetini açık tuttuğu için onun presence'ına abonedir; durum yalnızca abonelere fan-out edilir ve Alice'in ekranında 'çevrimiçi' belirir. 30 s'lik heartbeat kesilirse 'son görülme' yazılır.",
+        "en": "Bob's connection server writes 'bob online' to the presence service. Because Alice has Bob's chat open she is subscribed to his presence; the status is fanned out only to subscribers and 'online' appears on Alice's screen. If the 30 s heartbeat stops, 'last seen' is written instead."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["connB", "presence", "connA", "alice"], "edges": ["connB-presence", "presence-connA", "a-connA"] },
+      "nodeStates": { "presence": { "status": "active", "badge": "1 abone" }, "alice": { "badge": "Bob çevrimiçi" }, "connB": { "badge": "♥ 30 s" } },
+      "edgeStates": { "presence-connA": { "status": "active" } },
+      "packets": [
+        { "edge": "connB-presence", "shape": "diamond", "label": "online(bob)", "durationMs": 700 },
+        { "edge": "presence-connA", "shape": "diamond", "startAt": 900, "durationMs": 1000, "color": "success" },
+        { "edge": "a-connA", "shape": "dot", "direction": "backward", "startAt": 2000, "durationMs": 500, "color": "success" }
+      ],
+      "annotations": [
+        { "id": "subs", "x": 720, "y": 150, "text": { "tr": "yalnızca açık sohbetlere yayın, rehbere değil", "en": "broadcast only to open chats, not the whole contact list" }, "tone": "info", "target": "presence" }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["whatsapp", "messaging", "delivery-receipts", "presence", "e2e", "websocket"]
+}
