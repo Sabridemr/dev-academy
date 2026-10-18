@@ -1,5 +1,5 @@
-import { useMemo, useState, type LayoutChangeEvent } from 'react';
-import { View } from 'react-native';
+import { useMemo, useState } from 'react';
+import { View, type LayoutChangeEvent } from 'react-native';
 import Svg, { Circle, G, Line, Text as SvgText } from 'react-native-svg';
 import {
   RING_SIZE,

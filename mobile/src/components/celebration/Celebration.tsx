@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { AccessibilityInfo, StyleSheet, View } from 'react-native';
-import LottieView from 'lottie-react-native';
+import LottieView, { type AnimationObject } from 'lottie-react-native';
 
 /**
  * Kutlama animasyonu (Lottie) — quiz geçildiğinde / rozet kazanıldığında gösterilir.
@@ -8,7 +8,7 @@ import LottieView from 'lottie-react-native';
  * Reduced-motion açıksa animasyon oynatılmaz, son kare statik gösterilir.
  */
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- Metro varlık çözümlemesi require ile çalışır
-const CELEBRATION = require('../../../assets/animations/celebration.json') as object;
+const CELEBRATION = require('../../../assets/animations/celebration.json') as AnimationObject;
 
 export function Celebration({ size = 160, onFinish }: { size?: number; onFinish?: () => void }) {
   const [reduced, setReduced] = useState<boolean | null>(null);

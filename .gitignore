@@ -49,3 +49,6 @@ pnpm-debug.log*
 
 # Next.js
 web/next-env.d.ts
+
+# Redis yerel dump
+*.rdb

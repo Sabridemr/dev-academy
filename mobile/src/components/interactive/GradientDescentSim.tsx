@@ -1,5 +1,5 @@
-import { useMemo, useState, type LayoutChangeEvent } from 'react';
-import { View } from 'react-native';
+import { useMemo, useState } from 'react';
+import { View, type LayoutChangeEvent } from 'react-native';
 import Svg, { Circle, Line, Polyline, Rect } from 'react-native-svg';
 import { closedFormSolution, generateLinearData, gradientStep, mseLoss, type GdStep } from '@devacademy/shared';
 import { useI18n } from '@/i18n';
