@@ -4,7 +4,8 @@
 #   docker compose --profile app up -d --build     # altyapı + API + web (tam yığın)
 #   docker compose run --rm seed                   # content/ klasörünü veritabanına yükle
 #
-# Varsayılan kimlik bilgileri yalnızca yerel geliştirme içindir.
+# Varsayılan kimlik bilgileri yalnızca yerel geliştirme içindir: altyapı portları yalnızca 127.0.0.1'e
+# açılır. Gizli değerler ortamdan ezilebilir (ör. JWT_ACCESS_SECRET=... docker compose --profile app up).
 
 name: devacademy
 
@@ -16,7 +17,7 @@ services:
       POSTGRES_PASSWORD: devacademy
       POSTGRES_DB: devacademy
     ports:
-      - '5432:5432'
+      - '127.0.0.1:5432:5432'
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -38,7 +39,7 @@ services:
         'allkeys-lru',
       ]
     ports:
-      - '6379:6379'
+      - '127.0.0.1:6379:6379'
     volumes:
       - redisdata:/data
     healthcheck:
@@ -56,8 +57,8 @@ services:
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin
     ports:
-      - '9000:9000'
-      - '9001:9001'
+      - '127.0.0.1:9000:9000'
+      - '127.0.0.1:9001:9001'
     volumes:
       - miniodata:/data
     healthcheck:
@@ -94,7 +95,7 @@ services:
       LOG_LEVEL: info
       DATABASE_URL: postgresql://devacademy:devacademy@postgres:5432/devacademy?schema=public
       REDIS_URL: redis://redis:6379
-      JWT_ACCESS_SECRET: local-dev-access-secret-change-me-0123456789
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-local-dev-access-secret-change-me-0123456789}
       S3_ENDPOINT: http://minio:9000
       S3_PUBLIC_URL: http://localhost:9000/devacademy-media
       S3_BUCKET: devacademy-media
@@ -102,7 +103,7 @@ services:
       S3_SECRET_KEY: minioadmin
       CONTENT_DIR: ../content
       SEED_ADMIN_EMAIL: admin@devacademy.local
-      SEED_ADMIN_PASSWORD: Admin123!
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-Admin123!}
     depends_on:
       postgres:
         condition: service_healthy
@@ -120,10 +121,13 @@ services:
         condition: service_completed_successfully
       redis:
         condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
 
-  # İçerik yükleyici: docker compose run --rm seed
+  # İçerik yükleyici (tek seferlik): docker compose run --rm seed
+  # `--profile app up` ile her açılışta otomatik çalışmaz
   seed:
-    profiles: ['app', 'seed']
+    profiles: ['seed']
     build:
       context: .
       dockerfile: backend/Dockerfile
@@ -148,7 +152,8 @@ services:
     ports:
       - '3000:3000'
     depends_on:
-      - api
+      api:
+        condition: service_healthy
 
 volumes:
   pgdata:

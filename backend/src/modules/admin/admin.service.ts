@@ -7,7 +7,13 @@ import type {
   LessonBlock,
   Paginated,
 } from '@devacademy/shared';
-import { LessonBlockSchema, QuizSchema, validateScene } from '@devacademy/shared';
+import {
+  buildSearchText,
+  dateKey,
+  LessonBlockSchema,
+  QuizSchema,
+  validateScene,
+} from '@devacademy/shared';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { toJsonLocalized } from '../../common/utils/localized';
 import { ContentService } from '../content/content.service';
@@ -183,7 +189,13 @@ export class AdminService {
         });
     if (!version) throw new NotFoundException('Yayınlanacak taslak bulunamadı');
     const blocks = (version.blocks as unknown as LessonBlock[]) ?? [];
-    const searchText = buildSearchText(blocks, version.title, version.summary, version.concepts);
+    const searchText = buildSearchText(
+      blocks,
+      version.title,
+      version.summary,
+      version.concepts,
+      version.tags,
+    );
 
     const lesson = await this.prisma.$transaction(async (tx) => {
       await tx.lessonVersion.updateMany({
@@ -221,6 +233,8 @@ export class AdminService {
     ]);
     await this.content.invalidateAll();
     await this.search.invalidate();
+    // İstemciler ders/modül önbelleğini tazelesin (yayınlamadaki gibi)
+    this.realtime.broadcast({ type: 'content.unpublished', payload: { lessonId } });
     return { lessonId, published: false };
   }
 
@@ -228,7 +242,10 @@ export class AdminService {
   async forkDraft(lessonId: string, authorId: string) {
     const lesson = await this.prisma.lesson.findUnique({
       where: { id: lessonId },
-      include: { publishedVersion: true, versions: { where: { status: 'draft' } } },
+      include: {
+        publishedVersion: true,
+        versions: { where: { status: 'draft' }, orderBy: { version: 'desc' }, take: 1 },
+      },
     });
     if (!lesson) throw new NotFoundException('Ders bulunamadı');
     if (lesson.versions.length > 0) return lesson.versions[0];
@@ -451,47 +468,26 @@ export class AdminService {
       this.prisma.animationScene.count(),
       this.prisma.quiz.count(),
       this.prisma.attempt.count(),
-      this.prisma.user.count({
-        where: { lastActivityDate: new Date().toISOString().slice(0, 10) },
-      }),
+      this.countActiveToday(),
     ]);
     return { users, lessons, published, scenes, quizzes, attempts, activeToday };
   }
-}
 
-export function buildSearchText(
-  blocks: LessonBlock[],
-  title: unknown,
-  summary: unknown,
-  concepts: string[],
-): string {
-  const loc = (v: unknown) =>
-    typeof v === 'string'
-      ? v
-      : v && typeof v === 'object'
-        ? Object.values(v as Record<string, string>).join(' ')
-        : '';
-  const body = blocks
-    .map((b) => {
-      switch (b.type) {
-        case 'text':
-        case 'realworld':
-        case 'callout':
-          return `${b.markdown} ${b.markdownEn ?? ''}`;
-        case 'code':
-          return loc(b.title);
-        case 'diagram':
-          return `${loc(b.alt)} ${loc(b.caption)}`;
-        case 'interactive':
-          return `${b.interactive} ${loc(b.title)} ${loc(b.instructions)}`;
-        default:
-          return '';
+  /** lastActivityDate kullanıcının kendi saat dilimindeki gündür; "bugün" her dilim için ayrı hesaplanır */
+  private async countActiveToday(): Promise<number> {
+    const now = new Date();
+    const zones = await this.prisma.user.groupBy({
+      by: ['timezone'],
+      where: { deletedAt: null, lastActivityDate: { not: null } },
+    });
+    const conditions = zones.flatMap(({ timezone }) => {
+      try {
+        return [{ timezone, lastActivityDate: dateKey(now, timezone) }];
+      } catch {
+        return []; // geçersiz saat dilimi kaydı
       }
-    })
-    .join('\n');
-  return `${loc(title)}\n${loc(summary)}\n${concepts.join(' ')}\n${body}`
-    .replace(/[#*_`>|]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .slice(0, 200_000);
+    });
+    if (conditions.length === 0) return 0;
+    return this.prisma.user.count({ where: { deletedAt: null, OR: conditions } });
+  }
 }

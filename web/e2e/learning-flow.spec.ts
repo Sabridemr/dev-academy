@@ -2,6 +2,24 @@ import { expect, test } from '@playwright/test';
 
 /** Temel öğrenme akışı: ana sayfa → modül → ders → animasyon → quiz; kayıt → onboarding → pano */
 
+// Her testte: yakalanmamış sayfa hatası ya da React hydration/render hatası testi düşürür
+const FATAL_CONSOLE = /hydrat|did not match|Minified React error|server rendered HTML|Uncaught/i;
+const pageErrors = new WeakMap<object, string[]>();
+
+test.beforeEach(async ({ page }) => {
+  const errors: string[] = [];
+  pageErrors.set(page, errors);
+  page.on('pageerror', (err) => errors.push(`pageerror: ${err.message}`));
+  page.on('console', (msg) => {
+    if (msg.type() === 'error' && FATAL_CONSOLE.test(msg.text()))
+      errors.push(`console: ${msg.text()}`);
+  });
+});
+
+test.afterEach(async ({ page }) => {
+  expect(pageErrors.get(page) ?? []).toEqual([]);
+});
+
 test('ana sayfa modülleri ve hero animasyonunu gösterir', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
@@ -27,8 +45,9 @@ test('load balancer simülatörü istekleri dağıtır', async ({ page }) => {
   await expect(page.getByText(/Round-robin sıradaki: s1/)).toBeVisible();
 });
 
-test('kayıt → onboarding → pano', async ({ page }) => {
-  const email = `pw_${Date.now()}@test.local`;
+test('kayıt → onboarding → pano', async ({ page }, testInfo) => {
+  // Projeler (masaüstü/mobil) paralel koşar: aynı milisaniyede aynı e-posta çakışmasın
+  const email = `pw_${testInfo.project.name}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}@test.local`;
   await page.goto('/register');
   await page.getByLabel('Ad soyad').fill('Playwright Kullanıcı');
   await page.getByLabel('E-posta').fill(email);
@@ -37,6 +56,17 @@ test('kayıt → onboarding → pano', async ({ page }) => {
   await expect(page).toHaveURL(/onboarding/);
   await page.getByRole('radio').first().click();
   await page.getByRole('button', { name: 'Kaydet ve başla' }).click();
+  await expect(page).toHaveURL(/dashboard/);
+  await expect(page.getByText('Tamamlanma')).toBeVisible();
+  // Oturum localStorage'dayken tam sayfa yükleme: sunucu ve ilk istemci render'ı eşleşmeli (hydration)
+  await page.goto('/lessons/a-05-load-balancing');
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('Load Balancer');
+  await page.reload();
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('Load Balancer');
+  // Token'lar localStorage'da değil (refresh httpOnly çerezde); yeni sayfa yüklemesinde oturum çerezle sürer
+  const stored = await page.evaluate(() => localStorage.getItem('da-auth') ?? '');
+  expect(stored).not.toMatch(/accessToken|refreshToken/);
+  await page.goto('/dashboard');
   await expect(page).toHaveURL(/dashboard/);
   await expect(page.getByText('Tamamlanma')).toBeVisible();
 });

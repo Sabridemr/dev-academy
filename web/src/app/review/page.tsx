@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import Link from 'next/link';
 import { useQueryClient } from '@tanstack/react-query';
-import { gradeAnswer } from '@devacademy/shared';
+import { gradeAnswer, type ReviewCardDto } from '@devacademy/shared';
 import { RequireAuth } from '@/components/auth/RequireAuth';
+import { OrderList } from '@/components/lesson/OrderList';
 import { useI18n } from '@/i18n';
 import { api } from '@/lib/api';
 import { useReviews } from '@/lib/hooks';
@@ -16,72 +17,116 @@ import { cn } from '@/lib/utils';
  * ardından ne kadar iyi hatırladığını 0-5 arası değerlendirir.
  */
 function Review() {
-  const { t, tl, messages } = useI18n();
+  const { t } = useI18n();
   const qc = useQueryClient();
   const { data: cards, isLoading } = useReviews();
   const [index, setIndex] = useState(0);
-  const [selected, setSelected] = useState<string[]>([]);
-  const [revealed, setRevealed] = useState(false);
+  const [grading, setGrading] = useState(false);
+  const gradingRef = useRef(false);
 
   if (isLoading) return <div className="card h-48 animate-pulse" />;
   const card = cards?.[index];
   if (!card) return <div className="card p-8 text-center text-muted">{t('review.empty')}</div>;
+
+  // Çift tıklama aynı kartı iki kez değerlendirip sonrakini atlamasın (ref: aynı render'daki tıklamalar için)
+  const grade = async (quality: number) => {
+    if (gradingRef.current) return;
+    gradingRef.current = true;
+    setGrading(true);
+    try {
+      await api(`/progress/reviews/${card.id}/grade`, { method: 'POST', body: { quality } });
+      if (index + 1 >= (cards?.length ?? 0)) {
+        await qc.invalidateQueries({ queryKey: ['reviews'] });
+        await qc.invalidateQueries({ queryKey: ['progress-summary'] });
+        setIndex(0);
+      } else setIndex(index + 1);
+    } finally {
+      gradingRef.current = false;
+      setGrading(false);
+    }
+  };
+
+  return (
+    <ReviewCardView
+      key={card.id}
+      card={card}
+      position={`${index + 1}/${cards?.length}`}
+      grading={grading}
+      onGrade={grade}
+    />
+  );
+}
+
+/** Tek kart; seçim durumu karta özeldir (key ile kart değişince sıfırlanır) */
+function ReviewCardView({
+  card,
+  position,
+  grading,
+  onGrade,
+}: {
+  card: ReviewCardDto;
+  position: string;
+  grading: boolean;
+  onGrade: (quality: number) => void;
+}) {
+  const { t, tl, messages } = useI18n();
+  // Sıralama sorusunda başlangıç sırası seçeneklerin kendisidir (QuizBlock ile aynı)
+  const [selected, setSelected] = useState<string[]>(() =>
+    card.type === 'order' ? card.options.map((o) => o.id) : [],
+  );
+  const [revealed, setRevealed] = useState(false);
   const isRight = revealed && gradeAnswer(card.type, selected, card.correctAnswer);
   const optionText = (id: string) => {
     const o = card.options.find((x) => x.id === id);
     return o ? tl(o.text) : id;
   };
 
-  const grade = async (quality: number) => {
-    await api(`/progress/reviews/${card.id}/grade`, { method: 'POST', body: { quality } });
-    setSelected([]);
-    setRevealed(false);
-    if (index + 1 >= (cards?.length ?? 0)) {
-      await qc.invalidateQueries({ queryKey: ['reviews'] });
-      await qc.invalidateQueries({ queryKey: ['progress-summary'] });
-      setIndex(0);
-    } else setIndex(index + 1);
-  };
-
   return (
     <div className="card p-6">
       <div className="mb-3 flex justify-between text-xs text-muted">
         <span className="chip">{t('review.concept', { name: card.concept })}</span>
-        <span>
-          {index + 1}/{cards?.length}
-        </span>
+        <span>{position}</span>
       </div>
       <p className="mb-4 text-lg font-medium">{tl(card.prompt)}</p>
-      <div className="grid gap-2 sm:grid-cols-2">
-        {card.options.map((o) => (
-          <button
-            key={o.id}
-            type="button"
-            disabled={revealed}
-            onClick={() =>
-              setSelected((s) =>
-                card.type === 'multiple'
-                  ? s.includes(o.id)
-                    ? s.filter((x) => x !== o.id)
-                    : [...s, o.id]
-                  : [o.id],
-              )
-            }
-            className={cn(
-              'rounded-lg border px-3 py-2 text-left text-sm',
-              revealed && card.correctAnswer.includes(o.id)
-                ? 'border-success bg-success/10'
-                : revealed && selected.includes(o.id)
-                  ? 'border-danger bg-danger/10'
-                  : selected.includes(o.id)
-                    ? 'border-primary bg-primary/10'
-                    : 'border-border hover:bg-elevated',
-            )}
-          >
-            {tl(o.text)}
-          </button>
-        ))}
-      </div>
+      {card.type === 'order' ? (
+        <OrderList
+          order={selected}
+          options={card.options}
+          disabled={revealed}
+          onChange={setSelected}
+        />
+      ) : (
+        <div className="grid gap-2 sm:grid-cols-2">
+          {card.options.map((o) => (
+            <button
+              key={o.id}
+              type="button"
+              disabled={revealed}
+              onClick={() =>
+                setSelected((s) =>
+                  card.type === 'multiple'
+                    ? s.includes(o.id)
+                      ? s.filter((x) => x !== o.id)
+                      : [...s, o.id]
+                    : [o.id],
+                )
+              }
+              className={cn(
+                'rounded-lg border px-3 py-2 text-left text-sm',
+                revealed && card.correctAnswer.includes(o.id)
+                  ? 'border-success bg-success/10'
+                  : revealed && selected.includes(o.id)
+                    ? 'border-danger bg-danger/10'
+                    : selected.includes(o.id)
+                      ? 'border-primary bg-primary/10'
+                      : 'border-border hover:bg-elevated',
+              )}
+            >
+              {tl(o.text)}
+            </button>
+          ))}
+        </div>
+      )}
       {!revealed ? (
         <button
           type="button"
@@ -114,8 +159,9 @@ function Review() {
               <button
                 key={label}
                 type="button"
+                disabled={grading}
                 className={cn('btn-ghost', q < 3 ? 'hover:border-danger' : 'hover:border-success')}
-                onClick={() => grade(q)}
+                onClick={() => onGrade(q)}
               >
                 {q} · {label}
               </button>

@@ -84,7 +84,8 @@ export function ScenePlayer({ scene, caption, autoPlay = false, className, onFir
   }, [state.playing, onFirstPlay]);
 
   const onKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (e.target instanceof HTMLSelectElement) return;
+    // Odak bir kontrol üzerindeyse (düğme, sekme, kaydırıcı, özet...) tuş o kontrolün kendi işini yapar
+    if (isInteractiveTarget(e.target)) return;
     if (e.key === ' ') {
       e.preventDefault();
       dispatch({ type: 'TOGGLE_PLAY' });
@@ -272,5 +273,15 @@ export function ScenePlayer({ scene, caption, autoPlay = false, className, onFir
         </ol>
       </details>
     </figure>
+  );
+}
+
+/** Klavye kısayolları yalnızca oynatıcının kendisi odaktayken çalışır; kontroller yerel davranışını korur */
+function isInteractiveTarget(target: EventTarget): boolean {
+  return (
+    target instanceof HTMLElement &&
+    target.closest(
+      'button, a, input, select, textarea, summary, [role="tab"], [contenteditable]',
+    ) !== null
   );
 }

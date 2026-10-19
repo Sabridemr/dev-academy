@@ -22,7 +22,6 @@ describe('Header çıkış', () => {
     useAuthStore.setState({
       hydrated: true,
       accessToken: 'a',
-      refreshToken: 'r',
       user: {
         id: 'u1',
         email: 'onceki@x.y',

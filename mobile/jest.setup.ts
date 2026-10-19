@@ -47,3 +47,26 @@ jest.mock('lottie-react-native', () => {
   const { View } = require('react-native');
   return { __esModule: true, default: View };
 });
+
+// expo-notifications — modül yüklenirken Expo Go push uyarısı basar; testler bildirim API'sini kullanmaz
+jest.mock('expo-notifications', () => ({
+  setNotificationHandler: jest.fn(),
+  getPermissionsAsync: jest.fn(async () => ({ status: 'denied' })),
+  requestPermissionsAsync: jest.fn(async () => ({ status: 'denied' })),
+  scheduleNotificationAsync: jest.fn(async () => 'notification-id'),
+  cancelScheduledNotificationAsync: jest.fn(async () => undefined),
+  setNotificationChannelAsync: jest.fn(async () => null),
+  getExpoPushTokenAsync: jest.fn(async () => ({ data: 'ExponentPushToken[test]' })),
+  addNotificationResponseReceivedListener: jest.fn(() => ({ remove: jest.fn() })),
+  getLastNotificationResponseAsync: jest.fn(async () => null),
+  AndroidImportance: { DEFAULT: 3, HIGH: 4 },
+  SchedulableTriggerInputTypes: { DAILY: 'daily' },
+}));
+
+// @expo/vector-icons — v15 font'u asenkron yükleyip act() dışı güncelleme yapar; testlerde ikon görseli önemsiz
+jest.mock('@expo/vector-icons', () => {
+  const { createElement } = require('react');
+  const { Text } = require('react-native');
+  const Icon = ({ name }: { name: string }) => createElement(Text, null, name);
+  return new Proxy({}, { get: () => Icon });
+});

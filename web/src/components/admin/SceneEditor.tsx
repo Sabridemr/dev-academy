@@ -4,6 +4,7 @@ import { useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Plus, Rocket, Save, Trash2 } from 'lucide-react';
 import {
+  AnimationSceneSchema,
   NodeKindSchema,
   validateScene,
   resolveStepView,
@@ -59,6 +60,17 @@ export function SceneEditor({
   const onJsonChange = (text: string) => {
     setJsonText(text);
     try {
+      // Geçerli JSON ama yanlış yapı (ör. `{}`) önizlemeyi çökertmesin: şemadan geçmeyen girdi uygulanmaz
+      const parsed = AnimationSceneSchema.safeParse(JSON.parse(text));
+      if (!parsed.success) {
+        setJsonError(
+          parsed.error.issues
+            .slice(0, 3)
+            .map((i) => `${i.path.join('.') || '(kök)'}: ${i.message}`)
+            .join('; '),
+        );
+        return;
+      }
       setScene(JSON.parse(text) as AnimationSceneInput);
       setJsonError(null);
     } catch (e) {

@@ -1,0 +1,25 @@
+version: 2
+updates:
+  # pnpm çalışma alanı (kök lockfile tüm paketleri kapsar). Expo SDK'ya bağlı paketler
+  # `expo install --fix` ile topluca yükseltilmeli; Dependabot yalnızca yama/küçük sürüm açar.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    ignore:
+      - dependency-name: '*'
+        update-types: ['version-update:semver-major']
+    groups:
+      minor-and-patch:
+        update-types: ['minor', 'patch']
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+
+  - package-ecosystem: docker
+    directories: [/backend, /web]
+    schedule:
+      interval: weekly

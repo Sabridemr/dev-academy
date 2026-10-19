@@ -9,6 +9,7 @@ import type { LocalizedString } from '@devacademy/shared';
 /**
  * İçerik SVG'lerini güvenli biçimde gösterir. DOMPurify (SVG profili) script, olay işleyicileri,
  * foreignObject ve tüm bağlantı/dış referansları temizler; animate/set ile öznitelik değiştirme de yasaktır.
+ * <style> de yasaktır: satır içi SVG'de stil kuralları tüm sayfaya uygulanır (stiller öznitelik olarak yazılmalı).
  * İçerik SVG'leri href/use kullanmadığı için bunlar tamamen kapalıdır. Sunucuda (SSR) da çalışır.
  * SVG'ler --da-* CSS değişkenlerini kullandığı için tema otomatik uygulanır.
  */
@@ -17,6 +18,7 @@ export function sanitizeSvg(svg: string): string {
     USE_PROFILES: { svg: true, svgFilters: true },
     FORBID_TAGS: [
       'script',
+      'style',
       'foreignObject',
       'animate',
       'animateMotion',

@@ -16,7 +16,7 @@ Mimari ayrıntıları için [docs/architecture.md](docs/architecture.md). Projen
 
 ## Hızlı başlangıç
 
-Gereksinimler: Node.js ≥ 20, pnpm ≥ 9, Docker (ya da yerel PostgreSQL 16 + Redis 7).
+Gereksinimler: Node.js ≥ 20, pnpm ≥ 10, Docker (ya da yerel PostgreSQL 16 + Redis 7).
 
 ```bash
 pnpm install
@@ -88,8 +88,8 @@ Admin panelinden (web) dersler taslak olarak düzenlenir, sahne editöründe gö
 
 - **Monorepo + ortak paket**: Sahne şeması, API tipleri ve oyunlaştırma kuralları tek kaynaktan gelir; bir alan değiştiğinde üç katmanda derleme hatası alınır.
 - **İçerik Git’te**: Code review, diff ve CI doğrulaması için. Admin paneli aynı veritabanı sürümlerini düzenler; panelde yapılan değişiklikleri `content/` klasörüne geri yazan bir dışa aktarım henüz yoktur.
-- **Tek React sürümü**: React Native 0.79, React 19.0.0 gerektirir. `node-linker=hoisted` (Expo/Metro gereği) ile çakışma olmaması için tüm çalışma alanı `pnpm.overrides` ile React 19.0.0’a sabitlenmiştir.
-- **Kimlik doğrulama**: Web istemcisi token’ları `localStorage`’da tutar (SPA modeli). Daha yüksek güvenlik için refresh token’ı httpOnly çerezde tutan bir BFF katmanı önerilir. Mobil token’ları `expo-secure-store`’da tutar.
+- **Tek React sürümü**: Expo SDK 54 / React Native 0.81, React 19.1.0 gerektirir. `node-linker=hoisted` (Expo/Metro gereği) ile çakışma olmaması için tüm çalışma alanı `pnpm.overrides` ile React 19.1.0’a sabitlenmiştir.
+- **Kimlik doğrulama**: Web istemcisi refresh token’ı httpOnly çerezde taşır (`X-Auth-Mode: cookie`), access token yalnızca bellektedir; localStorage’da yalnızca profil durur. Web ve API farklı “site”lardaysa `REFRESH_COOKIE_SAMESITE=none` gerekir. CSP istek başına nonce kullanır (`'unsafe-inline'` yok). Mobil token’ları `expo-secure-store`’da tutar. Access token her istekte kullanıcının güncel durumuna (silinmiş mi, rolü, oturumları kapatıldı mı) göre doğrulanır.
 - **Web güvenliği**: İçerik SVG’leri DOMPurify ile temizlenir, sayfalar Content-Security-Policy ile sunulur. CSP’nin `connect-src` değeri build anındaki `NEXT_PUBLIC_API_URL`’den hesaplanır; API adresi değişirse web yeniden build edilmelidir. Swagger (`/docs`) üretimde kapalıdır.
 - **Arama**: PostgreSQL full-text (`simple` sözlük) + ILIKE yedeği; içerik ölçeği ayrı bir arama motorunu gerektirmiyor.
 - **Bildirimler**: Saatlik zamanlanmış iş, kullanıcının saat dilimine göre hatırlatma saati gelen ve o gün çalışmamış kullanıcılara Expo push (yoksa e-posta) gönderir.

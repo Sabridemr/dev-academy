@@ -40,9 +40,9 @@ export class UsersController {
 
   @Delete('me')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Hesabı kapat (soft delete)' })
+  @ApiOperation({ summary: 'Hesabı ve kişisel verileri kalıcı olarak sil' })
   async remove(@CurrentUser() user: AuthUser): Promise<void> {
-    await this.users.softDelete(user.id);
+    await this.users.eraseAccount(user.id);
   }
 
   @Post('me/push-tokens')

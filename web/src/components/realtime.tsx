@@ -44,6 +44,7 @@ export function RealtimeBridge() {
             setTimeout(() => setToasts((t) => t.filter((x) => x.id !== ev.payload.id)), 5000);
             break;
           case 'content.published':
+          case 'content.unpublished':
             void qc.invalidateQueries({ queryKey: ['lesson', ev.payload.lessonId] });
             void qc.invalidateQueries({ queryKey: ['module'] });
             break;

@@ -2,7 +2,7 @@ import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:f
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { loadContent } from './content-loader';
+import { loadContent, translationReport } from './content-loader';
 
 /** İçerik doğrulayıcı kuralları: gerçek A-05 dersinin geçici bir kopyası üzerinde bozulma senaryoları */
 const REAL = resolve(__dirname, '../../../../content');
@@ -85,5 +85,26 @@ describe('içerik doğrulayıcı', () => {
         expect.stringContaining('bilinmeyen modül yok-modul'),
       ]),
     );
+  });
+});
+
+describe('translationReport', () => {
+  it('gövdesi tamamen çevrilmiş dersleri ve İngilizcesi olan kısa metinleri sayar', () => {
+    const lesson = (id: string, markdownEn?: string) => ({
+      doc: {
+        meta: { id, title: { tr: 'Başlık', en: 'Title' }, summary: 'Özet' },
+        blocks: [
+          { id: 't', order: 0, type: 'text', markdown: 'Metin', markdownEn },
+          { id: 'd', order: 1, type: 'diagram', src: 'd.svg', alt: { tr: 'Alt' } },
+        ],
+      },
+    });
+    const report = translationReport({
+      modules: [{ lessons: [lesson('a', 'Text'), lesson('b')] }],
+    } as never);
+    expect(report.lessonsWithEnglishBody).toBe(1);
+    expect(report.untranslatedLessons).toEqual(['b']);
+    expect(report.localizedFields).toBe(6);
+    expect(report.localizedFieldsWithEnglish).toBe(2);
   });
 });

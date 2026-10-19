@@ -59,3 +59,23 @@ it('kuyruktaki deneme geçerse onPassed çağrılır', () => {
 
   expect(onPassed).toHaveBeenCalledTimes(1);
 });
+
+it('kuyruktaki deneme kalıcı hatayla düşürülürse kullanıcıya gösterilir', () => {
+  jest.useFakeTimers();
+  enqueueAttempt('quiz-1', 'l1', { answers: [{ questionId: 'q1', selected: ['a'] }] });
+  const qc = new QueryClient();
+  const view = render(
+    <QueryClientProvider client={qc}>
+      <QuizView quiz={quiz} lessonId="l1" />
+    </QueryClientProvider>,
+  );
+  expect(view.getByTestId('quiz-queued')).toBeTruthy();
+
+  clearQueues(); // flushAttemptQueue kalıcı hatada kaydı siler
+  act(() => {
+    jest.advanceTimersByTime(3100);
+  });
+
+  expect(view.queryByTestId('quiz-queued')).toBeNull();
+  expect(view.getByTestId('quiz-dropped')).toBeTruthy();
+});

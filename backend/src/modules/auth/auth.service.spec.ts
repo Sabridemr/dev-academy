@@ -105,6 +105,10 @@ function createService(
         return u;
       }),
       update: jest.fn(async ({ data }) => data),
+      delete: jest.fn(async ({ where }) => {
+        const i = users.findIndex((u) => u.id === where.id);
+        return i >= 0 ? users.splice(i, 1)[0] : null;
+      }),
     },
     oAuthAccount: {
       findUnique: jest.fn(
@@ -120,13 +124,16 @@ function createService(
       ({ JWT_ACCESS_TTL: 900, JWT_REFRESH_TTL: 3600, JWT_ACCESS_SECRET: 'x'.repeat(32) })[k],
   };
   const oauth = { verify: jest.fn(async () => opts.identity) };
+  const authState = { revokeAccessTokens: jest.fn(async () => undefined) };
   const service = new AuthService(
     prisma as never,
     new JwtService({}),
     config as never,
     oauth as never,
+    { acquireLock: async () => true } as never,
+    authState as never,
   );
-  return { service, prisma };
+  return { service, prisma, authState };
 }
 
 const userRow = (over: Record<string, unknown> = {}) => ({
@@ -223,12 +230,17 @@ describe('AuthService', () => {
   describe('oauthLogin', () => {
     const dto = { provider: 'google' as const, idToken: 'id-token' };
 
-    it('silinmiş kullanıcının bağlı hesabıyla girişi reddeder', async () => {
-      const { service } = createService({
-        identity: { providerUserId: 'g1', email: 'a@b.c', emailVerified: true },
-        accounts: [{ providerUserId: 'g1', user: userRow({ deletedAt: new Date() }) }],
+    it('eski (soft-delete) kapatılmış hesabın kalıntısını silip yeni hesap açar', async () => {
+      const legacy = userRow({ id: 'eski', email: 'deleted_eski@x', deletedAt: new Date() });
+      const { service, prisma } = createService({
+        identity: { providerUserId: 'g1', email: 'yeni@b.c', emailVerified: true },
+        users: [legacy],
+        accounts: [{ providerUserId: 'g1', userId: 'eski', user: legacy }],
       });
-      await expect(service.oauthLogin(dto, {})).rejects.toBeInstanceOf(UnauthorizedException);
+      const res = await service.oauthLogin(dto, {});
+      expect(prisma.user.delete).toHaveBeenCalledWith({ where: { id: 'eski' } });
+      expect(res.user.id).not.toBe('eski');
+      expect(prisma.user.create).toHaveBeenCalled();
     });
 
     it('doğrulanmamış e-posta ile mevcut hesaba bağlanmaz', async () => {
@@ -240,10 +252,33 @@ describe('AuthService', () => {
       expect(prisma.oAuthAccount.create).not.toHaveBeenCalled();
     });
 
+    it('e-postası doğrulanmamış şifreli hesaba bağlanmaz (pre-account hijack)', async () => {
+      const { service, prisma } = createService({
+        identity: { providerUserId: 'g4', email: 'a@b.c', emailVerified: true },
+        users: [userRow({ emailVerifiedAt: null })],
+      });
+      await expect(service.oauthLogin(dto, {})).rejects.toBeInstanceOf(ConflictException);
+      expect(prisma.oAuthAccount.create).not.toHaveBeenCalled();
+    });
+
+    it('yeni kullanıcıyı bağlı hesabıyla tek yazımda oluşturur', async () => {
+      const { service, prisma } = createService({
+        identity: { providerUserId: 'g5', email: 'yeni@b.c', emailVerified: true },
+      });
+      await service.oauthLogin(dto, {});
+      expect(prisma.user.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          email: 'yeni@b.c',
+          oauthAccounts: { create: expect.objectContaining({ providerUserId: 'g5' }) },
+        }),
+      });
+      expect(prisma.oAuthAccount.create).not.toHaveBeenCalled();
+    });
+
     it('doğrulanmış e-posta ile mevcut hesaba bağlanır, yeni kullanıcı açmaz', async () => {
       const { service, prisma } = createService({
         identity: { providerUserId: 'g3', email: 'A@b.c', emailVerified: true },
-        users: [userRow()],
+        users: [userRow({ emailVerifiedAt: new Date('2026-01-02') })],
       });
       const res = await service.oauthLogin(dto, {});
       expect(res.user.id).toBe('u1');
@@ -260,5 +295,11 @@ describe('AuthService', () => {
       BadRequestException,
     );
     expect(prisma.user.update).not.toHaveBeenCalled();
+  });
+
+  it('tüm cihazlardan çıkış access token’ları da geçersiz kılar', async () => {
+    const { service, authState } = createService({ users: [userRow()] });
+    await service.logout(undefined, 'u1', true);
+    expect(authState.revokeAccessTokens).toHaveBeenCalledWith('u1');
   });
 });

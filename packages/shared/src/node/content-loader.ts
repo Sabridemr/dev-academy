@@ -28,6 +28,7 @@ import {
   type Quiz,
 } from '../content/schema';
 import { parseLessonMarkdown, LessonParseError } from '../content/parser';
+import { isLessonBodyTranslated } from '../content/translation';
 import { validateScene } from '../scene/validate';
 import type { AnimationScene } from '../scene/schema';
 import { CURRICULUM } from '../content/curriculum';
@@ -260,6 +261,15 @@ export function loadContent(root = findContentRoot()): LoadedContent {
             message: 'viewBox yok; responsive ölçekleme için gerekli',
           });
         }
+        // İstemci sanitizer'ı bunları siler; <style> kuralları satır içi SVG'de tüm sayfaya uygulanır
+        const forbidden = content.match(/<(script|style|foreignObject)[\s>]/i);
+        if (forbidden) {
+          issues.push({
+            severity: 'error',
+            file: rel(join(lessonDir, f)),
+            message: `<${forbidden[1]}> kullanılamaz; stilleri SVG öznitelikleri olarak yazın`,
+          });
+        }
         svgs[f] = content;
       }
 
@@ -388,4 +398,52 @@ export function coverageReport(content: LoadedContent): {
     }
   }
   return { total, written: total - missing.length, missing };
+}
+
+/** Çevrilebilir kısa metin alanları (başlık, altyazı, alt metin, yönerge) */
+const LOCALIZED_KEYS = new Set(['title', 'summary', 'caption', 'alt', 'instructions']);
+
+/**
+ * İngilizce çeviri kapsamı. Doğrulama hatası/uyarısı değildir (--strict'i bozmaz); içerik ekibine
+ * nerede çeviri eksik olduğunu gösterir. Web, gövdesi çevrilmemiş derste EN kullanıcısına not gösterir.
+ */
+export function translationReport(content: LoadedContent): {
+  lessons: number;
+  lessonsWithEnglishBody: number;
+  untranslatedLessons: string[];
+  localizedFields: number;
+  localizedFieldsWithEnglish: number;
+} {
+  let lessons = 0;
+  let lessonsWithEnglishBody = 0;
+  const untranslatedLessons: string[] = [];
+  let localizedFields = 0;
+  let localizedFieldsWithEnglish = 0;
+
+  const countField = (value: unknown) => {
+    if (typeof value === 'string') localizedFields += 1;
+    else if (value && typeof value === 'object' && 'tr' in value) {
+      localizedFields += 1;
+      if ((value as { en?: string }).en) localizedFieldsWithEnglish += 1;
+    }
+  };
+
+  for (const m of content.modules) {
+    for (const l of m.lessons) {
+      lessons += 1;
+      countField(l.doc.meta.title);
+      countField(l.doc.meta.summary);
+      for (const b of l.doc.blocks)
+        for (const [k, v] of Object.entries(b)) if (LOCALIZED_KEYS.has(k)) countField(v);
+      if (isLessonBodyTranslated(l.doc.blocks)) lessonsWithEnglishBody += 1;
+      else untranslatedLessons.push(l.doc.meta.id);
+    }
+  }
+  return {
+    lessons,
+    lessonsWithEnglishBody,
+    untranslatedLessons,
+    localizedFields,
+    localizedFieldsWithEnglish,
+  };
 }

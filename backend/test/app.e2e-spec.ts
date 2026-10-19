@@ -148,6 +148,51 @@ describe('DevAcademy API (e2e)', () => {
     });
   });
 
+  describe('web çerez modu (httpOnly refresh token)', () => {
+    it('refresh token gövdede değil httpOnly çerezde; yenileme ve çıkış çerezle çalışır', async () => {
+      const login = await http
+        .post(`${prefix}/auth/login`)
+        .set('X-Auth-Mode', 'cookie')
+        .send({ email, password })
+        .expect(200);
+      expect(login.body.tokens.refreshToken).toBe('');
+      const setCookie = String(login.headers['set-cookie']);
+      expect(setCookie).toMatch(/da_rt=[^;]+/);
+      expect(setCookie).toMatch(/HttpOnly/i);
+      expect(setCookie).toMatch(/SameSite=Lax/i);
+      const cookie = setCookie.match(/da_rt=[^;]+/)![0];
+
+      // Başlıksız istek çerezi kullanmaz (mobil sözleşmesi değişmez)
+      await http.post(`${prefix}/auth/refresh`).set('Cookie', cookie).send({}).expect(401);
+
+      const refreshed = await http
+        .post(`${prefix}/auth/refresh`)
+        .set('X-Auth-Mode', 'cookie')
+        .set('Cookie', cookie)
+        .send({})
+        .expect(200);
+      expect(refreshed.body.accessToken).toBeTruthy();
+      expect(refreshed.body.refreshToken).toBe('');
+      const rotated = String(refreshed.headers['set-cookie']).match(/da_rt=[^;]+/)![0];
+      expect(rotated).not.toBe(cookie);
+
+      const out = await http
+        .post(`${prefix}/auth/logout`)
+        .set('X-Auth-Mode', 'cookie')
+        .set('Cookie', rotated)
+        .set('Authorization', `Bearer ${refreshed.body.accessToken}`)
+        .send({})
+        .expect(204);
+      expect(String(out.headers['set-cookie'])).toMatch(/da_rt=;/);
+      await http
+        .post(`${prefix}/auth/refresh`)
+        .set('X-Auth-Mode', 'cookie')
+        .set('Cookie', rotated)
+        .send({})
+        .expect(401);
+    });
+  });
+
   describe('users', () => {
     it('profil getirir ve günceller', async () => {
       const me = await http
@@ -476,6 +521,31 @@ describe('DevAcademy API (e2e)', () => {
         .expect(204);
     });
 
+    it('ders düzeyinde eş zamanlı yer imleri tek kayıt olur', async () => {
+      const [a, b] = await Promise.all(
+        [1, 2].map(() =>
+          http
+            .post(`${prefix}/bookmarks`)
+            .set('Authorization', `Bearer ${accessToken}`)
+            .send({ lessonId }),
+        ),
+      );
+      expect([a.status, b.status]).toEqual([201, 201]);
+      expect(b.body.id).toBe(a.body.id);
+      expect(a.body.blockId).toBeNull();
+      const list = await http
+        .get(`${prefix}/bookmarks`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200);
+      expect(list.body.filter((x: { blockId: string | null }) => x.blockId === null)).toHaveLength(
+        1,
+      );
+      await http
+        .delete(`${prefix}/bookmarks/${a.body.id}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(204);
+    });
+
     it('not oluşturur, günceller, siler', async () => {
       const n = await http
         .post(`${prefix}/notes`)
@@ -693,6 +763,87 @@ describe('DevAcademy API (e2e)', () => {
           .send(dto)
           .expect(200);
       }
+    });
+
+    it('yayından kaldırılan dersin quizi ve sahneleri öğrencilere kapanır', async () => {
+      const versions = await http
+        .get(`${prefix}/admin/lessons/${lessonId}/versions`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .expect(200);
+      const live = versions.body.find((v: { status: string }) => v.status === 'published');
+      const quiz = await http.get(`${prefix}/quizzes/by-lesson/${lessonId}`).expect(200);
+      await http.get(`${prefix}/scenes/load-balancer-round-robin`).expect(200); // cache'i ısıt
+      await http
+        .post(`${prefix}/admin/lessons/${lessonId}/unpublish`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .expect(201);
+      try {
+        await http.get(`${prefix}/quizzes/by-lesson/${lessonId}`).expect(404);
+        await http.get(`${prefix}/quizzes/${quiz.body.id}`).expect(404);
+        await http
+          .post(`${prefix}/quizzes/${quiz.body.id}/attempts`)
+          .set('Authorization', `Bearer ${accessToken}`)
+          .send({ answers: [] })
+          .expect(404);
+        await http.get(`${prefix}/scenes/load-balancer-round-robin`).expect(404);
+        const scenes = await http.get(`${prefix}/lessons/${lessonId}/scenes`).expect(200);
+        expect(scenes.body).toEqual([]);
+      } finally {
+        await http
+          .post(`${prefix}/admin/lessons/${lessonId}/publish`)
+          .set('Authorization', `Bearer ${adminToken}`)
+          .send({ versionId: live.id })
+          .expect(201);
+      }
+      await http.get(`${prefix}/quizzes/by-lesson/${lessonId}`).expect(200);
+      await http.get(`${prefix}/scenes/load-balancer-round-robin`).expect(200);
+    });
+  });
+
+  describe('oturum iptali ve hesap silme', () => {
+    // Kayıt uç noktası dakikada 5 istekle sınırlı: tek kullanıcıyla iki senaryo sırayla
+    it('tüm cihazlardan çıkış access token’ları hemen geçersiz kılar; hesap silinince veriler gider', async () => {
+      const userEmail = `e2e_erase_${Date.now()}@test.local`;
+      const reg = await http
+        .post(`${prefix}/auth/register`)
+        .send({ email: userEmail, password, displayName: 'Silinecek' })
+        .expect(201);
+      const first = reg.body.tokens as { accessToken: string; refreshToken: string };
+      await new Promise((r) => setTimeout(r, 1100)); // iat saniye hassasiyetinde
+      await http
+        .post(`${prefix}/auth/logout`)
+        .set('Authorization', `Bearer ${first.accessToken}`)
+        .send({ everywhere: true })
+        .expect(204);
+      await http
+        .get(`${prefix}/users/me`)
+        .set('Authorization', `Bearer ${first.accessToken}`)
+        .expect(401);
+
+      const login = await http
+        .post(`${prefix}/auth/login`)
+        .send({ email: userEmail, password })
+        .expect(200);
+      const second = login.body.tokens as { accessToken: string; refreshToken: string };
+      await http
+        .post(`${prefix}/bookmarks`)
+        .set('Authorization', `Bearer ${second.accessToken}`)
+        .send({ lessonId })
+        .expect(201);
+      await http
+        .delete(`${prefix}/users/me`)
+        .set('Authorization', `Bearer ${second.accessToken}`)
+        .expect(204);
+      await http
+        .get(`${prefix}/users/me`)
+        .set('Authorization', `Bearer ${second.accessToken}`)
+        .expect(401);
+      await http
+        .post(`${prefix}/auth/refresh`)
+        .send({ refreshToken: second.refreshToken })
+        .expect(401);
+      // Hesap gerçekten silindi: aynı bilgilerle giriş artık başarısız
+      await http.post(`${prefix}/auth/login`).send({ email: userEmail, password }).expect(401);
     });
   });
 });

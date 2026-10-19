@@ -9,6 +9,10 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+# GITHUB_TOKEN yalnızca okuma; hiçbir iş depoya yazmaz
+permissions:
+  contents: read
+
 env:
   TURBO_TELEMETRY_DISABLED: 1
   NEXT_TELEMETRY_DISABLED: 1
@@ -20,6 +24,7 @@ jobs:
   lint:
     name: Lint ve biçim
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -40,6 +45,7 @@ jobs:
   shared-and-content:
     name: Ortak paket ve içerik doğrulama
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -60,6 +66,7 @@ jobs:
   backend:
     name: Backend (birim + e2e)
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     needs: shared-and-content
     services:
       postgres:
@@ -96,6 +103,14 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @devacademy/backend exec prisma generate
       - run: pnpm turbo run typecheck test build --filter=@devacademy/backend
+      - name: Şema ile migration'lar arasında fark yok (eksik migration)
+        env:
+          SHADOW_DATABASE_URL: postgresql://devacademy:devacademy@localhost:5432/devacademy_shadow?schema=public
+        run: |
+          echo 'CREATE DATABASE devacademy_shadow;' | pnpm --filter @devacademy/backend exec prisma db execute --stdin --url "$DATABASE_URL"
+          pnpm --filter @devacademy/backend exec prisma migrate diff --exit-code \
+            --from-migrations prisma/migrations --to-schema-datamodel prisma/schema.prisma \
+            --shadow-database-url "$SHADOW_DATABASE_URL"
       - run: pnpm --filter @devacademy/backend exec prisma migrate deploy
       - run: pnpm --filter @devacademy/backend prisma:seed
       - run: pnpm --filter @devacademy/backend test:e2e
@@ -103,6 +118,7 @@ jobs:
   web:
     name: Web (typecheck, birim, build, Playwright)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: shared-and-content
     services:
       postgres:
@@ -162,8 +178,9 @@ jobs:
             web.log
 
   mobile:
-    name: Mobil (typecheck + Jest)
+    name: Mobil (typecheck, Jest, Metro paketleme)
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     needs: shared-and-content
     steps:
       - uses: actions/checkout@v4
@@ -178,11 +195,15 @@ jobs:
           key: turbo-mobile-${{ github.sha }}
           restore-keys: turbo-mobile-
       - run: pnpm install --frozen-lockfile
-      - run: pnpm turbo run typecheck test --filter=@devacademy/mobile
+      # build = expo export (iOS + Android): native modül/çözümleme hatalarını Metro düzeyinde yakalar
+      - run: pnpm turbo run typecheck test build --filter=@devacademy/mobile
+        env:
+          EXPO_PUBLIC_API_URL: https://api.example.invalid/api/v1
 
   docker:
     name: Docker imajları
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: [backend, web]
     if: github.event_name == 'push'
     steps:

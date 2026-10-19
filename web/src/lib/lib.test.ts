@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { translate, MESSAGES } from '@/i18n';
 import { sanitizeSvg } from '@/components/lesson/Diagram';
 import { slugify } from '@/components/lesson/Markdown';
-import { themeColor, formatDuration } from './utils';
+import { themeColor, formatDuration, safeNextPath } from './utils';
 
 describe('i18n', () => {
   it('anahtarı çözer ve parametreleri yerleştirir', () => {
@@ -48,6 +48,14 @@ describe('sanitizeSvg', () => {
     }
   });
 
+  it('<style> bloğunu temizler (satır içi SVG stilleri tüm sayfaya sızar)', () => {
+    const clean = sanitizeSvg(
+      '<svg viewBox="0 0 10 10"><style>body{display:none}</style><rect/></svg>',
+    );
+    expect(clean).not.toMatch(/<style|display:none/);
+    expect(clean).toContain('<rect');
+  });
+
   it('tema değişkenli normal diyagram öğelerini korur', () => {
     const clean = sanitizeSvg(
       '<svg viewBox="0 0 100 50" font-family="inherit"><defs><marker id="arr"><path d="M0,0 L5,5"/></marker></defs><rect fill="var(--da-surface)" stroke="var(--da-border)"/><line marker-end="url(#arr)"/><text x="5" y="5">API</text></svg>',
@@ -72,5 +80,25 @@ describe('yardımcılar', () => {
   it('formatDuration', () => {
     expect(formatDuration(3720, 'tr')).toBe('1 sa 2 dk');
     expect(formatDuration(300, 'en')).toBe('5m');
+  });
+});
+
+describe('safeNextPath', () => {
+  it('site içi yolları korur', () => {
+    expect(safeNextPath('/lessons/a-01?tab=quiz#q1', '/dashboard')).toBe(
+      '/lessons/a-01?tab=quiz#q1',
+    );
+  });
+  it('başka origin’e çıkan ya da geçersiz değerlerde varsayılana döner', () => {
+    for (const bad of [
+      null,
+      '',
+      'https://evil.com',
+      '//evil.com',
+      '/\\evil.com',
+      '/\t/evil.com',
+      'javascript:alert(1)',
+    ])
+      expect(safeNextPath(bad, '/dashboard')).toBe('/dashboard');
   });
 });

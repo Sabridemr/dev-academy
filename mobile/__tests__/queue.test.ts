@@ -66,4 +66,14 @@ describe('flushAttemptQueue', () => {
     await flushAttemptQueue();
     expect(readAttemptQueue()).toHaveLength(0);
   });
+
+  it('eş zamanlı iki gönderim aynı denemeyi bir kez yollar', async () => {
+    enqueueAttempt('quiz-1', 'l1', dto);
+    jest.mocked(endpoints.submitAttempt).mockResolvedValue(result);
+    const [a, b] = await Promise.all([flushAttemptQueue(), flushAttemptQueue()]);
+    expect(endpoints.submitAttempt).toHaveBeenCalledTimes(1);
+    expect(a).toHaveLength(1);
+    expect(b).toBe(a);
+    expect(readAttemptQueue()).toHaveLength(0);
+  });
 });

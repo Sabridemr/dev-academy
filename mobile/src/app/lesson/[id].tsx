@@ -11,6 +11,7 @@ import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useBookmarks, useLesson } from '@/hooks/content';
 import { useLessonProgress } from '@/hooks/useLessonProgress';
+import { isLessonBodyTranslated } from '@devacademy/shared';
 import { useI18n } from '@/i18n';
 import { endpoints } from '@/lib/endpoints';
 import { queryKeys } from '@/lib/queryClient';
@@ -37,7 +38,7 @@ import { NoteModal } from '@/components/lesson/NoteModal';
  */
 export default function LessonScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { t, tl } = useI18n();
+  const { t, tl, locale } = useI18n();
   const { colors } = useTheme();
   const qc = useQueryClient();
   const authed = useSession((s) => s.status === 'authenticated');
@@ -148,6 +149,11 @@ export default function LessonScreen() {
             {tl(l.title)}
           </Text>
           <Text muted>{tl(l.summary)}</Text>
+          {locale === 'en' && !isLessonBodyTranslated(l.blocks) ? (
+            <Text variant="caption" muted accessibilityRole="text">
+              {t('lesson.notTranslated')}
+            </Text>
+          ) : null}
           <Row wrap>
             <Chip label={t('module.minutes', { count: l.durationMinutes })} />
             <Chip label={t(`module.level.${l.level}`)} />

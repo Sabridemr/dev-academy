@@ -90,7 +90,9 @@ export const MarkdownView = memo(function MarkdownView({
     <Markdown
       style={style}
       onLinkPress={(url) => {
-        void Linking.openURL(url);
+        // Ders içeriği admin'den düzenlenebilir: yalnızca web bağlantıları açılır (tel:, sms:, intent:,
+        // uygulama içi derin bağlantılar gibi şemalar kullanıcı onayı olmadan tetiklenmesin)
+        if (/^https?:\/\//i.test(url)) void Linking.openURL(url);
         return false;
       }}
     >

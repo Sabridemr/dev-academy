@@ -4,6 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import type { Request } from 'express';
 import type { Env } from '../../config/env';
+import { AuthStateService } from './auth-state.service';
 import { IS_PUBLIC_KEY, OPTIONAL_AUTH_KEY, type AuthUser } from './decorators';
 
 export interface AccessTokenPayload {
@@ -11,6 +12,8 @@ export interface AccessTokenPayload {
   email: string;
   role: AuthUser['role'];
   type: 'access';
+  /** saniye (JWT standart alanı) */
+  iat?: number;
 }
 
 /**
@@ -23,6 +26,7 @@ export class JwtAuthGuard implements CanActivate {
     private readonly reflector: Reflector,
     private readonly jwt: JwtService,
     private readonly config: ConfigService<Env, true>,
+    private readonly authState: AuthStateService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -47,7 +51,11 @@ export class JwtAuthGuard implements CanActivate {
         secret: this.config.get('JWT_ACCESS_SECRET'),
       });
       if (payload.type !== 'access') throw new Error('wrong token type');
-      req.user = { id: payload.sub, email: payload.email, role: payload.role };
+      // İmza geçerli olsa da kullanıcı silinmiş ya da oturumları kapatılmış olabilir; rol de güncel olmalı
+      const state = await this.authState.get(payload.sub);
+      if (!state || !AuthStateService.isIssuedAfterRevocation(state, payload.iat))
+        throw new Error('revoked');
+      req.user = { id: payload.sub, email: payload.email, role: state.role };
       return true;
     } catch {
       if (isPublic || optional) return true;

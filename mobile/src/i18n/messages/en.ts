@@ -73,6 +73,8 @@ export const en: Messages = {
     hideLessons: 'Hide lessons',
   },
   lesson: {
+    notTranslated:
+      'This lesson hasn’t been translated to English yet; the text is shown in Turkish.',
     prev: 'Previous lesson',
     next: 'Next lesson',
     nextStep: 'Next step',
@@ -108,6 +110,8 @@ export const en: Messages = {
     reducedMotion: 'Reduced motion: packets are shown without animation.',
   },
   quiz: {
+    queuedDropped:
+      'Your offline answers were not accepted by the server; please take the quiz again.',
     title: 'Test yourself',
     submit: 'Submit answers',
     retry: 'Try again',

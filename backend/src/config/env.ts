@@ -21,6 +21,8 @@ export const EnvSchema = z.object({
     .int()
     .positive()
     .default(60 * 60 * 24 * 30),
+  /** Web refresh çerezi: web ve API farklı "site"lardaysa (ör. iki ayrı alan adı) 'none' gerekir */
+  REFRESH_COOKIE_SAMESITE: z.enum(['lax', 'strict', 'none']).default('lax'),
   GOOGLE_CLIENT_IDS: z.string().default(''),
   APPLE_CLIENT_IDS: z.string().default(''),
 
@@ -39,8 +41,8 @@ export const EnvSchema = z.object({
   RATE_LIMIT_MAX: z.coerce.number().int().positive().default(120),
 
   CONTENT_DIR: z.string().default('../content'),
-  SEED_ADMIN_EMAIL: z.string().email().default('admin@devacademy.local'),
-  SEED_ADMIN_PASSWORD: z.string().min(8).default('Admin123!'),
+  // SEED_ADMIN_EMAIL / SEED_ADMIN_PASSWORD yalnızca prisma/seed.ts okur (üretimde şifre zorunlu);
+  // uygulama kullanmadığı için zayıf bir varsayılanla burada tutulmaz.
 });
 
 export type Env = z.infer<typeof EnvSchema>;

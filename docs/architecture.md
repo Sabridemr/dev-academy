@@ -25,7 +25,7 @@ flowchart LR
   SEED[db:seed]
 
   W & A & M --> R
-  W & M -. olaylar .- WS
+  W -. olaylar .- WS
   R --> PG
   R --> RD
   R --> S3
@@ -46,20 +46,20 @@ flowchart LR
 
 ### Backend modülleri
 
-| Modül         | Uç noktalar                                                                                  | Not                                                                                                                                |
-| ------------- | -------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| auth          | `/auth/register`, `/login`, `/oauth`, `/refresh`, `/logout`, `/change-password`              | argon2id; refresh token rotasyonu ve yeniden kullanım tespiti; Google/Apple ID token doğrulama                                     |
-| users         | `/users/me` (GET/PATCH/DELETE), `/users/me/push-tokens` (POST, DELETE `/:token`)             | profil, öğrenme yolu, hatırlatma saati, doğrulanmış saat dilimi; hesap kapatma (soft delete); push token başka hesaba devredilemez |
-| content       | `/paths`, `/modules`, `/lessons`, `/scenes`                                                  | yalnızca yayınlanmış sürümler; Redis cache + ETag; token varsa ilerleme eklenir                                                    |
-| quizzes       | `/quizzes/by-lesson/:id`, `/quizzes/:id/attempts`                                            | doğru cevaplar istemciye gönderilmez; yanlışlar SM-2 kartına dönüşür                                                               |
-| progress      | `/progress`, `/summary`, `/lessons/:id`, `/reviews`, `/badges`, `/interactive`               | seri, rozet, tekrar takvimi; WebSocket bildirimleri                                                                                |
-| library       | `/bookmarks`, `/notes`                                                                       |                                                                                                                                    |
-| search        | `/search?q=`                                                                                 | önce PostgreSQL full-text (GIN indeksi), sonuç yoksa ILIKE alt dize yedeği; modül başlıkları iki dilde                             |
-| admin         | `/admin/lessons`, `/versions`, `/scenes`, `/quizzes`, `/modules`, `/media/presign`, `/stats` | editor/admin rolleri; taslak → yayın akışı                                                                                         |
-| offline       | `/offline/modules/:id`                                                                       | mobil için modül paketi (ETag destekli)                                                                                            |
-| health        | `/health`, `/health/ready`                                                                   | liveness / readiness                                                                                                               |
-| notifications | `/notifications/run-daily` (admin)                                                           | saatlik zamanlanmış iş: yerel hatırlatma saatinde Expo push ya da e-posta                                                          |
-| realtime      | WebSocket `/ws`                                                                              | socket.io; kullanıcı odası (ilerleme, seri, rozet olayları), `content.published` yayını, kimliği doğrulanmış simülasyon odaları    |
+| Modül         | Uç noktalar                                                                                  | Not                                                                                                                                                   |
+| ------------- | -------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| auth          | `/auth/register`, `/login`, `/oauth`, `/refresh`, `/logout`, `/change-password`              | argon2id; refresh token rotasyonu ve yeniden kullanım tespiti; Google/Apple ID token doğrulama                                                        |
+| users         | `/users/me` (GET/PATCH/DELETE), `/users/me/push-tokens` (POST, DELETE `/:token`)             | profil, öğrenme yolu, hatırlatma saati, doğrulanmış saat dilimi; hesabı ve kişisel verileri kalıcı silme (KVKK); push token başka hesaba devredilemez |
+| content       | `/paths`, `/modules`, `/lessons`, `/scenes`                                                  | yalnızca yayınlanmış sürümler; Redis cache + ETag; token varsa ilerleme eklenir                                                                       |
+| quizzes       | `/quizzes/by-lesson/:id`, `/quizzes/:id/attempts`                                            | doğru cevaplar istemciye gönderilmez; yanlışlar SM-2 kartına dönüşür                                                                                  |
+| progress      | `/progress`, `/summary`, `/lessons/:id`, `/reviews`, `/badges`, `/interactive`               | seri, rozet, tekrar takvimi; WebSocket bildirimleri                                                                                                   |
+| library       | `/bookmarks`, `/notes`                                                                       |                                                                                                                                                       |
+| search        | `/search?q=`                                                                                 | önce PostgreSQL full-text (GIN indeksi), sonuç yoksa ILIKE alt dize yedeği; modül başlıkları iki dilde                                                |
+| admin         | `/admin/lessons`, `/versions`, `/scenes`, `/quizzes`, `/modules`, `/media/presign`, `/stats` | editor/admin rolleri; taslak → yayın akışı                                                                                                            |
+| offline       | `/offline/modules/:id`                                                                       | mobil için modül paketi (ETag destekli)                                                                                                               |
+| health        | `/health`, `/health/ready`                                                                   | liveness / readiness                                                                                                                                  |
+| notifications | `/notifications/run-daily` (admin)                                                           | saatlik zamanlanmış iş: yerel hatırlatma saatinde Expo push ya da e-posta                                                                             |
+| realtime      | WebSocket `/ws`                                                                              | socket.io; kullanıcı odası (ilerleme, seri, rozet olayları), `content.published` yayını, kimliği doğrulanmış simülasyon odaları                       |
 
 Ortak altyapı: global JWT guard (`@Public`, `@OptionalAuth`), rol guard’ı, Redis tabanlı rate limiting, zod doğrulama pipe’ı (shared şemalarıyla), merkezi hata formatı (`ApiErrorBody`), pino yapılandırılmış log ve request-id, OpenAPI (`/docs`).
 
@@ -105,13 +105,13 @@ erDiagram
 ### Mobil offline
 
 1. Kullanıcı bir modülü indirir: `GET /offline/modules/:id` (ETag ile).
-2. Dersler, sahneler ve quizler SQLite’a yazılır; ETag ve senkron zamanı MMKV’de.
+2. Dersler, sahneler ve quizler SQLite’a yazılır (modül başına ETag ve `synced_at` dahil); son senkron zamanı MMKV’de.
 3. Çevrimdışıyken içerik SQLite’tan okunur; ilerleme güncellemeleri kuyruğa alınır, bağlantı gelince gönderilir.
 
 ## Ölçekleme notları
 
-- API stateless’tır (oturum JWT’de); WebSocket için birden fazla replikada socket.io Redis adapter eklenmelidir. WebSocket CORS’u HTTP ile aynı `CORS_ORIGINS` listesini kullanır.
-- Saatlik hatırlatma işi her replikada çalışır; çoklu replikada tek replikaya ya da dağıtık bir kilide bağlanmalıdır.
+- API stateless’tır (oturum JWT’de). socket.io Redis adapter’ı bağlıdır: bir replikadan yayınlanan olay diğer replikalara bağlı soketlere de ulaşır. WebSocket CORS’u HTTP ile aynı `CORS_ORIGINS` listesini kullanır. Mobil uygulama WebSocket kullanmaz.
+- Saatlik hatırlatma işi her replikada tetiklenir ama saat başına Redis kilidini (`SET NX PX`) yalnızca biri alır; kopya bildirim gönderilmez.
 - Rate limit sayaçları Redis’te tutulduğu için tüm replikalar aynı limiti uygular; Redis yoksa replika başına bellek içi sayaca düşer.
-- Okuma ağırlıklı içerik için Redis + ETag + Next.js ISR; yazma ağırlıklı ilerleme için istemci tarafında toplu gönderim (5 sn aralık).
-- Medya dosyaları S3’e ön imzalı URL ile doğrudan yüklenir; API dosya trafiği taşımaz.
+- Okuma ağırlıklı içerik için Redis + ETag + Next.js ISR; yazma ağırlıklı ilerleme için istemci tarafında toplu gönderim (web 5 sn aralık, mobil her %10 artışta ve ekrandan çıkışta).
+- Medya dosyaları S3’e ön imzalı POST formuyla doğrudan yüklenir (tür ve boyut sınırı depolama tarafında zorlanır, SVG kabul edilmez); API dosya trafiği taşımaz.

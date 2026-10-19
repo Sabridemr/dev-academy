@@ -4,6 +4,7 @@ import { api, isApiError } from '@/lib/api';
 import { endpoints, type MeProfile } from '@/lib/endpoints';
 import { queryClient } from '@/lib/queryClient';
 import { getJson, kv, KV_KEYS, setJson, tokenStorage } from '@/lib/storage';
+import { cancelDailyReminder } from '@/notifications/push';
 import { clearQueues } from '@/offline/queue';
 
 /**
@@ -15,13 +16,20 @@ export type SessionStatus = 'loading' | 'authenticated' | 'anonymous';
 export type SessionUser = UserProfile & { reminderHour?: number | null; timezone?: string };
 
 const USER_KEY = 'session.user';
+/** Bu kurulumda uygulama en az bir kez açıldı mı (MMKV kurulumla silinir) */
+const INSTALL_KEY = 'install.initialized';
 
-/** Yerel kullanıcı verisini temizler: profil, kuyruklar, sorgu önbelleği, kayıtlı push token işareti */
+/**
+ * Yerel kullanıcı verisini temizler: profil, kuyruklar, sorgu önbelleği, kayıtlı push token işareti,
+ * onboarding bayrağı ve günlük yerel hatırlatma (aynı cihazda açılan sonraki hesaba sızmasın).
+ */
 function clearLocalSession(): void {
   kv.delete(USER_KEY);
   kv.delete(KV_KEYS.pushToken);
+  kv.delete(KV_KEYS.onboarded);
   clearQueues();
   queryClient.clear();
+  void cancelDailyReminder();
 }
 
 interface SessionState {
@@ -39,6 +47,12 @@ export const useSession = create<SessionState>((set, get) => ({
   user: null,
 
   bootstrap: async () => {
+    // iOS Keychain uygulama silinince temizlenmez, MMKV temizlenir: yeniden kurulumda eski hesabın
+    // token'larıyla profil olmadan açılmasın. Yükseltmelerde önbellekli profil durduğu için dokunulmaz.
+    if (!kv.getBoolean(INSTALL_KEY)) {
+      if (!kv.getString(USER_KEY)) await tokenStorage.clear();
+      kv.set(INSTALL_KEY, true);
+    }
     const tokens = await tokenStorage.get();
     if (!tokens) {
       set({ status: 'anonymous', user: null });

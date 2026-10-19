@@ -7,7 +7,12 @@
  *   --strict   uyarıları da hata say
  *   --json     makine okunur çıktı
  */
-import { loadContent, coverageReport, findContentRoot } from '../src/node/content-loader';
+import {
+  loadContent,
+  coverageReport,
+  findContentRoot,
+  translationReport,
+} from '../src/node/content-loader';
 
 const args = new Set(process.argv.slice(2));
 const strict = args.has('--strict');
@@ -16,6 +21,7 @@ const asJson = args.has('--json');
 const root = findContentRoot();
 const content = loadContent(root);
 const coverage = coverageReport(content);
+const translation = translationReport(content);
 
 const errors = content.issues.filter((i) => i.severity === 'error');
 const warnings = content.issues.filter((i) => i.severity === 'warning');
@@ -42,6 +48,7 @@ if (asJson) {
       {
         root,
         coverage,
+        translation,
         counts: { sceneCount, quizCount, svgCount, interactiveCount },
         errors,
         warnings,
@@ -54,6 +61,11 @@ if (asJson) {
   console.log(`İçerik kökü: ${root}`);
   console.log(
     `Modül: ${content.modules.length}  Ders: ${coverage.written}/${coverage.total}  Sahne: ${sceneCount}  Quiz: ${quizCount}  SVG: ${svgCount}  İnteraktif: ${interactiveCount}`,
+  );
+  // Bilgi amaçlı (doğrulama sonucunu etkilemez)
+  console.log(
+    `İngilizce: ders gövdesi ${translation.lessonsWithEnglishBody}/${translation.lessons}, ` +
+      `başlık/altyazı ${translation.localizedFieldsWithEnglish}/${translation.localizedFields}`,
   );
   if (coverage.missing.length) {
     console.log(`\nEksik dersler (${coverage.missing.length}):`);

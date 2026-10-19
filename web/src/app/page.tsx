@@ -2,7 +2,8 @@ import { HomeView } from '@/components/pages/HomeView';
 import { serverApi } from '@/lib/api';
 import type { LearningPathSummary, ModuleSummary } from '@devacademy/shared';
 
-export const revalidate = 300;
+// Sayfa istek başına render edilir (dil çerezi + CSP nonce'u); API verisi serverApi'nin revalidate
+// süresiyle Next Data Cache'te tutulur, yani her istek API'ye gitmez.
 
 /** Ana sayfa: öğrenme yolları ve modüller sunucu tarafında alınır (SEO + hızlı ilk boyama). */
 export default async function HomePage() {

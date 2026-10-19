@@ -41,15 +41,20 @@ export const OAuthLoginSchema = z.object({
   /** Sağlayıcıdan alınan ID token (JWT) */
   idToken: z.string().min(10),
   /** Apple ilk girişte adı yalnızca bir kez gönderir */
-  displayName: z.string().optional(),
+  displayName: z.string().max(60).optional(),
 });
 export type OAuthLoginDto = z.infer<typeof OAuthLoginSchema>;
 
-export const RefreshSchema = z.object({ refreshToken: z.string().min(10) });
+/** Web istemcisi refresh token'ı httpOnly çerezde taşır (X-Auth-Mode: cookie); mobil gövdede gönderir */
+export const RefreshSchema = z.object({ refreshToken: z.string().min(10).max(200).optional() });
 export type RefreshDto = z.infer<typeof RefreshSchema>;
+
+/** Web istemcisinin refresh token'ı httpOnly çerezde istediğini belirten başlık */
+export const AUTH_MODE_HEADER = 'X-Auth-Mode';
 
 export interface AuthTokens {
   accessToken: string;
+  /** Çerez modunda (AUTH_MODE_HEADER: cookie) boş döner; token httpOnly çerezdedir */
   refreshToken: string;
   /** saniye */
   expiresIn: number;
@@ -86,7 +91,14 @@ export function isValidTimeZone(tz: string): boolean {
 
 export const UpdateProfileSchema = z.object({
   displayName: z.string().min(2).max(60).optional(),
-  avatarUrl: z.string().url().nullable().optional(),
+  /** Yalnızca https (javascript:/data: gibi şemalar img/src'de risklidir) */
+  avatarUrl: z
+    .string()
+    .url()
+    .max(500)
+    .refine((u) => u.startsWith('https://'), { message: 'Avatar adresi https olmalı' })
+    .nullable()
+    .optional(),
   locale: z.enum(['tr', 'en']).optional(),
   selectedPathId: z.string().nullable().optional(),
   reminderHour: z.number().int().min(0).max(23).nullable().optional(),
@@ -183,15 +195,22 @@ export interface QuizPublic {
 }
 
 export const SubmitAttemptSchema = z.object({
-  answers: z.array(
-    z.object({
-      questionId: z.string().min(1),
-      /** Seçilen seçenek id'leri (order tipinde sıralı) */
-      selected: z.array(z.string()).min(1),
-    }),
-  ),
-  /** ms cinsinden harcanan süre */
-  durationMs: z.number().int().min(0).optional(),
+  answers: z
+    .array(
+      z.object({
+        questionId: z.string().min(1).max(100),
+        /** Seçilen seçenek id'leri (order tipinde sıralı) */
+        selected: z.array(z.string().max(100)).min(1).max(20),
+      }),
+    )
+    .max(100),
+  /** ms cinsinden harcanan süre (en fazla 6 saat) */
+  durationMs: z
+    .number()
+    .int()
+    .min(0)
+    .max(6 * 60 * 60 * 1000)
+    .optional(),
 });
 export type SubmitAttemptDto = z.infer<typeof SubmitAttemptSchema>;
 
@@ -219,9 +238,14 @@ export type ProgressStatus = 'not_started' | 'in_progress' | 'completed';
 export const UpdateProgressSchema = z.object({
   /** 0..100 — görüntülenen blok oranı */
   percent: z.number().min(0).max(100),
-  lastBlockId: z.string().optional(),
-  /** Bu oturumda harcanan saniye */
-  secondsSpent: z.number().int().min(0).default(0),
+  lastBlockId: z.string().max(100).optional(),
+  /** Bu oturumda harcanan saniye (tek gönderimde en fazla 6 saat; toplam INT sınırını korur) */
+  secondsSpent: z
+    .number()
+    .int()
+    .min(0)
+    .max(6 * 60 * 60)
+    .default(0),
   completed: z.boolean().optional(),
 });
 export type UpdateProgressDto = z.infer<typeof UpdateProgressSchema>;
@@ -386,7 +410,7 @@ export interface AdminLessonVersion {
 
 /* --------------------------- Bildirimler --------------------------- */
 export const RegisterPushTokenSchema = z.object({
-  token: z.string().min(10),
+  token: z.string().min(10).max(512),
   platform: z.enum(['ios', 'android', 'web']),
   deviceName: z.string().max(100).optional(),
 });
@@ -422,9 +446,9 @@ export type WsServerEvent =
   | { type: 'badge.earned'; payload: BadgeDto }
   | { type: 'streak.updated'; payload: { currentStreak: number } }
   | { type: 'content.published'; payload: { lessonId: string; version: number } }
+  | { type: 'content.unpublished'; payload: { lessonId: string } }
   | { type: 'simulation.tick'; payload: { simulationId: string; data: unknown } };
 
 export type WsClientEvent =
-  | { type: 'subscribe.lesson'; lessonId: string }
   | { type: 'simulation.join'; simulationId: string }
   | { type: 'simulation.input'; simulationId: string; data: unknown };

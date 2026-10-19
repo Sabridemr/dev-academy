@@ -82,6 +82,22 @@ export class RedisService implements OnModuleDestroy {
     return count;
   }
 
+  /**
+   * Dağıtık tek seferlik kilit (SET NX PX). Birden fazla API örneğinde zamanlanmış işin yalnızca birinde
+   * çalışması için. Redis yoksa true döner: tek örnekte iş yine çalışır (çoklu örnekte kopya riski loglanır).
+   */
+  async acquireLock(key: string, ttlMs: number): Promise<boolean> {
+    if (!this.isAvailable) {
+      this.logger.warn(`Redis yok; "${key}" kilidi alınamadan devam ediliyor`);
+      return true;
+    }
+    try {
+      return (await this.client.set(key, String(process.pid), 'PX', ttlMs, 'NX')) === 'OK';
+    } catch {
+      return true;
+    }
+  }
+
   async ping(): Promise<boolean> {
     try {
       return (await this.client.ping()) === 'PONG';

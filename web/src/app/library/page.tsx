@@ -6,6 +6,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { RequireAuth } from '@/components/auth/RequireAuth';
 import { useI18n } from '@/i18n';
 import { api } from '@/lib/api';
+import { useAction } from '@/lib/use-action';
 import { useBookmarks, useNotes } from '@/lib/hooks';
 
 function Library() {
@@ -14,13 +15,18 @@ function Library() {
   const { data: bookmarks } = useBookmarks();
   const { data: notes } = useNotes();
 
-  const remove = async (path: string, key: string) => {
+  const remove = useAction(async (path: string, key: string) => {
     await api(path, { method: 'DELETE' });
     await qc.invalidateQueries({ queryKey: [key] });
-  };
+  });
 
   return (
     <div className="mx-auto grid max-w-6xl gap-6 px-4 py-10 lg:grid-cols-2">
+      {remove.error && (
+        <p className="text-sm text-danger lg:col-span-2" role="alert">
+          {t('common.error')}: {remove.error}
+        </p>
+      )}
       <section className="card p-5">
         <h2 className="mb-4 flex items-center gap-2 font-semibold">
           <Bookmark size={16} /> {t('library.bookmarks')}
@@ -38,7 +44,8 @@ function Library() {
               <button
                 type="button"
                 className="btn-icon h-8 w-8"
-                onClick={() => remove(`/bookmarks/${b.id}`, 'bookmarks')}
+                onClick={() => void remove.run(`/bookmarks/${b.id}`, 'bookmarks')}
+                disabled={remove.pending}
                 aria-label={t('library.delete')}
               >
                 <Trash2 size={14} />
@@ -65,7 +72,8 @@ function Library() {
                 </span>
                 <button
                   type="button"
-                  onClick={() => remove(`/notes/${n.id}`, 'notes')}
+                  onClick={() => void remove.run(`/notes/${n.id}`, 'notes')}
+                  disabled={remove.pending}
                   className="hover:text-danger"
                 >
                   {t('library.delete')}

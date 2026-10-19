@@ -162,9 +162,26 @@ export async function touchModuleSync(
   await db.runAsync('UPDATE modules SET synced_at = ? WHERE id = ?', [syncedAt, moduleId]);
 }
 
+async function pruneMissing(
+  db: SqlDb,
+  table: 'lessons' | 'scenes' | 'quizzes',
+  moduleId: string,
+  keepIds: string[],
+): Promise<void> {
+  if (keepIds.length === 0) {
+    await db.runAsync(`DELETE FROM ${table} WHERE module_id = ?`, [moduleId]);
+    return;
+  }
+  const placeholders = keepIds.map(() => '?').join(', ');
+  await db.runAsync(`DELETE FROM ${table} WHERE module_id = ? AND id NOT IN (${placeholders})`, [
+    moduleId,
+    ...keepIds,
+  ]);
+}
+
 /**
  * Bir çevrimdışı paketi tek işlemde (transaction) veritabanına yazar.
- * Pakette artık bulunmayan (yayından kalkmış) dersler silinir.
+ * Pakette artık bulunmayan (yayından kalkmış) dersler, sahneler ve quizler silinir.
  */
 export async function applyBundle(
   db: SqlDb,
@@ -177,17 +194,25 @@ export async function applyBundle(
     for (const lesson of bundle.lessons) await upsertLesson(db, lesson);
     for (const scene of bundle.scenes) await upsertScene(db, scene, bundle.moduleId);
     for (const quiz of bundle.quizzes) await upsertQuiz(db, quiz, bundle.moduleId);
-    const keepIds = bundle.lessons.map((l) => l.id);
-    if (keepIds.length > 0) {
-      const placeholders = keepIds.map(() => '?').join(', ');
-      await db.runAsync(`DELETE FROM lessons WHERE module_id = ? AND id NOT IN (${placeholders})`, [
-        bundle.moduleId,
-        ...keepIds,
-      ]);
-    } else {
-      // Modülde yayında ders kalmadıysa yereldeki tüm dersleri sil
-      await db.runAsync('DELETE FROM lessons WHERE module_id = ?', [bundle.moduleId]);
-    }
+    // Pakette artık olmayan (yayından kalkmış) dersler, sahneler ve quizler silinir
+    await pruneMissing(
+      db,
+      'lessons',
+      bundle.moduleId,
+      bundle.lessons.map((l) => l.id),
+    );
+    await pruneMissing(
+      db,
+      'scenes',
+      bundle.moduleId,
+      bundle.scenes.map((x) => x.id),
+    );
+    await pruneMissing(
+      db,
+      'quizzes',
+      bundle.moduleId,
+      bundle.quizzes.map((q) => q.id),
+    );
     await upsertModule(db, bundle.moduleId, module, etag, syncedAt);
   });
   return {

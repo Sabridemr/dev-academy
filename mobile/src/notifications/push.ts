@@ -121,6 +121,15 @@ export async function scheduleDailyReminder(hour: number | null, minute = 0): Pr
   kv.set(REMINDER_ID_KEY, id);
 }
 
+/** Çıkışta: planlı yerel hatırlatmayı iptal eder ve saat tercihini siler (sonraki hesaba taşınmasın) */
+export async function cancelDailyReminder(): Promise<void> {
+  const previous = kv.getString(REMINDER_ID_KEY);
+  kv.delete(REMINDER_ID_KEY);
+  kv.delete(KV_KEYS.reminderHour);
+  if (previous)
+    await Notifications.cancelScheduledNotificationAsync(previous).catch(() => undefined);
+}
+
 /** MMKV'de saklanan hatırlatma saati (-1 → kapalı, tanımsız → null) */
 export function storedReminderHour(): number | null {
   const v = kv.getNumber(KV_KEYS.reminderHour);

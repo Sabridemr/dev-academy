@@ -75,6 +75,7 @@ export const tr = {
     hideLessons: 'Dersleri gizle',
   },
   lesson: {
+    notTranslated: 'Bu ders henüz İngilizceye çevrilmedi; metin Türkçe gösteriliyor.',
     prev: 'Önceki ders',
     next: 'Sonraki ders',
     nextStep: 'Bir sonraki adım',
@@ -110,6 +111,8 @@ export const tr = {
     reducedMotion: 'Hareket azaltıldı: paketler animasyonsuz gösteriliyor.',
   },
   quiz: {
+    queuedDropped:
+      'Çevrimdışı gönderilen cevapların sunucuda kabul edilmedi; lütfen testi yeniden çöz.',
     title: 'Kendini sına',
     submit: 'Cevapları gönder',
     retry: 'Tekrar dene',

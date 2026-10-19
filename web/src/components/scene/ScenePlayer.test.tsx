@@ -33,6 +33,17 @@ describe('ScenePlayer', () => {
     expect(screen.getByText(/Adım 3\/5/)).toBeInTheDocument();
   });
 
+  it('odak bir düğmedeyken klavye kısayolu düğmenin yerine çalışmaz', () => {
+    renderWithProviders(<ScenePlayer scene={scene} />);
+    const next = screen.getByRole('button', { name: 'Adım ileri' });
+    act(() => {
+      fireEvent.keyDown(next, { key: 'ArrowRight' });
+      fireEvent.keyDown(next, { key: ' ' });
+    });
+    expect(screen.getByText(/Adım 1\/5/)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Duraklat|Pause/ })).not.toBeInTheDocument();
+  });
+
   it('adım çizelgesinden atlanabilir ve anlatım gizlenebilir', async () => {
     renderWithProviders(<ScenePlayer scene={scene} />);
     fireEvent.click(screen.getByRole('tab', { name: /4\./ }));

@@ -9,12 +9,19 @@ import type {
   SceneResponse,
   ProgressStatus,
 } from '@devacademy/shared';
+import type { Prisma } from '@prisma/client';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { RedisService } from '../../common/redis/redis.service';
 import { toLessonDetail, toLessonSummary, toModuleSummary, toPathSummary, toSceneResponse, type LessonWithVersion } from './content.mapper';
 
 /** Yayınlanmış içerik için cache TTL (saniye). Yayınlama anında anahtarlar temizlenir. */
 const CONTENT_TTL = 60 * 60 * 6;
+
+/** Yayındaki sahne; derse bağlıysa ders de yayında olmalı (bağımsız sahneler her zaman açık) */
+const PUBLIC_SCENE = {
+  status: 'published',
+  OR: [{ lessonId: null }, { lesson: { publishedVersionId: { not: null } } }],
+} satisfies Prisma.AnimationSceneWhereInput;
 
 export const CacheKeys = {
   paths: 'content:paths',
@@ -135,10 +142,15 @@ export class ContentService {
     const key = CacheKeys.lesson(idOrSlug);
     let detail = await this.redis.getJson<LessonDetail>(key);
     if (!detail) {
-      const lesson = await this.prisma.lesson.findFirst({
-        where: { OR: [{ id: idOrSlug }, { slug: idOrSlug }], publishedVersionId: { not: null } },
-        include: { publishedVersion: true, module: true },
-      });
+      // Slug yalnızca modül içinde benzersiz: önce kimlikle, yoksa slug'la müfredat sırasındaki ilk ders
+      const include = { publishedVersion: true, module: true } as const;
+      const lesson =
+        (await this.prisma.lesson.findFirst({ where: { id: idOrSlug, publishedVersionId: { not: null } }, include })) ??
+        (await this.prisma.lesson.findFirst({
+          where: { slug: idOrSlug, publishedVersionId: { not: null } },
+          orderBy: [{ module: { order: 'asc' } }, { order: 'asc' }],
+          include,
+        }));
       if (!lesson || !lesson.publishedVersion) throw new NotFoundException('Ders bulunamadı');
       const neighbors = await this.findNeighbors(lesson);
       detail = toLessonDetail(lesson, neighbors);
@@ -157,7 +169,7 @@ export class ContentService {
     const ordered = await this.prisma.lesson.findMany({
       where: { publishedVersionId: { not: null } },
       orderBy: [{ module: { order: 'asc' } }, { order: 'asc' }],
-      include: { publishedVersion: true },
+      select: { id: true, slug: true, moduleId: true, publishedVersion: { select: { title: true } } },
     });
     const idx = ordered.findIndex((l) => l.id === lesson.id);
     return { prev: idx > 0 ? ordered[idx - 1] : null, next: idx >= 0 && idx < ordered.length - 1 ? ordered[idx + 1] : null };
@@ -169,7 +181,7 @@ export class ContentService {
     const key = CacheKeys.scene(id);
     const cached = await this.redis.getJson<SceneResponse>(key);
     if (cached) return cached;
-    const row = await this.prisma.animationScene.findFirst({ where: { id, status: 'published' } });
+    const row = await this.prisma.animationScene.findFirst({ where: { id, ...PUBLIC_SCENE } });
     if (!row) throw new NotFoundException('Sahne bulunamadı');
     const out = toSceneResponse(row);
     await this.redis.setJson(key, out, CONTENT_TTL);
@@ -180,7 +192,7 @@ export class ContentService {
     const key = CacheKeys.lessonScenes(lessonId);
     const cached = await this.redis.getJson<SceneResponse[]>(key);
     if (cached) return cached;
-    const rows = await this.prisma.animationScene.findMany({ where: { lessonId, status: 'published' }, orderBy: { createdAt: 'asc' } });
+    const rows = await this.prisma.animationScene.findMany({ where: { lessonId, ...PUBLIC_SCENE }, orderBy: { createdAt: 'asc' } });
     const out = rows.map(toSceneResponse);
     await this.redis.setJson(key, out, CONTENT_TTL);
     return out;
@@ -189,13 +201,11 @@ export class ContentService {
   /* ------------------------------ Yardımcı ------------------------------ */
 
   private async attachModuleProgress(modules: ModuleSummary[], userId: string): Promise<ModuleSummary[]> {
-    const grouped = await this.prisma.progress.groupBy({
-      by: ['lessonId'],
-      where: { userId, status: 'completed' },
-      _count: { _all: true },
+    // Tamamlanan ve hâlâ yayında olan dersler (yayından kalkan ders sayıyı toplamın üstüne çıkarmasın)
+    const lessons = await this.prisma.lesson.findMany({
+      where: { publishedVersionId: { not: null }, progress: { some: { userId, status: 'completed' } } },
+      select: { moduleId: true },
     });
-    if (grouped.length === 0) return modules.map((m) => ({ ...m, completedCount: 0 }));
-    const lessons = await this.prisma.lesson.findMany({ where: { id: { in: grouped.map((g) => g.lessonId) } }, select: { id: true, moduleId: true } });
     const perModule = new Map<string, number>();
     for (const l of lessons) perModule.set(l.moduleId, (perModule.get(l.moduleId) ?? 0) + 1);
     return modules.map((m) => ({ ...m, completedCount: perModule.get(m.id) ?? 0 }));

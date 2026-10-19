@@ -43,7 +43,8 @@ function SearchView() {
         </p>
       )}
       <ul className="mt-4 space-y-3">
-        {data?.results.map((r) => (
+        {/* Sorgu kısalınca önceki sonuçlar (placeholderData) gösterilmez */}
+        {(debounced.length >= 2 ? data?.results : undefined)?.map((r) => (
           <li key={`${r.type}-${r.id}`}>
             <Link
               href={r.type === 'module' ? `/modules/${r.id}` : `/lessons/${r.id}`}

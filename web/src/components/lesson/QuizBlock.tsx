@@ -3,12 +3,13 @@
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { ArrowDown, ArrowUp, CheckCircle2, XCircle, Award } from 'lucide-react';
+import { CheckCircle2, XCircle, Award } from 'lucide-react';
 import type { AttemptResult, QuizPublic } from '@devacademy/shared';
 import { useI18n } from '@/i18n';
 import { useQuiz, useSubmitAttempt } from '@/lib/hooks';
 import { useIsAuthenticated } from '@/lib/auth-store';
 import { cn } from '@/lib/utils';
+import { OrderList } from './OrderList';
 
 type Answers = Record<string, string[]>;
 
@@ -46,24 +47,17 @@ function QuizForm({ quiz, title }: { quiz: QuizPublic; title: string }) {
       return { ...a, [qid]: cur.includes(oid) ? cur.filter((x) => x !== oid) : [...cur, oid] };
     });
   };
-  const move = (qid: string, idx: number, dir: -1 | 1) => {
-    if (result) return;
-    setAnswers((a) => {
-      const arr = [...(a[qid] ?? [])];
-      const j = idx + dir;
-      if (j < 0 || j >= arr.length) return a;
-      [arr[idx], arr[j]] = [arr[j], arr[idx]];
-      return { ...a, [qid]: arr };
-    });
-  };
 
   const allAnswered = quiz.questions.every((q) => (answers[q.id]?.length ?? 0) > 0);
   const onSubmit = async () => {
-    const res = await submit.mutateAsync({
-      answers: quiz.questions.map((q) => ({ questionId: q.id, selected: answers[q.id] ?? [] })),
-      durationMs: Date.now() - startedAt,
-    });
-    setResult(res);
+    // Hata submit.isError ile gösterilir; yakalanmamış promise reddi olmasın
+    const res = await submit
+      .mutateAsync({
+        answers: quiz.questions.map((q) => ({ questionId: q.id, selected: answers[q.id] ?? [] })),
+        durationMs: Date.now() - startedAt,
+      })
+      .catch(() => null);
+    if (res) setResult(res);
   };
   const reset = () => {
     setResult(null);
@@ -102,41 +96,12 @@ function QuizForm({ quiz, title }: { quiz: QuizPublic; title: string }) {
               </p>
               {multiple && <p className="mb-2 text-xs text-muted">{t('quiz.selectAll')}</p>}
               {q.type === 'order' ? (
-                <>
-                  <p className="mb-2 text-xs text-muted">{t('quiz.orderHint')}</p>
-                  <ul className="space-y-2">
-                    {selected.map((oid, idx) => {
-                      const opt = q.options.find((o) => o.id === oid)!;
-                      return (
-                        <li
-                          key={oid}
-                          className="flex items-center gap-2 rounded-lg border border-border bg-surface px-3 py-2 text-sm"
-                        >
-                          <span className="w-5 text-muted">{idx + 1}</span>
-                          <span className="flex-1">{tl(opt.text)}</span>
-                          <button
-                            type="button"
-                            className="btn-icon h-7 w-7"
-                            onClick={() => move(q.id, idx, -1)}
-                            disabled={idx === 0 || Boolean(result)}
-                            aria-label="↑"
-                          >
-                            <ArrowUp size={14} />
-                          </button>
-                          <button
-                            type="button"
-                            className="btn-icon h-7 w-7"
-                            onClick={() => move(q.id, idx, 1)}
-                            disabled={idx === selected.length - 1 || Boolean(result)}
-                            aria-label="↓"
-                          >
-                            <ArrowDown size={14} />
-                          </button>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </>
+                <OrderList
+                  order={selected}
+                  options={q.options}
+                  disabled={Boolean(result)}
+                  onChange={(next) => setAnswers((a) => ({ ...a, [q.id]: next }))}
+                />
               ) : (
                 <div role={multiple ? 'group' : 'radiogroup'} className="grid gap-2 sm:grid-cols-2">
                   {q.options.map((o) => {
@@ -191,7 +156,10 @@ function QuizForm({ quiz, title }: { quiz: QuizPublic; title: string }) {
         {!authed ? (
           <p className="text-sm text-muted">
             {t('quiz.loginToSave')}{' '}
-            <Link href="/login" className="text-primary underline">
+            <Link
+              href={`/login?next=${encodeURIComponent(`/lessons/${quiz.lessonId}`)}`}
+              className="text-primary underline"
+            >
               {t('nav.login')}
             </Link>
           </p>

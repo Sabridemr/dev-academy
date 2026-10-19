@@ -15,6 +15,12 @@ import { ProgressService } from '../progress/progress.service';
  * Quiz motoru: soruları doğru cevapsız sunar, denemeleri puanlar, yanlışları
  * aralıklı tekrar (SM-2) kartlarına dönüştürür, rozet/aktivite tetikler.
  */
+/** Yalnızca yayındaki quiz ve dersi yayında olanlar öğrencilere açıktır (taslak dersin quizi sızmaz) */
+const PUBLIC_QUIZ = {
+  status: 'published',
+  lesson: { publishedVersionId: { not: null } },
+} satisfies Prisma.QuizWhereInput;
+
 @Injectable()
 export class QuizzesService {
   constructor(
@@ -24,7 +30,7 @@ export class QuizzesService {
 
   async getQuiz(quizId: string): Promise<QuizPublic> {
     const quiz = await this.prisma.quiz.findFirst({
-      where: { id: quizId, status: 'published' },
+      where: { id: quizId, ...PUBLIC_QUIZ },
       include: { questions: { where: { archived: false }, orderBy: { order: 'asc' } } },
     });
     if (!quiz) throw new NotFoundException('Quiz bulunamadı');
@@ -33,7 +39,7 @@ export class QuizzesService {
 
   async getLessonQuiz(lessonId: string): Promise<QuizPublic> {
     const quiz = await this.prisma.quiz.findFirst({
-      where: { lessonId, status: 'published' },
+      where: { lessonId, ...PUBLIC_QUIZ },
       include: { questions: { where: { archived: false }, orderBy: { order: 'asc' } } },
     });
     if (!quiz) throw new NotFoundException('Bu dersin quizi yok');
@@ -42,7 +48,7 @@ export class QuizzesService {
 
   async submit(userId: string, quizId: string, dto: SubmitAttemptDto): Promise<AttemptResult> {
     const quiz = await this.prisma.quiz.findFirst({
-      where: { id: quizId, status: 'published' },
+      where: { id: quizId, ...PUBLIC_QUIZ },
       include: { questions: { where: { archived: false } } },
     });
     if (!quiz) throw new NotFoundException('Quiz bulunamadı');

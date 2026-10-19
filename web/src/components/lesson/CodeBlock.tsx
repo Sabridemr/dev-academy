@@ -119,7 +119,11 @@ export function CodeBlock({
   }, [current.code, current.language, active, highlightLines]);
 
   const copy = async () => {
-    await navigator.clipboard.writeText(current.code);
+    try {
+      await navigator.clipboard.writeText(current.code);
+    } catch {
+      return; // izin yok / güvenli olmayan bağlam: sessizce vazgeç (kod zaten seçilebilir)
+    }
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
   };

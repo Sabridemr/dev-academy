@@ -43,6 +43,8 @@ model User {
   lastActivityDate String? // YYYY-MM-DD (kullanıcının saat diliminde)
 
   emailVerifiedAt DateTime?
+  /// Bu andan önce verilmiş access token'lar geçersiz (şifre değişimi, tüm cihazlardan çıkış)
+  tokensValidAfter DateTime?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
   deletedAt       DateTime?
@@ -61,6 +63,7 @@ model User {
   authoredScenes       AnimationScene[]     @relation("SceneAuthor")
 
   @@index([selectedPathId])
+  @@index([reminderHour]) // saatlik hatırlatma işi bu alanla filtreler
 }
 
 model RefreshToken {
@@ -79,6 +82,7 @@ model RefreshToken {
 
   @@index([userId])
   @@index([family])
+  @@index([expiresAt]) // süresi dolmuş token temizliği
 }
 
 enum OAuthProvider {
@@ -145,6 +149,8 @@ model LearningPathItem {
   lesson   Lesson?      @relation(fields: [lessonId], references: [id], onDelete: Cascade)
 
   @@index([pathId, order])
+  @@index([moduleId])
+  @@index([lessonId])
 }
 
 model Module {
@@ -226,6 +232,7 @@ model LessonVersion {
 
   @@unique([lessonId, version])
   @@index([lessonId, status])
+  @@index([authorId])
 }
 
 model AnimationScene {
@@ -245,6 +252,7 @@ model AnimationScene {
   updatedAt DateTime      @updatedAt
 
   @@index([lessonId])
+  @@index([authorId])
 }
 
 /* ================================ Quiz ================================= */
@@ -317,6 +325,7 @@ model Attempt {
 
   @@index([userId, quizId])
   @@index([userId, createdAt])
+  @@index([quizId])
 }
 
 model AttemptAnswer {
@@ -329,6 +338,7 @@ model AttemptAnswer {
   correct    Boolean
 
   @@index([attemptId])
+  @@index([questionId])
 }
 
 /* ============================== İlerleme =============================== */
@@ -355,6 +365,7 @@ model Progress {
 
   @@unique([userId, lessonId])
   @@index([userId, status])
+  @@index([lessonId])
 }
 
 /// Aralıklı tekrar (SM-2) kartı: yanlış cevaplanan sorular/kavramlar
@@ -377,6 +388,8 @@ model ReviewCard {
 
   @@unique([userId, questionId])
   @@index([userId, dueAt])
+  @@index([questionId])
+  @@index([lessonId])
 }
 
 model InteractiveSession {
@@ -418,11 +431,13 @@ model Bookmark {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   lessonId  String
   lesson    Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
-  blockId   String?
+  /// Ders düzeyindeki yer imi için '' (NULL değil: unique kısıtta NULL'lar ayrı sayılır, kopya oluşurdu)
+  blockId   String   @default("")
   createdAt DateTime @default(now())
 
   @@unique([userId, lessonId, blockId])
   @@index([userId])
+  @@index([lessonId])
 }
 
 model Note {

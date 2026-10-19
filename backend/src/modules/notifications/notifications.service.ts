@@ -4,6 +4,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import nodemailer, { type Transporter } from 'nodemailer';
 import { dateKey } from '@devacademy/shared';
 import { PrismaService } from '../../common/prisma/prisma.service';
+import { RedisService } from '../../common/redis/redis.service';
 import type { Env } from '../../config/env';
 
 interface ExpoPushMessage {
@@ -44,13 +45,21 @@ export class NotificationsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly config: ConfigService<Env, true>,
+    private readonly redis: RedisService,
   ) {
     const smtp = config.get('SMTP_URL');
     this.mailer = smtp ? nodemailer.createTransport(smtp) : null;
     if (!this.mailer) this.logger.log('SMTP yapılandırılmamış; e-postalar loglanacak');
   }
 
+  /** Saatlik iş: her API örneğinde tetiklenir, saat başına kilidi yalnızca biri alır (kopya bildirim olmaz) */
   @Cron(CronExpression.EVERY_HOUR)
+  async scheduledReminders(): Promise<void> {
+    const hourKey = new Date().toISOString().slice(0, 13);
+    if (!(await this.redis.acquireLock(`lock:reminders:${hourKey}`, 55 * 60 * 1000))) return;
+    await this.sendDailyReminders();
+  }
+
   async sendDailyReminders(): Promise<{ push: number; email: number }> {
     if (this.config.get('NODE_ENV') === 'test') return { push: 0, email: 0 };
     const now = new Date();

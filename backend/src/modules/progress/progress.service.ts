@@ -102,8 +102,9 @@ export class ProgressService {
     const [totalLessons, progress, badges, perModuleTotals, dueReviews, timeAgg] =
       await Promise.all([
         this.prisma.lesson.count({ where: { publishedVersionId: { not: null } } }),
+        // Yalnızca yayındaki dersler: yayından kalkan dersler oranı %100'ün üstüne taşımasın
         this.prisma.progress.findMany({
-          where: { userId },
+          where: { userId, lesson: { publishedVersionId: { not: null } } },
           include: {
             lesson: {
               select: { moduleId: true, slug: true, publishedVersion: { select: { title: true } } },
@@ -255,16 +256,19 @@ export class ProgressService {
       },
       today,
     );
-    if (
+    const streakChanged =
       streak.lastActivityDate !== user.lastActivityDate ||
-      streak.currentStreak !== user.currentStreak
-    ) {
+      streak.currentStreak !== user.currentStreak;
+    if (streakChanged) {
       await this.prisma.user.update({ where: { id: userId }, data: streak });
       this.realtime.emitToUser(userId, {
         type: 'streak.updated',
         payload: { currentStreak: streak.currentStreak },
       });
     }
+    // Rozet koşulları yalnızca bir tamamlama/etkileşim ya da seri değişince değişebilir; kaydırma sırasındaki
+    // sıradan ilerleme güncellemelerinde rozet sorgularına (≈8 sorgu) gerek yok
+    if (!streakChanged && !Object.values(flags).some(Boolean)) return [];
 
     const ctx = await this.badgeContext(userId, streak.currentStreak, flags);
     const earnedSlugs = (

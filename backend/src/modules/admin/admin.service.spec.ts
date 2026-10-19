@@ -1,4 +1,4 @@
-import { buildSearchText } from './admin.service';
+import { buildSearchText } from '@devacademy/shared';
 
 describe('buildSearchText', () => {
   it('başlık, özet, kavramlar ve metin bloklarını birleştirir; markdown işaretlerini temizler', () => {
@@ -21,7 +21,9 @@ describe('buildSearchText', () => {
       { tr: 'Load Balancer', en: 'Load Balancer EN' },
       'Özet',
       ['round-robin'],
+      ['altyapi'],
     );
+    expect(text).toContain('altyapi');
     expect(text).toContain('Load Balancer EN');
     expect(text).toContain('Yük dengeleme');
     expect(text).toContain('round-robin');

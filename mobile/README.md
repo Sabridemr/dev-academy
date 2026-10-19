@@ -6,9 +6,9 @@ push bildirimleri içerir.
 
 | Katman    | Teknoloji                                                                                                  |
 | --------- | ---------------------------------------------------------------------------------------------------------- |
-| Çatı      | Expo SDK 53, React Native 0.79 (New Architecture), React 19.0, TypeScript (strict)                         |
-| Gezinme   | expo-router 5 (dosya tabanlı; `src/app`)                                                                   |
-| Animasyon | react-native-svg 15 + react-native-reanimated 3.17, Lottie (lottie-react-native 7)                         |
+| Çatı      | Expo SDK 54, React Native 0.81 (New Architecture), React 19.1, TypeScript (strict)                         |
+| Gezinme   | expo-router 6 (dosya tabanlı; `src/app`)                                                                   |
+| Animasyon | react-native-svg 15 + react-native-reanimated 4 (react-native-worklets), Lottie (lottie-react-native 7)    |
 | Veri      | @tanstack/react-query 5, zustand 5                                                                         |
 | Depolama  | expo-sqlite 15 (çevrimdışı içerik), react-native-mmkv 3 (ayarlar, ETag, kuyruk), expo-secure-store (token) |
 | Kimlik    | E-posta/şifre, Google (expo-auth-session), Apple (expo-apple-authentication, yalnızca iOS)                 |
@@ -59,10 +59,11 @@ Fiziksel cihaz: `pnpm ios --device` / `pnpm android --device`, ya da EAS ile
 Diğer komutlar:
 
 ```bash
-pnpm typecheck      # tsc --noEmit (lint = typecheck)
+pnpm typecheck      # tsc --noEmit
+pnpm lint           # eslint (uyarı da hata)
 pnpm test           # jest
 pnpm build          # expo export --platform all --output-dir dist  (Metro paket doğrulaması)
-pnpm test:e2e       # Detox (iOS simülatörü)
+pnpm detox:ios      # Detox (iOS simülatörü; kök `pnpm test:e2e` bunu çalıştırmaz)
 ```
 
 ## 3. Proje yapısı
@@ -182,7 +183,8 @@ Test: `npx expo push:send` ya da https://expo.dev/notifications ile token'a mesa
 - Google: `expo-auth-session/providers/google` → `id_token` → `POST /auth/oauth { provider: 'google' }`.
 - Apple (iOS): `expo-apple-authentication` → `identityToken` (+ ilk girişte ad) → `POST /auth/oauth`.
 - API istemcisi 401'de **tek uçuşlu** refresh yapar: eşzamanlı tüm istekler tek `/auth/refresh` çağrısını
-  bekler ve yeni token ile bir kez tekrarlanır; refresh reddedilirse oturum kapanır.
+  bekler ve yeni token ile bir kez tekrarlanır; refresh reddedilirse (400/401/403) oturum kapanır.
+  Refresh ağ hatası ya da 5xx/429 alırsa token'lar korunur ve istek ağ/sunucu hatasıyla düşer.
 
 ## 9. Testler
 
@@ -190,21 +192,26 @@ Test: `npx expo push:send` ya da https://expo.dev/notifications ile token'a mesa
 pnpm test           # birim testleri (jest-expo)
 ```
 
-| Test                             | Kapsam                                                                             |
-| -------------------------------- | ---------------------------------------------------------------------------------- |
-| `__tests__/ScenePlayer.test.tsx` | Reducer ile adım ileri/geri, seek, oynatma (TICK), hız, reduced-motion, transkript |
-| `__tests__/i18n.test.ts`         | Çeviri, parametreler, tr/en anahtar eşitliği, dil değiştirme + MMKV kalıcılığı     |
-| `__tests__/sync.test.ts`         | Sahte SQLite ile upsert/transaction, ETag + 304 akışı, kuyruk birleştirme          |
-| `__tests__/api.test.ts`          | Single-flight refresh, oturum sonlandırma, offline/network hataları, 304           |
-| `__tests__/svgTheme.test.ts`     | Diyagram SVG'lerinin tema renklerine çevrilmesi                                    |
+| Test                                   | Kapsam                                                                             |
+| -------------------------------------- | ---------------------------------------------------------------------------------- |
+| `__tests__/ScenePlayer.test.tsx`       | Reducer ile adım ileri/geri, seek, oynatma (TICK), hız, reduced-motion, transkript |
+| `__tests__/i18n.test.ts`               | Çeviri, parametreler, tr/en anahtar eşitliği, dil değiştirme + MMKV kalıcılığı     |
+| `__tests__/sync.test.ts`               | Sahte SQLite ile upsert/transaction, ETag + 304 akışı, kuyruk birleştirme          |
+| `__tests__/api.test.ts`                | Single-flight refresh, oturum sonlandırma, offline/network hataları, 304           |
+| `__tests__/svgTheme.test.ts`           | Diyagram SVG'lerinin tema renklerine çevrilmesi                                    |
+| `__tests__/queue.test.ts`              | Çevrimdışı kuyruklar: çıkışta temizlik, geçici/kalıcı hata, eş zamanlı gönderim    |
+| `__tests__/QuizView.test.tsx`          | Kuyruktan gönderilen quiz sonucunun ders tamamlamayı tetiklemesi                   |
+| `__tests__/simulators.test.tsx`        | Native simülatör bileşenlerinin render'ı                                           |
+| `__tests__/useLessonProgress.test.tsx` | Refetch'te süre/blok kaybı olmaması, ekrandan çıkışta gönderim                     |
 
 **Detox (e2e)** — `e2e/smoke.e2e.ts`: giriş → modül → ders → animasyonu oynat.
 
 ```bash
 npx expo prebuild                         # ios/ ve android/ üretir (git'e eklenmez)
 pnpm detox build -c ios.sim.debug
-pnpm test:e2e                             # backend çalışıyor ve seed edilmiş olmalı
-# Android: pnpm detox build -c android.emu.debug && pnpm test:e2e:android
+pnpm detox:ios                            # backend çalışıyor ve seed edilmiş olmalı
+# Android: önce `@config-plugins/detox` eklenip app.config.ts plugins'e yazılmalı (prebuild'in
+# androidTest/DetoxTest üretmesi için); ardından pnpm detox build -c android.emu.debug && pnpm detox:android
 ```
 
 Varsayılan e2e kullanıcısı seed'in yönetici hesabıdır (`admin@devacademy.local` / `Admin123!`);
@@ -212,10 +219,9 @@ Varsayılan e2e kullanıcısı seed'in yönetici hesabıdır (`admin@devacademy.
 
 ## 10. Notlar
 
-- `@react-navigation/*` paketleri expo-router 5 ile uyumlu (2025 ortası) sürümlere sabitlenmiştir: daha yeni
-  7.x sürümleri expo-router 5'in kullandığı `query-string` bağımlılığını bıraktığı için Metro paketlemesi kırılır.
-  `package.json → expo.install.exclude` bu sabitlemeyi `expo install --check` için belgeler.
-- `@devacademy/shared` kök giriş noktası Node'a özel `gray-matter` (Markdown ayrıştırıcı) içerir; Metro ve Jest
-  bunu `stubs/gray-matter.js` saplamasıyla değiştirir (mobil bu fonksiyonu hiç çağırmaz).
+- Expo SDK 54 Android API 36'yı hedefler (Google Play'in güncel hedef API şartı). Bağımlılıklar
+  `npx expo install --fix` ile SDK'ya hizalı tutulur; `npx expo-doctor` temiz olmalıdır.
+- Markdown ayrıştırıcı (Node'a özel `gray-matter`) `@devacademy/shared/node` girişindedir, kök girişte yoktur;
+  Metro ve Jest'teki `stubs/gray-matter.js` saplaması yalnızca yanlışlıkla içe aktarmaya karşı güvencedir.
 - Monorepo'da web farklı bir React sürümü kullandığından Metro ve Jest `react`'i her zaman mobil projenin
   çözdüğü kopyaya yönlendirir.

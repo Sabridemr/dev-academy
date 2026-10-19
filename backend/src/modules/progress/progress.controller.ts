@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Param, Post, Put, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { z } from 'zod';
-import { ReviewGradeSchema, UpdateProgressSchema } from '@devacademy/shared';
+import { InteractiveTypeSchema, ReviewGradeSchema, UpdateProgressSchema } from '@devacademy/shared';
 import type {
   BadgeDto,
   ProgressItem,
@@ -11,13 +11,18 @@ import type {
 } from '@devacademy/shared';
 import { CurrentUser, Public, type AuthUser } from '../../common/auth/decorators';
 import { zodBody } from '../../common/pipes/zod-validation.pipe';
+import { clampInt } from '../../common/utils/query';
 import { ApiZodBody } from '../../common/swagger/zod-openapi';
 import { ProgressService } from './progress.service';
 
 const InteractiveSchema = z.object({
-  interactive: z.string().min(1),
-  lessonId: z.string().optional(),
-  params: z.record(z.unknown()).optional(),
+  // Yalnızca bilinen simülatörler: rastgele adlarla "interaktif" rozeti kasılamaz
+  interactive: InteractiveTypeSchema,
+  lessonId: z.string().max(100).optional(),
+  params: z
+    .record(z.unknown())
+    .refine((p) => JSON.stringify(p).length <= 2000, { message: 'params çok büyük' })
+    .optional(),
 });
 
 @ApiTags('progress')
@@ -65,7 +70,7 @@ export class ProgressController {
   @ApiOperation({ summary: 'Bugün tekrar edilmesi gereken kartlar (spaced repetition)' })
   @ApiQuery({ name: 'limit', required: false })
   reviews(@CurrentUser() user: AuthUser, @Query('limit') limit?: string) {
-    return this.progress.dueReviews(user.id, limit ? Math.min(50, Number(limit) || 20) : 20);
+    return this.progress.dueReviews(user.id, clampInt(limit, 20, 1, 50));
   }
 
   @Post('reviews/:cardId/grade')

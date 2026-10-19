@@ -19,12 +19,15 @@ function Onboarding() {
   const [hour, setHour] = useState<number | null>(20);
 
   const save = async () => {
-    await update.mutateAsync({
-      selectedPathId: selected,
-      reminderHour: hour,
-      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-    });
-    router.push('/dashboard');
+    // Hata update.isError ile aşağıda gösterilir; yakalanmamış promise reddi olmasın
+    await update
+      .mutateAsync({
+        selectedPathId: selected,
+        reminderHour: hour,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      })
+      .then(() => router.push('/dashboard'))
+      .catch(() => undefined);
   };
 
   return (
@@ -81,6 +84,11 @@ function Onboarding() {
       >
         {t('onboarding.save')}
       </button>
+      {update.isError && (
+        <p className="mt-2 text-sm text-danger" role="alert">
+          {t('common.error')}
+        </p>
+      )}
     </div>
   );
 }
