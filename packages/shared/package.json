@@ -67,6 +67,7 @@
     "test:watch": "vitest",
     "lint": "eslint . --max-warnings=0",
     "content:validate": "tsx scripts/validate-content.ts",
+    "content:traces": "python3 scripts/python-trace/tracer.py ../../content",
     "schema:export": "tsx scripts/export-json-schema.ts",
     "clean": "rm -rf dist .turbo"
   },

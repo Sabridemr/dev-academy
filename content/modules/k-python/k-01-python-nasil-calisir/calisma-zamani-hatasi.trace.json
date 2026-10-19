@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "language": "python",
+  "code": "print(\"1. adım: hazırlık\")\nsayac = 10\nisim = \"Ada\"\nprint(\"2. adım: sayaç =\", sayac)\nmesaj = f\"{isim} için sayaç {sayac}\"\nprint(\"3. adım:\", mesaj)\nsayac = sayac + 5\nprint(\"4. adım:\", sayc + 1)\nprint(\"5. adım: bitti\")",
+  "sourceHash": "2e4c3a0f1f5e83b7551e8259d8175f7df5ff31ccee82973e5cacf6af76752367",
+  "pythonVersion": "3.14",
+  "steps": [
+    {"line":1,"event":"line","frames":[{"id":0,"name":"Global","line":1,"locals":[]}],"heap":[],"stdout":"","note":{"tr":"Dosyanın sözdizimi doğru olduğu için derlendi ve çalışmaya başladı. Hatalar, satırlarına gelinince ortaya çıkacak.","en":"The file has valid syntax, so it compiled and started running. Errors only appear when their lines are reached."}},
+    {"line":2,"event":"line","frames":[{"id":0,"name":"Global","line":2,"locals":[]}],"heap":[],"stdout":"1. adım: hazırlık\n"},
+    {"line":3,"event":"line","frames":[{"id":0,"name":"Global","line":3,"locals":[["sayac",{"t":"prim","type":"int","repr":"10"}]]}],"heap":[],"stdout":"1. adım: hazırlık\n"},
+    {"line":4,"event":"line","frames":[{"id":0,"name":"Global","line":4,"locals":[["sayac",{"t":"prim","type":"int","repr":"10"}],["isim",{"t":"prim","type":"str","repr":"'Ada'"}]]}],"heap":[],"stdout":"1. adım: hazırlık\n"},
+    {"line":5,"event":"line","frames":[{"id":0,"name":"Global","line":5,"locals":[["sayac",{"t":"prim","type":"int","repr":"10"}],["isim",{"t":"prim","type":"str","repr":"'Ada'"}]]}],"heap":[],"stdout":"1. adım: hazırlık\n2. adım: sayaç = 10\n","note":{"tr":"Metin ile sayı f-string içinde sorunsuz birleşir: f-string her değeri metne çevirir.","en":"Text and a number combine fine inside an f-string: it converts every value to text."}},
+    {"line":6,"event":"line","frames":[{"id":0,"name":"Global","line":6,"locals":[["sayac",{"t":"prim","type":"int","repr":"10"}],["isim",{"t":"prim","type":"str","repr":"'Ada'"}],["mesaj",{"t":"prim","type":"str","repr":"'Ada için sayaç 10'"}]]}],"heap":[],"stdout":"1. adım: hazırlık\n2. adım: sayaç = 10\n"},
+    {"line":7,"event":"line","frames":[{"id":0,"name":"Global","line":7,"locals":[["sayac",{"t":"prim","type":"int","repr":"10"}],["isim",{"t":"prim","type":"str","repr":"'Ada'"}],["mesaj",{"t":"prim","type":"str","repr":"'Ada için sayaç 10'"}]]}],"heap":[],"stdout":"1. adım: hazırlık\n2. adım: sayaç = 10\n3. adım: Ada için sayaç 10\n"},
+    {"line":8,"event":"line","frames":[{"id":0,"name":"Global","line":8,"locals":[["sayac",{"t":"prim","type":"int","repr":"15"}],["isim",{"t":"prim","type":"str","repr":"'Ada'"}],["mesaj",{"t":"prim","type":"str","repr":"'Ada için sayaç 10'"}]]}],"heap":[],"stdout":"1. adım: hazırlık\n2. adım: sayaç = 10\n3. adım: Ada için sayaç 10\n","note":{"tr":"Burada 'sayc' diye yazım hatası var. Python bu ismi global çerçevede ve yerleşik isimlerde arayacak, bulamayacak: NameError.","en":"There is a typo here: 'sayc'. Python looks it up in the global frame and the builtins, fails, and raises NameError."}},
+    {"line":8,"event":"exception","frames":[{"id":0,"name":"Global","line":8,"locals":[["sayac",{"t":"prim","type":"int","repr":"15"}],["isim",{"t":"prim","type":"str","repr":"'Ada'"}],["mesaj",{"t":"prim","type":"str","repr":"'Ada için sayaç 10'"}]]}],"exception":"NameError: name 'sayc' is not defined","heap":[],"stdout":"1. adım: hazırlık\n2. adım: sayaç = 10\n3. adım: Ada için sayaç 10\n"},
+    {"line":8,"event":"end","frames":[{"id":0,"name":"Global","line":8,"locals":[["sayac",{"t":"prim","type":"int","repr":"15"}],["isim",{"t":"prim","type":"str","repr":"'Ada'"}],["mesaj",{"t":"prim","type":"str","repr":"'Ada için sayaç 10'"}]]}],"heap":[],"stdout":"1. adım: hazırlık\n2. adım: sayaç = 10\n3. adım: Ada için sayaç 10\n","exception":"NameError: name 'sayc' is not defined"}
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "id": "k-python",
+  "slug": "python",
+  "code": "K",
+  "order": 11,
+  "title": {
+    "tr": "Python: Sıfırdan İleri Seviyeye",
+    "en": "Python: From Zero to Advanced"
+  },
+  "description": {
+    "tr": "Değişkenler ve bellek modelinden fonksiyonlara, OOP'ye ve dependency injection'a: her konu satır satır kod simülasyonuyla.",
+    "en": "From variables and the memory model to functions, OOP and dependency injection: every topic with line-by-line code simulations."
+  },
+  "icon": "code",
+  "color": "#3776ab",
+  "group": "programming"
+}

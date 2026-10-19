@@ -1,0 +1,110 @@
+{
+  "id": "k-16-solid-ve-dependency-injection-quiz",
+  "title": { "tr": "SOLID ve Dependency Injection Quiz", "en": "SOLID and Dependency Injection Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Kare, Dikdortgen'den türüyor ve en_ayarla metodu eni ve boyu birlikte değiştiriyor. genislet(d) fonksiyonu d.en_ayarla(10) yapıp d.alan() döndürüyor. print(genislet(Kare(5))) ne yazdırır ve hangi ilke çiğnenmiştir?",
+        "en": "Kare inherits from Dikdortgen and its en_ayarla changes both width and height. genislet(d) calls d.en_ayarla(10) and returns d.alan(). What does print(genislet(Kare(5))) print, and which principle is violated?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "100; Liskov'un Yerine Koyma İlkesi", "en": "100; the Liskov Substitution Principle" } },
+        { "id": "b", "text": { "tr": "50; Liskov'un Yerine Koyma İlkesi", "en": "50; the Liskov Substitution Principle" } },
+        { "id": "c", "text": { "tr": "100; Tek Sorumluluk İlkesi", "en": "100; the Single Responsibility Principle" } },
+        { "id": "d", "text": { "tr": "50; hiçbir ilke çiğnenmez", "en": "50; no principle is violated" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "Kare'nin en_ayarla metodu boyu da 10 yapar, alan 10 * 10 = 100 olur. Dikdortgen bekleyen kod boyun değişmemesini (10 * 5 = 50) beklediği için Kare onun yerine sorunsuz geçemez: bu Liskov ihlalidir. 50 sonucu ancak gerçek bir Dikdortgen(5, 5) ile alınırdı.",
+        "en": "Kare's en_ayarla also sets the height to 10, so the area is 10 * 10 = 100. Code expecting a Dikdortgen assumes the height stays (10 * 5 = 50), so Kare cannot substitute for it: a Liskov violation. 50 would only come from a real Dikdortgen(5, 5)."
+      },
+      "difficulty": "medium",
+      "concepts": ["liskov-substitution", "solid"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "class Servis: def __init__(self, depo=BellekDepo()): self.depo = depo. s1 = Servis(), s2 = Servis(), sonra s1.depo.kaydet(\"x\") çalışıyor (kaydet, depo içindeki kayitlar listesine ekler). print(s2.depo.kayitlar) ne yazdırır?",
+        "en": "class Servis: def __init__(self, depo=BellekDepo()): self.depo = depo. s1 = Servis(), s2 = Servis(), then s1.depo.kaydet(\"x\") runs (kaydet appends to the repository's kayitlar list). What does print(s2.depo.kayitlar) print?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "['x']", "en": "['x']" } },
+        { "id": "b", "text": { "tr": "[]", "en": "[]" } },
+        { "id": "c", "text": { "tr": "AttributeError", "en": "AttributeError" } },
+        { "id": "d", "text": { "tr": "None", "en": "None" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "Varsayılan değer BellekDepo() fonksiyon tanımlanırken bir kez oluşturulur; s1 ve s2 aynı depo nesnesini paylaşır, bu yüzden s2 de 'x'i görür. Doğrusu depo=None verip içeride yeni depo oluşturmaktır. [] cevabı her çağrıda yeni depo oluştuğunu varsayar.",
+        "en": "The default BellekDepo() is created once when the function is defined; s1 and s2 share the same repository object, so s2 sees 'x' too. The fix is depo=None and creating a new one inside. The [] answer assumes a new repository per call."
+      },
+      "difficulty": "hard",
+      "concepts": ["dependency-injection"]
+    },
+    {
+      "id": "q3",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Fake, kendisine hangi argümanlarla çağrıldığını kaydeden ve testin bu çağrıları doğrulamasını sağlayan test dublörüdür; çalışan bir uygulama içermez.",
+        "en": "A fake is a test double that records which arguments it was called with so the test can verify those calls; it contains no working implementation."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "Tarif edilen mock'tur. Fake ise basitleştirilmiş ama gerçekten çalışan bir uygulamadır (örneğin veriyi listede tutan bellek içi depo); test genellikle sonuçtaki durumu kontrol eder.",
+        "en": "That describes a mock. A fake is a simplified but genuinely working implementation (such as an in-memory repository backed by a list); tests usually check the resulting state."
+      },
+      "difficulty": "easy",
+      "concepts": ["test-doubles"]
+    },
+    {
+      "id": "q4",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Aşağıdakilerden hangileri dependency injection ve Bağımlılığın Tersine Çevrilmesi ilkesine uygundur?",
+        "en": "Which of the following follow dependency injection and the Dependency Inversion Principle?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "SiparisServisi'nin depo nesnesini __init__ parametresi olarak alması", "en": "SiparisServisi receiving its repository as an __init__ parameter" } },
+        { "id": "b", "text": { "tr": "Servisin parametre tipini PostgresDepo yerine bir SiparisDeposu Protocol'ü olarak yazmak", "en": "Typing the service parameter as a SiparisDeposu Protocol instead of PostgresDepo" } },
+        { "id": "c", "text": { "tr": "Servisin __init__ içinde os.environ'dan adres okuyup PostgresDepo oluşturması", "en": "The service reading an address from os.environ and creating PostgresDepo inside __init__" } },
+        { "id": "d", "text": { "tr": "Somut sınıfları yalnızca main() içindeki composition root'ta oluşturmak", "en": "Creating concrete classes only in the composition root inside main()" } }
+      ],
+      "correct": ["a", "b", "d"],
+      "explanation": {
+        "tr": "Bağımlılığı dışarıdan almak, soyutlamaya (Protocol) göre tip vermek ve somut nesneleri tek bir kökte kurmak DI ve DIP'in özüdür. Servisin kendi içinde ortam değişkeni okuyup somut depo oluşturması ise sıkı bağlılık yaratır ve testi gerçek veritabanına bağlar.",
+        "en": "Receiving dependencies from outside, typing against an abstraction (Protocol) and building concrete objects in one root are the essence of DI and DIP. A service that reads environment variables and creates a concrete repository itself is tightly coupled and ties its tests to a real database."
+      },
+      "difficulty": "medium",
+      "concepts": ["dependency-injection", "dependency-inversion", "composition-root"]
+    },
+    {
+      "id": "q5",
+      "type": "order",
+      "prompt": {
+        "tr": "Sözlük tabanlı konteynerde \"servis\" fabrikası lambda c: KullaniciServisi(c.coz(\"depo\")) olarak kayıtlı. k.coz(\"servis\") çağrıldığında olanları sıraya koy.",
+        "en": "In the dictionary-based container, the \"servis\" factory is registered as lambda c: KullaniciServisi(c.coz(\"depo\")). Order what happens when k.coz(\"servis\") is called."
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Sözlükten \"servis\" fabrikası alınır ve konteynerle çağrılır", "en": "The \"servis\" factory is taken from the dictionary and called with the container" } },
+        { "id": "b", "text": { "tr": "Fabrika içeriden c.coz(\"depo\") çağırır; yığına ikinci bir coz çerçevesi eklenir", "en": "The factory calls c.coz(\"depo\"); a second coz frame is pushed" } },
+        { "id": "c", "text": { "tr": "BellekDepo nesnesi oluşturulup döndürülür", "en": "A BellekDepo object is created and returned" } },
+        { "id": "d", "text": { "tr": "KullaniciServisi depoya referansla oluşturulur ve coz(\"servis\") onu döndürür", "en": "KullaniciServisi is created with a reference to the repository and coz(\"servis\") returns it" } }
+      ],
+      "correct": ["a", "b", "c", "d"],
+      "explanation": {
+        "tr": "Konteyner önce istenen adın fabrikasını bulur. Bu fabrika kendi bağımlılığını yine konteynerden ister, bu yüzden iç içe bir coz çağrısı depoyu üretir. Depo hazır olunca servis ona referansla kurulur ve dış çağrıya döner.",
+        "en": "The container first finds the factory for the requested name. That factory asks the container for its own dependency, so a nested coz call builds the repository. Once it exists, the service is built with a reference to it and returned to the outer call."
+      },
+      "difficulty": "medium",
+      "concepts": ["dependency-injection", "composition-root"]
+    }
+  ]
+}

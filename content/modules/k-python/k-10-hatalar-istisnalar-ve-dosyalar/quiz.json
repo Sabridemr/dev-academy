@@ -1,0 +1,110 @@
+{
+  "id": "k-10-hatalar-istisnalar-ve-dosyalar-quiz",
+  "title": { "tr": "Hatalar, İstisnalar ve Dosyalar Quiz", "en": "Errors, Exceptions and Files Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "def g(x): try: r = 10 // x / except ZeroDivisionError: print('A') / else: print('B') / finally: print('C'). g(0) ardından g(5) çağrılıyor. Çıktı sırası nedir?",
+        "en": "def g(x): try: r = 10 // x / except ZeroDivisionError: print('A') / else: print('B') / finally: print('C'). g(0) is called, then g(5). What is the output order?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "A C B C", "en": "A C B C" } },
+        { "id": "b", "text": { "tr": "A B C B C", "en": "A B C B C" } },
+        { "id": "c", "text": { "tr": "A C B", "en": "A C B" } },
+        { "id": "d", "text": { "tr": "A B C", "en": "A B C" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "g(0) hata fırlatır: except (A) ve finally (C) çalışır, else atlanır. g(5) hatasız biter: else (B) ve finally (C) çalışır. finally her iki yolda da çalıştığı için C iki kez yazılır.",
+        "en": "g(0) raises: except (A) and finally (C) run, else is skipped. g(5) succeeds: else (B) and finally (C) run. finally runs on both paths, so C is printed twice."
+      },
+      "difficulty": "easy",
+      "concepts": ["try-except"]
+    },
+    {
+      "id": "q2",
+      "type": "order",
+      "prompt": {
+        "tr": "kaydet() → kayit_olustur() → yas_coz() zincirinde yas_coz içinde ValueError fırlıyor ve yalnızca kaydet içinde try/except ValueError var. Olanları sıraya koy.",
+        "en": "In the chain kaydet() → kayit_olustur() → yas_coz(), a ValueError is raised inside yas_coz and only kaydet has try/except ValueError. Put the events in order."
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "yas_coz içinde int() ValueError fırlatır", "en": "int() raises ValueError inside yas_coz" } },
+        { "id": "b", "text": { "tr": "yas_coz çerçevesi yarıda kapanır, hata kayit_olustur'a geçer", "en": "The yas_coz frame is abandoned and the error passes to kayit_olustur" } },
+        { "id": "c", "text": { "tr": "kayit_olustur'da try olmadığı için onun çerçevesi de kapanır", "en": "kayit_olustur has no try, so its frame is closed too" } },
+        { "id": "d", "text": { "tr": "kaydet içindeki except ValueError bloğu çalışır", "en": "The except ValueError block inside kaydet runs" } }
+      ],
+      "correct": ["a", "b", "c", "d"],
+      "explanation": {
+        "tr": "Yakalanmayan istisna, uygun bir except bulunana kadar her çerçeveyi kapatarak yığında yukarı yayılır. Ara fonksiyonların kalan satırları çalışmaz.",
+        "en": "An uncaught exception propagates up the stack, closing each frame until a matching except is found. The remaining lines of the intermediate functions never run."
+      },
+      "difficulty": "medium",
+      "concepts": ["exception-propagation"]
+    },
+    {
+      "id": "q3",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Çıplak except: bloğu yalnızca Exception alt türlerini yakalar; Ctrl+C (KeyboardInterrupt) yine de programı durdurur.",
+        "en": "A bare except: block only catches Exception subclasses; Ctrl+C (KeyboardInterrupt) still stops the program."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "Çıplak except: BaseException'ı, yani KeyboardInterrupt ve SystemExit'i de yakalar. Bu yüzden Ctrl+C yutulabilir. Yalnızca beklediğin türü yakala.",
+        "en": "A bare except: catches BaseException, including KeyboardInterrupt and SystemExit, so Ctrl+C can be swallowed. Catch only the types you expect."
+      },
+      "difficulty": "medium",
+      "concepts": ["try-except", "exception"]
+    },
+    {
+      "id": "q4",
+      "type": "multiple",
+      "prompt": {
+        "tr": "with open('a.txt', 'w', encoding='utf-8') as f: bloğu için hangileri doğrudur?",
+        "en": "Which statements are true for the block with open('a.txt', 'w', encoding='utf-8') as f:?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Blok içinde istisna fırlasa bile dosya kapatılır", "en": "The file is closed even if an exception is raised inside the block" } },
+        { "id": "b", "text": { "tr": "Dosya zaten varsa içeriği silinir ve baştan yazılır", "en": "If the file already exists, its contents are erased and rewritten" } },
+        { "id": "c", "text": { "tr": "with, blok içindeki istisnayı her zaman yutar; dışarı hata çıkmaz", "en": "with always swallows exceptions from the block; no error escapes" } },
+        { "id": "d", "text": { "tr": "f.write('x') her çağrıda otomatik olarak satır sonu ekler", "en": "f.write('x') automatically adds a newline on each call" } }
+      ],
+      "correct": ["a", "b"],
+      "explanation": {
+        "tr": "with, __exit__ ile dosyayı her durumda kapatır ve 'w' modu var olan içeriği siler. Dosya nesnesinin __exit__'i istisnayı yutmaz, hata dışarı yayılır. write satır sonu eklemez; '\\n'yi kendin yazarsın.",
+        "en": "with closes the file in every case via __exit__, and 'w' mode erases existing contents. The file's __exit__ does not swallow exceptions; they propagate. write adds no newline; you write '\\n' yourself."
+      },
+      "difficulty": "medium",
+      "concepts": ["context-manager", "file-io"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "raise AyarHatasi('bozuk') from e satırı ne yapar?",
+        "en": "What does the line raise AyarHatasi('bozuk') from e do?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Yeni istisnayı fırlatır ve __cause__ niteliğine asıl hata e'yi bağlar; traceback ikisini de gösterir", "en": "Raises the new exception and sets its __cause__ to the original error e; the traceback shows both" } },
+        { "id": "b", "text": { "tr": "e'yi sessizce siler, yalnızca AyarHatasi görünür", "en": "Silently discards e; only AyarHatasi is visible" } },
+        { "id": "c", "text": { "tr": "e'yi aynen yeniden fırlatır; AyarHatasi yalnızca mesaj olarak eklenir", "en": "Re-raises e unchanged; AyarHatasi is only added as a message" } },
+        { "id": "d", "text": { "tr": "AyarHatasi, e'nin sınıfından türetilmiş olmak zorundadır", "en": "AyarHatasi must be a subclass of e's class" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "raise ... from e istisna zincirlemedir: yeni hata fırlar, e.__cause__ olarak saklanır ve traceback 'direct cause' satırıyla iki hatayı birden basar. Aynısını yeniden fırlatmak için tek başına raise yazılır; sınıflar arasında kalıtım şartı yoktur.",
+        "en": "raise ... from e is exception chaining: the new error is raised, e is stored as __cause__ and the traceback prints both with a 'direct cause' line. A bare raise re-raises the same error; no inheritance between the classes is required."
+      },
+      "difficulty": "hard",
+      "concepts": ["exception-chaining", "custom-exception"]
+    }
+  ]
+}

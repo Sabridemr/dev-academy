@@ -1,0 +1,110 @@
+{
+  "id": "k-17-bellek-yonetimi-ve-gc-quiz",
+  "title": { "tr": "Bellek Yönetimi Quiz", "en": "Memory Management Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "class A tanımında __del__ 'sil' yazdırıyor. a = A(); b = [a]; del a; print('x'); b.clear(); print('y') çalışınca çıktı sırası nedir?",
+        "en": "class A defines __del__ that prints 'sil'. Running a = A(); b = [a]; del a; print('x'); b.clear(); print('y') prints what, in order?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "x, sil, y", "en": "x, sil, y" } },
+        { "id": "b", "text": { "tr": "sil, x, y", "en": "sil, x, y" } },
+        { "id": "c", "text": { "tr": "x, y, sil", "en": "x, y, sil" } },
+        { "id": "d", "text": { "tr": "x, y (sil hiç yazılmaz)", "en": "x, y (sil is never printed)" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "del a yalnızca ismi siler; liste nesneyi hâlâ tuttuğu için 'sil' yazılmaz. b.clear() son referansı kaldırır, sayaç 0 olur ve __del__ hemen çalışır; sonra 'y' yazılır.",
+        "en": "del a only removes the name; the list still holds the object, so 'sil' is not printed yet. b.clear() drops the last reference, the count hits 0 and __del__ runs at once, then 'y' is printed."
+      },
+      "difficulty": "medium",
+      "concepts": ["reference-counting"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "x.komsu = y ve y.komsu = x ile birbirini gösteren iki nesne var. del x, y sonrasında ne olur?",
+        "en": "Two objects point at each other via x.komsu = y and y.komsu = x. What happens after del x, y?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Nesneler erişilemez olur ama sayaçları 1'de kalır; onları döngüsel çöp toplayıcı siler", "en": "They become unreachable but their counts stay at 1; the cyclic garbage collector frees them" } },
+        { "id": "b", "text": { "tr": "Sayaçları 0 olur ve referans sayımı onları hemen siler", "en": "Their counts drop to 0 and reference counting frees them immediately" } },
+        { "id": "c", "text": { "tr": "Program bitene kadar asla silinemezler", "en": "They can never be freed until the program exits" } },
+        { "id": "d", "text": { "tr": "del bir döngüdeki nesne için TypeError verir", "en": "del raises TypeError for objects in a cycle" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "Her nesne diğerinden bir referans aldığı için sayaçlar 1'de kalır ve referans sayımı onları silemez. CPython'un döngüsel GC'si grubun yalnızca kendi içinden tutulduğunu fark eder ve siler; yani sonsuza kadar kalmazlar.",
+        "en": "Each object still holds a reference to the other, so the counts stay at 1 and reference counting cannot free them. CPython's cyclic GC notices the group is only referenced internally and frees it, so they do not live forever."
+      },
+      "difficulty": "medium",
+      "concepts": ["reference-cycle", "garbage-collection"]
+    },
+    {
+      "id": "q3",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "x = int('1000'); y = int('1000') sonrasında x is y her zaman True'dur, çünkü değerleri eşittir.",
+        "en": "After x = int('1000'); y = int('1000'), x is y is always True because the values are equal."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "CPython yalnızca -5 ile 256 arasındaki int'leri önbellekte tutar. Çalışma anında üretilen iki 1000 ayrı nesnedir; bu kod False yazdırır. Değer için == kullanılmalı.",
+        "en": "CPython only caches ints from -5 to 256. Two 1000s created at run time are separate objects, so this prints False. Use == for values."
+      },
+      "difficulty": "easy",
+      "concepts": ["object-interning"]
+    },
+    {
+      "id": "q4",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Uzun süre çalışan bir serviste hangileri bellek sızıntısına yol açabilir?",
+        "en": "Which of these can cause a memory leak in a long-running service?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Her isteğin sonucunu sınırsız büyüyen modül düzeyindeki bir sözlüğe eklemek", "en": "Adding every request's result to an unbounded module-level dict" } },
+        { "id": "b", "text": { "tr": "Olay yayıncısına abone olup aboneliği hiç iptal etmemek", "en": "Subscribing to an event emitter and never unsubscribing" } },
+        { "id": "c", "text": { "tr": "Fonksiyon içinde geçici bir liste oluşturup döndürmeden bırakmak", "en": "Creating a temporary list inside a function and not returning it" } },
+        { "id": "d", "text": { "tr": "Yakalanan istisnaları traceback'leriyle birlikte bir listede biriktirmek", "en": "Collecting caught exceptions with their tracebacks in a list" } }
+      ],
+      "correct": ["a", "b", "d"],
+      "explanation": {
+        "tr": "Sızıntı, gereksiz nesneleri erişilebilir tutmaktır: sınırsız önbellek, abone listesi ve traceback'lerin tuttuğu çerçeveler bunu yapar. Fonksiyondaki geçici liste ise çerçeve kapanınca referansını kaybeder ve hemen silinir.",
+        "en": "A leak means keeping unneeded objects reachable: an unbounded cache, a subscriber list and the frames held by tracebacks all do that. A temporary list in a function loses its reference when the frame closes and is freed immediately."
+      },
+      "difficulty": "medium",
+      "concepts": ["memory-profiling", "reference-counting"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "__slots__ = ('x', 'y') tanımlı bir sınıf için hangisi doğrudur?",
+        "en": "Which is true for a class that defines __slots__ = ('x', 'y')?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Örneklerin __dict__'i olmaz; daha az bellek kullanırlar ve z gibi yeni nitelik eklenemez", "en": "Instances have no __dict__; they use less memory and a new attribute such as z cannot be added" } },
+        { "id": "b", "text": { "tr": "Örnekler aynı belleği kullanır ama nitelik erişimi yasaklanır", "en": "Instances use the same memory but attribute access is forbidden" } },
+        { "id": "c", "text": { "tr": "x ve y değiştirilemez (immutable) olur", "en": "x and y become immutable" } },
+        { "id": "d", "text": { "tr": "Sınıf otomatik olarak zayıf referans desteği kazanır", "en": "The class automatically gains weak reference support" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "__slots__ sözlük yerine sabit alanlar kullanır: bellek azalır, listede olmayan nitelik AttributeError verir. Alanlar yine değiştirilebilir; zayıf referans için '__weakref__' slotu ayrıca eklenmelidir.",
+        "en": "__slots__ replaces the dict with fixed fields: memory drops and unknown attributes raise AttributeError. The fields can still be reassigned, and weak references need a '__weakref__' slot added explicitly."
+      },
+      "difficulty": "medium",
+      "concepts": ["slots", "weak-reference"]
+    }
+  ]
+}

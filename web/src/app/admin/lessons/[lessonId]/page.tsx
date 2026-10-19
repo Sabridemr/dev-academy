@@ -43,6 +43,8 @@ const BLOCK_TEMPLATES: Record<
   interactive: { type: 'interactive', interactive: 'load-balancer', params: {} },
   code: { type: 'code', language: 'ts', code: '// kod', alternatives: [], highlightLines: [] },
   realworld: { type: 'realworld', company: 'Amazon', markdown: 'Gerçek dünya örneği…' },
+  // İz içeriği içerik deposunda üretilir (pnpm content:traces); editör yalnızca dosya yolunu tutar
+  trace: { type: 'trace', src: 'ornek.trace.json' },
   callout: { type: 'callout', tone: 'tip', markdown: 'İpucu…' },
   quiz: { type: 'quiz', src: 'quiz.json' },
   next: { type: 'next', lesson: '' },

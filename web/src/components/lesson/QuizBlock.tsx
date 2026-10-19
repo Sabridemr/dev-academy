@@ -90,7 +90,7 @@ function QuizForm({ quiz, title }: { quiz: QuizPublic; title: string }) {
                   : 'border-border',
               )}
             >
-              <p className="mb-3 font-medium">
+              <p className="mb-3 whitespace-pre-line font-medium">
                 <span className="mr-2 text-muted">{qi + 1}.</span>
                 {tl(q.prompt)}
               </p>

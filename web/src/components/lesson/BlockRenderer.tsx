@@ -11,6 +11,7 @@ import { Diagram } from './Diagram';
 import { AnimationBlock } from './AnimationBlock';
 import { InteractiveBlock } from './InteractiveBlock';
 import { QuizBlock } from './QuizBlock';
+import { TraceViewer } from './TraceViewer';
 
 const CALLOUT_STYLES = {
   info: { icon: Info, cls: 'border-primary/40 bg-primary/5', iconCls: 'text-primary' },
@@ -87,6 +88,10 @@ export function BlockRenderer({ block, lesson }: { block: LessonBlock; lesson: L
     }
     case 'quiz':
       return <QuizBlock lessonId={lesson.id} />;
+    case 'trace':
+      return block.trace ? (
+        <TraceViewer trace={block.trace} title={block.title} caption={block.caption} />
+      ) : null;
     case 'next': {
       const target = lesson.next && lesson.next.id === block.lesson ? lesson.next : null;
       return (

@@ -33,7 +33,7 @@ const LANGUAGE_LABELS: Record<string, string> = {
 
 // Shiki highlighter'ı bir kez yüklenir (lazy), çift tema (açık/koyu CSS değişkenleri)
 let highlighterPromise: Promise<import('shiki').Highlighter> | null = null;
-function getHighlighter() {
+export function getHighlighter() {
   highlighterPromise ??= import('shiki').then((m) =>
     m.createHighlighter({
       themes: ['github-light', 'github-dark'],

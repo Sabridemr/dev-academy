@@ -1,0 +1,110 @@
+{
+  "id": "k-09-comprehension-ve-fonksiyonel-araclar-quiz",
+  "title": { "tr": "Comprehension ve Fonksiyonel Araçlar Quiz", "en": "Comprehensions and Functional Tools Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "print([x * 2 for x in range(5) if x % 2 == 0]) ne yazdırır?",
+        "en": "What does print([x * 2 for x in range(5) if x % 2 == 0]) output?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "[0, 4, 8]", "en": "[0, 4, 8]" } },
+        { "id": "b", "text": { "tr": "[2, 6]", "en": "[2, 6]" } },
+        { "id": "c", "text": { "tr": "[0, 2, 4]", "en": "[0, 2, 4]" } },
+        { "id": "d", "text": { "tr": "[0, 2, 4, 6, 8]", "en": "[0, 2, 4, 6, 8]" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "Filtre önce çalışır: range(5) içinden çift olanlar 0, 2, 4 kalır; ifade bunları ikiyle çarpar → [0, 4, 8]. [2, 6] tek sayıları, [0, 2, 4] çarpılmamış hâli, [0, 2, 4, 6, 8] ise filtresiz hâli olurdu.",
+        "en": "The filter runs first: the even numbers 0, 2, 4 remain from range(5); the expression doubles them → [0, 4, 8]. [2, 6] would be the odd ones, [0, 2, 4] the undoubled values and [0, 2, 4, 6, 8] the unfiltered result."
+      },
+      "difficulty": "easy",
+      "concepts": ["list-comprehension"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "sorted([(\"b\", 2), (\"a\", 2), (\"c\", 1)], key=lambda t: t[1]) ne döndürür?",
+        "en": "What does sorted([(\"b\", 2), (\"a\", 2), (\"c\", 1)], key=lambda t: t[1]) return?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "[('c', 1), ('b', 2), ('a', 2)]", "en": "[('c', 1), ('b', 2), ('a', 2)]" } },
+        { "id": "b", "text": { "tr": "[('c', 1), ('a', 2), ('b', 2)]", "en": "[('c', 1), ('a', 2), ('b', 2)]" } },
+        { "id": "c", "text": { "tr": "[('a', 2), ('b', 2), ('c', 1)]", "en": "[('a', 2), ('b', 2), ('c', 1)]" } },
+        { "id": "d", "text": { "tr": "[1, 2, 2]", "en": "[1, 2, 2]" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "Yalnızca ikinci alana göre sıralanır ve Python'un sıralaması kararlıdır: anahtarı eşit olan ('b', 2) ile ('a', 2) ilk sıralarını korur. İsme göre ikinci bir anahtar verilmediği için 'a' öne geçmez; key yalnızca karşılaştırmayı etkiler, elemanların kendisi döner.",
+        "en": "Only the second field is used and Python's sort is stable: ('b', 2) and ('a', 2) have equal keys and keep their original order. No secondary key on the name is given, so 'a' does not move ahead; key only affects comparison, the items themselves are returned."
+      },
+      "difficulty": "medium",
+      "concepts": ["key-function", "lambda"]
+    },
+    {
+      "id": "q3",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "list(zip([1, 2, 3], [4, 5])) uzunluklar farklı olduğu için ValueError fırlatır.",
+        "en": "list(zip([1, 2, 3], [4, 5])) raises ValueError because the lengths differ."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "zip varsayılan olarak en kısa kaynakta sessizce durur ve [(1, 4), (2, 5)] döndürür; 3 kaybolur. Hata almak için Python 3.10+ ile strict=True vermen gerekir.",
+        "en": "By default zip silently stops at the shortest input and returns [(1, 4), (2, 5)]; 3 is lost. To get an error you must pass strict=True (Python 3.10+)."
+      },
+      "difficulty": "easy",
+      "concepts": ["zip-enumerate"]
+    },
+    {
+      "id": "q4",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Python 3'te hangileri liste değil, değerleri istendikçe üreten tembel bir iterator döndürür?",
+        "en": "In Python 3, which of these return a lazy iterator that produces values on demand rather than a list?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "map(str, sayilar)", "en": "map(str, sayilar)" } },
+        { "id": "b", "text": { "tr": "filter(None, sayilar)", "en": "filter(None, sayilar)" } },
+        { "id": "c", "text": { "tr": "zip(isimler, puanlar)", "en": "zip(isimler, puanlar)" } },
+        { "id": "d", "text": { "tr": "sorted(sayilar)", "en": "sorted(sayilar)" } }
+      ],
+      "correct": ["a", "b", "c"],
+      "explanation": {
+        "tr": "map, filter ve zip Python 3'te tembel iterator döndürür; sonucu görmek için list(...) gerekir. sorted ise sıralamak için bütün elemanları görmek zorundadır ve her zaman yeni bir list döndürür.",
+        "en": "map, filter and zip return lazy iterators in Python 3; you need list(...) to see the result. sorted must see every item to sort and always returns a new list."
+      },
+      "difficulty": "medium",
+      "concepts": ["map-filter", "zip-enumerate"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "Beş elemanlı bir liste sorted(liste, key=f) ile sıralanıyor. f kaç kez çağrılır?",
+        "en": "A five-item list is sorted with sorted(liste, key=f). How many times is f called?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Tam 5 kez, her eleman için bir kez", "en": "Exactly 5 times, once per item" } },
+        { "id": "b", "text": { "tr": "Her karşılaştırmada iki kez, yani yaklaşık 2 · n · log n kez", "en": "Twice per comparison, roughly 2 · n · log n times" } },
+        { "id": "c", "text": { "tr": "Bir kez, bütün liste için", "en": "Once, for the whole list" } },
+        { "id": "d", "text": { "tr": "Hiç; key yalnızca reverse=True ile kullanılır", "en": "Never; key is only used with reverse=True" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "sorted önce her eleman için key fonksiyonunu bir kez çağırıp anahtarları hesaplar, sonra karşılaştırmaları bu anahtarlarla yapar. Karşılaştırma başına çağırmaz; listeye tek seferde de uygulanmaz.",
+        "en": "sorted first calls the key function once per item to compute the keys, then compares those keys. It does not call it per comparison, nor once for the whole list."
+      },
+      "difficulty": "medium",
+      "concepts": ["key-function"]
+    }
+  ]
+}
