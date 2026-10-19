@@ -16,14 +16,15 @@ Mimari ayrıntıları için [docs/architecture.md](docs/architecture.md). Projen
 
 ## Hızlı başlangıç
 
-Gereksinimler: Node.js ≥ 20, pnpm ≥ 10, Docker (ya da yerel PostgreSQL 16 + Redis 7).
+Gereksinimler: Node.js 22–24, pnpm 10 (`corepack enable` ile gelir), Docker (ya da yerel PostgreSQL 16 + Redis 7).
 
 ```bash
+corepack enable          # pnpm'i package.json'daki sürümle PATH'e ekler (bir kez)
 pnpm install
-cp backend/.env.example backend/.env
+cp backend/.env.example backend/.env   # JWT_ACCESS_SECRET'ı değiştirin (en az 32 karakter)
 
-# Altyapı: PostgreSQL, Redis, MinIO
-docker compose up -d postgres redis minio minio-init
+# Altyapı: PostgreSQL + Redis. `--profile media` MinIO'yu da açar (yalnızca admin medya yükleme için)
+docker compose --profile media up -d
 
 # Ortak paketi derle, veritabanını hazırla ve içeriği yükle
 pnpm --filter @devacademy/shared build
