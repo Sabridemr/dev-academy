@@ -39,8 +39,8 @@ export const EnvSchema = z.object({
   RATE_LIMIT_MAX: z.coerce.number().int().positive().default(120),
 
   CONTENT_DIR: z.string().default('../content'),
-  SEED_ADMIN_EMAIL: z.string().email().default('admin@devacademy.local'),
-  SEED_ADMIN_PASSWORD: z.string().min(8).default('Admin123!'),
+  // SEED_ADMIN_EMAIL / SEED_ADMIN_PASSWORD yalnızca prisma/seed.ts okur (üretimde şifre zorunlu);
+  // uygulama kullanmadığı için zayıf bir varsayılanla burada tutulmaz.
 });
 
 export type Env = z.infer<typeof EnvSchema>;

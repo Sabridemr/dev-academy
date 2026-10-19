@@ -125,6 +125,7 @@ function createService(
     new JwtService({}),
     config as never,
     oauth as never,
+    { acquireLock: async () => true } as never,
   );
   return { service, prisma };
 }
@@ -240,10 +241,33 @@ describe('AuthService', () => {
       expect(prisma.oAuthAccount.create).not.toHaveBeenCalled();
     });
 
+    it('e-postası doğrulanmamış şifreli hesaba bağlanmaz (pre-account hijack)', async () => {
+      const { service, prisma } = createService({
+        identity: { providerUserId: 'g4', email: 'a@b.c', emailVerified: true },
+        users: [userRow({ emailVerifiedAt: null })],
+      });
+      await expect(service.oauthLogin(dto, {})).rejects.toBeInstanceOf(ConflictException);
+      expect(prisma.oAuthAccount.create).not.toHaveBeenCalled();
+    });
+
+    it('yeni kullanıcıyı bağlı hesabıyla tek yazımda oluşturur', async () => {
+      const { service, prisma } = createService({
+        identity: { providerUserId: 'g5', email: 'yeni@b.c', emailVerified: true },
+      });
+      await service.oauthLogin(dto, {});
+      expect(prisma.user.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          email: 'yeni@b.c',
+          oauthAccounts: { create: expect.objectContaining({ providerUserId: 'g5' }) },
+        }),
+      });
+      expect(prisma.oAuthAccount.create).not.toHaveBeenCalled();
+    });
+
     it('doğrulanmış e-posta ile mevcut hesaba bağlanır, yeni kullanıcı açmaz', async () => {
       const { service, prisma } = createService({
         identity: { providerUserId: 'g3', email: 'A@b.c', emailVerified: true },
-        users: [userRow()],
+        users: [userRow({ emailVerifiedAt: new Date('2026-01-02') })],
       });
       const res = await service.oauthLogin(dto, {});
       expect(res.user.id).toBe('u1');

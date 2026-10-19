@@ -255,16 +255,19 @@ export class ProgressService {
       },
       today,
     );
-    if (
+    const streakChanged =
       streak.lastActivityDate !== user.lastActivityDate ||
-      streak.currentStreak !== user.currentStreak
-    ) {
+      streak.currentStreak !== user.currentStreak;
+    if (streakChanged) {
       await this.prisma.user.update({ where: { id: userId }, data: streak });
       this.realtime.emitToUser(userId, {
         type: 'streak.updated',
         payload: { currentStreak: streak.currentStreak },
       });
     }
+    // Rozet koşulları yalnızca bir tamamlama/etkileşim ya da seri değişince değişebilir; kaydırma sırasındaki
+    // sıradan ilerleme güncellemelerinde rozet sorgularına (≈8 sorgu) gerek yok
+    if (!streakChanged && !Object.values(flags).some(Boolean)) return [];
 
     const ctx = await this.badgeContext(userId, streak.currentStreak, flags);
     const earnedSlugs = (

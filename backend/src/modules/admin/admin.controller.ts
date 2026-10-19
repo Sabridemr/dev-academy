@@ -26,6 +26,7 @@ import { CurrentUser, Roles, type AuthUser } from '../../common/auth/decorators'
 import { zodBody } from '../../common/pipes/zod-validation.pipe';
 import { ApiZodBody } from '../../common/swagger/zod-openapi';
 import { AdminService } from './admin.service';
+import { clampInt } from '../../common/utils/query';
 import { MediaService } from './media.service';
 
 const PublishSchema = z.object({ versionId: z.string().optional() });
@@ -64,7 +65,7 @@ export class AdminController {
   @ApiQuery({ name: 'page', required: false })
   @ApiQuery({ name: 'pageSize', required: false })
   lessons(@Query('page') page?: string, @Query('pageSize') pageSize?: string) {
-    return this.admin.listLessons(Number(page) || 1, Math.min(200, Number(pageSize) || 50));
+    return this.admin.listLessons(clampInt(page, 1, 1, 10_000), clampInt(pageSize, 50, 1, 200));
   }
 
   @Get('lessons/:lessonId/versions')
@@ -175,7 +176,7 @@ export class AdminController {
 
   /* Medya */
   @Post('media/presign')
-  @ApiOperation({ summary: 'S3 ön imzalı yükleme URL’si' })
+  @ApiOperation({ summary: 'S3 ön imzalı yükleme formu (presigned POST, boyut sınırlı)' })
   @ApiZodBody(PresignSchema)
   presign(@Body(zodBody(PresignSchema)) dto: z.infer<typeof PresignSchema>) {
     return this.media.presignUpload(dto.contentType, dto.folder);

@@ -6,6 +6,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { JwtService } from '@nestjs/jwt';
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import * as argon2 from 'argon2';
@@ -19,6 +20,7 @@ import type {
 } from '@devacademy/shared';
 import type { User } from '@prisma/client';
 import { PrismaService } from '../../common/prisma/prisma.service';
+import { RedisService } from '../../common/redis/redis.service';
 import type { Env } from '../../config/env';
 import { OAuthVerifierService } from './oauth-verifier.service';
 
@@ -41,7 +43,23 @@ export class AuthService {
     private readonly jwt: JwtService,
     private readonly config: ConfigService<Env, true>,
     private readonly oauth: OAuthVerifierService,
+    private readonly redis: RedisService,
   ) {}
+
+  /**
+   * Süresi bir günden uzun süre önce dolmuş refresh token'ları siler (tablo sınırsız büyümesin).
+   * Süresi dolmuş token zaten reddedilir; yeniden kullanım tespiti için yalnızca geçerli süredekiler gerekir.
+   */
+  @Cron(CronExpression.EVERY_DAY_AT_3AM)
+  async purgeExpiredRefreshTokens(): Promise<number> {
+    const day = new Date().toISOString().slice(0, 10);
+    if (!(await this.redis.acquireLock(`lock:purge-refresh:${day}`, 23 * 60 * 60 * 1000))) return 0;
+    const { count } = await this.prisma.refreshToken.deleteMany({
+      where: { expiresAt: { lt: new Date(Date.now() - 24 * 60 * 60 * 1000) } },
+    });
+    if (count) this.logger.log(`${count} süresi dolmuş refresh token silindi`);
+    return count;
+  }
 
   async register(dto: RegisterDto, meta: SessionMeta): Promise<AuthResponse> {
     const email = dto.email.toLowerCase().trim();
@@ -80,37 +98,35 @@ export class AuthService {
       return this.issueSession(existingAccount.user, meta);
     }
 
-    // Aynı e-posta ile hesap varsa yalnızca sağlayıcı e-postayı doğrulamışsa bağla; yoksa yeni kullanıcı oluştur
+    // Aynı e-posta ile hesap varsa yalnızca sağlayıcı e-postayı doğrulamışsa bağla; yoksa yeni kullanıcı oluştur.
+    // E-postası doğrulanmamış şifreli hesaba bağlanmaz: aksi halde kurbanın e-postasıyla önceden kayıt olan
+    // biri, kurban sosyal girişle geldiğinde aynı hesaba kendi şifresiyle erişmeye devam eder (pre-account hijack).
     const email = identity.email?.toLowerCase();
-    let user: User | null = null;
+    const account = {
+      provider: dto.provider,
+      providerUserId: identity.providerUserId,
+      email: identity.email ?? null,
+    };
     if (email) {
       const byEmail = await this.prisma.user.findUnique({ where: { email } });
       if (byEmail) {
         if (byEmail.deletedAt) throw new UnauthorizedException('Hesap kapatılmış');
-        if (!identity.emailVerified)
+        if (!identity.emailVerified || (byEmail.passwordHash && !byEmail.emailVerifiedAt))
           throw new ConflictException(
             'Bu e-posta ile kayıtlı bir hesap var; e-posta ve şifre ile giriş yapın',
           );
-        user = byEmail;
+        await this.prisma.oAuthAccount.create({ data: { ...account, userId: byEmail.id } });
+        return this.issueSession(byEmail, meta);
       }
     }
-    if (!user) {
-      user = await this.prisma.user.create({
-        data: {
-          email: email ?? `${dto.provider}_${identity.providerUserId}@users.devacademy.local`,
-          displayName:
-            dto.displayName?.trim() || identity.name || email?.split('@')[0] || 'Öğrenci',
-          avatarUrl: identity.picture ?? null,
-          emailVerifiedAt: identity.emailVerified ? new Date() : null,
-        },
-      });
-    }
-    await this.prisma.oAuthAccount.create({
+    // Kullanıcı ve bağlı hesap tek yazımda oluşur; ikinci adım başarısız olursa yetim kullanıcı kalmaz
+    const user: User = await this.prisma.user.create({
       data: {
-        userId: user.id,
-        provider: dto.provider,
-        providerUserId: identity.providerUserId,
-        email: identity.email ?? null,
+        email: email ?? `${dto.provider}_${identity.providerUserId}@users.devacademy.local`,
+        displayName: dto.displayName?.trim() || identity.name || email?.split('@')[0] || 'Öğrenci',
+        avatarUrl: identity.picture ?? null,
+        emailVerifiedAt: identity.emailVerified ? new Date() : null,
+        oauthAccounts: { create: account },
       },
     });
     return this.issueSession(user, meta);

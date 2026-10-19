@@ -5,6 +5,8 @@ import { asLocalized } from '../../common/utils/localized';
 /** Prisma satırlarını API DTO'larına çevirir (tek yerde). */
 
 export type LessonWithVersion = Lesson & { publishedVersion: LessonVersion | null };
+/** Önceki/sonraki ders bağlantısı için gereken alanlar (blok JSON'u yüklenmez) */
+export type NeighborRow = Pick<Lesson, 'id' | 'slug' | 'moduleId'> & { publishedVersion: Pick<LessonVersion, 'title'> | null };
 
 export function blocksOf(version: LessonVersion | null): LessonBlock[] {
   if (!version) return [];
@@ -32,10 +34,10 @@ export function toLessonSummary(lesson: LessonWithVersion): LessonSummary {
 
 export function toLessonDetail(
   lesson: LessonWithVersion & { module: ModuleRow },
-  neighbors: { prev: LessonWithVersion | null; next: LessonWithVersion | null },
+  neighbors: { prev: NeighborRow | null; next: NeighborRow | null },
 ): LessonDetail {
   const v = lesson.publishedVersion;
-  const ref = (l: LessonWithVersion | null) =>
+  const ref = (l: NeighborRow | null) =>
     l ? { id: l.id, slug: l.slug, moduleId: l.moduleId, title: asLocalized(l.publishedVersion?.title) } : null;
   return {
     ...toLessonSummary(lesson),

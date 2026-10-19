@@ -694,5 +694,39 @@ describe('DevAcademy API (e2e)', () => {
           .expect(200);
       }
     });
+
+    it('yayından kaldırılan dersin quizi ve sahneleri öğrencilere kapanır', async () => {
+      const versions = await http
+        .get(`${prefix}/admin/lessons/${lessonId}/versions`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .expect(200);
+      const live = versions.body.find((v: { status: string }) => v.status === 'published');
+      const quiz = await http.get(`${prefix}/quizzes/by-lesson/${lessonId}`).expect(200);
+      await http.get(`${prefix}/scenes/load-balancer-round-robin`).expect(200); // cache'i ısıt
+      await http
+        .post(`${prefix}/admin/lessons/${lessonId}/unpublish`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .expect(201);
+      try {
+        await http.get(`${prefix}/quizzes/by-lesson/${lessonId}`).expect(404);
+        await http.get(`${prefix}/quizzes/${quiz.body.id}`).expect(404);
+        await http
+          .post(`${prefix}/quizzes/${quiz.body.id}/attempts`)
+          .set('Authorization', `Bearer ${accessToken}`)
+          .send({ answers: [] })
+          .expect(404);
+        await http.get(`${prefix}/scenes/load-balancer-round-robin`).expect(404);
+        const scenes = await http.get(`${prefix}/lessons/${lessonId}/scenes`).expect(200);
+        expect(scenes.body).toEqual([]);
+      } finally {
+        await http
+          .post(`${prefix}/admin/lessons/${lessonId}/publish`)
+          .set('Authorization', `Bearer ${adminToken}`)
+          .send({ versionId: live.id })
+          .expect(201);
+      }
+      await http.get(`${prefix}/quizzes/by-lesson/${lessonId}`).expect(200);
+      await http.get(`${prefix}/scenes/load-balancer-round-robin`).expect(200);
+    });
   });
 });

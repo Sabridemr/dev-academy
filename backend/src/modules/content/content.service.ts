@@ -9,12 +9,19 @@ import type {
   SceneResponse,
   ProgressStatus,
 } from '@devacademy/shared';
+import type { Prisma } from '@prisma/client';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { RedisService } from '../../common/redis/redis.service';
 import { toLessonDetail, toLessonSummary, toModuleSummary, toPathSummary, toSceneResponse, type LessonWithVersion } from './content.mapper';
 
 /** Yayınlanmış içerik için cache TTL (saniye). Yayınlama anında anahtarlar temizlenir. */
 const CONTENT_TTL = 60 * 60 * 6;
+
+/** Yayındaki sahne; derse bağlıysa ders de yayında olmalı (bağımsız sahneler her zaman açık) */
+const PUBLIC_SCENE = {
+  status: 'published',
+  OR: [{ lessonId: null }, { lesson: { publishedVersionId: { not: null } } }],
+} satisfies Prisma.AnimationSceneWhereInput;
 
 export const CacheKeys = {
   paths: 'content:paths',
@@ -157,7 +164,7 @@ export class ContentService {
     const ordered = await this.prisma.lesson.findMany({
       where: { publishedVersionId: { not: null } },
       orderBy: [{ module: { order: 'asc' } }, { order: 'asc' }],
-      include: { publishedVersion: true },
+      select: { id: true, slug: true, moduleId: true, publishedVersion: { select: { title: true } } },
     });
     const idx = ordered.findIndex((l) => l.id === lesson.id);
     return { prev: idx > 0 ? ordered[idx - 1] : null, next: idx >= 0 && idx < ordered.length - 1 ? ordered[idx + 1] : null };
@@ -169,7 +176,7 @@ export class ContentService {
     const key = CacheKeys.scene(id);
     const cached = await this.redis.getJson<SceneResponse>(key);
     if (cached) return cached;
-    const row = await this.prisma.animationScene.findFirst({ where: { id, status: 'published' } });
+    const row = await this.prisma.animationScene.findFirst({ where: { id, ...PUBLIC_SCENE } });
     if (!row) throw new NotFoundException('Sahne bulunamadı');
     const out = toSceneResponse(row);
     await this.redis.setJson(key, out, CONTENT_TTL);
@@ -180,7 +187,7 @@ export class ContentService {
     const key = CacheKeys.lessonScenes(lessonId);
     const cached = await this.redis.getJson<SceneResponse[]>(key);
     if (cached) return cached;
-    const rows = await this.prisma.animationScene.findMany({ where: { lessonId, status: 'published' }, orderBy: { createdAt: 'asc' } });
+    const rows = await this.prisma.animationScene.findMany({ where: { lessonId, ...PUBLIC_SCENE }, orderBy: { createdAt: 'asc' } });
     const out = rows.map(toSceneResponse);
     await this.redis.setJson(key, out, CONTENT_TTL);
     return out;
