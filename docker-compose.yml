@@ -1,6 +1,7 @@
 # DevAcademy yerel geliştirme ortamı
 #
-#   docker compose up -d postgres redis minio      # yalnızca altyapı (uygulamaları pnpm dev ile çalıştırın)
+#   docker compose up -d                           # yalnızca altyapı: PostgreSQL + Redis (uygulamalar pnpm dev ile)
+#   docker compose --profile media up -d           # + MinIO (yalnızca admin medya yükleme için gerekir)
 #   docker compose --profile app up -d --build     # altyapı + API + web (tam yığın)
 #   docker compose run --rm seed                   # content/ klasörünü veritabanına yükle
 #
@@ -48,10 +49,12 @@ services:
       timeout: 3s
       retries: 20
 
-  # S3 uyumlu nesne depolama (görsel / animasyon dosyaları)
+  # S3 uyumlu nesne depolama (admin medya yükleme). İsteğe bağlı: `--profile media`.
+  # MinIO Docker Hub'da imaj yayınlamayı bıraktı (minio/minio, minio/mc çekilemiyor); imaj MINIO_IMAGE ile
+  # değiştirilebilir. Erişilemezse uygulamanın geri kalanı etkilenmez, yalnızca medya yükleme kapalı kalır.
   minio:
-    # Yalnızca yerel geliştirme içindir; üretimde belirli bir RELEASE.* etiketine sabitleyin
-    image: minio/minio:latest
+    profiles: ['media']
+    image: ${MINIO_IMAGE:-quay.io/minio/minio:latest}
     command: server /data --console-address ':9001'
     environment:
       MINIO_ROOT_USER: minioadmin
@@ -67,9 +70,10 @@ services:
       timeout: 3s
       retries: 20
 
-  # Bucket'ı oluşturur ve herkese açık okuma izni verir (tek seferlik)
+  # Bucket'ı oluşturur ve herkese açık okuma izni verir (tek seferlik). Sunucu imajı `mc`'yi içerir.
   minio-init:
-    image: minio/mc:latest
+    profiles: ['media']
+    image: ${MINIO_IMAGE:-quay.io/minio/minio:latest}
     depends_on:
       minio:
         condition: service_healthy
@@ -121,8 +125,6 @@ services:
         condition: service_completed_successfully
       redis:
         condition: service_healthy
-      minio-init:
-        condition: service_completed_successfully
 
   # İçerik yükleyici (tek seferlik): docker compose run --rm seed
   # `--profile app up` ile her açılışta otomatik çalışmaz
