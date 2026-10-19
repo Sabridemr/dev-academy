@@ -9,6 +9,7 @@
  */
 import 'dotenv/config';
 import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { PrismaClient, type Prisma } from '@prisma/client';
 import * as argon2 from 'argon2';
@@ -16,7 +17,10 @@ import Redis from 'ioredis';
 import {
   BADGES,
   buildSearchText,
+  CONTENT_ASSET_PREFIX,
   CURRICULUM,
+  RASTER_IMAGE_TYPES,
+  rasterExtension,
   LEARNING_PATHS,
   type LessonBlock,
   type LocalizedString,
@@ -50,12 +54,53 @@ function hash(v: unknown): string {
     .digest('hex');
 }
 
-/** Ders bloklarını veritabanına yazılabilir hâle getirir: SVG'ler inline, sahne/quiz id'leri çözülmüş */
-function resolveBlocks(lesson: LoadedLesson): LessonBlock[] {
+type StoredAsset = { src: string; width: number; height: number };
+let assetCount = 0;
+
+/**
+ * Dersin raster görsellerini (png/jpg/webp) veritabanına yazar. Kimlik içeriğin SHA-256'sıdır: aynı
+ * dosya bir kez saklanır, değişmeyen görsel yeniden yazılmaz ve adresi (`/assets/<sha>.<ext>`) sabit kalır.
+ */
+async function storeLessonAssets(lesson: LoadedLesson): Promise<Record<string, StoredAsset>> {
+  const out: Record<string, StoredAsset> = {};
+  for (const [file, img] of Object.entries(lesson.images)) {
+    const ext = rasterExtension(file);
+    if (!ext) continue;
+    const bytes = readFileSync(img.path);
+    const id = createHash('sha256').update(bytes).digest('hex');
+    const exists = await prisma.contentAsset.findUnique({ where: { id }, select: { id: true } });
+    if (!exists) {
+      await prisma.contentAsset.create({
+        data: {
+          id,
+          mime: RASTER_IMAGE_TYPES[ext],
+          bytes,
+          width: img.width,
+          height: img.height,
+          size: bytes.length,
+        },
+      });
+      assetCount += 1;
+    }
+    const canonicalExt = ext === 'jpeg' ? 'jpg' : ext;
+    out[file] = {
+      src: `${CONTENT_ASSET_PREFIX}${id}.${canonicalExt}`,
+      width: img.width,
+      height: img.height,
+    };
+  }
+  return out;
+}
+
+/**
+ * Ders bloklarını veritabanına yazılabilir hâle getirir: SVG'ler inline, raster görseller API yoluna
+ * çevrilmiş (boyutlarıyla), sahne/quiz id'leri çözülmüş
+ */
+function resolveBlocks(lesson: LoadedLesson, assets: Record<string, StoredAsset>): LessonBlock[] {
   return lesson.doc.blocks.map((b) => {
     switch (b.type) {
       case 'diagram':
-        return { ...b, svg: lesson.svgs[b.src] };
+        return assets[b.src] ? { ...b, ...assets[b.src] } : { ...b, svg: lesson.svgs[b.src] };
       case 'animation': {
         const scene = lesson.scenes.find((s) => s.file === b.scene);
         return { ...b, sceneId: scene?.scene.id };
@@ -309,7 +354,7 @@ async function main(): Promise<void> {
       }
 
       // Ders sürümü
-      const blocks = resolveBlocks(lesson);
+      const blocks = resolveBlocks(lesson, await storeLessonAssets(lesson));
       const versionPayload = {
         title: loc(meta.title),
         summary: loc(meta.summary),
@@ -458,7 +503,7 @@ async function main(): Promise<void> {
   console.log(
     `✓ ${publishedCount} ders sürümü yazıldı, ${unchangedCount} değişmedi, ${placeholders} taslak yer tutucu`,
   );
-  console.log(`✓ ${sceneCount} sahne, ${quizCount} quiz`);
+  console.log(`✓ ${sceneCount} sahne, ${quizCount} quiz, ${assetCount} yeni görsel`);
   await clearApiCache();
 }
 

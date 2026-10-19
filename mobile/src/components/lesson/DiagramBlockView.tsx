@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react';
-import { StyleSheet, View, type LayoutChangeEvent } from 'react-native';
+import { Image, Linking, Pressable, StyleSheet, View, type LayoutChangeEvent } from 'react-native';
 import { SvgXml } from 'react-native-svg';
-import type { LessonBlock } from '@devacademy/shared';
+import { resolveAssetUrl, type LessonBlock } from '@devacademy/shared';
+import { env } from '@/config/env';
 import { useI18n } from '@/i18n';
 import { radius, spacing, useTheme } from '@/theme';
 import { Text } from '@/components/ui';
@@ -12,6 +13,8 @@ type DiagramBlock = Extract<LessonBlock, { type: 'diagram' }>;
 /**
  * Diyagram bloğu: block.svg (seed sırasında gömülen satır içi SVG) SvgXml ile çizilir.
  * CSS değişkenleri ve sınıf stilleri önce tema renklerine çevrilir (utils/svgTheme.ts).
+ * Raster görseller (PDF'ten gelen sayfalar, ekran görüntüleri) API'den orijinal çözünürlükte yüklenir;
+ * dokununca tam boyutta (yakınlaştırılabilir) açılır.
  */
 export function DiagramBlockView({ block }: { block: DiagramBlock }) {
   const { tl } = useI18n();
@@ -19,6 +22,8 @@ export function DiagramBlockView({ block }: { block: DiagramBlock }) {
   const [width, setWidth] = useState(0);
   const xml = useMemo(() => (block.svg ? themeSvg(block.svg, colors) : null), [block.svg, colors]);
   const ratio = useMemo(() => (block.svg ? svgAspectRatio(block.svg) : 16 / 9), [block.svg]);
+  const imageUri = !block.svg && block.src ? resolveAssetUrl(block.src, env.apiUrl) : null;
+  const imageRatio = block.width && block.height ? block.width / block.height : 4 / 3;
 
   const onLayout = (e: LayoutChangeEvent) => setWidth(Math.round(e.nativeEvent.layout.width));
 
@@ -32,7 +37,19 @@ export function DiagramBlockView({ block }: { block: DiagramBlock }) {
       >
         {xml && width > 0 ? (
           <SvgXml xml={xml} width={width} height={width / ratio} />
-        ) : !xml ? (
+        ) : imageUri && width > 0 ? (
+          <Pressable
+            onPress={() => void Linking.openURL(imageUri)}
+            accessibilityRole="imagebutton"
+            accessibilityLabel={tl(block.alt)}
+          >
+            <Image
+              source={{ uri: imageUri }}
+              style={{ width, height: width / imageRatio }}
+              resizeMode="contain"
+            />
+          </Pressable>
+        ) : !xml && !imageUri ? (
           <Text muted variant="caption" style={{ padding: spacing.lg }}>
             {tl(block.alt)}
           </Text>

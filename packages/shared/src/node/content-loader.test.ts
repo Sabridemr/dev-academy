@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { loadContent, translationReport } from './content-loader';
+import { readImageSize } from './image-size';
 
 /** İçerik doğrulayıcı kuralları: gerçek A-05 dersinin geçici bir kopyası üzerinde bozulma senaryoları */
 const REAL = resolve(__dirname, '../../../../content');
@@ -34,6 +35,28 @@ const errors = () => loadContent(root).issues.filter((i) => i.severity === 'erro
 afterEach(() => {
   if (root) rmSync(root, { recursive: true, force: true });
   root = '';
+});
+
+/** 3×2 piksellik geçerli PNG (yalnızca başlık okunur) */
+const PNG_3x2 = Buffer.from(
+  '89504e470d0a1a0a0000000d49484452000000030000000208060000009d74066a0000000d4944415478da63f8ffff3f0300050001fe4c9a840000000049454e44ae426082',
+  'hex',
+);
+
+describe('readImageSize', () => {
+  it('PNG, JPEG ve WebP boyutunu başlıktan okur; tanınmayan veride null döner', () => {
+    expect(readImageSize(PNG_3x2)).toEqual({ width: 3, height: 2 });
+    // SOI + APP0 (boş) + SOF0 (yükseklik 480, genişlik 640)
+    const jpeg = Buffer.from('ffd8ffe00002ffc0000b0801e002800301110000', 'hex');
+    expect(readImageSize(jpeg)).toEqual({ width: 640, height: 480 });
+    const webp = Buffer.alloc(30);
+    webp.write('RIFF', 0, 'ascii');
+    webp.write('WEBPVP8X', 8, 'ascii');
+    webp.writeUIntLE(1199, 24, 3);
+    webp.writeUIntLE(799, 27, 3);
+    expect(readImageSize(webp)).toEqual({ width: 1200, height: 800 });
+    expect(readImageSize(Buffer.from('bu bir görsel değil'))).toBeNull();
+  });
 });
 
 describe('içerik doğrulayıcı', () => {
@@ -106,5 +129,35 @@ describe('translationReport', () => {
     expect(report.untranslatedLessons).toEqual(['b']);
     expect(report.localizedFields).toBe(6);
     expect(report.localizedFieldsWithEnglish).toBe(2);
+  });
+});
+
+describe('içerik doğrulayıcı: ders görselleri', () => {
+  it('ders klasöründeki raster görseli diyagram olarak kabul eder ve boyutunu okur', () => {
+    const dir = fixture();
+    writeFileSync(join(dir, 'sayfa-01.png'), PNG_3x2);
+    const md = join(dir, 'lesson.md');
+    writeFileSync(
+      md,
+      `${readFileSync(md, 'utf8')}\n:::diagram{src="sayfa-01.png" alt="Sayfa 1"}\n:::\n`,
+    );
+    const content = loadContent(root);
+    expect(content.issues.filter((i) => i.severity === 'error')).toEqual([]);
+    expect(content.modules[0].lessons[0].images['sayfa-01.png']).toMatchObject({
+      width: 3,
+      height: 2,
+    });
+  });
+
+  it('bozuk görsel dosyasını ve olmayan görsel referansını hata sayar', () => {
+    const dir = fixture();
+    writeFileSync(join(dir, 'bozuk.png'), 'png değil');
+    const md = join(dir, 'lesson.md');
+    writeFileSync(md, `${readFileSync(md, 'utf8')}\n:::diagram{src="yok.jpg" alt="Yok"}\n:::\n`);
+    const messages = errors().map((e) => e.message);
+    expect(messages).toContainEqual(expect.stringContaining('Görsel okunamadı'));
+    expect(messages).toContainEqual(
+      expect.stringContaining('Diyagram dosyası bulunamadı: yok.jpg'),
+    );
   });
 });

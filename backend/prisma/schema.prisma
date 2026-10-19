@@ -453,3 +453,17 @@ model Note {
 
   @@index([userId, lessonId])
 }
+
+/* ============================ İçerik görselleri ============================ */
+
+/// Ders görselleri (raster). İçerik deposundan seed ile gelir; kimlik içeriğin SHA-256'sıdır,
+/// bu yüzden aynı dosya bir kez saklanır ve adresi değişmez (API sonsuza dek önbellekletir).
+model ContentAsset {
+  id        String   @id // sha256 (hex)
+  mime      String
+  bytes     Bytes
+  width     Int
+  height    Int
+  size      Int
+  createdAt DateTime @default(now())
+}

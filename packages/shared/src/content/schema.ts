@@ -52,12 +52,18 @@ export const TextBlockSchema = BaseBlock.extend({
 
 export const DiagramBlockSchema = BaseBlock.extend({
   type: z.literal('diagram'),
-  /** Ders klasörüne göre SVG yolu ya da mutlak URL */
+  /**
+   * Ders klasörüne göre SVG ya da raster görsel (png, jpg, webp) yolu, ya da mutlak URL.
+   * Seed raster görselleri veritabanına alır ve src'yi API yoluna (`/assets/<sha256>.<ext>`) çevirir.
+   */
   src: z.string().min(1),
   alt: LocalizedStringSchema,
   caption: LocalizedStringSchema.optional(),
   /** Inline SVG içeriği (seed sırasında doldurulur) */
   svg: z.string().optional(),
+  /** Raster görselin piksel boyutu (seed doldurur; istemci en-boy oranını önceden ayırır) */
+  width: z.number().int().positive().optional(),
+  height: z.number().int().positive().optional(),
 });
 
 export const AnimationBlockSchema = BaseBlock.extend({

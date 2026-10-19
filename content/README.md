@@ -127,7 +127,22 @@ Soru tipleri: `single`, `multiple`, `truefalse`, `order`. Her derste 3–6 soru 
 - Renkleri CSS değişkenleriyle verin: `var(--da-fg)`, `var(--da-muted)`, `var(--da-primary)`, `var(--da-accent)`, `var(--da-surface)`, `var(--da-border)`, `var(--da-success)`, `var(--da-danger)`. Böylece açık/koyu temaya uyum sağlar.
 - Metinler için `font-family="inherit"` kullanın.
 
-## Doğrulama
+## Raster görseller (png, jpg, webp)
+
+Ekran görüntüsü, fotoğraf ya da PDF sayfası gibi görseller ders klasörüne konur ve diyagram bloğuyla
+kullanılır:
+
+```md
+:::diagram{src="sekil-01.png" alt="Türkçe açıklama|English description"}
+İsteğe bağlı alt yazı
+:::
+```
+
+- Seed görseli içerik özetiyle (SHA-256) veritabanına yazar ve API'den `/api/v1/assets/<sha>.<ext>`
+  adresiyle, kalıcı önbellekle sunar; MinIO gerekmez, görseller veritabanı yedeğine dahildir.
+- Görsel yeniden sıkıştırılmaz; dosya en fazla 15 MB olabilir. Doğrulayıcı bozuk ya da eksik dosyayı hata sayar.
+- `alt` metni zorunludur (ekran okuyucu ve arama için); öznitelikte `"`, `}` ve (ayırıcı dışında) `|` kullanmayın.
+
 
 ```bash
 pnpm content:validate          # hatalar varsa çıkış kodu 1

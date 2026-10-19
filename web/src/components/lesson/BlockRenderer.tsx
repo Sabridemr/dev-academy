@@ -28,7 +28,16 @@ export function BlockRenderer({ block, lesson }: { block: LessonBlock; lesson: L
     case 'text':
       return <Markdown>{md(block.markdown, block.markdownEn)}</Markdown>;
     case 'diagram':
-      return <Diagram svg={block.svg} src={block.src} alt={block.alt} caption={block.caption} />;
+      return (
+        <Diagram
+          svg={block.svg}
+          src={block.src}
+          alt={block.alt}
+          caption={block.caption}
+          width={block.width}
+          height={block.height}
+        />
+      );
     case 'animation':
       return <AnimationBlock sceneId={block.sceneId} caption={block.caption} />;
     case 'interactive':

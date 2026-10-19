@@ -3,3 +3,4 @@ export * from './schema';
 export * from './curriculum';
 export * from './search-text';
 export * from './translation';
+export * from './assets';
