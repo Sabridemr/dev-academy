@@ -14,7 +14,7 @@ coverage/
 # Ortam dosyaları
 .env
 .env.local
-.env.*.local
+.env.*
 !.env.example
 
 # Prisma

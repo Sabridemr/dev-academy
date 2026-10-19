@@ -25,7 +25,7 @@ flowchart LR
   SEED[db:seed]
 
   W & A & M --> R
-  W & M -. olaylar .- WS
+  W -. olaylar .- WS
   R --> PG
   R --> RD
   R --> S3
@@ -105,13 +105,13 @@ erDiagram
 ### Mobil offline
 
 1. Kullanıcı bir modülü indirir: `GET /offline/modules/:id` (ETag ile).
-2. Dersler, sahneler ve quizler SQLite’a yazılır; ETag ve senkron zamanı MMKV’de.
+2. Dersler, sahneler ve quizler SQLite’a yazılır (modül başına ETag ve `synced_at` dahil); son senkron zamanı MMKV’de.
 3. Çevrimdışıyken içerik SQLite’tan okunur; ilerleme güncellemeleri kuyruğa alınır, bağlantı gelince gönderilir.
 
 ## Ölçekleme notları
 
-- API stateless’tır (oturum JWT’de); WebSocket için birden fazla replikada socket.io Redis adapter eklenmelidir. WebSocket CORS’u HTTP ile aynı `CORS_ORIGINS` listesini kullanır.
-- Saatlik hatırlatma işi her replikada çalışır; çoklu replikada tek replikaya ya da dağıtık bir kilide bağlanmalıdır.
+- API stateless’tır (oturum JWT’de). socket.io Redis adapter’ı bağlıdır: bir replikadan yayınlanan olay diğer replikalara bağlı soketlere de ulaşır. WebSocket CORS’u HTTP ile aynı `CORS_ORIGINS` listesini kullanır. Mobil uygulama WebSocket kullanmaz.
+- Saatlik hatırlatma işi her replikada tetiklenir ama saat başına Redis kilidini (`SET NX PX`) yalnızca biri alır; kopya bildirim gönderilmez.
 - Rate limit sayaçları Redis’te tutulduğu için tüm replikalar aynı limiti uygular; Redis yoksa replika başına bellek içi sayaca düşer.
-- Okuma ağırlıklı içerik için Redis + ETag + Next.js ISR; yazma ağırlıklı ilerleme için istemci tarafında toplu gönderim (5 sn aralık).
-- Medya dosyaları S3’e ön imzalı URL ile doğrudan yüklenir; API dosya trafiği taşımaz.
+- Okuma ağırlıklı içerik için Redis + ETag + Next.js ISR; yazma ağırlıklı ilerleme için istemci tarafında toplu gönderim (web 5 sn aralık, mobil her %10 artışta ve ekrandan çıkışta).
+- Medya dosyaları S3’e ön imzalı POST formuyla doğrudan yüklenir (tür ve boyut sınırı depolama tarafında zorlanır, SVG kabul edilmez); API dosya trafiği taşımaz.
