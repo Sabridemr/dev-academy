@@ -23,16 +23,6 @@ export function useLessonProgress(lesson: LessonDetail | undefined) {
   const [percent, setPercent] = useState(lesson?.progress?.percent ?? 0);
   const [completed, setCompleted] = useState(lesson?.progress?.status === 'completed');
 
-  // Ders değişince sıfırla
-  useEffect(() => {
-    viewed.current = new Set();
-    lastSentPercent.current = lesson?.progress?.percent ?? 0;
-    sessionStart.current = Date.now();
-    completedRef.current = lesson?.progress?.status === 'completed';
-    setPercent(lesson?.progress?.percent ?? 0);
-    setCompleted(lesson?.progress?.status === 'completed');
-  }, [lesson?.id, lesson?.progress?.percent, lesson?.progress?.status]);
-
   const flush = useCallback(
     async (opts: { completed?: boolean; force?: boolean } = {}) => {
       if (!lesson || !authed) return;
@@ -57,6 +47,34 @@ export function useLessonProgress(lesson: LessonDetail | undefined) {
     [lesson, authed, qc],
   );
 
+  const flushRef = useRef(flush);
+  flushRef.current = flush;
+
+  // Ders değişince sıfırla; önceki dersin birikmiş süresi/blokları önce gönderilir (ekrandan çıkışta da)
+  useEffect(() => {
+    viewed.current = new Set();
+    lastSentPercent.current = lesson?.progress?.percent ?? 0;
+    sessionStart.current = Date.now();
+    completedRef.current = lesson?.progress?.status === 'completed';
+    setPercent(lesson?.progress?.percent ?? 0);
+    setCompleted(lesson?.progress?.status === 'completed');
+    const flushThisLesson = flushRef.current;
+    return () => void flushThisLesson({ force: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- yalnızca ders kimliği değişince
+  }, [lesson?.id]);
+
+  // Sunucudan gelen ilerleme (ör. yeniden bağlanınca refetch) yalnızca ileri taşır; oturum sayaçlarını silmez
+  const serverPercent = lesson?.progress?.percent ?? 0;
+  const serverCompleted = lesson?.progress?.status === 'completed';
+  useEffect(() => {
+    lastSentPercent.current = Math.max(lastSentPercent.current, serverPercent);
+    setPercent((p) => Math.max(p, serverPercent));
+    if (serverCompleted) {
+      completedRef.current = true;
+      setCompleted(true);
+    }
+  }, [serverPercent, serverCompleted]);
+
   /** LessonScreen: blok görünür olduğunda çağırır */
   const markViewed = useCallback(
     (blockId: string) => {
@@ -76,11 +94,6 @@ export function useLessonProgress(lesson: LessonDetail | undefined) {
     setPercent(100);
     await flush({ completed: true });
   }, [flush]);
-
-  // Ekrandan çıkarken son durumu gönder
-  const flushRef = useRef(flush);
-  flushRef.current = flush;
-  useEffect(() => () => void flushRef.current({ force: true }), []);
 
   return { percent, completed, markViewed, markCompleted };
 }

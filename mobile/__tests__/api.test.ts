@@ -103,6 +103,26 @@ describe('createApiClient', () => {
     expect(onSessionExpired).toHaveBeenCalledTimes(1);
   });
 
+  it('refresh ağ hatası ya da 5xx alırsa oturumu korur ve geçici hatayı iletir', async () => {
+    for (const [refresh, code] of [
+      [() => Promise.reject(new TypeError('Network request failed')), 'network'],
+      [async () => response({ status: 503 }), 'server'],
+    ] as const) {
+      const tokens = memoryTokens({ accessToken: 'old', refreshToken: 'refresh-1' });
+      const onSessionExpired = jest.fn();
+      const fetchImpl = jest.fn(async (url: RequestInfo | URL) => {
+        if (String(url).endsWith('/auth/refresh')) return refresh();
+        return response({ status: 401, body: { statusCode: 401, message: 'expired' } });
+      }) as unknown as typeof fetch;
+
+      const api = createApiClient({ baseUrl: BASE, tokens, fetchImpl, onSessionExpired });
+      await expect(api.get('/users/me')).rejects.toMatchObject({ code });
+      expect(tokens.clear).not.toHaveBeenCalled();
+      expect(onSessionExpired).not.toHaveBeenCalled();
+      expect(tokens.current).toEqual({ accessToken: 'old', refreshToken: 'refresh-1' });
+    }
+  });
+
   it('auth:false isteklerinde Authorization başlığı göndermez ve 401’de refresh denemez', async () => {
     const tokens = memoryTokens({ accessToken: 'tok', refreshToken: 'r' });
     const fetchImpl = jest.fn(async () =>

@@ -4,6 +4,7 @@ import { api, isApiError } from '@/lib/api';
 import { endpoints, type MeProfile } from '@/lib/endpoints';
 import { queryClient } from '@/lib/queryClient';
 import { getJson, kv, KV_KEYS, setJson, tokenStorage } from '@/lib/storage';
+import { cancelDailyReminder } from '@/notifications/push';
 import { clearQueues } from '@/offline/queue';
 
 /**
@@ -16,12 +17,17 @@ export type SessionUser = UserProfile & { reminderHour?: number | null; timezone
 
 const USER_KEY = 'session.user';
 
-/** Yerel kullanıcı verisini temizler: profil, kuyruklar, sorgu önbelleği, kayıtlı push token işareti */
+/**
+ * Yerel kullanıcı verisini temizler: profil, kuyruklar, sorgu önbelleği, kayıtlı push token işareti,
+ * onboarding bayrağı ve günlük yerel hatırlatma (aynı cihazda açılan sonraki hesaba sızmasın).
+ */
 function clearLocalSession(): void {
   kv.delete(USER_KEY);
   kv.delete(KV_KEYS.pushToken);
+  kv.delete(KV_KEYS.onboarded);
   clearQueues();
   queryClient.clear();
+  void cancelDailyReminder();
 }
 
 interface SessionState {

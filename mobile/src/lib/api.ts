@@ -117,9 +117,12 @@ export interface ApiClient {
   setSessionExpiredHandler(handler: () => void): void;
 }
 
+type RefreshResult =
+  { token: string; transient?: undefined } | { token: null; transient?: ApiError };
+
 export function createApiClient(opts: ApiClientOptions): ApiClient {
   const doFetch: typeof fetch = opts.fetchImpl ?? ((input, init) => fetch(input, init));
-  let refreshInFlight: Promise<string | null> | null = null;
+  let refreshInFlight: Promise<RefreshResult> | null = null;
   let onSessionExpired = opts.onSessionExpired;
 
   async function parseBody(res: Response): Promise<unknown> {
@@ -133,39 +136,52 @@ export function createApiClient(opts: ApiClientOptions): ApiClient {
     }
   }
 
-  function refreshAccessToken(): Promise<string | null> {
+  /**
+   * Tek uçuşlu yenileme. `transient` → sunucuya ulaşılamadı ya da geçici hata (5xx, 429): token'lar korunur
+   * ve çağıran isteğe 401 yerine bu hata iletilir; aksi halde zayıf ağda açılan uygulama oturumu kapatırdı.
+   */
+  function refreshTokens(): Promise<RefreshResult> {
     if (refreshInFlight) return refreshInFlight;
-    refreshInFlight = (async () => {
+    refreshInFlight = (async (): Promise<RefreshResult> => {
       const current = await opts.tokens.get();
-      if (!current?.refreshToken) return null;
+      if (!current?.refreshToken) return { token: null };
+      let res: Response;
       try {
-        const res = await doFetch(`${opts.baseUrl}/auth/refresh`, {
+        res = await doFetch(`${opts.baseUrl}/auth/refresh`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
           body: JSON.stringify({ refreshToken: current.refreshToken }),
         });
-        if (!res.ok) {
-          // Yenileme reddedildi → oturum geçersiz
-          if (res.status === 401 || res.status === 403 || res.status === 400) {
-            await opts.tokens.clear();
-            onSessionExpired?.();
-          }
-          return null;
-        }
-        const tokens = (await parseBody(res)) as AuthTokens;
-        await opts.tokens.set({
-          accessToken: tokens.accessToken,
-          refreshToken: tokens.refreshToken,
-        });
-        return tokens.accessToken;
-      } catch {
-        // Ağ hatası: token'ları silme, kullanıcı çevrimiçi olunca tekrar denenir
-        return null;
+      } catch (e) {
+        const message = e instanceof Error ? e.message : 'Network request failed';
+        return { token: null, transient: new ApiError('network', 0, message) };
       }
+      if (!res.ok) {
+        // Yenileme reddedildi → oturum geçersiz
+        if (res.status === 401 || res.status === 403 || res.status === 400) {
+          await opts.tokens.clear();
+          onSessionExpired?.();
+          return { token: null };
+        }
+        return {
+          token: null,
+          transient: new ApiError(codeForStatus(res.status), res.status, `HTTP ${res.status}`),
+        };
+      }
+      const tokens = (await parseBody(res)) as AuthTokens;
+      await opts.tokens.set({
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+      });
+      return { token: tokens.accessToken };
     })().finally(() => {
       refreshInFlight = null;
     });
     return refreshInFlight;
+  }
+
+  function refreshAccessToken(): Promise<string | null> {
+    return refreshTokens().then((r) => r.token);
   }
 
   async function send(
@@ -203,10 +219,13 @@ export function createApiClient(opts: ApiClientOptions): ApiClient {
     if (res.status === 401 && useAuth && usedToken) {
       // Başka bir istek token'ı zaten yenilemiş olabilir
       const latest = await opts.tokens.get();
-      const newToken =
-        latest && latest.accessToken !== usedToken
-          ? latest.accessToken
-          : await refreshAccessToken();
+      let newToken: string | null;
+      if (latest && latest.accessToken !== usedToken) newToken = latest.accessToken;
+      else {
+        const refreshed = await refreshTokens();
+        if (refreshed.transient) throw refreshed.transient;
+        newToken = refreshed.token;
+      }
       if (newToken) {
         res = await send(path, options, newToken);
       }

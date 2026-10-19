@@ -135,11 +135,23 @@ export function queuedAttemptFor(quizId: string): QueuedAttempt | undefined {
   return readAttemptQueue().find((a) => a.quizId === quizId);
 }
 
-/** Bekleyen quiz denemelerini gönderir; sonuçları döner */
-export async function flushAttemptQueue(): Promise<
-  { attempt: QueuedAttempt; result: AttemptResult }[]
-> {
-  const out: { attempt: QueuedAttempt; result: AttemptResult }[] = [];
+type FlushedAttempt = { attempt: QueuedAttempt; result: AttemptResult };
+let flushingAttempts: Promise<FlushedAttempt[]> | null = null;
+
+/**
+ * Bekleyen quiz denemelerini gönderir; sonuçları döner. Bağlantı geri gelince ve uygulama öne
+ * geldiğinde aynı anda tetiklenebilir: süren gönderim paylaşılır, deneme iki kez gönderilmez.
+ */
+export function flushAttemptQueue(): Promise<FlushedAttempt[]> {
+  if (flushingAttempts) return flushingAttempts;
+  flushingAttempts = sendQueuedAttempts().finally(() => {
+    flushingAttempts = null;
+  });
+  return flushingAttempts;
+}
+
+async function sendQueuedAttempts(): Promise<FlushedAttempt[]> {
+  const out: FlushedAttempt[] = [];
   for (const attempt of readAttemptQueue()) {
     try {
       const result = await endpoints.submitAttempt(attempt.quizId, attempt.dto);
