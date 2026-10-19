@@ -3,7 +3,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { I18nProvider } from '@/i18n';
-import { startAuthSync } from '@/lib/auth-store';
+import { startAuthSession } from '@/lib/api';
 import { RealtimeBridge } from './realtime';
 
 export function Providers({ locale, children }: { locale: string; children: ReactNode }) {
@@ -34,7 +34,7 @@ export function Providers({ locale, children }: { locale: string; children: Reac
 
 /** Oturumu mount'ta localStorage'dan yükler ve sekmeler arası senkronlar */
 function AuthSync() {
-  useEffect(() => startAuthSync(), []);
+  useEffect(() => startAuthSession(), []);
   return null;
 }
 

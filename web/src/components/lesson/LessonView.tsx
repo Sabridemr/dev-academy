@@ -13,21 +13,22 @@ import {
   Trash2,
 } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
-import type { LessonDetail } from '@devacademy/shared';
+import { isLessonBodyTranslated, type LessonDetail } from '@devacademy/shared';
 import { useI18n } from '@/i18n';
 import { api } from '@/lib/api';
+import { useAction } from '@/lib/use-action';
 import { useIsAuthenticated } from '@/lib/auth-store';
 import { useBookmarks, useLesson, useNotes, useUpdateProgress } from '@/lib/hooks';
 import { cn } from '@/lib/utils';
 import { BlockRenderer } from './BlockRenderer';
-import { slugify } from './Markdown';
+import { markdownHeadingText, slugify } from './Markdown';
 
 /**
  * Ders görüntüleyici: blokları sırayla çizer, görünür olan blokları IntersectionObserver ile izleyip
  * ilerleme yüzdesini sunucuya (debounce ile) yazar; yer imi ve not panelini içerir.
  */
 export function LessonView({ initial }: { initial: LessonDetail }) {
-  const { t, tl } = useI18n();
+  const { t, tl, locale } = useI18n();
   const authed = useIsAuthenticated();
   const { data } = useLesson(initial.id, initial);
   const lesson = data ?? initial;
@@ -119,12 +120,14 @@ export function LessonView({ initial }: { initial: LessonDetail }) {
     () =>
       lesson.blocks.flatMap((b) => {
         if (b.type !== 'text') return [];
-        return Array.from(b.markdown.matchAll(/^##\s+(.+)$/gm)).map((m) => ({
-          id: slugify(m[1]),
-          title: m[1],
-        }));
+        // Gövdeyle aynı dildeki Markdown ve aynı başlık metni → bağlantılar Markdown'daki id'lerle eşleşir
+        const markdown = locale === 'en' && b.markdownEn ? b.markdownEn : b.markdown;
+        return Array.from(markdown.matchAll(/^##\s+(.+)$/gm)).map((m) => {
+          const title = markdownHeadingText(m[1]);
+          return { id: slugify(title), title };
+        });
       }),
-    [lesson.blocks],
+    [lesson.blocks, locale],
   );
 
   return (
@@ -142,6 +145,11 @@ export function LessonView({ initial }: { initial: LessonDetail }) {
         <header className="mb-8">
           <h1 className="text-3xl font-bold tracking-tight md:text-4xl">{tl(lesson.title)}</h1>
           <p className="mt-3 max-w-prose text-lg text-muted">{tl(lesson.summary)}</p>
+          {locale === 'en' && !isLessonBodyTranslated(lesson.blocks) && (
+            <p className="mt-3 rounded-lg border border-border bg-elevated/60 px-3 py-2 text-sm text-muted">
+              {t('lesson.notTranslated')}
+            </p>
+          )}
           <div className="mt-4 flex flex-wrap items-center gap-2">
             <span className="chip">
               <Clock size={12} /> {t('module.minutes', { count: lesson.durationMinutes })}
@@ -241,28 +249,30 @@ function LessonTools({ lessonId }: { lessonId: string }) {
   const [draft, setDraft] = useState('');
   const bookmark = bookmarks?.find((b) => b.lessonId === lessonId && !b.blockId);
 
-  const toggleBookmark = async () => {
+  const toggleBookmark = useAction(async () => {
     if (bookmark) await api(`/bookmarks/${bookmark.id}`, { method: 'DELETE' });
     else await api('/bookmarks', { method: 'POST', body: { lessonId } });
     await qc.invalidateQueries({ queryKey: ['bookmarks'] });
-  };
-  const saveNote = async () => {
+  });
+  const saveNote = useAction(async () => {
     if (!draft.trim()) return;
     await api('/notes', { method: 'POST', body: { lessonId, body: draft.trim() } });
     setDraft('');
     await qc.invalidateQueries({ queryKey: ['notes'] });
-  };
-  const deleteNote = async (id: string) => {
+  });
+  const deleteNote = useAction(async (id: string) => {
     await api(`/notes/${id}`, { method: 'DELETE' });
     await qc.invalidateQueries({ queryKey: ['notes'] });
-  };
+  });
+  const actionError = toggleBookmark.error ?? saveNote.error ?? deleteNote.error;
 
   return (
     <div className="card space-y-3 p-4">
       <button
         type="button"
         className="btn-ghost w-full"
-        onClick={toggleBookmark}
+        onClick={() => void toggleBookmark.run()}
+        disabled={toggleBookmark.pending}
         aria-pressed={Boolean(bookmark)}
       >
         {bookmark ? <BookmarkCheck size={16} className="text-primary" /> : <Bookmark size={16} />}
@@ -282,8 +292,8 @@ function LessonTools({ lessonId }: { lessonId: string }) {
         <button
           type="button"
           className="btn-primary mt-2 w-full"
-          onClick={saveNote}
-          disabled={!draft.trim()}
+          onClick={() => void saveNote.run()}
+          disabled={!draft.trim() || saveNote.pending}
         >
           {t('lesson.saveNote')}
         </button>
@@ -294,13 +304,19 @@ function LessonTools({ lessonId }: { lessonId: string }) {
               <button
                 type="button"
                 className="mt-1 inline-flex items-center gap-1 text-xs text-muted hover:text-danger"
-                onClick={() => deleteNote(n.id)}
+                onClick={() => void deleteNote.run(n.id)}
+                disabled={deleteNote.pending}
               >
                 <Trash2 size={12} /> {t('library.delete')}
               </button>
             </li>
           ))}
         </ul>
+        {actionError && (
+          <p className="mt-2 text-xs text-danger" role="alert">
+            {t('common.error')}: {actionError}
+          </p>
+        )}
       </div>
     </div>
   );

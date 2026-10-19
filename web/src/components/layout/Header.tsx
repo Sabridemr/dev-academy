@@ -51,9 +51,10 @@ export function Header() {
   };
 
   const logout = async () => {
-    const { refreshToken, clear } = useAuthStore.getState();
+    const { clear } = useAuthStore.getState();
     try {
-      await api('/auth/logout', { method: 'POST', body: { refreshToken } });
+      // Refresh token httpOnly çerezde; sunucu iptal edip çerezi siler
+      await api('/auth/logout', { method: 'POST', body: {} });
     } catch {
       /* oturum zaten geçersiz olabilir */
     }

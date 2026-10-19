@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { Inter, JetBrains_Mono } from 'next/font/google';
 import { DEFAULT_LOCALE, isLocale } from '@devacademy/shared';
 import { Providers, themeInitScript } from '@/components/providers';
@@ -31,10 +31,12 @@ export const viewport: Viewport = {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const cookieLocale = (await cookies()).get(LOCALE_COOKIE)?.value;
   const locale = cookieLocale && isLocale(cookieLocale) ? cookieLocale : DEFAULT_LOCALE;
+  // middleware.ts'nin ürettiği CSP nonce'u (satır içi tema betiği için)
+  const nonce = (await headers()).get('x-nonce') ?? undefined;
   return (
     <html lang={locale} suppressHydrationWarning className={`${sans.variable} ${mono.variable}`}>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+        <script nonce={nonce} dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       <body className="min-h-screen font-sans">
         <Providers locale={locale}>

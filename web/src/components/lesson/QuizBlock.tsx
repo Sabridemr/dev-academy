@@ -50,11 +50,14 @@ function QuizForm({ quiz, title }: { quiz: QuizPublic; title: string }) {
 
   const allAnswered = quiz.questions.every((q) => (answers[q.id]?.length ?? 0) > 0);
   const onSubmit = async () => {
-    const res = await submit.mutateAsync({
-      answers: quiz.questions.map((q) => ({ questionId: q.id, selected: answers[q.id] ?? [] })),
-      durationMs: Date.now() - startedAt,
-    });
-    setResult(res);
+    // Hata submit.isError ile gösterilir; yakalanmamış promise reddi olmasın
+    const res = await submit
+      .mutateAsync({
+        answers: quiz.questions.map((q) => ({ questionId: q.id, selected: answers[q.id] ?? [] })),
+        durationMs: Date.now() - startedAt,
+      })
+      .catch(() => null);
+    if (res) setResult(res);
   };
   const reset = () => {
     setResult(null);
@@ -153,7 +156,10 @@ function QuizForm({ quiz, title }: { quiz: QuizPublic; title: string }) {
         {!authed ? (
           <p className="text-sm text-muted">
             {t('quiz.loginToSave')}{' '}
-            <Link href="/login" className="text-primary underline">
+            <Link
+              href={`/login?next=${encodeURIComponent(`/lessons/${quiz.lessonId}`)}`}
+              className="text-primary underline"
+            >
               {t('nav.login')}
             </Link>
           </p>

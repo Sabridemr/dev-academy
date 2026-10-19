@@ -60,6 +60,7 @@ export const tr = {
     hasQuiz: 'Quiz',
   },
   lesson: {
+    notTranslated: 'Bu ders henüz İngilizceye çevrilmedi; metin Türkçe gösteriliyor.',
     prev: 'Önceki ders',
     next: 'Sonraki ders',
     nextStep: 'Bir sonraki adım',

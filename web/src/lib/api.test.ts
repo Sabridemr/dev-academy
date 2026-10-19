@@ -1,27 +1,49 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { api, ApiError } from './api';
+import { api, ApiError, startAuthSession } from './api';
 import { useAuthStore } from './auth-store';
 
-/** API istemcisi: refresh'in oturumu yalnızca gerçek retlerde kapatması, sekmeler arası token ve hata gövdeleri */
+/**
+ * API istemcisi: refresh token httpOnly çerezde (çerez modu), access token yalnızca bellekte;
+ * oturum yalnızca gerçek retlerde kapanır; eski localStorage token'ı bir kez çereze taşınır.
+ */
 
 const user = { id: 'u1', email: 'a@b.c', displayName: 'A', role: 'student' } as never;
 const json = (status: number, body: unknown) =>
   new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
+type Init = RequestInit & { headers: Record<string, string> };
 
 beforeEach(() => {
   localStorage.clear();
-  useAuthStore.setState({ user, accessToken: 'old', refreshToken: 'r1', hydrated: true });
+  useAuthStore.setState({ user, accessToken: 'old', hydrated: true });
 });
 afterEach(() => vi.unstubAllGlobals());
 
 describe('api', () => {
-  it('refresh 5xx dönerse oturumu kapatmaz', async () => {
-    const fetchMock = vi.fn(async (url: string) =>
-      url.endsWith('/auth/refresh') ? json(503, {}) : json(401, { message: 'expired' }),
-    );
+  it('401 sonrası çerezle yeniler ve isteği yeni token ile tekrarlar', async () => {
+    const fetchMock = vi.fn(async (url: string, init?: Init) => {
+      if (url.endsWith('/auth/refresh')) return json(200, { accessToken: 'new', refreshToken: '' });
+      return init?.headers.Authorization === 'Bearer new'
+        ? json(200, { ok: true })
+        : json(401, { message: 'expired' });
+    });
     vi.stubGlobal('fetch', fetchMock);
+    await expect(api('/users/me')).resolves.toEqual({ ok: true });
+    const [, init] = fetchMock.mock.calls.find(([u]) => String(u).endsWith('/auth/refresh'))!;
+    expect(init?.credentials).toBe('include');
+    expect(init?.headers['X-Auth-Mode']).toBe('cookie');
+    expect(init?.body).toBe('{}'); // refresh token gövdede değil, çerezde
+    expect(useAuthStore.getState().accessToken).toBe('new');
+  });
+
+  it('refresh 5xx dönerse oturumu kapatmaz', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string) =>
+        url.endsWith('/auth/refresh') ? json(503, {}) : json(401, { message: 'expired' }),
+      ),
+    );
     await expect(api('/users/me')).rejects.toMatchObject({ status: 401 });
-    expect(useAuthStore.getState().refreshToken).toBe('r1');
+    expect(useAuthStore.getState().user).not.toBeNull();
   });
 
   it('refresh reddedilirse oturumu kapatır', async () => {
@@ -32,24 +54,8 @@ describe('api', () => {
       ),
     );
     await expect(api('/users/me')).rejects.toBeInstanceOf(ApiError);
+    expect(useAuthStore.getState().user).toBeNull();
     expect(useAuthStore.getState().accessToken).toBeNull();
-  });
-
-  it('başka sekme token’ı zaten döndürdüyse eski refresh token’ı göndermez', async () => {
-    // Diğer sekme yeni çifti depoya yazmış
-    localStorage.setItem(
-      'da-auth',
-      JSON.stringify({ state: { user, accessToken: 'new', refreshToken: 'r2' }, version: 0 }),
-    );
-    const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
-      if (url.endsWith('/auth/refresh')) return json(401, {});
-      const auth = (init?.headers as Record<string, string>).Authorization;
-      return auth === 'Bearer new' ? json(200, { ok: true }) : json(401, { message: 'expired' });
-    });
-    vi.stubGlobal('fetch', fetchMock);
-    await expect(api('/users/me')).resolves.toEqual({ ok: true });
-    expect(fetchMock.mock.calls.some(([url]) => String(url).endsWith('/auth/refresh'))).toBe(false);
-    expect(useAuthStore.getState().refreshToken).toBe('r2');
   });
 
   it('JSON olmayan hata gövdesini ApiError’a çevirir', async () => {
@@ -61,5 +67,30 @@ describe('api', () => {
       name: 'ApiError',
       status: 502,
     });
+  });
+});
+
+describe('startAuthSession', () => {
+  it('eski sürümün localStorage token’ını bir kez çereze taşır ve depodan siler', async () => {
+    useAuthStore.setState({ user: null, accessToken: null, hydrated: false });
+    localStorage.setItem(
+      'da-auth',
+      JSON.stringify({ state: { user, accessToken: 'a', refreshToken: 'legacy-r' }, version: 0 }),
+    );
+    const fetchMock = vi.fn(async (_url: string, _init?: RequestInit) =>
+      json(200, { accessToken: 'fresh', refreshToken: '' }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const stop = startAuthSession();
+    await vi.waitFor(() => expect(useAuthStore.getState().hydrated).toBe(true));
+    stop();
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(JSON.parse(String(fetchMock.mock.calls[0][1]?.body))).toEqual({
+      refreshToken: 'legacy-r',
+    });
+    expect(useAuthStore.getState().accessToken).toBe('fresh');
+    expect(localStorage.getItem('da-auth')).not.toContain('legacy-r');
   });
 });

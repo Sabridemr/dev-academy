@@ -26,7 +26,7 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
     const next = params.get('next');
     const path = params.get('path');
     if (mode === 'register' || !res.user.selectedPathId)
-      router.push(`/onboarding${path ? `?path=${path}` : ''}`);
+      router.push(`/onboarding${path ? `?path=${encodeURIComponent(path)}` : ''}`);
     else router.push(safeNextPath(next, '/dashboard'));
   };
 

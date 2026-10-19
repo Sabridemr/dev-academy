@@ -5,7 +5,8 @@ import { t as tl } from '@devacademy/shared';
 import { ApiError, serverApi } from '@/lib/api';
 import { LessonView } from '@/components/lesson/LessonView';
 
-export const revalidate = 60;
+// Sayfa istek başına render edilir (dil çerezi + CSP nonce'u); API verisi serverApi'nin revalidate
+// süresiyle Next Data Cache'te tutulur, yani her istek API'ye gitmez.
 
 async function getLesson(id: string): Promise<LessonDetail> {
   try {

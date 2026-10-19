@@ -1,9 +1,10 @@
-import type { ApiErrorBody, AuthTokens } from '@devacademy/shared';
-import { useAuthStore } from './auth-store';
+import { AUTH_MODE_HEADER, type ApiErrorBody, type AuthTokens } from '@devacademy/shared';
+import { AUTH_STORAGE_KEY, takeLegacyRefreshToken, useAuthStore } from './auth-store';
 
 /**
  * API istemcisi.
- *  - Access token'ı Authorization başlığına ekler.
+ *  - Access token'ı (bellekte) Authorization başlığına ekler.
+ *  - /auth/* çağrıları çerez modundadır: refresh token httpOnly çerezde taşınır (credentials: include).
  *  - 401'de tek seferlik refresh dener (eş zamanlı istekler aynı refresh promise'ini paylaşır).
  *  - Hata gövdesini ApiError olarak fırlatır (merkezi hata formatı).
  */
@@ -24,40 +25,75 @@ export class ApiError extends Error {
 
 let refreshing: Promise<string | null> | null = null;
 
+const AUTH_HEADERS = { [AUTH_MODE_HEADER]: 'cookie' } as const;
+
 /**
- * Sekmeler arası tek refresh: Web Locks ile aynı anda yalnızca bir sekme yeniler. Kilidi alan sekme
- * önce depodaki güncel token'ı okur; başka bir sekme zaten döndürdüyse onu kullanır, eski (iptal edilmiş)
- * token'ı sunucuya göndermez (gönderseydi yeniden kullanım tespiti tüm oturumu kapatırdı).
+ * Refresh çereziyle yeni access token alır; yenilenemezse null. Sekmeler aynı çerezi paylaştığından
+ * Web Locks ile aynı anda yalnızca bir sekme yeniler: aynı (döndürülmüş) token'ın iki kez gönderilmesi
+ * sunucuda yeniden kullanım tespitini tetikleyip tüm oturumu kapatırdı.
  */
-/** Yeni access token'ı (ya da yenilenemediyse null) döner */
-async function refreshTokens(staleAccessToken: string | null): Promise<string | null> {
+async function refreshTokens(): Promise<string | null> {
   const run = async (): Promise<string | null> => {
-    await useAuthStore.persist.rehydrate();
-    const { accessToken, refreshToken, setTokens, clear } = useAuthStore.getState();
-    if (!refreshToken) return null;
-    if (accessToken && accessToken !== staleAccessToken) return accessToken;
+    // Eski sürümden kalan localStorage token'ı varsa bir kez gövdede gönderilir, sunucu çereze yazar
+    const legacy = takeLegacyRefreshToken();
     let res: Response;
     try {
       res = await fetch(`${API_URL}/auth/refresh`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refreshToken }),
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', ...AUTH_HEADERS },
+        body: JSON.stringify(legacy ? { refreshToken: legacy } : {}),
       });
     } catch {
       return null; // ağ hatası: oturum korunur
     }
     if (!res.ok) {
       // Yalnızca sunucu token'ı reddettiyse çıkış yap; 5xx/429 geçicidir
-      if (res.status === 400 || res.status === 401 || res.status === 403) clear();
+      if (res.status === 400 || res.status === 401 || res.status === 403)
+        useAuthStore.getState().clear();
       return null;
     }
     const tokens = (await res.json()) as AuthTokens;
-    setTokens(tokens);
+    useAuthStore.getState().setAccessToken(tokens.accessToken);
     return tokens.accessToken;
   };
   if (typeof navigator !== 'undefined' && navigator.locks)
     return navigator.locks.request('da-auth-refresh', run);
   return run();
+}
+
+function sharedRefresh(): Promise<string | null> {
+  refreshing ??= refreshTokens().finally(() => {
+    refreshing = null;
+  });
+  return refreshing;
+}
+
+/**
+ * Açılışta oturumu kurar: profil localStorage'dan okunur, varsa access token çerezle alınır; ardından
+ * `hydrated` işaretlenir (RequireAuth bunu bekler). Diğer sekmede giriş/çıkış yapılınca bu sekme de uyar.
+ */
+export function startAuthSession(): () => void {
+  const store = useAuthStore;
+  const bootstrap = async () => {
+    await store.persist.rehydrate();
+    if (store.getState().user && !store.getState().accessToken) await sharedRefresh();
+    store.setState({ hydrated: true });
+  };
+  void bootstrap();
+  const onStorage = (e: StorageEvent) => {
+    if (e.key !== AUTH_STORAGE_KEY && e.key !== null) return;
+    void (async () => {
+      const hadUser = Boolean(store.getState().user);
+      await store.persist.rehydrate();
+      const { user, accessToken } = store.getState();
+      if (!user)
+        store.setState({ accessToken: null }); // diğer sekmede çıkış
+      else if (!hadUser || !accessToken) await sharedRefresh(); // diğer sekmede giriş
+    })();
+  };
+  window.addEventListener('storage', onStorage);
+  return () => window.removeEventListener('storage', onStorage);
 }
 
 export interface RequestOptions extends Omit<RequestInit, 'body'> {
@@ -73,21 +109,22 @@ export async function api<T>(
 ): Promise<T> {
   const { body, anonymous, headers, ...rest } = options;
   const accessToken = anonymous ? null : useAuthStore.getState().accessToken;
+  const isAuthCall = path.startsWith('/auth/');
   const res = await fetch(`${API_URL}${path}`, {
     ...rest,
+    // Giriş/kayıt/çıkış refresh çerezini yazar ya da siler
+    ...(isAuthCall ? { credentials: 'include' as const } : {}),
     headers: {
       ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
+      ...(isAuthCall ? AUTH_HEADERS : {}),
       ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
       ...headers,
     },
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });
 
-  if (res.status === 401 && !anonymous && !retried && useAuthStore.getState().refreshToken) {
-    refreshing ??= refreshTokens(accessToken).finally(() => {
-      refreshing = null;
-    });
-    if (await refreshing) return api<T>(path, options, true);
+  if (res.status === 401 && !anonymous && !retried && useAuthStore.getState().user) {
+    if (await sharedRefresh()) return api<T>(path, options, true);
   }
 
   if (res.status === 204) return undefined as T;

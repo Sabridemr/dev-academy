@@ -61,6 +61,8 @@ export const en: Messages = {
     hasQuiz: 'Quiz',
   },
   lesson: {
+    notTranslated:
+      'This lesson hasn’t been translated to English yet; the text is shown in Turkish.',
     prev: 'Previous lesson',
     next: 'Next lesson',
     nextStep: 'Next step',

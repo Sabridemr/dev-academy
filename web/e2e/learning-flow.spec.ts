@@ -63,6 +63,12 @@ test('kayıt → onboarding → pano', async ({ page }, testInfo) => {
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Load Balancer');
   await page.reload();
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Load Balancer');
+  // Token'lar localStorage'da değil (refresh httpOnly çerezde); yeni sayfa yüklemesinde oturum çerezle sürer
+  const stored = await page.evaluate(() => localStorage.getItem('da-auth') ?? '');
+  expect(stored).not.toMatch(/accessToken|refreshToken/);
+  await page.goto('/dashboard');
+  await expect(page).toHaveURL(/dashboard/);
+  await expect(page.getByText('Tamamlanma')).toBeVisible();
 });
 
 test('arama sonuç döndürür', async ({ page }) => {
