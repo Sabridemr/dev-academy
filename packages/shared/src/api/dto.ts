@@ -45,11 +45,16 @@ export const OAuthLoginSchema = z.object({
 });
 export type OAuthLoginDto = z.infer<typeof OAuthLoginSchema>;
 
-export const RefreshSchema = z.object({ refreshToken: z.string().min(10) });
+/** Web istemcisi refresh token'ı httpOnly çerezde taşır (X-Auth-Mode: cookie); mobil gövdede gönderir */
+export const RefreshSchema = z.object({ refreshToken: z.string().min(10).max(200).optional() });
 export type RefreshDto = z.infer<typeof RefreshSchema>;
+
+/** Web istemcisinin refresh token'ı httpOnly çerezde istediğini belirten başlık */
+export const AUTH_MODE_HEADER = 'X-Auth-Mode';
 
 export interface AuthTokens {
   accessToken: string;
+  /** Çerez modunda (AUTH_MODE_HEADER: cookie) boş döner; token httpOnly çerezdedir */
   refreshToken: string;
   /** saniye */
   expiresIn: number;
@@ -441,9 +446,9 @@ export type WsServerEvent =
   | { type: 'badge.earned'; payload: BadgeDto }
   | { type: 'streak.updated'; payload: { currentStreak: number } }
   | { type: 'content.published'; payload: { lessonId: string; version: number } }
+  | { type: 'content.unpublished'; payload: { lessonId: string } }
   | { type: 'simulation.tick'; payload: { simulationId: string; data: unknown } };
 
 export type WsClientEvent =
-  | { type: 'subscribe.lesson'; lessonId: string }
   | { type: 'simulation.join'; simulationId: string }
   | { type: 'simulation.input'; simulationId: string; data: unknown };
