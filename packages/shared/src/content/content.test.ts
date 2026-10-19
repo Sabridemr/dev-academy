@@ -151,8 +151,8 @@ describe('Quiz şeması', () => {
 });
 
 describe('Müfredat', () => {
-  it('7 modül ve benzersiz ders id’leri', () => {
-    expect(CURRICULUM).toHaveLength(7);
+  it('10 modül ve benzersiz ders id’leri', () => {
+    expect(CURRICULUM).toHaveLength(10);
     const ids = allLessons().map((x) => x.lesson.id);
     expect(new Set(ids).size).toBe(ids.length);
     expect(TOTAL_LESSON_COUNT).toBe(ids.length);
@@ -160,6 +160,8 @@ describe('Müfredat', () => {
   it('ders arama ve sonraki ders', () => {
     expect(findLesson('a-05-load-balancing')?.module.code).toBe('A');
     expect(nextLessonOf('a-13-observability-12-factor')?.id).toBe('b-01-monolith-to-microservices');
-    expect(nextLessonOf('g-08-nn-playground')).toBeUndefined();
+    // Modül sınırını aşar: G'nin son dersinden H'nin ilk dersine
+    expect(nextLessonOf('g-08-nn-playground')?.id).toBe('h-01-linux-notes');
+    expect(nextLessonOf('j-11-odunlesimler-mulakat-ve-ozet')).toBeUndefined();
   });
 });

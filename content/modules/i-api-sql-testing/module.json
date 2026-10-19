@@ -1,0 +1,13 @@
+{
+  "id": "i-api-sql-testing",
+  "slug": "api-sql-testing",
+  "code": "I",
+  "order": 9,
+  "title": { "tr": "API, SQL ve Test", "en": "APIs, SQL and Testing" },
+  "description": {
+    "tr": "API nasıl oluşturulur ve çağrılır, REST tasarımı, API testleri ve SQL: kişisel notlar ve rehberler.",
+    "en": "How APIs are built and called, REST design, API testing and SQL: personal notes and guides."
+  },
+  "icon": "route",
+  "color": "#f97316"
+}

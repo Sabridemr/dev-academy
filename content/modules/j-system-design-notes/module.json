@@ -1,0 +1,13 @@
+{
+  "id": "j-system-design-notes",
+  "slug": "system-design-notes",
+  "code": "J",
+  "order": 10,
+  "title": { "tr": "Sistem Tasarımı Notları ve Vakalar", "en": "System Design Notes and Case Studies" },
+  "description": {
+    "tr": "Temel sistem tasarımı kalıpları, Redis ve Kafka, Amazon ölçeğinde e-ticaret ve yemek siparişi platformu tasarımı.",
+    "en": "Core system design patterns, Redis and Kafka, Amazon-scale e-commerce and a food delivery platform design."
+  },
+  "icon": "network",
+  "color": "#14b8a6"
+}
