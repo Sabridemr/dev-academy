@@ -9,5 +9,6 @@
     "en": "Modeling, indexing, transactions, SQL/NoSQL choice and scaling."
   },
   "icon": "database",
-  "color": "#10b981"
+  "color": "#10b981",
+  "group": "software"
 }

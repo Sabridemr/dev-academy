@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { LocalizedString } from '../i18n';
-import type { LessonBlock, LessonLevel } from '../content/schema';
+import type { LessonBlock, LessonLevel, ModuleGroup } from '../content/schema';
 import type { AnimationScene } from '../scene/schema';
 
 /**
@@ -134,10 +134,16 @@ export interface ModuleSummary {
   description: LocalizedString;
   icon: string;
   color: string;
+  /** Modüller sayfasındaki kategori */
+  group: ModuleGroup;
   lessonCount: number;
+  /** Yayındaki derslerin toplam süresi (dakika) */
+  totalMinutes: number;
   /** Oturum açmış kullanıcı için tamamlanan ders sayısı */
   completedCount?: number;
 }
+
+export type LessonFormat = 'standard' | 'infographic' | 'pdf-guide';
 
 export interface LessonSummary {
   id: string;
@@ -152,6 +158,8 @@ export interface LessonSummary {
   hasAnimation: boolean;
   hasInteractive: boolean;
   hasQuiz: boolean;
+  /** Dersin biçimi: PDF'ten aktarılan infografik not seti ya da metin rehberi (kartlarda rozet) */
+  format: LessonFormat;
   /** Oturum açmış kullanıcı için */
   progress?: { status: ProgressStatus; percent: number };
 }

@@ -286,6 +286,11 @@ export type LessonDocument = z.infer<typeof LessonDocumentSchema>;
 
 /* ----------------------------- Modül ------------------------------- */
 
+/** Modüller sayfasındaki kategori (sırası listede gösterim sırasıdır) */
+export const MODULE_GROUPS = ['system-design', 'software', 'infrastructure', 'ai', 'programming'] as const;
+export const ModuleGroupSchema = z.enum(MODULE_GROUPS);
+export type ModuleGroup = z.infer<typeof ModuleGroupSchema>;
+
 export const ModuleManifestSchema = z
   .object({
     id: z.string().regex(SLUG_REGEX),
@@ -296,6 +301,7 @@ export const ModuleManifestSchema = z
     description: LocalizedStringSchema,
     icon: z.string().default('book'),
     color: z.string().default('#6366f1'),
+    group: ModuleGroupSchema.default('system-design'),
   })
   .strict();
 export type ModuleManifest = z.infer<typeof ModuleManifestSchema>;

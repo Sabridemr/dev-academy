@@ -1,0 +1,110 @@
+{
+  "id": "j-03-system-design-with-redis-and-kafka-quiz",
+  "title": { "tr": "Redis ve Kafka Quiz", "en": "Redis & Kafka Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "order",
+      "prompt": {
+        "tr": "Cache-Aside (lazy loading) kalıbında istenen veri önbellekte yokken (miss) gerçekleşen adımları doğru sıraya koyun.",
+        "en": "Put the steps of the Cache-Aside (lazy loading) pattern in the correct order when the requested data is not in the cache (a miss)."
+      },
+      "options": [
+        { "id": "store", "text": { "tr": "Veriyi Redis önbelleğine yaz", "en": "Store the data in the Redis cache" } },
+        { "id": "check", "text": { "tr": "Önce önbelleği kontrol et", "en": "Check the cache first" } },
+        { "id": "return", "text": { "tr": "Veriyi istemciye döndür", "en": "Return the data to the client" } },
+        { "id": "fetch", "text": { "tr": "Veriyi veritabanından getir", "en": "Fetch the data from the database" } }
+      ],
+      "correct": ["check", "fetch", "store", "return"],
+      "explanation": {
+        "tr": "Cache-Aside'da uygulama önce önbelleğe bakar; miss olursa veriyi veritabanından getirir, sonraki istekler için önbelleğe yazar ve istemciye döndürür. Önbelleği uygulamanın yönetmesi bu kalıbın ayırt edici özelliğidir.",
+        "en": "In Cache-Aside the application checks the cache first; on a miss it fetches the data from the database, stores it in the cache for later requests and returns it to the client. The application managing the cache is what defines this pattern."
+      },
+      "difficulty": "easy",
+      "concepts": ["cache-aside"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "Redis belleği doldu. Yalnızca bazı anahtarlarda TTL tanımlı ve süresi en yakın dolacak anahtarların önce silinmesini istiyorsun. Hangi tahliye politikasını seçmelisin?",
+        "en": "Redis memory is full. Only some keys have a TTL, and you want the keys closest to expiring to be removed first. Which eviction policy should you choose?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "allkeys-lru", "en": "allkeys-lru" } },
+        { "id": "b", "text": { "tr": "noeviction", "en": "noeviction" } },
+        { "id": "c", "text": { "tr": "volatile-ttl", "en": "volatile-ttl" } },
+        { "id": "d", "text": { "tr": "allkeys-random", "en": "allkeys-random" } }
+      ],
+      "correct": ["c"],
+      "explanation": {
+        "tr": "volatile-ttl yalnızca TTL'li anahtarlar arasından en kısa TTL'e sahip olanı önce siler. allkeys-lru tüm anahtarlardan en az yakın zamanda kullanılanı, allkeys-random rastgele bir anahtarı siler; noeviction ise hiçbir anahtarı silmez ve hata döndürür.",
+        "en": "volatile-ttl removes the key with the shortest TTL first, only among keys that have a TTL. allkeys-lru evicts the least recently used key from all keys, allkeys-random evicts a random key, and noeviction removes nothing and returns an error."
+      },
+      "difficulty": "medium",
+      "concepts": ["eviction-policies"]
+    },
+    {
+      "id": "q3",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Kafka, bir topic'in tüm partition'ları genelinde mesajların global sırasını garanti eder.",
+        "en": "Kafka guarantees global ordering of messages across all partitions of a topic."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "Yanlış. Bir partition append-only bir log olduğundan mesajlar artan offset'lerle sıralı saklanır; ancak sıra yalnızca partition içinde garanti edilir, birden fazla partition arasında global sıra garantisi yoktur.",
+        "en": "False. A partition is an append-only log, so messages are stored in order with increasing offsets; but ordering is guaranteed only within a partition, not globally across multiple partitions."
+      },
+      "difficulty": "easy",
+      "concepts": ["partitions"]
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": {
+        "tr": "3 partition'lı bir \"orders\" topic'ini aynı consumer group'taki 3 consumer okuyor. Consumer'lardan biri çökerse ne olur?",
+        "en": "Three consumers in the same consumer group read an \"orders\" topic with 3 partitions. What happens if one of the consumers crashes?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Çöken consumer'ın partition'ı, consumer geri gelene kadar okunmaz", "en": "The crashed consumer's partition is not read until that consumer comes back" } },
+        { "id": "b", "text": { "tr": "Rebalancing tetiklenir ve partition'lar gruptaki kalan consumer'lara yeniden atanır", "en": "Rebalancing is triggered and partitions are reassigned to the remaining consumers in the group" } },
+        { "id": "c", "text": { "tr": "Kalan iki consumer, o partition'ı aynı anda paralel olarak okumaya başlar", "en": "Both remaining consumers start reading that partition in parallel at the same time" } },
+        { "id": "d", "text": { "tr": "Topic'teki tüm mesajlar en baştan (offset 0) yeniden işlenir", "en": "All messages in the topic are reprocessed from the beginning (offset 0)" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Gruptaki consumer sayısı değişince rebalancing olur ve partition'lar kalan consumer'lara dağıtılır. Bir partition grup içinde yalnızca tek bir consumer'a atanır, bu yüzden iki consumer onu birlikte okumaz; yeni sahibi de baştan değil son commit edilen offset'ten devam eder.",
+        "en": "When the number of consumers in the group changes, rebalancing reassigns partitions to the remaining consumers. A partition is assigned to only one consumer in the group, so two consumers do not read it together, and its new owner resumes from the last committed offset rather than from the beginning."
+      },
+      "difficulty": "medium",
+      "concepts": ["consumer-groups", "partitions"]
+    },
+    {
+      "id": "q5",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Kafka'daki acks ayarları ve teslim garantileriyle ilgili hangi ifadeler doğrudur? (Birden fazla seçin)",
+        "en": "Which statements about Kafka's acks settings and delivery guarantees are correct? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "acks=0'da producer hiçbir onay beklemez; en hızlısıdır ama mesaj kaybolabilir (at-most-once)", "en": "With acks=0 the producer waits for no acknowledgment; it is fastest but messages can be lost (at-most-once)" } },
+        { "id": "b", "text": { "tr": "Exactly-once, idempotent producer'lar ve transaction'larla sağlanır", "en": "Exactly-once is achieved with idempotent producers and transactions" } },
+        { "id": "c", "text": { "tr": "At-least-once mesajın asla kopyalanmamasını garanti eder", "en": "At-least-once guarantees that a message is never duplicated" } },
+        { "id": "d", "text": { "tr": "acks=all yalnızca leader'ın yazmasını bekler, bu yüzden en hızlı seçenektir", "en": "acks=all waits only for the leader to write, which makes it the fastest option" } }
+      ],
+      "correct": ["a", "b"],
+      "explanation": {
+        "tr": "acks=0 onay beklemediği için hızlı ama risklidir; exactly-once idempotent producer + transaction ile kayıpsız ve kopyasız teslim sağlar. At-least-once'ta hata sonrası yeniden gönderim kopyaya yol açabilir; acks=all ise leader ile birlikte tüm in-sync replica'ları bekler, en dayanıklı ama en yavaş seçenektir.",
+        "en": "acks=0 is fast but risky because it waits for no acknowledgment; exactly-once uses idempotent producers plus transactions for delivery without loss or duplicates. With at-least-once a resend after failure can cause duplicates, and acks=all waits for the leader and all in-sync replicas, making it the most durable but slowest option."
+      },
+      "difficulty": "hard",
+      "concepts": ["delivery-guarantees"]
+    }
+  ]
+}

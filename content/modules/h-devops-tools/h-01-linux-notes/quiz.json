@@ -1,0 +1,111 @@
+{
+  "id": "h-01-linux-notes-quiz",
+  "title": { "tr": "Linux Temel Notları Quiz", "en": "Linux Core Notes Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "`chmod 754 deploy.sh` komutundan sonra dosyanın izinleri nasıl olur?",
+        "en": "What are the file's permissions after running `chmod 754 deploy.sh`?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Sahip: rwx, grup: r-x, diğerleri: r--", "en": "Owner: rwx, group: r-x, others: r--" } },
+        { "id": "b", "text": { "tr": "Sahip: rwx, grup: rw-, diğerleri: r--", "en": "Owner: rwx, group: rw-, others: r--" } },
+        { "id": "c", "text": { "tr": "Sahip: r--, grup: r-x, diğerleri: rwx", "en": "Owner: r--, group: r-x, others: rwx" } },
+        { "id": "d", "text": { "tr": "Sahip: rwx, grup: r-x, diğerleri: -wx", "en": "Owner: rwx, group: r-x, others: -wx" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "Rakamlar sırasıyla sahip, grup ve diğerleri içindir; r=4, w=2, x=1 toplanır. 7=4+2+1 (rwx), 5=4+1 (r-x), 4=r--. rw- 6 olurdu (b); sıralama tersine çevrilmez (c); -wx 3 olurdu (d).",
+        "en": "The digits are for owner, group and others in that order; r=4, w=2, x=1 are added. 7=4+2+1 (rwx), 5=4+1 (r-x), 4=r--. rw- would be 6 (b); the order is not reversed (c); -wx would be 3 (d)."
+      },
+      "difficulty": "easy",
+      "concepts": ["file-permissions", "chmod"]
+    },
+    {
+      "id": "q2",
+      "type": "order",
+      "prompt": {
+        "tr": "Kullanıcının yazdığı bir komutun Linux katmanlarından geçiş sırasını doğru sıraya koyun.",
+        "en": "Put the layers a user's command passes through in Linux in the correct order."
+      },
+      "options": [
+        { "id": "kernel", "text": { "tr": "Kernel komutu işler", "en": "The kernel processes the command" } },
+        { "id": "shell", "text": { "tr": "Shell komutu yorumlar", "en": "The shell interprets the command" } },
+        { "id": "hardware", "text": { "tr": "Donanım işi yürütür", "en": "The hardware executes the task" } },
+        { "id": "user", "text": { "tr": "Kullanıcı komutu yazar", "en": "The user types the command" } },
+        { "id": "fs", "text": { "tr": "Dosya sistemi veriyi okur/yazar", "en": "The file system reads/writes data" } }
+      ],
+      "correct": ["user", "shell", "kernel", "fs", "hardware"],
+      "explanation": {
+        "tr": "Kullanıcı komutu verir, shell onu yorumlayıp kernel'e iletir, kernel işler, dosya sistemi veriyi okur/yazar ve en son donanım işi yürütür. Shell kullanıcı ile kernel arasındaki arayüzdür; donanıma doğrudan kernel ve dosya sistemi üzerinden erişilir.",
+        "en": "The user gives the command, the shell interprets it and passes it to the kernel, the kernel processes it, the file system reads/writes data and finally the hardware executes the task. The shell is the interface between user and kernel; hardware is reached through the kernel and file system."
+      },
+      "difficulty": "easy",
+      "concepts": ["kernel"]
+    },
+    {
+      "id": "q3",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "`ln -s` ile oluşturulan sembolik (soft) bağ, orijinal dosya silindikten sonra da çalışmaya devam eder.",
+        "en": "A symbolic (soft) link created with `ln -s` keeps working after the original file is deleted."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "Soft link orijinal dosyanın yolunu gösterir; orijinal silinince bağ kırılır. Orijinal silindiğinde çalışmaya devam eden, inode'u gösteren hard link'tir (`ln`).",
+        "en": "A soft link points to the original file's path, so it breaks when the original is deleted. The one that keeps working is the hard link (`ln`), which points to the inode."
+      },
+      "difficulty": "medium",
+      "concepts": ["file-system-hierarchy"]
+    },
+    {
+      "id": "q4",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Süreç yönetimiyle ilgili hangi ifadeler doğrudur? (Birden fazla seçin)",
+        "en": "Which statements about process management are correct? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "`kill 1234` varsayılan olarak sürece TERM sinyali gönderir", "en": "`kill 1234` sends the TERM signal to the process by default" } },
+        { "id": "b", "text": { "tr": "`kill -9` yalnızca süreç normal yolla durmadığında kullanılmalıdır", "en": "`kill -9` should only be used when the process does not stop normally" } },
+        { "id": "c", "text": { "tr": "`bg %1`, 1 numaralı işi ön plana (mevcut terminale) getirir", "en": "`bg %1` brings job 1 to the foreground (current terminal)" } },
+        { "id": "d", "text": { "tr": "`nice -n 10 komut`, komutu daha yüksek öncelikle başlatır", "en": "`nice -n 10 command` starts the command with higher priority" } }
+      ],
+      "correct": ["a", "b"],
+      "explanation": {
+        "tr": "`kill` varsayılan olarak nazik bir TERM isteği gönderir; SIGKILL gönderen `kill -9` ise yanıt vermeyen süreçler için son çaredir. İşi ön plana getiren `fg`'dir, `bg` arka planda sürdürür (c yanlış). `nice` ile daha yüksek değer daha düşük öncelik demektir (d yanlış).",
+        "en": "`kill` sends a polite TERM request by default; `kill -9` sends SIGKILL and is a last resort for unresponsive processes. `fg` brings a job to the foreground, `bg` resumes it in the background (c is wrong). With `nice`, a higher value means lower priority (d is wrong)."
+      },
+      "difficulty": "medium",
+      "concepts": ["process-management"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "`grep \"error\" app.log | wc -l` komutu ne çıktı verir?",
+        "en": "What does `grep \"error\" app.log | wc -l` output?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "app.log dosyasındaki toplam satır sayısını", "en": "The total number of lines in app.log" } },
+        { "id": "b", "text": { "tr": "app.log içinde \"error\" geçen satırların sayısını", "en": "The number of lines in app.log that contain \"error\"" } },
+        { "id": "c", "text": { "tr": "\"error\" geçen satırları, numaralarıyla birlikte", "en": "The lines containing \"error\", together with their numbers" } },
+        { "id": "d", "text": { "tr": "\"error\", \"Error\" ve \"ERROR\" geçen satırların toplam sayısını", "en": "The total count of lines containing \"error\", \"Error\" and \"ERROR\"" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Pipe (`|`) grep'in çıktısını, yani \"error\" içeren satırları `wc -l`'e verir; o da bu satırları sayar. Tüm dosyayı saymak için doğrudan `wc -l app.log` gerekirdi (a); satırların kendisi yazdırılmaz (c); grep büyük/küçük harfe duyarlı olduğu için \"ERROR\" satırları sayılmaz (d).",
+        "en": "The pipe (`|`) feeds grep's output — the lines containing \"error\" — into `wc -l`, which counts them. Counting the whole file would need `wc -l app.log` directly (a); the lines themselves are not printed (c); grep is case-sensitive, so \"ERROR\" lines are not counted (d)."
+      },
+      "difficulty": "medium",
+      "concepts": ["grep"]
+    }
+  ]
+}

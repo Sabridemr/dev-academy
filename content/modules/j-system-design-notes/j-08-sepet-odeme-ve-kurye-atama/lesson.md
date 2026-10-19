@@ -7,8 +7,8 @@ title:
   tr: "Yemek Siparişi Platformu: Sepet, Ödeme ve Kurye Atama"
   en: "Food Delivery Platform: Cart, Payment and Courier Assignment"
 summary:
-  tr: "Redis tabanlı sepet ve checkout akışı, ödeme sisteminin mimarisi, durumları, şeması ve webhook yönetimi ile puanlama algoritması ve Redis Geo kullanan kurye atama sistemi."
-  en: "The Redis-based cart and checkout flow, the payment system architecture, states, schema and webhook handling, and the courier assignment system using a scoring algorithm and Redis Geo."
+  tr: "Güvenli sepet ve ödeme akışını, webhook doğrulamasını ve puanlamayla kurye atamayı tasarlamayı öğren."
+  en: "Learn to design a secure cart and payment flow, webhook verification and score-based courier assignment."
 durationMinutes: 13
 level: intermediate
 tags: [system-design, food-delivery, checkout, payments, courier-assignment]
@@ -396,6 +396,9 @@ Ortalama atama süresi, kurye kabul oranı, kurye kullanım oranı, kurye kaynak
 
 :::callout{tone="tip" title="Senin projen için"}
 Kendi kuryen yoksa bu bölümün karşılığı kargo firması seçimidir. Aynı puanlama mantığını kullanabilirsin: varış iline göre fiyat, teslim süresi, desi/ağırlık ve hasar oranı ile en uygun kargoyu otomatik seç. İstanbul içi toptan teslimatlar için kendi aracın varsa rota planlama (aynı gün, aynı bölgedeki siparişleri birleştirme) en büyük tasarrufu sağlar.
+:::
+
+:::quiz{src="quiz.json"}
 :::
 
 ## Orijinal PDF sayfaları

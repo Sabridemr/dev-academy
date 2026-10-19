@@ -1,0 +1,245 @@
+{
+  "id": "j-07-kesif-menu-ve-siparis-servisi-quiz",
+  "title": {
+    "tr": "Keşif, Menü ve Sipariş Servisi Quiz",
+    "en": "Discovery, Menu and Order Service Quiz"
+  },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Restoran araması için neden PostgreSQL yerine Elasticsearch kullanılır?",
+        "en": "Why is Elasticsearch used instead of PostgreSQL for restaurant search?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Elasticsearch ACID transaction sağladığı ve asıl veri kaynağı olduğu için",
+            "en": "Because Elasticsearch provides ACID transactions and is the source of truth"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Ters indeks, bulanık arama ve coğrafi sorguları milyonlarca kayıtta çok hızlı yaptığı için",
+            "en": "Because it performs inverted-index, fuzzy and geo queries very fast over millions of records"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "PostgreSQL konum (lat, long) verisini hiç saklayamadığı için",
+            "en": "Because PostgreSQL cannot store location (lat, long) data at all"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Elasticsearch verisi bozulursa yeniden oluşturulamayacağı için daha güvenli olduğu için",
+            "en": "Because Elasticsearch data cannot be rebuilt if corrupted, making it safer"
+          }
+        }
+      ],
+      "correct": [
+        "b"
+      ],
+      "explanation": {
+        "tr": "Elasticsearch, yazım hatası toleranslı, yarıçaplı ve sıralı aramalar için tasarlanmış bir arama motorudur. Asıl kaynak PostgreSQL'dir; Elasticsearch onun kopyasını tutar ve bozulursa asıl kaynaktan yeniden oluşturulur.",
+        "en": "Elasticsearch is a search engine built for typo-tolerant, radius-based, ranked searches. PostgreSQL remains the source of truth; Elasticsearch holds a copy that is rebuilt from it if corrupted."
+      },
+      "difficulty": "easy",
+      "concepts": [
+        "elasticsearch"
+      ]
+    },
+    {
+      "id": "q2",
+      "type": "order",
+      "prompt": {
+        "tr": "Cache-aside deseninde önbellekte olmayan (cache miss) bir menü okunurken adımları sıraya koyun.",
+        "en": "Order the steps of reading a menu that is not in the cache (cache miss) with the cache-aside pattern."
+      },
+      "options": [
+        {
+          "id": "check",
+          "text": {
+            "tr": "Redis'e bak",
+            "en": "Look in Redis"
+          }
+        },
+        {
+          "id": "db",
+          "text": {
+            "tr": "Veritabanından oku",
+            "en": "Read from the database"
+          }
+        },
+        {
+          "id": "set",
+          "text": {
+            "tr": "Sonucu TTL ile Redis'e yaz",
+            "en": "Write the result to Redis with a TTL"
+          }
+        },
+        {
+          "id": "ret",
+          "text": {
+            "tr": "Menüyü döndür",
+            "en": "Return the menu"
+          }
+        }
+      ],
+      "correct": [
+        "check",
+        "db",
+        "set",
+        "ret"
+      ],
+      "explanation": {
+        "tr": "Cache-aside'da uygulama önce önbelleğe bakar; miss olursa veritabanından okur, sonucu Redis'e (ör. 10 dk TTL ile) yazar ve döner. Veritabanını önbellekten önce okumak önbelleğin amacını boşa çıkarır.",
+        "en": "In cache-aside the application checks the cache first; on a miss it reads from the database, writes the result into Redis (e.g. with a 10-minute TTL) and returns it. Reading the database before the cache defeats the purpose of caching."
+      },
+      "difficulty": "easy",
+      "concepts": [
+        "cache-aside",
+        "ttl"
+      ]
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": {
+        "tr": "Outbox deseni hangi sorunu çözer?",
+        "en": "Which problem does the Outbox pattern solve?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Aynı kullanıcının iki kez sipariş vermesini engellemek",
+            "en": "Preventing the same user from placing two orders"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Sipariş veritabanına yazılıp Kafka'ya olay gönderilmeden sunucunun çökmesiyle olayın kaybolması",
+            "en": "An event being lost because the server crashes after writing the order but before publishing to Kafka"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "Menü önbelleğinin bayat veri göstermesi",
+            "en": "The menu cache showing stale data"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Restoran reddettiğinde ödemenin iade edilmesi",
+            "en": "Refunding the payment when the restaurant rejects"
+          }
+        }
+      ],
+      "correct": [
+        "b"
+      ],
+      "explanation": {
+        "tr": "Outbox'ta olay, siparişle aynı transaction içinde outbox tablosuna yazılır ve ayrı bir süreç onu Kafka'ya gönderir; böylece 'veritabanına yazıldı ama olay gitmedi' durumu oluşmaz. Çift siparişi idempotency, iadeyi Saga telafisi, bayat önbelleği TTL/invalidation çözer.",
+        "en": "With Outbox the event is written to an outbox table in the same transaction as the order and a separate worker publishes it to Kafka, so 'written to the DB but event never sent' cannot happen. Duplicate orders are handled by idempotency, refunds by Saga compensation, stale cache by TTL/invalidation."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "outbox-pattern"
+      ]
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": {
+        "tr": "Saga deseninde ödeme alındıktan sonra restoran siparişi reddederse ne olur?",
+        "en": "In the Saga pattern, what happens if the restaurant rejects the order after payment was taken?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Tüm servisleri kapsayan tek bir veritabanı transaction'ı geri alınır",
+            "en": "A single database transaction spanning all services is rolled back"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Telafi işlemleri çalışır: ödeme iade edilir, sipariş CANCELLED yapılır, kullanıcı bilgilendirilir",
+            "en": "Compensating transactions run: the payment is refunded, the order is set to CANCELLED, the user is notified"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "Sipariş PREPARING durumunda bekletilir ve başka restorana otomatik aktarılır",
+            "en": "The order is held in PREPARING and automatically moved to another restaurant"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Hiçbir şey yapılmaz; ödeme mutabakat sırasında düzeltilir",
+            "en": "Nothing is done; the payment is fixed during reconciliation"
+          }
+        }
+      ],
+      "correct": [
+        "b"
+      ],
+      "explanation": {
+        "tr": "Mikroservislerde tek bir transaction tüm servisleri kapsayamaz; Saga, başarısız adımda önceki adımları geri alan telafi işlemlerini çalıştırır. Notlardaki örnek: restoran reddetti → ödemeyi iade et → CANCELLED → kullanıcıya bildir.",
+        "en": "In microservices a single transaction cannot span all services; Saga runs compensating transactions that undo earlier steps when one fails. The notes' example: restaurant rejected → refund payment → CANCELLED → notify the user."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "saga-pattern"
+      ]
+    },
+    {
+      "id": "q5",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Derste verilen transitions tablosuna göre canTransition('DELIVERED', 'PREPARING') true döner.",
+        "en": "According to the transitions table in the lesson, canTransition('DELIVERED', 'PREPARING') returns true."
+      },
+      "options": [
+        {
+          "id": "t",
+          "text": {
+            "tr": "Doğru",
+            "en": "True"
+          }
+        },
+        {
+          "id": "f",
+          "text": {
+            "tr": "Yanlış",
+            "en": "False"
+          }
+        }
+      ],
+      "correct": [
+        "f"
+      ],
+      "explanation": {
+        "tr": "Yanlış. DELIVERED tabloda anahtar olarak yoktur, bu yüzden transitions[from]?.includes(to) undefined olur ve ?? false sonucu false döner. Durum makinesi, teslim edilmiş bir siparişin tekrar hazırlanmaya dönmesini engeller.",
+        "en": "False. DELIVERED is not a key in the table, so transitions[from]?.includes(to) is undefined and ?? false yields false. The state machine prevents a delivered order from going back to preparing."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "state-machine"
+      ]
+    }
+  ]
+}

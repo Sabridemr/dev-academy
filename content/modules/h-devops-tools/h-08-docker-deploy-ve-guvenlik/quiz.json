@@ -1,0 +1,238 @@
+{
+  "id": "h-08-docker-deploy-ve-guvenlik-quiz",
+  "title": {
+    "tr": "Docker, Deploy ve Güvenlik Quiz",
+    "en": "Docker, Deployment and Security Quiz"
+  },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "order",
+      "prompt": {
+        "tr": "`price` sütununu `price_cents` olarak değiştirmek için expand-contract yöntemindeki deploy adımlarını sıraya koyun.",
+        "en": "Order the deploy steps of the expand-contract approach for changing the `price` column to `price_cents`."
+      },
+      "options": [
+        {
+          "id": "migrate",
+          "text": {
+            "tr": "Veriyi taşı; kod sadece price_cents okusun",
+            "en": "Migrate the data; code reads only price_cents"
+          }
+        },
+        {
+          "id": "drop",
+          "text": {
+            "tr": "Eski price sütununu sil",
+            "en": "Drop the old price column"
+          }
+        },
+        {
+          "id": "expand",
+          "text": {
+            "tr": "price_cents sütununu ekle; kod ikisine de yazsın",
+            "en": "Add the price_cents column; code writes to both"
+          }
+        }
+      ],
+      "correct": [
+        "expand",
+        "migrate",
+        "drop"
+      ],
+      "explanation": {
+        "tr": "Önce yeni sütun eklenir ve kod ikisine de yazar (expand), sonra veri taşınıp kod yalnızca yeni sütunu okur, en son eski sütun silinir (contract). Tek deploy'da yeniden adlandırmak, eski kod çalışırken sütunu kaybettirir ve siteyi çökertir.",
+        "en": "First the new column is added and code writes to both (expand), then data is migrated and code reads only the new column, and finally the old column is dropped (contract). Renaming in a single deploy removes the column while old code is still running and crashes the site."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "database-migrations"
+      ]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "Deploy workflow'unda `concurrency: group: deploy-production, cancel-in-progress: false` var. Bir deploy sürerken ikinci bir deploy tetiklenirse ne olur?",
+        "en": "A deploy workflow has `concurrency: group: deploy-production, cancel-in-progress: false`. What happens if a second deploy is triggered while one is running?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "İkinci deploy sırada bekler; devam eden deploy iptal edilmez.",
+            "en": "The second deploy waits in the queue; the running deploy is not cancelled."
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Devam eden deploy iptal edilir ve yenisi başlar.",
+            "en": "The running deploy is cancelled and the new one starts."
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "İki deploy aynı anda paralel çalışır.",
+            "en": "Both deploys run in parallel at the same time."
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "İkinci deploy hata verip kalıcı olarak reddedilir.",
+            "en": "The second deploy fails and is permanently rejected."
+          }
+        }
+      ],
+      "correct": [
+        "a"
+      ],
+      "explanation": {
+        "tr": "Aynı concurrency grubunda aynı anda tek çalıştırma olur; cancel-in-progress: false olduğu için yeni çalıştırma sırada bekler. true olsaydı eskisi iptal edilirdi; bu PR'larda dakika tasarrufu için kullanılır ama deploy'u yarıda kesmek tehlikelidir.",
+        "en": "Only one run per concurrency group happens at a time; with cancel-in-progress: false the new run waits in the queue. With true the old run would be cancelled, which saves minutes on PRs but is dangerous for a deploy cut off midway."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "concurrency"
+      ]
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": {
+        "tr": "Yeni sürümü önce trafiğin küçük bir kısmına (ör. %5) verip izlemek, sorun yoksa kademeli artırmak istiyorsun. Hangi strateji uygundur?",
+        "en": "You want to send the new version to a small share of traffic (e.g. 5%) first, monitor it, and increase gradually if all is well. Which strategy fits?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Canary",
+            "en": "Canary"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Blue-Green",
+            "en": "Blue-Green"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "Recreate",
+            "en": "Recreate"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Rolling",
+            "en": "Rolling"
+          }
+        }
+      ],
+      "correct": [
+        "a"
+      ],
+      "explanation": {
+        "tr": "Canary trafiğin küçük bir kısmını yeni sürüme vererek riski en aza indirir, ama izleme ve trafik yönetimi gerektirir. Blue-Green trafiği tek seferde çevirir, Recreate kısa kesintiyle eskiyi durdurup yeniyi başlatır, Rolling sunucuları sırayla günceller.",
+        "en": "Canary minimises risk by sending a small share of traffic to the new version, but needs monitoring and traffic management. Blue-Green switches traffic all at once, Recreate stops the old and starts the new with a brief outage, and Rolling updates servers one by one."
+      },
+      "difficulty": "easy",
+      "concepts": [
+        "canary",
+        "blue-green"
+      ]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Docker image'larını yalnızca `latest` etiketiyle göndermek, hangi kodun canlıda olduğunu izlemeyi ve rollback'i kolaylaştırır.",
+        "en": "Pushing Docker images only with the `latest` tag makes it easier to track which code is live and to roll back."
+      },
+      "options": [
+        {
+          "id": "t",
+          "text": {
+            "tr": "Doğru",
+            "en": "True"
+          }
+        },
+        {
+          "id": "f",
+          "text": {
+            "tr": "Yanlış",
+            "en": "False"
+          }
+        }
+      ],
+      "correct": [
+        "f"
+      ],
+      "explanation": {
+        "tr": "Yanlış. latest tek başına kullanılmaz; her image commit SHA'sı veya sürüm numarasıyla etiketlenir. Böylece canlıdaki kod bilinir ve rollback için önceki SHA etiketiyle yeniden başlatmak yeterli olur.",
+        "en": "False. latest is not used on its own; every image is tagged with the commit SHA or a version number. That way you know what is live, and rolling back is just restarting with the previous SHA tag."
+      },
+      "difficulty": "easy",
+      "concepts": [
+        "docker-image"
+      ]
+    },
+    {
+      "id": "q5",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Derse göre GitHub Actions'ta hangileri güvenli uygulamalardır? (Birden fazla seçin)",
+        "en": "According to the lesson, which are secure practices in GitHub Actions? (Select all that apply)"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Varsayılan olarak `permissions: contents: read` verip `packages: write` iznini yalnızca image gönderen job'a tanımlamak.",
+            "en": "Granting `permissions: contents: read` by default and giving `packages: write` only to the job that pushes the image."
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Üçüncü taraf action'ları etiket yerine commit SHA ile sabitlemek.",
+            "en": "Pinning third-party actions to a commit SHA instead of a tag."
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "PR başlığını `run: echo \"${{ github.event.pull_request.title }}\"` ile doğrudan komuta yazmak.",
+            "en": "Writing the PR title straight into a command with `run: echo \"${{ github.event.pull_request.title }}\"`."
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Herkese açık depolarda self-hosted runner kullanmak.",
+            "en": "Using self-hosted runners on public repositories."
+          }
+        }
+      ],
+      "correct": [
+        "a",
+        "b"
+      ],
+      "explanation": {
+        "tr": "En az yetki ilkesi ve SHA ile sabitleme güvenli uygulamalardır. PR başlığını doğrudan ${{ }} ile komuta koymak script injection'a açıktır (önce env değişkenine alınmalı); herkese açık depoda self-hosted runner ise fork PR'ının senin sunucunda kod çalıştırmasına izin verir.",
+        "en": "Least privilege and SHA pinning are secure practices. Putting the PR title directly into a command with ${{ }} enables script injection (pass it through an env variable instead), and a self-hosted runner on a public repo lets a fork PR run code on your server."
+      },
+      "difficulty": "hard",
+      "concepts": [
+        "least-privilege"
+      ]
+    }
+  ]
+}

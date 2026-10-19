@@ -139,6 +139,7 @@ export default function AdminLessonEditor({ params }: { params: Promise<{ lesson
     hasAnimation: false,
     hasInteractive: false,
     hasQuiz: false,
+    format: 'standard',
     version: draft.version,
     publishedAt: null,
     blocks: [],

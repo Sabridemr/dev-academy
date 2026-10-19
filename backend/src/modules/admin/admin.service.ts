@@ -431,6 +431,7 @@ export class AdminService {
     description: unknown;
     icon?: string;
     color?: string;
+    group?: string;
   }) {
     const row = await this.prisma.module.upsert({
       where: { id: dto.id },
@@ -442,6 +443,7 @@ export class AdminService {
         description: jsonInput(dto.description),
         icon: dto.icon,
         color: dto.color,
+        group: dto.group,
       },
       create: {
         id: dto.id,
@@ -452,6 +454,7 @@ export class AdminService {
         description: jsonInput(dto.description),
         icon: dto.icon ?? 'book',
         color: dto.color ?? '#6366f1',
+        group: dto.group,
       },
     });
     await this.content.invalidateAll();

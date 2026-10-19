@@ -1,0 +1,254 @@
+{
+  "id": "j-04-amazon-mimari-veri-ve-siparis-akisi-quiz",
+  "title": {
+    "tr": "Amazon Mimari ve Sipariş Akışı Quiz",
+    "en": "Amazon Architecture and Order Flow Quiz"
+  },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Stoğu 1 olan ürün için iki kullanıcı aynı anda `UPDATE inventory SET available = available - 1 ... WHERE sku = 'X' AND available >= 1` çalıştırıyor. İkinci sorgu 0 satır güncelledi. Bu ne anlama gelir?",
+        "en": "Two users run `UPDATE inventory SET available = available - 1 ... WHERE sku = 'X' AND available >= 1` at the same time for an item with stock 1. The second query updated 0 rows. What does this mean?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Ürün tükendi; ikinci kullanıcıya satış yapılmamalı",
+            "en": "The item is sold out; the second user must not get it"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Sorgu kilitlenme (deadlock) nedeniyle başarısız oldu, aynen tekrar denenmeli",
+            "en": "The query failed due to a deadlock and should simply be retried"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "Stok -1'e düştü, arka plan işi düzeltecek",
+            "en": "Stock went down to -1 and a background job will fix it"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Önce SELECT ile stok okunup sonra tekrar UPDATE yapılmalı",
+            "en": "Stock should first be read with SELECT and then updated again"
+          }
+        }
+      ],
+      "correct": [
+        "a"
+      ],
+      "explanation": {
+        "tr": "Kontrol ve yazma tek atomik sorguda olduğu için satır kilidini ilk alan sorgu 1 satır günceller; diğeri kilit açılınca koşul (available >= 1) tutmadığından 0 satır döner, yani ürün tükenmiştir. Stok eksiye düşmez; ayrı SELECT ardından UPDATE ise tam da çift satışa yol açan yanlış yöntemdir.",
+        "en": "Because the check and the write happen in one atomic query, the query that gets the row lock first updates 1 row; the other sees the condition (available >= 1) fail once the lock is released and returns 0 rows, meaning sold out. Stock never goes negative, and a separate SELECT then UPDATE is exactly the wrong approach that causes double selling."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "atomic-conditional-update"
+      ]
+    },
+    {
+      "id": "q2",
+      "type": "order",
+      "prompt": {
+        "tr": "Saga ile dağıtık sipariş akışında başarılı (mutlu) yolun adımlarını doğru sıraya koyun.",
+        "en": "Put the happy-path steps of the distributed order flow with Saga in the correct order."
+      },
+      "options": [
+        {
+          "id": "pay",
+          "text": {
+            "tr": "Ödeme al",
+            "en": "Take payment"
+          }
+        },
+        {
+          "id": "create",
+          "text": {
+            "tr": "Sipariş oluştur",
+            "en": "Create order"
+          }
+        },
+        {
+          "id": "ship",
+          "text": {
+            "tr": "Kargoya ver",
+            "en": "Hand over to shipping"
+          }
+        },
+        {
+          "id": "stock",
+          "text": {
+            "tr": "Stok ayır",
+            "en": "Reserve stock"
+          }
+        },
+        {
+          "id": "confirm",
+          "text": {
+            "tr": "Siparişi onayla",
+            "en": "Confirm order"
+          }
+        }
+      ],
+      "correct": [
+        "create",
+        "stock",
+        "pay",
+        "confirm",
+        "ship"
+      ],
+      "explanation": {
+        "tr": "Sipariş oluşturulur, stok ayrılır, ödeme alınır, sipariş onaylanır ve kargoya verilir. Stok ödemeden önce ayrılır; ödeme reddedilirse telafi adımları önce stoğu serbest bırakır, sonra siparişi iptal eder.",
+        "en": "The order is created, stock is reserved, payment is taken, the order is confirmed and handed to shipping. Stock is reserved before payment; if payment is rejected the compensation steps first release the stock and then cancel the order."
+      },
+      "difficulty": "easy",
+      "concepts": [
+        "saga-pattern"
+      ]
+    },
+    {
+      "id": "q3",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Kullanıcı ürünü sepete eklediği anda stok ayrılmalıdır; böylece ödeme adımında ürün tükenmiş olmaz.",
+        "en": "Stock should be reserved as soon as the user adds an item to the cart, so the item is not sold out at checkout."
+      },
+      "options": [
+        {
+          "id": "t",
+          "text": {
+            "tr": "Doğru",
+            "en": "True"
+          }
+        },
+        {
+          "id": "f",
+          "text": {
+            "tr": "Yanlış",
+            "en": "False"
+          }
+        }
+      ],
+      "correct": [
+        "f"
+      ],
+      "explanation": {
+        "tr": "Yanlış. Sepete eklemek stok ayırmaz; ayırma ödeme (checkout) adımında 15 dakikalık bir rezervasyonla yapılır. Aksi halde kötü niyetli kullanıcılar ürünleri sepete atarak stoğu kilitleyebilir.",
+        "en": "False. Adding to the cart does not reserve stock; reservation happens at checkout with a 15-minute hold. Otherwise malicious users could lock up stock simply by filling their carts."
+      },
+      "difficulty": "easy",
+      "concepts": [
+        "atomic-conditional-update"
+      ]
+    },
+    {
+      "id": "q4",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Derse göre önbellekleme ile ilgili hangi ifadeler doğrudur? (Birden fazla seçin)",
+        "en": "According to the lesson, which statements about caching are correct? (Select all that apply)"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Cache-aside'da veri Redis'te yoksa DB'den okunur ve Redis'e TTL ile yazılır",
+            "en": "With cache-aside, if the data is not in Redis it is read from the DB and written to Redis with a TTL"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Thundering herd'e karşı istek birleştirme ve TTL'e rastgele sapma (jitter) kullanılır",
+            "en": "Request coalescing and random jitter on the TTL are used against the thundering herd"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "Kesin stok sayısı ve ödeme durumu her zaman DB'den okunur, cache'lenmez",
+            "en": "Exact stock counts and payment status are always read from the DB, not cached"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Ödeme durumu sık okunduğu için kısa TTL ile Redis'ten sunulmalıdır",
+            "en": "Payment status is read often, so it should be served from Redis with a short TTL"
+          }
+        }
+      ],
+      "correct": [
+        "a",
+        "b",
+        "c"
+      ],
+      "explanation": {
+        "tr": "Cache-aside, thundering herd çözümleri (single-flight, jitter, erken yenileme) ve 'ne cache'lenmez' kuralı derste anlatıldığı gibidir. Ödeme durumu ve kesin stok doğruluk kaynağından okunmalıdır; kısa TTL bile eski veri riski taşıdığı için d yanlıştır.",
+        "en": "Cache-aside, the thundering-herd fixes (single-flight, jitter, early refresh) and the 'what is not cached' rule are as described in the lesson. Payment status and exact stock must be read from the source of truth; even a short TTL risks stale data, so d is wrong."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "cache-aside"
+      ]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "CAP teoremine göre ağ bölündüğünde Amazon hangi veri için tutarlılık yerine erişilebilirliği seçer?",
+        "en": "According to the CAP theorem, during a network partition, for which data does Amazon choose availability over consistency?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Sepet: sepete ekleme reddedilmez, çakışmalar sonradan birleştirilir",
+            "en": "The cart: add-to-cart is never rejected and conflicts are merged later"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Ödeme: işlem asla reddedilmez, tutarlılık sonradan sağlanır",
+            "en": "Payment: transactions are never rejected and made consistent later"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "Stok: her bölge kendi sayacını düşürür, sonra birleştirilir",
+            "en": "Stock: each region decrements its own counter and they are merged later"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Sipariş onayı: replikadan okunur, primary beklenmez",
+            "en": "Order confirmation: read from a replica without waiting for the primary"
+          }
+        }
+      ],
+      "correct": [
+        "a"
+      ],
+      "explanation": {
+        "tr": "Amazon sepeti erişilebilirliği seçer; sepete ekleme hiç reddedilmez ve çakışmalar sonradan birleştirilir. Ödeme ve stok ise para ve çift satış riski nedeniyle tutarlılığı seçer.",
+        "en": "Amazon's cart chooses availability: add-to-cart is never rejected and conflicts are merged later. Payment and stock choose consistency because of the risk of losing money or double selling."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "cap-theorem"
+      ]
+    }
+  ]
+}

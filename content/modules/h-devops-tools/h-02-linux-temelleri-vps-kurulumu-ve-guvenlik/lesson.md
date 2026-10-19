@@ -7,8 +7,8 @@ title:
   tr: "Linux ve VPS Kullanım Rehberi: Linux Temelleri, VPS Kurulumu ve Güvenlik"
   en: "Linux and VPS Usage Guide: Linux Basics, VPS Setup and Security"
 summary:
-  tr: "Linux dağıtımları, dosya sistemi, terminal komutları, kullanıcı ve izinler, paket, süreç ve servis yönetimi, ağ temelleri ile VPS seçimi, SSH bağlantısı, ilk güvenlik sıkılaştırması ve DNS ayarını kapsar."
-  en: "Covers Linux distributions, the file system, terminal commands, users and permissions, package, process and service management, networking basics, plus choosing a VPS, connecting over SSH, initial security hardening and DNS setup."
+  tr: "Linux temellerini öğren, bir VPS kurup SSH anahtarı, UFW ve Fail2ban ile güvenli hâle getir."
+  en: "Learn Linux basics, then set up a VPS and secure it with SSH keys, UFW and Fail2ban."
 durationMinutes: 15
 level: beginner
 tags: [linux, vps, terminal, ssh, guvenlik, dns]
@@ -504,6 +504,9 @@ Yayılması birkaç dakika ile birkaç saat sürebilir. Kontrol:
 ```bash
 dig alanadi.com +short
 ```
+:::
+
+:::quiz{src="quiz.json"}
 :::
 
 ## Orijinal PDF sayfaları

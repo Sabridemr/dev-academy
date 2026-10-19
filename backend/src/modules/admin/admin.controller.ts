@@ -16,6 +16,7 @@ import {
   AdminLessonUpsertSchema,
   AdminQuizUpsertSchema,
   AdminSceneUpsertSchema,
+  ModuleGroupSchema,
 } from '@devacademy/shared';
 import type {
   AdminLessonUpsertDto,
@@ -40,6 +41,7 @@ const ModuleSchema = z.object({
   description: z.union([z.string(), z.object({ tr: z.string(), en: z.string().optional() })]),
   icon: z.string().optional(),
   color: z.string().optional(),
+  group: ModuleGroupSchema.optional(),
 });
 
 /** İçerik yönetimi — yalnızca editor ve admin rolleri. */

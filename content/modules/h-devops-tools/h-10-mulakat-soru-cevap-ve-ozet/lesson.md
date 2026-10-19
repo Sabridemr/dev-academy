@@ -7,8 +7,8 @@ title:
   tr: "CI/CD ve GitHub Actions: Mülakat Soru-Cevap ve Tek Sayfalık Özet"
   en: "CI/CD and GitHub Actions: Interview Q&A and One-Page Summary"
 summary:
-  tr: "CI/CD ve GitHub Actions üzerine 30 mülakat sorusu ile cevapları ve rehberin tek sayfalık özeti."
-  en: "Thirty interview questions and answers on CI/CD and GitHub Actions, plus a one-page summary of the guide."
+  tr: "CI/CD ve GitHub Actions bilgini 30 mülakat sorusu ve tek sayfalık özetle pekiştir."
+  en: "Reinforce your CI/CD and GitHub Actions knowledge with 30 interview questions and a one-page summary."
 durationMinutes: 7
 level: intermediate
 tags: [interview, ci-cd, github-actions, summary]
@@ -117,6 +117,9 @@ concepts: [continuous-delivery, pipeline, deployment-strategies, secrets, gitops
 | Güvenlik kontrol listesi |
 |---|
 | Secret'ları koda yazma · permissions kısıtla · action'ları SHA ile sabitle · pull_request_target'a dikkat · Dependabot + CodeQL aç · branch protection kur · production'a onay koy |
+
+:::quiz{src="quiz.json"}
+:::
 
 ## Orijinal PDF sayfaları
 

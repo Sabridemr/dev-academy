@@ -1,0 +1,244 @@
+{
+  "id": "h-07-tetikleyiciler-secrets-cache-ve-testler-quiz",
+  "title": {
+    "tr": "Tetikleyiciler, Secrets ve Cache Quiz",
+    "en": "Triggers, Secrets and Cache Quiz"
+  },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Bir workflow'da `schedule: - cron: '0 3 * * *'` tanımlı. İstanbul (UTC+3) saatiyle ne zaman çalışır?",
+        "en": "A workflow defines `schedule: - cron: '0 3 * * *'`. When does it run in Istanbul time (UTC+3)?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Her gün 06:00'da",
+            "en": "Every day at 06:00"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Her gün 03:00'da",
+            "en": "Every day at 03:00"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "Her gün 00:00'da",
+            "en": "Every day at 00:00"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Her saatin 3. dakikasında",
+            "en": "At minute 3 of every hour"
+          }
+        }
+      ],
+      "correct": [
+        "a"
+      ],
+      "explanation": {
+        "tr": "schedule saatleri UTC cinsindendir; 03:00 UTC, İstanbul'da 06:00'dır. Cron'daki ilk alan dakika (0), ikinci alan saattir (3); bu yüzden 'her saatin 3. dakikası' değildir.",
+        "en": "schedule times are in UTC; 03:00 UTC is 06:00 in Istanbul. The first cron field is the minute (0) and the second is the hour (3), so it is not 'minute 3 of every hour'."
+      },
+      "difficulty": "easy",
+      "concepts": [
+        "events"
+      ]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "Matrix'te `os: [ubuntu-latest, windows-latest]`, `node: [20, 22, 24]` ve `exclude: - os: windows-latest, node: 20` tanımlı. Kaç paralel job oluşur?",
+        "en": "A matrix defines `os: [ubuntu-latest, windows-latest]`, `node: [20, 22, 24]` and `exclude: - os: windows-latest, node: 20`. How many parallel jobs are created?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "5",
+            "en": "5"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "6",
+            "en": "6"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "4",
+            "en": "4"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "3",
+            "en": "3"
+          }
+        }
+      ],
+      "correct": [
+        "a"
+      ],
+      "explanation": {
+        "tr": "2 işletim sistemi × 3 Node sürümü = 6 kombinasyon; exclude ile windows + Node 20 çıkarılınca 5 job kalır. 6 exclude'u hesaba katmaz; 4 ve 3 ise fazladan kombinasyon çıkarır.",
+        "en": "2 operating systems × 3 Node versions = 6 combinations; excluding windows + Node 20 leaves 5 jobs. 6 ignores the exclude; 4 and 3 remove extra combinations."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "matrix-strategy"
+      ]
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": {
+        "tr": "lint ve test job'ları bağımsız; build `needs: [lint, test]`; deploy `needs: build` ve `if: github.ref == 'refs/heads/main'` içeriyor. Bir feature dalından açılan PR'da, tüm adımlar başarılıysa ne olur?",
+        "en": "lint and test jobs are independent; build has `needs: [lint, test]`; deploy has `needs: build` and `if: github.ref == 'refs/heads/main'`. On a PR from a feature branch, with all steps succeeding, what happens?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "lint ve test paralel çalışır, sonra build çalışır; deploy koşul sağlanmadığı için atlanır.",
+            "en": "lint and test run in parallel, then build runs; deploy is skipped because its condition is not met."
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Dört job da sırayla çalışır.",
+            "en": "All four jobs run one after another."
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "lint, test, build ve deploy aynı anda paralel çalışır.",
+            "en": "lint, test, build and deploy all run in parallel at once."
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "deploy, build'i beklemeden hemen çalışır.",
+            "en": "deploy runs immediately without waiting for build."
+          }
+        }
+      ],
+      "correct": [
+        "a"
+      ],
+      "explanation": {
+        "tr": "Job'lar varsayılan olarak paraleldir, bu yüzden lint ve test aynı anda çalışır; build ikisinin de başarılı olmasını bekler. deploy'daki if koşulu yalnızca main dalında doğrudur, PR'da ref main olmadığı için deploy atlanır.",
+        "en": "Jobs run in parallel by default, so lint and test run together; build waits for both to succeed. The if condition on deploy is only true on main; on a PR the ref is not main, so deploy is skipped."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "needs",
+        "expressions"
+      ]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Fork'tan gelen pull request'lerde depo secret'ları workflow'a varsayılan olarak verilir.",
+        "en": "For pull requests from forks, repository secrets are passed to the workflow by default."
+      },
+      "options": [
+        {
+          "id": "t",
+          "text": {
+            "tr": "Doğru",
+            "en": "True"
+          }
+        },
+        {
+          "id": "f",
+          "text": {
+            "tr": "Yanlış",
+            "en": "False"
+          }
+        }
+      ],
+      "correct": [
+        "f"
+      ],
+      "explanation": {
+        "tr": "Yanlış. Fork'lardan gelen PR'larda secret'lar varsayılan olarak verilmez; bu bir güvenlik özelliğidir. Aksi hâlde yabancı biri PR ile secret'ları okuyan kod çalıştırabilirdi.",
+        "en": "False. Secrets are not passed to PRs from forks by default; this is a security feature. Otherwise an outsider could run code through a PR that reads the secrets."
+      },
+      "difficulty": "easy",
+      "concepts": [
+        "secrets"
+      ]
+    },
+    {
+      "id": "q5",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Cache ve artifact ile ilgili hangi ifadeler doğrudur? (Birden fazla seçin)",
+        "en": "Which statements about cache and artifacts are true? (Select all that apply)"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Build klasörünü build job'undan deploy job'una aktarmak için artifact kullanılır.",
+            "en": "Artifacts are used to pass the build folder from the build job to the deploy job."
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Cache, npm önbelleği gibi bağımlılıkları geri yükleyerek süreyi kısaltır.",
+            "en": "Cache shortens run time by restoring dependencies such as the npm cache."
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "Workflow cache olmadan da doğru çalışmalıdır.",
+            "en": "The workflow must still work correctly without the cache."
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Test raporlarını kalıcı saklamanın doğru yolu cache'tir.",
+            "en": "Cache is the right way to keep test reports."
+          }
+        }
+      ],
+      "correct": [
+        "a",
+        "b",
+        "c"
+      ],
+      "explanation": {
+        "tr": "Cache yalnızca hızlandırmadır ve otomatik geri yüklenir; olmasa da workflow doğru çalışmalıdır. Build çıktısı veya test raporu gibi saklanacak/aktarılacak çıktılar artifact ile yüklenir (gerekirse if: always() ile başarısızlıkta da).",
+        "en": "Cache is only a speed-up and is restored automatically; the workflow must work without it. Outputs to keep or transfer, such as a build folder or test report, are uploaded as artifacts (with if: always() to keep them on failure too)."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "artifacts"
+      ]
+    }
+  ]
+}

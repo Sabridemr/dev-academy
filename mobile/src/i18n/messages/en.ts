@@ -63,6 +63,7 @@ export const en: Messages = {
     hasAnimation: 'Animation',
     hasInteractive: 'Simulator',
     hasQuiz: 'Quiz',
+    format: { infographic: 'Infographic', 'pdf-guide': 'PDF guide' },
     download: 'Download for offline',
     downloading: 'Downloading…',
     downloaded: 'Available offline',

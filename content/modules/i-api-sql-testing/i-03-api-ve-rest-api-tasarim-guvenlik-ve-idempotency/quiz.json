@@ -1,0 +1,244 @@
+{
+  "id": "i-03-api-ve-rest-api-tasarim-guvenlik-ve-idempotency-quiz",
+  "title": {
+    "tr": "API Tasarımı ve Güvenliği Quiz",
+    "en": "API Design and Security Quiz"
+  },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Bir ödeme webhook'unu karşılarken derse göre hangileri yapılmalıdır? (Birden fazla seçin)",
+        "en": "According to the lesson, which should you do when handling a payment webhook? (Select all that apply)"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "İmzayı doğrulamak",
+            "en": "Verify the signature"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Event ID'yi kaydedip aynı event'in tekrar işlenmesini engellemek",
+            "en": "Store the event ID and prevent the same event from being processed twice"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "Hızlıca 200 OK dönüp ağır işi arka plan kuyruğuna aktarmak",
+            "en": "Respond quickly with 200 OK and push heavy work to a background queue"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Tüm ağır işlemleri bitirmeden yanıt vermemek, böylece gönderen sistem sonucu beklesin",
+            "en": "Do not respond until all heavy work is done, so the sender waits for the result"
+          }
+        }
+      ],
+      "correct": [
+        "a",
+        "b",
+        "c"
+      ],
+      "explanation": {
+        "tr": "Webhook'ta imza doğrulanır, event ID ile tekrarlar engellenir (idempotent tasarım), yanıt hızlıca 200 ile verilir ve ağır iş kuyruğa alınır. Ağır işi bitirmeden beklemek zaman aşımına ve gereksiz tekrar denemelere yol açar.",
+        "en": "For a webhook you verify the signature, block duplicates via the event ID (idempotent design), reply quickly with 200 and queue the heavy work. Waiting for heavy work to finish leads to timeouts and needless retries."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "webhook",
+        "idempotency"
+      ]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "Giriş yapan bir kullanıcı `GET /api/orders/1001` adresindeki numarayı değiştirerek başka müşterilerin siparişlerini görebiliyor. Bu açığı gidermenin doğru yolu hangisidir?",
+        "en": "A logged-in user can see other customers' orders by changing the number in `GET /api/orders/1001`. What is the right way to fix this vulnerability?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Sunucuda her istekte siparişin o kullanıcıya ait olup olmadığını kontrol etmek",
+            "en": "Check on the server, on every request, that the order belongs to that user"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Sipariş numarasını arayüzde gizlemek",
+            "en": "Hide the order number in the UI"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "CORS ayarlarını kısıtlamak",
+            "en": "Restrict the CORS settings"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Endpoint'e rate limit eklemek",
+            "en": "Add a rate limit to the endpoint"
+          }
+        }
+      ],
+      "correct": [
+        "a"
+      ],
+      "explanation": {
+        "tr": "Bu bir IDOR açığıdır ve çözümü sunucu tarafında kaynak sahipliği kontrolüdür. Numarayı gizlemek isteği engellemez, CORS tarayıcı kısıtıdır ve rate limit yalnızca deneme hızını düşürür; hiçbiri yetki kontrolünün yerini tutmaz.",
+        "en": "This is an IDOR flaw and the fix is a server-side ownership check. Hiding the number does not block the request, CORS is a browser restriction and a rate limit only slows attempts; none of them replace an authorization check."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "idor"
+      ]
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": {
+        "tr": "v1'de `\"price\": 420` olan alan v2'de `retail`, `wholesale` ve `currency` içeren bir nesneye dönüşüyor. Bu değişiklik neden yeni bir sürümle (v2) yayınlanır?",
+        "en": "A field that is `\"price\": 420` in v1 becomes an object with `retail`, `wholesale` and `currency` in v2. Why is this change released as a new version (v2)?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Alanın tipi değiştiği için v1'e bağlı mevcut istemcileri bozabilir.",
+            "en": "Because the field's type changes, it could break existing clients that depend on v1."
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Latency'yi düşürmek için yeni sürüm gerekir.",
+            "en": "A new version is needed to reduce latency."
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "JSON iç içe nesneleri yalnızca v2 URL'lerinde destekler.",
+            "en": "JSON only supports nested objects under v2 URLs."
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "OpenAPI her alan eklemesinde yeni sürüm zorunlu kılar.",
+            "en": "OpenAPI requires a new version for every field addition."
+          }
+        }
+      ],
+      "correct": [
+        "a"
+      ],
+      "explanation": {
+        "tr": "Versiyonlama, geriye uyumsuz değişiklikleri mevcut istemcileri kırmadan yapmak içindir; sayı beklerken nesne alan bir v1 istemcisi bozulur. Sürümün latency ile ilgisi yoktur, JSON iç içe nesneyi her zaman destekler ve OpenAPI böyle bir zorunluluk getirmez.",
+        "en": "Versioning exists to make backward-incompatible changes without breaking current clients; a v1 client expecting a number breaks when it receives an object. Versions have nothing to do with latency, JSON always supports nested objects and OpenAPI imposes no such rule."
+      },
+      "difficulty": "easy",
+      "concepts": [
+        "api-versioning"
+      ]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Teknik olarak Swagger bir spesifikasyondur, OpenAPI ise bu spesifikasyonun etrafında gelişen araç ailesidir.",
+        "en": "Technically, Swagger is a specification and OpenAPI is the family of tools built around that specification."
+      },
+      "options": [
+        {
+          "id": "t",
+          "text": {
+            "tr": "Doğru",
+            "en": "True"
+          }
+        },
+        {
+          "id": "f",
+          "text": {
+            "tr": "Yanlış",
+            "en": "False"
+          }
+        }
+      ],
+      "correct": [
+        "f"
+      ],
+      "explanation": {
+        "tr": "Yanlış, tam tersidir: OpenAPI, REST API'yi makine tarafından okunabilir biçimde tanımlayan spesifikasyondur; Swagger ise bu standardın etrafında gelişmiş araç ekosistemidir. Günlük dilde ikisi bazen aynı anlamda kullanılır.",
+        "en": "False, it is the other way round: OpenAPI is the specification that describes a REST API in a machine-readable way; Swagger is the tool ecosystem built around that standard. In everyday speech the two are sometimes used interchangeably."
+      },
+      "difficulty": "easy",
+      "concepts": [
+        "openapi"
+      ]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "`GET /products?category=spices&page=2&limit=24` isteği için hangi ifade doğrudur?",
+        "en": "Which statement is correct for the request `GET /products?category=spices&page=2&limit=24`?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "category, page ve limit query parametresidir; sonucu filtreler ve sayfalar.",
+            "en": "category, page and limit are query parameters; they filter and paginate the result."
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "category bir path parametresidir; tek bir ürünü tanımlar.",
+            "en": "category is a path parameter; it identifies a single product."
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "page ve limit, cursor pagination kullanıldığını gösterir.",
+            "en": "page and limit show that cursor pagination is used."
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Bu istek baharat kategorisindeki tüm ürünleri tek seferde döndürür.",
+            "en": "This request returns all products in the spices category at once."
+          }
+        }
+      ],
+      "correct": [
+        "a"
+      ],
+      "explanation": {
+        "tr": "Path parametresi kaynağı tanımlar (`/products/123`), query parametresi ise koşulları ve görünümü belirtir. Bu istek baharat kategorisinin 24'lük ikinci sayfasını getirir; page + limit, cursor değil sayfa tabanlı pagination'dır.",
+        "en": "A path parameter identifies the resource (`/products/123`), while query parameters specify conditions and view. This request returns the second page of 24 spices; page + limit is page-based pagination, not cursor pagination."
+      },
+      "difficulty": "easy",
+      "concepts": [
+        "pagination"
+      ]
+    }
+  ]
+}

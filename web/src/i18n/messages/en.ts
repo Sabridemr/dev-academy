@@ -54,6 +54,14 @@ export const en: Messages = {
     save: 'Save and start',
   },
   module: {
+    groups: {
+      'system-design': 'System Design',
+      software: 'Software and Data',
+      infrastructure: 'Infrastructure and DevOps',
+      ai: 'Artificial Intelligence',
+      programming: 'Programming',
+    },
+    totalTime: '{hours}h {minutes}m',
     lessons: 'Lessons',
     completed: '{done}/{total} completed',
     minutes: '{count} min',
@@ -61,6 +69,7 @@ export const en: Messages = {
     hasAnimation: 'Animation',
     hasInteractive: 'Simulator',
     hasQuiz: 'Quiz',
+    format: { infographic: 'Infographic', 'pdf-guide': 'PDF guide' },
   },
   lesson: {
     notTranslated:

@@ -1,0 +1,254 @@
+{
+  "id": "i-04-api-ve-rest-api-uctan-uca-ornek-ve-mulakat-quiz",
+  "title": {
+    "tr": "Uçtan Uca E-ticaret API Quiz",
+    "en": "End-to-End E-commerce API Quiz"
+  },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "order",
+      "prompt": {
+        "tr": "Google ile giriş (Authorization Code Flow) adımlarını doğru sıraya koyun.",
+        "en": "Put the Sign in with Google (Authorization Code Flow) steps in the correct order."
+      },
+      "options": [
+        {
+          "id": "exchange",
+          "text": {
+            "tr": "Sunucu code'u client_secret ile Google'a gönderip id_token alır",
+            "en": "The server sends the code with client_secret to Google and gets an id_token"
+          }
+        },
+        {
+          "id": "click",
+          "text": {
+            "tr": "Kullanıcı butona tıklar, site onu Google'a yönlendirir",
+            "en": "The user clicks the button and the site redirects them to Google"
+          }
+        },
+        {
+          "id": "session",
+          "text": {
+            "tr": "Sunucu id_token imzasını doğrular ve kendi JWT'sini üretir",
+            "en": "The server verifies the id_token signature and issues its own JWT"
+          }
+        },
+        {
+          "id": "consent",
+          "text": {
+            "tr": "Kullanıcı Google'da giriş yapar ve izin verir",
+            "en": "The user logs in at Google and grants consent"
+          }
+        },
+        {
+          "id": "callback",
+          "text": {
+            "tr": "Google kullanıcıyı redirect_uri adresine tek kullanımlık code ile geri gönderir",
+            "en": "Google sends the user back to redirect_uri with a one-time code"
+          }
+        }
+      ],
+      "correct": [
+        "click",
+        "consent",
+        "callback",
+        "exchange",
+        "session"
+      ],
+      "explanation": {
+        "tr": "Önce yönlendirme ve Google'daki onay gelir; Google ardından code ile geri döner. Code ancak bundan sonra sunucuda token'a çevrilebilir ve oturum, doğrulanmış id_token'dan üretilen kendi JWT'nle açılır.",
+        "en": "Redirect and consent at Google come first; Google then returns with a code. Only after that can the server exchange the code for a token, and the session is opened with your own JWT built from the verified id_token."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "authorization-code-flow"
+      ]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "Stok düşerken `UPDATE stock SET quantity = quantity - $1 WHERE product_id = $2 AND quantity >= $1` çalıştırılıyor ve etkilenen satır sayısı 0 dönüyor. Bu ne anlama gelir?",
+        "en": "While deducting stock, `UPDATE stock SET quantity = quantity - $1 WHERE product_id = $2 AND quantity >= $1` runs and the affected row count is 0. What does this mean?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Stok yetmemiştir; sipariş için stok düşülmemelidir.",
+            "en": "Stock was insufficient; stock must not be deducted for the order."
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Güncelleme başarılı oldu ve stok sıfırlandı.",
+            "en": "The update succeeded and the stock was set to zero."
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "Veritabanı hatası oluştu; 500 dönüp hemen tekrar denenmelidir.",
+            "en": "A database error occurred; return 500 and retry immediately."
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Idempotency-Key çakıştı; aynı sipariş daha önce işlendi.",
+            "en": "The Idempotency-Key collided; the same order was already processed."
+          }
+        }
+      ],
+      "correct": [
+        "a"
+      ],
+      "explanation": {
+        "tr": "`quantity >= $1` koşulu kontrolü ve düşümü tek atomik ifadede yapar; yeterli stok yoksa hiçbir satır güncellenmez ve 0 döner. Bu, iki eş zamanlı siparişin aynı stoğu satmasını (race condition) önler; bir hata ya da idempotency çakışması değildir.",
+        "en": "The `quantity >= $1` condition does the check and the deduction in one atomic statement; if stock is insufficient no row is updated and 0 is returned. This prevents two concurrent orders from selling the same stock (a race condition); it is not an error or an idempotency collision."
+      },
+      "difficulty": "hard",
+      "concepts": [
+        "race-condition",
+        "stock-reservation"
+      ]
+    },
+    {
+      "id": "q3",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "`order_items.unit_price_cents` alanı, ürün fiyatı sonradan değişse bile eski siparişlerin ve faturaların doğru kalmasını sağlar.",
+        "en": "The `order_items.unit_price_cents` column keeps old orders and invoices correct even if the product price changes later."
+      },
+      "options": [
+        {
+          "id": "t",
+          "text": {
+            "tr": "Doğru",
+            "en": "True"
+          }
+        },
+        {
+          "id": "f",
+          "text": {
+            "tr": "Yanlış",
+            "en": "False"
+          }
+        }
+      ],
+      "correct": [
+        "t"
+      ],
+      "explanation": {
+        "tr": "Doğru. Sipariş anındaki fiyat sipariş satırında saklanır; fiyat tablosu güncellense de geçmiş siparişler bozulmaz. Fiyatlar kuruş cinsinden tam sayı tutulduğu için ondalık yuvarlama hatası da olmaz.",
+        "en": "True. The price at order time is stored on the order line, so past orders stay intact even when the price table changes. Prices are kept as integer cents, so there are no decimal rounding errors either."
+      },
+      "difficulty": "easy",
+      "concepts": [
+        "database-schema"
+      ]
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": {
+        "tr": "Sipariş `pending` durumunda oluşturulduktan sonra stok nasıl yönetilir?",
+        "en": "After an order is created in the `pending` state, how is stock handled?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Ödeme tamamlanana kadar rezerve edilir; ödeme webhook'u gelince kalıcı düşülür, ödeme başarısızsa rezervasyon serbest bırakılır.",
+            "en": "It is reserved until payment completes; it is permanently deducted when the payment webhook arrives, and the reservation is released if payment fails."
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Sipariş oluşturulduğu anda kalıcı olarak düşülür ve ödeme başarısız olsa da geri eklenmez.",
+            "en": "It is permanently deducted the moment the order is created and is not added back even if payment fails."
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "Hiç dokunulmaz; stok yalnızca kargo webhook'u geldiğinde düşülür.",
+            "en": "It is not touched; stock is only deducted when the shipping webhook arrives."
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Sepete eklendiği anda kalıcı olarak düşülür.",
+            "en": "It is permanently deducted as soon as the item is added to the cart."
+          }
+        }
+      ],
+      "correct": [
+        "a"
+      ],
+      "explanation": {
+        "tr": "`reserved` alanı ödemesi beklenen siparişlerin stoğunun başkasına satılmasını engeller. Ödeme webhook'u siparişi `paid` yapınca rezerve stok kalıcı düşülür, başarısız ödemede serbest bırakılır. Erken kalıcı düşüm stoğu boşa kilitler, kargoda düşüm ise fazla satışa yol açar.",
+        "en": "The `reserved` field stops stock for orders awaiting payment from being sold to someone else. When the payment webhook marks the order `paid`, reserved stock is permanently deducted; on failed payment it is released. Deducting too early locks stock needlessly, while deducting at shipping allows overselling."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "stock-reservation",
+        "order-lifecycle"
+      ]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "Minimum sipariş miktarı 6 olan bir ürün için geçerli JSON ile sepete 2 adet eklenmek isteniyor. API hangi durum kodunu dönmelidir?",
+        "en": "For a product with a minimum order quantity of 6, a request with valid JSON tries to add 2 to the cart. Which status code should the API return?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "400 Bad Request",
+            "en": "400 Bad Request"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "422 Unprocessable Content",
+            "en": "422 Unprocessable Content"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "401 Unauthorized",
+            "en": "401 Unauthorized"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "500 Internal Server Error",
+            "en": "500 Internal Server Error"
+          }
+        }
+      ],
+      "correct": [
+        "b"
+      ],
+      "explanation": {
+        "tr": "İstek biçimsel olarak doğru ama iş kuralına aykırı; bu 422'dir ve ders sepet adımında kurala aykırı durumda 422 döndüğünü söyler. 400 bozuk istek (ör. geçersiz JSON), 401 eksik kimlik, 500 beklenmedik sunucu hatası içindir.",
+        "en": "The request is well-formed but violates a business rule, which is 422; the lesson says the cart step returns 422 when a rule is broken. 400 is for a malformed request (e.g. invalid JSON), 401 for missing identity, 500 for an unexpected server error."
+      },
+      "difficulty": "easy",
+      "concepts": [
+        "http-status-codes"
+      ]
+    }
+  ]
+}

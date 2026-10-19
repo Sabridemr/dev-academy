@@ -7,6 +7,7 @@ import {
   Boxes,
   Brain,
   Briefcase,
+  Container,
   Database,
   Layers,
   Network,
@@ -35,6 +36,7 @@ export const ICONS: Record<string, LucideIcon> = {
   network: Network,
   briefcase: Briefcase,
   route: Route,
+  container: Container,
 };
 
 export function HomeView({

@@ -9,5 +9,6 @@
     "en": "GoF and distributed-system patterns: UML, animated object interaction, code in three languages."
   },
   "icon": "puzzle",
-  "color": "#f59e0b"
+  "color": "#f59e0b",
+  "group": "software"
 }

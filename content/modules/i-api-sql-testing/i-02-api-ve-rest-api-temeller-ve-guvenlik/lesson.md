@@ -7,8 +7,8 @@ title:
   tr: "API ve REST API: Temeller, HTTP, Kimlik Doğrulama, CORS ve Postman ile Test"
   en: "API and REST API: Fundamentals, HTTP, Authentication, CORS and Testing with Postman"
 summary:
-  tr: "API ve REST kavramlarını, HTTP yöntemlerini, durum kodlarını, header'ları, kimlik doğrulama ve yetkilendirmeyi, API key, JWT ve OAuth 2.0'ı, CORS'u, rate limiting'i, API Gateway'i ve Postman ile API testini toptan gıda e-ticareti örnekleriyle anlatır."
-  en: "Explains API and REST concepts, HTTP methods, status codes, headers, authentication and authorization, API keys, JWT and OAuth 2.0, CORS, rate limiting, API Gateway and API testing with Postman using wholesale food e-commerce examples."
+  tr: "REST, HTTP yöntemleri, durum kodları, kimlik doğrulama, CORS ve Postman testiyle API temellerini kavra."
+  en: "Grasp API basics through REST, HTTP methods, status codes, authentication, CORS and Postman testing."
 durationMinutes: 17
 level: beginner
 tags: [api, rest, http, authentication, cors, postman]
@@ -715,6 +715,9 @@ Böylece aynı isteği değiştirmeden farklı sunucularda test edebilirsin.
 :::
 
 Böylece tasarım, ürün listeleme, sepet ve kullanıcı akışları backend beklenmeden geliştirilebilir. Ancak canlıya çıkmadan önce mock yerine gerçek API ile entegrasyon mutlaka test edilmelidir.
+
+:::quiz{src="quiz.json"}
+:::
 
 ## Orijinal PDF sayfaları
 

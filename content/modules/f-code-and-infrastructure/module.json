@@ -9,5 +9,6 @@
     "en": "The lifecycle of code at an Amazon-like company: from a developer laptop to production."
   },
   "icon": "server",
-  "color": "#8b5cf6"
+  "color": "#8b5cf6",
+  "group": "infrastructure"
 }

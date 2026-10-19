@@ -1,0 +1,244 @@
+{
+  "id": "j-11-odunlesimler-mulakat-ve-ozet-quiz",
+  "title": {
+    "tr": "Ödünleşimler ve Mülakat Quiz",
+    "en": "Trade-offs and Interview Quiz"
+  },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Ağ bölünmesi (partition) sırasında ödeme ve stok verisi için CAP teoremine göre hangi tercih yapılır?",
+        "en": "During a network partition, which CAP choice is made for payment and stock data?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Erişilebilirlik (AP): birkaç saniye eski bakiye göstermek kabul edilebilir",
+            "en": "Availability (AP): showing a balance a few seconds old is acceptable"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Tutarlılık (CP): yanlış bakiye göstermektense hata vermek daha iyidir",
+            "en": "Consistency (CP): returning an error is better than showing a wrong balance"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "Hem tutarlılık hem erişilebilirlik birlikte garanti edilir",
+            "en": "Both consistency and availability are guaranteed together"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Bölünme toleransından vazgeçilir",
+            "en": "Partition tolerance is given up"
+          }
+        }
+      ],
+      "correct": [
+        "b"
+      ],
+      "explanation": {
+        "tr": "Ödeme ve stokta tutarlılık seçilir (CP). Restoran listesi ve kurye konumu gibi verilerde ise erişilebilirlik (AP) seçilir; bölünme anında ikisi birden garanti edilemez.",
+        "en": "For payments and stock, consistency is chosen (CP). For data like restaurant lists and courier location, availability (AP) is chosen; during a partition both cannot be guaranteed."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "cap-theorem"
+      ]
+    },
+    {
+      "id": "q2",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Derse göre hangi veriler SQL (ACID transaction) veritabanına daha uygundur? (Birden fazla seçin)",
+        "en": "According to the lesson, which data fits an SQL (ACID transaction) database better? (Select all that apply)"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Siparişler",
+            "en": "Orders"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Ödemeler",
+            "en": "Payments"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "Stok",
+            "en": "Stock"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Oturum ve log kayıtları",
+            "en": "Sessions and logs"
+          }
+        }
+      ],
+      "correct": [
+        "a",
+        "b",
+        "c"
+      ],
+      "explanation": {
+        "tr": "Sipariş, ödeme ve stok, ya hep ya hiç ve tutarlılık garantisi isteyen ACID gerektiren verilerdir. Menü, log, oturum ve konum gibi esnek yapılı veriler ise NoSQL için uygun gösterilir.",
+        "en": "Orders, payments and stock need all-or-nothing behavior and consistency guarantees, i.e. ACID. Flexible data like menus, logs, sessions and location are listed as a fit for NoSQL."
+      },
+      "difficulty": "easy",
+      "concepts": [
+        "sql-vs-nosql",
+        "acid"
+      ]
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": {
+        "tr": "Restoran bir ürünü 'tükendi' yaptı ama ürün arama sonuçlarında birkaç saniye daha görünüyor. Doğru yaklaşım hangisi?",
+        "en": "A restaurant marked an item 'sold out' but it still appears in search results for a few seconds. What is the right approach?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Bu kabul edilemez; tüm servisleri tek bir senkron transaction'a bağla",
+            "en": "This is unacceptable; tie all services into a single synchronous transaction"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Bu eventual consistency'nin bedelidir; ödeme adımında stoku asıl kaynaktan (veritabanı) tekrar kontrol et",
+            "en": "This is the price of eventual consistency; recheck stock against the source of truth (database) at checkout"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "Arama önbelleğini tamamen kapat",
+            "en": "Turn off the search cache entirely"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Ürünü veritabanından kalıcı olarak sil",
+            "en": "Permanently delete the item from the database"
+          }
+        }
+      ],
+      "correct": [
+        "b"
+      ],
+      "explanation": {
+        "tr": "Asenkron sistemlerde veri servislere kısa gecikmeyle ulaşır; bu ölçeklenebilirlik için ödenen bedeldir. Çözüm, kritik anda (ödeme adımı) stoku asıl kaynaktan yeniden doğrulamaktır; her şeyi senkron yapmak ya da önbelleği kapatmak ölçeği bozar.",
+        "en": "In async systems data reaches services with a short delay; that is the price paid for scalability. The fix is to revalidate stock against the source of truth at the critical moment (checkout); making everything synchronous or disabling the cache hurts scale."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "eventual-consistency"
+      ]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Yatay ölçekleme (daha çok sunucu eklemek), servislerin durumsuz olmasını ve bir yük dengeleyiciyi gerektirir.",
+        "en": "Horizontal scaling (adding more servers) requires services to be stateless and a load balancer."
+      },
+      "options": [
+        {
+          "id": "t",
+          "text": {
+            "tr": "Doğru",
+            "en": "True"
+          }
+        },
+        {
+          "id": "f",
+          "text": {
+            "tr": "Yanlış",
+            "en": "False"
+          }
+        }
+      ],
+      "correct": [
+        "t"
+      ],
+      "explanation": {
+        "tr": "Doğru. Yatay ölçekleme sınırsıza yakındır ama herhangi bir isteğin herhangi bir sunucuya gidebilmesi için oturum bilgisi sunucu belleğinde tutulmamalı ve trafiği bir yük dengeleyici dağıtmalıdır.",
+        "en": "True. Horizontal scaling is nearly unlimited, but for any request to be able to hit any server, session state must not live in server memory and a load balancer must distribute traffic."
+      },
+      "difficulty": "easy",
+      "concepts": [
+        "horizontal-scaling"
+      ]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "Küçük bir ekiple yeni bir ürün geliştirirken derste önerilen başlangıç mimarisi hangisidir?",
+        "en": "When building a new product with a small team, which starting architecture does the lesson recommend?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Baştan her iş alanı için ayrı mikroservis ve Kafka",
+            "en": "Separate microservices and Kafka for every domain from day one"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Modüler monolit; sınırlar netleşip ölçek sorunu çıkınca en çok yük alan modülü ayırmak",
+            "en": "A modular monolith; split out the most loaded module once boundaries are clear and scale becomes an issue"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "Hiç modül ayrımı olmayan tek dosyalık bir uygulama",
+            "en": "A single-file application with no module boundaries"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Yalnızca NoSQL kullanan sunucusuz fonksiyonlar",
+            "en": "Serverless functions using only NoSQL"
+          }
+        }
+      ],
+      "correct": [
+        "b"
+      ],
+      "explanation": {
+        "tr": "Ders, küçük ekip ve yeni ürün için modüler monolitle başlamayı, ölçek sorunu ortaya çıktığında en yoğun modülü ayrı servise çıkarmayı önerir. Baştan mikroservis gereksiz karmaşıklık getirir; modül ayrımı olmayan yapı ise sonradan ayırmayı zorlaştırır.",
+        "en": "The lesson recommends starting with a modular monolith for a small team and new product, then extracting the busiest module into its own service once scale problems appear. Microservices from day one add needless complexity; no module boundaries makes later extraction hard."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "modular-monolith"
+      ]
+    }
+  ]
+}

@@ -7,8 +7,8 @@ title:
   tr: "CI/CD ve GitHub Actions: Kod Kalitesi, Sürümleme, İzleme ve Tam Pipeline"
   en: "CI/CD and GitHub Actions: Code Quality, Versioning, Monitoring and the Full Pipeline"
 summary:
-  tr: "Kod kalitesi ve güvenlik taraması, sürümleme ve release, izleme ve bildirimler, hata ayıklama, maliyet ve limitler, diğer CI/CD araçları ve toptan gıda e-ticaret projesi için tam pipeline."
-  en: "Code quality and security scanning, versioning and releases, monitoring and notifications, debugging, cost and limits, other CI/CD tools and a complete pipeline for the wholesale food e-commerce project."
+  tr: "Güvenlik taraması, SemVer sürümleme ve izlemeyle projen için uçtan uca bir CI/CD pipeline'ı kur."
+  en: "Build an end-to-end CI/CD pipeline with security scanning, SemVer releases and monitoring."
 durationMinutes: 11
 level: intermediate
 tags: [ci-cd, github-actions, monitoring, release, devops]
@@ -419,6 +419,9 @@ Kurulum kontrol listesi:
 5. `main` için branch protection kurallarını aç ve CI kontrollerini zorunlu yap.
 6. Dependabot'u ve CodeQL'i etkinleştir.
 7. İlk deploy'dan önce rollback workflow'unu staging'de dene.
+
+:::quiz{src="quiz.json"}
+:::
 
 ## Orijinal PDF sayfaları
 

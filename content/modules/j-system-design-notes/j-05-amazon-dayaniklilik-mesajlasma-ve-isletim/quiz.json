@@ -1,0 +1,255 @@
+{
+  "id": "j-05-amazon-dayaniklilik-mesajlasma-ve-isletim-quiz",
+  "title": {
+    "tr": "Amazon Dayanıklılık ve Mesajlaşma Quiz",
+    "en": "Amazon Resilience and Messaging Quiz"
+  },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Günde 10 milyon aktif kullanıcı, kullanıcı başı ~50 istek yapıyor. Ortalama QPS kaba tahminle yaklaşık kaçtır?",
+        "en": "There are 10 million daily active users making ~50 requests each. Roughly what is the average QPS?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "~580 istek/sn",
+            "en": "~580 requests/s"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "~5.800 istek/sn",
+            "en": "~5,800 requests/s"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "~58.000 istek/sn",
+            "en": "~58,000 requests/s"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "~500.000 istek/sn",
+            "en": "~500,000 requests/s"
+          }
+        }
+      ],
+      "correct": [
+        "b"
+      ],
+      "explanation": {
+        "tr": "10M × 50 = 500 milyon istek/gün; 500M / 86.400 sn ≈ 5.800 istek/sn. ~30.000–60.000 tepe değeridir (ortalamanın 5–10 katı), 500.000 ise günlük toplamı saniyeye bölmeyi unutmak gibi bir hatadan gelir.",
+        "en": "10M × 50 = 500 million requests/day; 500M / 86,400 s ≈ 5,800 requests/s. ~30,000–60,000 is the peak (5–10× the average), and 500,000 comes from a mistake such as not dividing the daily total by the seconds in a day."
+      },
+      "difficulty": "easy",
+      "concepts": [
+        "capacity-estimation"
+      ]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "Kafka'da aynı siparişe ait olaylar neden aynı key (order_id) ile gönderilir?",
+        "en": "Why are events for the same order sent to Kafka with the same key (order_id)?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Sıra yalnızca partition içinde garanti edildiği için; aynı key aynı partition'a düşer",
+            "en": "Because ordering is only guaranteed within a partition, and the same key lands on the same partition"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Key verilmezse mesajlar okunduktan sonra silinmediği için",
+            "en": "Because without a key messages are not deleted after being read"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "Aynı key'li mesajlar tüm consumer group'lara yalnızca bir kez teslim edildiği için",
+            "en": "Because messages with the same key are delivered only once across all consumer groups"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Key, mesajın 3 broker'a replike edilmesini sağladığı için",
+            "en": "Because the key makes the message replicate to 3 brokers"
+          }
+        }
+      ],
+      "correct": [
+        "a"
+      ],
+      "explanation": {
+        "tr": "Kafka sırayı yalnızca bir partition içinde garanti eder; aynı order_id key'i aynı partition'a gittiği için o siparişin olayları sırayla işlenir. Mesajların silinmemesi retention'a, replikasyon replication.factor ayarına bağlıdır; farklı consumer group'lar aynı olayı bağımsız olarak okur.",
+        "en": "Kafka only guarantees order within a partition; since the same order_id key goes to the same partition, that order's events are processed in order. Messages not being deleted depends on retention, replication on replication.factor, and different consumer groups read the same event independently."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "kafka-partition"
+      ]
+    },
+    {
+      "id": "q3",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Kafka'da bir mesaj tüketici tarafından okunduğunda log'dan silinir; bu yüzden geçmiş olaylar yeniden işlenemez.",
+        "en": "In Kafka a message is deleted from the log once a consumer reads it, so past events cannot be reprocessed."
+      },
+      "options": [
+        {
+          "id": "t",
+          "text": {
+            "tr": "Doğru",
+            "en": "True"
+          }
+        },
+        {
+          "id": "f",
+          "text": {
+            "tr": "Yanlış",
+            "en": "False"
+          }
+        }
+      ],
+      "correct": [
+        "f"
+      ],
+      "explanation": {
+        "tr": "Yanlış. Kafka kalıcı bir log'dur; mesaj okununca silinmez, retention süresi boyunca durur. Tüketici kaldığı yeri offset ile hatırlar ve gerekirse geri sarıp olayları yeniden işleyebilir (replay). ACK sonrası silme RabbitMQ ve SQS'in davranışıdır.",
+        "en": "False. Kafka is a durable log; a message is not deleted when read but kept for the retention period. The consumer tracks its position with an offset and can rewind to replay events. Deleting after ACK is how RabbitMQ and SQS behave."
+      },
+      "difficulty": "easy",
+      "concepts": [
+        "kafka-partition"
+      ]
+    },
+    {
+      "id": "q4",
+      "type": "order",
+      "prompt": {
+        "tr": "Derste anlatılan CI/CD hattının adımlarını doğru sıraya koyun.",
+        "en": "Put the steps of the CI/CD pipeline described in the lesson in the correct order."
+      },
+      "options": [
+        {
+          "id": "image",
+          "text": {
+            "tr": "Docker imajı oluşturulur",
+            "en": "A Docker image is built"
+          }
+        },
+        {
+          "id": "commit",
+          "text": {
+            "tr": "Commit atılır",
+            "en": "Code is committed"
+          }
+        },
+        {
+          "id": "canary",
+          "text": {
+            "tr": "Canary deploy: trafiğin %1'i, sonra %10'u, sonra %100'ü yeni sürüme",
+            "en": "Canary deploy: 1%, then 10%, then 100% of traffic to the new version"
+          }
+        },
+        {
+          "id": "tests",
+          "text": {
+            "tr": "Testler çalışır",
+            "en": "Tests run"
+          }
+        },
+        {
+          "id": "staging",
+          "text": {
+            "tr": "Staging ortamına gider",
+            "en": "It goes to staging"
+          }
+        }
+      ],
+      "correct": [
+        "commit",
+        "tests",
+        "image",
+        "staging",
+        "canary"
+      ],
+      "explanation": {
+        "tr": "Commit sonrası testler çalışır, geçen kod Docker imajına paketlenir, staging'de denenir ve en son canary ile kademeli olarak canlıya alınır. Canary'nin amacı hatayı trafiğin küçük bir kısmında yakalamaktır; bu yüzden staging'den sonra gelir.",
+        "en": "After the commit tests run, passing code is packaged as a Docker image, tried in staging and finally rolled out gradually with a canary. The canary's purpose is to catch errors on a small share of traffic, so it comes after staging."
+      },
+      "difficulty": "easy",
+      "concepts": [
+        "canary-deploy"
+      ]
+    },
+    {
+      "id": "q5",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Derse göre mesajlaşmanın tuzaklarına karşı hangileri doğru önlemlerdir? (Birden fazla seçin)",
+        "en": "According to the lesson, which are correct safeguards against messaging pitfalls? (Select all that apply)"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Aynı mesaj iki kez gelebileceği için tüketiciyi idempotent yazmak",
+            "en": "Writing idempotent consumers because the same message may arrive twice"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Defalarca başarısız olan zehirli mesajları DLQ'ya almak",
+            "en": "Moving repeatedly failing poison messages to a DLQ"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "Sıranın korunması için key ile partition seçmek",
+            "en": "Choosing the partition by key to preserve ordering"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Kafka'nın exactly-once özelliği açıkken tüketicide idempotentliği atlamak",
+            "en": "Skipping consumer idempotency when Kafka's exactly-once feature is enabled"
+          }
+        }
+      ],
+      "correct": [
+        "a",
+        "b",
+        "c"
+      ],
+      "explanation": {
+        "tr": "Ders tekrar eden mesaj için idempotent tüketici, zehirli mesaj için DLQ ve sıra bozulması için key ile partition seçimini önerir. Exactly-once açık olsa bile tüketicinin idempotent yazılması gerektiği vurgulanır, bu yüzden d yanlıştır.",
+        "en": "The lesson recommends idempotent consumers for duplicates, a DLQ for poison messages and key-based partitioning for ordering. It stresses that consumers must still be idempotent even with exactly-once enabled, so d is wrong."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "dead-letter-queue",
+        "kafka-partition"
+      ]
+    }
+  ]
+}

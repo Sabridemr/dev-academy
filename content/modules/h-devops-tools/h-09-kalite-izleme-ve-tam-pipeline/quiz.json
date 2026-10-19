@@ -1,0 +1,246 @@
+{
+  "id": "h-09-kalite-izleme-ve-tam-pipeline-quiz",
+  "title": {
+    "tr": "Kalite, İzleme ve Tam Pipeline Quiz",
+    "en": "Quality, Monitoring and Full Pipeline Quiz"
+  },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Uygulama 1.4.3 sürümünde. Geriye uyumlu yeni bir özellik (Google ile giriş) ekleniyor. SemVer'e göre yeni sürüm ne olur?",
+        "en": "The app is at version 1.4.3. A backward-compatible new feature (Google sign-in) is added. Under SemVer, what is the new version?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "1.5.0",
+            "en": "1.5.0"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "1.4.4",
+            "en": "1.4.4"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "2.0.0",
+            "en": "2.0.0"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "1.5.3",
+            "en": "1.5.3"
+          }
+        }
+      ],
+      "correct": [
+        "a"
+      ],
+      "explanation": {
+        "tr": "MAJOR.MINOR.PATCH düzeninde geriye uyumlu yeni özellik MINOR'u artırır ve PATCH sıfırlanır: 1.5.0. 1.4.4 yalnızca hata düzeltmesi, 2.0.0 kırıcı değişiklik içindir; 1.5.3 PATCH'i sıfırlamadığı için hatalıdır.",
+        "en": "In MAJOR.MINOR.PATCH, a backward-compatible feature bumps MINOR and resets PATCH: 1.5.0. 1.4.4 is for bug fixes only, 2.0.0 for breaking changes; 1.5.3 is wrong because PATCH is not reset."
+      },
+      "difficulty": "easy",
+      "concepts": [
+        "semantic-versioning"
+      ]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "Dersteki `/health` endpoint'inde `db.query('SELECT 1')` hata fırlatırsa istemci ne alır?",
+        "en": "In the lesson's `/health` endpoint, what does the client receive if `db.query('SELECT 1')` throws?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "503 durum kodu ve `{ status: 'db_unreachable' }`",
+            "en": "Status 503 and `{ status: 'db_unreachable' }`"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "200 durum kodu ve `{ status: 'ok' }`",
+            "en": "Status 200 and `{ status: 'ok' }`"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "404 durum kodu",
+            "en": "Status 404"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Uygulama çöker ve yanıt dönmez",
+            "en": "The app crashes and no response is returned"
+          }
+        }
+      ],
+      "correct": [
+        "a"
+      ],
+      "explanation": {
+        "tr": "Hata catch bloğunda yakalanır ve 503 ile db_unreachable döner. 200 ve sürüm bilgisi yalnızca veritabanı sorgusu başarılı olursa döner; böylece smoke test (curl --fail) veritabanı sorununda deploy'u başarısız sayar.",
+        "en": "The error is caught in the catch block and returns 503 with db_unreachable. 200 with the version is returned only if the database query succeeds, so a smoke test (curl --fail) marks the deploy as failed when the database is down."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "health-check"
+      ]
+    },
+    {
+      "id": "q3",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Hangileri dört DORA metriğinden biridir? (Birden fazla seçin)",
+        "en": "Which of these are among the four DORA metrics? (Select all that apply)"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Deployment frequency (canlıya çıkış sıklığı)",
+            "en": "Deployment frequency"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Lead time for changes (commit'ten canlıya geçen süre)",
+            "en": "Lead time for changes (time from commit to production)"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "Change failure rate (sorun çıkaran deploy oranı)",
+            "en": "Change failure rate (share of deploys that cause problems)"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Code coverage (test kapsamı)",
+            "en": "Code coverage"
+          }
+        }
+      ],
+      "correct": [
+        "a",
+        "b",
+        "c"
+      ],
+      "explanation": {
+        "tr": "Dört DORA metriği deployment frequency, lead time for changes, change failure rate ve time to restore'dur. Code coverage testlerin kodun ne kadarını çalıştırdığını gösterir ama DORA metriği değildir.",
+        "en": "The four DORA metrics are deployment frequency, lead time for changes, change failure rate and time to restore. Code coverage shows how much code the tests execute but is not a DORA metric."
+      },
+      "difficulty": "easy",
+      "concepts": [
+        "dora-metrics"
+      ]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "GitOps'ta canlı ortamın istenen durumu Git'te tanımlanır; Argo CD gibi bir araç ortamı sürekli bu tanıma eşitler ve deploy bir YAML dosyasını değiştirip birleştirmekle yapılır.",
+        "en": "In GitOps the desired state of production is defined in Git; a tool like Argo CD continuously syncs the environment to it, and deploying means changing and merging a YAML file."
+      },
+      "options": [
+        {
+          "id": "t",
+          "text": {
+            "tr": "Doğru",
+            "en": "True"
+          }
+        },
+        {
+          "id": "f",
+          "text": {
+            "tr": "Yanlış",
+            "en": "False"
+          }
+        }
+      ],
+      "correct": [
+        "t"
+      ],
+      "explanation": {
+        "tr": "Doğru. GitOps'ta tek doğruluk kaynağı Git deposudur; Argo CD veya Flux ortamı sürekli bu tanıma eşitler, bu yüzden deploy bir YAML değişikliğinin birleştirilmesiyle gerçekleşir.",
+        "en": "True. In GitOps the Git repository is the single source of truth; Argo CD or Flux keeps the environment in sync with it, so a deploy happens by merging a YAML change."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "gitops"
+      ]
+    },
+    {
+      "id": "q5",
+      "type": "order",
+      "prompt": {
+        "tr": "Dersteki deploy.yml'de main'e push sonrası çalışan job'ları sıraya koyun.",
+        "en": "Order the jobs that run in the lesson's deploy.yml after a push to main."
+      },
+      "options": [
+        {
+          "id": "staging",
+          "text": {
+            "tr": "staging: migrate ve /health smoke testi",
+            "en": "staging: migrate and /health smoke test"
+          }
+        },
+        {
+          "id": "image",
+          "text": {
+            "tr": "image: Docker build, GHCR'ye SHA etiketiyle push",
+            "en": "image: Docker build, push to GHCR with the SHA tag"
+          }
+        },
+        {
+          "id": "production",
+          "text": {
+            "tr": "production: onay, yedek, migrate ve smoke test",
+            "en": "production: approval, backup, migrate and smoke test"
+          }
+        },
+        {
+          "id": "ci",
+          "text": {
+            "tr": "ci: lint, test, entegrasyon ve güvenlik kontrolleri",
+            "en": "ci: lint, test, integration and security checks"
+          }
+        }
+      ],
+      "correct": [
+        "ci",
+        "image",
+        "staging",
+        "production"
+      ],
+      "explanation": {
+        "tr": "Zincir needs ile kurulur: image ci'ı, staging image'ı, production staging'i bekler. Testler geçmeden image üretilmez; aynı SHA'lı image önce staging'de doğrulanır, sonra onay ve yedekle canlıya çıkar.",
+        "en": "The chain is built with needs: image waits for ci, staging for image, production for staging. No image is built before tests pass; the same SHA-tagged image is verified on staging first, then goes to production with approval and a backup."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "full-pipeline"
+      ]
+    }
+  ]
+}

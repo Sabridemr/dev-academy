@@ -256,6 +256,7 @@ async function main(): Promise<void> {
         description: loc(m.description),
         icon: m.icon,
         color: m.color,
+        group: m.group,
       },
       create: {
         id: m.id,
@@ -266,6 +267,7 @@ async function main(): Promise<void> {
         description: loc(m.description),
         icon: m.icon,
         color: m.color,
+        group: m.group,
       },
     });
 
@@ -373,7 +375,19 @@ async function main(): Promise<void> {
       const fingerprint = versionFingerprint(versionPayload);
       const existingFingerprint = published ? versionFingerprint(published) : null;
 
+      const searchText = buildSearchText(
+        lesson.doc.blocks,
+        meta.title,
+        meta.summary,
+        meta.concepts,
+        meta.tags,
+      );
+
       if (published && existingFingerprint === fingerprint && meta.status === 'published') {
+        // İçerik aynı ama arama metninin biçimi değişmiş olabilir (buildSearchText güncellemesi)
+        if (current?.searchText !== searchText) {
+          await prisma.lesson.update({ where: { id: meta.id }, data: { searchText } });
+        }
         unchangedCount += 1;
         continue;
       }
@@ -394,13 +408,6 @@ async function main(): Promise<void> {
         orderBy: { version: 'desc' },
       });
       const nextVersion = (last?.version ?? 0) + 1;
-      const searchText = buildSearchText(
-        lesson.doc.blocks,
-        meta.title,
-        meta.summary,
-        meta.concepts,
-        meta.tags,
-      );
 
       await prisma.$transaction(async (tx) => {
         if (meta.status === 'published') {

@@ -1,0 +1,109 @@
+{
+  "id": "h-05-devops-ve-docker-kullanim-rehberi-quiz",
+  "title": { "tr": "DevOps ve Docker Quiz", "en": "DevOps and Docker Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Node.js Dockerfile'ında önce `COPY package*.json ./` ve `RUN npm ci`, ardından `COPY . .` yazılmasının nedeni nedir?",
+        "en": "Why does the Node.js Dockerfile first do `COPY package*.json ./` and `RUN npm ci`, and only then `COPY . .`?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "npm ci, kaynak kod kopyalandıktan sonra çalışırsa hata verdiği için", "en": "Because npm ci fails if it runs after the source code is copied" } },
+        { "id": "b", "text": { "tr": "Kod değiştiğinde bağımlılık katmanı önbellekten gelsin ve derleme hızlansın diye", "en": "So the dependency layer comes from cache when only the code changes, speeding up builds" } },
+        { "id": "c", "text": { "tr": "package.json dosyasının imajın son hâline girmemesi için", "en": "So that package.json does not end up in the final image" } },
+        { "id": "d", "text": { "tr": "Konteynerin root olmayan kullanıcıyla çalışabilmesi için", "en": "So the container can run as a non-root user" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Sık değişmeyen katmanlar üste konur: package.json değişmedikçe `npm ci` katmanı önbellekten kullanılır, yalnızca kod katmanı yeniden oluşur. npm ci'nin sırayla ilgili bir hatası yoktur (a); package.json imaja yine girer (c); root olmayan kullanıcı `USER` talimatıyla sağlanır (d).",
+        "en": "Rarely changing layers go first: as long as package.json is unchanged, the `npm ci` layer is reused from cache and only the code layer is rebuilt. npm ci has no ordering error (a); package.json still ends up in the image (c); a non-root user comes from the `USER` instruction (d)."
+      },
+      "difficulty": "medium",
+      "concepts": ["dockerfile"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "E-ticaret yığınında `docker compose down -v` çalıştırırsanız `pgdata` volume'undaki veritabanına ne olur?",
+        "en": "In the e-commerce stack, what happens to the database in the `pgdata` volume if you run `docker compose down -v`?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Konteynerler durur, volume korunur; bir sonraki `up` ile veri geri gelir", "en": "Containers stop and the volume is kept; data returns on the next `up`" } },
+        { "id": "b", "text": { "tr": "Volume otomatik olarak yedeklenip sonra silinir", "en": "The volume is automatically backed up and then deleted" } },
+        { "id": "c", "text": { "tr": "Volume'lar da silinir ve veritabanı verisi gider", "en": "The volumes are removed too and the database data is lost" } },
+        { "id": "d", "text": { "tr": "Yalnızca imajlar silinir, konteynerler ve volume'lar kalır", "en": "Only images are removed; containers and volumes remain" } }
+      ],
+      "correct": ["c"],
+      "explanation": {
+        "tr": "`down` konteynerleri durdurup siler; `-v` bayrağı volume'ları da siler, yani veri gider. Volume'u korumak için `-v` olmadan `docker compose down` kullanılır (a). Otomatik yedek alınmaz (b); imaj temizliği `docker image prune` işidir (d).",
+        "en": "`down` stops and removes containers; the `-v` flag also removes volumes, so the data is lost. To keep the volume you use `docker compose down` without `-v` (a). No automatic backup is taken (b); cleaning images is `docker image prune`'s job (d)."
+      },
+      "difficulty": "easy",
+      "concepts": ["volume", "docker-compose"]
+    },
+    {
+      "id": "q3",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Konteyner ana makinenin çekirdeğini paylaştığı için sanal makineye göre çok daha küçüktür ve saniyeler içinde açılır.",
+        "en": "Because a container shares the host's kernel, it is much smaller than a virtual machine and starts in seconds."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["t"],
+      "explanation": {
+        "tr": "Sanal makine tam bir işletim sistemi çalıştırır (GB boyutunda, dakikalar içinde açılır); konteyner ise ana makinenin çekirdeğini paylaşır (MB boyutunda, saniyeler içinde açılır).",
+        "en": "A virtual machine runs a full operating system (GBs in size, boots in minutes); a container shares the host's kernel (MBs in size, starts in seconds)."
+      },
+      "difficulty": "easy",
+      "concepts": ["konteyner"]
+    },
+    {
+      "id": "q4",
+      "type": "order",
+      "prompt": {
+        "tr": "Dersteki GitHub Actions iş akışında `main`'e push sonrası işlerin çalışma sırasını doğru sıraya koyun.",
+        "en": "Put the jobs of the lesson's GitHub Actions workflow in the order they run after a push to `main`."
+      },
+      "options": [
+        { "id": "deploy", "text": { "tr": "SSH ile sunucuda `docker compose pull` ve `up -d`", "en": "`docker compose pull` and `up -d` on the server over SSH" } },
+        { "id": "test", "text": { "tr": "`npm ci` ve `npm test` ile testleri çalıştırma", "en": "Run tests with `npm ci` and `npm test`" } },
+        { "id": "build", "text": { "tr": "İmajı derleyip GHCR'ye gönderme", "en": "Build the image and push it to GHCR" } }
+      ],
+      "correct": ["test", "build", "deploy"],
+      "explanation": {
+        "tr": "`build` işi `needs: test`, `deploy` işi `needs: build` ile tanımlıdır; böylece testi geçmeyen kod imaja dönüşmez, registry'de olmayan imaj da sunucuya çekilemez.",
+        "en": "The `build` job declares `needs: test` and `deploy` declares `needs: build`, so code that fails tests never becomes an image, and an image that is not in the registry cannot be pulled on the server."
+      },
+      "difficulty": "easy",
+      "concepts": ["github-actions"]
+    },
+    {
+      "id": "q5",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Dersteki Dockerfile en iyi uygulamalarına uyan seçenekler hangileridir? (Birden fazla seçin)",
+        "en": "Which options follow the lesson's Dockerfile best practices? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "`node:20-alpine` gibi küçük ve sabit sürümlü bir temel imaj kullanmak", "en": "Using a small, pinned base image such as `node:20-alpine`" } },
+        { "id": "b", "text": { "tr": "Her zaman güncel kalmak için `node:latest` etiketini kullanmak", "en": "Using the `node:latest` tag to always stay up to date" } },
+        { "id": "c", "text": { "tr": "Veritabanı şifresini `ENV` ile imaja gömmek", "en": "Baking the database password into the image with `ENV`" } },
+        { "id": "d", "text": { "tr": "`USER node` ile konteyneri root olmayan kullanıcıyla çalıştırmak", "en": "Running the container as a non-root user with `USER node`" } }
+      ],
+      "correct": ["a", "d"],
+      "explanation": {
+        "tr": "Küçük ve sabit sürümlü temel imaj ile root olmayan kullanıcı önerilir. `latest` etiketi derlemeyi öngörülemez yapar (b); şifreler imaja gömülmez, ortam değişkeni ya da secret ile çalışma anında verilir (c).",
+        "en": "A small, pinned base image and a non-root user are recommended. The `latest` tag makes builds unpredictable (b); passwords are not baked into the image but supplied at runtime via environment variables or secrets (c)."
+      },
+      "difficulty": "medium",
+      "concepts": ["dockerfile"]
+    }
+  ]
+}

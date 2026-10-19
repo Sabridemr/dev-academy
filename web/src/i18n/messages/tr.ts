@@ -53,6 +53,14 @@ export const tr = {
     save: 'Kaydet ve başla',
   },
   module: {
+    groups: {
+      'system-design': 'Sistem Tasarımı',
+      software: 'Yazılım ve Veri',
+      infrastructure: 'Altyapı ve DevOps',
+      ai: 'Yapay Zekâ',
+      programming: 'Programlama',
+    },
+    totalTime: '{hours} sa {minutes} dk',
     lessons: 'Dersler',
     completed: '{done}/{total} tamamlandı',
     minutes: '{count} dk',
@@ -60,6 +68,7 @@ export const tr = {
     hasAnimation: 'Animasyon',
     hasInteractive: 'Simülatör',
     hasQuiz: 'Quiz',
+    format: { infographic: 'İnfografik', 'pdf-guide': 'PDF rehberi' },
   },
   lesson: {
     notTranslated: 'Bu ders henüz İngilizceye çevrilmedi; metin Türkçe gösteriliyor.',

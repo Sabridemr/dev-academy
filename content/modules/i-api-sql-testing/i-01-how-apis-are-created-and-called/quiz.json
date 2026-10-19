@@ -1,0 +1,257 @@
+{
+  "id": "i-01-how-apis-are-created-and-called-quiz",
+  "title": {
+    "tr": "API Oluşturma ve Çağrı Akışı Quiz",
+    "en": "Building and Calling an API Quiz"
+  },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "order",
+      "prompt": {
+        "tr": "Bir API çağrıldığında gerçekleşen adımları doğru sıraya koyun.",
+        "en": "Put the steps that happen when an API is called in the correct order."
+      },
+      "options": [
+        {
+          "id": "logic",
+          "text": {
+            "tr": "İş mantığı: iş kuralları uygulanır, hesaplamalar yapılır",
+            "en": "Business logic: business rules are applied and calculations done"
+          }
+        },
+        {
+          "id": "req",
+          "text": {
+            "tr": "İstemci API'ye HTTP isteği gönderir",
+            "en": "The client sends an HTTP request to the API"
+          }
+        },
+        {
+          "id": "resp",
+          "text": {
+            "tr": "Yanıt üretilir: durum koduyla JSON yanıt hazırlanır",
+            "en": "Response generation: a JSON response with a status code is prepared"
+          }
+        },
+        {
+          "id": "valid",
+          "text": {
+            "tr": "İstek doğrulama: kimlik, yetki, header ve parametreler kontrol edilir",
+            "en": "Request validation: authentication, authorization, headers and parameters are checked"
+          }
+        },
+        {
+          "id": "ep",
+          "text": {
+            "tr": "İstek tanımlı uç noktaya (route) ulaşır",
+            "en": "The request reaches the defined endpoint (route)"
+          }
+        }
+      ],
+      "correct": [
+        "req",
+        "ep",
+        "valid",
+        "logic",
+        "resp"
+      ],
+      "explanation": {
+        "tr": "İstek önce gönderilir, sunucuda doğru route'a ulaşır, ardından doğrulanır; geçerliyse iş mantığı çalışır (gerekirse veritabanına gider) ve en son yanıt üretilir. Doğrulama iş mantığından önce gelir ki geçersiz istek hiç işlenmesin.",
+        "en": "The request is sent, reaches the right route on the server, then is validated; if valid, business logic runs (hitting the database if needed) and finally the response is generated. Validation comes before business logic so invalid requests are never processed."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "request-validation",
+        "endpoint"
+      ]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "Örnek projede `User.find()` çağırıp `res.status(200).json(users)` döndüren kod hangi katmanda yer alır?",
+        "en": "In the sample project, which layer contains the code that calls `User.find()` and returns `res.status(200).json(users)`?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Controller (controllers/userController.js)",
+            "en": "Controller (controllers/userController.js)"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Route (routes/userRoutes.js)",
+            "en": "Route (routes/userRoutes.js)"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "Model (models/User.js)",
+            "en": "Model (models/User.js)"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Sunucu giriş noktası (server.js)",
+            "en": "Server entry point (server.js)"
+          }
+        }
+      ],
+      "correct": [
+        "a"
+      ],
+      "explanation": {
+        "tr": "İş mantığı ve modelle etkileşip yanıt döndürmek controller'ın görevidir. Route yalnızca URL ve HTTP metodunu controller fonksiyonuna bağlar, model şemayı tanımlar, server.js ise middleware ve route'ları bağlayıp sunucuyu başlatır.",
+        "en": "Business logic, talking to the model and returning the response is the controller's job. The route only maps the URL and HTTP method to a controller function, the model defines the schema, and server.js wires middleware and routes and starts the server."
+      },
+      "difficulty": "easy",
+      "concepts": [
+        "controller",
+        "express-router"
+      ]
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": {
+        "tr": "Postman ile `POST /users` isteği gönderildiğinde örnekte yanıt `201 Created` gelir. Bu kod neyi ifade eder?",
+        "en": "When `POST /users` is sent with Postman, the example returns `201 Created`. What does this code indicate?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Yeni bir kaynak (kullanıcı) başarıyla oluşturuldu.",
+            "en": "A new resource (user) was created successfully."
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "İstek doğrulamadan geçemedi.",
+            "en": "The request failed validation."
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "İstek başarılı ama yanıtta gövde yok.",
+            "en": "The request succeeded but the response has no body."
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Kullanıcı listesi başarıyla okundu.",
+            "en": "The user list was read successfully."
+          }
+        }
+      ],
+      "correct": [
+        "a"
+      ],
+      "explanation": {
+        "tr": "Controller'daki `createUser`, `User.create` sonrasında `res.status(201)` döndürür; 201 yeni kaynak oluşturulduğunu bildirir. Listeleme `getUsers` ile 200 döner; doğrulama hatası ise hata yanıtı üretir, başarı kodu değil.",
+        "en": "`createUser` in the controller returns `res.status(201)` after `User.create`; 201 signals a newly created resource. Listing via `getUsers` returns 200, and a validation failure produces an error response, not a success code."
+      },
+      "difficulty": "easy",
+      "concepts": [
+        "status-codes"
+      ]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "İstek doğrulama adımında istek geçersiz bulunursa API yine de iş mantığına geçer ve veritabanına yazar; hata sadece yanıtta belirtilir.",
+        "en": "If the request is found invalid during validation, the API still proceeds to business logic and writes to the database; the error is only mentioned in the response."
+      },
+      "options": [
+        {
+          "id": "t",
+          "text": {
+            "tr": "Doğru",
+            "en": "True"
+          }
+        },
+        {
+          "id": "f",
+          "text": {
+            "tr": "Yanlış",
+            "en": "False"
+          }
+        }
+      ],
+      "correct": [
+        "f"
+      ],
+      "explanation": {
+        "tr": "Yanlış. Notlara göre doğrulama kimlik, yetki, header, parametre ve istek verisini kontrol eder ve istek geçersizse doğrudan hata yanıtı döner; iş mantığı ve veritabanı adımına geçilmez.",
+        "en": "False. According to the notes, validation checks authentication, authorization, headers, parameters and request data, and an invalid request gets an error response right away; business logic and the database step are skipped."
+      },
+      "difficulty": "easy",
+      "concepts": [
+        "request-validation"
+      ]
+    },
+    {
+      "id": "q5",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Örnekteki `server.js` dosyasında hangileri yapılır? (Birden fazla seçin)",
+        "en": "Which of these are done in the sample `server.js` file? (Select all that apply)"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "`app.use(express.json())` ile JSON gövdeyi işleyen middleware eklenir.",
+            "en": "Middleware that parses JSON bodies is added with `app.use(express.json())`."
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Kullanıcı route'ları `/api/users` yoluna bağlanır.",
+            "en": "User routes are mounted on the `/api/users` path."
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "Mongoose ile kullanıcı şeması (name, email, age) tanımlanır.",
+            "en": "The user schema (name, email, age) is defined with Mongoose."
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Sunucu `PORT` üzerinde dinlemeye başlar.",
+            "en": "The server starts listening on `PORT`."
+          }
+        }
+      ],
+      "correct": [
+        "a",
+        "b",
+        "d"
+      ],
+      "explanation": {
+        "tr": "server.js API'nin giriş noktasıdır: middleware'i kullanır, route'ları bağlar ve `app.listen` ile sunucuyu başlatır. Şema tanımı ise ayrı bir katmanda, models/User.js dosyasında yapılır.",
+        "en": "server.js is the API's entry point: it uses middleware, mounts routes and starts the server with `app.listen`. The schema is defined in a separate layer, in models/User.js."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "middleware",
+        "express-router"
+      ]
+    }
+  ]
+}

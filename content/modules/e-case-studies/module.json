@@ -9,5 +9,6 @@
     "en": "Requirements → capacity → architecture → bottlenecks → animated request journey."
   },
   "icon": "rocket",
-  "color": "#ef4444"
+  "color": "#ef4444",
+  "group": "system-design"
 }

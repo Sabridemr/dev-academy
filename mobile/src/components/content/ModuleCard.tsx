@@ -73,6 +73,7 @@ export function LessonRow({ lesson }: { lesson: LessonSummary }) {
           {lesson.hasAnimation ? <Chip label={t('module.hasAnimation')} tone="primary" /> : null}
           {lesson.hasInteractive ? <Chip label={t('module.hasInteractive')} tone="success" /> : null}
           {lesson.hasQuiz ? <Chip label={t('module.hasQuiz')} tone="warning" /> : null}
+          {lesson.format && lesson.format !== 'standard' ? <Chip label={t(`module.format.${lesson.format}`)} /> : null}
         </Row>
         {status === 'in_progress' && lesson.progress ? <ProgressBar value={lesson.progress.percent / 100} height={4} /> : null}
       </View>
