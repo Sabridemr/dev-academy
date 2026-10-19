@@ -5,7 +5,7 @@
 # Runtime imajı yalnızca üretim bağımlılıklarını ve derlenmiş kodu içerir. Migration'lar API açılışında
 # değil, ayrı bir adımda (tools imajı: `prisma migrate deploy`) uygulanır; böylece birden fazla replika
 # aynı anda migration çalıştırmaya çalışmaz.
-FROM node:26-alpine AS base
+FROM node:22-alpine AS base
 RUN corepack enable && apk add --no-cache openssl libc6-compat
 WORKDIR /repo
 
@@ -35,7 +35,7 @@ RUN pnpm --filter @devacademy/backend deploy --prod --legacy /out \
  && cd /out && /repo/node_modules/.bin/prisma generate --schema prisma/schema.prisma \
  && rm -rf /out/src /out/test
 
-FROM node:26-alpine AS runtime
+FROM node:22-alpine AS runtime
 RUN apk add --no-cache openssl libc6-compat
 ENV NODE_ENV=production
 WORKDIR /app
