@@ -102,8 +102,9 @@ export class ProgressService {
     const [totalLessons, progress, badges, perModuleTotals, dueReviews, timeAgg] =
       await Promise.all([
         this.prisma.lesson.count({ where: { publishedVersionId: { not: null } } }),
+        // Yalnızca yayındaki dersler: yayından kalkan dersler oranı %100'ün üstüne taşımasın
         this.prisma.progress.findMany({
-          where: { userId },
+          where: { userId, lesson: { publishedVersionId: { not: null } } },
           include: {
             lesson: {
               select: { moduleId: true, slug: true, publishedVersion: { select: { title: true } } },

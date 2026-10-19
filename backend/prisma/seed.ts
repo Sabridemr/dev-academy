@@ -15,17 +15,13 @@ import * as argon2 from 'argon2';
 import Redis from 'ioredis';
 import {
   BADGES,
+  buildSearchText,
   CURRICULUM,
   LEARNING_PATHS,
   type LessonBlock,
   type LocalizedString,
 } from '@devacademy/shared';
-import {
-  coverageReport,
-  lessonPlainText,
-  loadContent,
-  type LoadedLesson,
-} from '@devacademy/shared/node';
+import { coverageReport, loadContent, type LoadedLesson } from '@devacademy/shared/node';
 
 const prisma = new PrismaClient();
 
@@ -353,17 +349,13 @@ async function main(): Promise<void> {
         orderBy: { version: 'desc' },
       });
       const nextVersion = (last?.version ?? 0) + 1;
-      const titleText =
-        typeof meta.title === 'string' ? meta.title : `${meta.title.tr} ${meta.title.en ?? ''}`;
-      const summaryText =
-        typeof meta.summary === 'string'
-          ? meta.summary
-          : `${meta.summary.tr} ${meta.summary.en ?? ''}`;
-      const searchText =
-        `${titleText}\n${summaryText}\n${meta.concepts.join(' ')} ${meta.tags.join(' ')}\n${lessonPlainText(lesson.doc)}`.slice(
-          0,
-          200_000,
-        );
+      const searchText = buildSearchText(
+        lesson.doc.blocks,
+        meta.title,
+        meta.summary,
+        meta.concepts,
+        meta.tags,
+      );
 
       await prisma.$transaction(async (tx) => {
         if (meta.status === 'published') {

@@ -142,10 +142,15 @@ export class ContentService {
     const key = CacheKeys.lesson(idOrSlug);
     let detail = await this.redis.getJson<LessonDetail>(key);
     if (!detail) {
-      const lesson = await this.prisma.lesson.findFirst({
-        where: { OR: [{ id: idOrSlug }, { slug: idOrSlug }], publishedVersionId: { not: null } },
-        include: { publishedVersion: true, module: true },
-      });
+      // Slug yalnızca modül içinde benzersiz: önce kimlikle, yoksa slug'la müfredat sırasındaki ilk ders
+      const include = { publishedVersion: true, module: true } as const;
+      const lesson =
+        (await this.prisma.lesson.findFirst({ where: { id: idOrSlug, publishedVersionId: { not: null } }, include })) ??
+        (await this.prisma.lesson.findFirst({
+          where: { slug: idOrSlug, publishedVersionId: { not: null } },
+          orderBy: [{ module: { order: 'asc' } }, { order: 'asc' }],
+          include,
+        }));
       if (!lesson || !lesson.publishedVersion) throw new NotFoundException('Ders bulunamadı');
       const neighbors = await this.findNeighbors(lesson);
       detail = toLessonDetail(lesson, neighbors);
@@ -196,13 +201,11 @@ export class ContentService {
   /* ------------------------------ Yardımcı ------------------------------ */
 
   private async attachModuleProgress(modules: ModuleSummary[], userId: string): Promise<ModuleSummary[]> {
-    const grouped = await this.prisma.progress.groupBy({
-      by: ['lessonId'],
-      where: { userId, status: 'completed' },
-      _count: { _all: true },
+    // Tamamlanan ve hâlâ yayında olan dersler (yayından kalkan ders sayıyı toplamın üstüne çıkarmasın)
+    const lessons = await this.prisma.lesson.findMany({
+      where: { publishedVersionId: { not: null }, progress: { some: { userId, status: 'completed' } } },
+      select: { moduleId: true },
     });
-    if (grouped.length === 0) return modules.map((m) => ({ ...m, completedCount: 0 }));
-    const lessons = await this.prisma.lesson.findMany({ where: { id: { in: grouped.map((g) => g.lessonId) } }, select: { id: true, moduleId: true } });
     const perModule = new Map<string, number>();
     for (const l of lessons) perModule.set(l.moduleId, (perModule.get(l.moduleId) ?? 0) + 1);
     return modules.map((m) => ({ ...m, completedCount: perModule.get(m.id) ?? 0 }));

@@ -13,14 +13,18 @@ import {
 import type { Server, Socket } from 'socket.io';
 import type { WsServerEvent } from '@devacademy/shared';
 import type { Env } from '../../config/env';
+import { AuthStateService } from '../../common/auth/auth-state.service';
 import type { AccessTokenPayload } from '../../common/auth/jwt-auth.guard';
 
 const RELAY_WINDOW_MS = 1000;
 const RELAY_MAX = 20;
+/** Bir soketin aynı anda katılabileceği simülasyon odası sayısı (oda başına fetchSockets maliyeti var) */
+const MAX_SIM_ROOMS = 5;
 
 interface SocketData {
   userId?: string;
   role?: string;
+  expiryTimer?: ReturnType<typeof setTimeout>;
 }
 
 /**
@@ -41,6 +45,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
   constructor(
     private readonly jwt: JwtService,
     private readonly config: ConfigService<Env, true>,
+    private readonly authState: AuthStateService,
   ) {}
 
   async handleConnection(client: Socket): Promise<void> {
@@ -50,12 +55,22 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     const data = client.data as SocketData;
     if (token) {
       try {
-        const payload = await this.jwt.verifyAsync<AccessTokenPayload>(token, {
+        const payload = await this.jwt.verifyAsync<AccessTokenPayload & { exp?: number }>(token, {
           secret: this.config.get('JWT_ACCESS_SECRET'),
         });
+        // HTTP guard ile aynı kurallar: yalnızca access token, kullanıcı aktif ve oturumları kapatılmamış
+        if (payload.type !== 'access') throw new Error('wrong token type');
+        const state = await this.authState.get(payload.sub);
+        if (!state || !AuthStateService.isIssuedAfterRevocation(state, payload.iat))
+          throw new Error('revoked');
         data.userId = payload.sub;
-        data.role = payload.role;
+        data.role = state.role;
         await client.join(`user:${payload.sub}`);
+        // Token süresi dolunca kişisel odadan çıkar; istemci yeni token'la yeniden bağlanır
+        if (payload.exp) {
+          const ms = payload.exp * 1000 - Date.now();
+          data.expiryTimer = setTimeout(() => this.downgrade(client), Math.max(0, ms));
+        }
       } catch {
         // anonim bağlantı: yalnızca genel yayınlar
       }
@@ -68,18 +83,19 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
 
   handleDisconnect(client: Socket): void {
     const data = client.data as SocketData;
+    if (data.expiryTimer) clearTimeout(data.expiryTimer);
     this.relayCounters.delete(client.id);
     if (data.userId) this.logger.debug(`Bağlantı kapandı: ${data.userId}`);
   }
 
-  @SubscribeMessage('subscribe.lesson')
-  async subscribeLesson(
-    @ConnectedSocket() client: Socket,
-    @MessageBody() body: { lessonId?: string },
-  ): Promise<{ ok: boolean }> {
-    if (!body?.lessonId) return { ok: false };
-    await client.join(`lesson:${body.lessonId}`);
-    return { ok: true };
+  /** Kimliği düşür: kişisel odadan çık, bağlantı anonim olarak sürer */
+  private downgrade(client: Socket): void {
+    const data = client.data as SocketData;
+    if (!data.userId) return;
+    void client.leave(`user:${data.userId}`);
+    data.userId = undefined;
+    data.role = undefined;
+    client.emit('hello', { authenticated: false, serverTime: new Date().toISOString() });
   }
 
   @SubscribeMessage('simulation.join')
@@ -89,6 +105,9 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
   ): Promise<{ ok: boolean; members: number }> {
     if (!body?.simulationId) return { ok: false, members: 0 };
     const room = `sim:${sanitize(body.simulationId)}`;
+    const simRooms = [...client.rooms].filter((r) => r.startsWith('sim:'));
+    if (!client.rooms.has(room) && simRooms.length >= MAX_SIM_ROOMS)
+      return { ok: false, members: 0 };
     await client.join(room);
     const members = (await this.server.in(room).fetchSockets()).length;
     this.server.to(room).emit('simulation.members', { simulationId: body.simulationId, members });
@@ -129,6 +148,11 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
 
   broadcast(event: WsServerEvent): void {
     this.server?.emit('event', event);
+  }
+
+  /** Hesap silindiğinde kullanıcının tüm soketlerini (Redis adaptörüyle tüm örneklerde) kapatır */
+  disconnectUser(userId: string): void {
+    this.server?.in(`user:${userId}`).disconnectSockets(true);
   }
 }
 

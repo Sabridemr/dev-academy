@@ -4,8 +4,8 @@ import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { LoggerModule } from 'nestjs-pino';
-import { randomUUID } from 'node:crypto';
 import { validateEnv, type Env } from './config/env';
+import { AuthStateModule } from './common/auth/auth-state.module';
 import { PrismaModule } from './common/prisma/prisma.module';
 import { RedisModule } from './common/redis/redis.module';
 import { RedisService } from './common/redis/redis.service';
@@ -13,7 +13,7 @@ import { RedisThrottlerStorage } from './common/throttler/redis-throttler.storag
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { JwtAuthGuard } from './common/auth/jwt-auth.guard';
 import { RolesGuard } from './common/auth/roles.guard';
-import { requestIdMiddleware } from './common/middleware/request-id.middleware';
+import { requestIdMiddleware, resolveRequestId } from './common/middleware/request-id.middleware';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { ContentModule } from './modules/content/content.module';
@@ -39,7 +39,7 @@ import { OfflineModule } from './modules/offline/offline.module';
       useFactory: (config: ConfigService<Env, true>) => ({
         pinoHttp: {
           level: config.get('LOG_LEVEL'),
-          genReqId: (req) => (req.headers['x-request-id'] as string | undefined) ?? randomUUID(),
+          genReqId: (req) => resolveRequestId(req.headers['x-request-id']),
           autoLogging: { ignore: (req) => (req.url ?? '').includes('/health') },
           redact: ['req.headers.authorization', 'req.headers.cookie'],
           customProps: () => ({ service: 'devacademy-api' }),
@@ -66,6 +66,7 @@ import { OfflineModule } from './modules/offline/offline.module';
     }),
     ScheduleModule.forRoot(),
     PrismaModule,
+    AuthStateModule,
     RedisModule,
     AuthModule,
     UsersModule,

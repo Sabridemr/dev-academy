@@ -43,6 +43,8 @@ model User {
   lastActivityDate String? // YYYY-MM-DD (kullanıcının saat diliminde)
 
   emailVerifiedAt DateTime?
+  /// Bu andan önce verilmiş access token'lar geçersiz (şifre değişimi, tüm cihazlardan çıkış)
+  tokensValidAfter DateTime?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
   deletedAt       DateTime?
@@ -429,7 +431,8 @@ model Bookmark {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   lessonId  String
   lesson    Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
-  blockId   String?
+  /// Ders düzeyindeki yer imi için '' (NULL değil: unique kısıtta NULL'lar ayrı sayılır, kopya oluşurdu)
+  blockId   String   @default("")
   createdAt DateTime @default(now())
 
   @@unique([userId, lessonId, blockId])

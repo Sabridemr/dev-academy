@@ -21,6 +21,8 @@ export const EnvSchema = z.object({
     .int()
     .positive()
     .default(60 * 60 * 24 * 30),
+  /** Web refresh çerezi: web ve API farklı "site"lardaysa (ör. iki ayrı alan adı) 'none' gerekir */
+  REFRESH_COOKIE_SAMESITE: z.enum(['lax', 'strict', 'none']).default('lax'),
   GOOGLE_CLIENT_IDS: z.string().default(''),
   APPLE_CLIENT_IDS: z.string().default(''),
 

@@ -63,7 +63,13 @@ export async function createApp(): Promise<NestExpressApplication> {
     origin: origins,
     credentials: true,
     exposedHeaders: ['ETag', 'X-Request-Id'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'If-None-Match', 'X-Request-Id'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'If-None-Match',
+      'X-Request-Id',
+      'X-Auth-Mode',
+    ],
   });
   app.useWebSocketAdapter(new CorsIoAdapter(app, origins, config.get('REDIS_URL')));
   app.enableShutdownHooks();

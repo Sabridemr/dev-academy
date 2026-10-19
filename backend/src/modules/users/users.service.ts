@@ -1,11 +1,17 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import type { RegisterPushTokenDto, UpdateProfileDto, UserProfile } from '@devacademy/shared';
+import { AuthStateService } from '../../common/auth/auth-state.service';
 import { PrismaService } from '../../common/prisma/prisma.service';
+import { RealtimeGateway } from '../realtime/realtime.gateway';
 import { toProfile } from '../auth/auth.service';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly authState: AuthStateService,
+    private readonly realtime: RealtimeGateway,
+  ) {}
 
   async getProfile(
     userId: string,
@@ -34,24 +40,15 @@ export class UsersService {
     return { ...toProfile(user), reminderHour: user.reminderHour, timezone: user.timezone };
   }
 
-  async softDelete(userId: string): Promise<void> {
-    await this.prisma.$transaction([
-      this.prisma.refreshToken.updateMany({
-        where: { userId, revokedAt: null },
-        data: { revokedAt: new Date() },
-      }),
-      this.prisma.pushToken.deleteMany({ where: { userId } }),
-      this.prisma.user.update({
-        where: { id: userId },
-        data: {
-          deletedAt: new Date(),
-          email: `deleted_${userId}@users.devacademy.local`,
-          displayName: 'Silinmiş kullanıcı',
-          avatarUrl: null,
-          passwordHash: null,
-        },
-      }),
-    ]);
+  /**
+   * Hesabı ve kişisel verileri kalıcı olarak siler (KVKK/GDPR silme hakkı): ilerleme, denemeler, notlar,
+   * yer imleri, tekrar kartları, rozetler, OAuth bağlantıları ve token'lar cascade ile gider; yazdığı
+   * ders/sahne sürümleri yazarsız kalır. Aynı Google/Apple hesabıyla daha sonra yeniden kayıt olunabilir.
+   */
+  async eraseAccount(userId: string): Promise<void> {
+    await this.prisma.user.delete({ where: { id: userId } });
+    await this.authState.invalidate(userId);
+    this.realtime.disconnectUser(userId);
   }
 
   async registerPushToken(userId: string, dto: RegisterPushTokenDto): Promise<void> {

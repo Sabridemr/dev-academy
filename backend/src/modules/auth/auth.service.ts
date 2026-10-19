@@ -19,10 +19,14 @@ import type {
   UserProfile,
 } from '@devacademy/shared';
 import type { User } from '@prisma/client';
+import { AuthStateService } from '../../common/auth/auth-state.service';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { RedisService } from '../../common/redis/redis.service';
 import type { Env } from '../../config/env';
 import { OAuthVerifierService } from './oauth-verifier.service';
+
+/** Zamanlama eşitlemesi için sahte hash (kayıtlı olmayan e-postalarda doğrulanır) */
+const DUMMY_HASH = argon2.hash(randomBytes(16).toString('hex'), { type: argon2.argon2id });
 
 export interface SessionMeta {
   userAgent?: string;
@@ -44,6 +48,7 @@ export class AuthService {
     private readonly config: ConfigService<Env, true>,
     private readonly oauth: OAuthVerifierService,
     private readonly redis: RedisService,
+    private readonly authState: AuthStateService,
   ) {}
 
   /**
@@ -75,8 +80,11 @@ export class AuthService {
   async login(dto: LoginDto, meta: SessionMeta): Promise<AuthResponse> {
     const email = dto.email.toLowerCase().trim();
     const user = await this.prisma.user.findUnique({ where: { email } });
-    if (!user || !user.passwordHash || user.deletedAt)
+    if (!user || !user.passwordHash || user.deletedAt) {
+      // Kullanıcı yokken de bir argon2 doğrulaması yap: yanıt süresi e-postanın kayıtlı olup olmadığını sızdırmasın
+      await argon2.verify(await DUMMY_HASH, dto.password).catch(() => false);
       throw new UnauthorizedException('E-posta ya da şifre hatalı');
+    }
     const ok = await argon2.verify(user.passwordHash, dto.password);
     if (!ok) throw new UnauthorizedException('E-posta ya da şifre hatalı');
     return this.issueSession(user, meta);
@@ -93,9 +101,11 @@ export class AuthService {
       },
       include: { user: true },
     });
-    if (existingAccount) {
-      if (existingAccount.user.deletedAt) throw new UnauthorizedException('Hesap kapatılmış');
+    if (existingAccount && !existingAccount.user.deletedAt)
       return this.issueSession(existingAccount.user, meta);
+    if (existingAccount) {
+      // Eski (soft-delete) kapatılmış hesap: kişi aynı sağlayıcıyla geri dönebilsin diye kalıntıyı tamamen sil
+      await this.prisma.user.delete({ where: { id: existingAccount.userId } });
     }
 
     // Aynı e-posta ile hesap varsa yalnızca sağlayıcı e-postayı doğrulamışsa bağla; yoksa yeni kullanıcı oluştur.
@@ -174,6 +184,8 @@ export class AuthService {
         where: { userId, revokedAt: null },
         data: { revokedAt: new Date() },
       });
+      // Diğer cihazlardaki access token'lar da süresini beklemeden geçersiz olur
+      await this.authState.revokeAccessTokens(userId);
       return;
     }
     if (!rawToken) return;
@@ -203,6 +215,7 @@ export class AuthService {
       where: { userId, revokedAt: null },
       data: { revokedAt: new Date() },
     });
+    await this.authState.revokeAccessTokens(userId);
   }
 
   /* ----------------------------- yardımcılar ----------------------------- */

@@ -1,5 +1,6 @@
-import { Controller, Get, ServiceUnavailableException } from '@nestjs/common';
+import { Controller, Get, HttpStatus, Res } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import type { Response } from 'express';
 import { Public } from '../../common/auth/decorators';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { RedisService } from '../../common/redis/redis.service';
@@ -32,14 +33,15 @@ export class HealthController {
   @Public()
   @Get('ready')
   @ApiOperation({ summary: 'Readiness: veritabanı ve Redis' })
-  async ready() {
+  async ready(@Res({ passthrough: true }) res: Response) {
     const [db, redis] = await Promise.all([this.prisma.ping(), this.redis.ping()]);
     const body = {
       status: db ? (redis ? 'ok' : 'degraded') : 'down',
       checks: { database: db ? 'up' : 'down', redis: redis ? 'up' : 'down' },
       timestamp: new Date().toISOString(),
     };
-    if (!db) throw new ServiceUnavailableException(body);
+    // 503 gövdesi de hangi bağımlılığın düştüğünü göstersin (hata filtresi `checks`'i taşımazdı)
+    if (!db) res.status(HttpStatus.SERVICE_UNAVAILABLE);
     return body;
   }
 }
