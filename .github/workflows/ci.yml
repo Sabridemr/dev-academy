@@ -32,7 +32,7 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: .turbo/cache
           key: turbo-lint-${{ github.sha }}
@@ -53,7 +53,7 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: .turbo/cache
           key: turbo-shared-${{ github.sha }}
@@ -95,7 +95,7 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: .turbo/cache
           key: turbo-backend-${{ github.sha }}
@@ -148,7 +148,7 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: .turbo/cache
           key: turbo-web-${{ github.sha }}
@@ -189,7 +189,7 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: .turbo/cache
           key: turbo-mobile-${{ github.sha }}
