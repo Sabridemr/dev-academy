@@ -16,6 +16,8 @@ export type SessionStatus = 'loading' | 'authenticated' | 'anonymous';
 export type SessionUser = UserProfile & { reminderHour?: number | null; timezone?: string };
 
 const USER_KEY = 'session.user';
+/** Bu kurulumda uygulama en az bir kez açıldı mı (MMKV kurulumla silinir) */
+const INSTALL_KEY = 'install.initialized';
 
 /**
  * Yerel kullanıcı verisini temizler: profil, kuyruklar, sorgu önbelleği, kayıtlı push token işareti,
@@ -45,6 +47,12 @@ export const useSession = create<SessionState>((set, get) => ({
   user: null,
 
   bootstrap: async () => {
+    // iOS Keychain uygulama silinince temizlenmez, MMKV temizlenir: yeniden kurulumda eski hesabın
+    // token'larıyla profil olmadan açılmasın. Yükseltmelerde önbellekli profil durduğu için dokunulmaz.
+    if (!kv.getBoolean(INSTALL_KEY)) {
+      if (!kv.getString(USER_KEY)) await tokenStorage.clear();
+      kv.set(INSTALL_KEY, true);
+    }
     const tokens = await tokenStorage.get();
     if (!tokens) {
       set({ status: 'anonymous', user: null });

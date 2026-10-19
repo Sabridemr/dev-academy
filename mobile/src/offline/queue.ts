@@ -135,6 +135,14 @@ export function queuedAttemptFor(quizId: string): QueuedAttempt | undefined {
   return readAttemptQueue().find((a) => a.quizId === quizId);
 }
 
+/** Kullanıcı testi yeniden çözerse bekleyen eski deneme gönderilmesin */
+export function removeQueuedAttempt(quizId: string): void {
+  setJson(
+    KV_KEYS.attemptQueue,
+    readAttemptQueue().filter((a) => a.quizId !== quizId),
+  );
+}
+
 type FlushedAttempt = { attempt: QueuedAttempt; result: AttemptResult };
 let flushingAttempts: Promise<FlushedAttempt[]> | null = null;
 

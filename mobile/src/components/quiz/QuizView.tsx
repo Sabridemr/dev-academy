@@ -7,7 +7,12 @@ import { useI18n } from '@/i18n';
 import { isApiError } from '@/lib/api';
 import { endpoints } from '@/lib/endpoints';
 import { queryKeys } from '@/lib/queryClient';
-import { enqueueAttempt, queuedAttemptFor, takeAttemptResult } from '@/offline/queue';
+import {
+  enqueueAttempt,
+  queuedAttemptFor,
+  removeQueuedAttempt,
+  takeAttemptResult,
+} from '@/offline/queue';
 import { useSession } from '@/stores/session';
 import { radius, spacing, useTheme, withAlpha } from '@/theme';
 import { Button, Card, Chip, IconButton, Text } from '@/components/ui';
@@ -50,6 +55,7 @@ export function QuizView({
   const [queued, setQueued] = useState(() => Boolean(queuedAttemptFor(quiz.id)));
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<unknown>(null);
+  const [dropped, setDropped] = useState(false);
   const startedAt = useRef(Date.now());
   const onPassedRef = useRef(onPassed);
   onPassedRef.current = onPassed;
@@ -66,6 +72,10 @@ export function QuizView({
         if (r.passed) onPassedRef.current?.();
         void qc.invalidateQueries({ queryKey: queryKeys.summary });
         void qc.invalidateQueries({ queryKey: queryKeys.reviews });
+      } else if (!queuedAttemptFor(quiz.id)) {
+        // Sonuç yok ve kuyrukta da değil: kalıcı hatayla düşürüldü → sonsuza dek "kuyrukta" görünmesin
+        setQueued(false);
+        setDropped(true);
       }
     }, 3000);
     return () => clearInterval(id);
@@ -111,7 +121,8 @@ export function QuizView({
       void qc.invalidateQueries({ queryKey: queryKeys.summary });
       void qc.invalidateQueries({ queryKey: queryKeys.reviews });
     } catch (e) {
-      if (isApiError(e) && e.isConnectivity) {
+      // İlerleme kuyruğuyla aynı kural: bağlantı, sunucu ve hız sınırı hataları geçicidir
+      if (isApiError(e) && (e.isConnectivity || e.code === 'server' || e.code === 'rate_limited')) {
         enqueueAttempt(quiz.id, lessonId, dto);
         setQueued(true);
       } else {
@@ -123,8 +134,11 @@ export function QuizView({
   };
 
   const retry = () => {
+    removeQueuedAttempt(quiz.id);
     setResult(null);
     setQueued(false);
+    setError(null);
+    setDropped(false);
     setAnswers(initialAnswers);
     startedAt.current = Date.now();
   };
@@ -305,6 +319,11 @@ export function QuizView({
       {!authed ? (
         <Text variant="caption" muted>
           {t('lesson.loginRequired')}
+        </Text>
+      ) : null}
+      {dropped ? (
+        <Text variant="caption" color={colors.danger} testID="quiz-dropped">
+          {t('quiz.queuedDropped')}
         </Text>
       ) : null}
       {error ? (

@@ -7,6 +7,17 @@ import type { ConfigContext, ExpoConfig } from 'expo/config';
  */
 const IS_DEV = process.env.APP_VARIANT === 'development';
 
+// Mağaza derlemesinde API adresi https olmalı: eksikse uygulama sessizce http://localhost'a düşer ve
+// Android release cleartext'i engellediği için çalışma anında anlaşılmaz biçimde bozulurdu.
+const profile = process.env.EAS_BUILD_PROFILE;
+if (
+  profile &&
+  profile !== 'development' &&
+  !process.env.EXPO_PUBLIC_API_URL?.startsWith('https://')
+) {
+  throw new Error(`EAS "${profile}" derlemesi için EXPO_PUBLIC_API_URL https olmalı`);
+}
+
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: IS_DEV ? 'DevAcademy (Dev)' : 'DevAcademy',
