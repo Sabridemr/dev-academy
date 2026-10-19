@@ -7,8 +7,8 @@
  * - Tekil paketler (react, react-native ...) her zaman mobil projenin çözdüğü kopyaya
  *   yönlendirilir: web farklı bir React sürümü kullandığında Metro'nun iki kopya
  *   paketlemesini engeller.
- * - gray-matter: @devacademy/shared içindeki Markdown ayrıştırıcısı (yalnızca Node'da
- *   kullanılır) `fs` gerektirir; mobilde boş bir saplama (stub) ile değiştirilir.
+ * - gray-matter: @devacademy/shared'in Node'a özel `./node` girişindeki Markdown ayrıştırıcısı
+ *   `fs` gerektirir; ana giriş artık onu içermez, saplama (stub) yanlışlıkla içe aktarmaya karşı güvencedir.
  */
 const path = require('path');
 const { getDefaultConfig } = require('expo/metro-config');
@@ -18,7 +18,8 @@ const workspaceRoot = path.resolve(projectRoot, '..');
 
 const config = getDefaultConfig(projectRoot);
 
-config.watchFolders = [workspaceRoot];
+// Expo'nun varsayılan izleme klasörleri korunur, depo kökü eklenir
+config.watchFolders = [...new Set([...(config.watchFolders ?? []), workspaceRoot])];
 config.resolver.nodeModulesPaths = [
   path.resolve(projectRoot, 'node_modules'),
   path.resolve(workspaceRoot, 'node_modules'),
@@ -28,6 +29,7 @@ const SINGLETONS = [
   'react',
   'react-native',
   'react-native-reanimated',
+  'react-native-worklets',
   'react-native-svg',
   'expo',
   'expo-router',

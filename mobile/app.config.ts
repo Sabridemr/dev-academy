@@ -30,10 +30,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   android: {
     package: IS_DEV ? 'com.devacademy.app.dev' : 'com.devacademy.app',
     edgeToEdgeEnabled: true,
-    permissions: ['POST_NOTIFICATIONS', 'SCHEDULE_EXACT_ALARM'],
+    // Günlük (DAILY) tetikleyici tam zamanlı alarm gerektirmez; Android 14+'ta SCHEDULE_EXACT_ALARM varsayılan reddedilir
+    permissions: ['POST_NOTIFICATIONS'],
   },
   plugins: [
     'expo-router',
+    'expo-font',
     'expo-secure-store',
     'expo-sqlite',
     'expo-localization',
