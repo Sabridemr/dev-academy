@@ -26,6 +26,8 @@ export const tr = {
     modulesTitle: 'Modüller',
     lessons: '{count} ders',
     modulesCount: '{count} modül',
+    showcaseLabel: 'Örnek animasyonlar',
+    goToLesson: 'Bu konunun dersine git',
   },
   auth: {
     email: 'E-posta',

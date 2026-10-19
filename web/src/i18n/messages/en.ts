@@ -26,6 +26,8 @@ export const en: Messages = {
     pathsTitle: 'Learning paths',
     modulesTitle: 'Modules',
     lessons: '{count} lessons',
+    showcaseLabel: 'Sample animations',
+    goToLesson: 'Go to this topic’s lesson',
     modulesCount: '{count} modules',
   },
   auth: {
