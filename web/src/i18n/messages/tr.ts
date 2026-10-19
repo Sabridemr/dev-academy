@@ -104,6 +104,8 @@ export const tr = {
     explanation: 'Açıklama',
     selectAll: 'Birden fazla seçenek seçebilirsin',
     orderHint: 'Okları kullanarak doğru sıraya diz',
+    moveUp: '{item} yukarı taşı',
+    moveDown: '{item} aşağı taşı',
     loginToSave: 'Sonucunu kaydetmek ve tekrar listesine eklemek için giriş yap.',
     newBadge: 'Yeni rozet: {name}',
     trueLabel: 'Doğru',

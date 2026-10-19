@@ -7,6 +7,7 @@ import { LoginSchema, RegisterSchema, type AuthResponse } from '@devacademy/shar
 import { useI18n } from '@/i18n';
 import { ApiError, api } from '@/lib/api';
 import { useAuthStore } from '@/lib/auth-store';
+import { safeNextPath } from '@/lib/utils';
 import { OAuthButtons } from './OAuthButtons';
 
 /** Giriş / kayıt formu: shared zod şemalarıyla istemci tarafı doğrulama, sunucu hataları alan bazında gösterilir */
@@ -26,7 +27,7 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
     const path = params.get('path');
     if (mode === 'register' || !res.user.selectedPathId)
       router.push(`/onboarding${path ? `?path=${path}` : ''}`);
-    else router.push(next && next.startsWith('/') ? next : '/dashboard');
+    else router.push(safeNextPath(next, '/dashboard'));
   };
 
   const onSubmit = async (e: React.FormEvent) => {

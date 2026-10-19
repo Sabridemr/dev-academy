@@ -105,6 +105,8 @@ export const en: Messages = {
     explanation: 'Explanation',
     selectAll: 'You can select more than one option',
     orderHint: 'Use the arrows to put them in the right order',
+    moveUp: 'Move {item} up',
+    moveDown: 'Move {item} down',
     loginToSave: 'Log in to save your result and add mistakes to your review list.',
     newBadge: 'New badge: {name}',
     trueLabel: 'True',

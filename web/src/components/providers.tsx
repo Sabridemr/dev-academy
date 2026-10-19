@@ -3,6 +3,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { I18nProvider } from '@/i18n';
+import { startAuthSync } from '@/lib/auth-store';
 import { RealtimeBridge } from './realtime';
 
 export function Providers({ locale, children }: { locale: string; children: ReactNode }) {
@@ -22,12 +23,19 @@ export function Providers({ locale, children }: { locale: string; children: Reac
   return (
     <QueryClientProvider client={client}>
       <I18nProvider initialLocale={locale}>
+        <AuthSync />
         <ThemeSync />
         <RealtimeBridge />
         {children}
       </I18nProvider>
     </QueryClientProvider>
   );
+}
+
+/** Oturumu mount'ta localStorage'dan yükler ve sekmeler arası senkronlar */
+function AuthSync() {
+  useEffect(() => startAuthSync(), []);
+  return null;
 }
 
 /** Sistem teması değişirse ve kullanıcı manuel seçim yapmadıysa güncelle */

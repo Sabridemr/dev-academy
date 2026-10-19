@@ -22,27 +22,42 @@ export class ApiError extends Error {
   }
 }
 
-let refreshing: Promise<AuthTokens | null> | null = null;
+let refreshing: Promise<string | null> | null = null;
 
-async function refreshTokens(): Promise<AuthTokens | null> {
-  const { refreshToken, setTokens, clear } = useAuthStore.getState();
-  if (!refreshToken) return null;
-  try {
-    const res = await fetch(`${API_URL}/auth/refresh`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refreshToken }),
-    });
+/**
+ * Sekmeler arası tek refresh: Web Locks ile aynı anda yalnızca bir sekme yeniler. Kilidi alan sekme
+ * önce depodaki güncel token'ı okur; başka bir sekme zaten döndürdüyse onu kullanır, eski (iptal edilmiş)
+ * token'ı sunucuya göndermez (gönderseydi yeniden kullanım tespiti tüm oturumu kapatırdı).
+ */
+/** Yeni access token'ı (ya da yenilenemediyse null) döner */
+async function refreshTokens(staleAccessToken: string | null): Promise<string | null> {
+  const run = async (): Promise<string | null> => {
+    await useAuthStore.persist.rehydrate();
+    const { accessToken, refreshToken, setTokens, clear } = useAuthStore.getState();
+    if (!refreshToken) return null;
+    if (accessToken && accessToken !== staleAccessToken) return accessToken;
+    let res: Response;
+    try {
+      res = await fetch(`${API_URL}/auth/refresh`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken }),
+      });
+    } catch {
+      return null; // ağ hatası: oturum korunur
+    }
     if (!res.ok) {
-      clear();
+      // Yalnızca sunucu token'ı reddettiyse çıkış yap; 5xx/429 geçicidir
+      if (res.status === 400 || res.status === 401 || res.status === 403) clear();
       return null;
     }
     const tokens = (await res.json()) as AuthTokens;
     setTokens(tokens);
-    return tokens;
-  } catch {
-    return null;
-  }
+    return tokens.accessToken;
+  };
+  if (typeof navigator !== 'undefined' && navigator.locks)
+    return navigator.locks.request('da-auth-refresh', run);
+  return run();
 }
 
 export interface RequestOptions extends Omit<RequestInit, 'body'> {
@@ -69,16 +84,21 @@ export async function api<T>(
   });
 
   if (res.status === 401 && !anonymous && !retried && useAuthStore.getState().refreshToken) {
-    refreshing ??= refreshTokens().finally(() => {
+    refreshing ??= refreshTokens(accessToken).finally(() => {
       refreshing = null;
     });
-    const tokens = await refreshing;
-    if (tokens) return api<T>(path, options, true);
+    if (await refreshing) return api<T>(path, options, true);
   }
 
   if (res.status === 204) return undefined as T;
   const text = await res.text();
-  const data = text ? (JSON.parse(text) as unknown) : undefined;
+  let data: unknown;
+  try {
+    data = text ? (JSON.parse(text) as unknown) : undefined;
+  } catch {
+    // JSON olmayan gövde (ör. proxy'nin HTML 502 sayfası): SyntaxError yerine durum kodlu ApiError
+    throw new ApiError(res.ok ? 502 : res.status, { message: `HTTP ${res.status}` });
+  }
   if (!res.ok) throw new ApiError(res.status, (data ?? {}) as Partial<ApiErrorBody>);
   return data as T;
 }

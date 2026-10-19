@@ -20,6 +20,8 @@ interface AuthState {
   clear: () => void;
 }
 
+const STORAGE_KEY = 'da-auth';
+
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
@@ -35,20 +37,37 @@ export const useAuthStore = create<AuthState>()(
       clear: () => set({ user: null, accessToken: null, refreshToken: null }),
     }),
     {
-      name: 'da-auth',
+      name: STORAGE_KEY,
       storage: createJSONStorage(() => localStorage),
       partialize: (s) => ({
         accessToken: s.accessToken,
         refreshToken: s.refreshToken,
         user: s.user,
       }),
-      onRehydrateStorage: () => (state) => {
-        if (state) state.hydrated = true;
+      // Sunucu ve ilk istemci render'ı aynı (oturumsuz) çıktıyı üretsin diye otomatik okunmaz;
+      // AuthHydrator mount olunca localStorage'dan okur (hydration uyumsuzluğu olmaz).
+      skipHydration: true,
+      onRehydrateStorage: () => () => {
         useAuthStore.setState({ hydrated: true });
       },
     },
   ),
 );
+
+/**
+ * Oturumu localStorage'dan yükler ve diğer sekmelerdeki değişiklikleri izler: bir sekme refresh
+ * token'ı döndürdüğünde ya da çıkış yaptığında diğerleri eski (iptal edilmiş) token'la kalmaz.
+ * Aksi halde eski token'la yapılan refresh, sunucuda yeniden kullanım tespitini tetikleyip tüm oturum
+ * ailesini kapatırdı.
+ */
+export function startAuthSync(): () => void {
+  void useAuthStore.persist.rehydrate();
+  const onStorage = (e: StorageEvent) => {
+    if (e.key === STORAGE_KEY || e.key === null) void useAuthStore.persist.rehydrate();
+  };
+  window.addEventListener('storage', onStorage);
+  return () => window.removeEventListener('storage', onStorage);
+}
 
 export function useIsAuthenticated(): boolean {
   return useAuthStore((s) => Boolean(s.accessToken && s.user));

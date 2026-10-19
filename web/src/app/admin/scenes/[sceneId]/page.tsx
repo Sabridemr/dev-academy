@@ -3,6 +3,7 @@
 import { use } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import type { AnimationSceneInput } from '@devacademy/shared';
+import { useI18n } from '@/i18n';
 import { api } from '@/lib/api';
 import { SceneEditor } from '@/components/admin/SceneEditor';
 
@@ -29,7 +30,8 @@ const NEW_SCENE: AnimationSceneInput = {
 export default function AdminSceneEditorPage({ params }: { params: Promise<{ sceneId: string }> }) {
   const { sceneId } = use(params);
   const isNew = sceneId === 'new';
-  const { data, isLoading } = useQuery({
+  const { t } = useI18n();
+  const { data, isLoading, error } = useQuery({
     queryKey: ['admin-scene', sceneId],
     queryFn: () =>
       api<{ id: string; lessonId: string | null; data: AnimationSceneInput }>(
@@ -38,6 +40,13 @@ export default function AdminSceneEditorPage({ params }: { params: Promise<{ sce
     enabled: !isNew,
   });
   if (!isNew && isLoading) return <div className="card h-96 animate-pulse" />;
+  if (!isNew && !data)
+    return (
+      <div className="card p-6 text-sm text-danger" role="alert">
+        {t('common.error')}
+        {error ? `: ${(error as Error).message}` : ''}
+      </div>
+    );
   return (
     <SceneEditor
       initial={isNew ? NEW_SCENE : data!.data}

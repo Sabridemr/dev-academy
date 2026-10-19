@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useEffect, useMemo, useState } from 'react';
+import { use, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus, Rocket, Save } from 'lucide-react';
@@ -66,27 +66,37 @@ export default function AdminLessonEditor({ params }: { params: Promise<{ lesson
   const [status, setStatus] = useState<{ tone: 'ok' | 'err'; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
 
-  // Taslağı yükle (yoksa yayındaki sürümden türet)
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const loadedFor = useRef<string | null>(null);
+
+  // Taslağı ders başına BİR kez yükle (yoksa yayındaki sürümden türet). Yayınlama sonrası sürüm listesi
+  // yeniden çekilince tekrar fork edilmez; sonraki kaydetme sunucuda yeni taslağı zaten oluşturur.
   useEffect(() => {
-    if (!versions.data) return;
+    if (!versions.data || loadedFor.current === lessonId) return;
+    loadedFor.current = lessonId;
+    const list = versions.data;
     void (async () => {
-      let base = versions.data.find((v) => v.status === 'draft');
-      if (!base) {
-        try {
-          const forked = await api<AdminLessonVersion>(`/admin/lessons/${lessonId}/fork`, {
-            method: 'POST',
-          });
-          base = forked;
-        } catch {
-          base = versions.data[0];
+      try {
+        let base = list.find((v) => v.status === 'draft');
+        if (!base) {
+          try {
+            base = await api<AdminLessonVersion>(`/admin/lessons/${lessonId}/fork`, {
+              method: 'POST',
+            });
+          } catch {
+            base = list[0];
+          }
         }
+        if (!base) throw new Error(t('common.notFound'));
+        const full = await api<VersionFull>(`/admin/versions/${base.id}`);
+        setDraft(full);
+        setBlockTexts(full.blocks.map((b) => JSON.stringify(b, null, 2)));
+      } catch (e) {
+        loadedFor.current = null;
+        setLoadError((e as Error).message || t('common.error'));
       }
-      if (!base) return;
-      const full = await api<VersionFull>(`/admin/versions/${base.id}`);
-      setDraft(full);
-      setBlockTexts(full.blocks.map((b) => JSON.stringify(b, null, 2)));
     })();
-  }, [versions.data, lessonId]);
+  }, [versions.data, lessonId, t]);
 
   const parsedBlocks = useMemo(
     () =>
@@ -107,6 +117,13 @@ export default function AdminLessonEditor({ params }: { params: Promise<{ lesson
   );
   const allValid = parsedBlocks.every((b) => b.ok);
 
+  const failure = loadError ?? (versions.isError ? (versions.error as Error).message : null);
+  if (!draft && failure)
+    return (
+      <div className="card p-6 text-sm text-danger" role="alert">
+        {t('common.error')}: {failure}
+      </div>
+    );
   if (!draft) return <div className="card h-64 animate-pulse" />;
 
   const previewLesson: LessonDetail = {
