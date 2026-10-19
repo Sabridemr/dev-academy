@@ -77,10 +77,11 @@ Animasyonlar platformdan bağımsız JSON “sahnelerinden” üretilir (`packag
 
 ```
 content/modules/<modül-id>/<ders-id>/
-  lesson.md        frontmatter + Markdown + :::diagram / :::animation / :::interactive / :::code / :::realworld / :::callout / :::quiz / :::next
+  lesson.md        frontmatter + Markdown + :::diagram / :::animation / :::interactive / :::code / :::realworld / :::callout / :::trace / :::quiz / :::next
   scene.json       animasyon sahnesi (birden fazla olabilir: <ad>.scene.json)
   quiz.json        3–6 soru
   diagram.svg      tema uyumlu (CSS değişkenleri) SVG
+  x.trace.py       Python kod simülasyonu kaynağı → pnpm content:traces ile x.trace.json
 ```
 
 Admin panelinden (web) dersler taslak olarak düzenlenir, sahne editöründe görsel olarak düzenlenir ve yayınlanır; her yayın yeni bir ders sürümü oluşturur.

@@ -1,0 +1,260 @@
+{
+  "id": "k-08-ozyineleme-quiz",
+  "title": {
+    "tr": "Özyineleme Quiz",
+    "en": "Recursion Quiz"
+  },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "say(n) fonksiyonu sırayla şunları yapıyor: n == 0 ise return; değilse print(n, end=\" \"), ardından say(n - 1), ardından yine print(n, end=\" \"). say(3) ne yazdırır?",
+        "en": "The function say(n) does this in order: if n == 0, return; otherwise print(n, end=\" \"), then say(n - 1), then print(n, end=\" \") again. What does say(3) print?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "3 2 1 1 2 3",
+            "en": "3 2 1 1 2 3"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "3 2 1 3 2 1",
+            "en": "3 2 1 3 2 1"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "3 2 1",
+            "en": "3 2 1"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "3 2 1 0 0 1 2 3",
+            "en": "3 2 1 0 0 1 2 3"
+          }
+        }
+      ],
+      "correct": [
+        "a"
+      ],
+      "explanation": {
+        "tr": "İlk print yığın büyürken (3, 2, 1), ikinci print her çerçeve kaldığı yerden devam ederken yığın küçülürken çalışır (1, 2, 3). Her çerçeve kendi n'ini hatırlar; n == 0 çerçevesi hiçbir şey yazdırmadan döner.",
+        "en": "The first print runs while the stack grows (3, 2, 1) and the second runs as each frame resumes while the stack shrinks (1, 2, 3). Each frame remembers its own n; the n == 0 frame returns without printing."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "call-stack",
+        "recursion"
+      ]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "f(n) şöyle tanımlı: n == 0 ise 0 döndür, değilse n + f(n - 1) döndür. print(f(4)) ne yazdırır ve f(4) sırasında yığında aynı anda en fazla kaç f çerçevesi bulunur?",
+        "en": "f(n) is defined as: return 0 if n == 0, otherwise return n + f(n - 1). What does print(f(4)) output, and at most how many f frames are on the stack at the same time during f(4)?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "10; 5 çerçeve (n = 4, 3, 2, 1, 0)",
+            "en": "10; 5 frames (n = 4, 3, 2, 1, 0)"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "10; 1 çerçeve, çünkü aynı fonksiyon tekrar kullanılır",
+            "en": "10; 1 frame, because the same function is reused"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "24; 4 çerçeve",
+            "en": "24; 4 frames"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "RecursionError, çünkü temel durum yok",
+            "en": "RecursionError, because there is no base case"
+          }
+        }
+      ],
+      "correct": [
+        "a"
+      ],
+      "explanation": {
+        "tr": "4 + 3 + 2 + 1 + 0 = 10. Her çağrı ayrı bir çerçeve açar ve n == 0 çerçevesi açıldığında beş f çerçevesi aynı anda yığındadır. Python çerçeveyi yeniden kullanmaz; temel durum da (n == 0) vardır.",
+        "en": "4 + 3 + 2 + 1 + 0 = 10. Every call pushes its own frame, and when the n == 0 frame opens five f frames are on the stack together. Python does not reuse frames, and a base case (n == 0) exists."
+      },
+      "difficulty": "easy",
+      "concepts": [
+        "base-case",
+        "call-stack"
+      ]
+    },
+    {
+      "id": "q3",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Bir fonksiyonu kuyruk özyinelemeli (son işi kendini çağırmak) yazarsan CPython çerçeveyi yeniden kullanır ve RecursionError almazsın.",
+        "en": "If you write a function tail-recursively (its last action is calling itself), CPython reuses the frame and you will not get a RecursionError."
+      },
+      "options": [
+        {
+          "id": "t",
+          "text": {
+            "tr": "Doğru",
+            "en": "True"
+          }
+        },
+        {
+          "id": "f",
+          "text": {
+            "tr": "Yanlış",
+            "en": "False"
+          }
+        }
+      ],
+      "correct": [
+        "f"
+      ],
+      "explanation": {
+        "tr": "CPython kuyruk çağrısı optimizasyonu yapmaz; her çağrı yeni bir çerçeve açar ve varsayılan 1000 sınırı aynen geçerlidir. Derin işlerde döngüye çevirmek gerekir.",
+        "en": "CPython does not perform tail-call optimization; every call pushes a new frame and the default limit of 1000 still applies. Deep work should be converted to a loop."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "tail-call",
+        "recursion-limit"
+      ]
+    },
+    {
+      "id": "q4",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Naif fib(n) = fib(n-1) + fib(n-2) fonksiyonu fib(35) için çok yavaş. Hangileri gerçekten işe yarayan çözümlerdir?",
+        "en": "The naive fib(n) = fib(n-1) + fib(n-2) is very slow for fib(35). Which of these are real fixes?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Fonksiyonu @functools.lru_cache(maxsize=None) ile süslemek",
+            "en": "Decorating the function with @functools.lru_cache(maxsize=None)"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Sonuçları çağrılar arasında paylaşılan bir sözlükte saklamak",
+            "en": "Storing results in a dict shared across calls"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "sys.setrecursionlimit(100000) çağırmak",
+            "en": "Calling sys.setrecursionlimit(100000)"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "a, b = b, a + b kullanan bir döngüyle yazmak",
+            "en": "Rewriting it with a loop using a, b = b, a + b"
+          }
+        }
+      ],
+      "correct": [
+        "a",
+        "b",
+        "d"
+      ],
+      "explanation": {
+        "tr": "Sorun derinlik değil, aynı alt problemlerin tekrar tekrar hesaplanmasıdır. lru_cache ve elle sözlük bu tekrarı kaldırır, döngü de her değeri bir kez hesaplar. Özyineleme sınırını yükseltmek çağrı sayısını hiç azaltmaz; fib(35)'in derinliği zaten yalnızca 35'tir.",
+        "en": "The problem is not depth but recomputing the same subproblems. lru_cache and a manual dict remove that repetition, and a loop computes each value once. Raising the recursion limit does not reduce the number of calls; fib(35) is only 35 deep anyway."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "memoization",
+        "recursion-limit"
+      ]
+    },
+    {
+      "id": "q5",
+      "type": "order",
+      "prompt": {
+        "tr": "faktoriyel(3) çağrısında olanları sıraya koy.",
+        "en": "Put the events of the call faktoriyel(3) in order."
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "n=3 çerçevesi açılır ve 3 * faktoriyel(2) satırında bekler",
+            "en": "The n=3 frame opens and waits on 3 * faktoriyel(2)"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "n=2 çerçevesi açılır ve 2 * faktoriyel(1) satırında bekler",
+            "en": "The n=2 frame opens and waits on 2 * faktoriyel(1)"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "n=1 çerçevesi temel duruma ulaşır ve 1 döndürür",
+            "en": "The n=1 frame hits the base case and returns 1"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "n=2 çerçevesi 2 döndürür ve kapanır",
+            "en": "The n=2 frame returns 2 and closes"
+          }
+        },
+        {
+          "id": "e",
+          "text": {
+            "tr": "n=3 çerçevesi 6 döndürür ve kapanır",
+            "en": "The n=3 frame returns 6 and closes"
+          }
+        }
+      ],
+      "correct": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e"
+      ],
+      "explanation": {
+        "tr": "Önce yığın büyür (3, 2, 1), temel durumda iniş durur, sonra bekleyen çerçeveler ters sırayla kaldıkları yerden devam edip kapanır: 1, sonra 2 * 1 = 2, sonra 3 * 2 = 6.",
+        "en": "The stack grows first (3, 2, 1), the descent stops at the base case, then the waiting frames resume and close in reverse order: 1, then 2 * 1 = 2, then 3 * 2 = 6."
+      },
+      "difficulty": "easy",
+      "concepts": [
+        "recursion",
+        "base-case",
+        "call-stack"
+      ]
+    }
+  ]
+}

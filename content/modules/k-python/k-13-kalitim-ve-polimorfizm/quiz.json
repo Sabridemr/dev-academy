@@ -1,0 +1,110 @@
+{
+  "id": "k-13-kalitim-ve-polimorfizm-quiz",
+  "title": { "tr": "Kalıtım ve Polimorfizm Quiz", "en": "Inheritance and Polymorphism Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "class A: f() 'A' döndürür, g() ise return self.f() yapar. class B(A) yalnızca f()'i ezip 'B' döndürür. print(B().g()) ne yazdırır?",
+        "en": "class A: f() returns 'A', and g() does return self.f(). class B(A) only overrides f() to return 'B'. What does print(B().g()) output?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "B", "en": "B" } },
+        { "id": "b", "text": { "tr": "A", "en": "A" } },
+        { "id": "c", "text": { "tr": "AttributeError, çünkü B'de g yok", "en": "AttributeError, because B has no g" } },
+        { "id": "d", "text": { "tr": "AB", "en": "AB" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "g, A'dan devralınır. İçindeki self.f() nesnenin gerçek sınıfında (B) aranır, bu yüzden B.f çalışır ve 'B' döner. g'nin A'da yazılmış olması aramayı değiştirmez.",
+        "en": "g is inherited from A. The self.f() inside it is looked up on the object's actual class (B), so B.f runs and returns 'B'. That g was written in A does not change the lookup."
+      },
+      "difficulty": "medium",
+      "concepts": ["method-override", "polymorphism"]
+    },
+    {
+      "id": "q2",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Alt sınıf kendi __init__'ini tanımlarsa, üst sınıfın __init__'i yine de otomatik olarak önce çalışır.",
+        "en": "If a subclass defines its own __init__, the parent's __init__ still runs automatically first."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "Alt sınıfın __init__'i üst sınıfınkini ezer. Üst sınıfın kurduğu alanların oluşması için super().__init__(...) açıkça çağrılmalıdır; aksi hâlde bu alanlara erişimde AttributeError alınır.",
+        "en": "The subclass __init__ overrides the parent's. You must call super().__init__(...) explicitly for the parent's fields to be set up; otherwise accessing them raises AttributeError."
+      },
+      "difficulty": "easy",
+      "concepts": ["super", "inheritance"]
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": {
+        "tr": "X.m() 'X' döndürür. Y(X) ve Z(X) sınıflarında m(), kendi harfini super().m() sonucunun önüne ekler. class W(Y, Z) de 'W' + super().m() döndürür. W().m() ne döndürür?",
+        "en": "X.m() returns 'X'. In Y(X) and Z(X), m() prepends its own letter to super().m(). class W(Y, Z) returns 'W' + super().m(). What does W().m() return?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "'WYZX'", "en": "'WYZX'" } },
+        { "id": "b", "text": { "tr": "'WYX'", "en": "'WYX'" } },
+        { "id": "c", "text": { "tr": "'WYXZX'", "en": "'WYXZX'" } },
+        { "id": "d", "text": { "tr": "'WZYX'", "en": "'WZYX'" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "W'nin MRO'su W, Y, Z, X, object'tir. super() 'MRO'da sıradaki' demek olduğu için Y'deki super() X'e değil Z'ye gider; X yalnızca bir kez çalışır.",
+        "en": "W's MRO is W, Y, Z, X, object. Because super() means 'next in the MRO', the super() in Y goes to Z rather than X, and X runs only once."
+      },
+      "difficulty": "hard",
+      "concepts": ["mro", "super"]
+    },
+    {
+      "id": "q4",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Hangileri kalıtım yerine kompozisyonun (\"has-a\") daha uygun olduğu durumlardır?",
+        "en": "Which of these are cases where composition (\"has-a\") fits better than inheritance?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Bir Araba'nın Motor'u olması", "en": "A Car having an Engine" } },
+        { "id": "b", "text": { "tr": "Bir Siparis'in ödemeyi yapan bir OdemeServisi kullanması", "en": "An Order using a PaymentService that processes payment" } },
+        { "id": "c", "text": { "tr": "YetersizBakiyeHatasi'nın Exception'dan türemesi", "en": "InsufficientFundsError deriving from Exception" } },
+        { "id": "d", "text": { "tr": "Yonetici'nin bir Calisan olması", "en": "A Manager being an Employee" } }
+      ],
+      "correct": ["a", "b"],
+      "explanation": {
+        "tr": "Araba bir motor değildir, bir motoru vardır; sipariş de ödeme servisi değildir, onu kullanır. Bunlar has-a ilişkisidir. İstisna sınıfları ve 'Yönetici bir çalışandır' ise gerçek is-a ilişkileridir ve kalıtım uygundur.",
+        "en": "A car is not an engine, it has one; an order is not a payment service, it uses one. These are has-a relations. Exception classes and 'a manager is an employee' are genuine is-a relations where inheritance fits."
+      },
+      "difficulty": "medium",
+      "concepts": ["composition", "inheritance"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "def koro(uyeler): for u in uyeler: print(u.ses_cikar()). Ordek ve RobotOrdek ortak bir üst sınıfı olmadan ses_cikar() tanımlıyor. koro([Ordek(), RobotOrdek()]) çalışır mı?",
+        "en": "def koro(uyeler): for u in uyeler: print(u.ses_cikar()). Ordek and RobotOrdek both define ses_cikar() without a common parent. Does koro([Ordek(), RobotOrdek()]) work?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Evet; Python yalnızca metodun var olup olmadığına bakar (duck typing)", "en": "Yes; Python only checks that the method exists (duck typing)" } },
+        { "id": "b", "text": { "tr": "Hayır; polimorfizm için ortak bir üst sınıf zorunludur", "en": "No; polymorphism requires a common parent class" } },
+        { "id": "c", "text": { "tr": "Hayır; liste farklı türde nesneler tutamaz", "en": "No; a list cannot hold objects of different types" } },
+        { "id": "d", "text": { "tr": "Yalnızca RobotOrdek, Ordek'ten türetilirse", "en": "Only if RobotOrdek derives from Ordek" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "Python'da polimorfizm kalıtım şartı koymaz: çağrı anında nesnede ses_cikar aranır ve bulunursa çalışır. Metodu olmayan bir nesne gelirse ancak o anda AttributeError oluşur.",
+        "en": "Python's polymorphism does not require inheritance: ses_cikar is looked up on the object at call time and runs if found. Only an object lacking the method raises AttributeError, at that moment."
+      },
+      "difficulty": "easy",
+      "concepts": ["duck-typing", "polymorphism"]
+    }
+  ]
+}

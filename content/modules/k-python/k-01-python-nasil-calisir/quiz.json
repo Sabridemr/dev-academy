@@ -1,0 +1,110 @@
+{
+  "id": "k-01-python-nasil-calisir-quiz",
+  "title": { "tr": "Python Nasıl Çalışır Quiz", "en": "How Python Runs Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Şu dosya çalıştırılıyor: 1. satır print(\"A\"), 2. satır x = 5, 3. satır print(x + \"1\"), 4. satır print(\"B\"). Ne olur?",
+        "en": "This file runs: line 1 print(\"A\"), line 2 x = 5, line 3 print(x + \"1\"), line 4 print(\"B\"). What happens?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "A yazdırılır, sonra 3. satırda TypeError ile program durur; B yazdırılmaz", "en": "A is printed, then the program stops with TypeError on line 3; B is not printed" } },
+        { "id": "b", "text": { "tr": "Hiçbir şey yazdırılmaz, çünkü hata derleme sırasında yakalanır", "en": "Nothing is printed because the error is caught at compile time" } },
+        { "id": "c", "text": { "tr": "A, 51 ve B yazdırılır", "en": "A, 51 and B are printed" } },
+        { "id": "d", "text": { "tr": "A, 6 ve B yazdırılır", "en": "A, 6 and B are printed" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "x + \"1\" bir çalışma zamanı hatasıdır (TypeError): sözdizimi doğru olduğu için program başlar, A yazılır ve 3. satırda durur. Python int ile str'yi otomatik dönüştürmez, bu yüzden 51 ya da 6 çıkmaz.",
+        "en": "x + \"1\" is a runtime error (TypeError): the syntax is valid, so the program starts, prints A and stops at line 3. Python does not auto-convert between int and str, so neither 51 nor 6 appears."
+      },
+      "difficulty": "easy",
+      "concepts": ["runtime-error"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "1. satır print(\"A\"), 2. satır if True:, 3. satır girintisiz print(\"B\"). Çıktı ne olur?",
+        "en": "Line 1 print(\"A\"), line 2 if True:, line 3 an unindented print(\"B\"). What is the output?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Yalnızca IndentationError; A bile yazdırılmaz", "en": "Only an IndentationError; not even A is printed" } },
+        { "id": "b", "text": { "tr": "A, ardından IndentationError", "en": "A, then an IndentationError" } },
+        { "id": "c", "text": { "tr": "A ve B", "en": "A and B" } },
+        { "id": "d", "text": { "tr": "A ve B, ardından bir uyarı", "en": "A and B, followed by a warning" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "IndentationError bir SyntaxError türüdür ve ayrıştırma aşamasında yakalanır. Dosya derlenemediği için hiçbir satır, 1. satırdaki print bile çalışmaz.",
+        "en": "IndentationError is a kind of SyntaxError, caught while parsing. The file never compiles, so no line runs, not even the print on line 1."
+      },
+      "difficulty": "medium",
+      "concepts": ["indentation", "syntax-error"]
+    },
+    {
+      "id": "q3",
+      "type": "order",
+      "prompt": {
+        "tr": "python3 program.py komutundan sonra CPython'un yaptıklarını sıraya koy.",
+        "en": "Put what CPython does after python3 program.py in order."
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Kaynak metni okuyup sözdizimini ayrıştırır", "en": "Reads the source text and parses its syntax" } },
+        { "id": "b", "text": { "tr": "Kodu bytecode'a derler", "en": "Compiles the code to bytecode" } },
+        { "id": "c", "text": { "tr": "Python sanal makinesi bytecode komutlarını tek tek yürütür", "en": "The Python virtual machine executes the bytecode instructions one by one" } },
+        { "id": "d", "text": { "tr": "Çalışma zamanı hatası varsa, o satıra gelindiğinde istisna fırlatılır", "en": "If there is a runtime error, an exception is raised when that line is reached" } }
+      ],
+      "correct": ["a", "b", "c", "d"],
+      "explanation": {
+        "tr": "Önce ayrıştırma (SyntaxError burada), sonra bytecode'a derleme, sonra PVM'nin yürütmesi gelir. Çalışma zamanı hataları yalnızca yürütme sırasında, ilgili satıra gelindiğinde ortaya çıkar.",
+        "en": "Parsing comes first (SyntaxError happens here), then compiling to bytecode, then execution by the PVM. Runtime errors only appear during execution, when the line is reached."
+      },
+      "difficulty": "medium",
+      "concepts": ["interpreter", "bytecode", "python-virtual-machine"]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "input() kullanıcı bir sayı yazdığında int döndürür.",
+        "en": "input() returns an int when the user types a number."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "input() her zaman str döndürür; kullanıcı 30 yazsa bile sonuç \"30\" metnidir. Hesap için int() ya da float() ile dönüştürmen gerekir.",
+        "en": "input() always returns a str; even if the user types 30 the result is the string \"30\". Convert it with int() or float() before doing arithmetic."
+      },
+      "difficulty": "easy",
+      "concepts": ["runtime-error"]
+    },
+    {
+      "id": "q5",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Bytecode ve .pyc dosyaları hakkında hangileri doğrudur?",
+        "en": "Which statements about bytecode and .pyc files are true?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Import edilen modüllerin bytecode'u __pycache__ klasöründe saklanır", "en": "Bytecode of imported modules is stored in the __pycache__ folder" } },
+        { "id": "b", "text": { "tr": "dis modülü bir fonksiyonun bytecode komutlarını gösterir", "en": "The dis module shows a function's bytecode instructions" } },
+        { "id": "c", "text": { "tr": "Bytecode işlemcinin doğrudan çalıştırdığı makine kodudur", "en": "Bytecode is machine code that the CPU runs directly" } },
+        { "id": "d", "text": { "tr": "Bytecode komutları tüm Python sürümlerinde aynıdır", "en": "Bytecode instructions are identical across all Python versions" } }
+      ],
+      "correct": ["a", "b"],
+      "explanation": {
+        "tr": "CPython import edilen modüllerin bytecode'unu __pycache__ içine .pyc olarak yazar ve dis bu komutları gösterir. Bytecode makine kodu değildir, onu Python sanal makinesi yürütür; komutlar da sürümden sürüme değişir (dosya adındaki cpython-314 etiketi bu yüzden vardır).",
+        "en": "CPython writes bytecode of imported modules to __pycache__ as .pyc files, and dis shows those instructions. Bytecode is not machine code; the Python virtual machine executes it, and instructions change between versions (hence the cpython-314 tag in the file name)."
+      },
+      "difficulty": "medium",
+      "concepts": ["bytecode", "interpreter"]
+    }
+  ]
+}

@@ -13,7 +13,9 @@
  *     modules/<module-id>/<lesson-id>/*.scene.json | scene.json
  *     modules/<module-id>/<lesson-id>/quiz.json
  *     modules/<module-id>/<lesson-id>/*.svg
+ *     modules/<module-id>/<lesson-id>/*.trace.py → *.trace.json   (pnpm content:traces)
  */
+import { createHash } from 'node:crypto';
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 import {
@@ -28,6 +30,7 @@ import {
   type Quiz,
 } from '../content/schema';
 import { parseLessonMarkdown, LessonParseError } from '../content/parser';
+import { CodeTraceSchema, type CodeTrace } from '../content/trace';
 import { isLessonBodyTranslated } from '../content/translation';
 import { rasterExtension } from '../content/assets';
 import { readImageSize } from './image-size';
@@ -51,6 +54,8 @@ export interface LoadedLesson {
   svgs: Record<string, string>;
   /** raster görsel dosya adı → yol ve piksel boyutu (seed veritabanına alır) */
   images: Record<string, LoadedImage>;
+  /** iz dosya adı (`x.trace.json`) → doğrulanmış kod izi */
+  traces: Record<string, CodeTrace>;
 }
 
 export interface LoadedImage {
@@ -312,8 +317,71 @@ export function loadContent(root = findContentRoot()): LoadedContent {
         images[f] = { path, ...size, bytes: buf.length };
       }
 
+      // Kod izleri: .trace.py kaynağından üretilir; kaynak değiştiyse iz yeniden üretilmeli
+      const traces: Record<string, CodeTrace> = {};
+      const files = readdirSync(lessonDir);
+      for (const f of files.filter((x) => x.endsWith('.trace.py'))) {
+        if (!files.includes(f.replace(/\.py$/, '.json'))) {
+          issues.push({
+            severity: 'error',
+            file: rel(join(lessonDir, f)),
+            message: 'İz üretilmemiş: pnpm content:traces',
+          });
+        }
+      }
+      for (const f of files.filter((x) => x.endsWith('.trace.json'))) {
+        const file = join(lessonDir, f);
+        let raw: unknown;
+        try {
+          raw = readJson(file);
+        } catch (err) {
+          issues.push({
+            severity: 'error',
+            file: rel(file),
+            message: `JSON parse hatası: ${String(err)}`,
+          });
+          continue;
+        }
+        const parsed = CodeTraceSchema.safeParse(raw);
+        if (!parsed.success) {
+          issues.push({
+            severity: 'error',
+            file: rel(file),
+            message: parsed.error.issues
+              .slice(0, 5)
+              .map((i) => `${i.path.join('.')}: ${i.message}`)
+              .join('; '),
+          });
+          continue;
+        }
+        const source = join(lessonDir, f.replace(/\.json$/, '.py'));
+        if (!existsSync(source)) {
+          issues.push({
+            severity: 'error',
+            file: rel(file),
+            message: `Kaynak dosya yok: ${f.replace(/\.json$/, '.py')}`,
+          });
+        } else if (
+          createHash('sha256').update(readFileSync(source)).digest('hex') !== parsed.data.sourceHash
+        ) {
+          issues.push({
+            severity: 'error',
+            file: rel(file),
+            message: 'İz, kaynak .trace.py ile güncel değil: pnpm content:traces',
+          });
+        }
+        traces[f] = parsed.data;
+      }
+
       // Blok referansları
       for (const b of doc.blocks) {
+        if (b.type === 'trace' && !traces[b.src]) {
+          issues.push({
+            severity: 'error',
+            file: rel(mdFile),
+            message: `İz dosyası bulunamadı ya da geçersiz: ${b.src}`,
+          });
+        }
         if (b.type === 'diagram' && !/^https?:\/\//.test(b.src) && !svgs[b.src] && !images[b.src]) {
           issues.push({
             severity: 'error',
@@ -360,7 +428,7 @@ export function loadContent(root = findContentRoot()): LoadedContent {
         });
       }
 
-      lessons.push({ dir: lessonDir, doc, scenes, quiz, quizFile, svgs, images });
+      lessons.push({ dir: lessonDir, doc, scenes, quiz, quizFile, svgs, images, traces });
     }
 
     lessons.sort((a, b) => a.doc.meta.order - b.doc.meta.order);

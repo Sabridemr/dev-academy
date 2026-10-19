@@ -1,0 +1,111 @@
+{
+  "id": "k-11-iterator-ve-generator-quiz",
+  "title": { "tr": "Iterator ve Generator Quiz", "en": "Iterators and Generators Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "g() generator fonksiyonu sırayla şunları içeriyor: print(\"A\"), yield 1, print(\"B\"), yield 2. x = g() ve ardından print(next(x)) çalışıyor. Çıktı nedir?",
+        "en": "The generator function g() contains, in order: print(\"A\"), yield 1, print(\"B\"), yield 2. x = g() runs, then print(next(x)). What is printed?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "A, ardından 1", "en": "A, then 1" } },
+        { "id": "b", "text": { "tr": "A, B, ardından 1", "en": "A, B, then 1" } },
+        { "id": "c", "text": { "tr": "x = g() satırında A, next(x) satırında 1", "en": "A on the x = g() line, 1 on the next(x) line" } },
+        { "id": "d", "text": { "tr": "Yalnızca 1", "en": "Only 1" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "g() çağrısı gövdeyi çalıştırmaz, yalnızca generator nesnesi döndürür. İlk next(x) gövdeyi ilk yield'e kadar çalıştırır: önce A yazdırılır, sonra 1 dışarı verilip yazdırılır. B ancak ikinci next'te çalışır.",
+        "en": "Calling g() does not run the body; it only returns a generator object. The first next(x) runs the body up to the first yield: A is printed, then 1 is yielded and printed. B only runs on the second next."
+      },
+      "difficulty": "medium",
+      "concepts": ["generator", "yield"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "sayilar = map(int, [\"1\", \"2\", \"3\"]) ardından print(sum(sayilar), sum(sayilar)) ne yazdırır?",
+        "en": "sayilar = map(int, [\"1\", \"2\", \"3\"]) followed by print(sum(sayilar), sum(sayilar)) prints what?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "6 0", "en": "6 0" } },
+        { "id": "b", "text": { "tr": "6 6", "en": "6 6" } },
+        { "id": "c", "text": { "tr": "6, ardından StopIteration hatası", "en": "6, then a StopIteration error" } },
+        { "id": "d", "text": { "tr": "TypeError, çünkü map nesnesi toplanamaz", "en": "TypeError, because a map object cannot be summed" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "map tek kullanımlık bir iterator döndürür. İlk sum onu tüketir (6); ikinci sum tükenmiş iterator'dan hiç eleman alamaz ve hata vermeden 0 döndürür. sum, StopIteration'ı kendisi yakalar.",
+        "en": "map returns a single-use iterator. The first sum consumes it (6); the second gets no items from the exhausted iterator and returns 0 without error. sum handles StopIteration itself."
+      },
+      "difficulty": "medium",
+      "concepts": ["iterator-protocol", "lazy-evaluation"]
+    },
+    {
+      "id": "q3",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Bir generator yield'de askıya alındığında çerçevesi silinir; bir sonraki next() fonksiyonu baştan başlatır.",
+        "en": "When a generator is suspended at yield its frame is destroyed; the next next() restarts the function from the top."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "Askıya alınan çerçeve yığından çıkar ama yok edilmez; generator nesnesinin içinde yerel değişkenleri ve kaldığı satırla birlikte saklanır. next() tam yield'den sonraki noktadan devam eder.",
+        "en": "The suspended frame leaves the stack but is not destroyed; it is kept inside the generator object with its locals and position. next() resumes right after the yield."
+      },
+      "difficulty": "easy",
+      "concepts": ["generator", "yield"]
+    },
+    {
+      "id": "q4",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Hangileri yalnızca iterable değil, aynı zamanda bir iterator'dır (next() ile doğrudan ilerletilebilir)?",
+        "en": "Which of these are not just iterables but iterators (can be advanced directly with next())?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "(x * x for x in range(3))", "en": "(x * x for x in range(3))" } },
+        { "id": "b", "text": { "tr": "zip([1, 2], [3, 4])", "en": "zip([1, 2], [3, 4])" } },
+        { "id": "c", "text": { "tr": "[1, 2, 3]", "en": "[1, 2, 3]" } },
+        { "id": "d", "text": { "tr": "range(3)", "en": "range(3)" } }
+      ],
+      "correct": ["a", "b"],
+      "explanation": {
+        "tr": "Generator ifadeleri ve zip nesneleri iterator'dır: __next__ metotları vardır ve bir kez tükenirler. Liste ve range ise iterable'dır; next([1, 2, 3]) TypeError verir, önce iter() ile iterator almak gerekir ve her iter() yeni bir iterator üretir.",
+        "en": "Generator expressions and zip objects are iterators: they have __next__ and are exhausted once. Lists and range are iterables; next([1, 2, 3]) raises TypeError, you first need iter(), and each iter() creates a fresh iterator."
+      },
+      "difficulty": "medium",
+      "concepts": ["iterable", "iterator-protocol"]
+    },
+    {
+      "id": "q5",
+      "type": "order",
+      "prompt": {
+        "tr": "for x in kaynak: gövde döngüsünün arka planda yaptıklarını sıraya koy.",
+        "en": "Put what the loop for x in kaynak: body does behind the scenes in order."
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "iter(kaynak) çağrılır ve bir iterator alınır", "en": "iter(kaynak) is called and an iterator is obtained" } },
+        { "id": "b", "text": { "tr": "next() ile sıradaki eleman alınıp x'e bağlanır", "en": "next() gets the next item and binds it to x" } },
+        { "id": "c", "text": { "tr": "Gövde çalışır; bu iki adım eleman bittikçe tekrarlanır", "en": "The body runs; these two steps repeat while items remain" } },
+        { "id": "d", "text": { "tr": "next() StopIteration fırlatır", "en": "next() raises StopIteration" } },
+        { "id": "e", "text": { "tr": "for istisnayı yakalar ve döngü sessizce biter", "en": "for catches the exception and the loop ends quietly" } }
+      ],
+      "correct": ["a", "b", "c", "d", "e"],
+      "explanation": {
+        "tr": "for önce bir kez iter() çağırır, sonra her turda next() ile eleman alıp gövdeyi çalıştırır. Eleman kalmayınca next() StopIteration fırlatır; for bunu 'bitti' sinyali olarak yakalar ve hata göstermeden döngüden çıkar.",
+        "en": "for calls iter() once, then on each pass gets an item with next() and runs the body. When items run out next() raises StopIteration; for catches it as the 'done' signal and exits without showing an error."
+      },
+      "difficulty": "easy",
+      "concepts": ["iterator-protocol", "stop-iteration"]
+    }
+  ]
+}

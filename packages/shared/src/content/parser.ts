@@ -42,6 +42,10 @@ import type { LocalizedString } from '../i18n';
  *   :::quiz{src="quiz.json"}
  *   :::
  *
+ *   :::trace{src="degiskenler.trace.json" title="Etiketler ve nesneler"}
+ *   İsteğe bağlı alt yazı
+ *   :::
+ *
  *   :::next{lesson="a-02-latency-throughput"}
  *   :::
  *
@@ -326,6 +330,16 @@ export function parseLessonMarkdown(markdown: string, options: ParseLessonOption
           order,
           type: 'quiz',
           src: requireAttr(attrs, 'src', name, sourcePath, seg.line),
+        });
+        break;
+      case 'trace':
+        blocks.push({
+          id: nextId('trace'),
+          order,
+          type: 'trace',
+          src: requireAttr(attrs, 'src', name, sourcePath, seg.line),
+          title: toLocalized(attrs.title),
+          caption: seg.body ? toLocalized(seg.body) : undefined,
         });
         break;
       case 'next':

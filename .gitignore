@@ -52,3 +52,4 @@ web/next-env.d.ts
 
 # Redis yerel dump
 *.rdb
+__pycache__/

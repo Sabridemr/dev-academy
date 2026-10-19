@@ -98,6 +98,19 @@ describe('Ders Markdown ayrıştırıcı', () => {
     expect(lastText && lastText.type === 'text' && lastText.markdown).toContain('Metin arası');
   });
 
+  it('trace directive kaynağını, çift dilli başlığını ve alt yazısını çıkarır', () => {
+    const doc = parseLessonMarkdown(
+      SAMPLE.replace('## Kavram', ':::trace{src="ornek.trace.json" title="Etiketler|Labels"}\nYığını izle\n:::\n\n## Kavram'),
+    );
+    const trace = doc.blocks.find((b) => b.type === 'trace');
+    expect(trace).toMatchObject({
+      type: 'trace',
+      src: 'ornek.trace.json',
+      title: { tr: 'Etiketler', en: 'Labels' },
+      caption: 'Yığını izle',
+    });
+  });
+
   it('kapatılmamış directive hata verir', () => {
     expect(() => parseLessonMarkdown(SAMPLE.replace(':::next{lesson="a-06-api-gateway"}\n:::', ':::next{lesson="x"}'))).toThrow(/kapatılmamış/);
   });
@@ -151,8 +164,8 @@ describe('Quiz şeması', () => {
 });
 
 describe('Müfredat', () => {
-  it('10 modül ve benzersiz ders id’leri', () => {
-    expect(CURRICULUM).toHaveLength(10);
+  it('11 modül ve benzersiz ders id’leri', () => {
+    expect(CURRICULUM).toHaveLength(11);
     const ids = allLessons().map((x) => x.lesson.id);
     expect(new Set(ids).size).toBe(ids.length);
     expect(TOTAL_LESSON_COUNT).toBe(ids.length);
@@ -162,6 +175,7 @@ describe('Müfredat', () => {
     expect(nextLessonOf('a-13-observability-12-factor')?.id).toBe('b-01-monolith-to-microservices');
     // Modül sınırını aşar: G'nin son dersinden H'nin ilk dersine
     expect(nextLessonOf('g-08-nn-playground')?.id).toBe('h-01-linux-notes');
-    expect(nextLessonOf('j-11-odunlesimler-mulakat-ve-ozet')).toBeUndefined();
+    expect(nextLessonOf('j-11-odunlesimler-mulakat-ve-ozet')?.id).toBe('k-01-python-nasil-calisir');
+    expect(nextLessonOf('k-19-testler-ve-mini-proje')).toBeUndefined();
   });
 });

@@ -1,0 +1,110 @@
+{
+  "id": "k-03-veri-tipleri-ve-operatorler-quiz",
+  "title": { "tr": "Veri Tipleri ve Operatörler Quiz", "en": "Data Types and Operators Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "print(-7 // 2, -7 % 2) ne yazdırır?",
+        "en": "What does print(-7 // 2, -7 % 2) output?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "-4 1", "en": "-4 1" } },
+        { "id": "b", "text": { "tr": "-3 -1", "en": "-3 -1" } },
+        { "id": "c", "text": { "tr": "-3.5 1", "en": "-3.5 1" } },
+        { "id": "d", "text": { "tr": "-4 -1", "en": "-4 -1" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "// aşağıya (eksi sonsuza) yuvarlar: -3.5 → -4. % bölenin (2) işaretini alır ve (-4) * 2 + 1 = -7 eşitliğini sağlar. -3 -1, sıfıra doğru kesen C/Java davranışıdır; // asla float döndürmez (int operandlarla).",
+        "en": "// rounds down (toward minus infinity): -3.5 → -4. % takes the sign of the divisor (2) so that (-4) * 2 + 1 = -7. -3 -1 is the truncate-toward-zero behaviour of C/Java; // with int operands never returns a float."
+      },
+      "difficulty": "medium",
+      "concepts": ["numeric-types", "operator-precedence"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "s = \"merhaba\" ardından s.upper() (sonuç atanmadan) ve print(s) çalışıyor. Çıktı nedir?",
+        "en": "s = \"merhaba\", then s.upper() (result not assigned) and print(s) run. What is printed?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "merhaba", "en": "merhaba" } },
+        { "id": "b", "text": { "tr": "MERHABA", "en": "MERHABA" } },
+        { "id": "c", "text": { "tr": "None", "en": "None" } },
+        { "id": "d", "text": { "tr": "TypeError", "en": "TypeError" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "str değiştirilemez: upper() yeni bir metin döndürür ama sonuç hiçbir isme bağlanmadığı için atılır; s hâlâ \"merhaba\" nesnesini gösterir. None, yerinde değiştiren list.sort() gibi metotların dönüş değeridir.",
+        "en": "str is immutable: upper() returns a new string, but since it is not bound to a name it is discarded; s still points to \"merhaba\". None is what in-place methods like list.sort() return."
+      },
+      "difficulty": "easy",
+      "concepts": ["string-immutability"]
+    },
+    {
+      "id": "q3",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Hangi değerler bir if koşulunda yanlış (falsy) sayılır?",
+        "en": "Which values are treated as false (falsy) in an if condition?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "0.0", "en": "0.0" } },
+        { "id": "b", "text": { "tr": "None", "en": "None" } },
+        { "id": "c", "text": { "tr": "\"False\"", "en": "\"False\"" } },
+        { "id": "d", "text": { "tr": "[0]", "en": "[0]" } }
+      ],
+      "correct": ["a", "b"],
+      "explanation": {
+        "tr": "Sıfır sayılar, None ve boş koleksiyonlar falsy'dir. \"False\" boş olmayan bir metin, [0] ise bir eleman içeren bir liste olduğu için ikisi de truthy'dir.",
+        "en": "Zero numbers, None and empty collections are falsy. \"False\" is a non-empty string and [0] is a list with one element, so both are truthy."
+      },
+      "difficulty": "medium",
+      "concepts": ["truthiness"]
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": {
+        "tr": "print(0 or [] or \"x\", 1 and 0 and 5) ne yazdırır?",
+        "en": "What does print(0 or [] or \"x\", 1 and 0 and 5) output?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "x 0", "en": "x 0" } },
+        { "id": "b", "text": { "tr": "True False", "en": "True False" } },
+        { "id": "c", "text": { "tr": "x 5", "en": "x 5" } },
+        { "id": "d", "text": { "tr": "[] 0", "en": "[] 0" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "and/or True/False değil operandın kendisini döndürür. or ilk truthy değeri (\"x\") verir; and ilk falsy değerde (0) durur ve 5'e hiç bakmaz (kısa devre).",
+        "en": "and/or return an operand, not True/False. or yields the first truthy value (\"x\"); and stops at the first falsy value (0) and never looks at 5 (short-circuit)."
+      },
+      "difficulty": "medium",
+      "concepts": ["short-circuit-evaluation", "truthiness"]
+    },
+    {
+      "id": "q5",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "int(\"3.5\") çağrısı 3 döndürür.",
+        "en": "int(\"3.5\") returns 3."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "int() metin aldığında metnin bir tam sayı olmasını bekler; \"3.5\" için ValueError fırlatır. int(3.5) (float) ya da int(float(\"3.5\")) ise 3 döndürür.",
+        "en": "When given a string, int() expects it to be an integer literal; \"3.5\" raises ValueError. int(3.5) (a float) or int(float(\"3.5\")) returns 3."
+      },
+      "difficulty": "easy",
+      "concepts": ["type-conversion"]
+    }
+  ]
+}

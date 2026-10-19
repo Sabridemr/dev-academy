@@ -1,0 +1,111 @@
+{
+  "id": "k-15-moduller-paketler-ve-tip-ipuclari-quiz",
+  "title": { "tr": "Modüller ve Tip İpuçları Quiz", "en": "Modules and Type Hints Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "ayarlar.py dosyasının ilk satırı print(\"yükleniyor\"). main.py içinde art arda iki kez import ayarlar yazılıyor ve main.py çalıştırılıyor. \"yükleniyor\" kaç kez yazdırılır?",
+        "en": "The first line of ayarlar.py is print(\"yükleniyor\"). main.py contains import ayarlar twice in a row and is run. How many times is \"yükleniyor\" printed?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "1 kez: ikinci import modülü sys.modules önbelleğinden alır", "en": "Once: the second import takes the module from the sys.modules cache" } },
+        { "id": "b", "text": { "tr": "2 kez: her import dosyayı yeniden çalıştırır", "en": "Twice: every import runs the file again" } },
+        { "id": "c", "text": { "tr": "Hiç: import yalnızca tanımları yükler, print çalışmaz", "en": "Never: import only loads definitions, print does not run" } },
+        { "id": "d", "text": { "tr": "Hiç, çünkü print yalnızca __name__ == \"__main__\" iken çalışır", "en": "Never, because print only runs when __name__ == \"__main__\"" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "İlk import modül nesnesini oluşturur, dosyanın tüm kodunu (print dahil) bir kez çalıştırır ve sys.modules'e koyar. İkinci import önbellekteki nesneyi döndürür ve hiçbir şey çalıştırmaz. Modül düzeyindeki kod __main__ korumasında değilse import sırasında çalışır.",
+        "en": "The first import creates the module object, runs all of the file's code (including print) once and stores it in sys.modules. The second import returns the cached object and runs nothing. Module-level code that is not inside a __main__ guard does run on import."
+      },
+      "difficulty": "easy",
+      "concepts": ["import-system", "module"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "def topla(a: int, b: int) -> int: return a + b tanımlı. print(topla(\"2\", \"3\")) ne yapar?",
+        "en": "def topla(a: int, b: int) -> int: return a + b is defined. What does print(topla(\"2\", \"3\")) do?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "23 yazdırır", "en": "Prints 23" } },
+        { "id": "b", "text": { "tr": "5 yazdırır, çünkü ipucu değerleri int'e çevirir", "en": "Prints 5, because the hints convert the values to int" } },
+        { "id": "c", "text": { "tr": "Çağrı anında TypeError fırlatır, çünkü tipler uyuşmuyor", "en": "Raises TypeError at call time because the types do not match" } },
+        { "id": "d", "text": { "tr": "Program hiç başlamaz, Python önce tipleri denetler", "en": "The program never starts; Python checks types first" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "Tip ipuçları çalışma zamanında zorlanmaz ve dönüştürme yapmaz. a + b iki metni birleştirir ve '23' döner. Tip uyuşmazlığını kod çalışmadan önce ancak mypy gibi bir statik denetleyici bildirir.",
+        "en": "Type hints are not enforced at runtime and do not convert anything. a + b concatenates the two strings and returns '23'. Only a static checker such as mypy reports the mismatch before running."
+      },
+      "difficulty": "easy",
+      "concepts": ["type-hints", "static-type-checking"]
+    },
+    {
+      "id": "q3",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "from math import sqrt yazmak, math modülünün yalnızca sqrt kısmını yükler; modülün geri kalanı çalıştırılmaz.",
+        "en": "Writing from math import sqrt loads only the sqrt part of the math module; the rest of the module is not executed."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "from ... import da modülün tamamını yükler ve sys.modules'e koyar; yalnızca senin isim alanına seçilen isimleri ekler. Bu yüzden hız ya da bellek kazancı sağlamaz.",
+        "en": "from ... import also loads the whole module into sys.modules; it only adds the chosen names to your namespace. It saves neither time nor memory."
+      },
+      "difficulty": "medium",
+      "concepts": ["import-system"]
+    },
+    {
+      "id": "q4",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Sanal ortamlar (venv) ve Protocol hakkında hangileri doğrudur?",
+        "en": "Which statements about virtual environments (venv) and Protocol are true?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Her proje kendi sanal ortamında farklı paket sürümleri kullanabilir", "en": "Each project can use different package versions in its own virtual environment" } },
+        { "id": "b", "text": { "tr": ".venv klasörü git'e eklenmeli ki herkes aynı paketleri alsın", "en": "The .venv folder should be committed to git so everyone gets the same packages" } },
+        { "id": "c", "text": { "tr": "Etkinleştirme, ortamın bin (Windows'ta Scripts) klasörünü PATH'in başına ekler", "en": "Activation puts the environment's bin (Scripts on Windows) folder at the front of PATH" } },
+        { "id": "d", "text": { "tr": "Bir sınıfın Protocol'e uyması için ondan türemesi gerekir", "en": "A class must inherit from a Protocol to satisfy it" } }
+      ],
+      "correct": ["a", "c"],
+      "explanation": {
+        "tr": "Sanal ortam bağımlılıkları projeye göre yalıtır ve etkinleştirme yalnızca PATH'i değiştirir. .venv paylaşılmaz; onun yerine requirements.txt ya da pyproject.toml paylaşılır. Protocol yapısal tiplemedir: gerekli metotlara sahip her sınıf, türemeden uyar.",
+        "en": "A virtual environment isolates dependencies per project and activation only changes PATH. .venv is not shared; share requirements.txt or pyproject.toml instead. Protocol is structural typing: any class with the required methods satisfies it without inheriting."
+      },
+      "difficulty": "medium",
+      "concepts": ["virtual-environment", "protocol"]
+    },
+    {
+      "id": "q5",
+      "type": "order",
+      "prompt": {
+        "tr": "Daha önce hiç içe aktarılmamış bir modül için import ayarlar satırında olanları sıraya koy.",
+        "en": "Order what happens on import ayarlar for a module that has never been imported before."
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "sys.modules önbelleğine bakılır, modül bulunamaz", "en": "The sys.modules cache is checked and the module is not found" } },
+        { "id": "b", "text": { "tr": "sys.path klasörlerinde ayarlar.py aranır", "en": "ayarlar.py is searched for in the sys.path folders" } },
+        { "id": "c", "text": { "tr": "Boş bir modül nesnesi oluşturulup sys.modules'e eklenir", "en": "An empty module object is created and added to sys.modules" } },
+        { "id": "d", "text": { "tr": "Dosyanın kodu modülün isim alanında bir kez çalıştırılır", "en": "The file's code runs once in the module's namespace" } },
+        { "id": "e", "text": { "tr": "İçe aktaran dosyada ayarlar adı modül nesnesine bağlanır", "en": "The name ayarlar is bound to the module object in the importing file" } }
+      ],
+      "correct": ["a", "b", "c", "d", "e"],
+      "explanation": {
+        "tr": "Python önce önbelleğe bakar, yoksa modülü sys.path'te bulur, modül nesnesini oluşturup çalıştırmadan önce sys.modules'e koyar (döngüsel import'ta yarım modülün görünmesinin nedeni budur), kodu çalıştırır ve son olarak adı bağlar.",
+        "en": "Python checks the cache, finds the module on sys.path, creates the module object and stores it in sys.modules before running it (which is why a half-initialized module is visible during a circular import), runs the code and finally binds the name."
+      },
+      "difficulty": "hard",
+      "concepts": ["import-system", "module"]
+    }
+  ]
+}

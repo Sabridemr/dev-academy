@@ -1,0 +1,110 @@
+{
+  "id": "k-19-testler-ve-mini-proje-quiz",
+  "title": { "tr": "Test ve Mini Proje Quiz", "en": "Testing and Mini Project Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "indirimli_fiyat(fiyat, oran) fonksiyonu fiyat - fiyat * oran / 100 döndürüyor. assert indirimli_fiyat(100, 25) == 70 satırı kaldığında pytest hata satırında ne gösterir?",
+        "en": "indirimli_fiyat(fiyat, oran) returns fiyat - fiyat * oran / 100. When assert indirimli_fiyat(100, 25) == 70 fails, what does pytest show on the error line?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "assert 75.0 == 70", "en": "assert 75.0 == 70" } },
+        { "id": "b", "text": { "tr": "Yalnızca AssertionError, değer göstermez", "en": "Only AssertionError, with no values" } },
+        { "id": "c", "text": { "tr": "assert 75 == 70", "en": "assert 75 == 70" } },
+        { "id": "d", "text": { "tr": "assert 70 == 75.0", "en": "assert 70 == 75.0" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "pytest assert ifadesini yeniden yazarak iki tarafın değerini de gösterir. / işlemi float ürettiği için sol taraf 75.0'dır; değerler yazıldığı sırayla gösterilir.",
+        "en": "pytest rewrites assert statements to show both sides. The / operator produces a float, so the left side is 75.0, and the values appear in the order written."
+      },
+      "difficulty": "easy",
+      "concepts": ["pytest", "unit-testing"]
+    },
+    {
+      "id": "q2",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "modul.py içinde from random import randint yazılmış ve zar_at() randint(1, 6) döndürüyor. Testte patch('random.randint', return_value=6) kullanmak zar_at()'ın her zaman 6 döndürmesini sağlar.",
+        "en": "modul.py has from random import randint and zar_at() returns randint(1, 6). Using patch('random.randint', return_value=6) in a test makes zar_at() always return 6."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "patch bir modüldeki ismi değiştirir. from ... import randint, ismi modul'ün kendi ad alanına kopyaladığı için random.randint'i değiştirmek modul.randint'i etkilemez; patch('modul.randint') gerekir.",
+        "en": "patch replaces a name in a module. from ... import randint copied the name into modul's own namespace, so patching random.randint does not affect modul.randint; patch('modul.randint') is needed."
+      },
+      "difficulty": "hard",
+      "concepts": ["mocking", "test-double"]
+    },
+    {
+      "id": "q3",
+      "type": "multiple",
+      "prompt": {
+        "tr": "pytest fixture'ları için hangileri doğrudur?",
+        "en": "Which statements about pytest fixtures are true?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Test fonksiyonu fixture'ı parametre adıyla ister", "en": "A test requests a fixture by parameter name" } },
+        { "id": "b", "text": { "tr": "Bir fixture başka fixture'ları parametre olarak isteyebilir", "en": "A fixture can request other fixtures as parameters" } },
+        { "id": "c", "text": { "tr": "Varsayılan olarak her test fixture'ın taze bir değerini alır", "en": "By default each test gets a fresh value from the fixture" } },
+        { "id": "d", "text": { "tr": "Fixture'lar yalnızca unittest.TestCase sınıflarında çalışır", "en": "Fixtures only work inside unittest.TestCase classes" } }
+      ],
+      "correct": ["a", "b", "c"],
+      "explanation": {
+        "tr": "pytest parametre adına bakarak fixture'ı bulur, bağımlı fixture'ları zincir hâlinde çözer ve varsayılan (function) kapsamda her teste yeni değer verir. Düz test fonksiyonlarında çalışırlar; TestCase gerekmez.",
+        "en": "pytest finds fixtures by parameter name, resolves dependent fixtures as a chain and gives each test a new value in the default (function) scope. They work with plain test functions; no TestCase is needed."
+      },
+      "difficulty": "medium",
+      "concepts": ["fixture", "pytest", "dependency-injection"]
+    },
+    {
+      "id": "q4",
+      "type": "order",
+      "prompt": {
+        "tr": "TDD döngüsünün adımlarını sıraya koy.",
+        "en": "Put the steps of the TDD cycle in order."
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Yeni davranış için küçük bir test yaz", "en": "Write a small test for the new behaviour" } },
+        { "id": "b", "text": { "tr": "Testi çalıştır ve kaldığını (kırmızı) gör", "en": "Run the test and see it fail (red)" } },
+        { "id": "c", "text": { "tr": "Testi geçirecek en basit kodu yaz (yeşil)", "en": "Write the simplest code that passes (green)" } },
+        { "id": "d", "text": { "tr": "Testler yeşilken kodu temizle (refaktör)", "en": "Clean up the code while the tests stay green (refactor)" } }
+      ],
+      "correct": ["a", "b", "c", "d"],
+      "explanation": {
+        "tr": "Önce test yazılır ve kalması beklenir; bu, testin gerçekten bir şey kontrol ettiğini kanıtlar. Sonra en basit çözüm, en son da testlerin koruması altında temizlik yapılır.",
+        "en": "The test is written first and must fail, which proves it checks something. Then comes the simplest fix, and finally the clean-up under the protection of the tests."
+      },
+      "difficulty": "easy",
+      "concepts": ["tdd"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "Kütüphane servisinde servis.odunc_ver('111', 'ayse') başarılı oldu. Ardından try içinde servis.odunc_ver('111', 'mehmet') çağrılıyor ve KitapZatenOduncte yakalanıyor. Bu noktada kitabın odunc_alan değeri nedir?",
+        "en": "In the library service, servis.odunc_ver('111', 'ayse') succeeded. Then servis.odunc_ver('111', 'mehmet') is called inside try and KitapZatenOduncte is caught. What is the book's odunc_alan now?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "'ayse'", "en": "'ayse'" } },
+        { "id": "b", "text": { "tr": "'mehmet'", "en": "'mehmet'" } },
+        { "id": "c", "text": { "tr": "None", "en": "None" } },
+        { "id": "d", "text": { "tr": "Kitap depodan silinmiştir", "en": "The book has been removed from the repository" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "Kural kontrolü değişiklikten önce yapıldığı için istisna fırladığında kitaba dokunulmamıştır; hâlâ 'ayse'dedir. İstisna yalnızca odunc_ver çerçevesini kapatır, nesneyi değiştirmez ya da silmez.",
+        "en": "The rule is checked before any change, so when the exception is raised the book is untouched and still with 'ayse'. The exception only closes the odunc_ver frame; it does not modify or delete the object."
+      },
+      "difficulty": "medium",
+      "concepts": ["unit-testing", "dependency-injection"]
+    }
+  ]
+}
