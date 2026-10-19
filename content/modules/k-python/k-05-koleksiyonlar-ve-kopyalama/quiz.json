@@ -1,0 +1,110 @@
+{
+  "id": "k-05-koleksiyonlar-ve-kopyalama-quiz",
+  "title": { "tr": "Koleksiyonlar ve Kopyalama Quiz", "en": "Collections and Copying Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "a = [[1, 2], [3]] ve b = a.copy() satırlarından sonra b[0].append(9) çalışıyor. print(a) ne yazdırır?",
+        "en": "After a = [[1, 2], [3]] and b = a.copy(), b[0].append(9) runs. What does print(a) output?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "[[1, 2, 9], [3]]", "en": "[[1, 2, 9], [3]]" } },
+        { "id": "b", "text": { "tr": "[[1, 2], [3]]", "en": "[[1, 2], [3]]" } },
+        { "id": "c", "text": { "tr": "[[1, 2], [3], 9]", "en": "[[1, 2], [3], 9]" } },
+        { "id": "d", "text": { "tr": "AttributeError", "en": "AttributeError" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "copy() sığ kopyadır: yeni dış liste oluşur ama iç listeler paylaşılır. b[0] ile a[0] aynı nesne olduğu için 9 a'da da görünür. a'nın değişmemesi için copy.deepcopy gerekirdi.",
+        "en": "copy() is shallow: a new outer list is created but the inner lists are shared. b[0] and a[0] are the same object, so 9 shows up in a too. Keeping a unchanged would need copy.deepcopy."
+      },
+      "difficulty": "medium",
+      "concepts": ["shallow-vs-deep-copy", "aliasing"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "m = [[0] * 2] * 2 ve ardından m[1][0] = 5 çalışıyor. print(m) ne yazdırır?",
+        "en": "m = [[0] * 2] * 2 and then m[1][0] = 5 runs. What does print(m) output?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "[[5, 0], [5, 0]]", "en": "[[5, 0], [5, 0]]" } },
+        { "id": "b", "text": { "tr": "[[0, 0], [5, 0]]", "en": "[[0, 0], [5, 0]]" } },
+        { "id": "c", "text": { "tr": "[[0, 5], [0, 5]]", "en": "[[0, 5], [0, 5]]" } },
+        { "id": "d", "text": { "tr": "TypeError", "en": "TypeError" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "Dış listedeki iki eleman aynı iç listeye referanstır; bir satırı değiştirmek ikisinde de görünür. Bağımsız satırlar için [[0] * 2 for _ in range(2)] yazılmalıdır.",
+        "en": "Both elements of the outer list reference the same inner list, so changing one row shows in both. Independent rows need [[0] * 2 for _ in range(2)]."
+      },
+      "difficulty": "medium",
+      "concepts": ["aliasing", "list"]
+    },
+    {
+      "id": "q3",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Bir liste, sözlük anahtarı olarak kullanılabilir; yeter ki içindeki elemanlar değiştirilemez olsun.",
+        "en": "A list can be used as a dictionary key as long as its elements are immutable."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "list değiştirilebilir olduğu için hashable değildir; içeriği ne olursa olsun anahtar olamaz (TypeError: unhashable type). Aynı değerleri anahtar yapmak için tuple kullanılır.",
+        "en": "list is mutable and therefore not hashable; it can never be a key regardless of its contents (TypeError: unhashable type). Use a tuple for the same values instead."
+      },
+      "difficulty": "easy",
+      "concepts": ["hashing", "dict"]
+    },
+    {
+      "id": "q4",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Aşağıdaki ifadelerden hangileri doğrudur?",
+        "en": "Which of the following statements are true?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "x in kume sorgusu ortalamada eleman sayısından bağımsız (O(1)) sürede çalışır.", "en": "x in a_set runs in time independent of the number of elements (O(1)) on average." } },
+        { "id": "b", "text": { "tr": "liste.sort() sıralanmış yeni bir liste döndürür.", "en": "list.sort() returns a new sorted list." } },
+        { "id": "c", "text": { "tr": "Python 3.7+ sürümlerinde dict, anahtarların ekleme sırasını korur.", "en": "In Python 3.7+, dict preserves the insertion order of keys." } },
+        { "id": "d", "text": { "tr": "{} boş bir set oluşturur.", "en": "{} creates an empty set." } }
+      ],
+      "correct": ["a", "c"],
+      "explanation": {
+        "tr": "Küme hash tablosu kullandığı için in ortalamada O(1)'dir ve dict 3.7'den beri ekleme sırasını korur. sort() yerinde sıralar ve None döndürür; {} boş bir sözlüktür, boş küme set() ile yazılır.",
+        "en": "Sets use a hash table, so in is O(1) on average, and dicts preserve insertion order since 3.7. sort() sorts in place and returns None; {} is an empty dict, an empty set is written set()."
+      },
+      "difficulty": "medium",
+      "concepts": ["time-complexity", "set", "dict", "list"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "t = (1, [2, 3]) için hangi satır hatasız çalışır?",
+        "en": "Given t = (1, [2, 3]), which line runs without an error?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "t[1].append(4)", "en": "t[1].append(4)" } },
+        { "id": "b", "text": { "tr": "t[0] = 5", "en": "t[0] = 5" } },
+        { "id": "c", "text": { "tr": "t[1] = [2, 3, 4]", "en": "t[1] = [2, 3, 4]" } },
+        { "id": "d", "text": { "tr": "t.append(4)", "en": "t.append(4)" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "Tuple'ın tuttuğu referanslar değişmez ama gösterdiği liste değiştirilebilir; t[1].append(4) listeyi yerinde değiştirir. Elemana atama TypeError, tuple'da append metodu olmadığı için AttributeError verir.",
+        "en": "A tuple's references cannot change, but the list it points to is mutable; t[1].append(4) mutates it in place. Item assignment raises TypeError, and tuples have no append method (AttributeError)."
+      },
+      "difficulty": "easy",
+      "concepts": ["tuple", "aliasing"]
+    }
+  ]
+}

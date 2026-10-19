@@ -1,0 +1,110 @@
+{
+  "id": "k-14-dunder-property-ve-dataclass-quiz",
+  "title": { "tr": "Özel Metotlar ve dataclass Quiz", "en": "Dunder Methods and dataclass Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "class A: içinde yalnızca __init__(self, n) ve __eq__ (n değerlerini karşılaştıran) tanımlı. {A(1), A(1)} ifadesi ne olur?",
+        "en": "class A defines only __init__(self, n) and __eq__ (comparing the n values). What happens with {A(1), A(1)}?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "TypeError: A hash'lenemez, çünkü __eq__ tanımlanınca __hash__ None olur", "en": "TypeError: A is unhashable, because defining __eq__ sets __hash__ to None" } },
+        { "id": "b", "text": { "tr": "Tek öğeli bir küme oluşur, çünkü iki nesne eşittir", "en": "A set with one item, because the two objects are equal" } },
+        { "id": "c", "text": { "tr": "İki öğeli bir küme oluşur, çünkü hash kimliğe göre hesaplanır", "en": "A set with two items, because the hash is based on identity" } },
+        { "id": "d", "text": { "tr": "Python __eq__'dan otomatik bir __hash__ üretir ve tek öğe kalır", "en": "Python derives a __hash__ from __eq__ automatically and one item remains" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "Bir sınıfta __eq__ tanımlayıp __hash__ tanımlamazsan Python __hash__'i None yapar; nesne küme öğesi olamaz ve TypeError alırsın. Kimliğe dayalı varsayılan hash, eşit nesnelerin eşit hash vermesi kuralını bozacağı için kaldırılır; Python kendiliğinden hash üretmez.",
+        "en": "If a class defines __eq__ without __hash__, Python sets __hash__ to None, so the object cannot be a set element and you get a TypeError. The identity-based default hash is removed because it would break the rule that equal objects have equal hashes; Python does not derive one for you."
+      },
+      "difficulty": "medium",
+      "concepts": ["eq-and-hash", "dunder-methods"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "@dataclass class K: ad: str; etiketler: list = field(default_factory=list). x = K(\"a\"), y = K(\"a\"), ardından x.etiketler.append(\"t\") çalışıyor. print(y.etiketler, x == y) ne yazdırır?",
+        "en": "@dataclass class K: ad: str; etiketler: list = field(default_factory=list). x = K(\"a\"), y = K(\"a\"), then x.etiketler.append(\"t\") runs. What does print(y.etiketler, x == y) output?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "[] False", "en": "[] False" } },
+        { "id": "b", "text": { "tr": "['t'] True", "en": "['t'] True" } },
+        { "id": "c", "text": { "tr": "[] True", "en": "[] True" } },
+        { "id": "d", "text": { "tr": "['t'] False", "en": "['t'] False" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "default_factory her nesneye ayrı bir liste verir, bu yüzden y.etiketler boş kalır. Üretilen __eq__ alanları karşılaştırır: etiketler farklı (['t'] ve []) olduğu için x == y False'tur. ['t'] cevapları listenin paylaşıldığını varsayar; bu ancak paylaşılan bir varsayılan liste olsaydı geçerli olurdu.",
+        "en": "default_factory gives each object its own list, so y.etiketler stays empty. The generated __eq__ compares fields: etiketler differ (['t'] vs []), so x == y is False. The ['t'] answers assume a shared list, which would only happen with a shared default list."
+      },
+      "difficulty": "medium",
+      "concepts": ["dataclass"]
+    },
+    {
+      "id": "q3",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Aşağıdakilerden hangileri doğrudur?",
+        "en": "Which of the following are true?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "3 * v ifadesinde int bir Vektor ile çarpmayı bilmezse Python v.__rmul__(3)'ü dener", "en": "In 3 * v, if int cannot multiply by a Vektor, Python tries v.__rmul__(3)" } },
+        { "id": "b", "text": { "tr": "self.__bakiye özelliği dışarıdan hiçbir şekilde okunamaz", "en": "The attribute self.__bakiye cannot be read from outside in any way" } },
+        { "id": "c", "text": { "tr": "Setter'ı olmayan bir property'ye atama yapmak AttributeError verir", "en": "Assigning to a property without a setter raises AttributeError" } },
+        { "id": "d", "text": { "tr": "__str__ tanımlı değilse print() nesnenin __repr__'ını kullanır", "en": "If __str__ is not defined, print() uses the object's __repr__" } }
+      ],
+      "correct": ["a", "c", "d"],
+      "explanation": {
+        "tr": "int.__mul__ NotImplemented döndürünce sağ işlenenin __rmul__'ı denenir; salt okunur property'ye atama AttributeError verir; __str__ yoksa __repr__ kullanılır. __bakiye ise yalnızca _Sinif__bakiye adına dönüştürülür (isim karıştırma) ve o adla okunabilir.",
+        "en": "When int.__mul__ returns NotImplemented, the right operand's __rmul__ is tried; assigning to a read-only property raises AttributeError; without __str__, __repr__ is used. __bakiye is only renamed to _ClassName__bakiye (name mangling) and can be read under that name."
+      },
+      "difficulty": "medium",
+      "concepts": ["operator-overloading", "encapsulation", "property", "dunder-methods"]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "abc.ABC'den türeyen ve @abstractmethod ile işaretli bir metodu olan sınıf örneklenebilir; hata ancak o metot çağrıldığında gelir.",
+        "en": "A class deriving from abc.ABC with a method marked @abstractmethod can be instantiated; the error only comes when that method is called."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "Soyut metotları uygulanmamış bir sınıfı örneklemeye çalışmak, nesne oluşturulurken hemen TypeError verir. Bu sayede eksik bir alt sınıf erkenden yakalanır.",
+        "en": "Trying to instantiate a class with unimplemented abstract methods raises TypeError immediately at construction time, so an incomplete subclass is caught early."
+      },
+      "difficulty": "easy",
+      "concepts": ["abstract-base-class"]
+    },
+    {
+      "id": "q5",
+      "type": "order",
+      "prompt": {
+        "tr": "v3 = v1 + v2 satırı çalışırken (Vektor sınıfında __add__ tanımlı) olanları sıraya koy.",
+        "en": "Order what happens while v3 = v1 + v2 runs (Vektor defines __add__)."
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Python sol işlenenin sınıfında __add__ metodunu bulur", "en": "Python finds __add__ on the left operand's class" } },
+        { "id": "b", "text": { "tr": "Yığına self=v1, diger=v2 olan bir __add__ çerçevesi eklenir", "en": "An __add__ frame with self=v1, diger=v2 is pushed" } },
+        { "id": "c", "text": { "tr": "__add__ içinde heap'te yeni bir Vektor nesnesi oluşturulur", "en": "A new Vektor object is created on the heap inside __add__" } },
+        { "id": "d", "text": { "tr": "Çerçeve kapanır ve v3 adı yeni nesneye bağlanır", "en": "The frame is popped and the name v3 is bound to the new object" } }
+      ],
+      "correct": ["a", "b", "c", "d"],
+      "explanation": {
+        "tr": "+ operatörü sol işlenenin __add__ metoduna yönlendirilir, bu bir fonksiyon çağrısı olduğu için yeni çerçeve açılır, metot yeni bir nesne üretip döndürür ve dönüş değeri v3'e bağlanır. v1 ve v2 değişmez.",
+        "en": "The + operator is dispatched to the left operand's __add__; being a call, it pushes a frame; the method builds and returns a new object, which is bound to v3. v1 and v2 are unchanged."
+      },
+      "difficulty": "easy",
+      "concepts": ["operator-overloading", "dunder-methods"]
+    }
+  ]
+}

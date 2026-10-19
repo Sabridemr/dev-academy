@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { LocalizedStringSchema } from '../i18n';
+import { CodeTraceSchema } from './trace';
 
 /**
  * İÇERİK ŞEMASI
@@ -187,6 +188,17 @@ export const QuizBlockSchema = BaseBlock.extend({
   quizId: z.string().optional(),
 });
 
+/** Satır satır kod izi (simülasyon): kod, çağrı yığını, heap ve çıktı adım adım oynatılır */
+export const TraceBlockSchema = BaseBlock.extend({
+  type: z.literal('trace'),
+  /** Ders klasörüne göre iz JSON yolu (`<ad>.trace.json`, `<ad>.trace.py`'den üretilir) */
+  src: z.string().min(1),
+  title: LocalizedStringSchema.optional(),
+  caption: LocalizedStringSchema.optional(),
+  /** İz içeriği (seed sırasında doldurulur) */
+  trace: CodeTraceSchema.optional(),
+});
+
 export const NextBlockSchema = BaseBlock.extend({
   type: z.literal('next'),
   lesson: z.string().min(1),
@@ -202,6 +214,7 @@ export const LessonBlockSchema = z.discriminatedUnion('type', [
   RealWorldBlockSchema,
   CalloutBlockSchema,
   QuizBlockSchema,
+  TraceBlockSchema,
   NextBlockSchema,
 ]);
 export type LessonBlock = z.infer<typeof LessonBlockSchema>;
@@ -216,6 +229,7 @@ export const LESSON_BLOCK_TYPES = [
   'realworld',
   'callout',
   'quiz',
+  'trace',
   'next',
 ] as const satisfies readonly LessonBlockType[];
 

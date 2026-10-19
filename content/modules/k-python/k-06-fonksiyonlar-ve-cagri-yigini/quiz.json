@@ -1,0 +1,110 @@
+{
+  "id": "k-06-fonksiyonlar-ve-cagri-yigini-quiz",
+  "title": { "tr": "Fonksiyonlar ve Çağrı Yığını Quiz", "en": "Functions and Call Stack Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "def ekle(x, l=[]): l.append(x); return l tanımından sonra ekle(1) ve ardından print(ekle(2)) çalışıyor. Ne yazdırılır?",
+        "en": "Given def ekle(x, l=[]): l.append(x); return l, ekle(1) runs and then print(ekle(2)). What is printed?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "[1, 2]", "en": "[1, 2]" } },
+        { "id": "b", "text": { "tr": "[2]", "en": "[2]" } },
+        { "id": "c", "text": { "tr": "[1]", "en": "[1]" } },
+        { "id": "d", "text": { "tr": "None", "en": "None" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "Varsayılan liste def satırında bir kez oluşturulur ve her çağrıda aynı nesne kullanılır; ilk çağrının eklediği 1 hâlâ oradadır. [2] almak için l=None kalıbı gerekir.",
+        "en": "The default list is created once when def runs and the same object is reused on every call, so the 1 from the first call is still there. Getting [2] requires the l=None pattern."
+      },
+      "difficulty": "medium",
+      "concepts": ["default-arguments"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "def f(*args, **kwargs): print(type(args).__name__, type(kwargs).__name__) için f(1, 2, a=3) ne yazdırır?",
+        "en": "For def f(*args, **kwargs): print(type(args).__name__, type(kwargs).__name__), what does f(1, 2, a=3) print?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "tuple dict", "en": "tuple dict" } },
+        { "id": "b", "text": { "tr": "list dict", "en": "list dict" } },
+        { "id": "c", "text": { "tr": "tuple set", "en": "tuple set" } },
+        { "id": "d", "text": { "tr": "list list", "en": "list list" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "*args fazla konumsal argümanları her zaman bir tuple'da, **kwargs fazla isimli argümanları bir dict'te toplar. Liste ya da küme değildir.",
+        "en": "*args always collects extra positional arguments into a tuple and **kwargs collects extra keyword arguments into a dict, never a list or a set."
+      },
+      "difficulty": "easy",
+      "concepts": ["args-kwargs"]
+    },
+    {
+      "id": "q3",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Aynı fonksiyon arka arkaya iki kez çağrıldığında, ikinci çağrı ilk çağrının yerel değişkenlerini görebilir.",
+        "en": "When the same function is called twice in a row, the second call can see the first call's local variables."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "Her çağrı kendi yeni çerçevesini açar ve return ile çerçeve kalkınca yerel isimler yok olur. Çağrılar arasında kalıcı olan yalnızca heap'teki paylaşılan nesnelerdir (örneğin değiştirilebilir varsayılan argüman).",
+        "en": "Each call pushes its own fresh frame, and local names vanish when the frame is popped on return. Only shared heap objects (such as a mutable default argument) persist between calls."
+      },
+      "difficulty": "easy",
+      "concepts": ["stack-frame", "call-stack"]
+    },
+    {
+      "id": "q4",
+      "type": "multiple",
+      "prompt": {
+        "tr": "def f(a, /, b, *, c): tanımı için hangi çağrılar hatasız çalışır?",
+        "en": "Given def f(a, /, b, *, c):, which calls run without an error?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "f(1, 2, c=3)", "en": "f(1, 2, c=3)" } },
+        { "id": "b", "text": { "tr": "f(1, b=2, c=3)", "en": "f(1, b=2, c=3)" } },
+        { "id": "c", "text": { "tr": "f(a=1, b=2, c=3)", "en": "f(a=1, b=2, c=3)" } },
+        { "id": "d", "text": { "tr": "f(1, 2, 3)", "en": "f(1, 2, 3)" } }
+      ],
+      "correct": ["a", "b"],
+      "explanation": {
+        "tr": "a yalnızca konumla, c yalnızca isimle verilebilir; b ikisine de açıktır. f(a=1, ...) a'yı isimle verdiği için, f(1, 2, 3) ise c'yi konumla verdiği için TypeError verir.",
+        "en": "a is positional-only, c is keyword-only and b accepts either. f(a=1, ...) passes a by name and f(1, 2, 3) passes c by position, so both raise TypeError."
+      },
+      "difficulty": "hard",
+      "concepts": ["parameters-and-arguments"]
+    },
+    {
+      "id": "q5",
+      "type": "order",
+      "prompt": {
+        "tr": "Global kod a() çağırıyor, a() de b() çağırıyor. Olayları gerçekleşme sırasına koy.",
+        "en": "Global code calls a(), and a() calls b(). Put the events in the order they happen."
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "a için çerçeve yığına eklenir", "en": "A frame for a is pushed onto the stack" } },
+        { "id": "b", "text": { "tr": "b için çerçeve a'nın üstüne eklenir", "en": "A frame for b is pushed on top of a" } },
+        { "id": "c", "text": { "tr": "b return eder, çerçevesi kalkar", "en": "b returns and its frame is popped" } },
+        { "id": "d", "text": { "tr": "a kaldığı satırdan devam eder ve return eder", "en": "a resumes from where it paused and returns" } }
+      ],
+      "correct": ["a", "b", "c", "d"],
+      "explanation": {
+        "tr": "Yığın LIFO çalışır: son eklenen çerçeve (b) ilk çıkar. a, b dönene kadar çağrı satırında bekler, sonra devam edip kendi çerçevesini kapatır.",
+        "en": "The stack is LIFO: the last frame pushed (b) is popped first. a waits on the call line until b returns, then resumes and pops its own frame."
+      },
+      "difficulty": "medium",
+      "concepts": ["call-stack", "return-value"]
+    }
+  ]
+}

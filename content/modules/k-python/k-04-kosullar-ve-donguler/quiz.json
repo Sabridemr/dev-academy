@@ -1,0 +1,110 @@
+{
+  "id": "k-04-kosullar-ve-donguler-quiz",
+  "title": { "tr": "Koşullar ve Döngüler Quiz", "en": "Conditions and Loops Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "for i in range(1, 4): içinde yalnızca if i == 5: break var; döngüye bağlı else: print(\"bitti\") yazılmış. Döngüden sonra print(i) çalışıyor. Çıktı nedir?",
+        "en": "for i in range(1, 4): contains only if i == 5: break; the loop has else: print(\"bitti\"). After the loop print(i) runs. What is the output?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "bitti ve 3", "en": "bitti and 3" } },
+        { "id": "b", "text": { "tr": "Yalnızca 3", "en": "Only 3" } },
+        { "id": "c", "text": { "tr": "bitti ve 4", "en": "bitti and 4" } },
+        { "id": "d", "text": { "tr": "NameError, çünkü i döngü dışında tanımlı değil", "en": "NameError, because i is not defined outside the loop" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "range(1, 4) 1, 2, 3 üretir; 5'e hiç ulaşılmadığı için break olmaz ve döngü-else çalışır. Döngü değişkeni döngüden sonra son değeriyle (3) yaşar; 4 range'e dahil değildir.",
+        "en": "range(1, 4) yields 1, 2, 3; 5 is never reached, so there is no break and the loop's else runs. The loop variable survives with its last value (3); 4 is not part of the range."
+      },
+      "difficulty": "medium",
+      "concepts": ["loop-else", "range"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "t = 0; for i in range(1, 10, 2): if i == 5: continue; t += i. Döngü bitince t kaçtır?",
+        "en": "t = 0; for i in range(1, 10, 2): if i == 5: continue; t += i. What is t after the loop?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "20", "en": "20" } },
+        { "id": "b", "text": { "tr": "25", "en": "25" } },
+        { "id": "c", "text": { "tr": "4", "en": "4" } },
+        { "id": "d", "text": { "tr": "16", "en": "16" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "range(1, 10, 2) 1, 3, 5, 7, 9 üretir (toplamı 25). continue yalnızca 5'in turunu atlar, döngüyü bitirmez: 25 - 5 = 20. 4 sonucu continue'yu break gibi düşünmekten (1 + 3) gelir; 16 ise 9'un da atlandığını varsaymaktır.",
+        "en": "range(1, 10, 2) yields 1, 3, 5, 7, 9 (sum 25). continue only skips the round for 5; it does not end the loop: 25 - 5 = 20. 4 comes from treating continue like break (1 + 3); 16 assumes 9 is excluded too."
+      },
+      "difficulty": "medium",
+      "concepts": ["break-continue", "range"]
+    },
+    {
+      "id": "q3",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "match ifadesinde case HEDEF: yazmak, değeri HEDEF değişkeninde saklanan sabitle karşılaştırır.",
+        "en": "In a match statement, case HEDEF: compares the value with the constant stored in the variable HEDEF."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "Çıplak bir isim yakalama desenidir: her değerle eşleşir ve değeri HEDEF adına bağlar. Sabitle karşılaştırmak için noktalı ad (Renk.KIRMIZI) ya da guard (case x if x == HEDEF) kullanılır.",
+        "en": "A bare name is a capture pattern: it matches any value and binds it to HEDEF. To compare with a constant, use a dotted name (Renk.KIRMIZI) or a guard (case x if x == HEDEF)."
+      },
+      "difficulty": "hard",
+      "concepts": ["pattern-matching"]
+    },
+    {
+      "id": "q4",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Hangi ifadeler doğrudur?",
+        "en": "Which statements are true?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "İç içe döngüde break yalnızca içinde bulunduğu döngüyü bitirir", "en": "In nested loops, break only ends the loop it is in" } },
+        { "id": "b", "text": { "tr": "while döngüsünün koşulu her turun başında yeniden kontrol edilir", "en": "A while loop's condition is checked again at the start of every round" } },
+        { "id": "c", "text": { "tr": "if/elif zincirinde koşulu doğru olan tüm bloklar sırayla çalışır", "en": "In an if/elif chain, every block whose condition is true runs in order" } },
+        { "id": "d", "text": { "tr": "Döngü-else, döngü break ile bittiğinde çalışır", "en": "A loop's else runs when the loop ends with break" } }
+      ],
+      "correct": ["a", "b"],
+      "explanation": {
+        "tr": "break yalnızca en içteki döngüyü bitirir ve while koşulu her tur başında yeniden değerlendirilir. if/elif zincirinde yalnızca ilk doğru blok çalışır; döngü-else ise tam tersine break OLMADAN bitince çalışır.",
+        "en": "break only ends the innermost loop, and a while condition is re-evaluated each round. In an if/elif chain only the first true block runs; a loop's else runs when the loop ends WITHOUT break."
+      },
+      "difficulty": "easy",
+      "concepts": ["nested-loops", "while-loop", "conditional-statements", "loop-else"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "sayilar = [1, 2, 2, 3] listesinde dolaşırken her 2'yi sayilar.remove(n) ile siliyorsun. Döngüden sonra liste nedir?",
+        "en": "While iterating over sayilar = [1, 2, 2, 3] you remove each 2 with sayilar.remove(n). What is the list after the loop?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "[1, 2, 3]", "en": "[1, 2, 3]" } },
+        { "id": "b", "text": { "tr": "[1, 3]", "en": "[1, 3]" } },
+        { "id": "c", "text": { "tr": "RuntimeError fırlatılır", "en": "A RuntimeError is raised" } },
+        { "id": "d", "text": { "tr": "[1, 2, 2, 3]", "en": "[1, 2, 2, 3]" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "İlk 2 silinince elemanlar sola kayar ve döngü bir sonraki indekse geçtiği için ikinci 2 atlanır. Listeler bu durumda hata vermez (sözlükler RuntimeError verir); doğru yol yeni bir liste oluşturmaktır.",
+        "en": "When the first 2 is removed, elements shift left and the loop moves to the next index, so the second 2 is skipped. Lists raise no error here (dicts raise RuntimeError); the right way is to build a new list."
+      },
+      "difficulty": "hard",
+      "concepts": ["for-loop"]
+    }
+  ]
+}

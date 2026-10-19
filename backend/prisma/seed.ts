@@ -107,6 +107,8 @@ function resolveBlocks(lesson: LoadedLesson, assets: Record<string, StoredAsset>
       }
       case 'quiz':
         return { ...b, quizId: lesson.quiz?.id };
+      case 'trace':
+        return { ...b, trace: lesson.traces[b.src] };
       default:
         return b;
     }

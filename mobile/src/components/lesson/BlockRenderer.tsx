@@ -13,6 +13,7 @@ import { QuizView } from '@/components/quiz/QuizView';
 import { CodeBlockView } from './CodeBlockView';
 import { DiagramBlockView } from './DiagramBlockView';
 import { MarkdownView } from './MarkdownView';
+import { TraceView } from './TraceView';
 
 /** Dile göre Markdown seçimi (markdownEn yoksa Türkçe) */
 function md(block: { markdown: string; markdownEn?: string }, locale: Locale): string {
@@ -47,6 +48,8 @@ export const BlockRenderer = memo(function BlockRenderer({ block, lesson, onQuiz
       );
     case 'quiz':
       return <QuizBlockView lessonId={lesson.id} onPassed={onQuizPassed} />;
+    case 'trace':
+      return <TraceView block={block} />;
     case 'next':
       return <NextBlockView lessonId={block.lesson} note={block.note} lesson={lesson} />;
     default:

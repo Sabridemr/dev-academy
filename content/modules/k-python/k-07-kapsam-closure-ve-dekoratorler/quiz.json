@@ -1,0 +1,110 @@
+{
+  "id": "k-07-kapsam-closure-ve-dekoratorler-quiz",
+  "title": { "tr": "Kapsam, Closure ve Dekoratörler Quiz", "en": "Scope, Closures and Decorators Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "x = 5 ve def f(): print(x); x = 10 tanımından sonra f() çağrılıyor. Ne olur?",
+        "en": "Given x = 5 and def f(): print(x); x = 10, f() is called. What happens?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "UnboundLocalError oluşur", "en": "UnboundLocalError is raised" } },
+        { "id": "b", "text": { "tr": "5 yazdırılır, sonra yerel x 10 olur", "en": "5 is printed, then local x becomes 10" } },
+        { "id": "c", "text": { "tr": "10 yazdırılır", "en": "10 is printed" } },
+        { "id": "d", "text": { "tr": "NameError oluşur", "en": "NameError is raised" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "Fonksiyonda x'e atama olduğu için derleyici x'i fonksiyonun tamamında yerel sayar; print(x) satırında yerel x henüz bağlanmamıştır. Global x'e bakılmaz, NameError da değil UnboundLocalError (NameError'ın alt sınıfı) oluşur.",
+        "en": "Because f assigns to x, the compiler treats x as local throughout the function; at print(x) the local x is not bound yet. The global x is not consulted, and the error is UnboundLocalError (a subclass of NameError)."
+      },
+      "difficulty": "medium",
+      "concepts": ["unboundlocalerror", "legb-scope"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "fs = [lambda: i for i in range(3)] ardından print([f() for f in fs]) ne yazdırır?",
+        "en": "fs = [lambda: i for i in range(3)] followed by print([f() for f in fs]) prints what?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "[2, 2, 2]", "en": "[2, 2, 2]" } },
+        { "id": "b", "text": { "tr": "[0, 1, 2]", "en": "[0, 1, 2]" } },
+        { "id": "c", "text": { "tr": "[0, 0, 0]", "en": "[0, 0, 0]" } },
+        { "id": "d", "text": { "tr": "NameError", "en": "NameError" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "Lambdalar i'nin değerini değil değişkenin kendisini yakalar (geç bağlama). Çağrıldıklarında döngü bitmiş ve i = 2 olmuştur. [0, 1, 2] için lambda i=i: i yazılmalıdır.",
+        "en": "The lambdas capture the variable i, not its value (late binding). When they are called the loop is over and i is 2. Getting [0, 1, 2] requires lambda i=i: i."
+      },
+      "difficulty": "medium",
+      "concepts": ["late-binding", "closure"]
+    },
+    {
+      "id": "q3",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "@dekor ile süslenmiş def f(): ... tanımı, f = dekor(f) yazmakla aynı etkiye sahiptir.",
+        "en": "Defining def f(): ... decorated with @dekor has the same effect as writing f = dekor(f)."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["t"],
+      "explanation": {
+        "tr": "@ sözdizimi bir kısaltmadır: fonksiyon tanımlanır, hemen dekoratöre verilir ve dönen nesne aynı isme bağlanır. Dekoratör her çağrıda değil, tanım anında bir kez çalışır.",
+        "en": "The @ syntax is shorthand: the function is defined, immediately passed to the decorator, and the returned object is bound to the same name. The decorator runs once at definition time, not on every call."
+      },
+      "difficulty": "easy",
+      "concepts": ["decorator"]
+    },
+    {
+      "id": "q4",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Bir dekoratörde @functools.wraps(fonk) kullanmanın etkileri hangileridir?",
+        "en": "Which are effects of using @functools.wraps(fonk) in a decorator?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Sarmalayıcının __name__ değeri asıl fonksiyonun adı olur", "en": "The wrapper's __name__ becomes the original function's name" } },
+        { "id": "b", "text": { "tr": "Asıl fonksiyonun docstring'i sarmalayıcıya kopyalanır", "en": "The original function's docstring is copied to the wrapper" } },
+        { "id": "c", "text": { "tr": "Asıl fonksiyona __wrapped__ niteliğiyle erişilebilir", "en": "The original function is reachable through the __wrapped__ attribute" } },
+        { "id": "d", "text": { "tr": "Sarmalayıcı çağrıldığında asıl fonksiyon otomatik olarak iki kez çalışır", "en": "The original function automatically runs twice when the wrapper is called" } }
+      ],
+      "correct": ["a", "b", "c"],
+      "explanation": {
+        "tr": "wraps, __name__, __doc__, __module__, __qualname__ gibi bilgileri kopyalar ve asıl fonksiyonu __wrapped__ içinde saklar. Çağrı davranışını değiştirmez; asıl fonksiyonu sarmalayıcı kaç kez çağırırsa o kadar çalışır.",
+        "en": "wraps copies metadata such as __name__, __doc__, __module__ and __qualname__ and stores the original in __wrapped__. It does not change call behaviour; the original runs as many times as the wrapper calls it."
+      },
+      "difficulty": "medium",
+      "concepts": ["functools-wraps", "decorator"]
+    },
+    {
+      "id": "q5",
+      "type": "order",
+      "prompt": {
+        "tr": "Python bir fonksiyonun içinde okunan bir ismi hangi sırayla arar? Sıraya koy.",
+        "en": "In what order does Python look up a name read inside a function? Put them in order."
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Yerel (Local)", "en": "Local" } },
+        { "id": "b", "text": { "tr": "Kapsayan fonksiyon (Enclosing)", "en": "Enclosing function" } },
+        { "id": "c", "text": { "tr": "Modül (Global)", "en": "Module (Global)" } },
+        { "id": "d", "text": { "tr": "Yerleşik (Built-in)", "en": "Built-in" } }
+      ],
+      "correct": ["a", "b", "c", "d"],
+      "explanation": {
+        "tr": "LEGB: önce çalışan fonksiyonun yerelleri, sonra dıştaki fonksiyonlar, sonra modül, en son yerleşik isimler. İlk bulunan kullanılır; bu yüzden aynı isimde bir global, yerleşik ismi gölgeler.",
+        "en": "LEGB: first the running function's locals, then enclosing functions, then the module, finally built-ins. The first match wins, which is why a global with the same name shadows a built-in."
+      },
+      "difficulty": "easy",
+      "concepts": ["legb-scope"]
+    }
+  ]
+}

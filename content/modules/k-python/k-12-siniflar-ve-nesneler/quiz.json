@@ -1,0 +1,110 @@
+{
+  "id": "k-12-siniflar-ve-nesneler-quiz",
+  "title": { "tr": "Sınıflar ve Nesneler Quiz", "en": "Classes and Objects Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "class A: x = [] ve __init__ içinde yalnızca self.n = n var. a = A(1); b = A(2); a.x.append(1); b.x = [9] çalışıyor. print(A.x, a.x, b.x) ne yazdırır?",
+        "en": "class A: x = [] and __init__ only sets self.n = n. a = A(1); b = A(2); a.x.append(1); b.x = [9] runs. What does print(A.x, a.x, b.x) output?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "[1] [1] [9]", "en": "[1] [1] [9]" } },
+        { "id": "b", "text": { "tr": "[] [1] [9]", "en": "[] [1] [9]" } },
+        { "id": "c", "text": { "tr": "[9] [9] [9]", "en": "[9] [9] [9]" } },
+        { "id": "d", "text": { "tr": "[1] [1] [1, 9]", "en": "[1] [1] [1, 9]" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "a.x.append(1) sınıftaki tek listeyi yerinde değiştirir, bu yüzden A.x ve a.x [1] olur. b.x = [9] ise atamadır: b'nin üzerinde yeni bir x oluşturur ve sınıftakini yalnızca b için gölgeler.",
+        "en": "a.x.append(1) mutates the single class-level list, so A.x and a.x are [1]. b.x = [9] is an assignment: it creates a new x on b and shadows the class value only for b."
+      },
+      "difficulty": "hard",
+      "concepts": ["class-attribute", "instance-attribute"]
+    },
+    {
+      "id": "q2",
+      "type": "order",
+      "prompt": {
+        "tr": "ada = Hesap('Ada', 100) satırında olanları sıraya koy.",
+        "en": "Put what happens on the line ada = Hesap('Ada', 100) in order."
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Heap'te yeni, boş bir Hesap örneği oluşturulur", "en": "A new, empty Hesap instance is created on the heap" } },
+        { "id": "b", "text": { "tr": "__init__ için çerçeve açılır; self yeni örneğe, sahip ve bakiye argümanlara bağlanır", "en": "A frame opens for __init__; self is bound to the new instance, sahip and bakiye to the arguments" } },
+        { "id": "c", "text": { "tr": "self.sahip = sahip ve self.bakiye = bakiye alanları örneğin üzerinde oluşturur", "en": "self.sahip = sahip and self.bakiye = bakiye create fields on the instance" } },
+        { "id": "d", "text": { "tr": "__init__ çerçevesi kapanır ve 'ada' ismi oluşturulan örneğe bağlanır", "en": "The __init__ frame closes and the name 'ada' is bound to the created instance" } }
+      ],
+      "correct": ["a", "b", "c", "d"],
+      "explanation": {
+        "tr": "Önce nesne oluşturulur (__new__), sonra __init__ onu self olarak alıp alanları kurar. __init__ None döndürür; Hesap(...) ifadesinin değeri oluşturulan nesnedir ve ada'ya bağlanır.",
+        "en": "The object is created first (__new__), then __init__ receives it as self and sets the fields. __init__ returns None; the value of Hesap(...) is the new object, which is bound to ada."
+      },
+      "difficulty": "easy",
+      "concepts": ["init-method", "self", "instance"]
+    },
+    {
+      "id": "q3",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "ada.yatir(25) ile Hesap.yatir(ada, 25) aynı fonksiyonu aynı argümanlarla çağırır.",
+        "en": "ada.yatir(25) and Hesap.yatir(ada, 25) call the same function with the same arguments."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["t"],
+      "explanation": {
+        "tr": "Metot sınıfın üzerindeki bir fonksiyondur. ada.yatir bir bound method döndürür ve çağrıldığında ada'yı self olarak ilk argümana kendisi koyar; sonuç Hesap.yatir(ada, 25) ile aynıdır.",
+        "en": "A method is a function stored on the class. ada.yatir returns a bound method that inserts ada as the first argument (self) when called, so it equals Hesap.yatir(ada, 25)."
+      },
+      "difficulty": "easy",
+      "concepts": ["bound-method", "self"]
+    },
+    {
+      "id": "q4",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Hesap sınıfında __eq__ tanımlı değil. b = Hesap('Ada', 100), c = Hesap('Ada', 100), d = b. Hangileri True'dur?",
+        "en": "Hesap does not define __eq__. b = Hesap('Ada', 100), c = Hesap('Ada', 100), d = b. Which are True?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "b == d", "en": "b == d" } },
+        { "id": "b", "text": { "tr": "b is d", "en": "b is d" } },
+        { "id": "c", "text": { "tr": "b == c", "en": "b == c" } },
+        { "id": "d", "text": { "tr": "b.__dict__ == c.__dict__", "en": "b.__dict__ == c.__dict__" } }
+      ],
+      "correct": ["a", "b", "d"],
+      "explanation": {
+        "tr": "__eq__ yokken == kimliğe bakar: b ile d aynı nesnedir (True), b ile c ayrı nesnedir (False). __dict__'ler ise sıradan sözlüklerdir ve içerikleri aynı olduğu için eşittir.",
+        "en": "Without __eq__, == compares identity: b and d are the same object (True), b and c are different objects (False). The __dict__ values are plain dicts with equal contents, so they compare equal."
+      },
+      "difficulty": "medium",
+      "concepts": ["instance", "instance-attribute"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "Bir metin satırından nesne oluşturan Tarih.metinden('29.10.1923') gibi bir alternatif kurucu için en uygun yapı hangisidir?",
+        "en": "Which construct best fits an alternative constructor like Tarih.metinden('29.10.1923') that builds an object from a string?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "@classmethod; içinde cls(...) döndürmek", "en": "@classmethod, returning cls(...)" } },
+        { "id": "b", "text": { "tr": "@staticmethod; içinde self(...) döndürmek", "en": "@staticmethod, returning self(...)" } },
+        { "id": "c", "text": { "tr": "İkinci bir __init__ tanımlamak", "en": "Defining a second __init__" } },
+        { "id": "d", "text": { "tr": "Sınıf niteliği olarak bir metin saklamak", "en": "Storing a string as a class attribute" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "@classmethod sınıfı cls olarak alır; cls(...) alt sınıflarda da doğru türü üretir. staticmethod'da self ya da cls yoktur. Python'da ikinci __init__ birinciyi ezer, aşırı yükleme (overloading) yoktur.",
+        "en": "@classmethod receives the class as cls, and cls(...) builds the right type even in subclasses. A staticmethod has no self or cls. A second __init__ simply replaces the first; Python has no overloading."
+      },
+      "difficulty": "medium",
+      "concepts": ["classmethod-staticmethod", "class"]
+    }
+  ]
+}

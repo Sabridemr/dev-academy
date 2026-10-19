@@ -1,0 +1,110 @@
+{
+  "id": "k-18-eszamanlilik-ve-asyncio-quiz",
+  "title": { "tr": "Eşzamanlılık ve asyncio Quiz", "en": "Concurrency and asyncio Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "async def indir(ad) önce '<ad> başladı' yazdırıyor, sonra await asyncio.sleep(0), sonra '<ad> bitti' yazdırıyor. asyncio.run içinde await asyncio.gather(indir('a'), indir('b')) çalışınca çıktı sırası nedir?",
+        "en": "async def indir(ad) prints '<ad> başladı', then awaits asyncio.sleep(0), then prints '<ad> bitti'. Inside asyncio.run, await asyncio.gather(indir('a'), indir('b')) runs. What is the output order?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "a başladı, b başladı, a bitti, b bitti", "en": "a başladı, b başladı, a bitti, b bitti" } },
+        { "id": "b", "text": { "tr": "a başladı, a bitti, b başladı, b bitti", "en": "a başladı, a bitti, b başladı, b bitti" } },
+        { "id": "c", "text": { "tr": "b başladı, a başladı, b bitti, a bitti", "en": "b başladı, a başladı, b bitti, a bitti" } },
+        { "id": "d", "text": { "tr": "Sıra her çalıştırmada rastgele değişir", "en": "The order changes randomly on every run" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "gather görevleri verilen sırayla planlar. a, await noktasında kontrolü bırakır ve b başlar; sonra döngü a'yı, ardından b'yi devam ettirir. asyncio tek thread'de işbirlikçi çalıştığı için bu sıra belirlidir, rastgele değildir.",
+        "en": "gather schedules the tasks in the given order. a yields control at its await and b starts; then the loop resumes a, then b. asyncio is cooperative on a single thread, so this order is deterministic, not random."
+      },
+      "difficulty": "medium",
+      "concepts": ["asyncio", "event-loop"]
+    },
+    {
+      "id": "q2",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Varsayılan (GIL'li) CPython'da saf Python ile yazılmış CPU-bound bir işi iki thread'e bölmek onu yaklaşık iki kat hızlandırır.",
+        "en": "In default (GIL-enabled) CPython, splitting a pure-Python CPU-bound job across two threads makes it roughly twice as fast."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "GIL aynı anda yalnızca bir thread'in Python bytecode'u çalıştırmasına izin verir; iki thread sırayla çalışır ve süre neredeyse aynı kalır. Gerçek paralellik için süreçler (ProcessPoolExecutor) kullanılır.",
+        "en": "The GIL lets only one thread run Python bytecode at a time; the two threads take turns and the time stays about the same. Use processes (ProcessPoolExecutor) for real parallelism."
+      },
+      "difficulty": "easy",
+      "concepts": ["gil", "threading", "parallelism"]
+    },
+    {
+      "id": "q3",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Bir async def fonksiyonunun içinde hangileri olay döngüsünü bloklar?",
+        "en": "Inside an async def function, which of these block the event loop?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "time.sleep(2)", "en": "time.sleep(2)" } },
+        { "id": "b", "text": { "tr": "requests.get(url) ile senkron HTTP isteği", "en": "A synchronous HTTP request with requests.get(url)" } },
+        { "id": "c", "text": { "tr": "await asyncio.sleep(2)", "en": "await asyncio.sleep(2)" } },
+        { "id": "d", "text": { "tr": "sum(range(10**9)) gibi uzun bir hesap", "en": "A long computation such as sum(range(10**9))" } }
+      ],
+      "correct": ["a", "b", "d"],
+      "explanation": {
+        "tr": "Olay döngüsü yalnızca await noktalarında başka görevlere geçebilir. time.sleep, senkron HTTP ve uzun hesap await etmeden thread'i meşgul eder. await asyncio.sleep ise kontrolü döngüye bırakır.",
+        "en": "The event loop can only switch tasks at await points. time.sleep, a synchronous HTTP call and a long computation occupy the thread without awaiting. await asyncio.sleep hands control back to the loop."
+      },
+      "difficulty": "medium",
+      "concepts": ["asyncio", "event-loop"]
+    },
+    {
+      "id": "q4",
+      "type": "order",
+      "prompt": {
+        "tr": "İki thread ortak sayaç = 0 değerini kilitsiz artırıyor ve en kötü sırayla çalışıyor. Olayları sıraya koy (sonuç 1 olur).",
+        "en": "Two threads increment a shared counter = 0 without a lock, in the worst order. Put the events in order (the result is 1)."
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "T1 sayacı okur ve 0 görür", "en": "T1 reads the counter and sees 0" } },
+        { "id": "b", "text": { "tr": "T2 sayacı okur ve yine 0 görür", "en": "T2 reads the counter and also sees 0" } },
+        { "id": "c", "text": { "tr": "T1 sayaca 1 yazar", "en": "T1 writes 1 to the counter" } },
+        { "id": "d", "text": { "tr": "T2 eski değere göre sayaca yine 1 yazar", "en": "T2 writes 1 again, based on its stale value" } }
+      ],
+      "correct": ["a", "b", "c", "d"],
+      "explanation": {
+        "tr": "T1'in okuması ile yazması arasına T2'nin okuması girdiği için iki thread de 0 görür ve ikisi de 1 yazar; bir artış kaybolur. Oku-yaz bölümünü Lock ile korumak bu araya girmeyi engeller.",
+        "en": "T2's read slips between T1's read and write, so both see 0 and both write 1; one increment is lost. Guarding the read-write section with a Lock prevents this interleaving."
+      },
+      "difficulty": "medium",
+      "concepts": ["race-condition", "threading"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "10.000 fotoğrafı yeniden boyutlandıran saf Python bir fonksiyonu 8 çekirdekli bir makinede hızlandırmak istiyorsun. En uygun araç hangisi?",
+        "en": "You want to speed up a pure-Python function that resizes 10,000 photos on an 8-core machine. Which tool fits best?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "ProcessPoolExecutor", "en": "ProcessPoolExecutor" } },
+        { "id": "b", "text": { "tr": "ThreadPoolExecutor", "en": "ThreadPoolExecutor" } },
+        { "id": "c", "text": { "tr": "asyncio.gather", "en": "asyncio.gather" } },
+        { "id": "d", "text": { "tr": "threading.Lock", "en": "threading.Lock" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "İş CPU-bound olduğu için ayrı GIL'lere sahip süreçler gerekir. Thread'ler ve asyncio GIL yüzünden hesabı paralelleştiremez; Lock ise hız değil, veri güvenliği sağlar.",
+        "en": "The job is CPU-bound, so it needs processes, each with its own GIL. Threads and asyncio cannot parallelise the computation because of the GIL, and a Lock provides data safety, not speed."
+      },
+      "difficulty": "easy",
+      "concepts": ["multiprocessing", "parallelism"]
+    }
+  ]
+}

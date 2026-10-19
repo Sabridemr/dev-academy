@@ -12,6 +12,7 @@ content/
       scene.json | <ad>.scene.json            → animasyon sahneleri (birden fazla olabilir)
       quiz.json                               → quiz
       *.svg                                   → diyagramlar
+      <ad>.trace.py → <ad>.trace.json         → kod simülasyonu (kaynak + üretilmiş iz)
 ```
 
 Modül ve ders kimlikleri `packages/shared/src/content/curriculum.ts` içindeki müfredattan gelir. Klasör adı = `lesson id` olmalıdır (ör. `a-05-load-balancing`).
@@ -67,6 +68,10 @@ Gerçek dünya örneği (Markdown)
 
 :::callout{tone="tip" title="İpucu"}
 info | tip | warning | danger
+:::
+
+:::trace{src="ornek.trace.json" title="Türkçe başlık|English title"}
+İsteğe bağlı yönerge
 :::
 
 :::quiz{src="quiz.json"}
@@ -126,6 +131,27 @@ Soru tipleri: `single`, `multiple`, `truefalse`, `order`. Her derste 3–6 soru 
 - `viewBox` zorunlu, sabit `width/height` kullanmayın (responsive).
 - Renkleri CSS değişkenleriyle verin: `var(--da-fg)`, `var(--da-muted)`, `var(--da-primary)`, `var(--da-accent)`, `var(--da-surface)`, `var(--da-border)`, `var(--da-success)`, `var(--da-danger)`. Böylece açık/koyu temaya uyum sağlar.
 - Metinler için `font-family="inherit"` kullanın.
+
+## Kod simülasyonları (`*.trace.py`)
+
+Python kodunu satır satır oynatan simülasyon: çalışacak satır, çağrı yığını (çerçeveler ve değişkenler), heap'teki
+nesneler ve referans okları, çıktı. İz, kodu **gerçekten çalıştırarak** üretilir; istemciler kod çalıştırmaz.
+
+```python
+#! heap-primitives                       # (opsiyonel) int/str gibi basit değerleri de heap nesnesi göster
+#@ Tek başına not: sonraki satıra bağlanır | English note
+a = [1, 2]
+b = a  #@ Bu satır çalışmadan önce gösterilir | Shown right before this line runs
+```
+
+```bash
+pnpm content:traces   # tüm <ad>.trace.py dosyalarından <ad>.trace.json üretir (python3 gerekir)
+```
+
+- `#@` yorumları ve `#!` satırları gösterilen koddan çıkarılır; satır numaraları buna göre verilir.
+- Üretilen iz kaynağın SHA-256 özetini taşır; kaynak değişip iz yeniden üretilmediyse doğrulayıcı hata verir.
+- Kod kısa olsun (≤ 25 satır, en fazla 300 adım). `input()`, rastgelelik, thread ve gerçek dosya yazma kullanmayın.
+- Üretici: `packages/shared/scripts/python-trace/tracer.py` (testleri: `python3 -m unittest discover -s packages/shared/scripts/python-trace`).
 
 ## Raster görseller (png, jpg, webp)
 

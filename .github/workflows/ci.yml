@@ -62,6 +62,8 @@ jobs:
       - run: pnpm turbo run build typecheck test --filter=@devacademy/shared
       - name: İçerik doğrulama (uyarılar da hata)
         run: pnpm content:validate --strict
+      - name: Kod izi üreticisi (Python) testleri
+        run: python3 -m unittest discover -s packages/shared/scripts/python-trace
 
   backend:
     name: Backend (birim + e2e)

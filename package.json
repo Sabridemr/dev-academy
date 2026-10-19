@@ -16,6 +16,7 @@
     "test": "turbo run test",
     "test:e2e": "turbo run test:e2e",
     "content:validate": "pnpm --filter @devacademy/shared run content:validate",
+    "content:traces": "pnpm --filter @devacademy/shared run content:traces",
     "db:migrate": "pnpm --filter @devacademy/backend run prisma:migrate",
     "db:seed": "pnpm --filter @devacademy/backend run prisma:seed",
     "format": "prettier --write \"**/*.{ts,tsx,js,mjs,cjs,json,md,yml,yaml}\" --ignore-path .gitignore --ignore-path .prettierignore",

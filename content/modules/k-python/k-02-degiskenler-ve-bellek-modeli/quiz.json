@@ -1,0 +1,110 @@
+{
+  "id": "k-02-degiskenler-ve-bellek-modeli-quiz",
+  "title": { "tr": "Değişkenler ve Bellek Modeli Quiz", "en": "Variables and Memory Model Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "a = [1, 2] ve b = a satırlarından sonra b.append(3) çalışıyor. print(a) ne yazdırır?",
+        "en": "After a = [1, 2] and b = a, b.append(3) runs. What does print(a) output?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "[1, 2, 3]", "en": "[1, 2, 3]" } },
+        { "id": "b", "text": { "tr": "[1, 2]", "en": "[1, 2]" } },
+        { "id": "c", "text": { "tr": "[3]", "en": "[3]" } },
+        { "id": "d", "text": { "tr": "TypeError", "en": "TypeError" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "b = a kopyalamaz; iki isim aynı listeye bağlıdır. append listeyi yerinde değiştirdiği için a da [1, 2, 3] gösterir.",
+        "en": "b = a does not copy; both names are bound to the same list. append mutates it in place, so a shows [1, 2, 3] too."
+      },
+      "difficulty": "easy",
+      "concepts": ["aliasing", "mutability"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "x = 5, y = x, ardından x += 1 çalışıyor. y'nin değeri nedir ve neden?",
+        "en": "x = 5, y = x, then x += 1 runs. What is y and why?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "5, çünkü int değiştirilemez ve x yeni bir nesneye bağlandı", "en": "5, because int is immutable and x was bound to a new object" } },
+        { "id": "b", "text": { "tr": "6, çünkü x ve y aynı nesneyi gösteriyordu", "en": "6, because x and y pointed to the same object" } },
+        { "id": "c", "text": { "tr": "5, çünkü y = x atamasında sayı kopyalandı", "en": "5, because y = x copied the number" } },
+        { "id": "d", "text": { "tr": "6, çünkü += her zaman yerinde değiştirir", "en": "6, because += always mutates in place" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "y = x kopyalamaz, aynı 5 nesnesine bağlar. int değiştirilemediği için x += 1 yeni bir nesne (6) üretir ve yalnızca x taşınır; y hâlâ 5'i gösterir.",
+        "en": "y = x binds to the same 5 object rather than copying. int is immutable, so x += 1 creates a new object (6) and only x moves; y still points to 5."
+      },
+      "difficulty": "medium",
+      "concepts": ["variable-binding", "mutability"]
+    },
+    {
+      "id": "q3",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "a == b True ise a is b de her zaman True'dur.",
+        "en": "If a == b is True, then a is b is always True."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "== değerleri, is kimliği karşılaştırır. [1, 2] == [1, 2] True'dur ama iki ayrı liste nesnesi olduğu için is False döner.",
+        "en": "== compares values, is compares identity. [1, 2] == [1, 2] is True, but they are two separate list objects, so is returns False."
+      },
+      "difficulty": "easy",
+      "concepts": ["object-identity"]
+    },
+    {
+      "id": "q4",
+      "type": "multiple",
+      "prompt": {
+        "tr": "def f(liste, n): içinde hangi işlemler çağıranın gördüğü veriyi değiştirir? (Çağıran f(notlar, puan) ile çağırıyor; notlar bir liste, puan bir int.)",
+        "en": "Inside def f(liste, n):, which operations change data the caller can see? (The caller calls f(notlar, puan); notlar is a list, puan is an int.)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "liste.append(1)", "en": "liste.append(1)" } },
+        { "id": "b", "text": { "tr": "liste[0] = 99", "en": "liste[0] = 99" } },
+        { "id": "c", "text": { "tr": "liste = [7, 8]", "en": "liste = [7, 8]" } },
+        { "id": "d", "text": { "tr": "n = n + 1", "en": "n = n + 1" } }
+      ],
+      "correct": ["a", "b"],
+      "explanation": {
+        "tr": "append ve indeksle atama aynı liste nesnesini yerinde değiştirir; çağıran bunu görür. liste = [...] ve n = n + 1 yalnızca yerel isimleri başka nesnelere bağlar, çağıranın değişkenleri etkilenmez.",
+        "en": "append and index assignment mutate the same list object, so the caller sees it. liste = [...] and n = n + 1 only rebind local names; the caller's variables are unaffected."
+      },
+      "difficulty": "medium",
+      "concepts": ["pass-by-object-reference", "mutability"]
+    },
+    {
+      "id": "q5",
+      "type": "order",
+      "prompt": {
+        "tr": "ekle(notlar, 100) çağrısında olanları sıraya koy.",
+        "en": "Put what happens during the call ekle(notlar, 100) in order."
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Yığına ekle için yeni bir çerçeve eklenir", "en": "A new frame for ekle is pushed onto the stack" } },
+        { "id": "b", "text": { "tr": "liste ve oge parametreleri, verilen nesnelere bağlanır", "en": "Parameters liste and oge are bound to the given objects" } },
+        { "id": "c", "text": { "tr": "liste.append(oge) heap'teki listeyi değiştirir", "en": "liste.append(oge) mutates the list on the heap" } },
+        { "id": "d", "text": { "tr": "Çerçeve yığından çıkarılır; liste değişmiş olarak kalır", "en": "The frame is popped; the list stays modified" } }
+      ],
+      "correct": ["a", "b", "c", "d"],
+      "explanation": {
+        "tr": "Çağrı önce çerçeve açar, parametreleri argüman nesnelerine bağlar, gövde çalışır ve dönüşte çerçeve kapanır. Değişiklik heap'teki nesnede olduğu için çerçeve kapansa da kalır.",
+        "en": "The call pushes a frame, binds parameters to the argument objects, runs the body and pops the frame on return. The change lives in the heap object, so it survives the frame."
+      },
+      "difficulty": "medium",
+      "concepts": ["stack-frame", "heap"]
+    }
+  ]
+}
