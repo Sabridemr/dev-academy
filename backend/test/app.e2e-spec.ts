@@ -4,6 +4,7 @@ import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import request from 'supertest';
+import { CURRICULUM } from '@devacademy/shared';
 import { createApp } from '../src/main';
 import { PrismaService } from '../src/common/prisma/prisma.service';
 import { RedisService } from '../src/common/redis/redis.service';
@@ -287,7 +288,8 @@ describe('DevAcademy API (e2e)', () => {
         expect.arrayContaining(['backend', 'system-design', 'ai', 'interview-prep']),
       );
       const modules = await http.get(`${prefix}/modules`).expect(200);
-      expect(modules.body).toHaveLength(7);
+      // content/ klasöründeki her modül yayında (müfredatla aynı sayı)
+      expect(modules.body).toHaveLength(CURRICULUM.length);
       expect(modules.body[0].code).toBe('A');
     });
 
