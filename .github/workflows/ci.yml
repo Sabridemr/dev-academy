@@ -169,7 +169,7 @@ jobs:
           npx wait-on -t 60000 http://localhost:3000
           pnpm --filter @devacademy/web exec playwright test --project=chromium --project=mobile
       - if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-report
           path: |
