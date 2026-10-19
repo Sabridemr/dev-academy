@@ -1,6 +1,6 @@
 /**
  * @devacademy/shared — ana giriş noktası.
- * Alt yollar: ./scene, ./content, ./simulators
+ * Alt yollar: ./scene, ./content, ./simulators, ./node (yalnızca Node: içerik ayrıştırıcı ve yükleyici)
  */
 export * from './i18n';
 export * from './scene';

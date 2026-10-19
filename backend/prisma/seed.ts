@@ -17,11 +17,15 @@ import {
   BADGES,
   CURRICULUM,
   LEARNING_PATHS,
-  lessonPlainText,
   type LessonBlock,
   type LocalizedString,
 } from '@devacademy/shared';
-import { coverageReport, loadContent, type LoadedLesson } from '@devacademy/shared/node';
+import {
+  coverageReport,
+  lessonPlainText,
+  loadContent,
+  type LoadedLesson,
+} from '@devacademy/shared/node';
 
 const prisma = new PrismaClient();
 

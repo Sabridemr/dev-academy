@@ -9,106 +9,96 @@
       <path d="M 12 2 L 12 18 M 2 10 L 18 10" fill="none" stroke="var(--da-primary, #6366f1)" stroke-width="1.6"/>
     </marker>
   </defs>
-  <style>
-    .t { fill: var(--da-fg, #0f172a); font-size: 11px; }
-    .h { fill: var(--da-fg, #0f172a); font-size: 13px; font-weight: 600; }
-    .k { font-weight: 600; }
-    .fk { fill: var(--da-accent, #f59e0b); font-weight: 600; }
-    .box { fill: var(--da-surface, #ffffff); stroke: var(--da-fg, #0f172a); stroke-width: 1.4; }
-    .head { fill: var(--da-primary, #6366f1); opacity: 0.14; }
-    .rel { stroke: var(--da-primary, #6366f1); stroke-width: 1.6; fill: none; }
-    .m { fill: var(--da-muted, #64748b); font-size: 10px; }
-  </style>
 
   <!-- users -->
-  <rect class="box" x="30" y="40" width="170" height="92" rx="8"/><rect class="head" x="30" y="40" width="170" height="26" rx="8"/>
-  <text class="h" x="115" y="58" text-anchor="middle">users</text>
-  <text class="t" x="40" y="84"><tspan class="k">PK</tspan> id bigint</text>
-  <text class="t" x="40" y="100">email citext UNIQUE</text>
-  <text class="t" x="40" y="116">name, created_at</text>
+  <rect x="30" y="40" width="170" height="92" rx="8" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.4"/><rect x="30" y="40" width="170" height="26" rx="8" fill="var(--da-primary, #6366f1)" opacity="0.14"/>
+  <text x="115" y="58" text-anchor="middle" fill="var(--da-fg, #0f172a)" font-size="13px" font-weight="600">users</text>
+  <text x="40" y="84" fill="var(--da-fg, #0f172a)" font-size="11px"><tspan font-weight="600">PK</tspan> id bigint</text>
+  <text x="40" y="100" fill="var(--da-fg, #0f172a)" font-size="11px">email citext UNIQUE</text>
+  <text x="40" y="116" fill="var(--da-fg, #0f172a)" font-size="11px">name, created_at</text>
 
   <!-- addresses -->
-  <rect class="box" x="30" y="180" width="170" height="92" rx="8"/><rect class="head" x="30" y="180" width="170" height="26" rx="8"/>
-  <text class="h" x="115" y="198" text-anchor="middle">addresses</text>
-  <text class="t" x="40" y="224"><tspan class="k">PK</tspan> id</text>
-  <text class="t" x="40" y="240"><tspan class="fk">FK</tspan> user_id</text>
-  <text class="t" x="40" y="256">line1, city, is_default</text>
+  <rect x="30" y="180" width="170" height="92" rx="8" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.4"/><rect x="30" y="180" width="170" height="26" rx="8" fill="var(--da-primary, #6366f1)" opacity="0.14"/>
+  <text x="115" y="198" text-anchor="middle" fill="var(--da-fg, #0f172a)" font-size="13px" font-weight="600">addresses</text>
+  <text x="40" y="224" fill="var(--da-fg, #0f172a)" font-size="11px"><tspan font-weight="600">PK</tspan> id</text>
+  <text x="40" y="240" fill="var(--da-fg, #0f172a)" font-size="11px"><tspan fill="var(--da-accent, #f59e0b)" font-weight="600">FK</tspan> user_id</text>
+  <text x="40" y="256" fill="var(--da-fg, #0f172a)" font-size="11px">line1, city, is_default</text>
 
   <!-- carts -->
-  <rect class="box" x="30" y="320" width="170" height="76" rx="8"/><rect class="head" x="30" y="320" width="170" height="26" rx="8"/>
-  <text class="h" x="115" y="338" text-anchor="middle">carts</text>
-  <text class="t" x="40" y="364"><tspan class="k">PK</tspan> id</text>
-  <text class="t" x="40" y="380"><tspan class="fk">FK</tspan> user_id UNIQUE (aktif)</text>
+  <rect x="30" y="320" width="170" height="76" rx="8" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.4"/><rect x="30" y="320" width="170" height="26" rx="8" fill="var(--da-primary, #6366f1)" opacity="0.14"/>
+  <text x="115" y="338" text-anchor="middle" fill="var(--da-fg, #0f172a)" font-size="13px" font-weight="600">carts</text>
+  <text x="40" y="364" fill="var(--da-fg, #0f172a)" font-size="11px"><tspan font-weight="600">PK</tspan> id</text>
+  <text x="40" y="380" fill="var(--da-fg, #0f172a)" font-size="11px"><tspan fill="var(--da-accent, #f59e0b)" font-weight="600">FK</tspan> user_id UNIQUE (aktif)</text>
 
   <!-- cart_items -->
-  <rect class="box" x="30" y="440" width="170" height="92" rx="8"/><rect class="head" x="30" y="440" width="170" height="26" rx="8"/>
-  <text class="h" x="115" y="458" text-anchor="middle">cart_items</text>
-  <text class="t" x="40" y="484"><tspan class="k">PK</tspan> <tspan class="fk">FK</tspan> cart_id</text>
-  <text class="t" x="40" y="500"><tspan class="k">PK</tspan> <tspan class="fk">FK</tspan> product_id</text>
-  <text class="t" x="40" y="516">qty</text>
+  <rect x="30" y="440" width="170" height="92" rx="8" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.4"/><rect x="30" y="440" width="170" height="26" rx="8" fill="var(--da-primary, #6366f1)" opacity="0.14"/>
+  <text x="115" y="458" text-anchor="middle" fill="var(--da-fg, #0f172a)" font-size="13px" font-weight="600">cart_items</text>
+  <text x="40" y="484" fill="var(--da-fg, #0f172a)" font-size="11px"><tspan font-weight="600">PK</tspan> <tspan fill="var(--da-accent, #f59e0b)" font-weight="600">FK</tspan> cart_id</text>
+  <text x="40" y="500" fill="var(--da-fg, #0f172a)" font-size="11px"><tspan font-weight="600">PK</tspan> <tspan fill="var(--da-accent, #f59e0b)" font-weight="600">FK</tspan> product_id</text>
+  <text x="40" y="516" fill="var(--da-fg, #0f172a)" font-size="11px">qty</text>
 
   <!-- orders -->
-  <rect class="box" x="380" y="40" width="200" height="140" rx="8"/><rect class="head" x="380" y="40" width="200" height="26" rx="8"/>
-  <text class="h" x="480" y="58" text-anchor="middle">orders</text>
-  <text class="t" x="390" y="84"><tspan class="k">PK</tspan> id bigint identity</text>
-  <text class="t" x="390" y="100"><tspan class="fk">FK</tspan> user_id</text>
-  <text class="t" x="390" y="116">status (pending→paid→shipped…)</text>
-  <text class="t" x="390" y="132">total_cents  (denormalize)</text>
-  <text class="t" x="390" y="148">shipping_address jsonb (snapshot)</text>
-  <text class="t" x="390" y="164">created_at</text>
+  <rect x="380" y="40" width="200" height="140" rx="8" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.4"/><rect x="380" y="40" width="200" height="26" rx="8" fill="var(--da-primary, #6366f1)" opacity="0.14"/>
+  <text x="480" y="58" text-anchor="middle" fill="var(--da-fg, #0f172a)" font-size="13px" font-weight="600">orders</text>
+  <text x="390" y="84" fill="var(--da-fg, #0f172a)" font-size="11px"><tspan font-weight="600">PK</tspan> id bigint identity</text>
+  <text x="390" y="100" fill="var(--da-fg, #0f172a)" font-size="11px"><tspan fill="var(--da-accent, #f59e0b)" font-weight="600">FK</tspan> user_id</text>
+  <text x="390" y="116" fill="var(--da-fg, #0f172a)" font-size="11px">status (pending→paid→shipped…)</text>
+  <text x="390" y="132" fill="var(--da-fg, #0f172a)" font-size="11px">total_cents  (denormalize)</text>
+  <text x="390" y="148" fill="var(--da-fg, #0f172a)" font-size="11px">shipping_address jsonb (snapshot)</text>
+  <text x="390" y="164" fill="var(--da-fg, #0f172a)" font-size="11px">created_at</text>
 
   <!-- order_items -->
-  <rect class="box" x="380" y="240" width="200" height="108" rx="8"/><rect class="head" x="380" y="240" width="200" height="26" rx="8" fill="var(--da-accent, #f59e0b)" opacity="0.18"/>
-  <text class="h" x="480" y="258" text-anchor="middle">order_items</text>
-  <text class="t" x="390" y="284"><tspan class="k">PK</tspan> <tspan class="fk">FK</tspan> order_id</text>
-  <text class="t" x="390" y="300"><tspan class="k">PK</tspan> <tspan class="fk">FK</tspan> product_id</text>
-  <text class="t" x="390" y="316">qty  CHECK (qty &gt; 0)</text>
-  <text class="t" x="390" y="332">unit_price_cents  (satın alma anı)</text>
+  <rect x="380" y="240" width="200" height="108" rx="8" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.4"/><rect x="380" y="240" width="200" height="26" rx="8" fill="var(--da-primary, #6366f1)" opacity="0.14"/>
+  <text x="480" y="258" text-anchor="middle" fill="var(--da-fg, #0f172a)" font-size="13px" font-weight="600">order_items</text>
+  <text x="390" y="284" fill="var(--da-fg, #0f172a)" font-size="11px"><tspan font-weight="600">PK</tspan> <tspan fill="var(--da-accent, #f59e0b)" font-weight="600">FK</tspan> order_id</text>
+  <text x="390" y="300" fill="var(--da-fg, #0f172a)" font-size="11px"><tspan font-weight="600">PK</tspan> <tspan fill="var(--da-accent, #f59e0b)" font-weight="600">FK</tspan> product_id</text>
+  <text x="390" y="316" fill="var(--da-fg, #0f172a)" font-size="11px">qty  CHECK (qty &gt; 0)</text>
+  <text x="390" y="332" fill="var(--da-fg, #0f172a)" font-size="11px">unit_price_cents  (satın alma anı)</text>
 
   <!-- payments -->
-  <rect class="box" x="380" y="410" width="200" height="108" rx="8"/><rect class="head" x="380" y="410" width="200" height="26" rx="8"/>
-  <text class="h" x="480" y="428" text-anchor="middle">payments</text>
-  <text class="t" x="390" y="454"><tspan class="k">PK</tspan> id</text>
-  <text class="t" x="390" y="470"><tspan class="fk">FK</tspan> order_id</text>
-  <text class="t" x="390" y="486">provider_ref UNIQUE, amount_cents</text>
-  <text class="t" x="390" y="502">status (initiated→captured→refunded)</text>
+  <rect x="380" y="410" width="200" height="108" rx="8" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.4"/><rect x="380" y="410" width="200" height="26" rx="8" fill="var(--da-primary, #6366f1)" opacity="0.14"/>
+  <text x="480" y="428" text-anchor="middle" fill="var(--da-fg, #0f172a)" font-size="13px" font-weight="600">payments</text>
+  <text x="390" y="454" fill="var(--da-fg, #0f172a)" font-size="11px"><tspan font-weight="600">PK</tspan> id</text>
+  <text x="390" y="470" fill="var(--da-fg, #0f172a)" font-size="11px"><tspan fill="var(--da-accent, #f59e0b)" font-weight="600">FK</tspan> order_id</text>
+  <text x="390" y="486" fill="var(--da-fg, #0f172a)" font-size="11px">provider_ref UNIQUE, amount_cents</text>
+  <text x="390" y="502" fill="var(--da-fg, #0f172a)" font-size="11px">status (initiated→captured→refunded)</text>
 
   <!-- products -->
-  <rect class="box" x="750" y="40" width="190" height="140" rx="8"/><rect class="head" x="750" y="40" width="190" height="26" rx="8"/>
-  <text class="h" x="845" y="58" text-anchor="middle">products</text>
-  <text class="t" x="760" y="84"><tspan class="k">PK</tspan> id</text>
-  <text class="t" x="760" y="100">sku UNIQUE</text>
-  <text class="t" x="760" y="116">name, price_cents, currency</text>
-  <text class="t" x="760" y="132">attributes jsonb (GIN)</text>
-  <text class="t" x="760" y="148">is_active</text>
+  <rect x="750" y="40" width="190" height="140" rx="8" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.4"/><rect x="750" y="40" width="190" height="26" rx="8" fill="var(--da-primary, #6366f1)" opacity="0.14"/>
+  <text x="845" y="58" text-anchor="middle" fill="var(--da-fg, #0f172a)" font-size="13px" font-weight="600">products</text>
+  <text x="760" y="84" fill="var(--da-fg, #0f172a)" font-size="11px"><tspan font-weight="600">PK</tspan> id</text>
+  <text x="760" y="100" fill="var(--da-fg, #0f172a)" font-size="11px">sku UNIQUE</text>
+  <text x="760" y="116" fill="var(--da-fg, #0f172a)" font-size="11px">name, price_cents, currency</text>
+  <text x="760" y="132" fill="var(--da-fg, #0f172a)" font-size="11px">attributes jsonb (GIN)</text>
+  <text x="760" y="148" fill="var(--da-fg, #0f172a)" font-size="11px">is_active</text>
 
   <!-- inventory -->
-  <rect class="box" x="750" y="240" width="190" height="108" rx="8"/><rect class="head" x="750" y="240" width="190" height="26" rx="8" fill="var(--da-success, #10b981)" opacity="0.16"/>
-  <text class="h" x="845" y="258" text-anchor="middle">inventory</text>
-  <text class="t" x="760" y="284"><tspan class="k">PK</tspan> <tspan class="fk">FK</tspan> product_id</text>
-  <text class="t" x="760" y="300">on_hand  CHECK (&gt;= 0)</text>
-  <text class="t" x="760" y="316">reserved  CHECK (&lt;= on_hand)</text>
-  <text class="t" x="760" y="332">satılabilir = on_hand − reserved</text>
+  <rect x="750" y="240" width="190" height="108" rx="8" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.4"/><rect x="750" y="240" width="190" height="26" rx="8" fill="var(--da-primary, #6366f1)" opacity="0.14"/>
+  <text x="845" y="258" text-anchor="middle" fill="var(--da-fg, #0f172a)" font-size="13px" font-weight="600">inventory</text>
+  <text x="760" y="284" fill="var(--da-fg, #0f172a)" font-size="11px"><tspan font-weight="600">PK</tspan> <tspan fill="var(--da-accent, #f59e0b)" font-weight="600">FK</tspan> product_id</text>
+  <text x="760" y="300" fill="var(--da-fg, #0f172a)" font-size="11px">on_hand  CHECK (&gt;= 0)</text>
+  <text x="760" y="316" fill="var(--da-fg, #0f172a)" font-size="11px">reserved  CHECK (&lt;= on_hand)</text>
+  <text x="760" y="332" fill="var(--da-fg, #0f172a)" font-size="11px">satılabilir = on_hand − reserved</text>
 
   <!-- İlişkiler -->
-  <path class="rel" d="M 115 132 L 115 180" marker-start="url(#one)" marker-end="url(#many)"/>
-  <path class="rel" d="M 70 132 C 70 300, 70 300, 70 320" marker-start="url(#one)" marker-end="url(#many)"/>
-  <path class="rel" d="M 115 396 L 115 440" marker-start="url(#one)" marker-end="url(#many)"/>
-  <path class="rel" d="M 200 86 L 380 86" marker-start="url(#one)" marker-end="url(#many)"/>
-  <path class="rel" d="M 480 180 L 480 240" marker-start="url(#one)" marker-end="url(#many)"/>
-  <path class="rel" d="M 480 348 L 480 410" marker-start="url(#one)" marker-end="url(#many)"/>
-  <path class="rel" d="M 750 294 L 580 294" marker-start="url(#one)" marker-end="url(#many)"/>
-  <path class="rel" d="M 845 180 L 845 240" marker-start="url(#one)" marker-end="url(#one)"/>
-  <path class="rel" d="M 200 500 C 300 500, 650 500, 700 420 C 740 360, 760 200, 780 180" marker-start="url(#many)" marker-end="url(#one)"/>
+  <path d="M 115 132 L 115 180" marker-start="url(#one)" marker-end="url(#many)" stroke="var(--da-primary, #6366f1)" stroke-width="1.6" fill="none"/>
+  <path d="M 70 132 C 70 300, 70 300, 70 320" marker-start="url(#one)" marker-end="url(#many)" stroke="var(--da-primary, #6366f1)" stroke-width="1.6" fill="none"/>
+  <path d="M 115 396 L 115 440" marker-start="url(#one)" marker-end="url(#many)" stroke="var(--da-primary, #6366f1)" stroke-width="1.6" fill="none"/>
+  <path d="M 200 86 L 380 86" marker-start="url(#one)" marker-end="url(#many)" stroke="var(--da-primary, #6366f1)" stroke-width="1.6" fill="none"/>
+  <path d="M 480 180 L 480 240" marker-start="url(#one)" marker-end="url(#many)" stroke="var(--da-primary, #6366f1)" stroke-width="1.6" fill="none"/>
+  <path d="M 480 348 L 480 410" marker-start="url(#one)" marker-end="url(#many)" stroke="var(--da-primary, #6366f1)" stroke-width="1.6" fill="none"/>
+  <path d="M 750 294 L 580 294" marker-start="url(#one)" marker-end="url(#many)" stroke="var(--da-primary, #6366f1)" stroke-width="1.6" fill="none"/>
+  <path d="M 845 180 L 845 240" marker-start="url(#one)" marker-end="url(#one)" stroke="var(--da-primary, #6366f1)" stroke-width="1.6" fill="none"/>
+  <path d="M 200 500 C 300 500, 650 500, 700 420 C 740 360, 760 200, 780 180" marker-start="url(#many)" marker-end="url(#one)" stroke="var(--da-primary, #6366f1)" stroke-width="1.6" fill="none"/>
 
-  <text class="m" x="290" y="78">places 1:N</text>
-  <text class="m" x="495" y="214">contains 1:N</text>
-  <text class="m" x="495" y="384">paid by 1:N</text>
-  <text class="m" x="625" y="286">appears in 1:N</text>
-  <text class="m" x="855" y="214">1:1</text>
-  <text class="m" x="125" y="160">1:N</text>
-  <text class="m" x="125" y="422">1:N</text>
-  <text class="m" x="600" y="520">cart_items → products (N:1)</text>
+  <text x="290" y="78" fill="var(--da-muted, #64748b)" font-size="10px">places 1:N</text>
+  <text x="495" y="214" fill="var(--da-muted, #64748b)" font-size="10px">contains 1:N</text>
+  <text x="495" y="384" fill="var(--da-muted, #64748b)" font-size="10px">paid by 1:N</text>
+  <text x="625" y="286" fill="var(--da-muted, #64748b)" font-size="10px">appears in 1:N</text>
+  <text x="855" y="214" fill="var(--da-muted, #64748b)" font-size="10px">1:1</text>
+  <text x="125" y="160" fill="var(--da-muted, #64748b)" font-size="10px">1:N</text>
+  <text x="125" y="422" fill="var(--da-muted, #64748b)" font-size="10px">1:N</text>
+  <text x="600" y="520" fill="var(--da-muted, #64748b)" font-size="10px">cart_items → products (N:1)</text>
 
-  <text class="m" x="480" y="548" text-anchor="middle">Snapshot'lar (fiyat, adres) tarihsel gerçektir; total_cents ise türetilmiş denormalize sütundur. Rezervasyon: on_hand sabit, reserved artar.</text>
+  <text x="480" y="548" text-anchor="middle" fill="var(--da-muted, #64748b)" font-size="10px">Snapshot'lar (fiyat, adres) tarihsel gerçektir; total_cents ise türetilmiş denormalize sütundur. Rezervasyon: on_hand sabit, reserved artar.</text>
 </svg>

@@ -260,6 +260,15 @@ export function loadContent(root = findContentRoot()): LoadedContent {
             message: 'viewBox yok; responsive ölçekleme için gerekli',
           });
         }
+        // İstemci sanitizer'ı bunları siler; <style> kuralları satır içi SVG'de tüm sayfaya uygulanır
+        const forbidden = content.match(/<(script|style|foreignObject)[\s>]/i);
+        if (forbidden) {
+          issues.push({
+            severity: 'error',
+            file: rel(join(lessonDir, f)),
+            message: `<${forbidden[1]}> kullanılamaz; stilleri SVG öznitelikleri olarak yazın`,
+          });
+        }
         svgs[f] = content;
       }
 
