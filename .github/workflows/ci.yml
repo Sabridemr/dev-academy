@@ -209,7 +209,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: docker/setup-buildx-action@v4
-      - uses: docker/build-push-action@v6
+      - uses: docker/build-push-action@v7
         with:
           context: .
           file: backend/Dockerfile
@@ -217,7 +217,7 @@ jobs:
           tags: devacademy-api:${{ github.sha }}
           cache-from: type=gha,scope=api
           cache-to: type=gha,scope=api,mode=max
-      - uses: docker/build-push-action@v6
+      - uses: docker/build-push-action@v7
         with:
           context: .
           file: backend/Dockerfile
@@ -225,7 +225,7 @@ jobs:
           push: false
           tags: devacademy-tools:${{ github.sha }}
           cache-from: type=gha,scope=api
-      - uses: docker/build-push-action@v6
+      - uses: docker/build-push-action@v7
         with:
           context: .
           file: web/Dockerfile
