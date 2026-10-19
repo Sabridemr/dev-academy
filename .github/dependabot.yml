@@ -19,7 +19,12 @@ updates:
     schedule:
       interval: weekly
 
+  # Node imajı CI ile aynı LTS hattında kalır (major geçiş elle: CI node-version + corepack/pnpm kurulumu
+  # birlikte güncellenmeli; Node 25+ corepack içermez)
   - package-ecosystem: docker
     directories: [/backend, /web]
     schedule:
       interval: weekly
+    ignore:
+      - dependency-name: node
+        update-types: ['version-update:semver-major']
