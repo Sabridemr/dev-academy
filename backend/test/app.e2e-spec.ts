@@ -1,5 +1,6 @@
 import type { INestApplication } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import request from 'supertest';
@@ -190,6 +191,31 @@ describe('DevAcademy API (e2e)', () => {
         .set('Cookie', rotated)
         .send({})
         .expect(401);
+    });
+  });
+
+  describe('ders görselleri (/assets)', () => {
+    it('görseli doğru türde, kalıcı önbellek başlıklarıyla döner; ETag ile 304; geçersiz ad 404', async () => {
+      const png = Buffer.from(
+        '89504e470d0a1a0a0000000d49484452000000030000000208060000009d74066a0000000d4944415478da63f8ffff3f0300050001fe4c9a840000000049454e44ae426082',
+        'hex',
+      );
+      const id = createHash('sha256').update(png).digest('hex');
+      await app.get(PrismaService).contentAsset.upsert({
+        where: { id },
+        update: {},
+        create: { id, mime: 'image/png', bytes: png, width: 3, height: 2, size: png.length },
+      });
+      const res = await http.get(`${prefix}/assets/${id}.png`).expect(200);
+      expect(res.headers['content-type']).toBe('image/png');
+      expect(res.headers['cache-control']).toContain('immutable');
+      expect(Buffer.compare(res.body as Buffer, png)).toBe(0);
+      await http
+        .get(`${prefix}/assets/${id}.png`)
+        .set('If-None-Match', res.headers.etag)
+        .expect(304);
+      await http.get(`${prefix}/assets/${'0'.repeat(64)}.png`).expect(404);
+      await http.get(`${prefix}/assets/..%2F..%2Fetc%2Fpasswd`).expect(404);
     });
   });
 

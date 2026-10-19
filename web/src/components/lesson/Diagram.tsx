@@ -4,7 +4,8 @@ import { useMemo, useState } from 'react';
 import DOMPurify from 'isomorphic-dompurify';
 import { Maximize2, X } from 'lucide-react';
 import { useI18n } from '@/i18n';
-import type { LocalizedString } from '@devacademy/shared';
+import { resolveAssetUrl, type LocalizedString } from '@devacademy/shared';
+import { API_URL } from '@/lib/api';
 
 /**
  * İçerik SVG'lerini güvenli biçimde gösterir. DOMPurify (SVG profili) script, olay işleyicileri,
@@ -37,11 +38,16 @@ export function Diagram({
   src,
   alt,
   caption,
+  width,
+  height,
 }: {
   svg?: string;
   src: string;
   alt: LocalizedString;
   caption?: LocalizedString;
+  /** Raster görselin piksel boyutu: yer önceden ayrılır, sayfa yüklenirken kaymaz */
+  width?: number;
+  height?: number;
 }) {
   const { tl, t } = useI18n();
   const [zoom, setZoom] = useState(false);
@@ -57,8 +63,17 @@ export function Diagram({
       suppressHydrationWarning
     />
   ) : (
+    // Ders görselleri API'den orijinal çözünürlükte gelir (yeniden sıkıştırılmaz)
     // eslint-disable-next-line @next/next/no-img-element
-    <img src={src} alt={altText} className="mx-auto h-auto w-full" />
+    <img
+      src={resolveAssetUrl(src, API_URL)}
+      alt={altText}
+      width={width}
+      height={height}
+      loading="lazy"
+      decoding="async"
+      className="mx-auto h-auto w-full"
+    />
   );
 
   return (

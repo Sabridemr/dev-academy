@@ -17,7 +17,8 @@ export function buildCsp(nonce: string): string {
     "default-src 'self'",
     `script-src 'self' 'nonce-${nonce}' 'wasm-unsafe-eval'${isDev ? " 'unsafe-eval'" : ''} ${google} ${apple}`,
     `style-src 'self' 'unsafe-inline' ${google}`,
-    `img-src 'self' data: blob: https:${isDev ? ' http://localhost:*' : ''}`,
+    // API: ders görselleri (/assets) — http olabilir (yerel ağ / homelab)
+    `img-src 'self' data: blob: https: ${apiOrigin}${isDev ? ' http://localhost:*' : ''}`,
     "font-src 'self' data:",
     `connect-src 'self' ${apiOrigin} ${wsOrigin} ${google} https://appleid.apple.com${isDev ? ' ws://localhost:* http://localhost:*' : ''}`,
     `frame-src ${google} https://appleid.apple.com`,

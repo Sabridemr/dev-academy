@@ -26,6 +26,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { RealtimeModule } from './modules/realtime/realtime.module';
 import { HealthModule } from './modules/health/health.module';
 import { OfflineModule } from './modules/offline/offline.module';
+import { AssetsModule } from './modules/assets/assets.module';
 
 @Module({
   imports: [
@@ -80,6 +81,7 @@ import { OfflineModule } from './modules/offline/offline.module';
     RealtimeModule,
     HealthModule,
     OfflineModule,
+    AssetsModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: HttpExceptionFilter },

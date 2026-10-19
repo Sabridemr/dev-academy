@@ -29,6 +29,8 @@ import {
 } from '../content/schema';
 import { parseLessonMarkdown, LessonParseError } from '../content/parser';
 import { isLessonBodyTranslated } from '../content/translation';
+import { rasterExtension } from '../content/assets';
+import { readImageSize } from './image-size';
 import { validateScene } from '../scene/validate';
 import type { AnimationScene } from '../scene/schema';
 import { CURRICULUM } from '../content/curriculum';
@@ -47,7 +49,19 @@ export interface LoadedLesson {
   quizFile: string | null;
   /** svg dosya adı → içerik */
   svgs: Record<string, string>;
+  /** raster görsel dosya adı → yol ve piksel boyutu (seed veritabanına alır) */
+  images: Record<string, LoadedImage>;
 }
+
+export interface LoadedImage {
+  path: string;
+  width: number;
+  height: number;
+  bytes: number;
+}
+
+/** Tek bir ders görselinin üst sınırı (API'den tek parça sunulur, veritabanında tutulur) */
+const MAX_IMAGE_BYTES = 15 * 1024 * 1024;
 
 export interface LoadedModule {
   dir: string;
@@ -273,9 +287,34 @@ export function loadContent(root = findContentRoot()): LoadedContent {
         svgs[f] = content;
       }
 
+      // Raster görseller (png, jpg, webp)
+      const images: Record<string, LoadedImage> = {};
+      for (const f of readdirSync(lessonDir).filter((x) => rasterExtension(x))) {
+        const path = join(lessonDir, f);
+        const buf = readFileSync(path);
+        const size = readImageSize(buf);
+        if (!size) {
+          issues.push({
+            severity: 'error',
+            file: rel(path),
+            message: 'Görsel okunamadı (geçerli bir PNG, JPEG ya da WebP değil)',
+          });
+          continue;
+        }
+        if (buf.length > MAX_IMAGE_BYTES) {
+          issues.push({
+            severity: 'error',
+            file: rel(path),
+            message: `Görsel çok büyük (${Math.round(buf.length / 1024 / 1024)} MB, en fazla 15 MB)`,
+          });
+          continue;
+        }
+        images[f] = { path, ...size, bytes: buf.length };
+      }
+
       // Blok referansları
       for (const b of doc.blocks) {
-        if (b.type === 'diagram' && !/^https?:\/\//.test(b.src) && !svgs[b.src]) {
+        if (b.type === 'diagram' && !/^https?:\/\//.test(b.src) && !svgs[b.src] && !images[b.src]) {
           issues.push({
             severity: 'error',
             file: rel(mdFile),
@@ -321,7 +360,7 @@ export function loadContent(root = findContentRoot()): LoadedContent {
         });
       }
 
-      lessons.push({ dir: lessonDir, doc, scenes, quiz, quizFile, svgs });
+      lessons.push({ dir: lessonDir, doc, scenes, quiz, quizFile, svgs, images });
     }
 
     lessons.sort((a, b) => a.doc.meta.order - b.doc.meta.order);
