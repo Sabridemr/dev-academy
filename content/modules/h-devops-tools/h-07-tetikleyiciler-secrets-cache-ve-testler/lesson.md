@@ -7,8 +7,8 @@ title:
   tr: "CI/CD ve GitHub Actions: Tetikleyiciler, İfadeler, Secrets, Matrix, Cache ve Testler"
   en: "CI/CD and GitHub Actions: Triggers, Expressions, Secrets, Matrix, Cache and Tests"
 summary:
-  tr: "Workflow tetikleyicileri, job bağımlılıkları, koşullar ve context'ler, ortam değişkenleri ve çıktılar, secrets ve variables, matrix, cache, artifact, PostgreSQL ile entegrasyon testi ve test piramidi."
-  en: "Workflow triggers, job dependencies, conditions and contexts, environment variables and outputs, secrets and variables, matrix, cache, artifacts, integration testing with PostgreSQL and the test pyramid."
+  tr: "Tetikleyici, secret, matrix, cache ve servis konteyneriyle hızlı ve güvenli workflow'lar kur."
+  en: "Build fast, secure workflows with triggers, secrets, matrix builds, caching and service containers."
 durationMinutes: 11
 level: intermediate
 tags: [github-actions, secrets, cache, testing, postgresql]
@@ -443,6 +443,9 @@ E2E testi için Playwright örneği:
           name: e2e-rapor
           path: playwright-report/
 ```
+:::
+
+:::quiz{src="quiz.json"}
 :::
 
 ## Orijinal PDF sayfaları

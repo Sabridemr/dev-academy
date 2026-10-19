@@ -7,8 +7,8 @@ title:
   tr: "Amazon Ölçeğinde E-Ticaret Sistem Tasarımı: Mimari, Veri ve Sipariş Akışı"
   en: "Amazon-Scale E-Commerce System Design: Architecture, Data and Order Flow"
 summary:
-  tr: Tek sunucudan mikroservise büyüme evrelerini, global altyapıyı, uçtan uca mimariyi, bir isteğin yolculuğunu, önbelleklemeyi, veritabanı ölçeklemeyi, son 1 ürün problemini, Saga ile sipariş-ödeme akışını ve arama, öneri ve fiyat servislerini ele alır.
-  en: Covers the growth stages from a single server to microservices, global infrastructure, end-to-end architecture, the journey of a request, caching, database scaling, the last-item problem, the order-payment flow with Saga, and search, recommendation and pricing services.
+  tr: "Amazon ölçeğinde mimariyi, önbellek ve DB ölçeklemeyi, çift satışı önlemeyi ve Saga ile sipariş akışını öğren."
+  en: "Learn Amazon-scale architecture, caching and DB scaling, preventing overselling and Saga-based order flow."
 durationMinutes: 11
 level: advanced
 tags: [system-design, microservices, e-commerce, caching, database-scaling, saga]
@@ -172,6 +172,9 @@ Mikroservislerde servisler arasında tek bir DB transaction'ı olamaz. Bu yüzde
 - **Arama:** Ürün değiştikçe olay yayınlanır ve Elasticsearch indeksi güncellenir (CDC: Change Data Capture, örneğin Debezium). Yazım hatası toleransı, eş anlamlılar (örneğin "çam fıstığı" ve "dolmalık fıstık") ve kişiselleştirilmiş sıralama burada yapılır.
 - **Öneri:** "Bunu alanlar şunu da aldı" (item-to-item collaborative filtering) Amazon'un klasik algoritmasıdır. Öneriler gece toplu (batch) olarak hesaplanır ve gerçek zamanlı sinyallerle karıştırılır. Amazon satışlarının önemli bir kısmının önerilerden geldiği sıkça belirtilir.
 - **Fiyat:** Fiyat ayrı bir servistir; kampanya, kupon, kademeli toptan fiyat ve döviz gibi kuralları uygular. Sepetteki fiyat, ödeme anında yeniden doğrulanır.
+
+:::quiz{src="quiz.json"}
+:::
 
 ## Orijinal PDF sayfaları
 

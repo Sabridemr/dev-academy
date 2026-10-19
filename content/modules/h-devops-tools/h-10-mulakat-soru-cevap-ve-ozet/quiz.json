@@ -1,0 +1,243 @@
+{
+  "id": "h-10-mulakat-soru-cevap-ve-ozet-quiz",
+  "title": {
+    "tr": "CI/CD Mülakat Quiz",
+    "en": "CI/CD Interview Quiz"
+  },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Continuous Deployment'ta testleri geçen her değişiklik insan onayı olmadan otomatik olarak canlıya çıkar.",
+        "en": "In Continuous Deployment, every change that passes tests goes to production automatically without human approval."
+      },
+      "options": [
+        {
+          "id": "t",
+          "text": {
+            "tr": "Doğru",
+            "en": "True"
+          }
+        },
+        {
+          "id": "f",
+          "text": {
+            "tr": "Yanlış",
+            "en": "False"
+          }
+        }
+      ],
+      "correct": [
+        "t"
+      ],
+      "explanation": {
+        "tr": "Doğru. Continuous Deployment'ta onay adımı yoktur. Continuous Delivery'de ise kod her an yayınlanabilir durumdadır ama canlıya çıkış onay gerektirir.",
+        "en": "True. Continuous Deployment has no approval step. In Continuous Delivery the code is always releasable, but production releases require approval."
+      },
+      "difficulty": "easy",
+      "concepts": [
+        "continuous-delivery"
+      ]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "Canlıda yeni bir özellik sorun çıkarıyor. Derse göre en hızlı geri alma yöntemi hangisidir?",
+        "en": "A new feature is causing problems in production. According to the lesson, what is the fastest way to roll back?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Özelliğin feature flag'ini kapatmak",
+            "en": "Turning off the feature's feature flag"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "git revert ile yeni commit oluşturup pipeline'ı yeniden çalıştırmak",
+            "en": "Creating a new commit with git revert and re-running the pipeline"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "Önceki SHA'lı image'ı yeniden deploy etmek",
+            "en": "Redeploying the previous SHA-tagged image"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Veritabanı migration'ını elle geri almak",
+            "en": "Manually rolling back the database migration"
+          }
+        }
+      ],
+      "correct": [
+        "a"
+      ],
+      "explanation": {
+        "tr": "Feature flag kapatmak deploy gerektirmez, bu yüzden en hızlısıdır. revert ve önceki image'a dönmek de geçerli rollback yöntemleridir ama pipeline veya deploy gerektirir; migration'lar ise kod kadar kolay geri alınmaz ve canlı veritabanı elle değiştirilmez.",
+        "en": "Turning off a feature flag needs no deploy, so it is the fastest. Revert and redeploying the previous image are valid rollbacks too, but they require a pipeline run or deploy; migrations are not as easy to undo as code, and the production database is never changed by hand."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "deployment-strategies"
+      ]
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": {
+        "tr": "Rolling deployment'ın bilinen dezavantajı nedir?",
+        "en": "What is the known drawback of a rolling deployment?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Güncelleme sürerken bir süre iki sürüm aynı anda çalışır.",
+            "en": "For a while during the update, two versions run at the same time."
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Güncelleme sırasında kısa bir kesinti olur.",
+            "en": "There is a brief outage during the update."
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "İki kat altyapı kaynağı gerektirir.",
+            "en": "It requires double the infrastructure."
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Trafiğin yalnızca %5'i yeni sürümü görür.",
+            "en": "Only 5% of traffic ever sees the new version."
+          }
+        }
+      ],
+      "correct": [
+        "a"
+      ],
+      "explanation": {
+        "tr": "Rolling'de sunucular sırayla güncellenir; kesinti olmaz ama bir süre eski ve yeni sürüm birlikte çalışır. Kısa kesinti Recreate'in, iki kat kaynak Blue-Green'in, küçük trafik payı ise Canary'nin özelliğidir.",
+        "en": "In rolling, servers are updated one by one; there is no outage but old and new versions run side by side for a while. A brief outage belongs to Recreate, double resources to Blue-Green and a small traffic share to Canary."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "deployment-strategies"
+      ]
+    },
+    {
+      "id": "q4",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Derse göre pipeline'ı hızlandırmak için hangileri kullanılır? (Birden fazla seçin)",
+        "en": "According to the lesson, which of these are used to speed up a pipeline? (Select all that apply)"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Bağımlılıklar için cache",
+            "en": "Caching dependencies"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Yalnızca ilgili dosyalar değişince çalıştıran `paths` filtresi",
+            "en": "A `paths` filter so it runs only when relevant files change"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "concurrency ile eski çalıştırmaları iptal etmek",
+            "en": "Cancelling old runs with concurrency"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Her ortam için paketi yeniden build etmek",
+            "en": "Rebuilding the package for each environment"
+          }
+        }
+      ],
+      "correct": [
+        "a",
+        "b",
+        "c"
+      ],
+      "explanation": {
+        "tr": "Cache, paralel job'lar, fail fast sıralaması, paths filtresi, concurrency ile iptal ve ağır testleri gece çalıştırma pipeline'ı hızlandırır. Her ortam için yeniden build almak ise 'build once, deploy many' ilkesine aykırıdır ve ortamlar arası farklara yol açar.",
+        "en": "Caching, parallel jobs, fail-fast ordering, paths filters, cancelling via concurrency and running heavy tests nightly speed up a pipeline. Rebuilding for each environment violates 'build once, deploy many' and causes differences between environments."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "pipeline"
+      ]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "Production secret'larını environment seviyesinde tutmanın amacı nedir?",
+        "en": "What is the purpose of keeping production secrets at the environment level?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Yalnızca o ortama deploy eden, onaylı job'ların bu secret'lara erişebilmesi",
+            "en": "So that only the approved jobs deploying to that environment can access them"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Secret'ların loglarda düz metin olarak görünebilmesi",
+            "en": "So that secrets can appear in plain text in the logs"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "Fork'tan gelen PR'ların da secret'lara erişebilmesi",
+            "en": "So that PRs from forks can also access the secrets"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Secret'ların YAML dosyasında saklanabilmesi",
+            "en": "So that secrets can be stored in the YAML file"
+          }
+        }
+      ],
+      "correct": [
+        "a"
+      ],
+      "explanation": {
+        "tr": "Environment secret'ları yalnızca o ortama (ör. production) deploy eden ve onay kuralından geçen job'lara açılır. Secret'lar asla koda veya YAML'a yazılmaz, loglara basılmaz; fork PR'larına da varsayılan olarak verilmez.",
+        "en": "Environment secrets are exposed only to jobs that deploy to that environment (e.g. production) and pass its approval rules. Secrets are never written into code or YAML or printed to logs, and they are not given to fork PRs by default."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "secrets"
+      ]
+    }
+  ]
+}

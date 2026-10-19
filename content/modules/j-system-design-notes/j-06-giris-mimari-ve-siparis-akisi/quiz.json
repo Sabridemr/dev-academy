@@ -1,0 +1,257 @@
+{
+  "id": "j-06-giris-mimari-ve-siparis-akisi-quiz",
+  "title": {
+    "tr": "Mimari ve Sipariş Akışı Quiz",
+    "en": "Architecture and Order Flow Quiz"
+  },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "order",
+      "prompt": {
+        "tr": "Sistem tasarımı mülakatında önerilen adımları doğru sıraya koyun.",
+        "en": "Put the recommended system design interview steps in the correct order."
+      },
+      "options": [
+        {
+          "id": "req",
+          "text": {
+            "tr": "Fonksiyonel gereksinimleri netleştir",
+            "en": "Clarify the functional requirements"
+          }
+        },
+        {
+          "id": "scale",
+          "text": {
+            "tr": "Ölçeği tahmin et (kullanıcı, istek/sn, veri)",
+            "en": "Estimate the scale (users, requests/sec, data)"
+          }
+        },
+        {
+          "id": "hld",
+          "text": {
+            "tr": "Yüksek seviye mimariyi çiz",
+            "en": "Draw the high-level architecture"
+          }
+        },
+        {
+          "id": "deep",
+          "text": {
+            "tr": "Kritik parçaların ayrıntısına in (şema, API)",
+            "en": "Deep-dive into critical parts (schema, APIs)"
+          }
+        },
+        {
+          "id": "trade",
+          "text": {
+            "tr": "Darboğazları ve ödünleşimleri tartış",
+            "en": "Discuss bottlenecks and trade-offs"
+          }
+        }
+      ],
+      "correct": [
+        "req",
+        "scale",
+        "hld",
+        "deep",
+        "trade"
+      ],
+      "explanation": {
+        "tr": "Önce sistemin ne yapacağı netleşir, ardından ölçek tahmini teknoloji seçimini belirler; mimari ondan sonra çizilir, ayrıntıya inilir ve en sonda darboğazlar tartışılır. Gereksinimler ve ölçek bilinmeden çizilen mimari yanlış varsayımlara dayanır.",
+        "en": "First you clarify what the system does, then the scale estimate drives technology choices; only then is the architecture drawn, details explored and bottlenecks discussed last. An architecture drawn before knowing requirements and scale rests on wrong assumptions."
+      },
+      "difficulty": "easy",
+      "concepts": [
+        "functional-requirements",
+        "non-functional-requirements"
+      ]
+    },
+    {
+      "id": "q2",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Aşağıdakilerden hangileri fonksiyonel OLMAYAN gereksinimdir? (Birden fazla seçin)",
+        "en": "Which of the following are NON-functional requirements? (Select all that apply)"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Arama 200 ms'nin altında cevap vermeli",
+            "en": "Search must respond under 200 ms"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Kullanıcı sepete ürün ekleyip kupon uygulayabilmeli",
+            "en": "The user can add items to the cart and apply a coupon"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "Bir servis çökse de sistemin geri kalanı çalışmalı",
+            "en": "If one service crashes the rest of the system keeps working"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Akşam yemeği saatindeki ani yükü kaldırmalı",
+            "en": "It must handle the sudden dinner-time load"
+          }
+        }
+      ],
+      "correct": [
+        "a",
+        "c",
+        "d"
+      ],
+      "explanation": {
+        "tr": "Gecikme, dayanıklılık ve ölçeklenebilirlik sistemin ne kadar iyi çalıştığını tanımlayan kalite hedefleridir. Sepete ürün ekleme ve kupon uygulama ise sistemin ne yaptığını anlatan fonksiyonel bir gereksinimdir.",
+        "en": "Latency, fault tolerance and scalability are quality targets describing how well the system works. Adding items to the cart and applying a coupon describes what the system does, so it is a functional requirement."
+      },
+      "difficulty": "easy",
+      "concepts": [
+        "non-functional-requirements",
+        "functional-requirements"
+      ]
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": {
+        "tr": "Mimaride API Gateway'in görevi nedir?",
+        "en": "What is the role of the API Gateway in the architecture?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Menü fotoğrafları gibi statik dosyaları kullanıcıya en yakın sunucudan dağıtmak",
+            "en": "Serving static files like menu photos from the server closest to the user"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Tüm isteklerin girdiği tek kapı olarak kimlik doğrulama, rate limiting ve doğru servise yönlendirme yapmak",
+            "en": "Being the single entry point that handles authentication, rate limiting and routing to the right service"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "Servisler arasında order-created gibi olayları asenkron taşımak",
+            "en": "Carrying events such as order-created asynchronously between services"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Sipariş ve ödeme gibi işlemsel verileri kalıcı olarak saklamak",
+            "en": "Persistently storing transactional data such as orders and payments"
+          }
+        }
+      ],
+      "correct": [
+        "b"
+      ],
+      "explanation": {
+        "tr": "API Gateway tek giriş noktasıdır; kimlik doğrulama, rate limiting ve yönlendirme yapar. Statik dosya dağıtımı CDN'in, asenkron olay taşıma Kafka'nın, işlemsel veri saklama ise PostgreSQL/MySQL gibi birincil veritabanının işidir.",
+        "en": "The API Gateway is the single entry point; it handles authentication, rate limiting and routing. Serving static files is the CDN's job, carrying async events is Kafka's, and storing transactional data belongs to the primary database such as PostgreSQL/MySQL."
+      },
+      "difficulty": "easy",
+      "concepts": [
+        "api-gateway",
+        "cdn"
+      ]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Sipariş akışında Order Service, siparişi tamamlamadan önce Notification Service'in SMS/push gönderimini bitirmesini senkron olarak bekler.",
+        "en": "In the order flow, the Order Service synchronously waits for the Notification Service to finish sending SMS/push before completing the order."
+      },
+      "options": [
+        {
+          "id": "t",
+          "text": {
+            "tr": "Doğru",
+            "en": "True"
+          }
+        },
+        {
+          "id": "f",
+          "text": {
+            "tr": "Yanlış",
+            "en": "False"
+          }
+        }
+      ],
+      "correct": [
+        "f"
+      ],
+      "explanation": {
+        "tr": "Yanlış. Notlara göre her adım asenkron ve olay güdümlüdür: Order Service olayı Kafka'ya yayınlar, bildirim servisi onu kendi hızında dinler. Böylece servisler birbirine sıkı bağlı olmaz.",
+        "en": "False. According to the notes every step is asynchronous and event-driven: the Order Service publishes the event to Kafka and the notification service consumes it at its own pace, so services are not tightly coupled."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "event-streaming"
+      ]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "Sipariş akışının idempotent olması neden önemlidir?",
+        "en": "Why is it important for the order flow to be idempotent?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Siparişlerin her zaman aynı restorana gitmesini sağlamak için",
+            "en": "To ensure orders always go to the same restaurant"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Ağ hatası sonrası istemci isteği yeniden denediğinde çift sipariş oluşmasını engellemek için",
+            "en": "To prevent a duplicate order when the client retries the request after a network error"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "Siparişin her aşamada iptal edilebilmesini sağlamak için",
+            "en": "To make the order cancellable at every stage"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Sipariş verisinin CDN üzerinden önbelleğe alınabilmesi için",
+            "en": "So that order data can be cached through the CDN"
+          }
+        }
+      ],
+      "correct": [
+        "b"
+      ],
+      "explanation": {
+        "tr": "Idempotency, aynı isteğin birden çok kez gelmesinin tek sefer gibi etki yaratmasıdır; yeniden denemeler çift sipariş üretmemelidir. İptal edilebilirlik ayrı bir gereksinimdir; restoran seçimi ve CDN önbelleğiyle ilgisi yoktur.",
+        "en": "Idempotency means receiving the same request several times has the effect of receiving it once; retries must not create duplicate orders. Cancellability is a separate requirement, and it has nothing to do with restaurant routing or CDN caching."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "idempotency"
+      ]
+    }
+  ]
+}

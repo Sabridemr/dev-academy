@@ -7,8 +7,8 @@ title:
   tr: "Yemek Siparişi Platformu: Ödünleşimler, Mülakat Soruları ve Özet"
   en: "Food Delivery Platform: Trade-offs, Interview Questions and Summary"
 summary:
-  tr: "Sistem tasarımı ödünleşimleri (SQL ve NoSQL, CAP, eventual consistency, ölçekleme), örnek cevaplı mülakat soruları, proje yol haritası, sonraki adımlar ve tek sayfalık özet."
-  en: "System design trade-offs (SQL vs NoSQL, CAP, eventual consistency, scaling), interview questions with sample answers, a project roadmap, next steps and a one-page summary."
+  tr: "SQL/NoSQL, CAP ve tutarlılık ödünleşimlerini mülakatta gerekçeleriyle savunmayı öğren."
+  en: "Learn to defend SQL/NoSQL, CAP and consistency trade-offs with clear reasoning in interviews."
 durationMinutes: 12
 level: intermediate
 tags: [system-design, food-delivery, trade-offs, interview-prep]
@@ -183,6 +183,9 @@ Notların son bölümündeki öneriler:
 | Sayılar |
 |---|
 | Arama < 200 ms · Takip < 2 sn · Konum 5–10 sn'de bir · %99,99 ≈ yılda 52 dk kesinti · 500K kurye / 5 sn = 100K güncelleme/sn · Sepet TTL 30 dk · Menü önbelleği 5–15 dk |
+
+:::quiz{src="quiz.json"}
+:::
 
 ## Orijinal PDF sayfaları
 

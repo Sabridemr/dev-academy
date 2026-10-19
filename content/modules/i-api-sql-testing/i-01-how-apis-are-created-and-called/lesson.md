@@ -7,8 +7,8 @@ title:
   tr: "API Nasıl Oluşturulur? / API Çağrıldığında Ne Olur?"
   en: "How to Create an API? / What Happens When an API is Called?"
 summary:
-  tr: "Node.js, Express ve MongoDB ile planlamadan yayına 9 adımda uçtan uca API oluşturmayı ve bir API çağrısının istemciden arayüz güncellemesine kadar izlediği 10 adımlık akışı anlatır."
-  en: "Covers building an API end to end in 9 steps with Node.js, Express and MongoDB, from planning to deployment, and the 10-step flow an API call follows from the client to the UI update."
+  tr: "Node.js, Express ve MongoDB ile adım adım API kurmayı ve bir API çağrısının uçtan uca akışını öğren."
+  en: "Learn to build an API step by step with Node.js, Express and MongoDB and trace an API call end to end."
 durationMinutes: 5
 level: beginner
 tags: [api, nodejs, express, mongodb, backend]
@@ -24,12 +24,19 @@ Bu ders, **@qa_insights** tarafından hazırlanan *How to Create an API? / What 
 Sayfa 1 / 3 · How to Create an API? / What Happens When an API is Called?
 :::
 
+## How to Create an API? End to End Flow
+
 :::diagram{src="sayfa-02.png" alt="API oluşturmanın 9 adımı: API planlama ve uç noktalar, Node.js ve Express kurulumu, MongoDB bağlantısı, Mongoose şeması, rotalar, controller, sunucu, Postman veya Thunder Client ile test, bulutta yayın."}
 Sayfa 2 / 3 · How to Create an API? End to End Flow
 :::
 
+## What Happens When an API is Called?
+
 :::diagram{src="sayfa-03.png" alt="API çağrısının 10 adımı: istemci, HTTP isteği, uç nokta, istek doğrulama, iş mantığı, veritabanı veya harici servis, JSON yanıt üretimi, HTTP yanıtı, istemcinin işlemesi, arayüz güncellemesi."}
 Sayfa 3 / 3 · What Happens When an API is Called?
+:::
+
+:::quiz{src="quiz.json"}
 :::
 
 :::next{lesson="i-02-api-ve-rest-api-temeller-ve-guvenlik"}

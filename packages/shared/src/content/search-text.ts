@@ -35,9 +35,13 @@ export function buildSearchText(
       }
     })
     .join('\n');
-  return `${loc(title)}\n${loc(summary)}\n${concepts.join(' ')} ${tags.join(' ')}\n${body}`
-    .replace(/[#*_`>|]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .slice(0, 200_000);
+  const clean = (s: string) =>
+    s
+      .replace(/[#*_`>|]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  // Gövde başta: arama sonucu özeti (ts_headline) metnin başından üretilir; başlık/etiket listesi
+  // yerine ders içeriğinden bir pasaj görünsün. Başlık, özet, kavram ve etiketler yine aranabilir.
+  const meta = clean(`${loc(title)} ${loc(summary)} ${concepts.join(' ')} ${tags.join(' ')}`);
+  return `${clean(body).slice(0, 200_000 - meta.length - 1)} ${meta}`.trim();
 }

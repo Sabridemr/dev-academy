@@ -9,5 +9,6 @@
     "en": "Core system design patterns, Redis and Kafka, Amazon-scale e-commerce and a food delivery platform design."
   },
   "icon": "network",
-  "color": "#14b8a6"
+  "color": "#14b8a6",
+  "group": "system-design"
 }

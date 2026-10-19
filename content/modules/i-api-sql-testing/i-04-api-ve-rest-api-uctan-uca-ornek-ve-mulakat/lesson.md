@@ -7,8 +7,8 @@ title:
   tr: "API ve REST API: Uçtan Uca E-ticaret Örneği, Mülakat Soru-Cevap ve Özet"
   en: "API and REST API: End-to-End E-commerce Example, Interview Q&A and Summary"
 summary:
-  tr: "Toptan satış sitesi için örnek endpoint yapısını, uçtan uca sipariş akışını, Google ile giriş (OAuth 2.0) akışını, PostgreSQL veritabanı taslağını ve Postman koleksiyonunu anlatır; ardından 30 mülakat sorusu ve tek sayfalık özet tablolarını verir."
-  en: "Presents a sample endpoint structure for a wholesale site, the end-to-end order flow, the Sign in with Google (OAuth 2.0) flow, a PostgreSQL database draft and the Postman collection, followed by 30 interview questions and one-page summary tables."
+  tr: "Uçtan uca bir e-ticaret API'si, Google ile giriş ve veritabanı taslağıyla API mülakatına hazırlan."
+  en: "Prepare for API interviews with an end-to-end e-commerce API, Sign in with Google and a database draft."
 durationMinutes: 15
 level: intermediate
 tags: [api, e-commerce, oauth, postgresql, interview, cheat-sheet]
@@ -353,6 +353,9 @@ Koleksiyonda Auth, Products, Cart, Orders, Admin ve Webhooks klasörleri ile dur
 | **Rate limit** | Zaman başına istek sınırı → 429 |
 | **OpenAPI** | API'yi tanımlayan standart (Swagger) |
 | **Latency** | İstek-cevap arası süre (ms) |
+
+:::quiz{src="quiz.json"}
+:::
 
 ## Orijinal PDF sayfaları
 

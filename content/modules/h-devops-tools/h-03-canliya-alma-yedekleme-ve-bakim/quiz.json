@@ -1,0 +1,110 @@
+{
+  "id": "h-03-canliya-alma-yedekleme-ve-bakim-quiz",
+  "title": { "tr": "Canlıya Alma, Yedekleme ve Bakım Quiz", "en": "Deployment, Backups and Maintenance Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Nginx ters vekilin arkasındaki siteniz \"502 Bad Gateway\" döndürüyor. İlk neyi kontrol etmelisiniz?",
+        "en": "Your site behind an Nginx reverse proxy returns \"502 Bad Gateway\". What should you check first?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "`dig alanadi.com` ile DNS'in doğru IP'yi gösterip göstermediğini", "en": "Whether DNS points to the right IP, with `dig alanadi.com`" } },
+        { "id": "b", "text": { "tr": "Arkadaki uygulamanın çalışıp çalışmadığını (`systemctl status magaza` veya `docker compose ps`)", "en": "Whether the backend app is running (`systemctl status magaza` or `docker compose ps`)" } },
+        { "id": "c", "text": { "tr": "Let's Encrypt sertifikasının süresinin dolup dolmadığını", "en": "Whether the Let's Encrypt certificate has expired" } },
+        { "id": "d", "text": { "tr": "Veritabanı portunun internete açık olup olmadığını", "en": "Whether the database port is open to the internet" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "502, Nginx'e ulaşıldığını ama arkadaki uygulamadan yanıt alınamadığını gösterir; bu yüzden uygulamanın çalıştığını doğrularsınız. DNS hatalı olsaydı istek Nginx'e hiç gelmezdi (a); sertifika sorunu 502 üretmez (c); veritabanı zaten dışarıya kapalı olmalıdır (d).",
+        "en": "A 502 means Nginx was reached but got no response from the backend app, so you verify the app is running. With wrong DNS the request would never reach Nginx (a); a certificate problem does not produce a 502 (c); the database should be closed to the outside anyway (d)."
+      },
+      "difficulty": "medium",
+      "concepts": ["ters-vekil", "systemd-servisi"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "`0 4 * * 0 /opt/scripts/yedek.sh` cron satırı betiği ne zaman çalıştırır?",
+        "en": "When does the cron line `0 4 * * 0 /opt/scripts/yedek.sh` run the script?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Her gün saat 04:00'te", "en": "Every day at 04:00" } },
+        { "id": "b", "text": { "tr": "Her ayın 4'ünde gece yarısı", "en": "At midnight on the 4th of every month" } },
+        { "id": "c", "text": { "tr": "4 dakikada bir", "en": "Every 4 minutes" } },
+        { "id": "d", "text": { "tr": "Her pazar saat 04:00'te", "en": "Every Sunday at 04:00" } }
+      ],
+      "correct": ["d"],
+      "explanation": {
+        "tr": "Alanlar sırasıyla dakika, saat, gün, ay ve haftagünüdür: dakika 0, saat 4, haftagünü 0 (pazar). Her gün 04:00 için `0 4 * * *` (a), 4 dakikada bir için `*/4 * * * *` (c) yazılırdı; gün alanı `*` olduğu için ayın 4'ü değildir (b).",
+        "en": "The fields are minute, hour, day, month and weekday: minute 0, hour 4, weekday 0 (Sunday). Every day at 04:00 would be `0 4 * * *` (a), every 4 minutes `*/4 * * * *` (c); the day field is `*`, so it is not the 4th of the month (b)."
+      },
+      "difficulty": "easy",
+      "concepts": ["cron", "yedekleme"]
+    },
+    {
+      "id": "q3",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "UFW yalnızca 22, 80 ve 443'e izin veriyorsa, compose.yaml'da `db` servisine `ports: [\"5432:5432\"]` ekleseniz bile veritabanı dışarıdan erişilemez kalır.",
+        "en": "If UFW only allows 22, 80 and 443, the database stays unreachable from outside even if you add `ports: [\"5432:5432\"]` to the `db` service in compose.yaml."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "Docker, UFW kurallarını atlayarak portları açabilir. Bu yüzden ders veritabanı gibi servislerde `ports:` tanımlamamayı, yalnızca Docker ağı içinde tutmayı önerir.",
+        "en": "Docker can open ports by bypassing UFW rules. That is why the lesson advises not defining `ports:` for services like the database and keeping them only on the Docker network."
+      },
+      "difficulty": "medium",
+      "concepts": ["docker-compose"]
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": {
+        "tr": "`sudo certbot --nginx -d alanadi.com` sertifika alamıyor. Dersteki sorun giderme tablosuna göre en olası neden hangisidir?",
+        "en": "`sudo certbot --nginx -d alanadi.com` fails to obtain a certificate. According to the lesson's troubleshooting table, what is the most likely cause?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "DNS henüz yayılmamış ya da 80 portu kapalı", "en": "DNS has not propagated yet or port 80 is closed" } },
+        { "id": "b", "text": { "tr": "Uygulama 3000 portunda çalışmıyor", "en": "The app is not running on port 3000" } },
+        { "id": "c", "text": { "tr": "Sunucuda swap alanı tanımlı değil", "en": "No swap space is configured on the server" } },
+        { "id": "d", "text": { "tr": "Sertifika 90 gün dolmadan yenilenemiyor", "en": "A certificate cannot be issued before 90 days have passed" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "Let's Encrypt alan adının sunucunuzu gösterdiğini doğrulamak ister; DNS yayılmamışsa ya da 80 portu kapalıysa doğrulama başarısız olur. Uygulamanın durumu 502 gibi hatalara yol açar (b), swap RAM sorunlarıyla ilgilidir (c); 90 gün yalnızca sertifikanın otomatik yenilenme döngüsüdür (d).",
+        "en": "Let's Encrypt needs to verify that the domain points to your server; if DNS has not propagated or port 80 is closed, validation fails. The app's state causes errors like 502 (b), swap relates to RAM issues (c), and 90 days is just the certificate's auto-renewal cycle (d)."
+      },
+      "difficulty": "medium",
+      "concepts": ["lets-encrypt"]
+    },
+    {
+      "id": "q5",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Dersteki canlıya alma kontrol listesine göre hangileri sağlanmış olmalıdır? (Birden fazla seçin)",
+        "en": "According to the lesson's go-live checklist, which of these must be in place? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "`.env` Git dışında ve izinleri 600", "en": "`.env` kept out of Git with permissions 600" } },
+        { "id": "b", "text": { "tr": "Günlük yedek ve sunucu dışında bir kopyası", "en": "A daily backup plus an off-server copy" } },
+        { "id": "c", "text": { "tr": "Uzaktan yönetim için PostgreSQL portunun internete açık olması", "en": "The PostgreSQL port open to the internet for remote management" } },
+        { "id": "d", "text": { "tr": "Acil durumlar için root ile şifreli SSH girişinin açık bırakılması", "en": "Password SSH login as root left enabled for emergencies" } }
+      ],
+      "correct": ["a", "b"],
+      "explanation": {
+        "tr": "Listede `.env`'in Git dışında ve 600 izinli olması ile günlük yedek + sunucu dışı kopya yer alır. Aynı liste veritabanının dışarıya kapalı olmasını (c) ve root ile şifreli girişin kapatılmasını (d) ister; acil erişim için sağlayıcının web konsolu kullanılır.",
+        "en": "The checklist includes `.env` outside Git with 600 permissions and a daily backup plus an off-server copy. The same list requires the database to be closed to the outside (c) and root and password logins to be disabled (d); for emergency access you use the provider's web console."
+      },
+      "difficulty": "easy",
+      "concepts": ["yedekleme"]
+    }
+  ]
+}

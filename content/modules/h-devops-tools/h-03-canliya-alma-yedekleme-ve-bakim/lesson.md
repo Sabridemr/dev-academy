@@ -7,8 +7,8 @@ title:
   tr: "Linux ve VPS Kullanım Rehberi: Canlıya Alma, Yedekleme ve Bakım"
   en: "Linux and VPS Usage Guide: Deployment, Backups and Maintenance"
 summary:
-  tr: "Statik site, systemd ile Node.js, Docker Compose ve Coolify ile canlıya alma yöntemlerini, GitHub Actions ile otomatik yayını, yedekleme, izleme, sorun giderme ve canlıya alma kontrol listesini kapsar."
-  en: "Covers deployment methods with a static site, Node.js under systemd, Docker Compose and Coolify, automated deployment with GitHub Actions, backups, monitoring, troubleshooting and the go-live checklist."
+  tr: "Uygulamanı VPS'te Nginx, systemd ya da Docker Compose ile yayına al; yedekle, izle ve sorun gider."
+  en: "Deploy your app on a VPS with Nginx, systemd or Docker Compose, then back it up, monitor and fix it."
 durationMinutes: 12
 level: intermediate
 tags: [linux, vps, deployment, nginx, docker, backup]
@@ -540,6 +540,9 @@ sudo ufw status
 sudo certbot renew --dry-run
 rsync -avz ./site/ magaza:/var/www/magaza/
 ```
+:::
+
+:::quiz{src="quiz.json"}
 :::
 
 ## Orijinal PDF sayfaları

@@ -8,6 +8,7 @@
     "tr": "Linux, sunucu yönetimi, Git, Docker, CI/CD, Grafana ve DevOps'ta yapay zekâ: kişisel notlar ve rehberler.",
     "en": "Linux, server management, Git, Docker, CI/CD, Grafana and AI in DevOps: personal notes and guides."
   },
-  "icon": "server",
-  "color": "#0ea5e9"
+  "icon": "container",
+  "color": "#0ea5e9",
+  "group": "infrastructure"
 }

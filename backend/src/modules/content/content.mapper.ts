@@ -1,5 +1,6 @@
 import type { Lesson, LessonVersion, Module as ModuleRow, LearningPath, AnimationScene as SceneRow, Prisma } from '@prisma/client';
-import type { LessonBlock, LessonDetail, LessonSummary, ModuleSummary, LearningPathSummary, SceneResponse, AnimationScene } from '@devacademy/shared';
+import { MODULE_GROUPS } from '@devacademy/shared';
+import type { LessonBlock, LessonDetail, LessonFormat, LessonSummary, ModuleGroup, ModuleSummary, LearningPathSummary, SceneResponse, AnimationScene } from '@devacademy/shared';
 import { asLocalized } from '../../common/utils/localized';
 
 /** Prisma satırlarını API DTO'larına çevirir (tek yerde). */
@@ -29,7 +30,19 @@ export function toLessonSummary(lesson: LessonWithVersion): LessonSummary {
     hasAnimation: blocks.some((b) => b.type === 'animation'),
     hasInteractive: blocks.some((b) => b.type === 'interactive'),
     hasQuiz: blocks.some((b) => b.type === 'quiz'),
+    format: lessonFormat(blocks),
   };
+}
+
+/** PDF'ten aktarılan derslerin sayfa görselleri altyazıdan tanınır ("Sayfa 3 / 11", "PDF sayfa 4 / 20") */
+function lessonFormat(blocks: LessonBlock[]): LessonFormat {
+  const captions = blocks.flatMap((b) => {
+    if (b.type !== 'diagram' || !b.caption) return [];
+    return [typeof b.caption === 'string' ? b.caption : b.caption.tr];
+  });
+  if (captions.some((c) => /^Sayfa \d+ \/ \d+/.test(c))) return 'infographic';
+  if (captions.some((c) => /^PDF sayfa \d+ \/ \d+/.test(c))) return 'pdf-guide';
+  return 'standard';
 }
 
 export function toLessonDetail(
@@ -52,7 +65,11 @@ export function toLessonDetail(
   };
 }
 
-export function toModuleSummary(module: ModuleRow & { _count?: { lessons: number } }, lessonCount?: number): ModuleSummary {
+export function toModuleSummary(
+  module: ModuleRow & { _count?: { lessons: number } },
+  lessonCount?: number,
+  totalMinutes = 0,
+): ModuleSummary {
   return {
     id: module.id,
     slug: module.slug,
@@ -62,7 +79,9 @@ export function toModuleSummary(module: ModuleRow & { _count?: { lessons: number
     description: asLocalized(module.description),
     icon: module.icon,
     color: module.color,
+    group: (MODULE_GROUPS as readonly string[]).includes(module.group) ? (module.group as ModuleGroup) : 'system-design',
     lessonCount: lessonCount ?? module._count?.lessons ?? 0,
+    totalMinutes,
   };
 }
 

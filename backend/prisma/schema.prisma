@@ -162,6 +162,8 @@ model Module {
   description Json
   icon        String   @default("book")
   color       String   @default("#6366f1")
+  /// Modüller sayfasındaki kategori (system-design, software, infrastructure, ai, programming)
+  group       String   @default("system-design")
   lessons     Lesson[]
   pathItems   LearningPathItem[]
   createdAt   DateTime @default(now())

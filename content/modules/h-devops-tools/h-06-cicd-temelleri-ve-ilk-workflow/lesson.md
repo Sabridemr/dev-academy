@@ -7,8 +7,8 @@ title:
   tr: "CI/CD ve GitHub Actions: Temeller, Pipeline ve İlk Workflow"
   en: "CI/CD and GitHub Actions: Fundamentals, Pipeline and First Workflow"
 summary:
-  tr: "CI/CD kavramları, CI ile iki farklı CD arasındaki fark, pipeline aşamaları, ortamlar, Git dallanma stratejileri, branch protection, GitHub Actions temel kavramları, YAML temelleri ve ilk workflow dosyası."
-  en: "CI/CD concepts, the difference between CI and the two kinds of CD, pipeline stages, environments, Git branching strategies, branch protection, GitHub Actions core concepts, YAML basics and the first workflow file."
+  tr: "CI/CD kavramlarını, pipeline aşamalarını ve branch protection'ı öğrenip ilk GitHub Actions workflow'unu yaz."
+  en: "Learn CI/CD concepts, pipeline stages and branch protection, then write your first GitHub Actions workflow."
 durationMinutes: 12
 level: beginner
 tags: [ci-cd, github-actions, pipeline, git, yaml]
@@ -307,6 +307,9 @@ Dosyayı push ettiğinde GitHub'da **Actions** sekmesinde çalıştığını gö
 
 :::callout{tone="tip" title="Mülakatta böyle söyle"}
 CI'da npm install yerine npm ci kullanırım; lock dosyasına birebir uyar, daha hızlıdır ve her çalıştırmada aynı bağımlılık sürümlerini garanti eder.
+:::
+
+:::quiz{src="quiz.json"}
 :::
 
 ## Orijinal PDF sayfaları

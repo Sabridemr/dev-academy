@@ -1,0 +1,110 @@
+{
+  "id": "h-12-ai-for-devops-notes-quiz",
+  "title": { "tr": "DevOps için Yapay Zeka Quiz", "en": "AI for DevOps Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "ML tabanlı anomali tespiti, sabit eşik değerli klasik uyarılara göre neden daha az yanlış alarm (false positive) üretir?",
+        "en": "Why does ML-based anomaly detection produce fewer false positives than classic fixed-threshold alerts?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Model sistemin normal davranış örüntülerini öğrenir ve yalnızca bu örüntüden gerçek zamanlı sapmaları işaretler", "en": "The model learns the system's normal behavior patterns and flags only real-time deviations from them" } },
+        { "id": "b", "text": { "tr": "Uyarı eşiklerini kalıcı olarak yükselterek daha az uyarı gönderir", "en": "It permanently raises the alert thresholds so fewer alerts are sent" } },
+        { "id": "c", "text": { "tr": "Yalnızca loglara bakar; metrik ve trace verilerini yok sayar", "en": "It only looks at logs and ignores metrics and traces" } },
+        { "id": "d", "text": { "tr": "Önceden yazılmış kurallara göre çalıştığı için hiç yanılmaz", "en": "It never makes mistakes because it runs on pre-written rules" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "Notlarda ML modellerinin normal davranış örüntülerini öğrendiği, sapmaları gerçek zamanlı tespit ettiği ve böylece yanlış alarmları azalttığı anlatılır. Eşiği körlemesine yükseltmek gerçek sorunları da kaçırır; tek veri kaynağına bakmak bağlamı kaybettirir; kurala dayalı çalışma ise AI'nin değil geleneksel otomasyonun özelliğidir.",
+        "en": "The notes explain that ML models learn normal behavior patterns, detect deviations in real time and thereby reduce false positives. Blindly raising thresholds also misses real issues, looking at a single data source loses context, and rule-based operation describes traditional automation, not AI."
+      },
+      "difficulty": "easy",
+      "concepts": ["anomaly-detection"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "Bir veritabanı sorunu yüzünden veritabanından, API'den ve ön yüzden aynı anda onlarca uyarı geliyor. AIOps'un hangi bileşeni bu olayları tek bir olayda (incident) birleştirip asıl kök nedeni öne çıkarır?",
+        "en": "Because of a database problem, dozens of alerts arrive at once from the database, the API and the frontend. Which AIOps component merges these events into a single incident and surfaces the real root cause?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Veri toplama (Data Collection)", "en": "Data Collection" } },
+        { "id": "b", "text": { "tr": "Korelasyon motoru (Correlation Engine)", "en": "Correlation Engine" } },
+        { "id": "c", "text": { "tr": "Otomasyon motoru (Automation Engine)", "en": "Automation Engine" } },
+        { "id": "d", "text": { "tr": "Görselleştirme ve içgörüler (Visualization & Insights)", "en": "Visualization & Insights" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Korelasyon motoru farklı kaynaklardan gelen olay ve uyarıları sistemler arasında ilişkilendirerek gürültüyü ve yanlış alarmları azaltır, kök nedeni daha hızlı bulur. Veri toplama yalnızca veriyi getirir, otomasyon motoru düzeltme aksiyonlarını çalıştırır, görselleştirme ise sonuçları panolarda sunar.",
+        "en": "The correlation engine relates events and alerts from different sources across systems, reducing noise and false positives and finding the root cause faster. Data collection only gathers the data, the automation engine runs remediation actions, and visualization presents results on dashboards."
+      },
+      "difficulty": "medium",
+      "concepts": ["event-correlation", "root-cause-analysis"]
+    },
+    {
+      "id": "q3",
+      "type": "order",
+      "prompt": {
+        "tr": "AIOps'taki kendini iyileştiren (self-healing) sistem akışının adımlarını doğru sıraya koyun.",
+        "en": "Put the steps of the AIOps self-healing system flow in the correct order."
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Otomatik aksiyon (ör. pod'u yeniden başlatma)", "en": "Automated action (e.g. restarting a pod)" } },
+        { "id": "b", "text": { "tr": "Sorun tespit edilir", "en": "Issue detected" } },
+        { "id": "c", "text": { "tr": "Sorun çözülür", "en": "Issue resolved" } },
+        { "id": "d", "text": { "tr": "AI karar verir", "en": "AI decision" } }
+      ],
+      "correct": ["b", "d", "a", "c"],
+      "explanation": {
+        "tr": "Önce sorun tespit edilir, ardından AI hangi düzeltmenin uygulanacağına karar verir, otomatik aksiyon çalışır ve sorun çözülür. Karar verilmeden aksiyon alınamaz; tespit olmadan da karar verilecek bir durum yoktur. Bu akış bilinen sorunlarda insan müdahalesi olmadan çalışır.",
+        "en": "First the issue is detected, then AI decides which fix to apply, the automated action runs and the issue is resolved. No action can be taken before a decision, and there is nothing to decide without detection. This flow runs without human intervention for known issues."
+      },
+      "difficulty": "easy",
+      "concepts": ["self-healing", "auto-remediation"]
+    },
+    {
+      "id": "q4",
+      "type": "multiple",
+      "prompt": {
+        "tr": "DevOps'ta yapay zekayı sorumlu kullanmak için notlarda önerilen uygulamalar hangileridir? (Birden fazla seçin)",
+        "en": "Which practices do the notes recommend for using AI responsibly in DevOps? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Kritik aksiyonlarda son kararı insanlar verir; AI çıktıları uygulanmadan önce gözden geçirilir", "en": "Humans make the final decision on critical actions; AI outputs are reviewed before being applied" } },
+        { "id": "b", "text": { "tr": "AI önerileri önce staging ya da test ortamında doğrulanır", "en": "AI recommendations are first verified in a staging or test environment" } },
+        { "id": "c", "text": { "tr": "Daha iyi bağlam için secret'lar ve üretim verisi doğrudan herkese açık AI araçlarına verilir", "en": "Secrets and production data are given directly to public AI tools for better context" } },
+        { "id": "d", "text": { "tr": "Veri AI ile kullanılmadan önce maskelenir ya da anonimleştirilir", "en": "Data is masked or anonymized before being used with AI" } }
+      ],
+      "correct": ["a", "b", "d"],
+      "explanation": {
+        "tr": "İnsanı döngüde tutmak, önerileri staging'de doğrulamak ve veriyi maskelemek notlardaki en iyi uygulamalardır. Secret, anahtar ya da PII'yi herkese açık AI araçlarıyla paylaşmak ise açıkça yaygın hatalar arasında sayılır; gerekirse şirket içi ya da özel modeller kullanılmalıdır.",
+        "en": "Keeping humans in the loop, validating suggestions in staging and masking data are the best practices in the notes. Sharing secrets, keys or PII with public AI tools is explicitly listed as a common mistake; on-prem or private models should be used when needed."
+      },
+      "difficulty": "medium",
+      "concepts": ["human-in-the-loop"]
+    },
+    {
+      "id": "q5",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "AI destekli bulut optimizasyonunda right-sizing bir kez yapılır; kaynaklar doğru boyuta getirildikten sonra tekrar bakmaya gerek yoktur.",
+        "en": "In AI-powered cloud optimization, right-sizing is done once; after resources are brought to the right size there is no need to revisit them."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "Yanlış. Notlar sürekli right-sizing yapmayı, AI önerilerini düzenli kullanmayı ve maliyet ile kullanımı izlemeyi önerir; iş yükü ve trafik zamanla değiştiği için tek seferlik boyutlandırma kısa sürede aşırı ya da yetersiz kaynağa döner. Kullanılmayan kaynakları temizlememek ve önerileri izlememek yaygın hatalar arasındadır.",
+        "en": "False. The notes recommend right-sizing continuously, using AI recommendations regularly and monitoring cost and usage; because workloads and traffic change over time, one-off sizing soon turns into over- or under-provisioning. Not removing unused resources and not monitoring recommendations are listed as common mistakes."
+      },
+      "difficulty": "easy",
+      "concepts": ["right-sizing"]
+    }
+  ]
+}

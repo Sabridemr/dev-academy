@@ -7,8 +7,8 @@ title:
   tr: "CI/CD ve GitHub Actions: Docker, Deploy, Rollback ve Güvenlik"
   en: "CI/CD and GitHub Actions: Docker, Deployment, Rollback and Security"
 summary:
-  tr: "Docker ile konteyner tabanlı CI/CD, deploy yöntemleri, environments ve onay kapıları, veritabanı migration'ları, deployment stratejileri, rollback, concurrency, reusable workflow ve composite action, runner türleri, güvenlik ve izinler."
-  en: "Container-based CI/CD with Docker, deployment methods, environments and approval gates, database migrations, deployment strategies, rollback, concurrency, reusable workflows and composite actions, runner types, security and permissions."
+  tr: "Docker image'ını güvenle canlıya çıkar; onay kapıları, migration, deploy stratejileri ve rollback'i öğren."
+  en: "Ship Docker images safely with approval gates, migrations, deployment strategies and rollback."
 durationMinutes: 12
 level: intermediate
 tags: [docker, deployment, github-actions, security, rollback]
@@ -488,6 +488,9 @@ permissions:
   id-token: write
   contents: read
 ```
+:::
+
+:::quiz{src="quiz.json"}
 :::
 
 ## Orijinal PDF sayfaları

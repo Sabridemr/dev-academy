@@ -7,8 +7,8 @@ title:
   tr: "Yemek Siparişi Platformu: Gerçek Zamanlı Takip, Bildirim ve Kupon Sistemleri"
   en: "Food Delivery Platform: Real-Time Tracking, Notification and Coupon Systems"
 summary:
-  tr: "WebSocket, polling ve SSE ile gerçek zamanlı sipariş takibi ve ETA hesaplama, çok kanallı bildirim sistemi ve hata yönetimi ile kupon ve kampanya doğrulama ve indirim hesaplama."
-  en: "Real-time order tracking with WebSocket, polling and SSE plus ETA calculation, the multi-channel notification system and failure handling, and coupon and campaign validation and discount calculation."
+  tr: "Canlı sipariş takibi, güvenilir bildirim gönderimi ve kupon doğrulama sistemlerini tasarlamayı öğren."
+  en: "Learn to design live order tracking, reliable notification delivery and coupon validation systems."
 durationMinutes: 13
 level: intermediate
 tags: [system-design, food-delivery, real-time, notifications, promotions]
@@ -400,6 +400,9 @@ Kupon kullanım sayısı, dönüşüm oranı (kampanya gösterildi → kullanıl
 
 :::callout{tone="tip" title="Senin projen için"}
 Toptan satışta en etkili kampanyalar kupon kodundan çok kademeli indirimlerdir: "10 koli üzeri %5, 50 koli üzeri %10", "5.000 TL üzeri kargo bedava", "Ramazan öncesi kuru meyve kampanyası". Aynı offers tablosu yapısına type = 'TIERED_QUANTITY' türü eklenerek kurulabilir. İlk siparişe özel bayi kuponu yeni bayi kazanmak için iyi bir başlangıçtır.
+:::
+
+:::quiz{src="quiz.json"}
 :::
 
 ## Orijinal PDF sayfaları

@@ -1,0 +1,244 @@
+{
+  "id": "j-08-sepet-odeme-ve-kurye-atama-quiz",
+  "title": {
+    "tr": "Sepet, Ödeme ve Kurye Atama Quiz",
+    "en": "Cart, Payment and Courier Assignment Quiz"
+  },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Performans için sepetin son tutarı istemcide hesaplanıp sunucuya gönderilebilir; sunucu bu tutarı doğrudan ödemeye kullanabilir.",
+        "en": "For performance, the cart's final total can be computed on the client and sent to the server, which can use it directly for payment."
+      },
+      "options": [
+        {
+          "id": "t",
+          "text": {
+            "tr": "Doğru",
+            "en": "True"
+          }
+        },
+        {
+          "id": "f",
+          "text": {
+            "tr": "Yanlış",
+            "en": "False"
+          }
+        }
+      ],
+      "correct": [
+        "f"
+      ],
+      "explanation": {
+        "tr": "Yanlış. Kritik kural, fiyatın her zaman sunucuda hesaplanmasıdır; tarayıcıdan gelen fiyata güvenilirse kötü niyetli biri isteği değiştirip 1 liraya sipariş verebilir.",
+        "en": "False. The critical rule is that price is always computed on the server; if the browser's price were trusted, a malicious user could tamper with the request and order for 1 lira."
+      },
+      "difficulty": "easy",
+      "concepts": [
+        "price-calculation"
+      ]
+    },
+    {
+      "id": "q2",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Dersteki ödeme webhook işleyicisi hangilerini yapar? (Birden fazla seçin)",
+        "en": "Which of the following does the lesson's payment webhook handler do? (Select all that apply)"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Ham gövdenin HMAC-SHA256 imzasını X-Signature ile karşılaştırır, uyuşmazsa 401 döner",
+            "en": "Compares the raw body's HMAC-SHA256 signature with X-Signature and returns 401 on mismatch"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "event_id'yi ON CONFLICT DO NOTHING ile kaydeder; daha önce işlendiyse 200 dönüp çıkar",
+            "en": "Stores event_id with ON CONFLICT DO NOTHING; if already processed it returns 200 and exits"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "Ağır işi kuyruğa atıp hemen 200 döner",
+            "en": "Pushes the heavy work onto a queue and returns 200 right away"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Tekrarlanan olaylarda 409 dönerek ödeme altyapısının yeniden göndermeyi kesmesini ister",
+            "en": "Returns 409 for duplicate events to tell the gateway to stop retrying"
+          }
+        }
+      ],
+      "correct": [
+        "a",
+        "b",
+        "c"
+      ],
+      "explanation": {
+        "tr": "Kod imzayı timingSafeEqual ile doğrular, event_id ile tekrarları ayıklar ve ağır işi kuyruğa atıp hızlıca 200 döner. Daha önce işlenmiş olaya 409 değil 200 döner; çünkü olay zaten başarıyla işlenmiştir.",
+        "en": "The code verifies the signature with timingSafeEqual, filters duplicates via event_id, and enqueues the heavy work before returning 200 quickly. For an already processed event it returns 200, not 409, because the event was already handled successfully."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "webhook-signature",
+        "payment-gateway"
+      ]
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": {
+        "tr": "Günlük mutabakat (reconciliation) neden yapılır?",
+        "en": "Why is daily reconciliation performed?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Kart bilgilerini kendi veritabanımızla eşleştirip saklamak için",
+            "en": "To match card details against our own database and store them"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Kendi ödeme kayıtlarımızı ödeme altyapısının raporuyla karşılaştırıp 'bizde başarılı, sağlayıcıda yok' gibi tutarsızlıkları yakalamak için",
+            "en": "To compare our payment records with the gateway's report and catch mismatches such as 'successful for us but missing at the provider'"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "Süresi dolan sepetleri Redis'ten silmek için",
+            "en": "To delete expired carts from Redis"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Webhook imzasını doğrulamak için",
+            "en": "To verify the webhook signature"
+          }
+        }
+      ],
+      "correct": [
+        "b"
+      ],
+      "explanation": {
+        "tr": "Mutabakat, iki taraftaki kayıtların karşılaştırılmasıdır; gateway_response gibi ham kayıtlar bu işte hayat kurtarır. Kart verisi sunucuya hiç gelmez, sepet süresini TTL yönetir, imza doğrulaması ise her webhook isteğinde yapılır.",
+        "en": "Reconciliation compares records on both sides; raw records such as gateway_response are invaluable for it. Card data never reaches the server, cart expiry is handled by TTL, and signature verification happens on every webhook request."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "reconciliation"
+      ]
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": {
+        "tr": "Kurye puanlama formülünde mesafe ve ETA'nın neden tersi (1/mesafe, 1/ETA) alınır?",
+        "en": "Why does the courier scoring formula use the inverse of distance and ETA (1/distance, 1/ETA)?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Mesafe küçüldükçe puanın büyümesi, yani yakın kuryenin öne çıkması için",
+            "en": "So the score grows as distance shrinks, i.e. closer couriers rank higher"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Uzak kuryelere iş vererek adil dağıtım sağlamak için",
+            "en": "To ensure fair distribution by giving work to far-away couriers"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "Sıfıra bölme hatasını önlemek için",
+            "en": "To avoid division-by-zero errors"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Redis Geo'nun mesafeyi negatif döndürmesini telafi etmek için",
+            "en": "To compensate for Redis Geo returning negative distances"
+          }
+        }
+      ],
+      "correct": [
+        "a"
+      ],
+      "explanation": {
+        "tr": "Ters alma, küçük mesafe ve kısa ETA'nın daha yüksek puan üretmesini sağlar. Sıfıra bölmeyi kodda Math.max(..., 0.1) önler, ters alma değil; Redis Geo negatif mesafe döndürmez.",
+        "en": "Taking the inverse makes a small distance and short ETA produce a higher score. Division by zero is prevented by Math.max(..., 0.1) in the code, not by the inversion; Redis Geo does not return negative distances."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "assignment-algorithm"
+      ]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "GEOSEARCH partner_locations FROMLONLAT 28.9784 41.0082 BYRADIUS 5 km WITHDIST ASC komutu ne döndürür?",
+        "en": "What does the command GEOSEARCH partner_locations FROMLONLAT 28.9784 41.0082 BYRADIUS 5 km WITHDIST ASC return?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Verilen noktaya 5 km içindeki kuryeleri, mesafeleriyle birlikte yakından uzağa sıralı",
+            "en": "Couriers within 5 km of the given point with their distances, sorted nearest first"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Yalnızca en yakın tek kuryeyi",
+            "en": "Only the single nearest courier"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "5 km'den uzak kuryeleri uzaktan yakına sıralı",
+            "en": "Couriers farther than 5 km, sorted farthest first"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "partner_123 ile partner_456 arasındaki mesafeyi",
+            "en": "The distance between partner_123 and partner_456"
+          }
+        }
+      ],
+      "correct": [
+        "a"
+      ],
+      "explanation": {
+        "tr": "BYRADIUS 5 km yarıçap içindekileri, WITHDIST mesafeyi, ASC ise yakından uzağa sıralamayı ifade eder. İki kurye arasındaki mesafeyi GEODIST verir; tek sonuç için COUNT gibi ek bir sınır gerekir.",
+        "en": "BYRADIUS 5 km selects members within the radius, WITHDIST includes the distance and ASC sorts nearest first. The distance between two couriers comes from GEODIST; a single result would need an extra limit such as COUNT."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "redis-geo"
+      ]
+    }
+  ]
+}

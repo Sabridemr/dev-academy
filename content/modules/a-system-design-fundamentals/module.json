@@ -9,5 +9,6 @@
     "en": "From the client-server model to consistent hashing: the building blocks of scalable systems."
   },
   "icon": "layers",
-  "color": "#6366f1"
+  "color": "#6366f1",
+  "group": "system-design"
 }

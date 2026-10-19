@@ -1,0 +1,255 @@
+{
+  "id": "j-01-must-know-system-design-patterns-quiz",
+  "title": {
+    "tr": "Sistem Tasarımı Kalıpları Quiz",
+    "en": "System Design Patterns Quiz"
+  },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Yazma trafiği çok yüksek bir sistemde yazmaların önce yalnızca cache'e yapılıp veritabanının daha sonra asenkron güncellenmesini istiyorsunuz. Bu hangi caching kalıbıdır?",
+        "en": "In a system with very heavy write traffic you want writes to go only to the cache first and the database to be updated later, asynchronously. Which caching pattern is this?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Cache Aside (Lazy Loading)",
+            "en": "Cache Aside (Lazy Loading)"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Read Through",
+            "en": "Read Through"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "Write Through",
+            "en": "Write Through"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Write Back (Write Behind)",
+            "en": "Write Back (Write Behind)"
+          }
+        }
+      ],
+      "correct": [
+        "d"
+      ],
+      "explanation": {
+        "tr": "Write Back'te yazma yalnızca cache'e yapılır, DB sonradan asenkron güncellenir; yüksek yazma yükü için uygundur. Write Through cache ve DB'ye aynı anda yazar, Cache Aside ve Read Through ise okuma yolunu (miss durumunu) tanımlar.",
+        "en": "In Write Back the write goes only to the cache and the DB is updated later asynchronously, which suits write-heavy systems. Write Through writes to cache and DB at the same time, while Cache Aside and Read Through describe the read path (cache misses)."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "caching"
+      ]
+    },
+    {
+      "id": "q2",
+      "type": "order",
+      "prompt": {
+        "tr": "Bağımlı servis arızalanmaya başladığında circuit breaker'ın davranışını doğru sıraya koyun.",
+        "en": "Put the circuit breaker's behaviour in the correct order once the dependent service starts failing."
+      },
+      "options": [
+        {
+          "id": "open",
+          "text": {
+            "tr": "Hatalar eşiği aşar, devre OPEN olur",
+            "en": "Failures exceed the threshold and the circuit goes OPEN"
+          }
+        },
+        {
+          "id": "block",
+          "text": {
+            "tr": "İstekler servise gitmeden hemen reddedilir (fail fast)",
+            "en": "Requests are rejected immediately without reaching the service (fail fast)"
+          }
+        },
+        {
+          "id": "wait",
+          "text": {
+            "tr": "Zaman aşımı süresi beklenir",
+            "en": "The timeout period elapses"
+          }
+        },
+        {
+          "id": "half",
+          "text": {
+            "tr": "HALF-OPEN durumunda sınırlı sayıda test isteği geçirilir",
+            "en": "In HALF-OPEN a limited number of test requests are let through"
+          }
+        },
+        {
+          "id": "closed",
+          "text": {
+            "tr": "Test istekleri başarılıysa devre CLOSED'a döner",
+            "en": "If the test requests succeed the circuit returns to CLOSED"
+          }
+        }
+      ],
+      "correct": [
+        "open",
+        "block",
+        "wait",
+        "half",
+        "closed"
+      ],
+      "explanation": {
+        "tr": "Devre eşik aşılınca açılır ve istekleri hemen keser; zaman aşımı dolunca HALF-OPEN'da az sayıda istekle servisi test eder, başarılı olursa CLOSED'a, başarısız olursa yeniden OPEN'a döner. Zaman aşımı beklenmeden HALF-OPEN'a geçilmez.",
+        "en": "The circuit opens when the threshold is exceeded and cuts requests immediately; after the timeout it tests the service with a few requests in HALF-OPEN, returning to CLOSED on success or back to OPEN on failure. It never goes HALF-OPEN before the timeout."
+      },
+      "difficulty": "easy",
+      "concepts": [
+        "circuit-breaker"
+      ]
+    },
+    {
+      "id": "q3",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Asenkron replikasyonda veri primary'ye yazılıp replikalara arka planda aktarıldığı için okumalar her zaman güçlü tutarlılık sağlar.",
+        "en": "In asynchronous replication data is written to the primary and copied to replicas in the background, so reads always get strong consistency."
+      },
+      "options": [
+        {
+          "id": "t",
+          "text": {
+            "tr": "Doğru",
+            "en": "True"
+          }
+        },
+        {
+          "id": "f",
+          "text": {
+            "tr": "Yanlış",
+            "en": "False"
+          }
+        }
+      ],
+      "correct": [
+        "f"
+      ],
+      "explanation": {
+        "tr": "Yanlış. Asenkron replikasyon düşük gecikme sağlar ama nihai (eventual) tutarlılık verir; replikasyon gecikmesi nedeniyle replikadan eski veri okunabilir. Güçlü tutarlılık, onaydan önce replikalara da yazan senkron replikasyonun özelliğidir.",
+        "en": "False. Asynchronous replication gives low latency but only eventual consistency; because of replication lag a replica may return stale data. Strong consistency is a property of synchronous replication, which writes to replicas before acknowledging."
+      },
+      "difficulty": "easy",
+      "concepts": [
+        "database-replication"
+      ]
+    },
+    {
+      "id": "q4",
+      "type": "multiple",
+      "prompt": {
+        "tr": "E-ticaret sipariş saga'sında sipariş oluşturma, ödeme ve stok ayırma tamamlandıktan sonra bir adım başarısız olursa hangi işlemler telafi akışının parçasıdır? (Birden fazla seçin)",
+        "en": "In an e-commerce order saga, if a step fails after order creation, payment and stock reservation have completed, which actions are part of the compensation flow? (Select all that apply)"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Ayrılan stoğu serbest bırakmak",
+            "en": "Releasing the reserved stock"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Ödemeyi iade etmek",
+            "en": "Refunding the payment"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "Siparişi iptal etmek",
+            "en": "Cancelling the order"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Tüm servislerin tablolarını tek bir dağıtık transaction ile kilitleyip geri almak",
+            "en": "Locking every service's tables in one distributed transaction and rolling it back"
+          }
+        }
+      ],
+      "correct": [
+        "a",
+        "b",
+        "c"
+      ],
+      "explanation": {
+        "tr": "Saga'da her adım yerel bir transaction'dır ve hata olunca tamamlanmış adımlar telafi işlemleriyle (stoğu bırak, ödemeyi iade et, siparişi iptal et) geri alınır. Saga tam da uzun süreli kilitlerden ve dağıtık transaction'dan kaçınmak için kullanılır, bu yüzden d yanlıştır.",
+        "en": "In a saga each step is a local transaction and on failure completed steps are undone by compensating actions (release stock, refund payment, cancel order). Saga exists precisely to avoid long-running locks and distributed transactions, so d is wrong."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "saga-pattern"
+      ]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "CQRS'te okuma tarafındaki veritabanı nasıl güncel tutulur?",
+        "en": "In CQRS, how is the read-side database kept up to date?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Komut tarafı yazmayı kaydettikten sonra yayınlanan olaylarla denormalize Read DB güncellenir",
+            "en": "After the command side saves a write, published events update the denormalized Read DB"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "İstemci her yazmayı hem Write DB'ye hem Read DB'ye kendisi gönderir",
+            "en": "The client itself sends every write to both the Write DB and the Read DB"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "Query Handler her okumada Write DB'yi sorgulayıp normalize modeli döner",
+            "en": "The Query Handler queries the Write DB on every read and returns the normalized model"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Read DB ile Write DB aynı tablodur, yalnızca API'ler ayrıdır",
+            "en": "The Read DB and Write DB are the same table; only the APIs differ"
+          }
+        }
+      ],
+      "correct": [
+        "a"
+      ],
+      "explanation": {
+        "tr": "CQRS'te Command API yazmayı normalize Write DB'ye kaydeder, bir olay (ör. OrderCreated) yayınlanır ve olay işleyici denormalize Read DB'yi günceller; sorgular bu modelden okunur. Bu yüzden okuma tarafı nihai tutarlıdır; diğer seçenekler okuma ve yazma modellerinin ayrılması fikrini ortadan kaldırır.",
+        "en": "In CQRS the Command API saves the write to the normalized Write DB, an event (e.g. OrderCreated) is published and an event handler updates the denormalized Read DB that queries read from. This is why the read side is eventually consistent; the other options remove the separation of read and write models."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "cqrs",
+        "event-driven-architecture"
+      ]
+    }
+  ]
+}

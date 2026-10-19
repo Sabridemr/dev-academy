@@ -7,8 +7,8 @@ title:
   tr: "Yemek Siparişi Platformu: Sadakat, Takip Sistemini Ölçekleme ve En İyi Uygulamalar"
   en: "Food Delivery Platform: Loyalty, Scaling the Tracking System and Best Practices"
 summary:
-  tr: "Sadakat ve davet sisteminin akışları ve veri modeli, takip sistemini Redis GeoHash, Kafka ve WebSocket ile ölçekleme, ardından en iyi uygulamalar, gerçek dünyadan dersler ve nihai teknoloji yığını."
-  en: "The flows and data model of the loyalty and referral system, scaling the tracking system with Redis GeoHash, Kafka and WebSocket, followed by best practices, real-world lessons and the final technology stack."
+  tr: "Sadakat ve davet sistemini kurmayı, canlı takibi milyonlara ölçeklemeyi ve dayanıklılık desenlerini öğren."
+  en: "Learn to build loyalty and referral systems, scale live tracking to millions and apply resilience patterns."
 durationMinutes: 14
 level: advanced
 tags: [system-design, food-delivery, loyalty, scalability, real-time]
@@ -325,6 +325,9 @@ CLOSED (normal) → hata eşiği aşıldı → OPEN (istekler kesilir)
 ### Gelecek geliştirmeler
 
 Yapay zekâ tabanlı ETA tahmini, talebe göre dinamik fiyatlama (surge algoritması), makine öğrenmesiyle daha iyi dolandırıcılık tespiti, sesli sipariş takibi, drone/robot teslimat (uzun vadede), çok şehirli ve uluslararası genişleme, sürdürülebilir (çevre dostu) teslimat seçenekleri, kişiselleştirilmiş öneriler, market ve eczane gibi diğer hizmetlerle entegrasyon.
+
+:::quiz{src="quiz.json"}
+:::
 
 ## Orijinal PDF sayfaları
 

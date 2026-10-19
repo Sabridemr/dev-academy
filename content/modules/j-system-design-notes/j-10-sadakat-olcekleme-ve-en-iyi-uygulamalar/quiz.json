@@ -1,0 +1,246 @@
+{
+  "id": "j-10-sadakat-olcekleme-ve-en-iyi-uygulamalar-quiz",
+  "title": {
+    "tr": "Sadakat, Ölçekleme ve En İyi Uygulamalar Quiz",
+    "en": "Loyalty, Scaling and Best Practices Quiz"
+  },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "500.000 kurye her 5 saniyede bir konum gönderirse saniyede kaç güncelleme oluşur ve bunun sonucu nedir?",
+        "en": "If 500,000 couriers each send a location every 5 seconds, how many updates per second is that and what follows?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "10.000/sn; her güncelleme doğrudan PostgreSQL'e yazılabilir",
+            "en": "10,000/s; every update can be written straight to PostgreSQL"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "100.000/sn; her güncellemeyi doğrudan PostgreSQL'e yazmak mümkün değildir, Redis ve Kafka gerekir",
+            "en": "100,000/s; writing every update directly to PostgreSQL is not feasible, Redis and Kafka are needed"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "2.500.000/sn; sistem ancak polling ile çalışabilir",
+            "en": "2,500,000/s; the system can only work with polling"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "100.000/sn; bu yük için tek bir güçlü veritabanı sunucusu yeterlidir",
+            "en": "100,000/s; a single powerful database server is enough for this load"
+          }
+        }
+      ],
+      "correct": [
+        "b"
+      ],
+      "explanation": {
+        "tr": "500.000 / 5 = 100.000 güncelleme/sn; ~200 bayttan saniyede 20 MB, günde ~1,7 TB eder. Bu yüzden son konum Redis'te tutulur, olaylar Kafka'dan akar; her güncellemeyi doğrudan PostgreSQL'e yazmak mümkün değildir.",
+        "en": "500,000 / 5 = 100,000 updates/s; at ~200 bytes that is 20 MB per second, ~1.7 TB per day. So the latest location lives in Redis and events flow through Kafka; writing every update directly to PostgreSQL is not feasible."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "back-of-the-envelope"
+      ]
+    },
+    {
+      "id": "q2",
+      "type": "order",
+      "prompt": {
+        "tr": "Circuit breaker'ın bir arıza ve toparlanma döngüsündeki durumlarını sıraya koyun.",
+        "en": "Order the circuit breaker's states through one failure-and-recovery cycle."
+      },
+      "options": [
+        {
+          "id": "closed",
+          "text": {
+            "tr": "CLOSED (normal, istekler geçer)",
+            "en": "CLOSED (normal, requests pass)"
+          }
+        },
+        {
+          "id": "open",
+          "text": {
+            "tr": "OPEN (hata eşiği aşıldı, istekler kesilir)",
+            "en": "OPEN (error threshold exceeded, requests are cut)"
+          }
+        },
+        {
+          "id": "half",
+          "text": {
+            "tr": "HALF_OPEN (bekleme bitti, birkaç deneme isteği)",
+            "en": "HALF_OPEN (wait over, a few trial requests)"
+          }
+        },
+        {
+          "id": "closed2",
+          "text": {
+            "tr": "CLOSED (deneme istekleri başarılı)",
+            "en": "CLOSED (trial requests succeeded)"
+          }
+        }
+      ],
+      "correct": [
+        "closed",
+        "open",
+        "half",
+        "closed2"
+      ],
+      "explanation": {
+        "tr": "Normalde devre kapalıdır; hata eşiği aşılınca açılır ve istekler kesilir. Bekleme süresi dolunca yarı açık duruma geçip birkaç deneme isteği gönderilir; başarılıysa tekrar kapanır, başarısızsa yeniden açılır.",
+        "en": "Normally the circuit is closed; when the error threshold is exceeded it opens and requests are cut. After the wait period it goes half-open and sends a few trial requests; on success it closes again, on failure it reopens."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "circuit-breaker"
+      ]
+    },
+    {
+      "id": "q3",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Davet programında ödül, arkadaş davet koduyla kayıt olduğu anda verilmelidir.",
+        "en": "In the referral program, the reward should be granted as soon as the friend signs up with the referral code."
+      },
+      "options": [
+        {
+          "id": "t",
+          "text": {
+            "tr": "Doğru",
+            "en": "True"
+          }
+        },
+        {
+          "id": "f",
+          "text": {
+            "tr": "Yanlış",
+            "en": "False"
+          }
+        }
+      ],
+      "correct": [
+        "f"
+      ],
+      "explanation": {
+        "tr": "Yanlış. Ödül kayıtta değil, şartları karşılayan ilk siparişten sonra verilir; aksi hâlde sahte hesaplarla ödül toplanabilir.",
+        "en": "False. The reward is granted after the first qualifying order, not at sign-up; otherwise rewards could be farmed with fake accounts."
+      },
+      "difficulty": "easy",
+      "concepts": [
+        "referral-program"
+      ]
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": {
+        "tr": "Gecikmeyi izlerken neden ortalama yerine p95 de takip edilir?",
+        "en": "Why track p95 rather than only the average when monitoring latency?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "p95 her zaman ortalamadan düşük olduğu için daha iyi görünür",
+            "en": "Because p95 is always lower than the average and looks better"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Ortalama, az sayıdaki çok yavaş isteği gizleyebilir; p95 isteklerin %95'inin altında kaldığı süreyi ve kuyruk gecikmesini gösterir",
+            "en": "The average can hide a few very slow requests; p95 shows the time under which 95% of requests finish and reveals tail latency"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "p95 yalnızca başarısız isteklerin süresini ölçtüğü için",
+            "en": "Because p95 only measures the duration of failed requests"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "p95 hesaplamak için log tutmaya gerek olmadığı için",
+            "en": "Because computing p95 requires no logging"
+          }
+        }
+      ],
+      "correct": [
+        "b"
+      ],
+      "explanation": {
+        "tr": "Örnekte 99 istek 50 ms, 1 istek 5 sn sürünce ortalama 100 ms görünür ama bazı kullanıcılar çok kötü deneyim yaşar. p95/p99 bu kuyruk gecikmesini görünür kılar; başarısız isteklerle sınırlı değildir.",
+        "en": "In the example 99 requests take 50 ms and 1 takes 5 s, so the average looks like 100 ms while some users suffer badly. p95/p99 make this tail latency visible; they are not limited to failed requests."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "p95-latency",
+        "observability"
+      ]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "Konum alımı (ingestion) servisini kullanıcıya veri sunan Tracking Service'ten ayırmanın temel nedeni nedir?",
+        "en": "What is the main reason for separating the location ingestion service from the Tracking Service that serves users?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Yazma yükü (100.000/sn) ile okuma yükü (milyonlarca kullanıcı) çok farklı olduğundan ikisini ayrı ayrı ölçeklemek (CQRS)",
+            "en": "Write load (100,000/s) and read load (millions of users) differ greatly, so each can be scaled separately (CQRS)"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "GeoHash yalnızca ayrı bir serviste hesaplanabildiği için",
+            "en": "Because GeoHash can only be computed in a separate service"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "Kurye uygulamasının pil tüketimini azaltmak için",
+            "en": "To reduce the courier app's battery usage"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "WebSocket bağlantılarının yazma işlemi yapamaması nedeniyle",
+            "en": "Because WebSocket connections cannot perform writes"
+          }
+        }
+      ],
+      "correct": [
+        "a"
+      ],
+      "explanation": {
+        "tr": "Ders, ingestion'ı ayırmayı yazma ve okuma yüklerinin çok farklı olmasıyla açıklar; bu CQRS fikridir. Pil optimizasyonu kuryenin konum gönderme sıklığını ayarlayarak yapılır; GeoHash'in ayrı servis gerektirmesi gibi bir kısıt yoktur.",
+        "en": "The lesson explains separating ingestion by the very different write and read loads; this is the CQRS idea. Battery optimization is done by adjusting how often the courier sends location, and GeoHash has no separate-service requirement."
+      },
+      "difficulty": "hard",
+      "concepts": [
+        "cqrs",
+        "geohash"
+      ]
+    }
+  ]
+}

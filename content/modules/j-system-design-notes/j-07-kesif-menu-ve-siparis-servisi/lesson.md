@@ -7,8 +7,8 @@ title:
   tr: "Yemek Siparişi Platformu: Restoran Keşfi, Menü ve Sipariş Servisi"
   en: "Food Delivery Platform: Restaurant Discovery, Menu and Order Service"
 summary:
-  tr: "Elasticsearch ve Redis ile restoran arama, restoran ve menü servisinin veri modeli ve önbellek stratejisi, sipariş servisinin durum makinesi, Saga ve Outbox desenleri."
-  en: "Restaurant search with Elasticsearch and Redis, the restaurant and menu service data model and caching strategy, and the order service state machine with the Saga and Outbox patterns."
+  tr: "Restoran araması, menü önbelleği ve Saga ile Outbox desenli sipariş servisini tasarlamayı öğren."
+  en: "Learn to design restaurant search, menu caching and an order service using the Saga and Outbox patterns."
 durationMinutes: 14
 level: intermediate
 tags: [system-design, food-delivery, search, caching, order-service]
@@ -390,6 +390,9 @@ Metrikler: sipariş oluşturma başarı oranı, iptal oranı, ortalama işlem s�
 
 :::callout{tone="tip" title="Senin projen için"}
 Toptan satış sipariş durumları: PENDING_PAYMENT → PAID (veya havalede AWAITING_TRANSFER) → PREPARING → SHIPPED → DELIVERED, ayrıca CANCELLED ve REFUNDED. Outbox desenini tek bir uygulamada da kullanabilirsin: sipariş ile "e-posta gönder" görevi aynı transaction'da kaydedilir, böylece onay e-postası asla kaybolmaz.
+:::
+
+:::quiz{src="quiz.json"}
 :::
 
 ## Orijinal PDF sayfaları

@@ -7,8 +7,8 @@ title:
   tr: DevOps ve Docker Kullanım Rehberi
   en: DevOps and Docker Usage Guide
 summary:
-  tr: DevOps ilkeleri, Git, Docker ve Dockerfile, volume ve ağ, Docker Compose, GitHub Actions ile CI/CD, sunucu hazırlığı, IaC, Kubernetes, izleme, yedekleme, güvenlik ve sorun giderme konularını başlangıçtan üretime kadar ele alır.
-  en: Covers DevOps principles, Git, Docker and Dockerfiles, volumes and networking, Docker Compose, CI/CD with GitHub Actions, server preparation, IaC, Kubernetes, monitoring, backups, security and troubleshooting from getting started to production.
+  tr: "Docker, Compose ve GitHub Actions ile uygulamanı konteynerleştirip otomatik olarak üretime taşı."
+  en: "Containerize your app with Docker and Compose and ship it to production automatically with GitHub Actions."
 durationMinutes: 16
 level: beginner
 tags: [devops, docker, docker-compose, ci-cd, kubernetes, iac]
@@ -597,6 +597,9 @@ docker system prune -a           # Temizlik
 git add . && git commit -m "" && git push
 kubectl get pods -A              # Tüm pod'lar
 ```
+:::
+
+:::quiz{src="quiz.json"}
 :::
 
 ## Orijinal PDF sayfaları

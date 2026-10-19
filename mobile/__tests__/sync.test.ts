@@ -88,6 +88,7 @@ function lesson(id: string, moduleId = 'a-mod', version = 1): LessonDetail {
     order: 1,
     title: { tr: id },
     summary: { tr: '' },
+    format: 'standard',
     durationMinutes: 10,
     level: 'beginner',
     tags: [],
@@ -128,6 +129,8 @@ const moduleDetail = {
   icon: 'book',
   color: '#6366f1',
   lessonCount: 2,
+  group: 'system-design',
+  totalMinutes: 0,
   lessons: [],
 } as ModuleDetail;
 

@@ -1,0 +1,256 @@
+{
+  "id": "h-06-cicd-temelleri-ve-ilk-workflow-quiz",
+  "title": {
+    "tr": "CI/CD Temelleri Quiz",
+    "en": "CI/CD Fundamentals Quiz"
+  },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Bir e-ticaret ekibi, testleri geçen kodun otomatik paketlenip staging'e çıkmasını ama canlıya çıkışın bir kişinin onayıyla yapılmasını istiyor. Bu hangi yaklaşımdır?",
+        "en": "An e-commerce team wants code that passes tests to be packaged and deployed to staging automatically, but production releases to require a person's approval. Which approach is this?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Continuous Delivery",
+            "en": "Continuous Delivery"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Continuous Deployment",
+            "en": "Continuous Deployment"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "Yalnızca Continuous Integration",
+            "en": "Continuous Integration only"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Trunk-based development",
+            "en": "Trunk-based development"
+          }
+        }
+      ],
+      "correct": [
+        "a"
+      ],
+      "explanation": {
+        "tr": "Continuous Delivery'de kod her an yayınlanabilir durumdadır ama canlıya çıkış insan onayı ister. Continuous Deployment'ta onay yoktur, testi geçen her değişiklik canlıya çıkar; CI yalnızca build ve testi kapsar, trunk-based ise bir dallanma stratejisidir.",
+        "en": "In Continuous Delivery the code is always releasable but going to production needs human approval. Continuous Deployment has no approval and ships every change that passes tests; CI only covers build and test, and trunk-based is a branching strategy."
+      },
+      "difficulty": "easy",
+      "concepts": [
+        "continuous-delivery",
+        "continuous-deployment"
+      ]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "Ders, CI'da npm install yerine npm ci kullanılmasını öneriyor. Bunun temel nedeni nedir?",
+        "en": "The lesson recommends npm ci instead of npm install in CI. What is the main reason?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "package-lock.json'a birebir uyan temiz kurulum yapar, böylece her çalıştırmada aynı sürümler kurulur.",
+            "en": "It performs a clean install that matches package-lock.json exactly, so every run installs the same versions."
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Bağımlılıkları en son sürümlerine yükseltir.",
+            "en": "It upgrades dependencies to their latest versions."
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "Lock dosyası olmadan da çalışır ve onu otomatik oluşturur.",
+            "en": "It works without a lock file and creates one automatically."
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Testleri kurulumla birlikte otomatik çalıştırır.",
+            "en": "It runs the tests automatically as part of the install."
+          }
+        }
+      ],
+      "correct": [
+        "a"
+      ],
+      "explanation": {
+        "tr": "npm ci lock dosyasına birebir uyar, daha hızlıdır ve tekrarlanabilir kurulum sağlar. Sürümleri yükseltmez, lock dosyası yoksa veya uyumsuzsa hata verir ve testleri çalıştırmaz; testler ayrı bir adımda (npm test) koşar.",
+        "en": "npm ci matches the lock file exactly, is faster and gives reproducible installs. It does not upgrade versions, fails if the lock file is missing or out of sync, and does not run tests; tests run in a separate step (npm test)."
+      },
+      "difficulty": "easy",
+      "concepts": [
+        "workflow"
+      ]
+    },
+    {
+      "id": "q3",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Aynı workflow'da bir job'da npm ci ile kurulan paketler ve üretilen dosyalar, sonraki job'da da hazır bulunur.",
+        "en": "In the same workflow, packages installed with npm ci and files produced in one job are already available in the next job."
+      },
+      "options": [
+        {
+          "id": "t",
+          "text": {
+            "tr": "Doğru",
+            "en": "True"
+          }
+        },
+        {
+          "id": "f",
+          "text": {
+            "tr": "Yanlış",
+            "en": "False"
+          }
+        }
+      ],
+      "correct": [
+        "f"
+      ],
+      "explanation": {
+        "tr": "Yanlış. Her job temiz, ayrı bir makinede başlar; bir job'da kurulan paketler veya oluşan dosyalar diğer job'da yoktur. Aktarmak için artifact veya cache kullanılır.",
+        "en": "False. Every job starts on a clean, separate machine; packages or files from one job do not exist in another. Use artifacts or cache to pass them along."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "workflow"
+      ]
+    },
+    {
+      "id": "q4",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Derse göre main dalı için branch protection kurallarında hangileri yer alır? (Birden fazla seçin)",
+        "en": "According to the lesson, which of these belong to the branch protection rules for main? (Select all that apply)"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "main'e doğrudan push yasaktır; değişiklik sadece PR ile girer.",
+            "en": "Direct pushes to main are blocked; changes enter only through a PR."
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "PR birleştirilmeden önce test ve lint gibi CI kontrolleri başarılı olmalıdır.",
+            "en": "CI checks such as test and lint must pass before a PR is merged."
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "Birleştirme için en az bir onay (review) gerekir.",
+            "en": "At least one approving review is required to merge."
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Hızlı düzeltmeler için force push serbest bırakılır.",
+            "en": "Force pushes are allowed for quick fixes."
+          }
+        }
+      ],
+      "correct": [
+        "a",
+        "b",
+        "c"
+      ],
+      "explanation": {
+        "tr": "Korunan main dalında doğrudan push yasaktır, CI kontrolleri ve en az bir onay zorunludur. Force push ve dal silme ise engellenir; bu kurallar CI'ı bir öneriden zorunlu bir kalite kapısına dönüştürür.",
+        "en": "On a protected main, direct pushes are blocked and CI checks plus at least one review are required. Force pushes and branch deletion are blocked; these rules turn CI from a suggestion into a mandatory quality gate."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "branch-protection"
+      ]
+    },
+    {
+      "id": "q5",
+      "type": "order",
+      "prompt": {
+        "tr": "Dersteki pipeline akışına göre şu aşamaları doğru sıraya koyun.",
+        "en": "Order these stages according to the pipeline flow in the lesson."
+      },
+      "options": [
+        {
+          "id": "staging",
+          "text": {
+            "tr": "Staging'e çıkış",
+            "en": "Deploy to staging"
+          }
+        },
+        {
+          "id": "test",
+          "text": {
+            "tr": "Lint ve testler",
+            "en": "Lint and tests"
+          }
+        },
+        {
+          "id": "prod",
+          "text": {
+            "tr": "Canlıya (production) çıkış",
+            "en": "Deploy to production"
+          }
+        },
+        {
+          "id": "package",
+          "text": {
+            "tr": "Paketleme (ör. Docker image)",
+            "en": "Packaging (e.g. Docker image)"
+          }
+        },
+        {
+          "id": "approval",
+          "text": {
+            "tr": "Onay",
+            "en": "Approval"
+          }
+        }
+      ],
+      "correct": [
+        "test",
+        "package",
+        "staging",
+        "approval",
+        "prod"
+      ],
+      "explanation": {
+        "tr": "Hızlı ve ucuz kontroller (lint, test) önce çalışır (fail fast). Ardından paket bir kez üretilir, aynı paket önce staging'e çıkar, onaydan sonra canlıya gider (build once, deploy many). Bir adım başarısız olursa sonraki adımlar çalışmaz.",
+        "en": "Fast, cheap checks (lint, tests) run first (fail fast). Then the package is built once, the same package goes to staging first and to production after approval (build once, deploy many). If a step fails, the later steps do not run."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "pipeline",
+        "fail-fast"
+      ]
+    }
+  ]
+}

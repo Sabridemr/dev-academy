@@ -1,0 +1,110 @@
+{
+  "id": "i-05-api-testing-notes-quiz",
+  "title": { "tr": "API Testi Quiz", "en": "API Testing Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Kullanıcı geçerli bir token ile giriş yapmış, ancak yetkisi olmadığı admin paneli endpoint'ine istek atıyor. API'nin dönmesi gereken durum kodu hangisidir?",
+        "en": "A user is logged in with a valid token but sends a request to an admin panel endpoint they have no permission for. Which status code should the API return?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "401 Unauthorized", "en": "401 Unauthorized" } },
+        { "id": "b", "text": { "tr": "403 Forbidden", "en": "403 Forbidden" } },
+        { "id": "c", "text": { "tr": "404 Not Found", "en": "404 Not Found" } },
+        { "id": "d", "text": { "tr": "400 Bad Request", "en": "400 Bad Request" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "403, kimliği doğrulanmış ama izni olmayan istemci içindir: sunucu isteği anlar ama yetkilendirmeyi reddeder. 401 kimlik bilgisi eksik ya da geçersiz olduğunda, 404 kaynak yokken, 400 ise isteğin sözdizimi hatalıyken döner.",
+        "en": "403 is for a client that is authenticated but lacks permission: the server understands the request but refuses to authorize it. 401 is for missing or invalid credentials, 404 for a missing resource and 400 for a malformed request."
+      },
+      "difficulty": "medium",
+      "concepts": ["http-status-codes", "authentication-authorization"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "Yanıt gövdesi {\"user\": {\"id\": 101, \"contact\": {\"email\": \"alice@example.com\"}}} olduğunda, \"alice@example.com\" değerini hangi JSONPath ifadesi döndürür?",
+        "en": "Given the response body {\"user\": {\"id\": 101, \"contact\": {\"email\": \"alice@example.com\"}}}, which JSONPath expression returns \"alice@example.com\"?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "$.email", "en": "$.email" } },
+        { "id": "b", "text": { "tr": "$.user.email", "en": "$.user.email" } },
+        { "id": "c", "text": { "tr": "$.user.contact.email", "en": "$.user.contact.email" } },
+        { "id": "d", "text": { "tr": "$.user.*", "en": "$.user.*" } }
+      ],
+      "correct": ["c"],
+      "explanation": {
+        "tr": "JSONPath $ (kök) ile başlar ve iç içe nesnelere nokta ile inilir: user → contact → email. $.email ve $.user.email ara seviyeleri atladığı için boş döner; $.user.* ise user'ın tüm alt alanlarını döndürür, yalnızca e-postayı değil.",
+        "en": "JSONPath starts at $ (root) and walks nested objects with dots: user → contact → email. $.email and $.user.email skip levels and return nothing; $.user.* returns all child properties of user, not just the email."
+      },
+      "difficulty": "easy",
+      "concepts": ["jsonpath"]
+    },
+    {
+      "id": "q3",
+      "type": "order",
+      "prompt": {
+        "tr": "HTTP istek-yanıt akışının adımlarını doğru sıraya koyun.",
+        "en": "Put the steps of the HTTP request-response flow in the correct order."
+      },
+      "options": [
+        { "id": "process", "text": { "tr": "Sunucu isteği işler", "en": "The server processes the request" } },
+        { "id": "receive", "text": { "tr": "İstemci yanıtı alır ve veriyi gösterir", "en": "The client receives the response and displays the data" } },
+        { "id": "request", "text": { "tr": "İstemci (tarayıcı, uygulama) sunucuya HTTP isteği gönderir", "en": "The client (browser, app) sends an HTTP request to the server" } },
+        { "id": "response", "text": { "tr": "Sunucu HTTP yanıtını (ör. 200 OK + veri) istemciye geri gönderir", "en": "The server sends the HTTP response (e.g. 200 OK + data) back to the client" } }
+      ],
+      "correct": ["request", "process", "response", "receive"],
+      "explanation": {
+        "tr": "Her HTTP iletişimi aynı döngüyü izler: istemci isteği gönderir, sunucu işler, sunucu yanıtı geri yollar ve istemci yanıtı alıp gösterir. Sunucu istek gelmeden işlem yapamaz; istemci de yanıt gönderilmeden veriyi gösteremez.",
+        "en": "Every HTTP communication follows the same cycle: the client sends a request, the server processes it, the server sends the response back and the client receives and displays it. The server cannot process before a request arrives, and the client cannot display data before a response is sent."
+      },
+      "difficulty": "easy",
+      "concepts": ["request-response-cycle"]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "POST idempotent bir metottur; aynı POST /users isteğini iki kez göndermek her zaman tek bir kullanıcı kaydıyla sonuçlanır.",
+        "en": "POST is an idempotent method; sending the same POST /users request twice always results in a single user record."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "Idempotency, aynı isteği birden çok kez göndermenin aynı etkiyi yaratması demektir. POST yeni kaynak oluşturur ve idempotent değildir; tekrar gönderilirse ikinci bir kayıt oluşabilir. GET, PUT ve DELETE ise idempotent'tir.",
+        "en": "Idempotency means sending the same request multiple times has the same effect. POST creates a new resource and is not idempotent; repeating it can create a second record. GET, PUT and DELETE, on the other hand, are idempotent."
+      },
+      "difficulty": "easy",
+      "concepts": ["idempotency", "http-methods"]
+    },
+    {
+      "id": "q5",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Kimlik doğrulama yöntemleriyle ilgili hangi ifadeler doğrudur? (Birden fazla seçin.)",
+        "en": "Which statements about authentication methods are correct? (Select all that apply.)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Basic Auth, kullanıcı adı:şifre bilgisini Base64 ile kodlayarak gönderir; basittir ama çok güvenli değildir.", "en": "Basic Auth sends username:password encoded in Base64; it is simple but not very secure." } },
+        { "id": "b", "text": { "tr": "API key kullanıcıyı değil, istemciyi (uygulamayı) tanımlar.", "en": "An API key identifies the client (application), not the user." } },
+        { "id": "c", "text": { "tr": "OAuth 2.0 bir kimlik doğrulama (authentication) çerçevesidir, yetkilendirme yapmaz.", "en": "OAuth 2.0 is an authentication framework and does not handle authorization." } },
+        { "id": "d", "text": { "tr": "JWT üç parçadan oluşur: header, payload ve signature.", "en": "A JWT consists of three parts: header, payload and signature." } }
+      ],
+      "correct": ["a", "b", "d"],
+      "explanation": {
+        "tr": "Basic Auth Base64 ile kodlanmış kullanıcı adı:şifre taşır ve zayıftır; API key istemciyi tanımlar; JWT header.payload.signature yapısındadır. OAuth 2.0 ise tersine bir yetkilendirme (authorization) çerçevesidir, kimlik doğrulama çerçevesi değildir.",
+        "en": "Basic Auth carries a Base64-encoded username:password and is weak; an API key identifies the client; a JWT has a header.payload.signature structure. OAuth 2.0, on the contrary, is an authorization framework, not an authentication one."
+      },
+      "difficulty": "hard",
+      "concepts": ["authentication-authorization", "oauth-2"]
+    }
+  ]
+}

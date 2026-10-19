@@ -1,0 +1,245 @@
+{
+  "id": "i-02-api-ve-rest-api-temeller-ve-guvenlik-quiz",
+  "title": {
+    "tr": "API ve REST Temelleri Quiz",
+    "en": "API and REST Fundamentals Quiz"
+  },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Başarıyla giriş yapmış ama yönetici olmayan bir müşteri `/api/admin/products` uç noktasına istek atıyor. Sunucu hangi durum kodunu dönmelidir?",
+        "en": "A customer who logged in successfully but is not an admin calls `/api/admin/products`. Which status code should the server return?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "401 Unauthorized",
+            "en": "401 Unauthorized"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "403 Forbidden",
+            "en": "403 Forbidden"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "404 Not Found",
+            "en": "404 Not Found"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "400 Bad Request",
+            "en": "400 Bad Request"
+          }
+        }
+      ],
+      "correct": [
+        "b"
+      ],
+      "explanation": {
+        "tr": "Kullanıcının kimliği doğrulanmış (authentication tamam) ama bu işlem için yetkisi yok (authorization başarısız); bu 403'tür. 401 kimliğin hiç kanıtlanmadığı durum içindir; kaynak var ve istek biçimsel olarak doğru olduğu için 404 ve 400 uygun değildir.",
+        "en": "The user is authenticated but lacks permission for this action (authorization fails), which is 403. 401 is for when identity has not been proven at all; the resource exists and the request is well-formed, so 404 and 400 do not fit."
+      },
+      "difficulty": "easy",
+      "concepts": [
+        "http-status-codes",
+        "authentication"
+      ]
+    },
+    {
+      "id": "q2",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "JWT payload'ı şifrelendiği için içine gizli veriler güvenle konabilir.",
+        "en": "Because a JWT payload is encrypted, secret data can safely be placed in it."
+      },
+      "options": [
+        {
+          "id": "t",
+          "text": {
+            "tr": "Doğru",
+            "en": "True"
+          }
+        },
+        {
+          "id": "f",
+          "text": {
+            "tr": "Yanlış",
+            "en": "False"
+          }
+        }
+      ],
+      "correct": [
+        "f"
+      ],
+      "explanation": {
+        "tr": "Yanlış. Çoğu JWT şifrelenmez, yalnızca imzalanır: içeriği herkes okuyabilir ama imza sayesinde değiştiremez. Bu yüzden gizli veri JWT payload'ına konmamalıdır.",
+        "en": "False. Most JWTs are not encrypted, only signed: anyone can read the content, but the signature prevents tampering. Secret data must therefore not go in the JWT payload."
+      },
+      "difficulty": "easy",
+      "concepts": [
+        "jwt"
+      ]
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": {
+        "tr": "`https://magaza.com` üzerindeki frontend, `https://api.magaza.com` API'sine istek atınca tarayıcıda CORS hatası alıyor; aynı istek Postman'de sorunsuz çalışıyor. En doğru açıklama hangisidir?",
+        "en": "A frontend on `https://magaza.com` gets a CORS error in the browser when calling the API at `https://api.magaza.com`; the same request works fine in Postman. What is the best explanation?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "CORS bir tarayıcı güvenlik mekanizmasıdır; API, magaza.com'a izin veren Access-Control-Allow-Origin gibi header'ları göndermiyor.",
+            "en": "CORS is a browser security mechanism; the API is not sending headers such as Access-Control-Allow-Origin that allow magaza.com."
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "API sunucusu Postman isteklerini özel olarak beyaz listeye almıştır.",
+            "en": "The API server has specifically whitelisted Postman requests."
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "CORS bir sunucu güvenlik duvarıdır; isteği sunucu reddetmiştir.",
+            "en": "CORS is a server firewall; the server rejected the request."
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "İstekte JWT olmadığı için CORS hatası oluşmuştur.",
+            "en": "The CORS error occurs because the request has no JWT."
+          }
+        }
+      ],
+      "correct": [
+        "a"
+      ],
+      "explanation": {
+        "tr": "CORS'u tarayıcı uygular ve API'nin gönderdiği izin header'larına bakar; Postman ve sunucudan sunucuya isteklerde CORS kısıtı yoktur. Bu yüzden çözüm, API'nin doğru Access-Control-Allow-* header'larını dönmesidir; token eksikliği CORS değil 401 sorunudur.",
+        "en": "The browser enforces CORS by checking the permission headers the API sends; Postman and server-to-server calls have no CORS restriction. The fix is for the API to return the right Access-Control-Allow-* headers; a missing token is a 401 problem, not CORS."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "cors"
+      ]
+    },
+    {
+      "id": "q4",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Derse göre bir API Gateway hangi sorumlulukları üstlenebilir? (Birden fazla seçin)",
+        "en": "According to the lesson, which responsibilities can an API Gateway take on? (Select all that apply)"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Kimlik doğrulama ve token kontrolü",
+            "en": "Authentication and token checks"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Rate limiting",
+            "en": "Rate limiting"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "İstekleri doğru arka uç servisine yönlendirme",
+            "en": "Routing requests to the right backend service"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Ürün ve sipariş verisini kalıcı olarak saklama",
+            "en": "Persistently storing product and order data"
+          }
+        }
+      ],
+      "correct": [
+        "a",
+        "b",
+        "c"
+      ],
+      "explanation": {
+        "tr": "Gateway istemci ile servisler arasındaki merkezi giriş noktasıdır: token kontrolü, rate limiting, CORS, yönlendirme, loglama, sürümleme gibi kesişen işleri üstlenir. Verinin saklanması ise arkadaki servislerin ve veritabanlarının işidir.",
+        "en": "The gateway is the central entry point between clients and services: it handles cross-cutting concerns such as token checks, rate limiting, CORS, routing, logging and versioning. Storing data is the job of the services and databases behind it."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "api-gateway"
+      ]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "Aynı gövdeyle on kez gönderildiğinde sistemin nihai durumunu değiştirmeyen (idempotent) istek hangisidir?",
+        "en": "Which request, sent ten times with the same body, leaves the system's final state unchanged (idempotent)?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "PUT /products/12",
+            "en": "PUT /products/12"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "POST /api/orders",
+            "en": "POST /api/orders"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "POST /api/products",
+            "en": "POST /api/products"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Hiçbiri; HTTP'de her tekrar yeni kayıt oluşturur",
+            "en": "None; every repeat creates a new record in HTTP"
+          }
+        }
+      ],
+      "correct": [
+        "a"
+      ],
+      "explanation": {
+        "tr": "PUT belirli bir kaynağı tamamen yazar; aynı veri on kez gönderilse de ürünün son hâli aynıdır. POST ise her tekrarda ayrı sipariş veya ürün oluşturabilir; bu yüzden kritik POST'larda Idempotency-Key kullanılır.",
+        "en": "PUT fully writes a specific resource; sending the same data ten times still leaves the product in the same final state. POST can create a separate order or product on every repeat, which is why critical POSTs use an Idempotency-Key."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "idempotency",
+        "http-methods"
+      ]
+    }
+  ]
+}

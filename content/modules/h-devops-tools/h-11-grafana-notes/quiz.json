@@ -1,0 +1,255 @@
+{
+  "id": "h-11-grafana-notes-quiz",
+  "title": {
+    "tr": "Grafana Quiz",
+    "en": "Grafana Quiz"
+  },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Grafana'nın veriyle ilişkisini en doğru anlatan ifade hangisidir?",
+        "en": "Which statement best describes Grafana's relationship with data?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Veriyi Prometheus, Loki gibi veri kaynaklarından sorgular ve görselleştirir; kendisi veri toplamaz ve saklamaz.",
+            "en": "It queries data from data sources such as Prometheus and Loki and visualizes it; it does not collect or store data itself."
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Sunuculardan metrikleri kendisi toplar ve kendi zaman serisi veritabanında saklar.",
+            "en": "It collects metrics from servers itself and stores them in its own time-series database."
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "Prometheus'un yerine geçer; ayrı bir veri kaynağına ihtiyaç duymaz.",
+            "en": "It replaces Prometheus and needs no separate data source."
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Yalnızca logları saklar; metrik ve trace için başka bir arayüz gerekir.",
+            "en": "It only stores logs; metrics and traces need a different UI."
+          }
+        }
+      ],
+      "correct": [
+        "a"
+      ],
+      "explanation": {
+        "tr": "Notlar açıkça 'Grafana veri toplamaz ve saklamaz' der: veriyi kaynaklardan sorgular ve dashboard'larda gösterir. Toplama ve saklama Prometheus, Loki, Tempo gibi kaynakların işidir; Grafana metrik, log ve trace'i birlikte görselleştirebilir.",
+        "en": "The notes state plainly that Grafana does not collect or store data: it queries sources and shows the data in dashboards. Collecting and storing is the job of sources like Prometheus, Loki and Tempo; Grafana can visualize metrics, logs and traces together."
+      },
+      "difficulty": "easy",
+      "concepts": [
+        "data-source"
+      ]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "Bir panelde `rate(http_requests_total[5m])` PromQL sorgusu ne döndürür?",
+        "en": "What does the PromQL query `rate(http_requests_total[5m])` return in a panel?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Son 5 dakika üzerinden hesaplanan saniye başına istek sayısını",
+            "en": "Requests per second calculated over the last 5 minutes"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Son 5 dakikada gelen toplam istek sayısını",
+            "en": "The total number of requests received in the last 5 minutes"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "Ayakta olan hedeflerin sayısını",
+            "en": "The number of targets that are up"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "İsteklerin ortalama yanıt süresini",
+            "en": "The average response time of requests"
+          }
+        }
+      ],
+      "correct": [
+        "a"
+      ],
+      "explanation": {
+        "tr": "`rate(...[5m])` son 5 dakikalık pencerede saniye başına artış hızını verir. Toplam sayı değil, hızdır; aktif hedef sayısı `count(up)` ile, gecikme ise ayrı bir metrikle ölçülür.",
+        "en": "`rate(...[5m])` gives the per-second rate over the last 5-minute window. It is a rate, not a total; the number of active targets comes from `count(up)`, and latency is a separate metric."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "promql"
+      ]
+    },
+    {
+      "id": "q3",
+      "type": "order",
+      "prompt": {
+        "tr": "Grafana'da bir uyarının veriden ekibe ulaşana kadar izlediği akışı doğru sıraya koyun.",
+        "en": "Put the steps an alert follows in Grafana, from data to the team, in the correct order."
+      },
+      "options": [
+        {
+          "id": "cp",
+          "text": {
+            "tr": "Contact point: uyarı yapılandırılmış kanala (ör. Slack) gönderilir",
+            "en": "Contact point: the alert is sent to the configured channel (e.g. Slack)"
+          }
+        },
+        {
+          "id": "rule",
+          "text": {
+            "tr": "Alert rule: Grafana veriyi sorgular ve kuralı değerlendirir",
+            "en": "Alert rule: Grafana queries the data and evaluates the rule"
+          }
+        },
+        {
+          "id": "ds",
+          "text": {
+            "tr": "Data source: metrik, log ve trace kaynaklardan toplanır",
+            "en": "Data source: metrics, logs and traces are collected from sources"
+          }
+        },
+        {
+          "id": "policy",
+          "text": {
+            "tr": "Notification policy: uyarı etiket ve önem derecesine göre yönlendirilir",
+            "en": "Notification policy: the alert is routed by labels and severity"
+          }
+        },
+        {
+          "id": "cond",
+          "text": {
+            "tr": "Alert condition: koşul belirlenen süre boyunca doğru kalır",
+            "en": "Alert condition: the condition stays true for the configured duration"
+          }
+        }
+      ],
+      "correct": [
+        "ds",
+        "rule",
+        "cond",
+        "policy",
+        "cp"
+      ],
+      "explanation": {
+        "tr": "Akış: veri kaynağı → kuralın değerlendirilmesi → koşulun süre boyunca sağlanması → politikanın uyarıyı yönlendirmesi → contact point'e gönderim. Politika, koşul tetiklenmeden yönlendirme yapamaz; contact point de en sondaki teslim noktasıdır.",
+        "en": "The flow is: data source → rule evaluation → condition holding for the duration → policy routing the alert → delivery to the contact point. A policy cannot route before the condition fires, and the contact point is the final delivery target."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "alert-rule",
+        "notification-policy"
+      ]
+    },
+    {
+      "id": "q4",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Grafana uyarı bileşenleriyle ilgili hangi ifadeler doğrudur? (Birden fazla seçin)",
+        "en": "Which statements about Grafana alerting components are correct? (Select all that apply)"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Alert rule neyin izleneceğini ve ne zaman uyarı verileceğini tanımlar.",
+            "en": "An alert rule defines what to monitor and when to alert."
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Notification policy uyarıları etiket, önem derecesi ve gruplama kurallarına göre contact point'lere yönlendirir.",
+            "en": "A notification policy routes alerts to contact points based on labels, severity and grouping rules."
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "Contact point, uyarının hangi eşikte tetikleneceğine karar verir.",
+            "en": "A contact point decides at which threshold the alert fires."
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Notification policy, eşik değerini ve For süresini tanımlar.",
+            "en": "A notification policy defines the threshold value and the For duration."
+          }
+        }
+      ],
+      "correct": [
+        "a",
+        "b"
+      ],
+      "explanation": {
+        "tr": "Kural 'ne ve ne zaman' sorusunu, politika 'kime ve nasıl yönlendirilecek' sorusunu cevaplar. Eşik ve For süresi kuralın koşuluna aittir; contact point yalnızca bildirimin nereye (e-posta, Slack, webhook) gideceğini belirler.",
+        "en": "The rule answers 'what and when', the policy answers 'whom and how to route'. Threshold and For duration belong to the rule's condition; a contact point only defines where the notification goes (email, Slack, webhook)."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "alert-rule",
+        "contact-point"
+      ]
+    },
+    {
+      "id": "q5",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Grafana RBAC'de Viewer rolündeki bir kullanıcı dashboard oluşturup düzenleyebilir.",
+        "en": "In Grafana RBAC, a user with the Viewer role can create and edit dashboards."
+      },
+      "options": [
+        {
+          "id": "t",
+          "text": {
+            "tr": "Doğru",
+            "en": "True"
+          }
+        },
+        {
+          "id": "f",
+          "text": {
+            "tr": "Yanlış",
+            "en": "False"
+          }
+        }
+      ],
+      "correct": [
+        "f"
+      ],
+      "explanation": {
+        "tr": "Yanlış. Viewer yalnızca dashboard ve panelleri görüntüler; dashboard oluşturma ve düzenleme Editor rolünün yetkisidir. Kullanıcı, veri kaynağı ve ayar yönetimi ise Admin'e aittir.",
+        "en": "False. A Viewer can only view dashboards and panels; creating and editing dashboards is the Editor role's permission. Managing users, data sources and settings belongs to Admin."
+      },
+      "difficulty": "easy",
+      "concepts": [
+        "rbac"
+      ]
+    }
+  ]
+}

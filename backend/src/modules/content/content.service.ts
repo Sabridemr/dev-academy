@@ -88,11 +88,19 @@ export class ContentService {
   async listModules(userId?: string): Promise<ModuleSummary[]> {
     let modules = await this.redis.getJson<ModuleSummary[]>(CacheKeys.modules);
     if (!modules) {
-      const rows = await this.prisma.module.findMany({
-        orderBy: { order: 'asc' },
-        include: { _count: { select: { lessons: { where: { publishedVersionId: { not: null } } } } } },
-      });
-      modules = rows.map((m) => toModuleSummary(m));
+      const [rows, published] = await Promise.all([
+        this.prisma.module.findMany({
+          orderBy: { order: 'asc' },
+          include: { _count: { select: { lessons: { where: { publishedVersionId: { not: null } } } } } },
+        }),
+        this.prisma.lesson.findMany({
+          where: { publishedVersionId: { not: null } },
+          select: { moduleId: true, publishedVersion: { select: { durationMinutes: true } } },
+        }),
+      ]);
+      const minutes = new Map<string, number>();
+      for (const l of published) minutes.set(l.moduleId, (minutes.get(l.moduleId) ?? 0) + (l.publishedVersion?.durationMinutes ?? 0));
+      modules = rows.map((m) => toModuleSummary(m, undefined, minutes.get(m.id) ?? 0));
       await this.redis.setJson(CacheKeys.modules, modules, CONTENT_TTL);
     }
     return userId ? this.attachModuleProgress(modules, userId) : modules;
@@ -109,7 +117,8 @@ export class ContentService {
         },
       });
       if (!module) throw new NotFoundException('Modül bulunamadı');
-      detail = { ...toModuleSummary(module, module.lessons.length), lessons: module.lessons.map(toLessonSummary) };
+      const totalMinutes = module.lessons.reduce((sum, l) => sum + (l.publishedVersion?.durationMinutes ?? 0), 0);
+      detail = { ...toModuleSummary(module, module.lessons.length, totalMinutes), lessons: module.lessons.map(toLessonSummary) };
       await this.redis.setJson(key, detail, CONTENT_TTL);
     }
     if (userId) {

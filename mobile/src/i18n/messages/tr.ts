@@ -65,6 +65,7 @@ export const tr = {
     hasAnimation: 'Animasyon',
     hasInteractive: 'Simülatör',
     hasQuiz: 'Quiz',
+    format: { infographic: 'İnfografik', 'pdf-guide': 'PDF rehberi' },
     download: 'Çevrimdışı için indir',
     downloading: 'İndiriliyor…',
     downloaded: 'Çevrimdışı hazır',

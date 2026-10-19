@@ -7,8 +7,8 @@ title:
   tr: "Amazon Ölçeğinde E-Ticaret Sistem Tasarımı: Dayanıklılık, Mesajlaşma ve İşletim"
   en: "Amazon-Scale E-Commerce System Design: Resilience, Messaging and Operations"
 summary:
-  tr: Güvenilirlik desenlerini, güvenliği, DevOps ve gözlemlenebilirliği, kampanya günü hazırlığını, kapasite hesabını, Kafka, RabbitMQ ve SQS ile mesajlaşmayı, servis iletişimini, Kubernetes'i, yardımcı servisleri ve kendi projen için yol haritasını ele alır.
-  en: Covers reliability patterns, security, DevOps and observability, campaign-day preparation, capacity estimation, messaging with Kafka, RabbitMQ and SQS, service communication, Kubernetes, supporting services and a roadmap for your own project.
+  tr: "Dayanıklılık desenleri, Kafka/RabbitMQ, kapasite hesabı ve Kubernetes ile sistemi ayakta tutmayı öğren."
+  en: "Keep systems running with resilience patterns, Kafka/RabbitMQ messaging, capacity math and Kubernetes."
 durationMinutes: 12
 level: advanced
 tags: [system-design, kafka, rabbitmq, kubernetes, observability, reliability]
@@ -168,6 +168,9 @@ Aynı mesaj iki kez gelebilir (idempotent tüketici yaz). Mesajların sırası b
 
 :::callout{tone="info" title="Özet:"}
 Amazon'u Amazon yapan tek bir teknoloji değil; bağımsız ekipler, bağımsız servisler, her şeyin ölçülmesi ve "hata olacak" varsayımıyla tasarım yapılmasıdır. Kritik veride (stok, para) tutarlılık, geri kalan her yerde hız ve erişilebilirlik seçilir.
+:::
+
+:::quiz{src="quiz.json"}
 :::
 
 ## Orijinal PDF sayfaları

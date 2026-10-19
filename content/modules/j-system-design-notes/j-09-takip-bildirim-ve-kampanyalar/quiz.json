@@ -1,0 +1,246 @@
+{
+  "id": "j-09-takip-bildirim-ve-kampanyalar-quiz",
+  "title": {
+    "tr": "Takip, Bildirim ve Kampanyalar Quiz",
+    "en": "Tracking, Notifications and Promotions Quiz"
+  },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Birden fazla WebSocket sunucusu varken kurye konumu A sunucusuna geliyor, kullanıcı ise B sunucusuna bağlı. Güncelleme kullanıcıya nasıl ulaşır?",
+        "en": "With several WebSocket servers, a courier's location arrives at server A while the user is connected to server B. How does the update reach the user?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Kullanıcı her 5 saniyede bir A sunucusunu polling ile sorgular",
+            "en": "The user polls server A every 5 seconds"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Redis PubSub veya Kafka mesajı tüm sunuculara dağıtır; kullanıcının bağlı olduğu B sunucusu iletir",
+            "en": "Redis PubSub or Kafka distributes the message to all servers and server B, where the user is connected, delivers it"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "Yük dengeleyici, bağlantıyı A sunucusuna taşır",
+            "en": "The load balancer moves the connection to server A"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Konum önce PostgreSQL'e yazılır, B sunucusu tabloyu tarar",
+            "en": "The location is written to PostgreSQL first and server B scans the table"
+          }
+        }
+      ],
+      "correct": [
+        "b"
+      ],
+      "explanation": {
+        "tr": "PubSub, mesajı tüm WebSocket sunucularına yayar ve ilgili kullanıcıya bağlı olan sunucu iletir. Polling ve veritabanı taraması gecikme ve yük getirir; yük dengeleyici açık bağlantıları sunucular arasında taşımaz.",
+        "en": "PubSub fans the message out to all WebSocket servers and the one holding the user's connection delivers it. Polling and database scanning add latency and load; a load balancer does not move open connections between servers."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "pubsub",
+        "websocket"
+      ]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "SSE (Server-Sent Events) için hangisi doğrudur?",
+        "en": "Which statement about SSE (Server-Sent Events) is correct?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Kalıcı ve çift yönlü bir bağlantıdır",
+            "en": "It is a persistent, bidirectional connection"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "HTTP üzerinde sunucudan istemciye tek yönlü bir akıştır",
+            "en": "It is a one-way server-to-client stream over HTTP"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "İstemcinin her X saniyede 'yeni bir şey var mı?' diye sormasıdır",
+            "en": "It is the client asking 'anything new?' every X seconds"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Yeni veri gelene kadar açık bekleyen tek seferlik bir istektir",
+            "en": "It is a single request held open until new data arrives"
+          }
+        }
+      ],
+      "correct": [
+        "b"
+      ],
+      "explanation": {
+        "tr": "SSE, HTTP üzerinde sunucudan istemciye tek yönlü akıştır; basittir ama tek yönlüdür. Çift yönlü kalıcı bağlantı WebSocket'tir, periyodik sorma polling, açık bekleyen istek ise long polling'dir.",
+        "en": "SSE is a one-way server-to-client stream over HTTP; simple but unidirectional. A persistent bidirectional connection is WebSocket, periodic asking is polling, and a request held open is long polling."
+      },
+      "difficulty": "easy",
+      "concepts": [
+        "server-sent-events",
+        "websocket"
+      ]
+    },
+    {
+      "id": "q3",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Başarısız bir push bildirimi için derste önerilen hata yönetimi yaklaşımları hangileridir? (Birden fazla seçin)",
+        "en": "Which failure-handling approaches does the lesson recommend for a failed push notification? (Select all that apply)"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "1, 2, 4, 8 sn gibi üstel geri çekilmeyle (jitter ile) yeniden denemek",
+            "en": "Retry with exponential backoff such as 1, 2, 4, 8 s (with jitter)"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Belirli sayıda denemeden sonra hâlâ başarısız olan mesajı Dead Letter Queue'ya taşımak",
+            "en": "Move a message that still fails after a number of attempts to a Dead Letter Queue"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "Push başarısızsa SMS gibi alternatif bir kanala geçmek",
+            "en": "Fall back to another channel such as SMS if push fails"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Teslim edilene kadar her saniye sabit aralıkla sınırsız yeniden denemek",
+            "en": "Retry at a fixed one-second interval indefinitely until delivered"
+          }
+        }
+      ],
+      "correct": [
+        "a",
+        "b",
+        "c"
+      ],
+      "explanation": {
+        "tr": "Ders üstel geri çekilme, DLQ ve alternatif kanalı önerir. Her saniye sınırsız yeniden denemek, aşırı yüklenmiş bir servisi tamamen çökertebilir; üstel geri çekilme ve jitter bu yükü yaymak için vardır.",
+        "en": "The lesson recommends exponential backoff, a DLQ and channel fallback. Retrying every second indefinitely can completely crash an overloaded service; exponential backoff with jitter exists to spread that load."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "exponential-backoff",
+        "dead-letter-queue"
+      ]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Dead Letter Queue'ya taşınan mesajlar ana kuyrukta kalmaya devam eder ve diğer mesajların işlenmesini bekletir.",
+        "en": "Messages moved to the Dead Letter Queue stay in the main queue and block the processing of other messages."
+      },
+      "options": [
+        {
+          "id": "t",
+          "text": {
+            "tr": "Doğru",
+            "en": "True"
+          }
+        },
+        {
+          "id": "f",
+          "text": {
+            "tr": "Yanlış",
+            "en": "False"
+          }
+        }
+      ],
+      "correct": [
+        "f"
+      ],
+      "explanation": {
+        "tr": "Yanlış. DLQ, kalıcı olarak başarısız mesajların taşındığı ayrı bir kuyruktur; amacı ana kuyruğu tıkamamaktır. Bu mesajları bir geliştirici sonradan inceler.",
+        "en": "False. A DLQ is a separate queue for permanently failing messages; its purpose is to keep the main queue from being blocked. A developer inspects those messages later."
+      },
+      "difficulty": "easy",
+      "concepts": [
+        "dead-letter-queue"
+      ]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "600 TL'lik siparişe '%20 indirim, en fazla 100 TL' kuponu uygulanırsa indirim ne olur?",
+        "en": "A '20% off, up to 100 TL' coupon is applied to a 600 TL order. What is the discount?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "120 TL",
+            "en": "120 TL"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "100 TL",
+            "en": "100 TL"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "20 TL",
+            "en": "20 TL"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "480 TL",
+            "en": "480 TL"
+          }
+        }
+      ],
+      "correct": [
+        "b"
+      ],
+      "explanation": {
+        "tr": "indirim = min(600 × 20 / 100, 100) = min(120, 100) = 100 TL. 120 TL sınır uygulanmadan hesaplanan tutardır; min fonksiyonu indirimin maksimum sınırı aşmasını engeller.",
+        "en": "discount = min(600 × 20 / 100, 100) = min(120, 100) = 100 TL. 120 TL is the amount before applying the cap; the min function prevents the discount from exceeding the maximum."
+      },
+      "difficulty": "easy",
+      "concepts": [
+        "coupon-validation"
+      ]
+    }
+  ]
+}

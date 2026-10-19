@@ -1,0 +1,111 @@
+{
+  "id": "j-02-system-design-notes-part-1-quiz",
+  "title": { "tr": "Sistem Tasarımı Temelleri Quiz", "en": "System Design Fundamentals Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Bir e-ticaret sistemi için toplanan gereksinimlerden hangisi fonksiyonel olmayan (non-functional) bir gereksinimdir?",
+        "en": "Which of the following requirements gathered for an e-commerce system is a non-functional requirement?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Kullanıcı ürünleri arayabilmeli", "en": "The user can search products" } },
+        { "id": "b", "text": { "tr": "Kullanıcı sepete ürün ekleyebilmeli", "en": "The user can add items to the cart" } },
+        { "id": "c", "text": { "tr": "Yanıt süresi 200 ms'nin altında olmalı", "en": "Response time should be under 200 ms" } },
+        { "id": "d", "text": { "tr": "Kullanıcı sipariş verip ödeme yapabilmeli", "en": "The user can place an order and make a payment" } }
+      ],
+      "correct": ["c"],
+      "explanation": {
+        "tr": "Fonksiyonel olmayan gereksinimler sistemin ne kadar iyi çalıştığını (performans, ölçeklenebilirlik, güvenlik) tanımlar; 200 ms yanıt süresi bir performans hedefidir. Arama, sepete ekleme ve sipariş verme ise sistemin ne yaptığını anlatan, kullanıcıya görünen fonksiyonel özelliklerdir.",
+        "en": "Non-functional requirements define how well the system works (performance, scalability, security); a 200 ms response time is a performance target. Searching, adding to cart and placing an order describe what the system does, so they are user-visible functional features."
+      },
+      "difficulty": "easy",
+      "concepts": ["non-functional-requirements", "functional-requirements"]
+    },
+    {
+      "id": "q2",
+      "type": "order",
+      "prompt": {
+        "tr": "Modern ölçeklenebilir bir web uygulamasında kullanıcının isteği hangi bileşenlerden hangi sırayla geçer? Doğru sıraya koyun.",
+        "en": "In a modern scalable web application, in which order does a user's request pass through these components? Put them in the correct order."
+      },
+      "options": [
+        { "id": "lb", "text": { "tr": "Yük dengeleyici", "en": "Load balancer" } },
+        { "id": "db", "text": { "tr": "Veritabanı", "en": "Database" } },
+        { "id": "dns", "text": { "tr": "DNS", "en": "DNS" } },
+        { "id": "app", "text": { "tr": "Uygulama sunucusu", "en": "Application server" } },
+        { "id": "cdn", "text": { "tr": "CDN", "en": "CDN" } }
+      ],
+      "correct": ["dns", "cdn", "lb", "app", "db"],
+      "explanation": {
+        "tr": "Önce DNS alan adını IP'ye çevirir, ardından statik içerik en yakın CDN ucundan sunulur, yük dengeleyici isteği sağlıklı bir uygulama sunucusuna yönlendirir, uygulama sunucusu iş mantığını çalıştırır ve gerekirse veritabanından okur ya da yazar. Yanıt aynı yoldan geri döner.",
+        "en": "First DNS resolves the domain to an IP, then static content is served from the nearest CDN edge, the load balancer routes the request to a healthy application server, which runs the business logic and reads from or writes to the database if needed. The response travels back the same path."
+      },
+      "difficulty": "medium",
+      "concepts": ["cdn", "load-balancing"]
+    },
+    {
+      "id": "q3",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Bir tabloya indeks eklemenin dezavantajları hangileridir? Tüm doğru seçenekleri işaretleyin.",
+        "en": "What are the drawbacks of adding an index to a table? Select all that apply."
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Ek depolama alanı tüketir", "en": "It consumes additional storage space" } },
+        { "id": "b", "text": { "tr": "INSERT, UPDATE ve DELETE işlemlerini yavaşlatır, çünkü indeksin de güncellenmesi gerekir", "en": "It slows down INSERT, UPDATE and DELETE, because the index must be updated too" } },
+        { "id": "c", "text": { "tr": "SELECT sorgularını yavaşlatır, çünkü veritabanı önce indeksi okumak zorundadır", "en": "It slows down SELECT queries, because the database must read the index first" } },
+        { "id": "d", "text": { "tr": "Çok fazla indeks genel performansı düşürebilir", "en": "Too many indexes can degrade overall performance" } }
+      ],
+      "correct": ["a", "b", "d"],
+      "explanation": {
+        "tr": "İndeks ek depolama ister, her yazma işleminde güncellenmesi gerektiği için INSERT/UPDATE/DELETE'i yavaşlatır ve aşırı indeksleme performansı düşürür. SELECT sorgularını ise yavaşlatmaz, tam tablo taramasını önleyerek hızlandırır; indeksin asıl amacı budur.",
+        "en": "An index needs extra storage, slows INSERT/UPDATE/DELETE because it must be updated on every write, and over-indexing degrades performance. It does not slow down SELECT queries; it speeds them up by avoiding a full table scan, which is its whole purpose."
+      },
+      "difficulty": "medium",
+      "concepts": ["database-indexing"]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "İstemci oturumunu sunucuda saklayan durumlu (stateful) sunucular, durumsuz (stateless) sunuculara göre yatay olarak daha kolay ölçeklenir.",
+        "en": "Stateful servers, which store the client session on the server, are easier to scale horizontally than stateless servers."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "Tam tersi: durumsuz sunucularda her istek bağımsızdır, bu yüzden yük dengeleyici isteği herhangi bir sunucuya gönderebilir ve sunucu eklemek kolaydır. Durumlu sunucularda istekler önceki duruma bağlı olduğundan yatay ölçekleme zorlaşır.",
+        "en": "The opposite is true: with stateless servers every request is independent, so the load balancer can send it to any server and adding servers is easy. With stateful servers requests depend on previous state, which makes horizontal scaling harder."
+      },
+      "difficulty": "easy",
+      "concepts": ["horizontal-scaling"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "Cache-Aside kalıbında uygulama Redis'te aradığı anahtarı bulamazsa (cache miss) ne olur?",
+        "en": "In the Cache-Aside pattern, what happens when the application does not find the requested key in Redis (a cache miss)?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Uygulama kullanıcıya hata döner ve isteği daha sonra tekrar denemesini ister", "en": "The application returns an error and asks the user to retry later" } },
+        { "id": "b", "text": { "tr": "Uygulama veriyi veritabanından okur, kullanıcıya döner ve bir TTL ile önbelleğe yazar", "en": "The application reads the data from the database, returns it to the user and stores it in the cache with a TTL" } },
+        { "id": "c", "text": { "tr": "Redis, eksik veriyi veritabanından kendiliğinden çekip uygulamaya iletir", "en": "Redis automatically fetches the missing data from the database and passes it to the application" } },
+        { "id": "d", "text": { "tr": "İstek CDN'e yönlendirilir ve veri en yakın uç sunucudan sunulur", "en": "The request is redirected to the CDN and served from the nearest edge server" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Cache-Aside'da önbelleği yöneten uygulamadır: ıskada veriyi veritabanından okur, kullanıcıya döner ve TTL ile önbelleğe yazar; sonraki istek önbellekten (HIT) karşılanır. Redis veritabanına kendisi gitmez, ıska da bir hata ya da CDN yönlendirmesi değildir.",
+        "en": "In Cache-Aside the application manages the cache: on a miss it reads from the database, returns the data and stores it in the cache with a TTL, so the next request is a HIT. Redis does not query the database by itself, and a miss is neither an error nor a CDN redirect."
+      },
+      "difficulty": "medium",
+      "concepts": ["caching"]
+    }
+  ]
+}

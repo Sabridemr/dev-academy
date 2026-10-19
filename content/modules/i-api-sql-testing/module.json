@@ -9,5 +9,6 @@
     "en": "How APIs are built and called, REST design, API testing and SQL: personal notes and guides."
   },
   "icon": "route",
-  "color": "#f97316"
+  "color": "#f97316",
+  "group": "software"
 }

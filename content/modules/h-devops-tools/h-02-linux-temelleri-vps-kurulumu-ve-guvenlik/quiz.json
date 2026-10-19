@@ -1,0 +1,110 @@
+{
+  "id": "h-02-linux-temelleri-vps-kurulumu-ve-guvenlik-quiz",
+  "title": { "tr": "Linux Temelleri ve VPS Güvenliği Quiz", "en": "Linux Basics and VPS Security Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "order",
+      "prompt": {
+        "tr": "Yeni bir VPS'te kendinizi dışarıda bırakmadan güvenliği sıkılaştırmak için adımları doğru sıraya koyun.",
+        "en": "Put the steps for hardening a new VPS without locking yourself out in the correct order."
+      },
+      "options": [
+        { "id": "sshd", "text": { "tr": "sshd_config'de PermitRootLogin no ve PasswordAuthentication no yapıp SSH'ı yeniden başlatmak", "en": "Set PermitRootLogin no and PasswordAuthentication no in sshd_config and restart SSH" } },
+        { "id": "user", "text": { "tr": "deploy kullanıcısını oluşturup authorized_keys dosyasını ona kopyalamak", "en": "Create the deploy user and copy authorized_keys to it" } },
+        { "id": "ufw", "text": { "tr": "UFW'de OpenSSH, 80 ve 443'e izin verip `ufw enable` çalıştırmak", "en": "Allow OpenSSH, 80 and 443 in UFW and run `ufw enable`" } },
+        { "id": "test", "text": { "tr": "Yeni bir terminalde `ssh deploy@IP` ile girişi test etmek", "en": "Test logging in with `ssh deploy@IP` in a new terminal" } }
+      ],
+      "correct": ["user", "test", "sshd", "ufw"],
+      "explanation": {
+        "tr": "Önce anahtarlı bir yönetici kullanıcı hazırlanır ve girişi test edilir; ancak bundan sonra root ve şifreli giriş kapatılır. Test etmeden root girişini kapatırsanız erişiminiz kesilebilir. UFW de SSH'a izin verildikten sonra etkinleştirilir.",
+        "en": "First an admin user with a key is prepared and its login is tested; only then are root and password logins disabled. Disabling root login before testing can lock you out. UFW is enabled only after SSH has been allowed."
+      },
+      "difficulty": "medium",
+      "concepts": ["ssh-anahtari", "ufw"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "Uzak sunucuda `sudo ufw default deny incoming` ve ardından `sudo ufw enable` çalıştırdınız ama `ufw allow OpenSSH` yapmayı unuttunuz. Ne olur?",
+        "en": "On a remote server you ran `sudo ufw default deny incoming` and then `sudo ufw enable`, but forgot `ufw allow OpenSSH`. What happens?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "UFW mevcut SSH oturumunu algılayıp 22. portu otomatik açar", "en": "UFW detects the current SSH session and opens port 22 automatically" } },
+        { "id": "b", "text": { "tr": "Yalnızca 80 ve 443 kapanır; SSH her zaman muaftır", "en": "Only 80 and 443 are closed; SSH is always exempt" } },
+        { "id": "c", "text": { "tr": "Gelen SSH bağlantıları engellenir ve sunucuya erişiminiz kesilir", "en": "Incoming SSH connections are blocked and you lose access to the server" } },
+        { "id": "d", "text": { "tr": "Fail2ban devreye girip yalnızca sizin IP'nize izin verir", "en": "Fail2ban steps in and allows only your IP" } }
+      ],
+      "correct": ["c"],
+      "explanation": {
+        "tr": "Varsayılan kural tüm gelen bağlantıları reddeder; SSH için açık izin yoksa 22. port da kapanır. Ders bu yüzden `ufw enable` öncesi SSH'a izin vermeyi şart koşar. UFW SSH'ı kendiliğinden muaf tutmaz; Fail2ban ise izin vermez, kaba kuvvet deneyen IP'leri engeller.",
+        "en": "The default rule denies all incoming connections; without an explicit SSH rule, port 22 is closed too. That is why the lesson requires allowing SSH before `ufw enable`. UFW does not exempt SSH on its own, and Fail2ban does not grant access — it bans IPs that try brute force."
+      },
+      "difficulty": "easy",
+      "concepts": ["ufw"]
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": {
+        "tr": "`chmod 600 .env` çalıştırdıktan sonra `ls -l .env` çıktısında izinler nasıl görünür ve bu neden uygundur?",
+        "en": "After `chmod 600 .env`, how do the permissions appear in `ls -l .env`, and why is that appropriate?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "`-rw-r--r--`; herkes okuyabilir ama yalnızca sahip yazabilir", "en": "`-rw-r--r--`; everyone can read but only the owner can write" } },
+        { "id": "b", "text": { "tr": "`-rw-------`; yalnızca sahip okuyup yazabilir, gizli değerler başkasına görünmez", "en": "`-rw-------`; only the owner can read and write, so secrets are hidden from others" } },
+        { "id": "c", "text": { "tr": "`-rwx------`; sahip dosyayı çalıştırabilir, diğerleri erişemez", "en": "`-rwx------`; the owner can execute the file, others have no access" } },
+        { "id": "d", "text": { "tr": "`----rw----`; yalnızca grup okuyup yazabilir", "en": "`----rw----`; only the group can read and write" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "6 = r(4)+w(2) sahip için, 0 ise grup ve diğerleri için hiç izin yok demektir: `-rw-------`. `.env` gibi gizli dosyalar için doğru seçim budur. `-rw-r--r--` 644'tür (a), `rwx` 7 olurdu (c), ilk rakam her zaman sahibe aittir (d).",
+        "en": "6 = r(4)+w(2) for the owner, and 0 means no permissions for group and others: `-rw-------`. That is the right choice for secret files like `.env`. `-rw-r--r--` is 644 (a), `rwx` would be 7 (c), and the first digit always belongs to the owner (d)."
+      },
+      "difficulty": "easy",
+      "concepts": ["dosya-izinleri"]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "`ssh-keygen -t ed25519` sonrası VPS paneline yapıştırılması gereken anahtar `~/.ssh/id_ed25519` dosyasının içeriğidir.",
+        "en": "After `ssh-keygen -t ed25519`, the key to paste into the VPS panel is the content of `~/.ssh/id_ed25519`."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "`id_ed25519` özel anahtardır ve asla paylaşılmaz. Panele yapıştırılan, `.pub` uzantılı açık anahtardır (`cat ~/.ssh/id_ed25519.pub`).",
+        "en": "`id_ed25519` is the private key and must never be shared. What you paste into the panel is the public key with the `.pub` extension (`cat ~/.ssh/id_ed25519.pub`)."
+      },
+      "difficulty": "easy",
+      "concepts": ["ssh-anahtari"]
+    },
+    {
+      "id": "q5",
+      "type": "multiple",
+      "prompt": {
+        "tr": "systemd ile servis yönetimi hakkında hangi ifadeler doğrudur? (Birden fazla seçin)",
+        "en": "Which statements about managing services with systemd are correct? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "`systemctl reload nginx` ayarları kesinti olmadan yeniler", "en": "`systemctl reload nginx` refreshes the configuration without downtime" } },
+        { "id": "b", "text": { "tr": "`systemctl enable nginx` servisin açılışta otomatik başlamasını sağlar", "en": "`systemctl enable nginx` makes the service start automatically at boot" } },
+        { "id": "c", "text": { "tr": "`systemctl disable nginx` paketi sistemden kaldırır", "en": "`systemctl disable nginx` removes the package from the system" } },
+        { "id": "d", "text": { "tr": "Bir servisin loglarını görmek için `systemctl logs nginx` kullanılır", "en": "`systemctl logs nginx` is used to view a service's logs" } }
+      ],
+      "correct": ["a", "b"],
+      "explanation": {
+        "tr": "`reload` kesintisiz ayar yenileme, `enable` açılışta otomatik başlatmadır. `disable` yalnızca otomatik başlatmayı kapatır; paketi kaldırmak `apt remove` işidir (c). Servis logları journald'dadır ve `journalctl -u nginx` ile okunur (d).",
+        "en": "`reload` refreshes config without downtime and `enable` starts the service at boot. `disable` only turns off auto-start; removing the package is `apt remove`'s job (c). Service logs live in journald and are read with `journalctl -u nginx` (d)."
+      },
+      "difficulty": "medium",
+      "concepts": ["systemd"]
+    }
+  ]
+}

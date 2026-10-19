@@ -7,6 +7,7 @@ import {
   Boxes,
   Brain,
   Briefcase,
+  Container,
   Database,
   Layers,
   Network,
@@ -18,12 +19,10 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import type { LearningPathSummary, ModuleSummary } from '@devacademy/shared';
-import { parseScene } from '@devacademy/shared';
-import exampleScene from '@devacademy/shared/examples/load-balancer-round-robin.scene.json';
 import { useI18n } from '@/i18n';
 import { useIsAuthenticated } from '@/lib/auth-store';
 import { useProgressSummary } from '@/lib/hooks';
-import { ScenePlayer } from '../scene/ScenePlayer';
+import { SceneShowcase, type ShowcaseScene } from '../home/SceneShowcase';
 
 export const ICONS: Record<string, LucideIcon> = {
   layers: Layers,
@@ -37,16 +36,18 @@ export const ICONS: Record<string, LucideIcon> = {
   network: Network,
   briefcase: Briefcase,
   route: Route,
+  container: Container,
 };
-
-const heroScene = parseScene(exampleScene);
 
 export function HomeView({
   paths,
   modules,
+  scenes = [],
 }: {
   paths: LearningPathSummary[];
   modules: ModuleSummary[];
+  /** Vitrin animasyonları (sunucuda API'den alınır) */
+  scenes?: ShowcaseScene[];
 }) {
   const { t, tl } = useI18n();
   const authed = useIsAuthenticated();
@@ -54,8 +55,12 @@ export function HomeView({
 
   return (
     <div className="mx-auto max-w-7xl px-4 pb-16">
-      <section className="grid items-center gap-10 py-12 lg:grid-cols-2 lg:py-20">
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
+      <section className="grid items-center gap-10 py-12 lg:grid-cols-2 lg:items-start lg:py-20">
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="lg:pt-20"
+        >
           <p className="chip mb-4">{t('app.tagline')}</p>
           <h1 className="text-4xl font-bold tracking-tight md:text-5xl">{t('home.heroTitle')}</h1>
           <p className="mt-4 max-w-xl text-lg text-muted">{t('home.heroSubtitle')}</p>
@@ -77,7 +82,7 @@ export function HomeView({
             </Link>
           </div>
         </motion.div>
-        <ScenePlayer scene={heroScene} />
+        <SceneShowcase scenes={scenes} />
       </section>
 
       {paths.length > 0 && (

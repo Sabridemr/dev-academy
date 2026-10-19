@@ -1,0 +1,111 @@
+{
+  "id": "i-06-sql-notes-quiz",
+  "title": { "tr": "SQL Notları Quiz", "en": "SQL Notes Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Employees tablosu: (1, John, 10), (2, Alice, 20), (3, Bob, 30), (4, David, NULL). Departments tablosu: (10, IT), (20, HR), (30, Finance), (40, Marketing). `SELECT * FROM Employees A LEFT JOIN Departments B ON A.DeptID = B.DeptID;` sorgusunun sonucu için hangisi doğrudur?",
+        "en": "Employees table: (1, John, 10), (2, Alice, 20), (3, Bob, 30), (4, David, NULL). Departments table: (10, IT), (20, HR), (30, Finance), (40, Marketing). Which statement about the result of `SELECT * FROM Employees A LEFT JOIN Departments B ON A.DeptID = B.DeptID;` is correct?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "4 satır döner; David'in departman sütunları NULL olur, Marketing sonuçta yer almaz.", "en": "4 rows are returned; David's department columns are NULL and Marketing does not appear." } },
+        { "id": "b", "text": { "tr": "3 satır döner; eşleşmesi olmayan David sonuçtan çıkarılır.", "en": "3 rows are returned; David, who has no match, is excluded." } },
+        { "id": "c", "text": { "tr": "5 satır döner; David ve çalışanı olmayan Marketing NULL değerlerle birlikte yer alır.", "en": "5 rows are returned; both David and Marketing (which has no employees) appear with NULL values." } },
+        { "id": "d", "text": { "tr": "4 satır döner; Marketing NULL çalışan bilgisiyle yer alır, David çıkarılır.", "en": "4 rows are returned; Marketing appears with NULL employee data and David is excluded." } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "LEFT JOIN sol tablonun (Employees) tüm satırlarını ve sağdan yalnızca eşleşenleri getirir; eşleşmeyen David'in sağ taraf sütunları NULL olur. 3 satır INNER JOIN'in, 5 satır FULL OUTER JOIN'in, Marketing'i tutup David'i atan sonuç ise RIGHT JOIN'in davranışıdır.",
+        "en": "LEFT JOIN returns every row of the left table (Employees) plus only the matching rows from the right; unmatched David gets NULL right-side columns. 3 rows is INNER JOIN, 5 rows is FULL OUTER JOIN, and keeping Marketing while dropping David is RIGHT JOIN behavior."
+      },
+      "difficulty": "medium",
+      "concepts": ["sql-joins"]
+    },
+    {
+      "id": "q2",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "`SELECT * FROM Employees WHERE Email = NULL;` sorgusu, e-postası boş (NULL) olan çalışanları döndürür.",
+        "en": "The query `SELECT * FROM Employees WHERE Email = NULL;` returns the employees whose email is NULL."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "NULL bilinmeyen değer demektir; = ya da <> ile karşılaştırma UNKNOWN döner ve sorgu hiç satır getirmez. Doğru yazım `WHERE Email IS NULL` olur.",
+        "en": "NULL means an unknown value; comparing it with = or <> yields UNKNOWN, so the query returns no rows. The correct form is `WHERE Email IS NULL`."
+      },
+      "difficulty": "easy",
+      "concepts": ["where-clause"]
+    },
+    {
+      "id": "q3",
+      "type": "order",
+      "prompt": {
+        "tr": "FROM'dan sonra, SQL bu cümlecikleri hangi sırayla değerlendirir? Doğru sıraya koyun.",
+        "en": "After FROM, in which order does SQL evaluate these clauses? Put them in the correct order."
+      },
+      "options": [
+        { "id": "select", "text": { "tr": "SELECT", "en": "SELECT" } },
+        { "id": "having", "text": { "tr": "HAVING", "en": "HAVING" } },
+        { "id": "orderby", "text": { "tr": "ORDER BY", "en": "ORDER BY" } },
+        { "id": "where", "text": { "tr": "WHERE", "en": "WHERE" } },
+        { "id": "groupby", "text": { "tr": "GROUP BY", "en": "GROUP BY" } }
+      ],
+      "correct": ["where", "groupby", "having", "select", "orderby"],
+      "explanation": {
+        "tr": "Satırlar önce WHERE ile süzülür, sonra GROUP BY ile gruplanır, gruplar HAVING ile filtrelenir, ardından SELECT çalışır ve en son ORDER BY sıralar. Bu yüzden SELECT'teki takma adlar ORDER BY'da kullanılabilir ama WHERE'de kullanılamaz.",
+        "en": "Rows are first filtered by WHERE, then grouped by GROUP BY, groups are filtered by HAVING, then SELECT runs and ORDER BY sorts last. That is why SELECT aliases can be used in ORDER BY but not in WHERE."
+      },
+      "difficulty": "medium",
+      "concepts": ["group-by-having", "select-statement"]
+    },
+    {
+      "id": "q4",
+      "type": "multiple",
+      "prompt": {
+        "tr": "WHERE ve HAVING ile ilgili hangileri doğrudur? (Birden fazla seçin)",
+        "en": "Which statements about WHERE and HAVING are true? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "WHERE satırları gruplamadan önce filtreler.", "en": "WHERE filters rows before grouping." } },
+        { "id": "b", "text": { "tr": "HAVING grupları gruplamadan sonra filtreler ve aggregate fonksiyonlarla çalışır.", "en": "HAVING filters groups after grouping and works with aggregate functions." } },
+        { "id": "c", "text": { "tr": "`WHERE COUNT(*) > 3` ile çalışan sayısı 3'ten fazla olan departmanlar süzülebilir.", "en": "`WHERE COUNT(*) > 3` can be used to keep departments with more than 3 employees." } },
+        { "id": "d", "text": { "tr": "SELECT'te tanımlanan bir sütun takma adı (ör. EmpCount) HAVING içinde kullanılabilir.", "en": "A column alias defined in SELECT (e.g. EmpCount) can be used inside HAVING." } }
+      ],
+      "correct": ["a", "b"],
+      "explanation": {
+        "tr": "WHERE tek tek satırları gruplamadan önce, HAVING ise aggregate değerlere göre grupları sonra süzer. Aggregate fonksiyonlar WHERE'de kullanılamaz (bunun için `HAVING COUNT(*) > 3` yazılır) ve takma adlar HAVING'de kullanılamaz; tam ifade yazılmalıdır.",
+        "en": "WHERE filters individual rows before grouping, while HAVING filters groups afterwards based on aggregate values. Aggregate functions cannot be used in WHERE (write `HAVING COUNT(*) > 3` instead), and aliases cannot be used in HAVING; use the full expression."
+      },
+      "difficulty": "medium",
+      "concepts": ["group-by-having", "aggregate-functions"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "Maaşları 70000, 60000, 60000 ve 50000 olan dört çalışan için `DENSE_RANK() OVER (ORDER BY Salary DESC)` hangi değerleri üretir?",
+        "en": "For four employees with salaries 70000, 60000, 60000 and 50000, what values does `DENSE_RANK() OVER (ORDER BY Salary DESC)` produce?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "1, 2, 2, 3", "en": "1, 2, 2, 3" } },
+        { "id": "b", "text": { "tr": "1, 2, 2, 4", "en": "1, 2, 2, 4" } },
+        { "id": "c", "text": { "tr": "1, 2, 3, 4", "en": "1, 2, 3, 4" } },
+        { "id": "d", "text": { "tr": "Tek satır: 3 (farklı maaş sayısı)", "en": "A single row: 3 (the number of distinct salaries)" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "DENSE_RANK eşit değerlere aynı sırayı verir ve sonraki sırayı atlamaz: 1, 2, 2, 3. 1, 2, 2, 4 boşluk bırakan RANK'in, 1, 2, 3, 4 ise ROW_NUMBER'ın sonucudur; window fonksiyonları satırları GROUP BY gibi tek satıra indirmez.",
+        "en": "DENSE_RANK gives tied values the same rank without skipping the next one: 1, 2, 2, 3. 1, 2, 2, 4 is RANK (which leaves gaps) and 1, 2, 3, 4 is ROW_NUMBER; window functions do not collapse rows into one like GROUP BY."
+      },
+      "difficulty": "hard",
+      "concepts": ["window-functions"]
+    }
+  ]
+}

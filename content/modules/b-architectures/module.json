@@ -9,5 +9,6 @@
     "en": "Architectural evolution from monolith to microservices, serverless to multi-region."
   },
   "icon": "boxes",
-  "color": "#0ea5e9"
+  "color": "#0ea5e9",
+  "group": "system-design"
 }

@@ -7,8 +7,8 @@ title:
   tr: "API ve REST API: Versiyonlama, Webhook, Pagination, Dokümantasyon, Güvenlik ve Idempotency"
   en: "API and REST API: Versioning, Webhooks, Pagination, Documentation, Security and Idempotency"
 summary:
-  tr: "API versiyonlamayı, latency'yi, senkron ve asenkron API'leri, webhook'ları, parametreleri, pagination'ı, hata yönetimini, OpenAPI ve schema'yı, REST'in SOAP ve GraphQL ile farkını, HATEOAS'ı, tasarım ilkelerini, API güvenliğini ve idempotency'yi anlatır."
-  en: "Covers API versioning, latency, synchronous and asynchronous APIs, webhooks, parameters, pagination, error handling, OpenAPI and schemas, REST vs SOAP and GraphQL, HATEOAS, design principles, API security and idempotency."
+  tr: "Versiyonlama, webhook, pagination, hata yönetimi, güvenlik ve idempotency ile sağlam API tasarlamayı öğren."
+  en: "Learn to design robust APIs with versioning, webhooks, pagination, error handling, security and idempotency."
 durationMinutes: 13
 level: intermediate
 tags: [api, versioning, webhook, openapi, api-security, idempotency]
@@ -576,6 +576,9 @@ Sunucu aynı anahtarla gelen tekrar isteği yeni sipariş yaratmak yerine ilk i�
 
 :::callout{tone="tip" title="Mülakatta böyle söyle:"}
 GET, PUT ve DELETE idempotenttir; POST değildir. Ödeme ve sipariş gibi işlemlerde Idempotency-Key ile tekrarları güvenli hale getiririm.
+:::
+
+:::quiz{src="quiz.json"}
 :::
 
 ## Orijinal PDF sayfaları

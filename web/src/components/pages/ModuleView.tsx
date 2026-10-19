@@ -7,6 +7,7 @@ import {
   CircleDot,
   Clapperboard,
   Clock,
+  FileText,
   FlaskConical,
   ListChecks,
 } from 'lucide-react';
@@ -87,6 +88,11 @@ export function ModuleView({ moduleId }: { moduleId: string }) {
                     {l.hasQuiz && (
                       <span className="chip">
                         <ListChecks size={11} /> {t('module.hasQuiz')}
+                      </span>
+                    )}
+                    {l.format !== 'standard' && (
+                      <span className="chip">
+                        <FileText size={11} /> {t(`module.format.${l.format}`)}
                       </span>
                     )}
                   </div>

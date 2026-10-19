@@ -7,8 +7,8 @@ title:
   tr: "Yemek Siparişi Platformu: Giriş, Yüksek Seviye Mimari ve Sipariş Akışı"
   en: "Food Delivery Platform: Introduction, High-Level Architecture and Order Flow"
 summary:
-  tr: "Rehberin kapsamı, sistem tasarımı mülakat adımları ve gereksinimler, mikroservis tabanlı yüksek seviye mimari ile uçtan uca kullanıcı yolculuğu ve sipariş akışı."
-  en: "The guide scope, system design interview steps and requirements, the microservice-based high-level architecture, and the end-to-end user journey and order flow."
+  tr: "Yemek siparişi platformunun gereksinimlerini, mikroservis mimarisini ve uçtan uca sipariş akışını kavra."
+  en: "Grasp a food delivery platform's requirements, microservice architecture and end-to-end order flow."
 durationMinutes: 10
 level: beginner
 tags: [system-design, food-delivery, microservices, architecture]
@@ -232,6 +232,9 @@ Notun önemli vurgusu: **Her adım asenkron ve olay güdümlüdür (Kafka).** Si
 
 :::callout{tone="tip" title="Senin projen için"}
 Toptan satışta yolculuk şöyle olur: bayi girişi → kategori ve ürün arama → koli/miktar seçimi (minimum sipariş miktarıyla) → sepet → havale/kart/vadeli ödeme → depo hazırlığı → kargoya teslim → kargo takibi. Kurye atama yerine kargo firması entegrasyonu gelir.
+:::
+
+:::quiz{src="quiz.json"}
 :::
 
 ## Orijinal PDF sayfaları

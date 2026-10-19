@@ -9,5 +9,6 @@
     "en": "From machine learning fundamentals to LLMs and production AI system design."
   },
   "icon": "brain",
-  "color": "#ec4899"
+  "color": "#ec4899",
+  "group": "ai"
 }
