@@ -1,15 +1,35 @@
 version: 2
 updates:
-  # pnpm çalışma alanı (kök lockfile tüm paketleri kapsar). Expo SDK'ya bağlı paketler
-  # `expo install --fix` ile topluca yükseltilmeli; Dependabot yalnızca yama/küçük sürüm açar.
+  # pnpm çalışma alanı (kök lockfile tüm paketleri kapsar). Yalnızca küçük sürüm/yama, tek grup PR.
   - package-ecosystem: npm
     directory: /
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    # Yeni sürüm en az 7 gün beklenir: pnpm'in minimumReleaseAge kontrolü çok yeni sürümleri
+    # reddedip güncellemeyi kırıyordu (ERR_PNPM_NO_MATURE_MATCHING_VERSION); tedarik zinciri için de güvenli
+    cooldown:
+      default-days: 7
     ignore:
       - dependency-name: '*'
         update-types: ['version-update:semver-major']
+      # Expo SDK'ya bağlı paketler: sürümleri SDK belirler, `npx expo install --fix` ile birlikte yükseltilir
+      # (React kökteki pnpm.overrides ile de sabittir)
+      - dependency-name: 'react'
+      - dependency-name: 'react-dom'
+      - dependency-name: 'react-test-renderer'
+      - dependency-name: '@types/react'
+      - dependency-name: 'react-native'
+      - dependency-name: 'react-native-*'
+      - dependency-name: '@react-native/*'
+      - dependency-name: '@react-native-community/*'
+      - dependency-name: '@react-navigation/*'
+      - dependency-name: 'expo'
+      - dependency-name: 'expo-*'
+      - dependency-name: '@expo/*'
+      - dependency-name: 'jest-expo'
+      - dependency-name: 'babel-preset-expo'
+      - dependency-name: 'lottie-react-native'
     groups:
       minor-and-patch:
         update-types: ['minor', 'patch']
