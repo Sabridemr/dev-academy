@@ -43,5 +43,5 @@ COPY --from=deploy --chown=node:node /out /app
 COPY --from=build --chown=node:node /repo/backend/dist /app/dist
 USER node
 EXPOSE 4000
-HEALTHCHECK --interval=15s --timeout=3s --retries=5 CMD wget -qO- http://localhost:4000/health || exit 1
+HEALTHCHECK --interval=15s --timeout=3s --retries=5 CMD wget -qO- http://127.0.0.1:4000/health || exit 1
 CMD ["node", "dist/main.js"]
