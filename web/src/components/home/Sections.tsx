@@ -192,7 +192,6 @@ export function SimulatorShowcase() {
 
 export function PathsSection({ paths }: { paths: LearningPathSummary[] }) {
   const { t, tl } = useI18n();
-  const authed = useIsAuthenticated();
   if (!paths.length) return null;
   return (
     <section
@@ -211,7 +210,7 @@ export function PathsSection({ paths }: { paths: LearningPathSummary[] }) {
           return (
             <Link
               key={p.id}
-              href={authed ? `/onboarding?path=${p.id}` : `/register?path=${p.id}`}
+              href={`/paths/${p.id}`}
               className="card card-hover group flex flex-col p-5"
             >
               <span className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">

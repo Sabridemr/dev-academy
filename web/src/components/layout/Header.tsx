@@ -8,6 +8,7 @@ import {
   BookOpen,
   ChevronDown,
   Flame,
+  History,
   Languages,
   LayoutDashboard,
   Library,
@@ -16,6 +17,7 @@ import {
   Moon,
   Repeat,
   Search,
+  Settings,
   Shield,
   Sun,
   X,
@@ -294,6 +296,9 @@ function UserMenu({
           <MenuLink href="/dashboard" icon={LayoutDashboard} label={t('nav.dashboard')} />
           <MenuLink href="/review" icon={Repeat} label={t('nav.review')} />
           <MenuLink href="/library" icon={Library} label={t('nav.library')} />
+          <MenuLink href="/history" icon={History} label={t('nav.history')} />
+          <div className="my-1 border-t border-border" />
+          <MenuLink href="/settings" icon={Settings} label={t('nav.settings')} />
           <div className="my-1 border-t border-border" />
           <button
             type="button"
@@ -447,6 +452,11 @@ function MobileMenu({
         </button>
       </div>
       <div className="mt-3 flex gap-2">
+        {authed && (
+          <Link href="/settings" className="btn-ghost flex-1">
+            <Settings size={15} /> {t('nav.settings')}
+          </Link>
+        )}
         {authed ? (
           <button type="button" onClick={onLogout} className="btn-ghost flex-1">
             <LogOut size={15} /> {t('nav.logout')}

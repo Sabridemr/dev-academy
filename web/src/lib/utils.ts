@@ -12,6 +12,16 @@ export function formatDuration(seconds: number, locale: string): string {
   return h > 0 ? `${h}h ${m}m` : `${m}m`;
 }
 
+/** LocalizedString (düz metin ya da {tr,en}) → her zaman nesne biçimi (form alanları için) */
+export function toLocalizedObject(value: string | { tr: string; en?: string } | undefined): {
+  tr: string;
+  en: string;
+} {
+  if (!value) return { tr: '', en: '' };
+  if (typeof value === 'string') return { tr: value, en: '' };
+  return { tr: value.tr, en: value.en ?? '' };
+}
+
 /** Yüzde: tr → "%40", en → "40%" (Intl ile yerel biçim) */
 export function formatPercent(value: number, locale: string): string {
   const v = Math.max(0, Math.min(100, Math.round(value)));

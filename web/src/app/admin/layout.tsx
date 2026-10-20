@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Clapperboard, FileText, LayoutDashboard } from 'lucide-react';
+import { Boxes, Clapperboard, FileText, LayoutDashboard } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { RequireAuth } from '@/components/auth/RequireAuth';
 import { useI18n } from '@/i18n';
@@ -15,6 +15,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     { href: '/admin', label: t('admin.stats'), icon: LayoutDashboard, exact: true },
     { href: '/admin/lessons', label: t('admin.lessons'), icon: FileText },
     { href: '/admin/scenes', label: t('admin.scenes'), icon: Clapperboard },
+    { href: '/admin/modules', label: t('admin.modules'), icon: Boxes },
   ];
   return (
     <RequireAuth roles={['editor', 'admin']}>

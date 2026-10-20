@@ -17,6 +17,7 @@ import type {
   SubmitAttemptDto,
   UpdateProgressDto,
   LearningPathSummary,
+  LearningPathDetail,
   UserProfile,
   UpdateProfileDto,
   ReviewCardDto,
@@ -168,6 +169,37 @@ export function useSubmitAttempt(quizId: string) {
       void qc.invalidateQueries({ queryKey: ['progress-summary'] });
       void qc.invalidateQueries({ queryKey: ['reviews'] });
     },
+  });
+}
+
+export interface AttemptSummaryDto {
+  id: string;
+  quizId: string;
+  lessonId: string;
+  quizTitle: LocalizedString;
+  score: number;
+  passed: boolean;
+  correctCount: number;
+  totalCount: number;
+  durationMs: number;
+  createdAt: string;
+}
+
+export function useAttempts() {
+  const authed = useIsAuthenticated();
+  return useQuery({
+    queryKey: ['attempts'],
+    queryFn: () => api<AttemptSummaryDto[]>('/quizzes/attempts'),
+    enabled: authed,
+  });
+}
+
+export function usePath(id: string) {
+  const authed = useIsAuthenticated();
+  return useQuery({
+    queryKey: ['path', id, authed],
+    queryFn: () => api<LearningPathDetail>(`/paths/${id}`),
+    enabled: Boolean(id),
   });
 }
 

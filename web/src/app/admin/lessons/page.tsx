@@ -58,9 +58,14 @@ export default function AdminLessons() {
                   )}
                 </td>
                 <td className="px-4 py-2 text-right">
-                  <Link href={`/admin/lessons/${r.id}`} className="btn-ghost py-1">
-                    {t('admin.edit')}
-                  </Link>
+                  <span className="inline-flex gap-2">
+                    <Link href={`/admin/quizzes/${r.id}`} className="btn-ghost btn-sm">
+                      {t('admin.quizzes')}
+                    </Link>
+                    <Link href={`/admin/lessons/${r.id}`} className="btn-ghost btn-sm">
+                      {t('admin.edit')}
+                    </Link>
+                  </span>
                 </td>
               </tr>
             ))}

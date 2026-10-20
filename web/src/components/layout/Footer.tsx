@@ -22,6 +22,7 @@ export function Footer() {
         { href: '/dashboard', label: t('nav.dashboard') },
         { href: '/review', label: t('nav.review') },
         { href: '/library', label: t('nav.library') },
+        { href: '/settings', label: t('nav.settings') },
       ]
     : [
         { href: '/login', label: t('nav.login') },
