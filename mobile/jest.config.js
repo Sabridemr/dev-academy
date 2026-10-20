@@ -21,7 +21,7 @@ module.exports = {
     '^react/(.*)$': `${reactDir}/$1`,
   },
   transformIgnorePatterns: [
-    'node_modules/(?!((jest-)?react-native|@react-native(-community)?|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg|react-native-markdown-display|react-native-mmkv|rive-react-native|lottie-react-native|@tanstack/.*|zustand|@devacademy/.*))',
+    'node_modules/(?!((jest-)?react-native|@react-native(-community)?|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg|react-native-markdown-display|rive-react-native|lottie-react-native|@tanstack/.*|zustand|@devacademy/.*))',
   ],
   testPathIgnorePatterns: ['/node_modules/', '<rootDir>/e2e/'],
   clearMocks: true,

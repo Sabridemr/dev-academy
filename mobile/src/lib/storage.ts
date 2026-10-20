@@ -1,14 +1,43 @@
-import { MMKV } from 'react-native-mmkv';
+import { SQLiteStorage } from 'expo-sqlite/kv-store';
 import * as SecureStore from 'expo-secure-store';
 
 /**
  * DEPOLAMA KATMANI
  * ----------------
- * - MMKV: hızlı anahtar-değer deposu → ayarlar (dil, tema), ETag'ler, senkron zaman damgaları,
- *   çevrimdışı ilerleme/quiz kuyruğu. Token SAKLANMAZ.
+ * - kv: senkron anahtar-değer deposu (expo-sqlite/kv-store; Expo Go'da da çalışır) → ayarlar (dil, tema),
+ *   ETag'ler, senkron zaman damgaları, çevrimdışı ilerleme/quiz kuyruğu. Token SAKLANMAZ.
  * - SecureStore (Keychain / Keystore): erişim ve yenileme token'ları.
  */
-export const kv = new MMKV({ id: 'devacademy' });
+const store = new SQLiteStorage('devacademy-kv.db');
+
+/** Değerler metin olarak saklanır; sayı/boolean okurken türüne göre çözülür */
+export const kv = {
+  getString(key: string): string | undefined {
+    return store.getItemSync(key) ?? undefined;
+  },
+  getBoolean(key: string): boolean | undefined {
+    const raw = store.getItemSync(key);
+    return raw === null ? undefined : raw === 'true';
+  },
+  getNumber(key: string): number | undefined {
+    const raw = store.getItemSync(key);
+    if (raw === null) return undefined;
+    const n = Number(raw);
+    return Number.isFinite(n) ? n : undefined;
+  },
+  set(key: string, value: string | number | boolean): void {
+    store.setItemSync(key, String(value));
+  },
+  delete(key: string): void {
+    store.removeItemSync(key);
+  },
+  contains(key: string): boolean {
+    return store.getItemSync(key) !== null;
+  },
+  clearAll(): void {
+    store.clearSync();
+  },
+};
 
 export const KV_KEYS = {
   locale: 'settings.locale',

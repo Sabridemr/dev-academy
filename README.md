@@ -62,21 +62,21 @@ docker compose run --rm --build seed   # içeriği yükler (ilk kurulum ve içer
 
 - Web: `http://<LAN-IP>:3000`, API: `http://<LAN-IP>:4000/api/v1`. `PUBLIC_HOST` değişince `--build` ile web
   imajı yeniden derlenmelidir (API adresi derleme anında gömülür).
-- Mobil, native modüller (MMKV, SQLite) kullandığı için **Expo Go'da çalışmaz**; bir kez "development build"
-  (expo-dev-client) üretilip telefona kurulur, sonra JS sunucudaki Metro'dan gelir:
+- Mobil uygulama telefondaki **Expo Go** ile doğrudan açılır (SDK 54); JS sunucudaki Metro'dan gelir:
 
 ```bash
 pnpm install                                   # depo kökünde (Docker'dan bağımsız; Metro için Node 22+ gerekir)
-cd mobile && npx eas-cli login && npx eas-cli build --profile development --platform android   # tek seferlik; APK'yı telefona kurun
-pnpm start:lan                                 # shared paketini derler + Metro'yu LAN'da açar (:8081)
+cd mobile && pnpm start:lan                    # shared paketini derler + Metro'yu LAN'da açar (:8081)
 ```
 
-- `pnpm start:lan` çıktısındaki `exp+devacademy://expo-development-client/?url=http://<LAN-IP>:8081` adresini
-  telefondaki **DevAcademy (Dev)** uygulamasına girin (ya da QR'ı okutun). API ve web adresi geliştirme
-  derlemesinde Metro'nun çalıştığı makineden otomatik türetilir; `mobile/.env` yalnızca farklı bir adres
-  gerekiyorsa (ör. API başka sunucuda) doldurulur.
+- Terminaldeki QR'ı Expo Go ile okutun ya da Expo Go'da `exp://<LAN-IP>:8081` adresini girin. API ve web adresi
+  Metro'nun çalıştığı makineden otomatik türetilir; `mobile/.env` yalnızca farklı bir adres gerekiyorsa
+  (ör. API başka sunucuda) doldurulur.
 - Metro çalışmadan `@devacademy/shared` çözülemez: `pnpm start` yerine `pnpm start:lan` kullanın ya da önce
   `pnpm --filter @devacademy/shared build` çalıştırın.
+- Kalıcı bir uygulama ya da Android'de uzaktan push bildirimi isterseniz bir kez development build üretin
+  (`npx eas-cli build --profile development --platform android`) ve Metro'yu `pnpm start:lan:dev` ile açıp
+  Expo Go yerine **DevAcademy (Dev)** ile bağlanın.
 
 Telefon ve sunucu aynı ağda olmalı; 3000, 4000 ve 8081 portları sunucu güvenlik duvarında açık olmalıdır. Sunucuya
 modemden sabit IP (DHCP rezervasyonu) verin: IP değişirse `PUBLIC_HOST` güncellenip web imajı `--build` ile

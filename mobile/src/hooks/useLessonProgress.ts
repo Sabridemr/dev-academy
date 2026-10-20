@@ -10,7 +10,7 @@ import { useSession } from '@/stores/session';
  * - Görüntülenen blok oranı → yüzde (scroll konumundan, LessonScreen bildirir)
  * - Harcanan süre (saniye)
  * - Sunucuya PUT /progress/lessons/:id — her %10'luk artışta, tamamlanınca ve ekrandan çıkarken;
- *   çevrimdışıysa MMKV kuyruğuna alınır (offline/queue.ts) ve bağlantı gelince gönderilir.
+ *   çevrimdışıysa kv kuyruğuna alınır (offline/queue.ts) ve bağlantı gelince gönderilir.
  */
 export function useLessonProgress(lesson: LessonDetail | undefined) {
   const qc = useQueryClient();

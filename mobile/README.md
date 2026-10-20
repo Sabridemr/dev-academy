@@ -4,16 +4,16 @@ DevAcademy'nin Expo tabanlı mobil uygulaması. Web ile **aynı animasyon sahnel
 `playerReducer`) oynatır; dersler, interaktif simülatörler, quizler, aralıklı tekrar, çevrimdışı içerik ve
 push bildirimleri içerir.
 
-| Katman    | Teknoloji                                                                                                  |
-| --------- | ---------------------------------------------------------------------------------------------------------- |
-| Çatı      | Expo SDK 54, React Native 0.81 (New Architecture), React 19.1, TypeScript (strict)                         |
-| Gezinme   | expo-router 6 (dosya tabanlı; `src/app`)                                                                   |
-| Animasyon | react-native-svg 15 + react-native-reanimated 4 (react-native-worklets), Lottie (lottie-react-native 7)    |
-| Veri      | @tanstack/react-query 5, zustand 5                                                                         |
-| Depolama  | expo-sqlite 15 (çevrimdışı içerik), react-native-mmkv 3 (ayarlar, ETag, kuyruk), expo-secure-store (token) |
-| Kimlik    | E-posta/şifre, Google (expo-auth-session), Apple (expo-apple-authentication, yalnızca iOS)                 |
-| Bildirim  | expo-notifications 0.31, expo-device                                                                       |
-| Test      | jest-expo + @testing-library/react-native, Detox (e2e)                                                     |
+| Katman    | Teknoloji                                                                                                   |
+| --------- | ----------------------------------------------------------------------------------------------------------- |
+| Çatı      | Expo SDK 54, React Native 0.81 (New Architecture), React 19.1, TypeScript (strict)                          |
+| Gezinme   | expo-router 6 (dosya tabanlı; `src/app`)                                                                    |
+| Animasyon | react-native-svg 15 + react-native-reanimated 4 (react-native-worklets), Lottie (lottie-react-native 7)     |
+| Veri      | @tanstack/react-query 5, zustand 5                                                                          |
+| Depolama  | expo-sqlite 15 (çevrimdışı içerik), expo-sqlite/kv-store (ayarlar, ETag, kuyruk), expo-secure-store (token) |
+| Kimlik    | E-posta/şifre, Google (expo-auth-session), Apple (expo-apple-authentication, yalnızca iOS)                  |
+| Bildirim  | expo-notifications 0.31, expo-device                                                                        |
+| Test      | jest-expo + @testing-library/react-native, Detox (e2e)                                                      |
 
 ---
 
@@ -43,8 +43,8 @@ cp .env.example .env                        # değişkenleri düzenleyin
 
 ## 2. Çalıştırma
 
-> Uygulama MMKV, SQLite ve Lottie gibi native modüller kullandığı için **Expo Go yerine development
-> build** gerekir.
+> Uygulama yalnızca Expo Go'da hazır gelen native modülleri kullanır; **Expo Go ile doğrudan açılabilir**.
+> Kalıcı bir uygulama ya da Android'de uzaktan push bildirimi için development build (expo-dev-client) gerekir.
 
 ```bash
 cd mobile
@@ -90,7 +90,7 @@ mobile/
 │  ├─ i18n/                 # tr (varsayılan) + en; useI18n()
 │  ├─ theme/                # --da-* token'larının RN karşılığı, açık/koyu tema
 │  ├─ lib/                  # api.ts (refresh'li istemci), endpoints.ts, storage.ts, network.ts
-│  ├─ offline/              # db.ts (SQLite), sync.ts (ETag senkron), queue.ts (MMKV kuyrukları)
+│  ├─ offline/              # db.ts (SQLite), sync.ts (ETag senkron), queue.ts (kv kuyrukları)
 │  ├─ notifications/        # push.ts, bildirim yönlendirmesi
 │  └─ stores/               # zustand: session, settings
 ├─ __tests__/               # birim testleri
@@ -135,7 +135,7 @@ Diğer `InteractiveType` değerleri için başlık/yönergeyi gösteren ve `${EX
 adresini açan bir yedek kart gösterilir. İlk etkileşimde `POST /progress/interactive` (rozetler için) gönderilir.
 
 İlerleme: kaydırma konumundan görüntülenen blok oranı → yüzde; her %10 artışta, tamamlanınca ve ekrandan
-çıkarken `PUT /progress/lessons/:id`. Çevrimdışıysa MMKV kuyruğuna yazılır.
+çıkarken `PUT /progress/lessons/:id`. Çevrimdışıysa kv kuyruğuna yazılır.
 
 ## 6. Çevrimdışı mimari
 
@@ -153,16 +153,16 @@ UI ── React Query ── networkFirst() ──► API ──X──► SQLit
   `scenes(id, json, version)`, `quizzes(id, lesson_id, json)`, `modules(id, json, etag, synced_at)`
   (silme kolaylığı için sahne/quiz tablolarında ek `module_id` sütunu vardır). JSON sütunları API DTO'sunu
   aynen saklar; çevrimdışı okuma çevrimiçi yanıtla aynı tipi döner. Şema sürümü `PRAGMA user_version`.
-- **ETag**: hem `modules.etag` hem MMKV (`etag.offline.<id>`). Uygulama açılışında (çevrimiçiyse) indirilmiş
+- **ETag**: hem `modules.etag` hem kv deposu (`etag.offline.<id>`). Uygulama açılışında (çevrimiçiyse) indirilmiş
   tüm modüller ETag ile tazelenir; Profil → "Şimdi güncelle" de aynı işi yapar.
 - **İçerik kancaları** (`src/hooks/content.ts`): NetInfo çevrimdışı diyorsa doğrudan SQLite; çevrimiçiyken
   API, ağ/sunucu hatasında SQLite'a düşer. React Query `onlineManager` NetInfo ile beslenir.
-- **Kuyruklar** (`src/offline/queue.ts`, MMKV):
+- **Kuyruklar** (`src/offline/queue.ts`, kv deposu):
   - İlerleme: ders başına tek kayıt (yüzde = max, süre = toplam, tamamlandı = OR).
   - Quiz denemeleri: doğru cevaplar istemcide olmadığından çevrimdışı puanlanmaz; deneme saklanır,
     "bağlantı gelince değerlendirilecek" mesajı gösterilir ve çevrimiçi olunca gönderilir.
   - Kuyruklar bağlantı geri geldiğinde ve uygulama ön plana döndüğünde boşaltılır.
-- **Token'lar** yalnızca SecureStore'da (Keychain/Keystore); MMKV'de token tutulmaz.
+- **Token'lar** yalnızca SecureStore'da (Keychain/Keystore); kv deposunda token tutulmaz.
 
 ## 7. Push bildirimleri
 
@@ -195,7 +195,7 @@ pnpm test           # birim testleri (jest-expo)
 | Test                                   | Kapsam                                                                             |
 | -------------------------------------- | ---------------------------------------------------------------------------------- |
 | `__tests__/ScenePlayer.test.tsx`       | Reducer ile adım ileri/geri, seek, oynatma (TICK), hız, reduced-motion, transkript |
-| `__tests__/i18n.test.ts`               | Çeviri, parametreler, tr/en anahtar eşitliği, dil değiştirme + MMKV kalıcılığı     |
+| `__tests__/i18n.test.ts`               | Çeviri, parametreler, tr/en anahtar eşitliği, dil değiştirme + kv kalıcılığı       |
 | `__tests__/sync.test.ts`               | Sahte SQLite ile upsert/transaction, ETag + 304 akışı, kuyruk birleştirme          |
 | `__tests__/api.test.ts`                | Single-flight refresh, oturum sonlandırma, offline/network hataları, 304           |
 | `__tests__/svgTheme.test.ts`           | Diyagram SVG'lerinin tema renklerine çevrilmesi                                    |

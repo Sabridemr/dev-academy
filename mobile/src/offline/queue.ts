@@ -4,7 +4,7 @@ import { endpoints } from '@/lib/endpoints';
 import { getJson, kv, KV_KEYS, setJson } from '@/lib/storage';
 
 /**
- * ÇEVRİMDIŞI KUYRUKLAR (MMKV)
+ * ÇEVRİMDIŞI KUYRUKLAR (kv deposu)
  * ---------------------------
  * 1) İlerleme: ders başına tek kayıt tutulur (yüzde = max, süre = toplam, tamamlandı = OR).
  *    Böylece çevrimdışı uzun bir oturum tek PUT isteğine indirgenir.

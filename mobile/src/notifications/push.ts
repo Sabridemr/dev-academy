@@ -130,7 +130,7 @@ export async function cancelDailyReminder(): Promise<void> {
     await Notifications.cancelScheduledNotificationAsync(previous).catch(() => undefined);
 }
 
-/** MMKV'de saklanan hatırlatma saati (-1 → kapalı, tanımsız → null) */
+/** kv deposunda saklanan hatırlatma saati (-1 → kapalı, tanımsız → null) */
 export function storedReminderHour(): number | null {
   const v = kv.getNumber(KV_KEYS.reminderHour);
   return v === undefined || v < 0 ? null : v;
