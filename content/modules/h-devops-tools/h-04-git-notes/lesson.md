@@ -114,6 +114,12 @@ git merge --abort                         # vazgeçip başa dön
 `rebase`, `commit --amend`, `reset --hard` ve `push --force` commit'leri değiştirir ya da siler. Bunlar yalnızca henüz paylaşılmamış, size ait commit'lerde güvenlidir. Zorunlu kaldığınızda `git push --force-with-lease` kullanın: uzak dal sizin bildiğinizden farklıysa gönderimi reddeder ve ekip arkadaşınızın commit'lerini ezmenizi engeller.
 :::
 
+## Dene: commit grafiğini kendin kur
+
+:::interactive{type="git-graph" scenario="merge"}
+main ve feature dallarına commit ekle, sonra "merge" ile üç yollu birleştirmeyi, "rebase" ile doğrusal geçmişi karşılaştır. Çakışma senaryosunu seçip aynı dosyayı iki dalda değiştirdiğinde Git'in neden duraksadığını ve çözüm adımını izle; sağdaki komut günlüğü her tıklamanın karşılık geldiği git komutunu gösterir.
+:::
+
 ## Uzak depo ve pull request akışı
 
 `git fetch` uzak depodaki yeni commit'leri indirir ama dallarınıza dokunmaz; `origin/main` gibi uzak takip dalları güncellenir ve siz incelemeden hiçbir şey birleşmez. `git pull` ise `fetch` artı `merge`'dür (ayarlarsanız `fetch` artı `rebase`). Alışkanlık olarak önce `fetch`, sonra `git log main..origin/main` ile ne geldiğine bakmak, ardından birleştirmek daha güvenlidir.
