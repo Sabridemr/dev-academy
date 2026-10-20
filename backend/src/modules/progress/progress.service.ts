@@ -99,7 +99,7 @@ export class ProgressService {
   async summary(userId: string): Promise<ProgressSummary> {
     const user = await this.prisma.user.findUniqueOrThrow({ where: { id: userId } });
     const today = dateKey(new Date(), user.timezone);
-    const [totalLessons, progress, badges, perModuleTotals, dueReviews, timeAgg] =
+    const [totalLessons, progress, badges, perModuleTotals, dueReviews, timeAgg, nextReview] =
       await Promise.all([
         this.prisma.lesson.count({ where: { publishedVersionId: { not: null } } }),
         // Yalnızca yayındaki dersler: yayından kalkan dersler oranı %100'ün üstüne taşımasın
@@ -124,6 +124,11 @@ export class ProgressService {
         }),
         this.prisma.reviewCard.count({ where: { userId, dueAt: { lte: new Date() } } }),
         this.prisma.progress.aggregate({ where: { userId }, _sum: { secondsSpent: true } }),
+        this.prisma.reviewCard.findFirst({
+          where: { userId, dueAt: { gt: new Date() } },
+          orderBy: { dueAt: 'asc' },
+          select: { dueAt: true },
+        }),
       ]);
     const completed = progress.filter((p) => p.status === 'completed');
     const completedPerModule = new Map<string, number>();
@@ -166,6 +171,7 @@ export class ProgressService {
           }
         : null,
       dueReviews,
+      nextReviewAt: nextReview?.dueAt.toISOString() ?? null,
     };
   }
 

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { translate, MESSAGES } from '@/i18n';
 import { sanitizeSvg } from '@/components/lesson/Diagram';
 import { slugify } from '@/components/lesson/Markdown';
-import { themeColor, formatDuration, safeNextPath } from './utils';
+import { themeColor, formatDuration, formatPercent, safeNextPath } from './utils';
 
 describe('i18n', () => {
   it('anahtarı çözer ve parametreleri yerleştirir', () => {
@@ -76,6 +76,11 @@ describe('yardımcılar', () => {
     expect(themeColor('danger')).toBe('var(--da-danger)');
     expect(themeColor('#fff')).toBe('#fff');
     expect(themeColor(undefined)).toBe('var(--da-primary)');
+  });
+  it('formatPercent yerel biçimi kullanır', () => {
+    expect(formatPercent(40, 'tr')).toBe('%40');
+    expect(formatPercent(40, 'en')).toBe('40%');
+    expect(formatPercent(140, 'en')).toBe('100%');
   });
   it('formatDuration', () => {
     expect(formatDuration(3720, 'tr')).toBe('1 sa 2 dk');

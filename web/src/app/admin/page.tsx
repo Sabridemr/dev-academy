@@ -25,13 +25,13 @@ export default function AdminHome() {
     [t('admin.lessons'), data?.lessons],
     [t('admin.published'), data?.published],
     [t('admin.scenes'), data?.scenes],
-    ['Quiz', data?.quizzes],
-    ['Attempts', data?.attempts],
-    ['Active today', data?.activeToday],
+    [t('admin.quizzes'), data?.quizzes],
+    [t('admin.attempts'), data?.attempts],
+    [t('admin.activeToday'), data?.activeToday],
   ];
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold">{t('admin.stats')}</h1>
+      <h1 className="t-h2 mb-6">{t('admin.stats')}</h1>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {items.map(([label, value]) => (
           <div key={label} className="card p-5">

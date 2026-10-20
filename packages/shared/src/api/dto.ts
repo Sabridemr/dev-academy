@@ -300,6 +300,8 @@ export interface ProgressSummary {
   } | null;
   /** Bugün tekrar edilmesi gereken kavram sayısı */
   dueReviews: number;
+  /** Bekleyen kart yoksa bir sonraki kartın vadesi (ISO); hiç kart yoksa null */
+  nextReviewAt?: string | null;
 }
 
 export interface ReviewItem {
@@ -350,6 +352,8 @@ export interface NoteDto {
   body: string;
   createdAt: string;
   updatedAt: string;
+  /** Notun ait olduğu ders (kütüphanede başlık göstermek için; liste uç noktasında döner) */
+  lesson?: { id: string; slug: string; moduleId: string; title: LocalizedString };
 }
 
 export const UpsertNoteSchema = z.object({

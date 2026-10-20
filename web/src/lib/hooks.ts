@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type {
   AttemptResult,
+  BadgeDto,
   BookmarkDto,
   LessonDetail,
   ModuleDetail,
@@ -167,6 +168,14 @@ export function useSubmitAttempt(quizId: string) {
       void qc.invalidateQueries({ queryKey: ['progress-summary'] });
       void qc.invalidateQueries({ queryKey: ['reviews'] });
     },
+  });
+}
+
+export function useBadgeCatalog() {
+  return useQuery({
+    queryKey: ['badge-catalog'],
+    queryFn: () => api<BadgeDto[]>('/progress/badges', { anonymous: true }),
+    staleTime: 60 * 60 * 1000,
   });
 }
 

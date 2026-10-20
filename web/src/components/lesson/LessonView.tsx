@@ -26,7 +26,7 @@ import { api } from '@/lib/api';
 import { useAction } from '@/lib/use-action';
 import { useIsAuthenticated } from '@/lib/auth-store';
 import { useBookmarks, useLesson, useModule, useNotes, useUpdateProgress } from '@/lib/hooks';
-import { cn } from '@/lib/utils';
+import { cn, formatPercent } from '@/lib/utils';
 import { Dialog } from '../ui/Dialog';
 import { useOptionalToast } from '../ui/Toast';
 import { BlockRenderer } from './BlockRenderer';
@@ -421,7 +421,9 @@ export function LessonView({ initial }: { initial: LessonDetail }) {
                 <p className="label mb-0">
                   {authed ? t('lesson.progress') : t('lesson.readingProgress')}
                 </p>
-                <span className="text-xs tabular-nums text-muted">%{percent}</span>
+                <span className="text-xs tabular-nums text-muted">
+                  {formatPercent(percent, locale)}
+                </span>
               </div>
               <div
                 className="h-2 overflow-hidden rounded-full bg-elevated"

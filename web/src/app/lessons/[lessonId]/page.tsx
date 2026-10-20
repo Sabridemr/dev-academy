@@ -27,7 +27,7 @@ export async function generateMetadata({
     const lesson = await getLesson(lessonId);
     return { title: tl(lesson.title), description: tl(lesson.summary) };
   } catch {
-    return { title: 'Ders' };
+    return { title: 'DevAcademy' };
   }
 }
 

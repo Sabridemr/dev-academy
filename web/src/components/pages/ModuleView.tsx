@@ -18,14 +18,14 @@ import type { LessonSummary, ModuleDetail } from '@devacademy/shared';
 import { useI18n } from '@/i18n';
 import { useIsAuthenticated } from '@/lib/auth-store';
 import { useModule } from '@/lib/hooks';
-import { cn } from '@/lib/utils';
+import { cn, formatPercent } from '@/lib/utils';
 import { ICONS } from '../home/Sections';
 import { EmptyState } from '../ui/EmptyState';
 import { ProgressRing } from '../ui/ProgressRing';
 import { Skeleton, SkeletonCard } from '../ui/Skeleton';
 
 export function ModuleView({ moduleId }: { moduleId: string }) {
-  const { t, tl } = useI18n();
+  const { t, tl, locale } = useI18n();
   const authed = useIsAuthenticated();
   const { data: m, isLoading, isError } = useModule(moduleId);
 
@@ -147,7 +147,7 @@ export function ModuleView({ moduleId }: { moduleId: string }) {
               label={`${t('module.completed', { done, total: m.lessonCount })}`}
               className="self-start"
             >
-              %{pct}
+              {formatPercent(pct, locale)}
             </ProgressRing>
           )}
         </div>
@@ -184,7 +184,7 @@ function LessonRow({
   color: string;
   isNext: boolean;
 }) {
-  const { t, tl } = useI18n();
+  const { t, tl, locale } = useI18n();
   const status = l.progress?.status ?? 'not_started';
   const StatusIcon =
     status === 'completed' ? CheckCircle2 : status === 'in_progress' ? CircleDot : Circle;
@@ -245,7 +245,9 @@ function LessonRow({
           </div>
         </div>
         {l.progress && l.progress.status === 'in_progress' && (
-          <span className="shrink-0 text-xs tabular-nums text-muted">%{l.progress.percent}</span>
+          <span className="shrink-0 text-xs tabular-nums text-muted">
+            {formatPercent(l.progress.percent, locale)}
+          </span>
         )}
         <span
           className="absolute inset-y-0 left-0 w-1 rounded-l-2xl opacity-0 transition group-hover:opacity-100"

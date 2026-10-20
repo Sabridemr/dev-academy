@@ -12,6 +12,32 @@ export function formatDuration(seconds: number, locale: string): string {
   return h > 0 ? `${h}h ${m}m` : `${m}m`;
 }
 
+/** Yüzde: tr → "%40", en → "40%" (Intl ile yerel biçim) */
+export function formatPercent(value: number, locale: string): string {
+  const v = Math.max(0, Math.min(100, Math.round(value)));
+  try {
+    return new Intl.NumberFormat(locale === 'tr' ? 'tr-TR' : 'en-US', {
+      style: 'percent',
+      maximumFractionDigits: 0,
+    }).format(v / 100);
+  } catch {
+    return locale === 'tr' ? `%${v}` : `${v}%`;
+  }
+}
+
+/** Kısa yerel tarih (örn. 21 Eki 2026) */
+export function formatDate(iso: string, locale: string): string {
+  try {
+    return new Date(iso).toLocaleDateString(locale === 'tr' ? 'tr-TR' : 'en-US', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    });
+  } catch {
+    return iso.slice(0, 10);
+  }
+}
+
 /** İçerik renk anahtarlarını (primary, danger ...) CSS değişkenine çevirir; hex ise olduğu gibi döner */
 export function themeColor(value: string | undefined, fallback = 'var(--da-primary)'): string {
   if (!value) return fallback;

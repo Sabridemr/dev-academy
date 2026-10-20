@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { CheckCircle2, Eye, EyeOff, GraduationCap, Loader2 } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { LoginSchema, RegisterSchema, type AuthResponse } from '@devacademy/shared';
 import { useI18n } from '@/i18n';
@@ -20,6 +21,7 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   const onSuccess = (res: AuthResponse) => {
     setSession(res.user, res.tokens);
@@ -71,17 +73,30 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
       <label htmlFor={name} className="label">
         {label}
       </label>
-      <input
-        id={name}
-        type={type}
-        autoComplete={autoComplete}
-        className="input"
-        value={form[name]}
-        onChange={(e) => setForm((f) => ({ ...f, [name]: e.target.value }))}
-        aria-invalid={Boolean(errors[name])}
-        aria-describedby={errors[name] ? `${name}-err` : undefined}
-        required
-      />
+      <div className="relative">
+        <input
+          id={name}
+          type={name === 'password' && showPassword ? 'text' : type}
+          autoComplete={autoComplete}
+          className={name === 'password' ? 'input pr-10' : 'input'}
+          value={form[name]}
+          onChange={(e) => setForm((f) => ({ ...f, [name]: e.target.value }))}
+          aria-invalid={Boolean(errors[name])}
+          aria-describedby={errors[name] ? `${name}-err` : undefined}
+          required
+        />
+        {name === 'password' && (
+          <button
+            type="button"
+            className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted hover:text-fg"
+            onClick={() => setShowPassword((v) => !v)}
+            aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
+            aria-pressed={showPassword}
+          >
+            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+          </button>
+        )}
+      </div>
       {errors[name] && (
         <p id={`${name}-err`} className="mt-1 text-xs text-danger">
           {errors[name]}
@@ -91,9 +106,23 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
   );
 
   return (
-    <div className="mx-auto max-w-md px-4 py-16">
-      <div className="card p-6">
-        <h1 className="mb-6 text-2xl font-bold">
+    <div className="mx-auto grid max-w-5xl gap-8 px-4 py-12 lg:grid-cols-[1fr_minmax(0,420px)] lg:items-center lg:py-20">
+      <aside className="bg-glow relative hidden overflow-hidden rounded-3xl border border-border bg-surface p-8 lg:block">
+        <div className="bg-grid absolute inset-0 -z-10 opacity-50" aria-hidden="true" />
+        <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-primary-fg shadow-glow">
+          <GraduationCap size={24} />
+        </span>
+        <h2 className="t-h2 mt-6">{t('auth.sideTitle')}</h2>
+        <ul className="mt-6 space-y-3 text-sm text-muted">
+          {[t('auth.benefit1'), t('auth.benefit2'), t('auth.benefit3')].map((b) => (
+            <li key={b} className="flex items-start gap-2">
+              <CheckCircle2 size={16} className="mt-0.5 shrink-0 text-success-fg" /> {b}
+            </li>
+          ))}
+        </ul>
+      </aside>
+      <div className="card p-6 sm:p-8">
+        <h1 className="t-h2 mb-6">
           {mode === 'login' ? t('auth.loginTitle') : t('auth.registerTitle')}
         </h1>
         <form onSubmit={onSubmit} className="space-y-4" noValidate>
@@ -110,8 +139,13 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
               {message}
             </p>
           )}
-          <button type="submit" className="btn-primary w-full py-2.5" disabled={submitting}>
-            {mode === 'login' ? t('auth.loginCta') : t('auth.registerCta')}
+          <button type="submit" className="btn-primary btn-lg w-full" disabled={submitting}>
+            {submitting && <Loader2 size={16} className="animate-spin" />}
+            {submitting
+              ? t('auth.submitting')
+              : mode === 'login'
+                ? t('auth.loginCta')
+                : t('auth.registerCta')}
           </button>
         </form>
         <div className="my-5 flex items-center gap-3 text-xs text-muted">
