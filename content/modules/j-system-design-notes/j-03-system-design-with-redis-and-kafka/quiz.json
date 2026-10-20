@@ -7,19 +7,19 @@
       "id": "q1",
       "type": "order",
       "prompt": {
-        "tr": "Cache-Aside (lazy loading) kalıbında istenen veri önbellekte yokken (miss) gerçekleşen adımları doğru sıraya koyun.",
-        "en": "Put the steps of the Cache-Aside (lazy loading) pattern in the correct order when the requested data is not in the cache (a miss)."
+        "tr": "Cache-Aside kalıbında istenen veri önbellekte yokken (miss) gerçekleşen adımları doğru sıraya koyun.",
+        "en": "Put the steps of the Cache-Aside pattern in the correct order when the requested data is not in the cache (a miss)."
       },
       "options": [
-        { "id": "store", "text": { "tr": "Veriyi Redis önbelleğine yaz", "en": "Store the data in the Redis cache" } },
-        { "id": "check", "text": { "tr": "Önce önbelleği kontrol et", "en": "Check the cache first" } },
+        { "id": "store", "text": { "tr": "Veriyi TTL ile Redis'e yaz", "en": "Store the data in Redis with a TTL" } },
+        { "id": "check", "text": { "tr": "Önce önbelleğe bak", "en": "Check the cache first" } },
         { "id": "return", "text": { "tr": "Veriyi istemciye döndür", "en": "Return the data to the client" } },
         { "id": "fetch", "text": { "tr": "Veriyi veritabanından getir", "en": "Fetch the data from the database" } }
       ],
       "correct": ["check", "fetch", "store", "return"],
       "explanation": {
-        "tr": "Cache-Aside'da uygulama önce önbelleğe bakar; miss olursa veriyi veritabanından getirir, sonraki istekler için önbelleğe yazar ve istemciye döndürür. Önbelleği uygulamanın yönetmesi bu kalıbın ayırt edici özelliğidir.",
-        "en": "In Cache-Aside the application checks the cache first; on a miss it fetches the data from the database, stores it in the cache for later requests and returns it to the client. The application managing the cache is what defines this pattern."
+        "tr": "Cache-Aside'da önbelleği yöneten uygulamadır: önce Redis'e bakar, miss olursa veritabanından okur, sonraki istekler için TTL ile önbelleğe yazar ve istemciye döner. Redis veritabanına kendisi gitmez.",
+        "en": "In Cache-Aside the application manages the cache: it checks Redis first, on a miss reads from the database, stores the value with a TTL for later requests and returns it to the client. Redis never queries the database by itself."
       },
       "difficulty": "easy",
       "concepts": ["cache-aside"]
@@ -28,22 +28,22 @@
       "id": "q2",
       "type": "single",
       "prompt": {
-        "tr": "Redis belleği doldu. Yalnızca bazı anahtarlarda TTL tanımlı ve süresi en yakın dolacak anahtarların önce silinmesini istiyorsun. Hangi tahliye politikasını seçmelisin?",
-        "en": "Redis memory is full. Only some keys have a TTL, and you want the keys closest to expiring to be removed first. Which eviction policy should you choose?"
+        "tr": "Bir oyunun liderlik tablosunda puanları güncellemek ve \"ilk 10 oyuncuyu\" tek komutla getirmek için hangi Redis veri yapısı en uygundur?",
+        "en": "Which Redis data structure is best suited for updating scores on a game leaderboard and fetching the \"top 10 players\" with a single command?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "allkeys-lru", "en": "allkeys-lru" } },
-        { "id": "b", "text": { "tr": "noeviction", "en": "noeviction" } },
-        { "id": "c", "text": { "tr": "volatile-ttl", "en": "volatile-ttl" } },
-        { "id": "d", "text": { "tr": "allkeys-random", "en": "allkeys-random" } }
+        { "id": "a", "text": { "tr": "Hash (HSET / HGETALL)", "en": "Hash (HSET / HGETALL)" } },
+        { "id": "b", "text": { "tr": "List (LPUSH / LRANGE)", "en": "List (LPUSH / LRANGE)" } },
+        { "id": "c", "text": { "tr": "Sorted Set (ZINCRBY / ZREVRANGE)", "en": "Sorted Set (ZINCRBY / ZREVRANGE)" } },
+        { "id": "d", "text": { "tr": "Set (SADD / SMEMBERS)", "en": "Set (SADD / SMEMBERS)" } }
       ],
       "correct": ["c"],
       "explanation": {
-        "tr": "volatile-ttl yalnızca TTL'li anahtarlar arasından en kısa TTL'e sahip olanı önce siler. allkeys-lru tüm anahtarlardan en az yakın zamanda kullanılanı, allkeys-random rastgele bir anahtarı siler; noeviction ise hiçbir anahtarı silmez ve hata döndürür.",
-        "en": "volatile-ttl removes the key with the shortest TTL first, only among keys that have a TTL. allkeys-lru evicts the least recently used key from all keys, allkeys-random evicts a random key, and noeviction removes nothing and returns an error."
+        "tr": "Sorted Set üyeleri skora göre sıralı tutar: ZINCRBY puanı atomik günceller, ZREVRANGE 0 9 en yüksek on üyeyi döner; sıralama Redis'te yapılır. Hash sıralama tutmaz, List ekleme sırasını korur, Set ise yalnızca tekil üyelik bilir.",
+        "en": "A Sorted Set keeps members ordered by score: ZINCRBY updates a score atomically and ZREVRANGE 0 9 returns the top ten; the sorting happens inside Redis. A Hash has no ordering, a List keeps insertion order, and a Set only knows unique membership."
       },
-      "difficulty": "medium",
-      "concepts": ["eviction-policies"]
+      "difficulty": "easy",
+      "concepts": ["redis-data-structures"]
     },
     {
       "id": "q3",
@@ -58,53 +58,53 @@
       ],
       "correct": ["f"],
       "explanation": {
-        "tr": "Yanlış. Bir partition append-only bir log olduğundan mesajlar artan offset'lerle sıralı saklanır; ancak sıra yalnızca partition içinde garanti edilir, birden fazla partition arasında global sıra garantisi yoktur.",
-        "en": "False. A partition is an append-only log, so messages are stored in order with increasing offsets; but ordering is guaranteed only within a partition, not globally across multiple partitions."
+        "tr": "Yanlış. Her partition ekle-yalnız bir günlüktür ve kayıtlar artan offset'lerle sıralı saklanır; ancak sıra yalnızca partition içinde garanti edilir. Aynı siparişin olaylarının sıralı kalması için hepsi aynı anahtarla (orderId) üretilir ve aynı partition'a düşer.",
+        "en": "False. Each partition is an append-only log and records are stored in order with increasing offsets, but ordering is guaranteed only within a partition. To keep the events of one order in sequence they are all produced with the same key (orderId) so they land in the same partition."
       },
       "difficulty": "easy",
-      "concepts": ["partitions"]
+      "concepts": ["kafka-partitions"]
     },
     {
       "id": "q4",
       "type": "single",
       "prompt": {
-        "tr": "3 partition'lı bir \"orders\" topic'ini aynı consumer group'taki 3 consumer okuyor. Consumer'lardan biri çökerse ne olur?",
+        "tr": "3 partition'lı \"orders\" topic'ini aynı consumer group'taki 3 consumer okuyor. Consumer'lardan biri çökerse ne olur?",
         "en": "Three consumers in the same consumer group read an \"orders\" topic with 3 partitions. What happens if one of the consumers crashes?"
       },
       "options": [
         { "id": "a", "text": { "tr": "Çöken consumer'ın partition'ı, consumer geri gelene kadar okunmaz", "en": "The crashed consumer's partition is not read until that consumer comes back" } },
-        { "id": "b", "text": { "tr": "Rebalancing tetiklenir ve partition'lar gruptaki kalan consumer'lara yeniden atanır", "en": "Rebalancing is triggered and partitions are reassigned to the remaining consumers in the group" } },
+        { "id": "b", "text": { "tr": "Rebalance tetiklenir ve partition'lar gruptaki kalan consumer'lara yeniden atanır", "en": "A rebalance is triggered and partitions are reassigned to the remaining consumers in the group" } },
         { "id": "c", "text": { "tr": "Kalan iki consumer, o partition'ı aynı anda paralel olarak okumaya başlar", "en": "Both remaining consumers start reading that partition in parallel at the same time" } },
         { "id": "d", "text": { "tr": "Topic'teki tüm mesajlar en baştan (offset 0) yeniden işlenir", "en": "All messages in the topic are reprocessed from the beginning (offset 0)" } }
       ],
       "correct": ["b"],
       "explanation": {
-        "tr": "Gruptaki consumer sayısı değişince rebalancing olur ve partition'lar kalan consumer'lara dağıtılır. Bir partition grup içinde yalnızca tek bir consumer'a atanır, bu yüzden iki consumer onu birlikte okumaz; yeni sahibi de baştan değil son commit edilen offset'ten devam eder.",
-        "en": "When the number of consumers in the group changes, rebalancing reassigns partitions to the remaining consumers. A partition is assigned to only one consumer in the group, so two consumers do not read it together, and its new owner resumes from the last committed offset rather than from the beginning."
+        "tr": "Grup üyeliği değişince rebalance olur ve partition'lar kalan consumer'lara dağıtılır. Bir partition grup içinde yalnızca tek bir consumer'a atanır, bu yüzden iki consumer onu birlikte okumaz; yeni sahibi de baştan değil son commit edilen offset'ten devam eder, bu yüzden tüketici idempotent olmalıdır.",
+        "en": "When group membership changes a rebalance redistributes partitions to the remaining consumers. A partition is assigned to only one consumer within a group, so two consumers never read it together; its new owner resumes from the last committed offset rather than from the beginning, which is why the consumer must be idempotent."
       },
       "difficulty": "medium",
-      "concepts": ["consumer-groups", "partitions"]
+      "concepts": ["consumer-groups", "kafka-partitions"]
     },
     {
       "id": "q5",
       "type": "multiple",
       "prompt": {
-        "tr": "Kafka'daki acks ayarları ve teslim garantileriyle ilgili hangi ifadeler doğrudur? (Birden fazla seçin)",
-        "en": "Which statements about Kafka's acks settings and delivery guarantees are correct? (Select all that apply)"
+        "tr": "Replikasyon faktörü 3 ve min.insync.replicas=2 olan bir Kafka topic'ine acks=all ve enable.idempotence=true ile yazan bir producer düşünün. Hangi ifadeler doğrudur? Tüm doğru seçenekleri işaretleyin.",
+        "en": "Consider a producer writing with acks=all and enable.idempotence=true to a Kafka topic with replication factor 3 and min.insync.replicas=2. Which statements are correct? Select all that apply."
       },
       "options": [
-        { "id": "a", "text": { "tr": "acks=0'da producer hiçbir onay beklemez; en hızlısıdır ama mesaj kaybolabilir (at-most-once)", "en": "With acks=0 the producer waits for no acknowledgment; it is fastest but messages can be lost (at-most-once)" } },
-        { "id": "b", "text": { "tr": "Exactly-once, idempotent producer'lar ve transaction'larla sağlanır", "en": "Exactly-once is achieved with idempotent producers and transactions" } },
-        { "id": "c", "text": { "tr": "At-least-once mesajın asla kopyalanmamasını garanti eder", "en": "At-least-once guarantees that a message is never duplicated" } },
-        { "id": "d", "text": { "tr": "acks=all yalnızca leader'ın yazmasını bekler, bu yüzden en hızlı seçenektir", "en": "acks=all waits only for the leader to write, which makes it the fastest option" } }
+        { "id": "a", "text": { "tr": "Bir yazma, lider dahil en az iki senkron replikaya ulaşmadan onaylanmaz", "en": "A write is not acknowledged until it reaches at least two in-sync replicas including the leader" } },
+        { "id": "b", "text": { "tr": "Ağ hatasından sonra producer yeniden gönderirse broker aynı sıra numaralı kaydı atar, partition'da çift kayıt oluşmaz", "en": "If the producer resends after a network error, the broker drops the record with the same sequence number, so no duplicate appears in the partition" } },
+        { "id": "c", "text": { "tr": "Bu ayarlar tüketicinin aynı olayı iki kez işlemesini de otomatik olarak engeller", "en": "These settings also automatically prevent a consumer from processing the same event twice" } },
+        { "id": "d", "text": { "tr": "ISR tek replikaya düşerse Kafka yazmayı kabul etmeye devam eder, yalnızca uyarı üretir", "en": "If the ISR shrinks to a single replica Kafka keeps accepting writes and only logs a warning" } }
       ],
       "correct": ["a", "b"],
       "explanation": {
-        "tr": "acks=0 onay beklemediği için hızlı ama risklidir; exactly-once idempotent producer + transaction ile kayıpsız ve kopyasız teslim sağlar. At-least-once'ta hata sonrası yeniden gönderim kopyaya yol açabilir; acks=all ise leader ile birlikte tüm in-sync replica'ları bekler, en dayanıklı ama en yavaş seçenektir.",
-        "en": "acks=0 is fast but risky because it waits for no acknowledgment; exactly-once uses idempotent producers plus transactions for delivery without loss or duplicates. With at-least-once a resend after failure can cause duplicates, and acks=all waits for the leader and all in-sync replicas, making it the most durable but slowest option."
+        "tr": "acks=all ile min.insync.replicas=2, yazmanın en az iki senkron kopyada olmasını zorunlu kılar; idempotent producer, PID ve sıra numarası sayesinde yeniden gönderimdeki tekrarları broker tarafında eler. Ancak bu garanti yalnızca producer ile partition arasındadır: rebalance sonrası aynı kaydı yeniden okuyan tüketici için tekilleştirme (ör. eventId'yi Redis'te SET NX ile saklama) ayrıca gerekir. ISR, min.insync.replicas'ın altına düşerse Kafka yazmayı reddeder; bu, dayanıklılığı erişilebilirliğe tercih eden bilinçli bir davranıştır.",
+        "en": "acks=all with min.insync.replicas=2 forces a write onto at least two in-sync copies, and the idempotent producer uses its PID and sequence number so the broker discards duplicates from resends. That guarantee only covers the producer-to-partition hop: a consumer that re-reads the same record after a rebalance still needs its own deduplication (for example storing the eventId in Redis with SET NX). If the ISR falls below min.insync.replicas Kafka rejects writes; that is a deliberate choice of durability over availability."
       },
       "difficulty": "hard",
-      "concepts": ["delivery-guarantees"]
+      "concepts": ["idempotent-producer", "replication-isr"]
     }
   ]
 }

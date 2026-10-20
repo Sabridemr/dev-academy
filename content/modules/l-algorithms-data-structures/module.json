@@ -1,0 +1,17 @@
+{
+  "id": "l-algorithms-data-structures",
+  "slug": "algorithms-data-structures",
+  "code": "L",
+  "order": 12,
+  "title": {
+    "tr": "Algoritmalar ve Veri Yapıları",
+    "en": "Algorithms and Data Structures"
+  },
+  "description": {
+    "tr": "Big-O’dan dinamik programlamaya: görselleştirilmiş sıralama, graf gezintisi ve satır satır Python izleriyle.",
+    "en": "From Big-O to dynamic programming: visualised sorting, graph traversal and line-by-line Python traces."
+  },
+  "icon": "puzzle",
+  "color": "#f59e0b",
+  "group": "programming"
+}

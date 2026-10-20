@@ -17,7 +17,8 @@
       "c-design-patterns",
       "f-code-and-infrastructure",
       "h-devops-tools",
-      "i-api-sql-testing"
+      "i-api-sql-testing",
+      "n-auth-security"
     ]
   },
   {
@@ -56,7 +57,8 @@
       "g-artificial-intelligence",
       "a-system-design-fundamentals/a-07-caching",
       "a-system-design-fundamentals/a-09-message-queues-event-driven",
-      "h-devops-tools/h-12-ai-for-devops-notes"
+      "h-devops-tools/h-12-ai-for-devops-notes",
+      "m-llm-applications"
     ]
   },
   {
@@ -73,7 +75,8 @@
     "icon": "code",
     "items": [
       "k-python",
-      "c-design-patterns"
+      "c-design-patterns",
+      "l-algorithms-data-structures"
     ]
   },
   {
@@ -102,7 +105,8 @@
       "j-system-design-notes/j-02-system-design-notes-part-1",
       "h-devops-tools/h-10-mulakat-soru-cevap-ve-ozet",
       "i-api-sql-testing/i-04-api-ve-rest-api-uctan-uca-ornek-ve-mulakat",
-      "j-system-design-notes/j-11-odunlesimler-mulakat-ve-ozet"
+      "j-system-design-notes/j-11-odunlesimler-mulakat-ve-ozet",
+      "l-algorithms-data-structures"
     ]
   },
   {
@@ -142,6 +146,24 @@
       "a-system-design-fundamentals/a-03-horizontal-vertical-scaling",
       "h-devops-tools/h-01-linux-notes",
       "h-devops-tools/h-04-git-notes"
+    ]
+  },
+  {
+    "id": "security",
+    "slug": "security",
+    "title": {
+      "tr": "Güvenlik",
+      "en": "Security"
+    },
+    "description": {
+      "tr": "Kimlik doğrulama, yetkilendirme, OWASP ve güvenli tasarım.",
+      "en": "Authentication, authorisation, OWASP and secure design."
+    },
+    "icon": "shield",
+    "items": [
+      "n-auth-security",
+      "f-code-and-infrastructure/f-07-security-layers",
+      "i-api-sql-testing/i-03-api-ve-rest-api-tasarim-guvenlik-ve-idempotency"
     ]
   }
 ]

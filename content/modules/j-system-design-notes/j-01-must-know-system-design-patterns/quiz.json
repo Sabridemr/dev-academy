@@ -10,50 +10,22 @@
       "id": "q1",
       "type": "single",
       "prompt": {
-        "tr": "Yazma trafiği çok yüksek bir sistemde yazmaların önce yalnızca cache'e yapılıp veritabanının daha sonra asenkron güncellenmesini istiyorsunuz. Bu hangi caching kalıbıdır?",
-        "en": "In a system with very heavy write traffic you want writes to go only to the cache first and the database to be updated later, asynchronously. Which caching pattern is this?"
+        "tr": "Ürün detay sayfası saniyede binlerce kez okunuyor ama ürün bilgisi günde birkaç kez değişiyor; veritabanı okuma yükünden boğuluyor. İlk denenecek kalıp hangisidir?",
+        "en": "A product detail page is read thousands of times per second while product data changes only a few times a day; the database is drowning in read load. Which pattern should be tried first?"
       },
       "options": [
-        {
-          "id": "a",
-          "text": {
-            "tr": "Cache Aside (Lazy Loading)",
-            "en": "Cache Aside (Lazy Loading)"
-          }
-        },
-        {
-          "id": "b",
-          "text": {
-            "tr": "Read Through",
-            "en": "Read Through"
-          }
-        },
-        {
-          "id": "c",
-          "text": {
-            "tr": "Write Through",
-            "en": "Write Through"
-          }
-        },
-        {
-          "id": "d",
-          "text": {
-            "tr": "Write Back (Write Behind)",
-            "en": "Write Back (Write Behind)"
-          }
-        }
+        { "id": "a", "text": { "tr": "Sharding: ürün tablosunu kategoriye göre böl", "en": "Sharding: split the product table by category" } },
+        { "id": "b", "text": { "tr": "Caching: ürün bilgisini TTL'li bir önbellekten sun", "en": "Caching: serve product data from a cache with a TTL" } },
+        { "id": "c", "text": { "tr": "Saga: okuma akışını adımlara böl", "en": "Saga: split the read flow into steps" } },
+        { "id": "d", "text": { "tr": "Event sourcing: her görüntülemeyi olay olarak sakla", "en": "Event sourcing: store every view as an event" } }
       ],
-      "correct": [
-        "d"
-      ],
+      "correct": ["b"],
       "explanation": {
-        "tr": "Write Back'te yazma yalnızca cache'e yapılır, DB sonradan asenkron güncellenir; yüksek yazma yükü için uygundur. Write Through cache ve DB'ye aynı anda yazar, Cache Aside ve Read Through ise okuma yolunu (miss durumunu) tanımlar.",
-        "en": "In Write Back the write goes only to the cache and the DB is updated later asynchronously, which suits write-heavy systems. Write Through writes to cache and DB at the same time, while Cache Aside and Read Through describe the read path (cache misses)."
+        "tr": "Okuma yazmadan çok daha fazla ve veri nadiren değişiyor: önbellek için ideal profil. Sharding yazma kapasitesi ve veri hacmi için, saga çok servisli yazma akışları için, event sourcing ise durum geçmişinin gerektiği alanlar için kullanılır; hiçbiri bu problemin ilk adayı değildir.",
+        "en": "Reads vastly outnumber writes and the data rarely changes: the ideal profile for a cache. Sharding addresses write capacity and data volume, saga handles multi-service write flows and event sourcing suits domains that need state history; none of them is the first candidate here."
       },
-      "difficulty": "medium",
-      "concepts": [
-        "caching"
-      ]
+      "difficulty": "easy",
+      "concepts": ["caching"]
     },
     {
       "id": "q2",
@@ -63,193 +35,80 @@
         "en": "Put the circuit breaker's behaviour in the correct order once the dependent service starts failing."
       },
       "options": [
-        {
-          "id": "open",
-          "text": {
-            "tr": "Hatalar eşiği aşar, devre OPEN olur",
-            "en": "Failures exceed the threshold and the circuit goes OPEN"
-          }
-        },
-        {
-          "id": "block",
-          "text": {
-            "tr": "İstekler servise gitmeden hemen reddedilir (fail fast)",
-            "en": "Requests are rejected immediately without reaching the service (fail fast)"
-          }
-        },
-        {
-          "id": "wait",
-          "text": {
-            "tr": "Zaman aşımı süresi beklenir",
-            "en": "The timeout period elapses"
-          }
-        },
-        {
-          "id": "half",
-          "text": {
-            "tr": "HALF-OPEN durumunda sınırlı sayıda test isteği geçirilir",
-            "en": "In HALF-OPEN a limited number of test requests are let through"
-          }
-        },
-        {
-          "id": "closed",
-          "text": {
-            "tr": "Test istekleri başarılıysa devre CLOSED'a döner",
-            "en": "If the test requests succeed the circuit returns to CLOSED"
-          }
-        }
+        { "id": "open", "text": { "tr": "Hata oranı eşiği aşar, devre OPEN olur", "en": "The failure rate exceeds the threshold and the circuit goes OPEN" } },
+        { "id": "block", "text": { "tr": "İstekler servise gitmeden hemen reddedilir (fail fast)", "en": "Requests are rejected immediately without reaching the service (fail fast)" } },
+        { "id": "wait", "text": { "tr": "Zaman aşımı süresi beklenir", "en": "The timeout period elapses" } },
+        { "id": "half", "text": { "tr": "HALF-OPEN durumunda sınırlı sayıda deneme isteği geçirilir", "en": "In HALF-OPEN a limited number of probe requests are let through" } },
+        { "id": "closed", "text": { "tr": "Deneme istekleri başarılıysa devre CLOSED'a döner", "en": "If the probe requests succeed the circuit returns to CLOSED" } }
       ],
-      "correct": [
-        "open",
-        "block",
-        "wait",
-        "half",
-        "closed"
-      ],
+      "correct": ["open", "block", "wait", "half", "closed"],
       "explanation": {
-        "tr": "Devre eşik aşılınca açılır ve istekleri hemen keser; zaman aşımı dolunca HALF-OPEN'da az sayıda istekle servisi test eder, başarılı olursa CLOSED'a, başarısız olursa yeniden OPEN'a döner. Zaman aşımı beklenmeden HALF-OPEN'a geçilmez.",
-        "en": "The circuit opens when the threshold is exceeded and cuts requests immediately; after the timeout it tests the service with a few requests in HALF-OPEN, returning to CLOSED on success or back to OPEN on failure. It never goes HALF-OPEN before the timeout."
+        "tr": "Devre eşik aşılınca açılır ve istekleri hemen keser; zaman aşımı dolunca HALF-OPEN'da az sayıda istekle servisi yoklar, başarılı olursa CLOSED'a, başarısız olursa yeniden OPEN'a döner. Zaman aşımı beklenmeden HALF-OPEN'a geçilmez.",
+        "en": "The circuit opens once the threshold is exceeded and cuts requests immediately; after the timeout it probes the service with a few requests in HALF-OPEN, returning to CLOSED on success or back to OPEN on failure. It never goes HALF-OPEN before the timeout."
       },
       "difficulty": "easy",
-      "concepts": [
-        "circuit-breaker"
-      ]
+      "concepts": ["circuit-breaker"]
     },
     {
       "id": "q3",
       "type": "truefalse",
       "prompt": {
-        "tr": "Asenkron replikasyonda veri primary'ye yazılıp replikalara arka planda aktarıldığı için okumalar her zaman güçlü tutarlılık sağlar.",
-        "en": "In asynchronous replication data is written to the primary and copied to replicas in the background, so reads always get strong consistency."
+        "tr": "Okuma replikaları eklemek, veritabanının yazma kapasitesini de artırır; bu yüzden yazma darboğazında sharding yerine replikasyon tercih edilmelidir.",
+        "en": "Adding read replicas also increases the database's write capacity, so replication should be preferred over sharding for a write bottleneck."
       },
       "options": [
-        {
-          "id": "t",
-          "text": {
-            "tr": "Doğru",
-            "en": "True"
-          }
-        },
-        {
-          "id": "f",
-          "text": {
-            "tr": "Yanlış",
-            "en": "False"
-          }
-        }
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
       ],
-      "correct": [
-        "f"
-      ],
+      "correct": ["f"],
       "explanation": {
-        "tr": "Yanlış. Asenkron replikasyon düşük gecikme sağlar ama nihai (eventual) tutarlılık verir; replikasyon gecikmesi nedeniyle replikadan eski veri okunabilir. Güçlü tutarlılık, onaydan önce replikalara da yazan senkron replikasyonun özelliğidir.",
-        "en": "False. Asynchronous replication gives low latency but only eventual consistency; because of replication lag a replica may return stale data. Strong consistency is a property of synchronous replication, which writes to replicas before acknowledging."
+        "tr": "Yanlış. Replikasyonda her yazma yine liderden geçer ve tüm replikalara kopyalanır; yazma kapasitesi artmaz, hatta replikasyon yükü eklenir. Yazma darboğazını yatay büyüten kalıp sharding'dir; replikasyon okuma yükünü dağıtır ve erişilebilirlik sağlar.",
+        "en": "False. With replication every write still goes through the leader and is copied to all replicas; write capacity does not grow and replication adds load. Sharding is the pattern that scales writes horizontally; replication spreads read load and provides availability."
       },
-      "difficulty": "easy",
-      "concepts": [
-        "database-replication"
-      ]
+      "difficulty": "medium",
+      "concepts": ["database-replication", "database-sharding"]
     },
     {
       "id": "q4",
       "type": "multiple",
       "prompt": {
-        "tr": "E-ticaret sipariş saga'sında sipariş oluşturma, ödeme ve stok ayırma tamamlandıktan sonra bir adım başarısız olursa hangi işlemler telafi akışının parçasıdır? (Birden fazla seçin)",
-        "en": "In an e-commerce order saga, if a step fails after order creation, payment and stock reservation have completed, which actions are part of the compensation flow? (Select all that apply)"
+        "tr": "E-ticaret sipariş saga'sında sipariş oluşturma, ödeme ve stok ayırma tamamlandıktan sonra kargo planlama adımı başarısız olursa hangi işlemler telafi akışının parçasıdır? (Birden fazla seçin)",
+        "en": "In an e-commerce order saga, if the shipping step fails after order creation, payment and stock reservation have completed, which actions are part of the compensation flow? (Select all that apply)"
       },
       "options": [
-        {
-          "id": "a",
-          "text": {
-            "tr": "Ayrılan stoğu serbest bırakmak",
-            "en": "Releasing the reserved stock"
-          }
-        },
-        {
-          "id": "b",
-          "text": {
-            "tr": "Ödemeyi iade etmek",
-            "en": "Refunding the payment"
-          }
-        },
-        {
-          "id": "c",
-          "text": {
-            "tr": "Siparişi iptal etmek",
-            "en": "Cancelling the order"
-          }
-        },
-        {
-          "id": "d",
-          "text": {
-            "tr": "Tüm servislerin tablolarını tek bir dağıtık transaction ile kilitleyip geri almak",
-            "en": "Locking every service's tables in one distributed transaction and rolling it back"
-          }
-        }
+        { "id": "a", "text": { "tr": "Ayrılan stoğu serbest bırakmak", "en": "Releasing the reserved stock" } },
+        { "id": "b", "text": { "tr": "Ödemeyi iade etmek", "en": "Refunding the payment" } },
+        { "id": "c", "text": { "tr": "Siparişi iptal durumuna çekmek", "en": "Marking the order as cancelled" } },
+        { "id": "d", "text": { "tr": "Tüm servislerin tablolarını tek bir dağıtık transaction ile kilitleyip geri almak", "en": "Locking every service's tables in one distributed transaction and rolling it back" } }
       ],
-      "correct": [
-        "a",
-        "b",
-        "c"
-      ],
+      "correct": ["a", "b", "c"],
       "explanation": {
-        "tr": "Saga'da her adım yerel bir transaction'dır ve hata olunca tamamlanmış adımlar telafi işlemleriyle (stoğu bırak, ödemeyi iade et, siparişi iptal et) geri alınır. Saga tam da uzun süreli kilitlerden ve dağıtık transaction'dan kaçınmak için kullanılır, bu yüzden d yanlıştır.",
-        "en": "In a saga each step is a local transaction and on failure completed steps are undone by compensating actions (release stock, refund payment, cancel order). Saga exists precisely to avoid long-running locks and distributed transactions, so d is wrong."
+        "tr": "Saga'da her adım yerel bir transaction'dır; hata olunca tamamlanmış adımlar ters sırayla telafi işlemleriyle (stoğu bırak, ödemeyi iade et, siparişi iptal et) geri alınır. Saga tam da uzun süreli kilitlerden ve dağıtık transaction'dan kaçınmak için vardır, bu yüzden d yanlıştır.",
+        "en": "In a saga each step is a local transaction; on failure the completed steps are undone in reverse order by compensating actions (release stock, refund payment, cancel order). Saga exists precisely to avoid long-running locks and distributed transactions, so d is wrong."
       },
       "difficulty": "medium",
-      "concepts": [
-        "saga-pattern"
-      ]
+      "concepts": ["saga-pattern"]
     },
     {
       "id": "q5",
       "type": "single",
       "prompt": {
-        "tr": "CQRS'te okuma tarafındaki veritabanı nasıl güncel tutulur?",
-        "en": "In CQRS, how is the read-side database kept up to date?"
+        "tr": "Sipariş servisi önce veritabanına yazıyor, sonra kuyruğa 'sipariş oluştu' olayı gönderiyor. Yazma başarılı ama kuyruk gönderimi ağ hatasıyla başarısız oluyor; istemci de zaman aşımı görüp isteği yeniden gönderiyor. Hem kaybolan olayı hem de çift siparişi önleyen kalıp çifti hangisidir?",
+        "en": "The order service first writes to the database, then sends an 'order created' event to the queue. The write succeeds but the queue send fails with a network error; the client sees a timeout and resends the request. Which pair of patterns prevents both the lost event and the duplicate order?"
       },
       "options": [
-        {
-          "id": "a",
-          "text": {
-            "tr": "Komut tarafı yazmayı kaydettikten sonra yayınlanan olaylarla denormalize Read DB güncellenir",
-            "en": "After the command side saves a write, published events update the denormalized Read DB"
-          }
-        },
-        {
-          "id": "b",
-          "text": {
-            "tr": "İstemci her yazmayı hem Write DB'ye hem Read DB'ye kendisi gönderir",
-            "en": "The client itself sends every write to both the Write DB and the Read DB"
-          }
-        },
-        {
-          "id": "c",
-          "text": {
-            "tr": "Query Handler her okumada Write DB'yi sorgulayıp normalize modeli döner",
-            "en": "The Query Handler queries the Write DB on every read and returns the normalized model"
-          }
-        },
-        {
-          "id": "d",
-          "text": {
-            "tr": "Read DB ile Write DB aynı tablodur, yalnızca API'ler ayrıdır",
-            "en": "The Read DB and Write DB are the same table; only the APIs differ"
-          }
-        }
+        { "id": "a", "text": { "tr": "Outbox: olayı iş verisiyle aynı transaction'da tabloya yaz; idempotency anahtarı: tekrarlanan isteği tanıyıp aynı yanıtı döndür", "en": "Outbox: write the event to a table in the same transaction as the business data; idempotency key: recognise the repeated request and return the same response" } },
+        { "id": "b", "text": { "tr": "Circuit breaker: kuyruk hata verince devreyi aç; CDN: isteği uçta önbellekle", "en": "Circuit breaker: open the circuit when the queue fails; CDN: cache the request at the edge" } },
+        { "id": "c", "text": { "tr": "Replikasyon: olayı bir replikaya yaz; rate limiting: istemcinin yeniden denemesini engelle", "en": "Replication: write the event to a replica; rate limiting: block the client's retry" } },
+        { "id": "d", "text": { "tr": "Pub/sub: olayı birden fazla konuya yayınla; sharding: siparişi iki shard'a yaz", "en": "Pub/sub: publish the event to several topics; sharding: write the order to two shards" } }
       ],
-      "correct": [
-        "a"
-      ],
+      "correct": ["a"],
       "explanation": {
-        "tr": "CQRS'te Command API yazmayı normalize Write DB'ye kaydeder, bir olay (ör. OrderCreated) yayınlanır ve olay işleyici denormalize Read DB'yi günceller; sorgular bu modelden okunur. Bu yüzden okuma tarafı nihai tutarlıdır; diğer seçenekler okuma ve yazma modellerinin ayrılması fikrini ortadan kaldırır.",
-        "en": "In CQRS the Command API saves the write to the normalized Write DB, an event (e.g. OrderCreated) is published and an event handler updates the denormalized Read DB that queries read from. This is why the read side is eventually consistent; the other options remove the separation of read and write models."
+        "tr": "Bu klasik 'dual write' problemidir: veritabanı ve kuyruk iki ayrı sistemdir, biri başarılı diğeri başarısız olabilir. Outbox olayı iş verisiyle aynı transaction'da yazarak atomik yapar, ayrı bir süreç olayı kuyruğa taşır. İstemcinin yeniden gönderdiği istek ise idempotency anahtarıyla tanınır ve ikinci sipariş yaratılmaz. Diğer seçenekler problemin ne atomikliğini ne de tekrar güvenliğini ele alır; rate limiting ile yeniden denemeyi engellemek de kullanıcıyı belirsizlikte bırakır.",
+        "en": "This is the classic dual-write problem: the database and the queue are two separate systems, so one can succeed while the other fails. The outbox makes the event atomic by writing it in the same transaction as the business data, and a separate process relays it to the queue. The client's resent request is recognised by its idempotency key, so no second order is created. The other options address neither atomicity nor safe retries; blocking retries with rate limiting would simply leave the user in limbo."
       },
-      "difficulty": "medium",
-      "concepts": [
-        "cqrs",
-        "event-driven-architecture"
-      ]
+      "difficulty": "hard",
+      "concepts": ["outbox", "idempotency"]
     }
   ]
 }

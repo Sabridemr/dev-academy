@@ -20,6 +20,9 @@ import {
   Rocket,
   Route,
   Server,
+  Shield,
+  Lock,
+  Cpu,
   Terminal,
   type LucideIcon,
 } from 'lucide-react';
@@ -43,6 +46,9 @@ export const ICONS: Record<string, LucideIcon> = {
   route: Route,
   container: Container,
   code: Code2,
+  shield: Shield,
+  lock: Lock,
+  cpu: Cpu,
 };
 
 export function SectionHeading({

@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 440" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Bir API çağrısının anatomisi</title>
+  <desc id="desc">Solda istemci, HTTP isteğini metod, URL, başlıklar ve gövde ile gönderir. Ortada sunucu: yönlendirici isteği handler'a iletir, handler doğrulama yapar ve veritabanına gider. Yanıt durum kodu, başlıklar ve JSON gövde ile istemciye döner.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-primary, #6366f1)"/>
+    </marker>
+    <marker id="arrow-back" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-success, #10b981)"/>
+    </marker>
+    <marker id="arrow-m" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+  </defs>
+
+  <!-- Sunucu kutusu -->
+  <rect x="330" y="30" width="540" height="380" rx="16" fill="var(--da-surface, #f8fafc)" stroke="var(--da-border, #cbd5e1)" stroke-dasharray="6 6"/>
+  <text x="600" y="56" text-anchor="middle" font-size="13" fill="var(--da-muted, #64748b)">Sunucu (api.example.com)</text>
+
+  <!-- İstemci -->
+  <rect x="30" y="170" width="150" height="100" rx="12" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5"/>
+  <text x="105" y="210" text-anchor="middle" font-size="15" font-weight="600" fill="var(--da-fg, #0f172a)">İstemci</text>
+  <text x="105" y="232" text-anchor="middle" font-size="11" fill="var(--da-muted, #64748b)">tarayıcı · mobil · fetch · curl</text>
+
+  <!-- İstek oku -->
+  <path d="M 180 200 L 340 200" stroke="var(--da-primary, #6366f1)" stroke-width="2.2" fill="none" marker-end="url(#arrow)"/>
+  <!-- İstek içeriği -->
+  <rect x="40" y="60" width="250" height="92" rx="10" fill="var(--da-primary, #6366f1)" opacity="0.10" stroke="var(--da-primary, #6366f1)"/>
+  <g font-size="11.5" fill="var(--da-fg, #0f172a)">
+    <text x="52" y="80" font-weight="600" fill="var(--da-primary, #6366f1)">İSTEK</text>
+    <text x="52" y="98">POST /v1/users?fields=id,name</text>
+    <text x="52" y="114">Authorization: Bearer eyJ…</text>
+    <text x="52" y="130">Content-Type: application/json</text>
+    <text x="52" y="146">{ "name": "Ayşe", "email": "…" }</text>
+  </g>
+  <path d="M 200 152 C 220 170, 230 185, 240 198" stroke="var(--da-primary, #6366f1)" stroke-width="1" fill="none" stroke-dasharray="3 3"/>
+
+  <!-- Yanıt oku -->
+  <path d="M 340 240 L 180 240" stroke="var(--da-success, #10b981)" stroke-width="2.2" fill="none" marker-end="url(#arrow-back)"/>
+  <!-- Yanıt içeriği -->
+  <rect x="40" y="290" width="250" height="92" rx="10" fill="var(--da-success, #10b981)" opacity="0.10" stroke="var(--da-success, #10b981)"/>
+  <g font-size="11.5" fill="var(--da-fg, #0f172a)">
+    <text x="52" y="310" font-weight="600" fill="var(--da-success, #10b981)">YANIT</text>
+    <text x="52" y="328">201 Created</text>
+    <text x="52" y="344">Content-Type: application/json</text>
+    <text x="52" y="360">Location: /v1/users/42</text>
+    <text x="52" y="376">{ "id": 42, "name": "Ayşe", … }</text>
+  </g>
+  <path d="M 200 290 C 220 272, 230 258, 240 244" stroke="var(--da-success, #10b981)" stroke-width="1" fill="none" stroke-dasharray="3 3"/>
+
+  <!-- Yönlendirici -->
+  <rect x="350" y="150" width="130" height="120" rx="12" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5"/>
+  <text x="415" y="178" text-anchor="middle" font-size="14" font-weight="600" fill="var(--da-fg, #0f172a)">Yönlendirici</text>
+  <g font-size="10.5" fill="var(--da-muted, #64748b)" text-anchor="middle">
+    <text x="415" y="200">metod + yol eşleşir</text>
+    <text x="415" y="216">GET /v1/users/:id</text>
+    <text x="415" y="232">POST /v1/users ◀</text>
+    <text x="415" y="252">auth middleware</text>
+  </g>
+
+  <!-- Yönlendirici → handler -->
+  <path d="M 480 210 L 540 210" stroke="var(--da-muted, #64748b)" stroke-width="1.8" fill="none" marker-end="url(#arrow-m)"/>
+
+  <!-- Handler -->
+  <rect x="542" y="130" width="170" height="160" rx="12" fill="var(--da-primary, #6366f1)" opacity="0.12" stroke="var(--da-primary, #6366f1)" stroke-width="2"/>
+  <text x="627" y="158" text-anchor="middle" font-size="14" font-weight="600" fill="var(--da-primary, #6366f1)">Handler</text>
+  <g font-size="11" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="627" y="184">1. gövdeyi doğrula</text>
+    <text x="627" y="202">→ geçersizse 422</text>
+    <text x="627" y="224">2. iş mantığı</text>
+    <text x="627" y="246">3. veritabanına yaz</text>
+    <text x="627" y="268">4. 201 + JSON döndür</text>
+  </g>
+
+  <!-- Handler → DB -->
+  <path d="M 712 230 L 772 230" stroke="var(--da-muted, #64748b)" stroke-width="1.8" fill="none" marker-end="url(#arrow-m)"/>
+  <path d="M 772 250 L 712 250" stroke="var(--da-muted, #64748b)" stroke-width="1.8" fill="none" marker-end="url(#arrow-m)" stroke-dasharray="4 3"/>
+
+  <!-- Veritabanı -->
+  <g fill="var(--da-accent, #f59e0b)" opacity="0.18">
+    <ellipse cx="815" cy="195" rx="40" ry="12"/>
+    <rect x="775" y="195" width="80" height="80"/>
+    <ellipse cx="815" cy="275" rx="40" ry="12"/>
+  </g>
+  <g fill="none" stroke="var(--da-accent, #f59e0b)" stroke-width="1.5">
+    <ellipse cx="815" cy="195" rx="40" ry="12"/>
+    <path d="M 775 195 L 775 275"/>
+    <path d="M 855 195 L 855 275"/>
+    <ellipse cx="815" cy="275" rx="40" ry="12"/>
+  </g>
+  <text x="815" y="242" text-anchor="middle" font-size="12" fill="var(--da-fg, #0f172a)">Veritabanı</text>
+  <text x="742" y="222" text-anchor="middle" font-size="9.5" fill="var(--da-muted, #64748b)">INSERT</text>
+  <text x="742" y="266" text-anchor="middle" font-size="9.5" fill="var(--da-muted, #64748b)">id = 42</text>
+
+  <!-- Hata yolu -->
+  <path d="M 590 290 C 590 330, 470 330, 470 340" stroke="var(--da-danger, #ef4444)" stroke-width="1.4" fill="none" stroke-dasharray="4 3"/>
+  <rect x="380" y="340" width="190" height="46" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-danger, #ef4444)" stroke-width="1.4"/>
+  <text x="475" y="359" text-anchor="middle" font-size="11.5" fill="var(--da-danger, #ef4444)">4xx: istemci isteği düzeltir</text>
+  <text x="475" y="376" text-anchor="middle" font-size="11.5" fill="var(--da-danger, #ef4444)">5xx: sunucu hatası, sonra tekrar dene</text>
+
+  <!-- Alt not -->
+  <text x="450" y="428" text-anchor="middle" font-size="12" fill="var(--da-muted, #64748b)">Durumsuz döngü: kimlik her istekte başlıkla taşınır; sunucu istekler arasında istemciyi hatırlamak zorunda değildir.</text>
+</svg>

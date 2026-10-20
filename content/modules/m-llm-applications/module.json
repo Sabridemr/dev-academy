@@ -1,0 +1,17 @@
+{
+  "id": "m-llm-applications",
+  "slug": "llm-applications",
+  "code": "M",
+  "order": 13,
+  "title": {
+    "tr": "LLM Uygulamaları: RAG, Ajanlar ve Üretim",
+    "en": "LLM Applications: RAG, Agents and Production"
+  },
+  "description": {
+    "tr": "Token ve bağlam penceresinden RAG, vektör veritabanı, değerlendirme, ajanlar, guardrail ve maliyet yönetimine.",
+    "en": "From tokens and context windows to RAG, vector databases, evaluation, agents, guardrails and cost management."
+  },
+  "icon": "brain",
+  "color": "#a855f7",
+  "group": "ai"
+}

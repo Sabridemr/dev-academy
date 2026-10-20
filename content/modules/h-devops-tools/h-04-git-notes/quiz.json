@@ -1,112 +1,49 @@
 {
   "id": "h-04-git-notes-quiz",
-  "title": {
-    "tr": "Git Quiz",
-    "en": "Git Quiz"
-  },
+  "title": { "tr": "Git Quiz", "en": "Git Quiz" },
   "passScore": 70,
   "questions": [
     {
       "id": "q1",
       "type": "order",
       "prompt": {
-        "tr": "Git yaşam döngüsüne göre bir değişikliğin çalışma dizininden uzak depoya ulaşma adımlarını sıraya koyun.",
-        "en": "Following the Git lifecycle, order the steps a change takes from the working directory to the remote repository."
+        "tr": "Bir değişikliğin çalışma dizininden uzak depoya ulaşma adımlarını sıraya koyun.",
+        "en": "Order the steps a change takes from the working directory to the remote repository."
       },
       "options": [
-        {
-          "id": "commit",
-          "text": {
-            "tr": "git commit -m \"mesaj\" ile yerel depoya kaydet",
-            "en": "Save it to the local repository with git commit -m \"message\""
-          }
-        },
-        {
-          "id": "edit",
-          "text": {
-            "tr": "Çalışma dizininde dosyayı değiştir",
-            "en": "Modify the file in the working directory"
-          }
-        },
-        {
-          "id": "push",
-          "text": {
-            "tr": "git push origin <dal> ile uzak depoya gönder",
-            "en": "Send it to the remote with git push origin <branch>"
-          }
-        },
-        {
-          "id": "add",
-          "text": {
-            "tr": "git add <dosya> ile staging alanına al",
-            "en": "Move it to the staging area with git add <file>"
-          }
-        }
+        { "id": "commit", "text": { "tr": "git commit -m \"mesaj\" ile yerel depoya kaydet", "en": "Save it to the local repository with git commit -m \"message\"" } },
+        { "id": "edit", "text": { "tr": "Çalışma dizininde dosyayı değiştir", "en": "Modify the file in the working directory" } },
+        { "id": "push", "text": { "tr": "git push origin <dal> ile uzak depoya gönder", "en": "Send it to the remote with git push origin <branch>" } },
+        { "id": "add", "text": { "tr": "git add <dosya> ile staging alanına al", "en": "Move it to the staging area with git add <file>" } }
       ],
-      "correct": [
-        "edit",
-        "add",
-        "commit",
-        "push"
-      ],
+      "correct": ["edit", "add", "commit", "push"],
       "explanation": {
-        "tr": "Akış Modify → Add → Commit → Push'tur: değişiklik önce çalışma dizininde yapılır, git add ile staging'e alınır, git commit ile yerel depoya (.git) kaydedilir ve git push ile uzak depoya gönderilir. Staging'e alınmamış bir değişiklik commit'e girmez, commit edilmemiş bir değişiklik de push edilemez.",
-        "en": "The flow is Modify → Add → Commit → Push: the change is made in the working directory, staged with git add, saved to the local repository (.git) with git commit and sent to the remote with git push. An unstaged change does not go into a commit, and an uncommitted change cannot be pushed."
+        "tr": "Değişiklik önce çalışma dizininde yapılır, git add ile staging'e alınır, git commit ile yerel depoya (.git) yazılır ve git push ile uzak depoya gönderilir. Staging'e alınmamış bir değişiklik commit'e girmez; commit edilmemiş bir değişiklik push edilemez.",
+        "en": "The change is made in the working directory, staged with git add, written to the local repository (.git) with git commit and sent to the remote with git push. An unstaged change does not enter a commit; an uncommitted change cannot be pushed."
       },
       "difficulty": "easy",
-      "concepts": [
-        "staging-area",
-        "commit"
-      ]
+      "concepts": ["staging-area", "commit"]
     },
     {
       "id": "q2",
       "type": "single",
       "prompt": {
-        "tr": "Takım arkadaşının uzak depoya gönderdiği değişiklikleri, kendi dalına hemen birleştirmeden önce incelemek istiyorsun. Hangi komut uygundur?",
+        "tr": "Ekip arkadaşının uzak depoya gönderdiği değişiklikleri, kendi dalına birleştirmeden önce incelemek istiyorsun. Hangi komut uygundur?",
         "en": "You want to inspect the changes a teammate pushed to the remote before merging them into your branch. Which command fits?"
       },
       "options": [
-        {
-          "id": "a",
-          "text": {
-            "tr": "git fetch origin",
-            "en": "git fetch origin"
-          }
-        },
-        {
-          "id": "b",
-          "text": {
-            "tr": "git pull origin main",
-            "en": "git pull origin main"
-          }
-        },
-        {
-          "id": "c",
-          "text": {
-            "tr": "git push origin main",
-            "en": "git push origin main"
-          }
-        },
-        {
-          "id": "d",
-          "text": {
-            "tr": "git clone <url>",
-            "en": "git clone <url>"
-          }
-        }
+        { "id": "a", "text": { "tr": "git fetch origin", "en": "git fetch origin" } },
+        { "id": "b", "text": { "tr": "git pull origin main", "en": "git pull origin main" } },
+        { "id": "c", "text": { "tr": "git push origin main", "en": "git push origin main" } },
+        { "id": "d", "text": { "tr": "git clone <url>", "en": "git clone <url>" } }
       ],
-      "correct": [
-        "a"
-      ],
+      "correct": ["a"],
       "explanation": {
-        "tr": "git fetch uzak depodaki değişiklikleri indirir ve uzak takip dallarını günceller ama otomatik birleştirme yapmaz. git pull ise fetch + merge'dür, yani değişiklikleri hemen dala birleştirir; push gönderir, clone ise depoyu baştan kopyalar.",
-        "en": "git fetch downloads the remote changes and updates the remote-tracking branches but does not merge automatically. git pull is fetch + merge, so it merges immediately; push sends changes and clone copies the whole repository from scratch."
+        "tr": "git fetch uzak depodaki commit'leri indirir ve origin/main gibi uzak takip dallarını günceller ama hiçbir şeyi birleştirmez; git log main..origin/main ile gelenleri inceleyebilirsin. git pull ise fetch + merge yaptığı için hemen birleştirir; push gönderir, clone depoyu baştan kopyalar.",
+        "en": "git fetch downloads the remote commits and updates remote-tracking branches such as origin/main without merging anything; you can inspect what arrived with git log main..origin/main. git pull is fetch + merge, so it merges immediately; push sends changes and clone copies the whole repository."
       },
       "difficulty": "easy",
-      "concepts": [
-        "remote-repository"
-      ]
+      "concepts": ["remote-repository"]
     },
     {
       "id": "q3",
@@ -116,46 +53,18 @@
         "en": "You accidentally ran git reset --hard and your latest commits no longer show in the branch history. Which command do you use first to find the lost commit?"
       },
       "options": [
-        {
-          "id": "a",
-          "text": {
-            "tr": "git reflog",
-            "en": "git reflog"
-          }
-        },
-        {
-          "id": "b",
-          "text": {
-            "tr": "git log --oneline",
-            "en": "git log --oneline"
-          }
-        },
-        {
-          "id": "c",
-          "text": {
-            "tr": "git stash pop",
-            "en": "git stash pop"
-          }
-        },
-        {
-          "id": "d",
-          "text": {
-            "tr": "git restore --staged <dosya>",
-            "en": "git restore --staged <file>"
-          }
-        }
+        { "id": "a", "text": { "tr": "git reflog", "en": "git reflog" } },
+        { "id": "b", "text": { "tr": "git log --oneline", "en": "git log --oneline" } },
+        { "id": "c", "text": { "tr": "git stash pop", "en": "git stash pop" } },
+        { "id": "d", "text": { "tr": "git restore --staged <dosya>", "en": "git restore --staged <file>" } }
       ],
-      "correct": [
-        "a"
-      ],
+      "correct": ["a"],
       "explanation": {
-        "tr": "git reflog, HEAD'in tüm hareketlerini (reset, rebase, checkout dahil) kaydeder; kayıp commit'in hash'i buradan bulunup git checkout veya git branch ile geri getirilir. git log yalnızca dalın mevcut geçmişini gösterir; stash pop saklanmış değişiklikleri uygular, restore --staged ise bir dosyayı staging'den çıkarır.",
-        "en": "git reflog records every HEAD movement (including reset, rebase and checkout); you find the lost commit's hash there and bring it back with git checkout or git branch. git log only shows the branch's current history; stash pop applies stashed changes and restore --staged unstages a file."
+        "tr": "git reflog, HEAD'in her hareketini (reset, rebase, checkout dahil) yerel olarak kaydeder; kayıp commit'in hash'i burada bulunur ve git reset --hard HEAD@{n} ya da git branch kurtarma <hash> ile geri getirilir. git log yalnızca dalın mevcut geçmişini gösterir; stash pop saklanmış değişiklikleri uygular; restore --staged bir dosyayı staging'den çıkarır.",
+        "en": "git reflog records every HEAD movement locally (including reset, rebase and checkout); the lost commit's hash is found there and restored with git reset --hard HEAD@{n} or git branch rescue <hash>. git log only shows the branch's current history; stash pop applies stashed changes; restore --staged unstages a file."
       },
       "difficulty": "medium",
-      "concepts": [
-        "git-reflog"
-      ]
+      "concepts": ["git-reflog"]
     },
     {
       "id": "q4",
@@ -165,84 +74,37 @@
         "en": "Because rebase preserves the original commits, it is safe to use on shared branches such as main."
       },
       "options": [
-        {
-          "id": "t",
-          "text": {
-            "tr": "Doğru",
-            "en": "True"
-          }
-        },
-        {
-          "id": "f",
-          "text": {
-            "tr": "Yanlış",
-            "en": "False"
-          }
-        }
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
       ],
-      "correct": [
-        "f"
-      ],
+      "correct": ["f"],
       "explanation": {
-        "tr": "Yanlış. Rebase commit'leri en son commit'in üzerine yeniden uygular ve farklı kimlikli yeni commit'ler üretir, yani geçmişi yeniden yazar. Bu yüzden paylaşılan dallarda rebase yapılmaz; orada geçmişi koruyan merge tercih edilir, rebase ise kendi feature dalını PR öncesi güncellemek içindir.",
-        "en": "False. Rebase replays commits on top of the latest commit and creates new commits with different IDs, i.e. it rewrites history. That is why you avoid rebasing shared branches and prefer merge, which preserves history; rebase is for updating your own feature branch before a PR."
+        "tr": "Yanlış. Rebase, commit'leri hedef dalın ucuna yeniden uygular ve farklı hash'li yeni commit'ler üretir; yani geçmişi yeniden yazar. Başkalarının üzerine iş yaptığı bir dalda bu, herkesin geçmişini bozar. Paylaşılan dallarda geçmişi koruyan merge kullanılır; rebase kendi feature dalını PR öncesi güncellemek içindir.",
+        "en": "False. Rebase replays commits on top of the target branch and produces new commits with different hashes, i.e. it rewrites history. On a branch others have built on, that breaks everyone's history. Shared branches use merge, which preserves history; rebase is for updating your own feature branch before a PR."
       },
       "difficulty": "medium",
-      "concepts": [
-        "rebase",
-        "merge"
-      ]
+      "concepts": ["rebase", "merge"]
     },
     {
       "id": "q5",
-      "type": "multiple",
+      "type": "single",
       "prompt": {
-        "tr": "git stash ile ilgili hangi ifadeler doğrudur? (Birden fazla seçin)",
-        "en": "Which statements about git stash are true? (Select all that apply)"
+        "tr": "`git mv utils.ts helpers.ts` yapıp içeriğe dokunmadan commit'ledin. Git'in nesne veritabanında ne olur?",
+        "en": "You run `git mv utils.ts helpers.ts` and commit without touching the content. What happens in Git's object database?"
       },
       "options": [
-        {
-          "id": "a",
-          "text": {
-            "tr": "Commit edilmemiş değişiklikleri geçici olarak saklar ve çalışma dizinini temizler.",
-            "en": "It temporarily saves uncommitted changes and cleans the working directory."
-          }
-        },
-        {
-          "id": "b",
-          "text": {
-            "tr": "git stash pop en son stash'i uygular ve listeden siler.",
-            "en": "git stash pop applies the latest stash and removes it from the list."
-          }
-        },
-        {
-          "id": "c",
-          "text": {
-            "tr": "git stash apply en son stash'i uygular ama listede tutar.",
-            "en": "git stash apply applies the latest stash but keeps it in the list."
-          }
-        },
-        {
-          "id": "d",
-          "text": {
-            "tr": "git stash değişiklikleri otomatik olarak uzak depoya yedekler.",
-            "en": "git stash automatically backs up the changes to the remote repository."
-          }
-        }
+        { "id": "a", "text": { "tr": "Yeni bir blob, yeni bir tree ve yeni bir commit oluşur", "en": "A new blob, a new tree and a new commit are created" } },
+        { "id": "b", "text": { "tr": "Blob aynı kalır; yeni bir tree ve yeni bir commit oluşur", "en": "The blob stays the same; a new tree and a new commit are created" } },
+        { "id": "c", "text": { "tr": "Yalnızca yeni bir commit oluşur; tree ve blob değişmez", "en": "Only a new commit is created; tree and blob are unchanged" } },
+        { "id": "d", "text": { "tr": "Eski blob silinir ve yeni adla yeniden yazılır", "en": "The old blob is deleted and rewritten under the new name" } }
       ],
-      "correct": [
-        "a",
-        "b",
-        "c"
-      ],
+      "correct": ["b"],
       "explanation": {
-        "tr": "Stash, yarım kalan işi commit etmeden kenara koyup temiz bir çalışma dizini sağlar; dal değiştirmeden önce kullanılır. pop uygular ve siler, apply uygular ve saklar. Stash yereldir; uzak depoya hiçbir şey göndermez.",
-        "en": "Stash sets unfinished work aside without committing it and gives you a clean working directory, typically before switching branches. pop applies and removes, apply applies and keeps. Stash is local; it does not send anything to the remote."
+        "tr": "Blob yalnızca içeriği tutar ve adı içeriğin SHA-1 özetidir; içerik değişmediği için aynı blob paylaşılır. Dosya adı tree'de yaşar, dolayısıyla yeni bir tree gerekir; commit de yeni tree'yi işaret ettiği için yenidir. Git yeniden adlandırmayı ayrıca kaydetmez, iki tree'yi karşılaştırarak çıkarır.",
+        "en": "A blob holds only content and its name is the SHA-1 of that content; since the content did not change, the same blob is shared. File names live in the tree, so a new tree is needed, and the commit is new because it points to the new tree. Git does not record renames explicitly; it infers them by comparing the two trees."
       },
-      "difficulty": "easy",
-      "concepts": [
-        "git-stash"
-      ]
+      "difficulty": "hard",
+      "concepts": ["git-objects", "commit-graph"]
     }
   ]
 }

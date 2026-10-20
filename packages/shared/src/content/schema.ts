@@ -104,6 +104,17 @@ export const InteractiveTypeSchema = z.enum([
   'traffic-wave',
   'fan-out',
   'geo-index',
+  'sorting-visualizer',
+  'graph-traversal',
+  'hash-table',
+  'big-o-plotter',
+  'rag-pipeline',
+  'prompt-playground',
+  'token-cost',
+  'oauth-flow',
+  'jwt-inspector',
+  'bruteforce-login',
+  'git-graph',
 ]);
 export type InteractiveType = z.infer<typeof InteractiveTypeSchema>;
 
@@ -140,6 +151,17 @@ export const INTERACTIVE_PARAMS = {
   'traffic-wave': ['autoscale', 'baselineRps', 'peakMultiplier', 'queueEnabled', 'rampSeconds', 'scaleUpDelaySeconds'],
   'fan-out': ['avgFollowers', 'celebrities', 'celebrity', 'celebrityFollowers', 'celebrityThreshold', 'mode'],
   'geo-index': ['drivers', 'resolution', 'ringSize', 'showBoundaryProblem'],
+  'sorting-visualizer': ['algorithm', 'size', 'speed'],
+  'graph-traversal': ['algorithm', 'nodes', 'start', 'target', 'weighted'],
+  'hash-table': ['buckets', 'collision', 'loadFactor'],
+  'big-o-plotter': ['functions', 'maxN'],
+  'rag-pipeline': ['chunkSize', 'overlap', 'query', 'topK'],
+  'prompt-playground': ['preset', 'temperature'],
+  'token-cost': ['inputTokens', 'model', 'outputTokens', 'requestsPerDay'],
+  'oauth-flow': ['flow', 'pkce'],
+  'jwt-inspector': ['secret', 'token'],
+  'bruteforce-login': ['attemptsPerSecond', 'lockoutAfter', 'lockoutSeconds', 'passwordSpace'],
+  'git-graph': ['scenario'],
 } as const satisfies Record<InteractiveType, readonly string[]>;
 
 /** Quiz soru sayısı kuralı (içerik yazım kılavuzu): en az 3, en fazla 6 */
