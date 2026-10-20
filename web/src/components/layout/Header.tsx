@@ -5,7 +5,9 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import {
+  Award,
   BookOpen,
+  BriefcaseBusiness,
   ChevronDown,
   Flame,
   History,
@@ -28,6 +30,7 @@ import { useI18n } from '@/i18n';
 import { api } from '@/lib/api';
 import { useAuthStore, useIsAuthenticated, useIsEditor } from '@/lib/auth-store';
 import { useCommandPalette } from '@/lib/command-palette-store';
+import { summaryLevel } from '@/lib/gamification';
 import { useProgressSummary } from '@/lib/hooks';
 import { cn } from '@/lib/utils';
 import { applyTheme, resolveTheme, THEME_STORAGE_KEY } from '../providers';
@@ -164,6 +167,7 @@ export function Header() {
               <span className="tabular-nums">{summary.currentStreak}</span>
             </Link>
           )}
+          {authed && <LevelBadge summary={summary} />}
 
           <button
             type="button"
@@ -235,6 +239,33 @@ export function Header() {
   );
 }
 
+/** Seviye rozeti: "Lv N" + seviye içi mini ilerleme çubuğu (XP özeti yoksa çizilmez) */
+function LevelBadge({ summary }: { summary: ReturnType<typeof useProgressSummary>['data'] }) {
+  const { t, locale } = useI18n();
+  const lv = summaryLevel(summary);
+  if (!lv) return null;
+  const pct = Math.round(lv.progress * 100);
+  const title = t('nav.levelTitle', { level: lv.level, xp: lv.xp.toLocaleString(locale) });
+  return (
+    <Link
+      href="/dashboard"
+      className="chip chip-primary hidden h-9 flex-col items-stretch justify-center gap-1 px-3 sm:inline-flex"
+      title={title}
+      aria-label={title}
+    >
+      <span className="text-xs font-semibold leading-none tabular-nums">
+        {t('nav.levelShort', { level: lv.level })}
+      </span>
+      <span
+        className="block h-1 w-10 overflow-hidden rounded-full bg-primary/20"
+        aria-hidden="true"
+      >
+        <span className="block h-full rounded-full bg-primary" style={{ width: `${pct}%` }} />
+      </span>
+    </Link>
+  );
+}
+
 /** Avatarlı kullanıcı menüsü: ad/e-posta, panel, dil ve tema kısayolları, çıkış */
 function UserMenu({
   name,
@@ -297,6 +328,8 @@ function UserMenu({
           <MenuLink href="/review" icon={Repeat} label={t('nav.review')} />
           <MenuLink href="/library" icon={Library} label={t('nav.library')} />
           <MenuLink href="/history" icon={History} label={t('nav.history')} />
+          <MenuLink href="/exam" icon={BriefcaseBusiness} label={t('nav.exam')} />
+          <MenuLink href="/certificates" icon={Award} label={t('nav.certificates')} />
           <div className="my-1 border-t border-border" />
           <MenuLink href="/settings" icon={Settings} label={t('nav.settings')} />
           <div className="my-1 border-t border-border" />
@@ -437,6 +470,24 @@ function MobileMenu({
           </li>
         ))}
       </ul>
+      {authed && (
+        <ul className="mt-3 grid grid-cols-2 gap-1 border-t border-border pt-3">
+          {[
+            { href: '/history', label: t('nav.history'), icon: History },
+            { href: '/exam', label: t('nav.exam'), icon: BriefcaseBusiness },
+            { href: '/certificates', label: t('nav.certificates'), icon: Award },
+          ].map((l) => (
+            <li key={l.href}>
+              <Link
+                href={l.href}
+                className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm hover:bg-elevated"
+              >
+                <l.icon size={16} /> {l.label}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
       <div className="mt-3 flex gap-2 border-t border-border pt-3">
         <button type="button" className="btn-ghost flex-1" onClick={onToggleTheme}>
           {dark ? <Sun size={15} /> : <Moon size={15} />}

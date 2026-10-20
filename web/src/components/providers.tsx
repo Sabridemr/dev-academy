@@ -27,6 +27,7 @@ export function Providers({ locale, children }: { locale: string; children: Reac
         <ToastProvider>
           <AuthSync />
           <ThemeSync />
+          <ServiceWorkerRegistration />
           <RealtimeBridge />
           {children}
         </ToastProvider>
@@ -38,6 +39,20 @@ export function Providers({ locale, children }: { locale: string; children: Reac
 /** Oturumu mount'ta localStorage'dan yükler ve sekmeler arası senkronlar */
 function AuthSync() {
   useEffect(() => startAuthSession(), []);
+  return null;
+}
+
+/** PWA: service worker yalnızca production'da ve tarayıcı destekliyorsa kaydedilir */
+function ServiceWorkerRegistration() {
+  useEffect(() => {
+    if (process.env.NODE_ENV !== 'production' || !('serviceWorker' in navigator)) return;
+    const register = () => {
+      navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => undefined);
+    };
+    if (document.readyState === 'complete') register();
+    else window.addEventListener('load', register, { once: true });
+    return () => window.removeEventListener('load', register);
+  }, []);
   return null;
 }
 

@@ -22,6 +22,16 @@ import type {
   UpdateProfileDto,
   ReviewCardDto,
   LocalizedString,
+  DailyActivityDto,
+  XpEventDto,
+  CertificateDto,
+  LessonFeedbackDto,
+  LessonFeedbackSummary,
+  CreateExamDto,
+  ExamDto,
+  ExamResult,
+  SubmitExamDto,
+  AdminLessonAnalytics,
 } from '@devacademy/shared';
 import { api } from './api';
 import { useAuthStore, useIsAuthenticated } from './auth-store';
@@ -111,6 +121,17 @@ export function useSearch(q: string) {
 
 /* ---------------------------- Kullanıcı ----------------------------- */
 
+/**
+ * /users/me yanıtı. `dailyGoalMinutes` ve `emailVerifiedAt` paylaşılan UserProfile'da yok; backend
+ * eklediğinde dolar (yoksa undefined gelir ve arayüz varsayılanı kullanır).
+ */
+export type MeProfile = UserProfile & {
+  reminderHour: number | null;
+  timezone: string;
+  dailyGoalMinutes?: number | null;
+  emailVerifiedAt?: string | null;
+};
+
 export function useMe() {
   const authed = useIsAuthenticated();
   const setUser = useAuthStore((s) => s.setUser);
@@ -118,9 +139,7 @@ export function useMe() {
     queryKey: ['me'],
     enabled: authed,
     queryFn: async () => {
-      const me = await api<UserProfile & { reminderHour: number | null; timezone: string }>(
-        '/users/me',
-      );
+      const me = await api<MeProfile>('/users/me');
       setUser(me);
       return me;
     },
@@ -132,7 +151,11 @@ export function useUpdateProfile() {
   return useMutation({
     mutationFn: (dto: UpdateProfileDto) =>
       api<UserProfile>('/users/me', { method: 'PATCH', body: dto }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['me'] }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['me'] });
+      // Günlük hedef özet kartında da görünür
+      void qc.invalidateQueries({ queryKey: ['progress-summary'] });
+    },
   });
 }
 
@@ -249,4 +272,132 @@ export function useTrackInteractive(interactive: string, lessonId?: string) {
       () => undefined,
     );
   };
+}
+
+/* ------------------------- Motivasyon (Faz 8) ------------------------- */
+
+/** Son `days` günün günlük aktivitesi (ısı haritası). Eksik günler istemcide sıfırla doldurulur. */
+export function useActivity(days = 365) {
+  const authed = useIsAuthenticated();
+  return useQuery({
+    queryKey: ['activity', days],
+    queryFn: () => api<DailyActivityDto[]>(`/progress/activity?days=${days}`),
+    enabled: authed,
+    staleTime: 5 * 60_000,
+  });
+}
+
+export function useXpEvents() {
+  const authed = useIsAuthenticated();
+  return useQuery({
+    queryKey: ['xp-events'],
+    queryFn: () => api<XpEventDto[]>('/progress/xp'),
+    enabled: authed,
+  });
+}
+
+export function useCertificates() {
+  const authed = useIsAuthenticated();
+  return useQuery({
+    queryKey: ['certificates'],
+    queryFn: () => api<CertificateDto[]>('/certificates'),
+    enabled: authed,
+  });
+}
+
+export function useLessonFeedback(lessonId: string) {
+  const authed = useIsAuthenticated();
+  return useQuery({
+    queryKey: ['lesson-feedback', lessonId],
+    queryFn: () => api<LessonFeedbackSummary>(`/lessons/${lessonId}/feedback`),
+    enabled: authed && Boolean(lessonId),
+  });
+}
+
+export function useSubmitLessonFeedback(lessonId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (dto: LessonFeedbackDto) =>
+      api<LessonFeedbackSummary | undefined>(`/lessons/${lessonId}/feedback`, {
+        method: 'POST',
+        body: dto,
+      }),
+    onSuccess: (res, dto) => {
+      qc.setQueryData<LessonFeedbackSummary>(['lesson-feedback', lessonId], (prev) =>
+        res && typeof res === 'object' && 'lessonId' in res
+          ? { ...res, mine: res.mine ?? dto }
+          : prev
+            ? { ...prev, mine: dto }
+            : {
+                lessonId,
+                up: 0,
+                down: 0,
+                difficulty: { easy: 0, ok: 0, hard: 0 },
+                mine: dto,
+              },
+      );
+    },
+  });
+}
+
+/**
+ * GET /exams liste öğesi. Paylaşılan sözleşmede liste tipi tanımlı değil; alanlar ExamDto/ExamResult
+ * ile uyumlu, sunulmayanlar opsiyonel tutuldu.
+ */
+export interface ExamSummaryDto {
+  id: string;
+  startedAt: string;
+  submittedAt?: string | null;
+  durationSec: number;
+  score?: number | null;
+  passed?: boolean | null;
+  correctCount?: number | null;
+  totalCount: number;
+  timedOut?: boolean;
+  xpEarned?: number;
+}
+
+export function useExams() {
+  const authed = useIsAuthenticated();
+  return useQuery({
+    queryKey: ['exams'],
+    queryFn: () => api<ExamSummaryDto[]>('/exams'),
+    enabled: authed,
+  });
+}
+
+export function useExam(id: string | null) {
+  const authed = useIsAuthenticated();
+  return useQuery({
+    queryKey: ['exam', id],
+    queryFn: () => api<ExamDto>(`/exams/${id}`),
+    enabled: authed && Boolean(id),
+    staleTime: Infinity,
+  });
+}
+
+export function useCreateExam() {
+  return useMutation({
+    mutationFn: (dto: CreateExamDto) => api<ExamDto>('/exams', { method: 'POST', body: dto }),
+  });
+}
+
+export function useSubmitExam(examId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (dto: SubmitExamDto) =>
+      api<ExamResult>(`/exams/${examId}/submit`, { method: 'POST', body: dto }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['exams'] });
+      void qc.invalidateQueries({ queryKey: ['progress-summary'] });
+      void qc.invalidateQueries({ queryKey: ['reviews'] });
+    },
+  });
+}
+
+export function useAdminAnalytics() {
+  return useQuery({
+    queryKey: ['admin-analytics'],
+    queryFn: () => api<AdminLessonAnalytics[]>('/admin/analytics'),
+  });
 }

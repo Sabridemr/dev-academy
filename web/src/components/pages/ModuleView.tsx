@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import {
   ArrowRight,
+  Award,
   CheckCircle2,
   Circle,
   CircleDot,
@@ -17,7 +18,7 @@ import {
 import type { LessonSummary, ModuleDetail } from '@devacademy/shared';
 import { useI18n } from '@/i18n';
 import { useIsAuthenticated } from '@/lib/auth-store';
-import { useModule } from '@/lib/hooks';
+import { useCertificates, useModule } from '@/lib/hooks';
 import { cn, formatPercent } from '@/lib/utils';
 import { ICONS } from '../home/Sections';
 import { EmptyState } from '../ui/EmptyState';
@@ -28,6 +29,7 @@ export function ModuleView({ moduleId }: { moduleId: string }) {
   const { t, tl, locale } = useI18n();
   const authed = useIsAuthenticated();
   const { data: m, isLoading, isError } = useModule(moduleId);
+  const { data: certificates } = useCertificates();
 
   if (isLoading)
     return (
@@ -132,6 +134,14 @@ export function ModuleView({ moduleId }: { moduleId: string }) {
                   <CheckCircle2 size={18} /> {t('module.allDone')}
                 </span>
               )}
+              {authed && m.lessonCount > 0 && done >= m.lessonCount && (
+                <CertificateLink
+                  publicId={
+                    certificates?.find((c) => c.targetType === 'module' && c.targetId === m.id)
+                      ?.publicId
+                  }
+                />
+              )}
               {authed && m.completedCount !== undefined && (
                 <span className="text-sm text-muted">
                   {t('module.completed', { done, total: m.lessonCount })}
@@ -163,6 +173,19 @@ export function ModuleView({ moduleId }: { moduleId: string }) {
         ))}
       </ol>
     </div>
+  );
+}
+
+/** Modül tamamlandıysa sertifika bağlantısı (sertifika henüz listede yoksa sertifikalar sayfası) */
+function CertificateLink({ publicId }: { publicId?: string }) {
+  const { t } = useI18n();
+  return (
+    <Link
+      href={publicId ? `/certificates/${publicId}` : '/certificates'}
+      className="btn-ghost btn-lg border-warning/50 text-warning-fg"
+    >
+      <Award size={18} /> {t('certificates.moduleCertificate')}
+    </Link>
   );
 }
 

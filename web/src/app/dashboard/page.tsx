@@ -25,6 +25,15 @@ import { useI18n } from '@/i18n';
 import { useAuthStore } from '@/lib/auth-store';
 import { useBadgeCatalog, useModules, useProgressSummary } from '@/lib/hooks';
 import { cn, formatDate, formatDuration, formatPercent } from '@/lib/utils';
+import {
+  ActivitySection,
+  CertificatesPanel,
+  DailyGoalCard,
+  ExamCta,
+  StreakFreezeHint,
+  XpCard,
+} from '@/components/dashboard/MotivationCards';
+import { summaryLevel } from '@/lib/gamification';
 
 function Dashboard() {
   const { t, tl, locale } = useI18n();
@@ -117,7 +126,9 @@ function Dashboard() {
           label={t('dashboard.streak')}
           value={t('dashboard.days', { count: s.currentStreak })}
           hint={t('dashboard.longest', { count: s.longestStreak })}
-        />
+        >
+          <StreakFreezeHint summary={s} />
+        </StatCard>
         <StatCard
           icon={Clock}
           label={t('dashboard.timeSpent')}
@@ -141,6 +152,20 @@ function Dashboard() {
           )}
         </StatCard>
       </div>
+
+      {/* Motivasyon: seviye/XP, günlük hedef, mülakat modu */}
+      <div
+        className={cn(
+          'mt-4 grid gap-4',
+          summaryLevel(s) ? 'md:grid-cols-[1.3fr_1fr_1fr]' : 'md:grid-cols-2',
+        )}
+      >
+        <XpCard summary={s} />
+        <DailyGoalCard summary={s} />
+        <ExamCta />
+      </div>
+
+      <ActivitySection />
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1.2fr_1fr]">
         <section className="card p-5">
@@ -181,7 +206,10 @@ function Dashboard() {
             })}
           </ul>
         </section>
-        <BadgesPanel earned={s.badges} catalog={catalog ?? []} />
+        <div className="space-y-6">
+          <CertificatesPanel />
+          <BadgesPanel earned={s.badges} catalog={catalog ?? []} />
+        </div>
       </div>
     </div>
   );

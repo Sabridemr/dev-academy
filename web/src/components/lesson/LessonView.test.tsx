@@ -21,6 +21,8 @@ vi.mock('@/lib/hooks', () => ({
   useBookmarks: () => ({ data: [] }),
   useNotes: () => ({ data: [] }),
   usePrefersReducedMotion: () => true,
+  useLessonFeedback: () => ({ data: undefined, isLoading: false }),
+  useSubmitLessonFeedback: () => ({ mutateAsync: vi.fn(), isPending: false, isError: false }),
 }));
 
 const initial = {

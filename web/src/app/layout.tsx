@@ -21,6 +21,15 @@ export const metadata: Metadata = {
   description:
     'Yazılım mimarisi, sistem tasarımı ve yapay zekâyı animasyonlu, interaktif derslerle öğrenin.',
   applicationName: 'DevAcademy',
+  manifest: '/manifest.webmanifest',
+  icons: {
+    icon: [
+      { url: '/icons/icon.svg', type: 'image/svg+xml' },
+      { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+    ],
+    apple: [{ url: '/icons/apple-touch-icon.png', sizes: '180x180' }],
+  },
+  appleWebApp: { capable: true, title: 'DevAcademy', statusBarStyle: 'black-translucent' },
 };
 
 export const viewport: Viewport = {

@@ -1,13 +1,21 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Award } from 'lucide-react';
-import type { BadgeDto, WsServerEvent } from '@devacademy/shared';
+import {
+  levelForXp,
+  type BadgeDto,
+  type CertificateDto,
+  type ProgressSummary,
+  type WsServerEvent,
+} from '@devacademy/shared';
 import { API_URL } from '@/lib/api';
 import { useAuthStore } from '@/lib/auth-store';
 import { useI18n } from '@/i18n';
+import { useOptionalToast } from './ui/Toast';
 
 /**
  * WebSocket köprüsü: sunucu olaylarını React Query cache'ine yansıtır ve rozet bildirimlerini gösterir.
@@ -16,8 +24,55 @@ import { useI18n } from '@/i18n';
 export function RealtimeBridge() {
   const token = useAuthStore((s) => s.accessToken);
   const qc = useQueryClient();
-  const { tl } = useI18n();
+  const { t, tl } = useI18n();
+  const router = useRouter();
+  const { toast } = useOptionalToast();
   const [toasts, setToasts] = useState<BadgeDto[]>([]);
+  // Olay işleyicisi soket ömrü boyunca aynı kalır; güncel çeviri/yönlendirme ref üzerinden okunur
+  const handlers = useRef({
+    xp: (_p: { xp: number; level: number; delta: number }) => {},
+    certificate: (_c: CertificateDto) => {},
+  });
+  handlers.current = {
+    xp: ({ xp, level, delta }) => {
+      const prev = qc.getQueryData<ProgressSummary>(['progress-summary']);
+      const prevLevel =
+        prev?.level?.level ?? (typeof prev?.xp === 'number' ? levelForXp(prev.xp).level : level);
+      // Çubuk hemen ilerlesin; ardından sunucudan tam özet
+      qc.setQueryData<ProgressSummary>(['progress-summary'], (old) =>
+        old ? { ...old, xp, level: levelForXp(xp) } : old,
+      );
+      void qc.invalidateQueries({ queryKey: ['progress-summary'] });
+      void qc.invalidateQueries({ queryKey: ['activity'] });
+      if (level > prevLevel)
+        toast({
+          title: t('xp.levelUp', { level }),
+          description: t('xp.levelUpHint'),
+          tone: 'badge',
+          duration: 6000,
+        });
+      else if (delta > 0)
+        toast({
+          title: t('xp.toast', { delta }),
+          description: t('xp.toastHint', { xp, level }),
+          tone: 'success',
+          duration: 3500,
+        });
+    },
+    certificate: (c) => {
+      void qc.invalidateQueries({ queryKey: ['certificates'] });
+      toast({
+        title: t('certificates.issuedToast', { title: tl(c.title) }),
+        description: t('certificates.issuedToastHint'),
+        tone: 'badge',
+        duration: 0,
+        action: {
+          label: t('certificates.open'),
+          onClick: () => router.push(`/certificates/${c.publicId}`),
+        },
+      });
+    },
+  };
 
   useEffect(() => {
     let socket: { disconnect: () => void } | null = null;
@@ -42,6 +97,12 @@ export function RealtimeBridge() {
           case 'badge.earned':
             setToasts((t) => [...t, ev.payload]);
             setTimeout(() => setToasts((t) => t.filter((x) => x.id !== ev.payload.id)), 5000);
+            break;
+          case 'xp.updated':
+            handlers.current.xp(ev.payload);
+            break;
+          case 'certificate.issued':
+            handlers.current.certificate(ev.payload);
             break;
           case 'content.published':
           case 'content.unpublished':

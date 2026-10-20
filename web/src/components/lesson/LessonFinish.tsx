@@ -7,6 +7,7 @@ import type { LessonDetail } from '@devacademy/shared';
 import { useI18n } from '@/i18n';
 import { usePrefersReducedMotion } from '@/lib/hooks';
 import { cn } from '@/lib/utils';
+import { LessonFeedback } from './LessonFeedback';
 
 /**
  * Ders sonu kartı: tamamlama düğmesi, tamamlanınca kutlama ve sıradaki ders.
@@ -82,6 +83,7 @@ export function LessonFinish({
       {!lesson.next && completed && (
         <p className="mt-4 text-sm text-muted">{t('lesson.moduleDone')}</p>
       )}
+      {authed && <LessonFeedback lessonId={lesson.id} />}
     </section>
   );
 }

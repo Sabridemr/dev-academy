@@ -304,6 +304,49 @@ body {
   color: var(--shiki-dark);
 }
 
+/* Yazdırma: site kabuğu gizlenir, koyu tema açık token'lara döner (sertifika sayfası) */
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 10mm;
+  }
+  :root,
+  .dark {
+    --da-bg-rgb: 255 255 255;
+    --da-fg-rgb: 11 18 34;
+    --da-muted-rgb: 91 107 133;
+    --da-surface-rgb: 255 255 255;
+    --da-elevated-rgb: 238 242 249;
+    --da-border-rgb: 221 227 238;
+    --da-primary-rgb: 37 99 235;
+    --da-primary-fg-rgb: 255 255 255;
+    --da-accent-rgb: 8 145 178;
+    --da-warning-rgb: 217 119 6;
+    --da-warning-fg-rgb: 180 83 9;
+    --da-success-fg-rgb: 4 120 87;
+    color-scheme: light;
+  }
+  body > header,
+  body > footer,
+  .no-print {
+    display: none !important;
+  }
+  html,
+  body {
+    background: var(--da-bg);
+  }
+  .certificate-page {
+    max-width: none;
+    padding: 0;
+  }
+  .certificate-sheet {
+    box-shadow: none;
+    break-inside: avoid;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

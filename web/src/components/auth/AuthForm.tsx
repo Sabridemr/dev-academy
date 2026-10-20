@@ -134,6 +134,16 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
             t('auth.password'),
             mode === 'login' ? 'current-password' : 'new-password',
           )}
+          {mode === 'login' && (
+            <p className="-mt-2 text-right">
+              <Link
+                href={`/forgot-password${form.email ? `?email=${encodeURIComponent(form.email)}` : ''}`}
+                className="btn-link text-xs"
+              >
+                {t('auth.forgot')}
+              </Link>
+            </p>
+          )}
           {message && (
             <p className="rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger" role="alert">
               {message}

@@ -3,7 +3,16 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
-import { AlertTriangle, KeyRound, LogOut, Settings, Trash2, UserRound } from 'lucide-react';
+import {
+  AlertTriangle,
+  BadgeCheck,
+  KeyRound,
+  LogOut,
+  MailCheck,
+  Settings,
+  Trash2,
+  UserRound,
+} from 'lucide-react';
 import { isValidTimeZone, t as tLocalized, type Locale } from '@devacademy/shared';
 import { RequireAuth } from '@/components/auth/RequireAuth';
 import { Dialog } from '@/components/ui/Dialog';
@@ -40,6 +49,7 @@ function SettingsView() {
     timezone: 'Europe/Istanbul',
     reminderHour: null as number | null,
     selectedPathId: null as string | null,
+    dailyGoalMinutes: '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -52,6 +62,7 @@ function SettingsView() {
       timezone: me.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
       reminderHour: me.reminderHour,
       selectedPathId: me.selectedPathId,
+      dailyGoalMinutes: me.dailyGoalMinutes ? String(me.dailyGoalMinutes) : '',
     });
   }, [me]);
 
@@ -59,6 +70,15 @@ function SettingsView() {
     setErrors({});
     if (!isValidTimeZone(form.timezone)) {
       setErrors({ timezone: t('common.error') });
+      return;
+    }
+    const goalText = form.dailyGoalMinutes.trim();
+    const dailyGoalMinutes = goalText === '' ? null : Number(goalText);
+    if (
+      dailyGoalMinutes !== null &&
+      (!Number.isInteger(dailyGoalMinutes) || dailyGoalMinutes < 5 || dailyGoalMinutes > 240)
+    ) {
+      setErrors({ dailyGoalMinutes: t('settings.dailyGoalInvalid') });
       return;
     }
     try {
@@ -69,6 +89,7 @@ function SettingsView() {
         timezone: form.timezone,
         reminderHour: form.reminderHour,
         selectedPathId: form.selectedPathId,
+        dailyGoalMinutes,
       });
       if (form.locale !== locale) setLocale(form.locale);
       toast({ title: t('settings.saved'), tone: 'success' });
@@ -110,6 +131,7 @@ function SettingsView() {
           <Field label={t('settings.email')} hint={t('settings.emailHint')}>
             <input className="input" value={me.email} disabled />
           </Field>
+          <EmailVerification verifiedAt={me.emailVerifiedAt} className="sm:col-span-2" />
           <Field label={t('settings.avatarUrl')} error={errors.avatarUrl} className="sm:col-span-2">
             <input
               className="input"
@@ -172,6 +194,23 @@ function SettingsView() {
               ))}
             </select>
           </Field>
+          <Field
+            label={t('settings.dailyGoal')}
+            hint={t('settings.dailyGoalHint')}
+            error={errors.dailyGoalMinutes}
+          >
+            <input
+              type="number"
+              inputMode="numeric"
+              className="input"
+              min={5}
+              max={240}
+              step={5}
+              value={form.dailyGoalMinutes}
+              placeholder="20"
+              onChange={(e) => setForm((f) => ({ ...f, dailyGoalMinutes: e.target.value }))}
+            />
+          </Field>
           <Field label={t('settings.path')}>
             <select
               className="input"
@@ -228,6 +267,52 @@ function Field({
         hint && <span className="mt-1 block text-xs text-muted">{hint}</span>
       )}
     </label>
+  );
+}
+
+/** E-posta doğrulama durumu; doğrulanmadıysa bağlantı isteme düğmesi */
+function EmailVerification({
+  verifiedAt,
+  className,
+}: {
+  verifiedAt: string | null | undefined;
+  className?: string;
+}) {
+  const { t, locale } = useI18n();
+  const { toast } = useOptionalToast();
+  const [sent, setSent] = useState(false);
+  const request = useAction(async () => {
+    await api('/auth/verify-email/request', { method: 'POST', body: {} });
+    setSent(true);
+    toast({ title: t('settings.verifySent'), tone: 'success' });
+  });
+  if (verifiedAt)
+    return (
+      <p className={`flex items-center gap-1.5 text-sm text-success-fg ${className ?? ''}`}>
+        <BadgeCheck size={15} /> {t('settings.emailVerified')} · {formatDate(verifiedAt, locale)}
+      </p>
+    );
+  return (
+    <div
+      className={`flex flex-wrap items-center justify-between gap-3 rounded-xl border border-warning/40 bg-warning/5 p-3 ${className ?? ''}`}
+    >
+      <p className="text-sm">{sent ? t('settings.verifySent') : t('settings.emailNotVerified')}</p>
+      <div className="flex items-center gap-2">
+        {request.error && (
+          <span className="text-xs text-danger-fg" role="alert">
+            {request.error}
+          </span>
+        )}
+        <button
+          type="button"
+          className="btn-soft btn-sm"
+          onClick={() => void request.run()}
+          disabled={request.pending || sent}
+        >
+          <MailCheck size={14} /> {t('settings.verifyEmail')}
+        </button>
+      </div>
+    </div>
   );
 }
 
