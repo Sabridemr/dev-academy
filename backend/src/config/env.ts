@@ -36,6 +36,12 @@ export const EnvSchema = z.object({
   EXPO_PUSH_URL: z.string().url().default('https://exp.host/--/api/v2/push/send'),
   SMTP_URL: z.string().optional(),
   MAIL_FROM: z.string().default('DevAcademy <no-reply@devacademy.local>'),
+  /** E-postadaki bağlantıların (şifre sıfırlama, e-posta doğrulama) işaret ettiği web istemcisi */
+  WEB_URL: z
+    .string()
+    .url()
+    .default('http://localhost:3000')
+    .transform((u) => u.replace(/\/+$/, '')),
 
   RATE_LIMIT_TTL: z.coerce.number().int().positive().default(60),
   RATE_LIMIT_MAX: z.coerce.number().int().positive().default(120),

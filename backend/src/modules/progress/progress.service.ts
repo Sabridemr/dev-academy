@@ -2,23 +2,32 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import type {
   BadgeDto,
+  CertificateDto,
+  DailyActivityDto,
   ProgressItem,
   ProgressSummary,
   ReviewCardDto,
   ReviewItem,
   UpdateProgressDto,
+  XpEventDto,
 } from '@devacademy/shared';
 import {
-  applyActivity,
+  applyActivityWithFreeze,
   dateKey,
+  daysBetween,
   effectiveStreak,
   evaluateBadges,
+  levelForXp,
   sm2Review,
+  XP_RULES,
   type BadgeContext,
 } from '@devacademy/shared';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { asLocalized } from '../../common/utils/localized';
 import { RealtimeGateway } from '../realtime/realtime.gateway';
+import { CertificatesService } from '../certificates/certificates.service';
+import { publishedLessonIdsForPath } from '../certificates/path-lessons';
+import { refillFreezes, xpAwardsFor, type XpAward } from './motivation';
 
 export interface ActivityFlags {
   lessonCompleted?: string;
@@ -26,7 +35,31 @@ export interface ActivityFlags {
   perfectQuiz?: boolean;
   interactive?: boolean;
   note?: boolean;
+  /** Geçilen quiz: ilk geçişte XP (kusursuzsa perfectQuiz ile bonus), günlük quizzesPassed sayacı */
+  quizPassed?: string;
+  /** Kalite ≥ 3 ile değerlendirilen tekrar kartı */
+  reviewGraded?: string;
+  /** Geçilen deneme sınavı */
+  examPassed?: string;
+  /** Bu eylemde harcanan saniye (günlük aktivite ve günlük hedef) */
+  secondsSpent?: number;
 }
+
+export interface ActivityOutcome {
+  badges: BadgeDto[];
+  /** Bu eylemle kazanılan XP */
+  xpDelta: number;
+  certificates: CertificateDto[];
+}
+
+/** Rozet koşullarını değiştirebilen eylemler (süre/tekrar/sınav yalnızca XP ve günlük aktiviteyi etkiler) */
+const BADGE_FLAGS = [
+  'lessonCompleted',
+  'quizCompleted',
+  'perfectQuiz',
+  'interactive',
+  'note',
+] as const;
 
 /**
  * İlerleme, seri, rozet ve aralıklı tekrar servisi.
@@ -38,6 +71,7 @@ export class ProgressService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly realtime: RealtimeGateway,
+    private readonly certificates: CertificatesService,
   ) {}
 
   async list(userId: string): Promise<ProgressItem[]> {
@@ -90,6 +124,7 @@ export class ProgressService {
 
     const newBadges = await this.recordActivity(userId, {
       lessonCompleted: completed && !wasCompleted ? lessonId : undefined,
+      secondsSpent: dto.secondsSpent,
     });
     const item = toItem(row);
     this.realtime.emitToUser(userId, { type: 'progress.updated', payload: item });
@@ -99,37 +134,49 @@ export class ProgressService {
   async summary(userId: string): Promise<ProgressSummary> {
     const user = await this.prisma.user.findUniqueOrThrow({ where: { id: userId } });
     const today = dateKey(new Date(), user.timezone);
-    const [totalLessons, progress, badges, perModuleTotals, dueReviews, timeAgg, nextReview] =
-      await Promise.all([
-        this.prisma.lesson.count({ where: { publishedVersionId: { not: null } } }),
-        // Yalnızca yayındaki dersler: yayından kalkan dersler oranı %100'ün üstüne taşımasın
-        this.prisma.progress.findMany({
-          where: { userId, lesson: { publishedVersionId: { not: null } } },
-          include: {
-            lesson: {
-              select: { moduleId: true, slug: true, publishedVersion: { select: { title: true } } },
-            },
+    const [
+      totalLessons,
+      progress,
+      badges,
+      perModuleTotals,
+      dueReviews,
+      timeAgg,
+      nextReview,
+      todayActivity,
+    ] = await Promise.all([
+      this.prisma.lesson.count({ where: { publishedVersionId: { not: null } } }),
+      // Yalnızca yayındaki dersler: yayından kalkan dersler oranı %100'ün üstüne taşımasın
+      this.prisma.progress.findMany({
+        where: { userId, lesson: { publishedVersionId: { not: null } } },
+        include: {
+          lesson: {
+            select: { moduleId: true, slug: true, publishedVersion: { select: { title: true } } },
           },
-          orderBy: { updatedAt: 'desc' },
-        }),
-        this.prisma.userBadge.findMany({
-          where: { userId },
-          include: { badge: true },
-          orderBy: { earnedAt: 'desc' },
-        }),
-        this.prisma.lesson.groupBy({
-          by: ['moduleId'],
-          where: { publishedVersionId: { not: null } },
-          _count: { _all: true },
-        }),
-        this.prisma.reviewCard.count({ where: { userId, dueAt: { lte: new Date() } } }),
-        this.prisma.progress.aggregate({ where: { userId }, _sum: { secondsSpent: true } }),
-        this.prisma.reviewCard.findFirst({
-          where: { userId, dueAt: { gt: new Date() } },
-          orderBy: { dueAt: 'asc' },
-          select: { dueAt: true },
-        }),
-      ]);
+        },
+        orderBy: { updatedAt: 'desc' },
+      }),
+      this.prisma.userBadge.findMany({
+        where: { userId },
+        include: { badge: true },
+        orderBy: { earnedAt: 'desc' },
+      }),
+      this.prisma.lesson.groupBy({
+        by: ['moduleId'],
+        where: { publishedVersionId: { not: null } },
+        _count: { _all: true },
+      }),
+      this.prisma.reviewCard.count({ where: { userId, dueAt: { lte: new Date() } } }),
+      this.prisma.progress.aggregate({ where: { userId }, _sum: { secondsSpent: true } }),
+      this.prisma.reviewCard.findFirst({
+        where: { userId, dueAt: { gt: new Date() } },
+        orderBy: { dueAt: 'asc' },
+        select: { dueAt: true },
+      }),
+      this.prisma.dailyActivity.findUnique({
+        where: { userId_date: { userId, date: today } },
+        select: { seconds: true },
+      }),
+    ]);
     const completed = progress.filter((p) => p.status === 'completed');
     const completedPerModule = new Map<string, number>();
     for (const p of completed)
@@ -143,14 +190,7 @@ export class ProgressService {
       totalLessons,
       completedLessons: completed.length,
       completionPercent: totalLessons ? Math.round((completed.length / totalLessons) * 100) : 0,
-      currentStreak: effectiveStreak(
-        {
-          currentStreak: user.currentStreak,
-          longestStreak: user.longestStreak,
-          lastActivityDate: user.lastActivityDate,
-        },
-        today,
-      ),
+      currentStreak: streakWithFreeze(user, today),
       longestStreak: user.longestStreak,
       lastActivityDate: user.lastActivityDate,
       activeToday: user.lastActivityDate === today,
@@ -172,7 +212,50 @@ export class ProgressService {
         : null,
       dueReviews,
       nextReviewAt: nextReview?.dueAt.toISOString() ?? null,
+      xp: user.xp,
+      level: levelForXp(user.xp),
+      dailyGoalMinutes: user.dailyGoalMinutes,
+      todaySeconds: todayActivity?.seconds ?? 0,
+      streakFreezes: user.streakFreezes,
     };
+  }
+
+  /* ------------------------------ Aktivite & XP ------------------------------ */
+
+  /** Son `days` günün aktivitesi (yalnızca kaydı olan günler; eksik günleri istemci doldurur) */
+  async activity(userId: string, days: number): Promise<DailyActivityDto[]> {
+    const user = await this.prisma.user.findUniqueOrThrow({
+      where: { id: userId },
+      select: { timezone: true },
+    });
+    const from = dateKey(new Date(Date.now() - (days - 1) * 86_400_000), user.timezone);
+    const rows = await this.prisma.dailyActivity.findMany({
+      where: { userId, date: { gte: from } },
+      orderBy: { date: 'asc' },
+    });
+    return rows.map((r) => ({
+      date: r.date,
+      seconds: r.seconds,
+      lessonsCompleted: r.lessonsCompleted,
+      quizzesPassed: r.quizzesPassed,
+      xp: r.xp,
+    }));
+  }
+
+  /** Son 50 XP olayı (yeniden eskiye) */
+  async xpHistory(userId: string): Promise<XpEventDto[]> {
+    const rows = await this.prisma.xpEvent.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+    });
+    return rows.map((r) => ({
+      id: r.id,
+      kind: r.kind,
+      amount: r.amount,
+      refId: r.refId,
+      createdAt: r.createdAt.toISOString(),
+    }));
   }
 
   async listBadges(): Promise<BadgeDto[]> {
@@ -224,7 +307,7 @@ export class ProgressService {
         lastReviewed: new Date(),
       },
     });
-    await this.recordActivity(userId, {});
+    await this.recordActivity(userId, { reviewGraded: quality >= 3 ? card.id : undefined });
     return {
       id: updated.id,
       concept: updated.concept,
@@ -252,31 +335,188 @@ export class ProgressService {
   /* ---------------------------- Seri & rozet ----------------------------- */
 
   async recordActivity(userId: string, flags: ActivityFlags): Promise<BadgeDto[]> {
+    return (await this.recordActivityDetailed(userId, flags)).badges;
+  }
+
+  /**
+   * Seri (dondurma hakkıyla), günlük aktivite, XP, modül/yol sertifikası ve rozetler.
+   * XP olayları (userId, kind, refId) ile tekildir: aynı ders/quiz/gün için ikinci kez verilmez.
+   */
+  async recordActivityDetailed(userId: string, flags: ActivityFlags): Promise<ActivityOutcome> {
     const user = await this.prisma.user.findUniqueOrThrow({ where: { id: userId } });
-    const today = dateKey(new Date(), user.timezone);
-    const streak = applyActivity(
+    const now = new Date();
+    const today = dateKey(now, user.timezone);
+    const refill = refillFreezes(user.streakFreezes, user.lastFreezeGrantAt, now);
+    const next = applyActivityWithFreeze(
       {
         currentStreak: user.currentStreak,
         longestStreak: user.longestStreak,
         lastActivityDate: user.lastActivityDate,
+        streakFreezes: refill.streakFreezes,
       },
       today,
+      daysBetween,
     );
+    const streak = {
+      currentStreak: next.currentStreak,
+      longestStreak: next.longestStreak,
+      lastActivityDate: next.lastActivityDate,
+      streakFreezes: next.streakFreezes,
+    };
     const streakChanged =
       streak.lastActivityDate !== user.lastActivityDate ||
       streak.currentStreak !== user.currentStreak;
+    const userChanged =
+      streakChanged ||
+      streak.streakFreezes !== user.streakFreezes ||
+      refill.lastFreezeGrantAt.getTime() !== user.lastFreezeGrantAt?.getTime();
+    if (userChanged) {
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: { ...streak, lastFreezeGrantAt: refill.lastFreezeGrantAt },
+      });
+    }
     if (streakChanged) {
-      await this.prisma.user.update({ where: { id: userId }, data: streak });
       this.realtime.emitToUser(userId, {
         type: 'streak.updated',
         payload: { currentStreak: streak.currentStreak },
       });
     }
+
+    // Günlük aktivite (ısı haritası + günlük hedef)
+    const seconds = flags.secondsSpent ?? 0;
+    const lessonsCompleted = flags.lessonCompleted ? 1 : 0;
+    const quizzesPassed = flags.quizPassed ? 1 : 0;
+    const daily = await this.prisma.dailyActivity.upsert({
+      where: { userId_date: { userId, date: today } },
+      update: {
+        seconds: { increment: seconds },
+        lessonsCompleted: { increment: lessonsCompleted },
+        quizzesPassed: { increment: quizzesPassed },
+      },
+      create: { userId, date: today, seconds, lessonsCompleted, quizzesPassed },
+    });
+    const goalSeconds = (user.dailyGoalMinutes ?? 0) * 60;
+
+    // Modül / yol tamamlama yalnızca yeni tamamlanan derste değişebilir
+    const completedTargets = flags.lessonCompleted
+      ? await this.completedTargets(userId, flags.lessonCompleted)
+      : { modules: [], paths: [] };
+
+    const awards = xpAwardsFor(
+      {
+        lessonCompleted: flags.lessonCompleted,
+        quizPassed: flags.quizPassed,
+        perfectQuiz: flags.perfectQuiz,
+        reviewGraded: flags.reviewGraded,
+        examPassed: flags.examPassed,
+        dailyGoalMet: goalSeconds > 0 && seconds > 0 && daily.seconds >= goalSeconds,
+        modulesCompleted: completedTargets.modules,
+      },
+      today,
+    );
+    const xpDelta = await this.grantXp(userId, today, awards);
+
+    const certificates: CertificateDto[] = [];
+    for (const [type, ids] of [
+      ['module', completedTargets.modules],
+      ['path', completedTargets.paths],
+    ] as const) {
+      for (const id of ids) {
+        const cert = await this.certificates.issue(userId, type, id);
+        if (!cert) continue;
+        certificates.push(cert);
+        this.realtime.emitToUser(userId, { type: 'certificate.issued', payload: cert });
+      }
+    }
+
+    const badges = await this.evaluateNewBadges(userId, streak.currentStreak, flags, streakChanged);
+    return { badges, xpDelta, certificates };
+  }
+
+  /**
+   * XP olaylarını yazar; daha önce verilmiş olanlar (unique) atlanır. Toplam, kullanıcıya ve günlük
+   * aktiviteye aynı transaction'da eklenir. Kazanılan XP döner.
+   */
+  private async grantXp(userId: string, today: string, awards: XpAward[]): Promise<number> {
+    if (awards.length === 0) return 0;
+    const result = await this.prisma.$transaction(async (tx) => {
+      let delta = 0;
+      for (const a of awards) {
+        // createMany + skipDuplicates → INSERT ... ON CONFLICT DO NOTHING: eş zamanlı isteklerde de tek kayıt
+        const { count } = await tx.xpEvent.createMany({
+          data: [{ userId, kind: a.kind, amount: XP_RULES[a.kind], refId: a.refId }],
+          skipDuplicates: true,
+        });
+        if (count > 0) delta += XP_RULES[a.kind];
+      }
+      if (delta === 0) return null;
+      const updated = await tx.user.update({
+        where: { id: userId },
+        data: { xp: { increment: delta } },
+        select: { xp: true },
+      });
+      await tx.dailyActivity.upsert({
+        where: { userId_date: { userId, date: today } },
+        update: { xp: { increment: delta } },
+        create: { userId, date: today, xp: delta },
+      });
+      return { delta, xp: updated.xp };
+    });
+    if (!result) return 0;
+    this.realtime.emitToUser(userId, {
+      type: 'xp.updated',
+      payload: { xp: result.xp, level: levelForXp(result.xp).level, delta: result.delta },
+    });
+    return result.delta;
+  }
+
+  /** Ders tamamlanınca bitmiş olan modül ve öğrenme yolları */
+  private async completedTargets(
+    userId: string,
+    lessonId: string,
+  ): Promise<{ modules: string[]; paths: string[] }> {
+    const lesson = await this.prisma.lesson.findUnique({
+      where: { id: lessonId },
+      select: { moduleId: true },
+    });
+    if (!lesson) return { modules: [], paths: [] };
+    const published = { publishedVersionId: { not: null } } as const;
+    const [moduleTotal, moduleDone, pathItems] = await Promise.all([
+      this.prisma.lesson.count({ where: { moduleId: lesson.moduleId, ...published } }),
+      this.prisma.progress.count({
+        where: { userId, status: 'completed', lesson: { moduleId: lesson.moduleId, ...published } },
+      }),
+      this.prisma.learningPathItem.findMany({
+        where: { OR: [{ moduleId: lesson.moduleId }, { lessonId }] },
+        select: { pathId: true },
+        distinct: ['pathId'],
+      }),
+    ]);
+    const modules = moduleTotal > 0 && moduleDone >= moduleTotal ? [lesson.moduleId] : [];
+    const paths: string[] = [];
+    for (const { pathId } of pathItems) {
+      const ids = await publishedLessonIdsForPath(this.prisma, pathId);
+      if (!ids?.length || !ids.includes(lessonId)) continue;
+      const done = await this.prisma.progress.count({
+        where: { userId, status: 'completed', lessonId: { in: ids } },
+      });
+      if (done >= ids.length) paths.push(pathId);
+    }
+    return { modules, paths };
+  }
+
+  private async evaluateNewBadges(
+    userId: string,
+    currentStreak: number,
+    flags: ActivityFlags,
+    streakChanged: boolean,
+  ): Promise<BadgeDto[]> {
     // Rozet koşulları yalnızca bir tamamlama/etkileşim ya da seri değişince değişebilir; kaydırma sırasındaki
     // sıradan ilerleme güncellemelerinde rozet sorgularına (≈8 sorgu) gerek yok
-    if (!streakChanged && !Object.values(flags).some(Boolean)) return [];
+    if (!streakChanged && !BADGE_FLAGS.some((k) => Boolean(flags[k]))) return [];
 
-    const ctx = await this.badgeContext(userId, streak.currentStreak, flags);
+    const ctx = await this.badgeContext(userId, currentStreak, flags);
     const earnedSlugs = (
       await this.prisma.userBadge.findMany({
         where: { userId },
@@ -355,6 +595,26 @@ export class ProgressService {
       lessonIdJustCompleted: flags.lessonCompleted,
     };
   }
+}
+
+/**
+ * Okuma sırasında seri: bir gün atlanmış ama dondurma hakkı varsa seri bugün aktivite yapılırsa
+ * korunacağı için sıfır gösterilmez (applyActivityWithFreeze ile tutarlı).
+ */
+export function streakWithFreeze(
+  user: {
+    currentStreak: number;
+    longestStreak: number;
+    lastActivityDate: string | null;
+    streakFreezes: number;
+  },
+  today: string,
+): number {
+  const effective = effectiveStreak(user, today);
+  if (effective > 0 || !user.lastActivityDate) return effective;
+  return daysBetween(user.lastActivityDate, today) === 2 && user.streakFreezes > 0
+    ? user.currentStreak
+    : 0;
 }
 
 function toItem(p: {

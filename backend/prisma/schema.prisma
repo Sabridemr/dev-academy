@@ -41,6 +41,16 @@ model User {
   currentStreak    Int     @default(0)
   longestStreak    Int     @default(0)
   lastActivityDate String? // YYYY-MM-DD (kullanıcının saat diliminde)
+  /// Kullanılabilir seri dondurma hakkı (haftada bir yenilenir, en fazla STREAK_FREEZE_MAX)
+  streakFreezes     Int       @default(1)
+  /// Son dondurma hakkı yenilemesi (haftalık sayaç bu andan başlar)
+  lastFreezeGrantAt DateTime?
+
+  // Motivasyon
+  /// Toplam XP (XpEvent toplamı; seviye shared levelForXp ile hesaplanır)
+  xp               Int  @default(0)
+  /// Günlük çalışma hedefi (dakika); null = hedef yok
+  dailyGoalMinutes Int?
 
   emailVerifiedAt DateTime?
   /// Bu andan önce verilmiş access token'lar geçersiz (şifre değişimi, tüm cihazlardan çıkış)
@@ -61,6 +71,12 @@ model User {
   interactiveSessions  InteractiveSession[]
   authoredVersions     LessonVersion[]      @relation("VersionAuthor")
   authoredScenes       AnimationScene[]     @relation("SceneAuthor")
+  xpEvents             XpEvent[]
+  dailyActivities      DailyActivity[]
+  certificates         Certificate[]
+  lessonFeedback       LessonFeedback[]
+  passwordResets       PasswordReset[]
+  exams                Exam[]
 
   @@index([selectedPathId])
   @@index([reminderHour]) // saatlik hatırlatma işi bu alanla filtreler
@@ -197,6 +213,7 @@ model Lesson {
   reviewCards        ReviewCard[]
   pathItems          LearningPathItem[]
   interactiveSessions InteractiveSession[]
+  feedback           LessonFeedback[]
   createdAt          DateTime       @default(now())
   updatedAt          DateTime       @updatedAt
 
@@ -454,6 +471,113 @@ model Note {
   updatedAt DateTime @updatedAt
 
   @@index([userId, lessonId])
+}
+
+/* ============================= Motivasyon ============================== */
+
+/// XP kazanım kaydı. (userId, kind, refId) tekil: aynı ders/quiz/gün için XP iki kez verilmez
+model XpEvent {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// XP_RULES anahtarı (lessonCompleted, quizPassed, ...)
+  kind      String
+  amount    Int
+  /// İlgili varlık (ders, quiz, sınav, modül id'si ya da gün anahtarı)
+  refId     String?
+  createdAt DateTime @default(now())
+
+  @@unique([userId, kind, refId])
+  @@index([userId, createdAt])
+}
+
+/// Kullanıcının günlük aktivite özeti (ısı haritası, günlük hedef)
+model DailyActivity {
+  id               String @id @default(cuid())
+  userId           String
+  user             User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// YYYY-MM-DD (kullanıcının saat diliminde)
+  date             String
+  seconds          Int    @default(0)
+  lessonsCompleted Int    @default(0)
+  quizzesPassed    Int    @default(0)
+  xp               Int    @default(0)
+
+  @@unique([userId, date])
+}
+
+enum CertificateTarget {
+  module
+  path
+}
+
+model Certificate {
+  id         String            @id @default(cuid())
+  /// Paylaşılabilir, tahmin edilemez kimlik
+  publicId   String            @unique
+  userId     String
+  user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  targetType CertificateTarget
+  targetId   String
+  issuedAt   DateTime          @default(now())
+
+  @@unique([userId, targetType, targetId])
+}
+
+model LessonFeedback {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lessonId   String
+  lesson     Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  /// 1 = beğendim, -1 = beğenmedim
+  rating     Int
+  /// easy | ok | hard
+  difficulty String?
+  comment    String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([userId, lessonId])
+  @@index([lessonId])
+}
+
+enum TokenPurpose {
+  reset
+  verify
+}
+
+/// Şifre sıfırlama ve e-posta doğrulama token'ları (yalnızca SHA-256 özeti saklanır)
+model PasswordReset {
+  id        String       @id @default(cuid())
+  userId    String
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String       @unique
+  purpose   TokenPurpose @default(reset)
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime     @default(now())
+
+  @@index([userId, purpose])
+}
+
+/// Deneme/mülakat sınavı: soru seçimi oluşturulurken sabitlenir
+model Exam {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// Question.id listesi (sunum sırası)
+  questionIds String[]
+  startedAt   DateTime  @default(now())
+  /// 0 = süresiz
+  durationSec Int
+  submittedAt DateTime?
+  score       Int?
+  passed      Boolean?
+  /// ExamResult (shared)
+  result      Json?
+
+  @@index([userId, startedAt])
 }
 
 /* ============================ İçerik görselleri ============================ */

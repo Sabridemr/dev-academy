@@ -1,9 +1,30 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import type { RegisterPushTokenDto, UpdateProfileDto, UserProfile } from '@devacademy/shared';
+import type { User } from '@prisma/client';
 import { AuthStateService } from '../../common/auth/auth-state.service';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { RealtimeGateway } from '../realtime/realtime.gateway';
 import { toProfile } from '../auth/auth.service';
+
+/** GET/PATCH /users/me: profil + kullanıcıya özel ayarlar */
+export type MeProfile = UserProfile & {
+  reminderHour: number | null;
+  timezone: string;
+  dailyGoalMinutes: number | null;
+  streakFreezes: number;
+  emailVerified: boolean;
+};
+
+function toMe(user: User): MeProfile {
+  return {
+    ...toProfile(user),
+    reminderHour: user.reminderHour,
+    timezone: user.timezone,
+    dailyGoalMinutes: user.dailyGoalMinutes,
+    streakFreezes: user.streakFreezes,
+    emailVerified: Boolean(user.emailVerifiedAt),
+  };
+}
 
 @Injectable()
 export class UsersService {
@@ -13,15 +34,13 @@ export class UsersService {
     private readonly realtime: RealtimeGateway,
   ) {}
 
-  async getProfile(
-    userId: string,
-  ): Promise<UserProfile & { reminderHour: number | null; timezone: string }> {
+  async getProfile(userId: string): Promise<MeProfile> {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user || user.deletedAt) throw new NotFoundException('Kullanıcı bulunamadı');
-    return { ...toProfile(user), reminderHour: user.reminderHour, timezone: user.timezone };
+    return toMe(user);
   }
 
-  async updateProfile(userId: string, dto: UpdateProfileDto) {
+  async updateProfile(userId: string, dto: UpdateProfileDto): Promise<MeProfile> {
     if (dto.selectedPathId) {
       const path = await this.prisma.learningPath.findUnique({ where: { id: dto.selectedPathId } });
       if (!path) throw new NotFoundException('Öğrenme yolu bulunamadı');
@@ -35,9 +54,10 @@ export class UsersService {
         selectedPathId: dto.selectedPathId,
         reminderHour: dto.reminderHour,
         timezone: dto.timezone,
+        dailyGoalMinutes: dto.dailyGoalMinutes,
       },
     });
-    return { ...toProfile(user), reminderHour: user.reminderHour, timezone: user.timezone };
+    return toMe(user);
   }
 
   /**

@@ -5,18 +5,19 @@ import type {
   SubmitAttemptDto,
   LocalizedString,
 } from '@devacademy/shared';
-import { gradeAnswer, qualityFromAnswer, sm2Review, SM2_INITIAL } from '@devacademy/shared';
+import { gradeAnswer } from '@devacademy/shared';
 import type { Prisma, Question, Quiz } from '@prisma/client';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { asLocalized } from '../../common/utils/localized';
 import { ProgressService } from '../progress/progress.service';
+import { upsertReviewCards } from './review-cards';
 
 /**
  * Quiz motoru: soruları doğru cevapsız sunar, denemeleri puanlar, yanlışları
  * aralıklı tekrar (SM-2) kartlarına dönüştürür, rozet/aktivite tetikler.
  */
 /** Yalnızca yayındaki quiz ve dersi yayında olanlar öğrencilere açıktır (taslak dersin quizi sızmaz) */
-const PUBLIC_QUIZ = {
+export const PUBLIC_QUIZ = {
   status: 'published',
   lesson: { publishedVersionId: { not: null } },
 } satisfies Prisma.QuizWhereInput;
@@ -90,19 +91,20 @@ export class QuizzesService {
         },
       });
       // Aralıklı tekrar kartları: yanlışlar yeni/sıfırlanmış kart, doğrular mevcut kartı ilerletir
-      await this.upsertReviewCards(
+      await upsertReviewCards(
         tx,
         userId,
-        quiz.lessonId,
-        results.map((r) => ({ question: r.question, correct: r.correct })),
+        results.map((r) => ({ question: r.question, lessonId: quiz.lessonId, correct: r.correct })),
         perQuestionMs,
       );
       return created;
     });
 
+    // XP: ilk geçişte quizPassed, kusursuzsa ek bonus (XpEvent tekilliği tekrar vermeyi engeller)
     const newBadges = await this.progress.recordActivity(userId, {
       quizCompleted: true,
       perfectQuiz: correctCount === totalCount,
+      quizPassed: passed ? quizId : undefined,
     });
 
     return {
@@ -142,55 +144,6 @@ export class QuizzesService {
       durationMs: a.durationMs,
       createdAt: a.createdAt.toISOString(),
     }));
-  }
-
-  private async upsertReviewCards(
-    tx: Prisma.TransactionClient,
-    userId: string,
-    lessonId: string,
-    results: { question: Question; correct: boolean }[],
-    perQuestionMs?: number,
-  ): Promise<void> {
-    const now = new Date();
-    // Mevcut kartlar tek sorguda okunur (soru başına ayrı sorgu yerine)
-    const existingCards = await tx.reviewCard.findMany({
-      where: { userId, questionId: { in: results.map((r) => r.question.id) } },
-    });
-    const byQuestion = new Map(existingCards.map((c) => [c.questionId, c]));
-    const creates: Prisma.ReviewCardCreateManyInput[] = [];
-    for (const r of results) {
-      const existing = byQuestion.get(r.question.id);
-      if (!existing && r.correct) continue; // doğru bilinen ve kartı olmayan soru için kart açma
-      const quality = qualityFromAnswer(r.correct, perQuestionMs);
-      const card = sm2Review(existing ?? SM2_INITIAL, quality);
-      const dueAt = new Date(now.getTime() + card.intervalDays * 86_400_000);
-      const concept = r.question.concepts[0] ?? lessonId;
-      if (existing) {
-        await tx.reviewCard.update({
-          where: { id: existing.id },
-          data: {
-            intervalDays: card.intervalDays,
-            easeFactor: card.easeFactor,
-            repetitions: card.repetitions,
-            dueAt,
-            lastReviewed: now,
-          },
-        });
-      } else {
-        creates.push({
-          userId,
-          questionId: r.question.id,
-          lessonId,
-          concept,
-          intervalDays: card.intervalDays,
-          easeFactor: card.easeFactor,
-          repetitions: card.repetitions,
-          dueAt,
-          lastReviewed: now,
-        });
-      }
-    }
-    if (creates.length > 0) await tx.reviewCard.createMany({ data: creates, skipDuplicates: true });
   }
 }
 

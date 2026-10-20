@@ -13,7 +13,15 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import type { CookieOptions, Request, Response } from 'express';
 import { z } from 'zod';
-import { LoginSchema, OAuthLoginSchema, RefreshSchema, RegisterSchema } from '@devacademy/shared';
+import {
+  ForgotPasswordSchema,
+  LoginSchema,
+  OAuthLoginSchema,
+  RefreshSchema,
+  RegisterSchema,
+  ResetPasswordSchema,
+  VerifyEmailSchema,
+} from '@devacademy/shared';
 import type {
   AuthResponse,
   AuthTokens,
@@ -175,5 +183,52 @@ export class AuthController {
     @CurrentUser() user: AuthUser,
   ): Promise<void> {
     await this.auth.changePassword(user.id, dto.currentPassword, dto.newPassword);
+  }
+
+  @Public()
+  @Post('forgot')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @ApiOperation({
+    summary: 'Şifre sıfırlama bağlantısı iste (hesap olsun olmasın her zaman 204)',
+  })
+  @ApiZodBody(ForgotPasswordSchema)
+  async forgot(
+    @Body(zodBody(ForgotPasswordSchema)) dto: z.infer<typeof ForgotPasswordSchema>,
+  ): Promise<void> {
+    await this.auth.forgotPassword(dto.email);
+  }
+
+  @Public()
+  @Post('reset')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @ApiOperation({ summary: 'Sıfırlama token’ı ile yeni şifre belirle (tüm oturumları kapatır)' })
+  @ApiZodBody(ResetPasswordSchema)
+  async reset(
+    @Body(zodBody(ResetPasswordSchema)) dto: z.infer<typeof ResetPasswordSchema>,
+  ): Promise<void> {
+    await this.auth.resetPassword(dto.token, dto.newPassword);
+  }
+
+  @Post('verify-email/request')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiBearerAuth()
+  @Throttle({ default: { limit: 3, ttl: 60_000 } })
+  @ApiOperation({ summary: 'E-posta doğrulama bağlantısı gönder' })
+  async requestVerification(@CurrentUser() user: AuthUser): Promise<void> {
+    await this.auth.requestEmailVerification(user.id);
+  }
+
+  @Public()
+  @Post('verify-email')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @ApiOperation({ summary: 'E-posta doğrulama token’ını onayla' })
+  @ApiZodBody(VerifyEmailSchema)
+  async verifyEmail(
+    @Body(zodBody(VerifyEmailSchema)) dto: z.infer<typeof VerifyEmailSchema>,
+  ): Promise<void> {
+    await this.auth.verifyEmail(dto.token);
   }
 }

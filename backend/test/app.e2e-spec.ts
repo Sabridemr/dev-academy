@@ -8,6 +8,9 @@ import { CURRICULUM } from '@devacademy/shared';
 import { createApp } from '../src/main';
 import { PrismaService } from '../src/common/prisma/prisma.service';
 import { RedisService } from '../src/common/redis/redis.service';
+import { NotificationsService } from '../src/modules/notifications/notifications.service';
+import * as argon2 from 'argon2';
+import { XP_RULES } from '@devacademy/shared';
 
 /**
  * Uçtan uca testler: seed edilmiş test veritabanında (A-05 referans dersi dahil) API akışlarını doğrular.
@@ -30,10 +33,13 @@ describe('DevAcademy API (e2e)', () => {
   });
 
   /** Kayıt uç noktasının hız sınırını tüketmeden test kullanıcısı + access token üretir */
-  async function directUser(tag: string): Promise<string> {
-    const user = await app
-      .get(PrismaService)
-      .user.create({ data: { email: `e2e_${tag}_${Date.now()}@test.local`, displayName: tag } });
+  async function directUser(
+    tag: string,
+    data: { role?: 'student' | 'admin'; passwordHash?: string } = {},
+  ): Promise<string> {
+    const user = await app.get(PrismaService).user.create({
+      data: { email: `e2e_${tag}_${Date.now()}@test.local`, displayName: tag, ...data },
+    });
     const token = await app
       .get(JwtService)
       .signAsync(
@@ -825,6 +831,385 @@ describe('DevAcademy API (e2e)', () => {
       }
       await http.get(`${prefix}/quizzes/by-lesson/${lessonId}`).expect(200);
       await http.get(`${prefix}/scenes/load-balancer-round-robin`).expect(200);
+    });
+  });
+
+  describe('motivasyon: XP, günlük hedef, aktivite', () => {
+    /** Quizin doğru cevapları (yalnızca test; API sızdırmaz) */
+    async function correctAnswers(quizId: string) {
+      const qs = await app
+        .get(PrismaService)
+        .question.findMany({ where: { quizId, archived: false } });
+      return qs.map((q) => ({ questionId: q.key, selected: q.correct }));
+    }
+
+    it('günlük hedef kaydedilir; ders tamamlama + hedef XP verir, özet ve aktivite yansır', async () => {
+      const auth = await directUser('xp');
+      const me = await http
+        .patch(`${prefix}/users/me`)
+        .set('Authorization', auth)
+        .send({ dailyGoalMinutes: 5 })
+        .expect(200);
+      expect(me.body).toMatchObject({
+        dailyGoalMinutes: 5,
+        streakFreezes: 1,
+        emailVerified: false,
+      });
+      await http
+        .patch(`${prefix}/users/me`)
+        .set('Authorization', auth)
+        .send({ dailyGoalMinutes: 1 })
+        .expect(400);
+
+      await http
+        .put(`${prefix}/progress/lessons/${lessonId}`)
+        .set('Authorization', auth)
+        .send({ percent: 100, completed: true, secondsSpent: 400 })
+        .expect(200);
+      // Aynı ders yeniden tamamlanınca XP verilmez
+      await http
+        .put(`${prefix}/progress/lessons/${lessonId}`)
+        .set('Authorization', auth)
+        .send({ percent: 100, completed: true, secondsSpent: 10 })
+        .expect(200);
+
+      const expected = XP_RULES.lessonCompleted + XP_RULES.dailyGoalMet;
+      const summary = await http
+        .get(`${prefix}/progress/summary`)
+        .set('Authorization', auth)
+        .expect(200);
+      expect(summary.body).toMatchObject({
+        xp: expected,
+        dailyGoalMinutes: 5,
+        todaySeconds: 410,
+        streakFreezes: 1,
+        currentStreak: 1,
+      });
+      expect(summary.body.level).toMatchObject({ level: 1, xpIntoLevel: expected });
+
+      const xp = await http.get(`${prefix}/progress/xp`).set('Authorization', auth).expect(200);
+      expect(xp.body.map((e: { kind: string }) => e.kind).sort()).toEqual([
+        'dailyGoalMet',
+        'lessonCompleted',
+      ]);
+      const activity = await http
+        .get(`${prefix}/progress/activity?days=30`)
+        .set('Authorization', auth)
+        .expect(200);
+      expect(activity.body).toHaveLength(1);
+      expect(activity.body[0]).toMatchObject({ seconds: 410, lessonsCompleted: 1, xp: expected });
+      expect(activity.body[0].date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    });
+
+    it('quiz ilk geçişte geçme + kusursuz bonusu verir, tekrar çözünce vermez', async () => {
+      const auth = await directUser('quizxp');
+      const quiz = await http.get(`${prefix}/quizzes/by-lesson/${lessonId}`).expect(200);
+      const answers = await correctAnswers(quiz.body.id);
+      for (let i = 0; i < 2; i++) {
+        const res = await http
+          .post(`${prefix}/quizzes/${quiz.body.id}/attempts`)
+          .set('Authorization', auth)
+          .send({ answers })
+          .expect(201);
+        expect(res.body.score).toBe(100);
+      }
+      const summary = await http
+        .get(`${prefix}/progress/summary`)
+        .set('Authorization', auth)
+        .expect(200);
+      expect(summary.body.xp).toBe(XP_RULES.quizPassed + XP_RULES.quizPerfectBonus);
+      const activity = await http
+        .get(`${prefix}/progress/activity`)
+        .set('Authorization', auth)
+        .expect(200);
+      expect(activity.body[0].quizzesPassed).toBe(2);
+    });
+  });
+
+  describe('sertifikalar', () => {
+    it('modül bitince sertifika ve modül XP’si; herkese açık doğrulama sayfası', async () => {
+      const prisma = app.get(PrismaService);
+      const groups = await prisma.lesson.groupBy({
+        by: ['moduleId'],
+        where: { publishedVersionId: { not: null } },
+        _count: { _all: true },
+      });
+      const smallest = groups.sort((a, b) => a._count._all - b._count._all)[0];
+      const lessons = await prisma.lesson.findMany({
+        where: { moduleId: smallest.moduleId, publishedVersionId: { not: null } },
+        select: { id: true },
+      });
+      const auth = await directUser('cert');
+      for (const l of lessons)
+        await http
+          .put(`${prefix}/progress/lessons/${l.id}`)
+          .set('Authorization', auth)
+          .send({ percent: 100, completed: true })
+          .expect(200);
+
+      const certs = await http.get(`${prefix}/certificates`).set('Authorization', auth).expect(200);
+      const cert = certs.body.find(
+        (c: { targetType: string; targetId: string }) =>
+          c.targetType === 'module' && c.targetId === smallest.moduleId,
+      );
+      expect(cert).toBeDefined();
+      expect(cert).toMatchObject({ userName: 'cert', lessonCount: lessons.length });
+      expect(cert.publicId).toMatch(/^[A-Za-z0-9_-]{16}$/);
+
+      const pub = await http.get(`${prefix}/certificates/public/${cert.publicId}`).expect(200);
+      expect(pub.body).toMatchObject({
+        id: cert.id,
+        userName: 'cert',
+        targetId: smallest.moduleId,
+      });
+      expect(pub.body.title).toBeTruthy();
+      await http.get(`${prefix}/certificates/public/yok-boyle-bir-sertifika`).expect(404);
+      await http.get(`${prefix}/certificates`).expect(401);
+
+      const xp = await http.get(`${prefix}/progress/xp`).set('Authorization', auth).expect(200);
+      expect(xp.body.filter((e: { kind: string }) => e.kind === 'moduleCompleted')).toHaveLength(1);
+    });
+  });
+
+  describe('ders geri bildirimi + admin analitiği', () => {
+    it('geri bildirim upsert edilir, özet ve kendi oyu döner; analitiğe yansır', async () => {
+      const auth = await directUser('fb');
+      await http
+        .post(`${prefix}/lessons/${lessonId}/feedback`)
+        .set('Authorization', auth)
+        .send({ rating: -1 })
+        .expect(200);
+      const res = await http
+        .post(`${prefix}/lessons/${lessonId}/feedback`)
+        .set('Authorization', auth)
+        .send({ rating: 1, difficulty: 'hard', comment: '  Harika anlatım  ' })
+        .expect(200);
+      expect(res.body.mine).toEqual({ rating: 1, difficulty: 'hard', comment: 'Harika anlatım' });
+      expect(res.body.up).toBeGreaterThanOrEqual(1);
+      expect(res.body.difficulty.hard).toBeGreaterThanOrEqual(1);
+
+      const mine = await http
+        .get(`${prefix}/lessons/${lessonId}/feedback`)
+        .set('Authorization', auth)
+        .expect(200);
+      expect(mine.body.mine.rating).toBe(1);
+      const anon = await http.get(`${prefix}/lessons/${lessonId}/feedback`).expect(200);
+      expect(anon.body).not.toHaveProperty('mine');
+      expect(anon.body.up).toBe(res.body.up);
+
+      await http
+        .post(`${prefix}/lessons/${lessonId}/feedback`)
+        .set('Authorization', auth)
+        .send({ rating: 5 })
+        .expect(400);
+      await http.post(`${prefix}/lessons/${lessonId}/feedback`).send({ rating: 1 }).expect(401);
+      await http.get(`${prefix}/lessons/olmayan-ders/feedback`).expect(404);
+
+      await http.get(`${prefix}/admin/analytics`).set('Authorization', auth).expect(403);
+      const admin = await directUser('fbadmin', { role: 'admin' });
+      const analytics = await http
+        .get(`${prefix}/admin/analytics`)
+        .set('Authorization', admin)
+        .expect(200);
+      const row = analytics.body.find((r: { lessonId: string }) => r.lessonId === lessonId);
+      expect(row.feedbackUp).toBeGreaterThanOrEqual(1);
+      expect(row.hardVotes).toBeGreaterThanOrEqual(1);
+      expect(row.started).toBeGreaterThanOrEqual(row.completed);
+      expect(row.quizAttempts).toBeGreaterThan(0);
+      expect(row.completionRate).toBeGreaterThanOrEqual(0);
+      expect(row.completionRate).toBeLessThanOrEqual(1);
+    });
+  });
+
+  describe('şifre sıfırlama ve e-posta doğrulama', () => {
+    const tokenOf = (text: string) => decodeURIComponent(text.match(/token=([^\s]+)/)![1]);
+
+    it('forgot her zaman 204; bağlantıyla şifre sıfırlanır, oturumlar kapanır, token tek kullanımlık', async () => {
+      const mail = jest.spyOn(app.get(NotificationsService), 'sendEmail');
+      mail.mockClear();
+      // Kayıt/giriş uç noktalarının hız sınırını tüketmemek için kullanıcı ve oturum doğrudan oluşturulur
+      const prisma = app.get(PrismaService);
+      const resetEmail = `e2e_reset_${Date.now()}@test.local`;
+      const user = await prisma.user.create({
+        data: {
+          email: resetEmail,
+          displayName: 'Sıfırla',
+          passwordHash: await argon2.hash(password),
+        },
+      });
+      const session = await prisma.refreshToken.create({
+        data: {
+          userId: user.id,
+          tokenHash: createHash('sha256').update(`rt-${user.id}`).digest('hex'),
+          family: 'e2e-reset',
+          expiresAt: new Date(Date.now() + 3_600_000),
+        },
+      });
+
+      await http.post(`${prefix}/auth/forgot`).send({ email: 'yok_boyle@test.local' }).expect(204);
+      expect(mail).not.toHaveBeenCalled();
+      await http
+        .post(`${prefix}/auth/forgot`)
+        .send({ email: resetEmail.toUpperCase() })
+        .expect(204);
+      expect(mail).toHaveBeenCalledTimes(1);
+      const [to, , text] = mail.mock.calls[0];
+      expect(to).toBe(resetEmail);
+      expect(text).toContain('http://localhost:3000/reset-password?token=');
+      const token = tokenOf(text);
+
+      await http
+        .post(`${prefix}/auth/reset`)
+        .send({ token: 'x'.repeat(43), newPassword: 'YeniSifre123!' })
+        .expect(400);
+      await http
+        .post(`${prefix}/auth/reset`)
+        .send({ token, newPassword: 'YeniSifre123!' })
+        .expect(204);
+      await http
+        .post(`${prefix}/auth/reset`)
+        .send({ token, newPassword: 'BaskaSifre123!' })
+        .expect(400);
+      // Tüm oturumlar kapandı, yeni şifre geçerli, e-posta doğrulanmış sayılır
+      expect(
+        (await prisma.refreshToken.findUniqueOrThrow({ where: { id: session.id } })).revokedAt,
+      ).toBeInstanceOf(Date);
+      const updated = await prisma.user.findUniqueOrThrow({ where: { id: user.id } });
+      expect(await argon2.verify(updated.passwordHash!, 'YeniSifre123!')).toBe(true);
+      expect(await argon2.verify(updated.passwordHash!, password)).toBe(false);
+      expect(updated.emailVerifiedAt).toBeInstanceOf(Date);
+      mail.mockRestore();
+    });
+
+    it('e-posta doğrulama bağlantısı istenir ve onaylanır', async () => {
+      const mail = jest.spyOn(app.get(NotificationsService), 'sendEmail');
+      mail.mockClear();
+      const auth = await directUser('verify', { passwordHash: await argon2.hash(password) });
+      await http.post(`${prefix}/auth/verify-email/request`).expect(401);
+      await http.post(`${prefix}/auth/verify-email/request`).set('Authorization', auth).expect(204);
+      expect(mail).toHaveBeenCalledTimes(1);
+      const text = mail.mock.calls[0][2];
+      expect(text).toContain('/verify-email?token=');
+      const token = tokenOf(text);
+      // Doğrulama token'ı şifre sıfırlamada kullanılamaz
+      await http
+        .post(`${prefix}/auth/reset`)
+        .send({ token, newPassword: 'YeniSifre123!' })
+        .expect(400);
+      await http.post(`${prefix}/auth/verify-email`).send({ token }).expect(204);
+      await http.post(`${prefix}/auth/verify-email`).send({ token }).expect(400);
+      const me = await http.get(`${prefix}/users/me`).set('Authorization', auth).expect(200);
+      expect(me.body.emailVerified).toBe(true);
+      mail.mockRestore();
+    });
+  });
+
+  describe('deneme sınavı', () => {
+    const moduleId = 'a-system-design-fundamentals';
+
+    async function correctFor(questionIds: string[]) {
+      const prisma = app.get(PrismaService);
+      const out: { questionId: string; selected: string[] }[] = [];
+      for (const id of questionIds) {
+        const [quizId, key] = id.split(':');
+        const q = await prisma.question.findUniqueOrThrow({
+          where: { quizId_key: { quizId, key } },
+        });
+        out.push({ questionId: id, selected: q.correct });
+      }
+      return out;
+    }
+
+    it('sınav cevapsız sunulur, sahibine özeldir; doğru gönderim geçer ve XP verir', async () => {
+      const auth = await directUser('exam');
+      const other = await directUser('exam2');
+      const exam = await http
+        .post(`${prefix}/exams`)
+        .set('Authorization', auth)
+        .send({ moduleIds: [moduleId], count: 5, durationSec: 600 })
+        .expect(201);
+      expect(exam.body.questions).toHaveLength(5);
+      expect(exam.body.passScore).toBe(70);
+      expect(new Set(exam.body.questions.map((q: { id: string }) => q.id)).size).toBe(5);
+      for (const q of exam.body.questions) expect(q.moduleId).toBe(moduleId);
+      expect(JSON.stringify(exam.body)).not.toContain('"correct');
+      expect(JSON.stringify(exam.body)).not.toContain('explanation');
+
+      await http.get(`${prefix}/exams/${exam.body.id}`).set('Authorization', other).expect(404);
+      const got = await http
+        .get(`${prefix}/exams/${exam.body.id}`)
+        .set('Authorization', auth)
+        .expect(200);
+      expect(got.body.result).toBeNull();
+
+      const ids = exam.body.questions.map((q: { id: string }) => q.id);
+      await http
+        .post(`${prefix}/exams/${exam.body.id}/submit`)
+        .set('Authorization', auth)
+        .send({ answers: [{ questionId: 'yok:q1', selected: ['a'] }] })
+        .expect(400);
+      const res = await http
+        .post(`${prefix}/exams/${exam.body.id}/submit`)
+        .set('Authorization', auth)
+        .send({ answers: await correctFor(ids) })
+        .expect(200);
+      expect(res.body).toMatchObject({
+        examId: exam.body.id,
+        score: 100,
+        passed: true,
+        correctCount: 5,
+        totalCount: 5,
+        timedOut: false,
+        xpEarned: XP_RULES.examPassed,
+      });
+      expect(res.body.perModule).toEqual([{ moduleId, correct: 5, total: 5 }]);
+      expect(res.body.results[0].correctAnswer.length).toBeGreaterThan(0);
+      await http
+        .post(`${prefix}/exams/${exam.body.id}/submit`)
+        .set('Authorization', auth)
+        .send({ answers: [] })
+        .expect(409);
+      const after = await http
+        .get(`${prefix}/exams/${exam.body.id}`)
+        .set('Authorization', auth)
+        .expect(200);
+      expect(after.body.result.score).toBe(100);
+    });
+
+    it('süre aşımı yine puanlanır; yanlışlar tekrar kartına dönüşür; liste döner', async () => {
+      const prisma = app.get(PrismaService);
+      const auth = await directUser('examlate');
+      const exam = await http
+        .post(`${prefix}/exams`)
+        .set('Authorization', auth)
+        .send({ count: 5, durationSec: 60 })
+        .expect(201);
+      await prisma.exam.update({
+        where: { id: exam.body.id },
+        data: { startedAt: new Date(Date.now() - 10 * 60_000) },
+      });
+      const res = await http
+        .post(`${prefix}/exams/${exam.body.id}/submit`)
+        .set('Authorization', auth)
+        .send({
+          answers: exam.body.questions.map((q: { id: string }) => ({
+            questionId: q.id,
+            selected: ['zzz-yanlis'],
+          })),
+        })
+        .expect(200);
+      expect(res.body).toMatchObject({ timedOut: true, passed: false, score: 0, xpEarned: 0 });
+      const userId = (await prisma.exam.findUniqueOrThrow({ where: { id: exam.body.id } })).userId;
+      expect(await prisma.reviewCard.count({ where: { userId } })).toBe(5);
+
+      const list = await http.get(`${prefix}/exams`).set('Authorization', auth).expect(200);
+      expect(list.body).toHaveLength(1);
+      expect(list.body[0]).toMatchObject({ id: exam.body.id, questionCount: 5, passed: false });
+      await http
+        .post(`${prefix}/exams`)
+        .set('Authorization', auth)
+        .send({ pathId: 'olmayan-yol' })
+        .expect(404);
     });
   });
 

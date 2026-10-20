@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import type {
+  AdminLessonAnalytics,
   AdminLessonUpsertDto,
   AdminLessonVersion,
   AdminQuizUpsertDto,
@@ -15,7 +16,7 @@ import {
   validateScene,
 } from '@devacademy/shared';
 import { PrismaService } from '../../common/prisma/prisma.service';
-import { toJsonLocalized } from '../../common/utils/localized';
+import { asLocalized, toJsonLocalized } from '../../common/utils/localized';
 import { ContentService } from '../content/content.service';
 import { SearchService } from '../search/search.service';
 import { RealtimeGateway } from '../realtime/realtime.gateway';
@@ -474,6 +475,96 @@ export class AdminService {
       this.countActiveToday(),
     ]);
     return { users, lessons, published, scenes, quizzes, attempts, activeToday };
+  }
+
+  /**
+   * Ders başına öğrenme analitiği (yalnızca yayındaki dersler): başlayan/tamamlayan, ortalama süre,
+   * quiz deneme ve geçme oranı, geri bildirim sayıları. Hepsi gruplu sorgularla, ders başına sorgu yok.
+   */
+  async lessonAnalytics(): Promise<AdminLessonAnalytics[]> {
+    const lessons = await this.prisma.lesson.findMany({
+      where: { publishedVersionId: { not: null } },
+      select: {
+        id: true,
+        moduleId: true,
+        publishedVersion: { select: { title: true } },
+        quizzes: { select: { id: true } },
+      },
+      orderBy: [{ module: { order: 'asc' } }, { order: 'asc' }],
+    });
+    const lessonIds = lessons.map((l) => l.id);
+    const quizToLesson = new Map(lessons.flatMap((l) => l.quizzes.map((q) => [q.id, l.id])));
+    const quizIds = [...quizToLesson.keys()];
+    const [started, completed, attempts, passed, ratings, hard] = await Promise.all([
+      this.prisma.progress.groupBy({
+        by: ['lessonId'],
+        where: { lessonId: { in: lessonIds } },
+        _count: { _all: true },
+        _avg: { secondsSpent: true },
+      }),
+      this.prisma.progress.groupBy({
+        by: ['lessonId'],
+        where: { lessonId: { in: lessonIds }, status: 'completed' },
+        _count: { _all: true },
+      }),
+      this.prisma.attempt.groupBy({
+        by: ['quizId'],
+        where: { quizId: { in: quizIds } },
+        _count: { _all: true },
+      }),
+      this.prisma.attempt.groupBy({
+        by: ['quizId'],
+        where: { quizId: { in: quizIds }, passed: true },
+        _count: { _all: true },
+      }),
+      this.prisma.lessonFeedback.groupBy({
+        by: ['lessonId', 'rating'],
+        where: { lessonId: { in: lessonIds } },
+        _count: { _all: true },
+      }),
+      this.prisma.lessonFeedback.groupBy({
+        by: ['lessonId'],
+        where: { lessonId: { in: lessonIds }, difficulty: 'hard' },
+        _count: { _all: true },
+      }),
+    ]);
+    const startedBy = new Map(started.map((r) => [r.lessonId, r]));
+    const completedBy = new Map(completed.map((r) => [r.lessonId, r._count._all]));
+    const hardBy = new Map(hard.map((r) => [r.lessonId, r._count._all]));
+    const sumByLesson = (rows: { quizId: string; _count: { _all: number } }[]) => {
+      const m = new Map<string, number>();
+      for (const r of rows) {
+        const lessonId = quizToLesson.get(r.quizId);
+        if (lessonId) m.set(lessonId, (m.get(lessonId) ?? 0) + r._count._all);
+      }
+      return m;
+    };
+    const attemptsBy = sumByLesson(attempts);
+    const passedBy = sumByLesson(passed);
+    const rating = (lessonId: string, value: number) =>
+      ratings.find((r) => r.lessonId === lessonId && r.rating === value)?._count._all ?? 0;
+    const ratio = (a: number, b: number) => (b > 0 ? Math.round((a / b) * 1000) / 1000 : 0);
+
+    return lessons.map((l) => {
+      const s = startedBy.get(l.id);
+      const startedCount = s?._count._all ?? 0;
+      const completedCount = completedBy.get(l.id) ?? 0;
+      const quizAttempts = attemptsBy.get(l.id) ?? 0;
+      return {
+        lessonId: l.id,
+        title: asLocalized(l.publishedVersion?.title),
+        moduleId: l.moduleId,
+        started: startedCount,
+        completed: completedCount,
+        completionRate: ratio(completedCount, startedCount),
+        avgSecondsSpent: Math.round(s?._avg.secondsSpent ?? 0),
+        quizAttempts,
+        quizPassRate: ratio(passedBy.get(l.id) ?? 0, quizAttempts),
+        feedbackUp: rating(l.id, 1),
+        feedbackDown: rating(l.id, -1),
+        hardVotes: hardBy.get(l.id) ?? 0,
+      };
+    });
   }
 
   /** lastActivityDate kullanıcının kendi saat dilimindeki gündür; "bugün" her dilim için ayrı hesaplanır */
