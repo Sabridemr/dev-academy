@@ -16,9 +16,11 @@ vi.mock('@/lib/auth-store', () => ({ useIsAuthenticated: () => true }));
 vi.mock('@/lib/api', () => ({ api: vi.fn(async () => undefined) }));
 vi.mock('@/lib/hooks', () => ({
   useLesson: () => ({ data: lessonData }),
-  useUpdateProgress: () => ({ mutate }),
+  useModule: () => ({ data: undefined }),
+  useUpdateProgress: () => ({ mutate, isPending: false }),
   useBookmarks: () => ({ data: [] }),
   useNotes: () => ({ data: [] }),
+  usePrefersReducedMotion: () => true,
 }));
 
 const initial = {

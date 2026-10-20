@@ -1,7 +1,10 @@
 'use client';
 
-import type { ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { FlaskConical, Maximize2, Minimize2, RotateCcw } from 'lucide-react';
+import { useI18n } from '@/i18n';
 import { cn } from '@/lib/utils';
+import { useSimContext } from './sim-context';
 
 /** Simülatörlerin ortak yerleşim parçaları — tutarlı görünüm için */
 
@@ -18,19 +21,83 @@ export function SimShell({
   aside?: ReactNode;
   className?: string;
 }) {
+  const { t } = useI18n();
+  const ctx = useSimContext();
+  const root = useRef<HTMLElement>(null);
+  const [fullscreen, setFullscreen] = useState(false);
+  const heading = ctx.title ?? title;
+
+  useEffect(() => {
+    const onChange = () => setFullscreen(document.fullscreenElement === root.current);
+    document.addEventListener('fullscreenchange', onChange);
+    return () => document.removeEventListener('fullscreenchange', onChange);
+  }, []);
+  const toggleFullscreen = async () => {
+    try {
+      if (document.fullscreenElement) await document.exitFullscreen();
+      else await root.current?.requestFullscreen?.();
+    } catch {
+      /* desteklenmiyor */
+    }
+  };
+
   return (
-    <div className={cn('card overflow-hidden', className)}>
-      {(title || toolbar) && (
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-4 py-2.5">
-          {title && <p className="text-sm font-semibold">{title}</p>}
-          {toolbar && <div className="flex flex-wrap items-center gap-2">{toolbar}</div>}
-        </div>
+    <section
+      ref={root}
+      className={cn(
+        'card overflow-hidden',
+        fullscreen && 'overflow-auto rounded-none border-0 bg-bg',
+        className,
       )}
-      <div className={cn('grid gap-4 p-4', aside ? 'lg:grid-cols-[1fr_280px]' : '')}>
-        <div className="min-w-0">{children}</div>
-        {aside && <aside className="min-w-0 space-y-4">{aside}</aside>}
+      aria-label={heading}
+    >
+      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border px-4 py-3">
+        <div className="flex min-w-0 items-start gap-3">
+          <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-accent/15 text-accent-fg">
+            <FlaskConical size={15} />
+          </span>
+          <div className="min-w-0">
+            {heading && <p className="text-sm font-semibold leading-snug">{heading}</p>}
+            <p className="mt-0.5 text-xs text-muted">
+              {ctx.goal ? (
+                <>
+                  <span className="font-medium text-fg/80">{t('sim.goal')}:</span> {ctx.goal}
+                </>
+              ) : (
+                t('sim.hint')
+              )}
+            </p>
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          {toolbar}
+          {ctx.onReset && (
+            <button
+              type="button"
+              className="btn-icon btn-icon-sm"
+              onClick={ctx.onReset}
+              aria-label={t('sim.resetAll')}
+              title={t('sim.resetAll')}
+            >
+              <RotateCcw size={14} />
+            </button>
+          )}
+          <button
+            type="button"
+            className="btn-icon btn-icon-sm"
+            onClick={toggleFullscreen}
+            aria-label={fullscreen ? t('player.exitFullscreen') : t('sim.fullscreen')}
+            title={fullscreen ? t('player.exitFullscreen') : t('sim.fullscreen')}
+          >
+            {fullscreen ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+          </button>
+        </div>
       </div>
-    </div>
+      <div className={cn('bg-dots grid gap-4 p-4', aside ? 'lg:grid-cols-[1fr_280px]' : '')}>
+        <div className="min-w-0">{children}</div>
+        {aside && <aside className="min-w-0 space-y-4 rounded-xl bg-surface/70 p-3">{aside}</aside>}
+      </div>
+    </section>
   );
 }
 

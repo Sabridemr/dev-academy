@@ -274,6 +274,25 @@ body {
   max-height: 70vh;
 }
 
+/* Kod bloğu satır numaraları (Shiki .line sarmalayıcıları ve yüklenmeden önceki düz metin) */
+.code-lines pre {
+  counter-reset: line;
+}
+.code-lines .line {
+  display: inline-block;
+  width: 100%;
+}
+.code-lines .line::before {
+  counter-increment: line;
+  content: counter(line);
+  display: inline-block;
+  width: 2.5em;
+  margin-right: 1em;
+  text-align: right;
+  color: rgb(var(--da-muted-rgb) / 0.6);
+  user-select: none;
+}
+
 /* Shiki: açık/koyu tema değişkenleri */
 .shiki,
 .shiki span {

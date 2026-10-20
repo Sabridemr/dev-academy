@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import { Check, Copy } from 'lucide-react';
 import type { LocalizedString } from '@devacademy/shared';
 import { useI18n } from '@/i18n';
@@ -84,6 +84,7 @@ export function CodeBlock({
   highlightLines?: number[];
 }) {
   const { t, tl } = useI18n();
+  const uid = useId().replace(/[^a-zA-Z0-9]/g, '');
   const variants: Variant[] = [{ language, code, title }, ...alternatives];
   const [active, setActive] = useState(0);
   const [html, setHtml] = useState<string | null>(null);
@@ -105,7 +106,7 @@ export function CodeBlock({
             {
               line(node, line) {
                 if (active === 0 && highlightLines.includes(line))
-                  this.addClassToHast(node, 'bg-primary/10 -mx-4 px-4 block');
+                  this.addClassToHast(node, 'bg-primary/10 -mx-2 px-2 rounded');
               },
             },
           ],
@@ -138,8 +139,19 @@ export function CodeBlock({
                 key={`${v.language}-${i}`}
                 type="button"
                 role="tab"
+                id={`code-tab-${uid}-${i}`}
                 aria-selected={i === active}
+                aria-controls={`code-panel-${uid}`}
+                tabIndex={i === active ? 0 : -1}
                 onClick={() => setActive(i)}
+                onKeyDown={(e) => {
+                  if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+                  e.preventDefault();
+                  setActive(
+                    (a) =>
+                      (a + (e.key === 'ArrowRight' ? 1 : -1) + variants.length) % variants.length,
+                  );
+                }}
                 className={cn(
                   'rounded-md px-2.5 py-1 text-xs font-medium',
                   i === active ? 'bg-surface text-fg shadow-sm' : 'text-muted hover:text-fg',
@@ -165,11 +177,23 @@ export function CodeBlock({
           {copied ? t('lesson.copied') : t('lesson.copy')}
         </button>
       </div>
-      <div className="overflow-x-auto p-4 font-mono text-[13px] leading-6">
+      <div
+        id={`code-panel-${uid}`}
+        role="tabpanel"
+        aria-labelledby={variants.length > 1 ? `code-tab-${uid}-${active}` : undefined}
+        className="code-lines overflow-x-auto p-4 pl-2 font-mono text-[13px] leading-6"
+      >
         {html ? (
           <div dangerouslySetInnerHTML={{ __html: html }} />
         ) : (
-          <pre className="whitespace-pre">{current.code}</pre>
+          <pre className="whitespace-pre">
+            {current.code.split('\n').map((line, i) => (
+              <span key={i} className="line">
+                {line}
+                {'\n'}
+              </span>
+            ))}
+          </pre>
         )}
       </div>
     </div>
