@@ -4,7 +4,7 @@ import { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Check, Route } from 'lucide-react';
 import { RequireAuth } from '@/components/auth/RequireAuth';
-import { ICONS } from '@/components/pages/HomeView';
+import { ICONS } from '@/components/home/Sections';
 import { useI18n } from '@/i18n';
 import { usePaths, useUpdateProfile } from '@/lib/hooks';
 import { cn } from '@/lib/utils';

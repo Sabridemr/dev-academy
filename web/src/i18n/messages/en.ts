@@ -56,6 +56,47 @@ export const en: Messages = {
     showcaseLabel: 'Sample animations',
     goToLesson: 'Go to this topic’s lesson',
     modulesCount: '{count} modules',
+    eyebrow: 'For engineers who learn by seeing',
+    heroTitleA: 'Learn complex systems',
+    heroTitleB: 'by seeing them',
+    heroSubtitleLong:
+      'From load balancers to Transformers: every concept comes with a step-by-step animation, a simulator you can play with and a short quiz that checks you.',
+    tryFree: 'Free, no account needed',
+    howTitle: 'Learn in three steps',
+    howSubtitle:
+      'Every lesson follows the same flow: see it first, then try it, then make it stick.',
+    how1Title: 'Watch',
+    how1Text:
+      'Step-by-step animations show the system in motion; pick the speed, jump to any step.',
+    how2Title: 'Try',
+    how2Text:
+      'Play with parameters in simulators: kill a server, fill a cache, clog a queue. See results instantly.',
+    how3Title: 'Reinforce',
+    how3Text:
+      'A short quiz, real-world examples and spaced repetition: your mistakes come back at the right time.',
+    statsModules: 'modules',
+    statsLessons: 'lessons',
+    statsHours: 'hours of content',
+    statsSims: 'interactive simulators',
+    simsTitle: 'Get hands-on with simulators',
+    simsSubtitle:
+      'Try without an account. Every simulator lives inside a lesson, with its context.',
+    simCache: 'Cache',
+    simRateLimiter: 'Rate limiter',
+    simHashing: 'Consistent hashing',
+    pathsSubtitle: 'Modules ordered by your goal. Pick a path, continue where you left off.',
+    modulesSubtitle:
+      'From system design to Python: each module stands alone, yet they build on each other.',
+    allModules: 'All modules',
+    ctaTitle: 'Finish a lesson today.',
+    ctaText:
+      'Create a free account so your progress, streak and review cards follow you on every device.',
+    ctaButton: 'Create account',
+    welcomeBack: 'Welcome back, {name}',
+    welcomeHint: 'Continue where you left off or explore a new module.',
+    dueToday: '{count} reviews due',
+    streakDays: '{count}-day streak',
+    noContinue: 'You haven’t started a lesson yet. Pick your first one!',
   },
   auth: {
     email: 'Email',
@@ -97,6 +138,22 @@ export const en: Messages = {
     hasInteractive: 'Simulator',
     hasQuiz: 'Quiz',
     format: { infographic: 'Infographic', 'pdf-guide': 'PDF guide' },
+    startFirst: 'Start the first lesson',
+    continueLesson: 'Continue',
+    allDone: 'Module completed',
+    contains: 'In this module',
+    animations: '{count} animations',
+    interactives: '{count} simulators',
+    quizzes: '{count} quizzes',
+    lessonsSubtitle: 'Lessons go in order; each one builds on the previous.',
+    status: { completed: 'Completed', in_progress: 'In progress', not_started: 'Not started' },
+    groupDescriptions: {
+      'system-design': 'Building blocks of scalable, resilient systems and real case studies.',
+      software: 'Design patterns, database modelling, API and testing practices.',
+      infrastructure: 'The life of code: Git, CI/CD, Docker, Kubernetes and observability.',
+      ai: 'From machine learning foundations to LLMs and production AI systems.',
+      programming: 'From zero to advanced, with line-by-line code simulation.',
+    },
   },
   lesson: {
     notTranslated:

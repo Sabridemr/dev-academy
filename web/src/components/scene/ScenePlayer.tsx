@@ -31,6 +31,8 @@ interface Props {
   scene: AnimationScene;
   caption?: string;
   autoPlay?: boolean;
+  /** Bitince kısa bir duraklamanın ardından baştan oynat (vitrin) */
+  loop?: boolean;
   className?: string;
   /** Oynatıcı ilk kez oynatıldığında (ilerleme/analitik) */
   onFirstPlay?: () => void;
@@ -40,7 +42,14 @@ interface Props {
  * Web animasyon motoru. Tüm durum geçişleri shared/playerReducer'dan gelir;
  * zaman requestAnimationFrame ile ilerletilir. Klavye: Boşluk = oynat/duraklat, ←/→ = adım.
  */
-export function ScenePlayer({ scene, caption, autoPlay = false, className, onFirstPlay }: Props) {
+export function ScenePlayer({
+  scene,
+  caption,
+  autoPlay = false,
+  loop = false,
+  className,
+  onFirstPlay,
+}: Props) {
   const { t, tl } = useI18n();
   const reducedMotionPref = usePrefersReducedMotion();
   const reducer = useMemo(
@@ -58,10 +67,20 @@ export function ScenePlayer({ scene, caption, autoPlay = false, className, onFir
     dispatch({ type: 'SET_REDUCED_MOTION', value: reducedMotionPref });
   }, [reducedMotionPref]);
 
-  // Sahne değişirse baştan başlat (editör önizlemesi)
+  // Sahne değişirse baştan başlat (editör önizlemesi); ilk mount'ta değil (autoPlay korunur)
+  const prevScene = useRef(scene);
   useEffect(() => {
+    if (prevScene.current === scene) return;
+    prevScene.current = scene;
     dispatch({ type: 'RESET' });
   }, [scene]);
+
+  // Döngü: bitince 1.8 sn bekleyip baştan oynat (PLAY bitmiş durumda sıfırlayıp başlatır)
+  useEffect(() => {
+    if (!loop || !state.finished) return;
+    const id = setTimeout(() => dispatch({ type: 'PLAY' }), 1800);
+    return () => clearTimeout(id);
+  }, [loop, state.finished]);
 
   useEffect(() => {
     if (!state.playing) {
