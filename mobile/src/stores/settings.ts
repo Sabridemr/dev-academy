@@ -4,7 +4,7 @@ import { DEFAULT_LOCALE, isLocale, type Locale } from '@devacademy/shared';
 import { kv, KV_KEYS } from '@/lib/storage';
 
 /**
- * Uygulama ayarları (dil, tema). MMKV'de kalıcıdır; ilk açılışta dil cihaz dilinden tahmin edilir.
+ * Uygulama ayarları (dil, tema). kv deposunda kalıcıdır; ilk açılışta dil cihaz dilinden tahmin edilir.
  */
 export type ThemePreference = 'system' | 'light' | 'dark';
 

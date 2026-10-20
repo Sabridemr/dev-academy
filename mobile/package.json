@@ -6,7 +6,8 @@
   "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",
-    "start:lan": "pnpm --filter @devacademy/shared build && expo start --lan",
+    "start:lan": "pnpm --filter @devacademy/shared build && expo start --lan --go",
+    "start:lan:dev": "pnpm --filter @devacademy/shared build && expo start --lan --dev-client",
     "dev": "expo start",
     "android": "expo run:android",
     "ios": "expo run:ios",
@@ -51,7 +52,6 @@
     "react-native": "0.81.5",
     "react-native-gesture-handler": "~2.28.0",
     "react-native-markdown-display": "^7.0.2",
-    "react-native-mmkv": "~3.3.3",
     "react-native-reanimated": "~4.1.7",
     "react-native-safe-area-context": "5.6.2",
     "react-native-screens": "~4.16.0",

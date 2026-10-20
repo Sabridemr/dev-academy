@@ -9,14 +9,14 @@ import { clearQueues } from '@/offline/queue';
 
 /**
  * OTURUM DEPOSU (zustand)
- * Token'lar SecureStore'da; kullanıcı profili hızlı açılış için MMKV'de önbelleklenir
+ * Token'lar SecureStore'da; kullanıcı profili hızlı açılış için kv deposunda önbelleklenir
  * (çevrimdışı açılışta da kullanıcı oturumlu kalır).
  */
 export type SessionStatus = 'loading' | 'authenticated' | 'anonymous';
 export type SessionUser = UserProfile & { reminderHour?: number | null; timezone?: string };
 
 const USER_KEY = 'session.user';
-/** Bu kurulumda uygulama en az bir kez açıldı mı (MMKV kurulumla silinir) */
+/** Bu kurulumda uygulama en az bir kez açıldı mı (kv deposu kurulumla silinir) */
 const INSTALL_KEY = 'install.initialized';
 
 /**
@@ -47,7 +47,7 @@ export const useSession = create<SessionState>((set, get) => ({
   user: null,
 
   bootstrap: async () => {
-    // iOS Keychain uygulama silinince temizlenmez, MMKV temizlenir: yeniden kurulumda eski hesabın
+    // iOS Keychain uygulama silinince temizlenmez, kv deposu temizlenir: yeniden kurulumda eski hesabın
     // token'larıyla profil olmadan açılmasın. Yükseltmelerde önbellekli profil durduğu için dokunulmaz.
     if (!kv.getBoolean(INSTALL_KEY)) {
       if (!kv.getString(USER_KEY)) await tokenStorage.clear();

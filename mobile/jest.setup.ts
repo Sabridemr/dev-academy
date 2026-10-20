@@ -1,6 +1,5 @@
 /**
  * Jest ortamı: native modüller için bellek içi sahteler (mock).
- * react-native-mmkv v3 test ortamında kendi bellek içi uygulamasını otomatik kullanır.
  */
 
 // SecureStore — bellek içi anahtar-değer
@@ -30,6 +29,30 @@ jest.mock('@react-native-community/netinfo', () =>
 jest.mock('expo-localization', () => ({
   getLocales: () => [{ languageCode: 'tr', languageTag: 'tr-TR' }],
 }));
+
+// expo-sqlite/kv-store — bellek içi senkron anahtar-değer deposu (storage.ts `kv`)
+jest.mock('expo-sqlite/kv-store', () => {
+  class SQLiteStorage {
+    private map = new Map<string, string>();
+    getItemSync(key: string): string | null {
+      return this.map.get(key) ?? null;
+    }
+    setItemSync(key: string, value: string | ((prev: string | null) => string)): void {
+      this.map.set(key, typeof value === 'function' ? value(this.getItemSync(key)) : value);
+    }
+    removeItemSync(key: string): boolean {
+      return this.map.delete(key);
+    }
+    clearSync(): boolean {
+      this.map.clear();
+      return true;
+    }
+    getAllKeysSync(): string[] {
+      return [...this.map.keys()];
+    }
+  }
+  return { SQLiteStorage, Storage: new SQLiteStorage(), default: new SQLiteStorage() };
+});
 
 // expo-sqlite — testler kendi sahte veritabanını enjekte eder; doğrudan açılış bellek içi sahte döner
 jest.mock('expo-sqlite', () => ({

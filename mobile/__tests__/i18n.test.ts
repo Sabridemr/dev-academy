@@ -34,7 +34,7 @@ describe('i18n', () => {
     expect(leafKeys(MESSAGES.en).sort()).toEqual(leafKeys(MESSAGES.tr).sort());
   });
 
-  it('useI18n dili değiştirir, MMKV’ye kaydeder ve içerik metnini (tl) çözer', () => {
+  it('useI18n dili değiştirir, kv deposuna kaydeder ve içerik metnini (tl) çözer', () => {
     const { result } = renderHook(() => useI18n());
     expect(result.current.locale).toBe('tr');
     expect(result.current.t('nav.home')).toBe('Ana sayfa');

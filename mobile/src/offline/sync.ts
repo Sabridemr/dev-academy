@@ -19,7 +19,7 @@ import {
  * GET /offline/modules/:id → OfflineBundle (dersler + sahneler + quizler).
  * Daha önce indirilmişse saklanan ETag If-None-Match ile gönderilir; 304 gelirse yalnızca
  * senkron zamanı güncellenir, 200 gelirse paket tek transaction ile SQLite'a yazılır.
- * ETag hem SQLite (modules.etag) hem MMKV'de (hızlı erişim) tutulur.
+ * ETag hem SQLite (modules.etag) hem kv deposunda (hızlı erişim) tutulur.
  */
 
 export interface SyncDeps {
@@ -37,7 +37,7 @@ export type SyncResult =
 
 const etagKey = (moduleId: string) => KV_KEYS.etag(`offline.${moduleId}`);
 
-export const mmkvEtags: SyncDeps['etags'] = {
+export const kvEtags: SyncDeps['etags'] = {
   get: (moduleId) => kv.getString(etagKey(moduleId)) ?? null,
   set: (moduleId, etag) => {
     if (etag) kv.set(etagKey(moduleId), etag);
@@ -59,7 +59,7 @@ async function resolveDeps(deps?: Partial<SyncDeps>): Promise<SyncDeps> {
     db: deps?.db ?? (await getDb()),
     fetchBundle: deps?.fetchBundle ?? ((id, etag) => endpoints.offlineModule(id, etag)),
     fetchModule: deps?.fetchModule ?? defaultFetchModule,
-    etags: deps?.etags ?? mmkvEtags,
+    etags: deps?.etags ?? kvEtags,
     now: deps?.now ?? (() => new Date().toISOString()),
   };
 }
@@ -89,7 +89,7 @@ export async function syncModule(moduleId: string, deps?: Partial<SyncDeps>): Pr
 export async function removeModuleDownload(moduleId: string): Promise<void> {
   const db = await getDb();
   await deleteModule(db, moduleId);
-  mmkvEtags.set(moduleId, null);
+  kvEtags.set(moduleId, null);
 }
 
 /**
