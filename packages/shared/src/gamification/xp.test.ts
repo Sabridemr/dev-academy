@@ -17,7 +17,12 @@ describe('XP ve seviye', () => {
 });
 
 describe('seri dondurma', () => {
-  const base = { currentStreak: 5, longestStreak: 5, lastActivityDate: '2026-10-01', streakFreezes: 1 };
+  const base = {
+    currentStreak: 5,
+    longestStreak: 5,
+    lastActivityDate: '2026-10-01',
+    streakFreezes: 1,
+  };
   it('bir gün atlanınca dondurma hakkı seriyi korur', () => {
     const r = applyActivityWithFreeze(base, '2026-10-03', daysBetween);
     expect(r.currentStreak).toBe(6);

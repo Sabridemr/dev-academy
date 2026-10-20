@@ -379,12 +379,13 @@ export function loadContent(root = findContentRoot()): LoadedContent {
 
       // İçerik kalitesi kontrolleri (uyarı; --strict ile hata)
       const rawMd = readFileSync(mdFile, 'utf8');
-      if (/tüm hakları (yazarına|sahibine) aittir|not setinin \d+ sayfasından oluşur/i.test(rawMd)) {
+      if (
+        /tüm hakları (yazarına|sahibine) aittir|not setinin \d+ sayfasından oluşur/i.test(rawMd)
+      ) {
         issues.push({
           severity: 'error',
           file: rel(mdFile),
-          message:
-            'Üçüncü taraf not seti ifadesi: ders özgün metinle yazılmalı (telif riski)',
+          message: 'Üçüncü taraf not seti ifadesi: ders özgün metinle yazılmalı (telif riski)',
         });
       }
       const proseWords = doc.blocks
@@ -405,7 +406,8 @@ export function loadContent(root = findContentRoot()): LoadedContent {
         issues.push({
           severity: 'warning',
           file: rel(mdFile),
-          message: 'Ön koşul tanımlı değil (prerequisites boş); ders ağı için en az bir ders bağlayın',
+          message:
+            'Ön koşul tanımlı değil (prerequisites boş); ders ağı için en az bir ders bağlayın',
         });
       }
       for (const [f, img] of Object.entries(images)) {

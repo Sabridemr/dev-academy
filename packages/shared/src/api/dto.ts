@@ -413,7 +413,12 @@ export interface ExamResult {
   correctCount: number;
   totalCount: number;
   timedOut: boolean;
-  results: { questionId: string; correct: boolean; correctAnswer: string[]; explanation: LocalizedString }[];
+  results: {
+    questionId: string;
+    correct: boolean;
+    correctAnswer: string[];
+    explanation: LocalizedString;
+  }[];
   perConcept: { concept: string; correct: number; total: number }[];
   perModule: { moduleId: string; correct: number; total: number }[];
   xpEarned: number;
