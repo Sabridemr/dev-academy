@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 440" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Gözlemlenebilirlik boru hattı</title>
+  <desc id="desc">Solda uygulama, ortada metrik için Prometheus, log için Loki ve iz için Tempo depoları, sağda Grafana. Prometheus uygulamadan metrik çeker; loglar ve izler ajanlarla depolara gönderilir. Grafana üç depoyu sorgular; alert kuralları Alertmanager üzerinden bildirim gönderir.</desc>
+  <defs>
+    <marker id="arrow-p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-primary, #6366f1)"/>
+    </marker>
+    <marker id="arrow-m" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+    <marker id="arrow-d" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-danger, #ef4444)"/>
+    </marker>
+  </defs>
+
+  <!-- Uygulama -->
+  <rect x="30" y="140" width="170" height="150" rx="14" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5"/>
+  <text x="115" y="170" text-anchor="middle" font-size="15" font-weight="600" fill="var(--da-fg, #0f172a)">Uygulama</text>
+  <text x="115" y="192" text-anchor="middle" font-size="11" fill="var(--da-muted, #64748b)">api servisi × N pod</text>
+  <g font-size="11" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="115" y="222">GET /metrics</text>
+    <text x="115" y="244">stdout → log satırları</text>
+    <text x="115" y="266">OpenTelemetry span'leri</text>
+  </g>
+
+  <!-- Depolar -->
+  <g stroke-width="1.5">
+    <rect x="360" y="40" width="200" height="90" rx="12" fill="var(--da-primary, #6366f1)" opacity="0.12" stroke="var(--da-primary, #6366f1)"/>
+    <rect x="360" y="170" width="200" height="90" rx="12" fill="var(--da-accent, #f59e0b)" opacity="0.15" stroke="var(--da-accent, #f59e0b)"/>
+    <rect x="360" y="300" width="200" height="90" rx="12" fill="var(--da-success, #10b981)" opacity="0.12" stroke="var(--da-success, #10b981)"/>
+  </g>
+  <g font-size="14" font-weight="600" text-anchor="middle" fill="var(--da-fg, #0f172a)">
+    <text x="460" y="70">Prometheus</text>
+    <text x="460" y="200">Loki</text>
+    <text x="460" y="330">Tempo</text>
+  </g>
+  <g font-size="11" fill="var(--da-muted, #64748b)" text-anchor="middle">
+    <text x="460" y="90">metrikler · zaman serisi</text>
+    <text x="460" y="108">ad + etiketler → değerler</text>
+    <text x="460" y="220">loglar · yalnızca etiket indeksi</text>
+    <text x="460" y="238">LogQL</text>
+    <text x="460" y="350">izler · trace ve span</text>
+    <text x="460" y="368">TraceQL</text>
+  </g>
+
+  <!-- Uygulama → depolar -->
+  <!-- Pull: Prometheus → uygulama (ok yönü ters) -->
+  <path d="M 358 85 C 300 85, 260 220, 202 220" stroke="var(--da-primary, #6366f1)" stroke-width="2" fill="none" marker-end="url(#arrow-p)"/>
+  <text x="262" y="118" text-anchor="middle" font-size="11" font-weight="600" fill="var(--da-primary, #6366f1)">pull / scrape</text>
+  <text x="262" y="134" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">her 15 sn</text>
+  <!-- Push: loglar ve izler -->
+  <g stroke="var(--da-muted, #64748b)" stroke-width="1.8" fill="none" marker-end="url(#arrow-m)" stroke-dasharray="5 4">
+    <path d="M 202 244 L 358 215"/>
+    <path d="M 202 266 C 280 266, 300 345, 358 345"/>
+  </g>
+  <text x="280" y="212" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">Promtail / Alloy</text>
+  <text x="280" y="320" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">OTel Collector</text>
+
+  <!-- Grafana -->
+  <rect x="700" y="120" width="210" height="190" rx="14" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5"/>
+  <text x="805" y="150" text-anchor="middle" font-size="15" font-weight="600" fill="var(--da-fg, #0f172a)">Grafana</text>
+  <text x="805" y="170" text-anchor="middle" font-size="11" fill="var(--da-muted, #64748b)">veri toplamaz, saklamaz; sorgular</text>
+  <g fill="var(--da-surface, #f8fafc)" stroke="var(--da-border, #cbd5e1)">
+    <rect x="716" y="184" width="178" height="30" rx="6"/>
+    <rect x="716" y="222" width="178" height="30" rx="6"/>
+    <rect x="716" y="260" width="178" height="30" rx="6"/>
+  </g>
+  <g font-size="11" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="805" y="204">Dashboard · paneller</text>
+    <text x="805" y="242">Explore · PromQL / LogQL</text>
+    <text x="805" y="280">Alert kuralları · politikalar</text>
+  </g>
+
+  <!-- Depolar → Grafana sorguları -->
+  <g stroke="var(--da-primary, #6366f1)" stroke-width="2" fill="none" marker-end="url(#arrow-p)">
+    <path d="M 562 85 C 640 85, 650 190, 698 195"/>
+    <path d="M 562 215 L 698 215"/>
+    <path d="M 562 345 C 640 345, 650 240, 698 235"/>
+  </g>
+  <text x="630" y="150" text-anchor="middle" font-size="11" fill="var(--da-primary, #6366f1)" font-weight="600">sorgu</text>
+
+  <!-- Alert yolu -->
+  <path d="M 805 312 L 805 352" stroke="var(--da-danger, #ef4444)" stroke-width="2" fill="none" marker-end="url(#arrow-d)"/>
+  <rect x="700" y="354" width="210" height="50" rx="12" fill="var(--da-danger, #ef4444)" opacity="0.12" stroke="var(--da-danger, #ef4444)" stroke-width="1.5"/>
+  <text x="805" y="375" text-anchor="middle" font-size="12" font-weight="600" fill="var(--da-fg, #0f172a)">Alertmanager → iletişim noktası</text>
+  <text x="805" y="393" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">Slack · e-posta · PagerDuty · webhook</text>
+
+  <text x="470" y="428" text-anchor="middle" font-size="11" fill="var(--da-muted, #64748b)">Ortak etiketler ve trace kimliği sayesinde metrik → log → iz arasında tek tıkla geçilir.</text>
+</svg>

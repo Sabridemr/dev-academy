@@ -4,8 +4,8 @@ slug: git-notes
 module: h-devops-tools
 order: 4
 title:
-  tr: "Git: Başlangıçtan İleri Seviyeye Tam Notlar"
-  en: "Git Complete Notes (Beginner to Advanced)"
+  tr: "Git: Commit Grafiği, Dallanma, Merge ve Rebase"
+  en: "Git: Commit Graph, Branching, Merge and Rebase"
 summary:
   tr: "Git'te commit, dal, merge/rebase ve uzak depo akışını öğren; hataları güvenle geri al ve kurtar."
   en: "Learn Git's commit, branch, merge/rebase and remote workflow, and safely undo and recover mistakes."

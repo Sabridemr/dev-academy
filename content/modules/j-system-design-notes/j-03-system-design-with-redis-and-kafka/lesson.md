@@ -4,8 +4,8 @@ slug: system-design-with-redis-and-kafka
 module: j-system-design-notes
 order: 3
 title:
-  tr: "Redis ve Kafka ile Sistem Tasarımı: Kapsamlı Notlar"
-  en: "System Design with Redis & Kafka (Complete Notes)"
+  tr: "Redis ve Kafka ile Sistem Tasarımı"
+  en: "System Design with Redis and Kafka"
 summary:
   tr: "Redis önbellekleme ve Kafka olay akışıyla ölçeklenebilir, dayanıklı sistemler tasarlamayı öğren."
   en: "Learn to design scalable, resilient systems with Redis caching and Kafka event streaming."

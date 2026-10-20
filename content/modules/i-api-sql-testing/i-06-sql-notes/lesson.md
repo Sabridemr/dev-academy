@@ -4,8 +4,8 @@ slug: sql-notes
 module: i-api-sql-testing
 order: 6
 title:
-  tr: "SQL Kapsamlı Notlar"
-  en: "SQL Complete Notes"
+  tr: "SQL: JOIN, Toplama, Transaction ve İndeksler"
+  en: "SQL: Joins, Aggregation, Transactions and Indexes"
 summary:
   tr: "SELECT, JOIN, GROUP BY ve window fonksiyonlarıyla veriyi sorgulamayı ve SQL mülakatlarına hazırlanmayı öğren."
   en: "Learn to query data with SELECT, JOINs, GROUP BY and window functions, and prepare for SQL interviews."

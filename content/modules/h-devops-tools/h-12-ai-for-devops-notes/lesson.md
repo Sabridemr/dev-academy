@@ -4,8 +4,8 @@ slug: ai-for-devops-notes
 module: h-devops-tools
 order: 12
 title:
-  tr: "DevOps için Yapay Zeka: Başlangıçtan İleri Seviyeye Tam Notlar"
-  en: "AI for DevOps Complete Notes (Beginner to Advanced)"
+  tr: "DevOps’ta Yapay Zekâ: AIOps, Log Analizi ve Sorumlu Kullanım"
+  en: "AI in DevOps: AIOps, Log Analysis and Responsible Use"
 summary:
   tr: "Yapay zekayı CI/CD, izleme, olay yönetimi ve bulut maliyetinde güvenle kullanmayı öğren."
   en: "Learn to use AI safely across CI/CD, monitoring, incident response and cloud cost."

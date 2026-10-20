@@ -4,88 +4,214 @@ slug: grafana-notes
 module: h-devops-tools
 order: 11
 title:
-  tr: "Grafana: Başlangıçtan İleri Seviyeye Tam Notlar"
-  en: "Grafana Complete Notes (Beginner to Advanced)"
+  tr: "Gözlemlenebilirlik: Prometheus, Grafana ve Alarmlar"
+  en: "Observability: Prometheus, Grafana and Alerting"
 summary:
   tr: "Grafana'da veri kaynakları, dashboard, PromQL/LogQL sorguları ve uyarılarla sistemleri izlemeyi öğren."
   en: "Learn to monitor systems with Grafana using data sources, dashboards, PromQL/LogQL queries and alerts."
-durationMinutes: 17
+durationMinutes: 28
 level: intermediate
-tags: [grafana, monitoring, observability, devops, prometheus]
-prerequisites: []
-concepts: [data-source, dashboard, panel, promql, logql, alert-rule, contact-point, notification-policy, golden-signals, rbac]
+tags: [grafana, prometheus, observability, monitoring, alerting, slo, devops]
+prerequisites: [a-13-observability-12-factor, f-03-kubernetes-basics, h-05-devops-ve-docker-kullanim-rehberi]
+concepts: [metrics-logs-traces, prometheus-data-model, pull-model, promql, data-source, dashboard, panel, alert-rule, notification-policy, contact-point, slo, error-budget, loki, tempo]
 ---
 
-:::callout{tone="info" title="Kaynak"}
-Bu ders, **@qa_insights** tarafından hazırlanan *Grafana Complete Notes (Beginner to Advanced)* not setinin 11 sayfasından oluşur. Sayfalar özgün hâliyle, değiştirilmeden yer alır; tüm hakları yazarına aittir. Kişisel çalışma notu olarak eklenmiştir.
+## Kavram: sistemin içini dışarıdan görmek
+
+Bir uygulama canlıya alındığında asıl soru "çalışıyor mu" değil, "nasıl çalışıyor" olur. Kullanıcılar yavaşlık mı yaşıyor, hangi uç nokta hata veriyor, dün geceki dağıtımdan sonra bellek neden sızıyor? **Gözlemlenebilirlik (observability)**, bir sistemin dışarıdan ürettiği sinyallere bakarak iç durumunu anlayabilme yeteneğidir. İzleme (monitoring) önceden bildiğiniz soruları sorar; gözlemlenebilirlik daha önce aklınıza gelmemiş soruları da cevaplayabilmenizi sağlar.
+
+Bu sinyaller üç ana türe ayrılır ve her biri farklı bir soruya cevap verir:
+
+- **Metrikler (metrics)** — zaman içinde ölçülen sayılar: saniyedeki istek, CPU yüzdesi, kuyruk uzunluğu. Ucuzdur, uzun süre saklanır, "ne zaman ve ne kadar" sorusunu cevaplar.
+- **Loglar (logs)** — zaman damgalı olay kayıtları: "kullanıcı 42 için ödeme reddedildi, sebep: limit". Ayrıntılıdır ama hacimlidir; "tam olarak ne oldu" sorusunu cevaplar.
+- **İzler (traces)** — tek bir isteğin servisler arasında izlediği yol ve her adımın süresi. Dağıtık sistemlerde "zaman nerede harcandı" sorusunu cevaplar.
+
+Üçünü birbirine bağlayan şey ortak etiketler ve kimliklerdir: bir metrik grafiğindeki sıçramadan o dakikanın loglarına, logdaki trace kimliğinden ilgili ize atlayabildiğinizde gözlemlenebilirlik gerçekten işe yarar. **Grafana** tam olarak bu birleştirme katmanıdır: kendisi veri toplamaz ve saklamaz; Prometheus, Loki, Tempo, Elasticsearch, PostgreSQL gibi **veri kaynaklarına (data source)** sorgu atar ve sonuçları panellerde görselleştirir.
+
+:::diagram{src="diagram.svg" alt="Gözlemlenebilirlik boru hattı: uygulama metrikleri /metrics uç noktasından Prometheus tarafından çekilir, loglar Promtail ile Loki'ye, izler OpenTelemetry ile Tempo'ya gider; Grafana üç kaynağı sorgular, alert kuralları Alertmanager üzerinden Slack ve çağrı sistemine bildirim gönderir|Observability pipeline: application metrics are pulled by Prometheus from the /metrics endpoint, logs go to Loki via Promtail, traces to Tempo via OpenTelemetry; Grafana queries all three sources and alert rules notify Slack and on-call via Alertmanager"}
+Metrik, log ve iz ayrı depolarda yaşar; Grafana tek ekranda birleştirir.
 :::
 
-:::diagram{src="sayfa-01.png" alt="Kapak: @qa_insights tarafından Grafana tam notları, başlangıçtan ileri seviyeye. Ortada turuncu Grafana logosu."}
-Sayfa 1 / 11 · GRAFANA COMPLETE NOTES (Grafana)
+## Prometheus veri modeli ve pull yaklaşımı
+
+**Prometheus**, bulut yerlisi dünyanın fiili metrik standardıdır. Veri modeli basittir: her zaman serisi bir **metrik adı** ve bir dizi **etiket (label)** çiftiyle tanımlanır, değerleri zaman damgalı kayan noktalı sayılardır. `http_requests_total{method="GET", route="/api/orders", status="200"}` bir seridir; `status="500"` olanı ayrı bir seridir. Etiketler sorgularda filtreleme ve gruplama yapmanızı sağlar; ama her yeni etiket değeri yeni bir seri demektir, bu yüzden kullanıcı kimliği gibi sınırsız değerleri asla etiket yapmazsınız (kardinalite patlaması).
+
+Dört metrik türü vardır: **counter** yalnızca artar (toplam istek, toplam hata); **gauge** iner çıkar (bellek, aktif bağlantı); **histogram** değerleri kovalara (bucket) dağıtır ve yüzdelik hesaplamaya izin verir (yanıt süresi); **summary** istemci tarafında yüzdelik hesaplar.
+
+Prometheus'un ayırt edici özelliği **pull (çekme)** modelidir: uygulamalar metriklerini `/metrics` uç noktasında düz metin olarak yayınlar, Prometheus belirli aralıklarla (örneğin 15 saniye) bu uç noktaları **kazır (scrape)**. Push yerine pull'un avantajları: hedefin ayakta olup olmadığı otomatik bilinir (`up` metriği), yapılandırma merkezidir ve bir uygulama hatasının izleme sistemini mesaj seliyle boğması zorlaşır. Kubernetes gibi ortamlarda hedefler **servis keşfi** ile otomatik bulunur. Kısa ömürlü toplu işler için istisna olarak **Pushgateway** vardır.
+
+## PromQL: zaman serisi sorgulama dili
+
+**PromQL**, serileri seçen, zaman penceresinde işleyen ve toplayan bir ifade dilidir. En önemli fikir şudur: counter'ların ham değeri anlamsızdır, her zaman **rate** ile hıza çevrilir. `rate(x[5m])` son beş dakikadaki saniye başına artışı verir; pencere, kazıma aralığının en az dört katı olmalıdır ki aradaki boşluklar sonucu bozmasın.
+
+:::code{lang="promql" title="Sık kullanılan PromQL ifadeleri"}
+```promql
+# Saniyedeki toplam istek (tüm örnekler toplanmış)
+sum(rate(http_requests_total[5m]))
+
+# Rota başına hata oranı (%): 5xx / tüm istekler
+sum by (route) (rate(http_requests_total{status=~"5.."}[5m]))
+  / sum by (route) (rate(http_requests_total[5m])) * 100
+
+# p95 yanıt süresi (histogram kovalarından)
+histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket[5m])))
+
+# Konteyner başına bellek kullanımı (gauge, doğrudan okunur)
+container_memory_working_set_bytes{namespace="prod"} / 1024 / 1024
+
+# Kazınamayan hedefler
+up == 0
+
+# Disk 4 saat içinde dolacak mı? (doğrusal öngörü)
+predict_linear(node_filesystem_avail_bytes{mountpoint="/"}[1h], 4 * 3600) < 0
+```
 :::
 
-## What is Grafana?
+`sum by (route)` ifadesi toplamayı etiket bazında gruplar; `=~` düzenli ifadeyle eşleştirir; `histogram_quantile` kovalardan yüzdelik türetir. Sorguları Grafana'nın **Explore** ekranında deneyip sonra panele taşımak iyi bir alışkanlıktır.
 
-:::diagram{src="sayfa-02.png" alt="Grafana nedir: açık kaynak görselleştirme ve izleme platformu, metrik, log ve trace verisini dashboard'a çevirir. Neden kullanılır, izleme ile gözlemlenebilirlik farkı, kullanım alanları. Grafana veri toplamaz."}
-Sayfa 2 / 11 · What is Grafana?
+## Grafana: panel, dashboard ve değişkenler
+
+Grafana'nın yapı taşı **panel**dir: bir sorgu (ya da birkaçı), bir görselleştirme türü (time series, stat, gauge, bar, table, logs, heatmap) ve eşik, birim, açıklama gibi ayarlar. Paneller bir **dashboard** üzerinde satırlar hâlinde düzenlenir. İyi bir servis dashboard'u genellikle üstte dört "altın sinyali" gösterir — trafik, hata oranı, gecikme, doygunluk — altında ise bağımlılıklar ve kaynak kullanımı gelir.
+
+**Değişkenler (variables)**, aynı dashboard'u her servis ya da ortam için tekrar yazmaktan kurtarır: `$namespace` ve `$service` gibi açılır listeler sorgulara `{namespace="$namespace"}` biçiminde girer. **Annotations**, dağıtım anlarını grafik üzerinde dikey çizgi olarak gösterir; bir sıçramanın bir dağıtımla çakışıp çakışmadığını saniyede görürsünüz. Dashboard'lar JSON olarak dışa aktarılabilir ve kodla (provisioning) yönetilir; böylece Git'te sürümlenir ve yeni bir Grafana örneğine otomatik yüklenir.
+
+:::callout{tone="info" title="Altın sinyaller ve RED"}
+Google'ın SRE pratiğinden gelen dört altın sinyal: **gecikme, trafik, hata, doygunluk**. İstek odaklı servisler için sade bir alt küme olan **RED** (Rate, Errors, Duration) çoğu dashboard'un ilk satırını oluşturur. Bu üç paneli her servis için standartlaştırırsanız nöbetçi mühendis hangi servise bakarsa baksın aynı yerleşimi görür.
 :::
 
-## Grafana Architecture
+## Trafik dalgasında metrikler nasıl değişir?
 
-:::diagram{src="sayfa-03.png" alt="Grafana mimarisi: Go ile yazılmış Grafana Server, Prometheus ve Loki gibi veri kaynakları, dashboard ve panel türleri, organizasyon ve roller, uyarı kanalları ve veri akış diyagramı."}
-Sayfa 3 / 11 · Grafana Architecture
+Bir kampanya ya da haber nedeniyle trafik beş katına çıktığında dashboard'unuzda neler olur? İstek hızı yükselir, kapasite yetişemezse kuyruk uzar ya da istekler düşer, hata oranı ve p95 gecikme sıçrar; otomatik ölçekleme gecikmeyle devreye girer ve örnek sayısı artar. Aşağıdaki simülatörde bu dalgayı kendiniz üretin ve her kontrolün hangi metriği nasıl etkilediğini izleyin.
+
+:::interactive{type="traffic-wave" baselineRps=200 peakMultiplier=5 autoscale=true}
+Trafik dalgasında metriklerin nasıl değiştiğini izleyin: taban trafik ve tepe çarpanını yükseltip "Günü oynat"a basın; talep ile kapasite eğrisinin açıldığı anda düşen istek sayısının nasıl arttığına bakın. Otomatik ölçeklemeyi kapatıp sabit instance sayısıyla karşılaştırın, ölçekleme gecikmesini artırıp tepe instance ve günlük maliyet göstergelerini izleyin; kuyruğu açtığınızda düşen istek yerine bekleme süresinin uzadığını fark edin. Her göstergenin Prometheus'ta hangi sorguya karşılık geleceğini düşünün: talep `sum(rate(http_requests_total[1m]))`, düşen istek `rate(http_requests_total{status="503"}[1m])`, instance sayısı `count(up{job="api"})`.
 :::
 
-## Grafana Data Sources
+## Alert kuralları: veriden nöbetçiye
 
-:::diagram{src="sayfa-04.png" alt="Grafana veri kaynakları: tanım, Prometheus, Loki, Elasticsearch, MySQL, PostgreSQL, InfluxDB, CloudWatch ve Azure Monitor tablosu, neyin izlenmesi için hangi kaynağın seçileceği ve en iyi uygulamalar."}
-Sayfa 4 / 11 · Grafana Data Sources
+Dashboard'a bakmak için birinin uyanık olması gerekir; **uyarı (alert)** sistemi sizin yerinize bakar. Bir **alert kuralı** üç şeyden oluşur: bir sorgu, bir koşul (eşik) ve bir süre (`for`). Süre, geçici dalgalanmaların alarm üretmesini engeller: "hata oranı 5 dakika boyunca %2'nin üzerindeyse" gibi. Kural tetiklendiğinde **etiketler** (`severity=critical`, `team=payments`) taşır; **bildirim politikası (notification policy)** bu etiketlere bakarak uyarıyı doğru **iletişim noktasına (contact point)** — Slack kanalı, e-posta, PagerDuty, webhook — yönlendirir. Benzer uyarılar gruplanır, çözülene kadar belirli aralıklarla tekrarlanır, bakım pencerelerinde **sessize alınır (silence)**.
+
+:::code{lang="yaml" title="Prometheus alert kuralı örneği"}
+```yaml
+groups:
+  - name: api-slo
+    rules:
+      - alert: HighErrorRate
+        expr: |
+          sum(rate(http_requests_total{job="api", status=~"5.."}[5m]))
+            / sum(rate(http_requests_total{job="api"}[5m])) > 0.02
+        for: 5m
+        labels:
+          severity: critical
+          team: payments
+        annotations:
+          summary: "API hata oranı %2'nin üzerinde"
+          description: "Son 5 dakikada 5xx oranı {{ $value | humanizePercentage }}."
+          runbook_url: "https://wiki.ornek.com/runbooks/api-errors"
+```
 :::
 
-## Dashboards & Panels
+İyi bir uyarının iki özelliği vardır: **eyleme dönüktür** (biri gece uyandırılıyorsa yapacak bir şey olmalı) ve **belirtiye dayanır** (CPU %80 değil, "kullanıcılar hata alıyor"). Nedene dayalı uyarılar gürültü üretir; nöbetçi birkaç hafta sonra bildirimleri okumayı bırakır ve gerçek kesinti kaçar.
 
-:::diagram{src="sayfa-05.png" alt="Dashboard ve paneller: dashboard panellerden oluşur, panel en küçük görselleştirme birimidir. Panel türleri, değişkenler, zaman aralığı, dönüşümler, tekrarlayan paneller ve en iyi uygulamalar."}
-Sayfa 5 / 11 · Dashboards & Panels
+## SLO ve hata bütçesi
+
+Kaç uyarı kuralının "doğru" eşiği olduğuna karar vermenin sistematik yolu **SLO (Service Level Objective)** kavramıdır. Önce bir **SLI** seçersiniz — başarılı isteklerin oranı ya da 300 ms altında yanıtlanan isteklerin oranı gibi ölçülebilir bir gösterge. Sonra bir hedef koyarsınız: "30 günde isteklerin %99,9'u başarılı olacak." Bu hedefin tersi **hata bütçesidir**: 30 günde isteklerin %0,1'i başarısız olabilir; zaman cinsinden yaklaşık 43 dakika tam kesinti.
+
+Hata bütçesi, güvenilirlik ile hız arasındaki tartışmayı sayıya bağlar. Bütçe doluysa ekip riskli dağıtımlar yapabilir; bütçe tükeniyorsa yeni özellik yerine dayanıklılık işine öncelik verilir. Uyarılar da bütçeye göre kurulur: "bütçeyi şu hızla yakmaya devam edersek 2 gün içinde tükenecek" anlamına gelen **burn rate** uyarıları, sabit eşiklerden çok daha az gürültü üretir ve kullanıcıyı gerçekten etkileyen sorunları yakalar. Kısa (1 saat) ve uzun (6 saat) pencereleri birlikte kontrol eden çok pencereli kurallar, hem ani çöküşü hem sinsi bozulmayı yakalar.
+
+:::callout{tone="warning" title="Yüzde 100 bir hedef değildir"}
+%100 erişilebilirlik hedeflemek, her dağıtımı korkutucu hâle getirir ve yine de başarılamaz; kullanıcının telefonu ve ağı zaten yüzde yüz güvenilir değildir. Her ek dokuz (%99 → %99,9 → %99,99) maliyeti kabaca on katına çıkarır. Hedefi, kullanıcının fark edeceği seviyeye göre seçin ve ölçmeye başlamadan hedef koymayın.
 :::
 
-## Queries & Visualization
+## Loki ve Tempo: log ve iz tarafı
 
-:::diagram{src="sayfa-06.png" alt="Sorgular ve görselleştirme: sorgu editörü, PromQL örnekleri rate ve sum, SQL sorguları ve timeFilter makrosu, Loki için LogQL, sorgu türleri ve grafik, gauge, tablo, heatmap gibi panel türleri."}
-Sayfa 6 / 11 · Queries & Visualization
+**Loki**, Grafana ekibinin geliştirdiği log deposudur ve "Prometheus ama loglar için" felsefesiyle çalışır: log içeriğini tam metin indekslemek yerine yalnızca etiketleri (`app`, `namespace`, `pod`) indeksler, satırları sıkıştırılmış parçalar hâlinde nesne depolamada tutar. Bu onu ucuz ve basit yapar. Sorgu dili **LogQL**, PromQL'e benzer: `{app="api"} |= "error" | json | status >= 500` gibi bir akış seçici ve filtre zinciri; `rate({app="api"} |= "error" [5m])` ile loglardan metrik türetilebilir. Loglar Promtail, Grafana Alloy ya da Fluent Bit gibi bir ajanla toplanır.
+
+**Tempo** ise dağıtık izleri saklar. Uygulamalar OpenTelemetry SDK'sı ile her isteğe bir trace kimliği verir ve servisler arası çağrılarda bu kimliği başlıklarla taşır; her servis kendi **span**'ini (başlangıç, bitiş, etiketler) gönderir. Grafana'da bir log satırındaki trace kimliğine tıklayıp izin tamamını görmek, üç sinyali birbirine bağlamanın en somut hâlidir.
+
+## Örnek kurulum: Docker Compose ile Prometheus + Grafana
+
+Aşağıdaki kurulum tek komutla yerel bir izleme yığını ayağa kaldırır. `prometheus.yml` içindeki `scrape_configs`, Prometheus'un hangi hedefleri kazıyacağını söyler; Grafana ise `provisioning` klasörü sayesinde açılışta Prometheus'u veri kaynağı olarak tanır.
+
+:::code{lang="yaml" title="docker-compose.yml ve prometheus.yml"}
+```yaml
+# docker-compose.yml
+services:
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    ports: ["9090:9090"]
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prom-data:/prometheus
+    command: ["--config.file=/etc/prometheus/prometheus.yml", "--storage.tsdb.retention.time=15d"]
+
+  grafana:
+    image: grafana/grafana:11.1.0
+    ports: ["3000:3000"]
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: degistir-beni
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - grafana-data:/var/lib/grafana
+    depends_on: [prometheus]
+
+  node-exporter:
+    image: prom/node-exporter:v1.8.1
+    ports: ["9100:9100"]
+
+volumes:
+  prom-data: {}
+  grafana-data: {}
+```
+```yaml
+# prometheus.yml
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - /etc/prometheus/rules/*.yml
+
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets: ["localhost:9090"]
+  - job_name: node
+    static_configs:
+      - targets: ["node-exporter:9100"]
+  - job_name: api
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["host.docker.internal:8080"]
+```
+```yaml
+# grafana/provisioning/datasources/prometheus.yml
+apiVersion: 1
+datasources:
+  - name: Prometheus
+    type: prometheus
+    url: http://prometheus:9090
+    isDefault: true
+```
 :::
 
-## Alerts & Notifications
+`docker compose up -d` sonrasında `localhost:9090/targets` adresinde hedeflerin "UP" olduğunu, `localhost:3000` adresinde Grafana'nın Prometheus'u gördüğünü doğrulayın. İlk dashboard için Grafana'nın topluluk kataloğundan "Node Exporter Full" panosunu kimliğiyle içe aktarmak dakikalar içinde CPU, bellek ve disk grafikleri verir.
 
-:::diagram{src="sayfa-07.png" alt="Uyarılar ve bildirimler: uyarı kuralı sorgu, koşul ve değerlendirmeden oluşur. Threshold ve For koşulları, contact point, notification policy, e-posta ve Slack kanalları, uyarı akışı."}
-Sayfa 7 / 11 · Alerts & Notifications
+:::realworld{company="Grafana Labs"}
+Grafana Labs, kendi barındırdığı Grafana Cloud hizmetini izlemek için ürettiği araçların kendisini kullanır ve bu deneyimi açıkça paylaşır. Şirketin bulut ortamı on milyonlarca aktif zaman serisini Mimir (uzun süreli Prometheus depolaması), petabaytlarca logu Loki ve izleri Tempo üzerinde tutar; bu ölçek, "her log satırını indekslemek yerine yalnızca etiketleri indeksle" kararının asıl gerekçesidir. Ekipler servislerini SLO'larla yönetir: her servis için kullanıcıya dönük bir SLI tanımlanır, hata bütçesi burn rate uyarılarıyla takip edilir ve nöbetçi yalnızca bütçeyi hızla tüketen olaylarda uyandırılır. Geliştiriciler dashboard ve uyarı kurallarını JSON ve YAML olarak Git'te tutar; CI boru hattı bunları Grafana'ya otomatik yükler. Sonuç, "dashboard'u kim bozdu" sorusunun `git log` ile cevaplandığı bir ortamdır.
 :::
 
-## Logs, Metrics & Traces
-
-:::diagram{src="sayfa-08.png" alt="Log, metrik ve trace: Prometheus ile metrik, Loki ile log, Tempo ile trace. Trace ID ile korelasyon, kök neden analizi akışı, Golden Signals ve gözlemlenebilirlik akışı."}
-Sayfa 8 / 11 · Logs, Metrics & Traces
-:::
-
-## Real-World Monitoring with Grafana
-
-:::diagram{src="sayfa-09.png" alt="Gerçek dünya izleme senaryoları: Kubernetes, Docker, sunucu, JVM, Spring Boot API, veritabanı, iş dashboard'ları ve harici API izleme, her biri için temel metrikler ve izleme veri akışı."}
-Sayfa 9 / 11 · Real-World Monitoring with Grafana
-:::
-
-## Performance Optimization & Best Practices in Grafana
-
-:::diagram{src="sayfa-10.png" alt="Grafana performans ve en iyi uygulamalar: dashboard ve sorgu optimizasyonu, label filtreleri, değişkenler, klasör yapısı, Viewer, Editor, Admin rolleriyle RBAC, uyarı ayarı, yedekleme ve sık hatalar."}
-Sayfa 10 / 11 · Performance Optimization & Best Practices in Grafana
-:::
-
-## Grafana Interview Guide & Roadmap
-
-:::diagram{src="sayfa-11.png" alt="Grafana mülakat rehberi ve yol haritası: iş akışı, sık mülakat soruları, systemctl ile grafana-server komutları, grafana.ini yapılandırma dosyası, entegrasyonlar, 6 adımlı kariyer yol haritası, zihin haritası."}
-Sayfa 11 / 11 · Grafana Interview Guide & Roadmap
+:::callout{tone="tip" title="Mülakat özeti"}
+- Metrik "ne kadar", log "ne oldu", iz "nerede yavaş" sorusunu cevaplar; Grafana üçünü sorgulayıp görselleştirir, saklamaz.
+- Prometheus pull ile `/metrics` kazır; seri = ad + etiketler; counter'ı `rate()` ile, yüzdeliği `histogram_quantile()` ile okuyun; kardinaliteyi kontrol altında tutun.
+- Uyarı = sorgu + eşik + `for`; belirtiye dayalı ve eyleme dönük olsun; politika etiketlere göre iletişim noktasına yönlendirir.
+- SLO hedefi, hata bütçesini tanımlar (%99,9 / 30 gün ≈ 43 dk); burn rate uyarıları sabit eşiklerden daha az gürültülüdür.
+- Loki etiket indeksler, Tempo OpenTelemetry izlerini saklar; dashboard ve kurallar kod olarak Git'te yaşar.
 :::
 
 :::quiz{src="quiz.json"}
 :::
 
 :::next{lesson="h-12-ai-for-devops-notes"}
+Sırada: topladığınız metrik ve logları yapay zekâ ile yorumlamak — anomali tespiti, olay özetleme ve DevOps iş akışlarında yapay zekâ asistanları.
 :::

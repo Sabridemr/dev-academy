@@ -4,8 +4,8 @@ slug: system-design-notes-part-1
 module: j-system-design-notes
 order: 2
 title:
-  tr: "Sistem Tasarımı: Kapsamlı Notlar (Bölüm 1)"
-  en: "System Design Complete Notes Part 1"
+  tr: "Sistem Tasarımı Mülakat Çerçevesi ve Kapasite Tahmini"
+  en: "System Design Interview Framework and Capacity Estimation"
 summary:
   tr: "Temel bileşenler, önbellek, yük dengeleme ve ölçeklemeyle ölçeklenebilir sistem tasarlamayı öğren."
   en: "Learn to design scalable systems from the request path to databases, caching, load balancing and scaling."

@@ -793,10 +793,7 @@ export const CURRICULUM: CurriculumModule[] = [
         'h',
         1,
         'linux-notes',
-        {
-          tr: 'Linux: Başlangıçtan İleri Seviyeye Tam Notlar',
-          en: 'Linux Complete Notes (Beginner to Advanced)',
-        },
+        { tr: 'Linux Temelleri: Terminal, Dosya Sistemi ve İzinler', en: 'Linux Basics: Terminal, File System and Permissions' },
         {
           tr: "Linux'a giriş, mimari, dosya sistemi, gezinme, dosya ve dizin komutları, izinler, metin işleme, süreç, disk, ağ ve paket yönetimi, shell betikleri, gerçek projelerde kullanım ve mülakat sorularını kapsar.",
           en: 'Covers an introduction to Linux, its architecture, file system, navigation, file and directory commands, permissions, text processing, process, disk, network and package management, shell scripting, real-project usage and interview questions.',
@@ -832,10 +829,7 @@ export const CURRICULUM: CurriculumModule[] = [
         'h',
         4,
         'git-notes',
-        {
-          tr: 'Git: Başlangıçtan İleri Seviyeye Tam Notlar',
-          en: 'Git Complete Notes (Beginner to Advanced)',
-        },
+        { tr: 'Git: Commit Grafiği, Dallanma, Merge ve Rebase', en: 'Git: Commit Graph, Branching, Merge and Rebase' },
         {
           tr: "Git'e giriş, mimari ve yaşam döngüsü, kurulum, temel komutlar, iş akışı, dallanma, merge ve rebase, uzak depolar, geri alma, stash ve etiketler, GitHub iş birliği, QA ve CI/CD kullanımı, sık hatalar, ileri komutlar ve mülakat sorularını kapsar.",
           en: 'Covers an introduction to Git, its architecture and lifecycle, installation, essential commands, workflow, branching, merge and rebase, remote repositories, undo and recovery, stash and tags, GitHub collaboration, use in QA and CI/CD, common errors, advanced commands and interview questions.',
@@ -920,10 +914,7 @@ export const CURRICULUM: CurriculumModule[] = [
         'h',
         11,
         'grafana-notes',
-        {
-          tr: 'Grafana: Başlangıçtan İleri Seviyeye Tam Notlar',
-          en: 'Grafana Complete Notes (Beginner to Advanced)',
-        },
+        { tr: 'Gözlemlenebilirlik: Prometheus, Grafana ve Alarmlar', en: 'Observability: Prometheus, Grafana and Alerting' },
         {
           tr: 'Grafana mimarisini, veri kaynaklarını, dashboard ve panelleri, PromQL ve LogQL sorgularını, uyarıları, log-metrik-trace gözlemlenebilirliğini, gerçek dünya izleme senaryolarını ve performans en iyi uygulamalarını kapsar.',
           en: 'Covers Grafana architecture, data sources, dashboards and panels, PromQL and LogQL queries, alerting, logs-metrics-traces observability, real-world monitoring scenarios and performance best practices.',
@@ -933,10 +924,7 @@ export const CURRICULUM: CurriculumModule[] = [
         'h',
         12,
         'ai-for-devops-notes',
-        {
-          tr: 'DevOps için Yapay Zekâ: Başlangıçtan İleri Seviyeye Tam Notlar',
-          en: 'AI for DevOps Complete Notes (Beginner to Advanced)',
-        },
+        { tr: 'DevOps’ta Yapay Zekâ: AIOps, Log Analizi ve Sorumlu Kullanım', en: 'AI in DevOps: AIOps, Log Analysis and Responsible Use' },
         {
           tr: "Yapay zekânın CI/CD, altyapı yönetimi, izleme ve gözlemlenebilirlik, AIOps, olay yönetimi, log analizi, bulut maliyeti, DevSecOps, otomasyon, kodlama asistanları, Kubernetes ve Docker'da kullanımını, araçları, en iyi uygulamaları ve mülakat sorularını kapsar.",
           en: 'Covers how AI is used in CI/CD, infrastructure management, monitoring and observability, AIOps, incident management, log analysis, cloud cost, DevSecOps, automation, coding assistants, Kubernetes and Docker, along with tools, best practices and interview questions.',
@@ -1014,7 +1002,7 @@ export const CURRICULUM: CurriculumModule[] = [
         'i',
         5,
         'api-testing-notes',
-        { tr: 'API Testi: Kapsamlı Notlar', en: 'API Testing Complete Notes' },
+        { tr: 'API Testi: Piramit, Contract Test ve Yük Testi', en: 'API Testing: Pyramid, Contract Tests and Load Tests' },
         {
           tr: 'HTTP temelleri, metotlar, istek ve yanıt yapısı, durum kodları, kimlik doğrulama, JSON ve JSONPath, test iş akışı ve doğrulama, Postman, REST Assured, mülakat soruları ve hata ayıklamayı kapsayan API testi notları.',
           en: 'API testing notes covering HTTP fundamentals, methods, request and response structure, status codes, authentication, JSON and JSONPath, testing workflow and validation, Postman, REST Assured, interview questions and debugging.',
@@ -1024,7 +1012,7 @@ export const CURRICULUM: CurriculumModule[] = [
         'i',
         6,
         'sql-notes',
-        { tr: 'SQL Kapsamlı Notlar', en: 'SQL Complete Notes' },
+        { tr: 'SQL: JOIN, Toplama, Transaction ve İndeksler', en: 'SQL: Joins, Aggregation, Transactions and Indexes' },
         {
           tr: 'SQL temellerinden SELECT, filtreleme, sıralama, aggregate fonksiyonlar, GROUP BY, JOIN, alt sorgular, CASE, DDL, DML, TCL, kısıtlar, indeksler, view ve window fonksiyonlarına, mülakat özetiyle birlikte.',
           en: 'From SQL basics through SELECT, filtering, sorting, aggregate functions, GROUP BY, joins, subqueries, CASE, DDL, DML, TCL, constraints, indexes, views and window functions, with an interview cheat sheet.',
@@ -1063,10 +1051,7 @@ export const CURRICULUM: CurriculumModule[] = [
         'j',
         2,
         'system-design-notes-part-1',
-        {
-          tr: 'Sistem Tasarımı: Kapsamlı Notlar (Bölüm 1)',
-          en: 'System Design Complete Notes Part 1',
-        },
+        { tr: 'Sistem Tasarımı Mülakat Çerçevesi ve Kapasite Tahmini', en: 'System Design Interview Framework and Capacity Estimation' },
         {
           tr: "Sistem tasarımının temel kavramlarını, gereksinimleri, istek yaşam döngüsünü, mülakat akışını, temel bileşenleri, API ve veritabanı tasarımını, indekslemeyi, önbelleklemeyi, CDN'i, yük dengelemeyi, ölçeklemeyi ve monolit ile mikroservis karşılaştırmasını anlatan notlar.",
           en: 'Notes covering system design fundamentals, requirements, the request lifecycle, interview workflow, core components, API and database design, indexing, caching, CDN, load balancing, scaling and monolith versus microservices.',
@@ -1076,10 +1061,7 @@ export const CURRICULUM: CurriculumModule[] = [
         'j',
         3,
         'system-design-with-redis-and-kafka',
-        {
-          tr: 'Redis ve Kafka ile Sistem Tasarımı: Kapsamlı Notlar',
-          en: 'System Design with Redis & Kafka (Complete Notes)',
-        },
+        { tr: 'Redis ve Kafka ile Sistem Tasarımı', en: 'System Design with Redis and Kafka' },
         {
           tr: "Sistem tasarımı temelleri, mimariler, ağ, veritabanları, önbellekleme, dağıtık sistemler, mesajlaşma, ölçeklenebilirlik, depolama ve güvenlikten Redis ve Kafka'nın ayrıntılarına ve gerçek bir yemek siparişi sistem tasarımına kadar uzanan notlar.",
           en: 'Notes spanning system design fundamentals, architectures, networking, databases, caching, distributed systems, messaging, scalability, storage and security through Redis and Kafka in depth and a real food-delivery system design.',

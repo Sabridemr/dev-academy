@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 440" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Test piramidi ve sözleşme testi</title>
+  <desc id="desc">Solda üç katlı test piramidi: altta birim testleri, ortada API ve entegrasyon testleri, üstte uçtan uca testler; her katın hız ve gerçekçilik notu vardır. Sağda tüketici ve sağlayıcı arasındaki pact sözleşme dosyası ve iki tarafın CI'ında çalışan doğrulama gösterilir.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+    <marker id="arrow-ok" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-success, #10b981)"/>
+    </marker>
+  </defs>
+
+  <!-- Başlıklar -->
+  <g font-size="13" fill="var(--da-muted, #64748b)" text-anchor="middle">
+    <text x="230" y="34">Test piramidi</text>
+    <text x="660" y="34">Sözleşme testi (tüketici odaklı)</text>
+  </g>
+
+  <!-- Piramit katları -->
+  <polygon points="190,70 270,70 300,150 160,150" fill="var(--da-danger, #ef4444)" opacity="0.18" stroke="var(--da-danger, #ef4444)" stroke-width="1.5"/>
+  <polygon points="150,160 310,160 350,250 110,250" fill="var(--da-primary, #6366f1)" opacity="0.18" stroke="var(--da-primary, #6366f1)" stroke-width="2"/>
+  <polygon points="100,260 360,260 400,360 60,360" fill="var(--da-success, #10b981)" opacity="0.18" stroke="var(--da-success, #10b981)" stroke-width="1.5"/>
+
+  <g font-size="13" font-weight="600" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="230" y="106">Uçtan uca (E2E)</text>
+    <text x="230" y="200">API / entegrasyon</text>
+    <text x="230" y="304">Birim testleri</text>
+  </g>
+  <g font-size="10.5" fill="var(--da-muted, #64748b)" text-anchor="middle">
+    <text x="230" y="124">tarayıcı · az sayıda · yavaş</text>
+    <text x="230" y="218">HTTP isteği → durum kodu · şema · gövde</text>
+    <text x="230" y="234">başlıklar · süre · sözleşme</text>
+    <text x="230" y="322">tek fonksiyon · binlerce · saniyeler</text>
+    <text x="230" y="338">dış bağımlılık yok</text>
+  </g>
+
+  <!-- Eksen notları -->
+  <g font-size="11" fill="var(--da-muted, #64748b)">
+    <text x="30" y="80">gerçekçi ▲</text>
+    <text x="30" y="350">▼ hızlı</text>
+    <text x="410" y="80">az</text>
+    <text x="410" y="350">çok</text>
+  </g>
+
+  <!-- Vurgu: orta katman -->
+  <path d="M 350 205 L 395 205" stroke="var(--da-primary, #6366f1)" stroke-width="1.5" fill="none" stroke-dasharray="4 3"/>
+  <text x="400" y="200" font-size="10.5" fill="var(--da-primary, #6366f1)">bu dersin</text>
+  <text x="400" y="214" font-size="10.5" fill="var(--da-primary, #6366f1)">odağı</text>
+
+  <!-- Sözleşme testi bölümü -->
+  <rect x="480" y="50" width="400" height="330" rx="16" fill="var(--da-surface, #f8fafc)" stroke="var(--da-border, #cbd5e1)" stroke-dasharray="6 6"/>
+
+  <!-- Tüketici -->
+  <rect x="500" y="90" width="130" height="70" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5"/>
+  <text x="565" y="118" text-anchor="middle" font-size="13" font-weight="600" fill="var(--da-fg, #0f172a)">Tüketici</text>
+  <text x="565" y="136" text-anchor="middle" font-size="10.5" fill="var(--da-muted, #64748b)">mobil uygulama</text>
+  <text x="565" y="150" text-anchor="middle" font-size="10.5" fill="var(--da-muted, #64748b)">"id, name, email isterim"</text>
+
+  <!-- Sağlayıcı -->
+  <rect x="730" y="90" width="130" height="70" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5"/>
+  <text x="795" y="118" text-anchor="middle" font-size="13" font-weight="600" fill="var(--da-fg, #0f172a)">Sağlayıcı</text>
+  <text x="795" y="136" text-anchor="middle" font-size="10.5" fill="var(--da-muted, #64748b)">users servisi</text>
+  <text x="795" y="150" text-anchor="middle" font-size="10.5" fill="var(--da-muted, #64748b)">GET /v1/users/:id</text>
+
+  <!-- Pact dosyası -->
+  <rect x="620" y="200" width="120" height="76" rx="10" fill="var(--da-accent, #f59e0b)" opacity="0.18" stroke="var(--da-accent, #f59e0b)" stroke-width="1.5"/>
+  <text x="680" y="226" text-anchor="middle" font-size="12.5" font-weight="600" fill="var(--da-fg, #0f172a)">pact.json</text>
+  <text x="680" y="244" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">istek + beklenen yanıt</text>
+  <text x="680" y="260" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">sözleşme deposu (broker)</text>
+
+  <!-- Tüketici → pact (üretir) -->
+  <path d="M 565 160 C 565 200, 600 220, 620 230" stroke="var(--da-muted, #64748b)" stroke-width="1.8" fill="none" marker-end="url(#arrow)"/>
+  <text x="560" y="205" font-size="10.5" fill="var(--da-muted, #64748b)">1. üretir</text>
+
+  <!-- pact → sağlayıcı (doğrular) -->
+  <path d="M 740 230 C 770 220, 795 200, 795 160" stroke="var(--da-success, #10b981)" stroke-width="1.8" fill="none" marker-end="url(#arrow-ok)"/>
+  <text x="770" y="205" font-size="10.5" fill="var(--da-success, #10b981)">2. CI'da doğrular</text>
+
+  <!-- Sonuç -->
+  <rect x="500" y="300" width="360" height="56" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-success, #10b981)" stroke-width="1.5"/>
+  <text x="680" y="322" text-anchor="middle" font-size="12" fill="var(--da-fg, #0f172a)">3. İki taraf da "sözleşme yeşil" görmeden dağıtmaz</text>
+  <text x="680" y="342" text-anchor="middle" font-size="10.5" fill="var(--da-muted, #64748b)">alan yeniden adlandırılırsa sağlayıcının CI'ı kırılır, mobil değil</text>
+
+  <!-- Alt not -->
+  <text x="450" y="420" text-anchor="middle" font-size="12" fill="var(--da-muted, #64748b)">Ters piramit (çok E2E, az birim) yavaş ve kırılgan bir süit demektir; API testleri hız ve gerçekçiliği dengeler.</text>
+</svg>
