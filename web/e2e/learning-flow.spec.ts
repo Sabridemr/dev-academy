@@ -23,7 +23,10 @@ test.afterEach(async ({ page }) => {
 test('ana sayfa modülleri ve hero animasyonunu gösterir', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-  await expect(page.getByRole('button', { name: /Oynat|Play/ }).first()).toBeVisible();
+  // Vitrin otomatik oynar: oynat ya da duraklat düğmesi görünür
+  await expect(
+    page.getByRole('button', { name: /Oynat|Play|Duraklat|Pause/ }).first(),
+  ).toBeVisible();
   await expect(page.getByText('Sistem Tasarımı Temelleri').first()).toBeVisible();
 });
 
