@@ -50,6 +50,29 @@ docker compose --profile app up -d --build
 docker compose run --rm seed
 ```
 
+## Ev sunucusunda (LAN) çalıştırma
+
+Tam yığın Docker'da, mobil uygulama ise sunucudaki Metro'dan telefona yüklenir; internete açılmaz.
+
+```bash
+cp .env.example .env            # PUBLIC_HOST=<sunucunun LAN IP'si>, JWT_ACCESS_SECRET'ı değiştirin
+docker compose --profile app up -d --build
+docker compose run --rm seed    # içeriği yükler (ilk kurulum ve içerik değiştikçe)
+```
+
+- Web: `http://<LAN-IP>:3000`, API: `http://<LAN-IP>:4000/api/v1`. `PUBLIC_HOST` değişince `--build` ile web
+  imajı yeniden derlenmelidir (API adresi derleme anında gömülür).
+- Mobil, native modüller (MMKV, SQLite) kullandığı için **Expo Go'da çalışmaz**; bir kez "development build"
+  (expo-dev-client) üretilip telefona kurulur, sonra JS sunucudaki Metro'dan gelir:
+
+```bash
+cd mobile && cp .env.example .env    # EXPO_PUBLIC_API_URL=http://<LAN-IP>:4000/api/v1, EXPO_PUBLIC_WEB_URL=http://<LAN-IP>:3000
+npx eas-cli login && npx eas-cli build --profile development --platform android   # tek seferlik; APK'yı telefona kurun
+pnpm start --lan                     # Metro :8081; telefondaki DevAcademy (Dev) uygulaması QR/adresle bağlanır
+```
+
+Telefon ve sunucu aynı ağda olmalı; 3000, 4000 ve 8081 portları sunucu güvenlik duvarında açık olmalıdır.
+
 ## Sık kullanılan komutlar
 
 | Komut                                        | Açıklama                                                                 |
