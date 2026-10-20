@@ -1,0 +1,110 @@
+{
+  "id": "n-06-cryptography-basics-quiz",
+  "title": { "tr": "Kriptografi Temelleri Quiz", "en": "Cryptography Basics Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Kullanıcı şifrelerini saklamak için aşağıdakilerden hangisi uygundur?",
+        "en": "Which of the following is appropriate for storing user passwords?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "SHA-256(şifre)", "en": "SHA-256(password)" } },
+        { "id": "b", "text": { "tr": "AES-256-GCM ile şifreleyip anahtarı sunucuda tutmak", "en": "Encrypt with AES-256-GCM and keep the key on the server" } },
+        { "id": "c", "text": { "tr": "argon2id (her şifre için rastgele tuz, ayarlanmış bellek ve zaman maliyeti)", "en": "argon2id (random per-password salt, tuned memory and time cost)" } },
+        { "id": "d", "text": { "tr": "MD5(şifre + sabit tuz)", "en": "MD5(password + fixed salt)" } }
+      ],
+      "correct": ["c"],
+      "explanation": {
+        "tr": "SHA-256 hızlıdır ve tuzsuzdur; sızan hash'ler çevrimdışı sözlükle hızla denenir (a). Şifreleme geri döndürülebilirdir; anahtar sızarsa tüm şifreler açığa çıkar (b). MD5 kırık ve hızlıdır, sabit tuz da aynı şifrelerin aynı hash'i vermesini engellemez (d). argon2id tuzlu, yavaş ve bellek zorludur.",
+        "en": "SHA-256 is fast and unsalted; leaked hashes are quickly tested offline with dictionaries (a). Encryption is reversible; if the key leaks, every password is exposed (b). MD5 is broken and fast, and a fixed salt still lets identical passwords share a hash (d). argon2id is salted, slow and memory-hard."
+      },
+      "difficulty": "easy",
+      "concepts": ["password-hashing", "cryptographic-hash"]
+    },
+    {
+      "id": "q2",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "AES-GCM'de aynı anahtarla aynı nonce'u iki farklı mesaj için kullanmak yalnızca küçük bir performans sorunudur; gizlilik ve bütünlük etkilenmez.",
+        "en": "In AES-GCM, using the same nonce with the same key for two different messages is just a minor performance issue; confidentiality and integrity are unaffected."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "Yanlış. Nonce tekrarı GCM'in en ağır hatasıdır: iki düz metin arasındaki ilişki açığa çıkar ve doğrulama anahtarı ele geçirilerek sahte mesaj üretilebilir. Nonce her şifrelemede rastgele üretilmeli, yüksek hacimde anahtar döndürülmelidir.",
+        "en": "False. Nonce reuse is GCM's most severe failure: the relationship between the two plaintexts leaks and the authentication key can be recovered to forge messages. The nonce must be random for every encryption, and keys rotated at high volume."
+      },
+      "difficulty": "hard",
+      "concepts": ["aead", "symmetric-encryption"]
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": {
+        "tr": "Bir ödeme sağlayıcısı webhook isteklerini, sizinle paylaştığı bir sırla imzalıyor. Bu hangi araçtır ve doğrulama nasıl yapılmalıdır?",
+        "en": "A payment provider signs webhook requests with a secret it shares with you. Which tool is this and how should verification be done?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "HMAC; kodu yeniden hesaplayıp sabit zamanlı karşılaştırmak", "en": "HMAC; recompute the code and compare in constant time" } },
+        { "id": "b", "text": { "tr": "Dijital imza; sağlayıcının açık anahtarıyla şifreyi çözmek", "en": "Digital signature; decrypt with the provider's public key" } },
+        { "id": "c", "text": { "tr": "Düz hash; gövdenin SHA-256'sını başlıkla == ile karşılaştırmak", "en": "Plain hash; compare the body's SHA-256 with the header using ==" } },
+        { "id": "d", "text": { "tr": "AEAD; gövdeyi paylaşılan sırla çözmek", "en": "AEAD; decrypt the body with the shared secret" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "Paylaşılan sırla üretilen doğrulama kodu HMAC'tir. Sabit zamanlı karşılaştırma, yanıt süresi üzerinden bilgi sızmasını önler. Düz hash'i saldırgan da hesaplayabilir (c); paylaşılan sır asimetrik imza değildir (b); gövde şifreli değildir (d).",
+        "en": "An authentication code produced with a shared secret is an HMAC. Constant-time comparison prevents leaking information through response timing. An attacker can compute a plain hash too (c); a shared secret is not an asymmetric signature (b); the body is not encrypted (d)."
+      },
+      "difficulty": "medium",
+      "concepts": ["hmac"]
+    },
+    {
+      "id": "q4",
+      "type": "multiple",
+      "prompt": {
+        "tr": "TLS 1.3 el sıkışması ile ilgili hangi ifadeler doğrudur? (Birden fazla seçin)",
+        "en": "Which statements about the TLS 1.3 handshake are true? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "ECDHE ile her bağlantıya özgü geçici anahtarlar kullanılır; bu ileri gizlilik sağlar", "en": "ECDHE uses per-connection ephemeral keys, which provides forward secrecy" } },
+        { "id": "b", "text": { "tr": "Sunucu, el sıkışma dökümünü sertifikasındaki açık anahtara karşılık gelen özel anahtarla imzalar", "en": "The server signs the handshake transcript with the private key matching its certificate's public key" } },
+        { "id": "c", "text": { "tr": "Uygulama verisi asimetrik şifrelemeyle şifrelenir", "en": "Application data is encrypted with asymmetric encryption" } },
+        { "id": "d", "text": { "tr": "Finished mesajları, el sıkışmanın değiştirilmediğini doğrulamak için bir MAC içerir", "en": "Finished messages contain a MAC to verify the handshake was not tampered with" } }
+      ],
+      "correct": ["a", "b", "d"],
+      "explanation": {
+        "tr": "Asimetrik kriptografi yalnızca anahtar anlaşması ve kimlik kanıtı için kullanılır; uygulama verisi türetilen simetrik anahtarlarla AEAD (AES-GCM ya da ChaCha20-Poly1305) ile şifrelenir (c yanlış).",
+        "en": "Asymmetric cryptography is only used for key agreement and proof of identity; application data is encrypted with AEAD (AES-GCM or ChaCha20-Poly1305) under the derived symmetric keys (c is wrong)."
+      },
+      "difficulty": "medium",
+      "concepts": ["tls-handshake", "asymmetric-cryptography"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "Zarf şifrelemede (envelope encryption) ana anahtarı (KEK) döndürmek neden ucuzdur?",
+        "en": "Why is rotating the master key (KEK) cheap with envelope encryption?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Yalnızca veri anahtarları (DEK) yeniden sarılır; verinin kendisi yeniden şifrelenmez", "en": "Only the data keys (DEKs) are re-wrapped; the data itself is not re-encrypted" } },
+        { "id": "b", "text": { "tr": "Ana anahtar hiç döndürülmez, yalnızca adı değişir", "en": "The master key is never rotated, only renamed" } },
+        { "id": "c", "text": { "tr": "Veri şifrelenmeden saklandığı için", "en": "Because the data is stored unencrypted" } },
+        { "id": "d", "text": { "tr": "Ana anahtar her kaydın yanında düz metin olarak durduğu için", "en": "Because the master key is stored in plaintext next to every record" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "Veri rastgele DEK'lerle şifrelenir; DEK'ler KMS'teki KEK ile sarılır. KEK döndürüldüğünde küçük DEK'ler yeni KEK ile yeniden sarılır, terabaytlarca veri olduğu gibi kalır. Diğer seçenekler zarf şifrelemenin amacına aykırıdır.",
+        "en": "Data is encrypted with random DEKs, which are wrapped by the KEK in the KMS. When the KEK rotates, the small DEKs are re-wrapped with the new KEK and terabytes of data stay untouched. The other options contradict the purpose of envelope encryption."
+      },
+      "difficulty": "medium",
+      "concepts": ["key-management"]
+    }
+  ]
+}

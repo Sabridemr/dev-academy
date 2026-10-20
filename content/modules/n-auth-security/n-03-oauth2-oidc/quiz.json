@@ -1,0 +1,258 @@
+{
+  "id": "n-03-oauth2-oidc-quiz",
+  "title": {
+    "tr": "OAuth 2.0 ve OIDC Quiz",
+    "en": "OAuth 2.0 and OIDC Quiz"
+  },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "order",
+      "prompt": {
+        "tr": "Authorization code + PKCE akışının adımlarını doğru sıraya koyun.",
+        "en": "Put the steps of the authorization code + PKCE flow in the correct order."
+      },
+      "options": [
+        {
+          "id": "c",
+          "text": {
+            "tr": "Sunucu kod ve state ile redirect_uri'ye geri yönlendirir",
+            "en": "The server redirects back to redirect_uri with a code and state"
+          }
+        },
+        {
+          "id": "a",
+          "text": {
+            "tr": "İstemci code_verifier üretir ve code_challenge'ı hesaplar",
+            "en": "The client generates a code_verifier and derives the code_challenge"
+          }
+        },
+        {
+          "id": "e",
+          "text": {
+            "tr": "İstemci access token ile kaynak sunucusunu çağırır",
+            "en": "The client calls the resource server with the access token"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Tarayıcı challenge ve state ile /authorize'a yönlendirilir; kullanıcı onay verir",
+            "en": "The browser is redirected to /authorize with the challenge and state; the user consents"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "İstemci kodu ve verifier'ı arka kanalda /token'a gönderir",
+            "en": "The client sends the code and verifier to /token on the back channel"
+          }
+        }
+      ],
+      "correct": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e"
+      ],
+      "explanation": {
+        "tr": "Verifier akış başlamadan üretilir; sunucuya önce yalnızca özeti (challenge) gösterilir. Kod ön kanaldan döner, verifier ise yalnızca arka kanaldaki takasta açıklanır. Token'lar alındıktan sonra API çağrılır.",
+        "en": "The verifier is generated before the flow starts; the server first sees only its hash (the challenge). The code returns on the front channel, and the verifier is revealed only in the back-channel exchange. The API is called after the tokens arrive."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "authorization-code-flow",
+        "pkce"
+      ]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "Bir mobil uygulamada kötü niyetli bir uygulama yetkilendirme kodunu yakalıyor. PKCE (S256) kullanılıyorsa saldırgan neden token alamaz?",
+        "en": "On mobile, a malicious app intercepts the authorization code. If PKCE (S256) is used, why can't the attacker get tokens?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Kod şifrelidir ve yalnızca istemci çözebilir",
+            "en": "The code is encrypted and only the client can decrypt it"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Takas için gereken code_verifier yalnızca akışı başlatan istemcide vardır ve challenge'dan geri hesaplanamaz",
+            "en": "The code_verifier needed for the exchange exists only in the client that started the flow and cannot be derived from the challenge"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "Mobil uygulama istemci sırrını güvenle saklar",
+            "en": "The mobile app stores its client secret securely"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "state değeri kodun yeniden kullanımını engeller",
+            "en": "The state value prevents reuse of the code"
+          }
+        }
+      ],
+      "correct": [
+        "b"
+      ],
+      "explanation": {
+        "tr": "Kod şifreli değildir (a). Mobil uygulama açık istemcidir; içine gömülen sır çıkarılabilir (c). state CSRF'ye karşı yanıtı tarayıcı oturumuna bağlar, kod sızıntısını engellemez (d). PKCE'de takas, yalnızca istemcinin bildiği verifier'ı gerektirir.",
+        "en": "The code is not encrypted (a). A mobile app is a public client; any embedded secret can be extracted (c). state binds the response to the browser session against CSRF; it does not stop code leakage (d). With PKCE the exchange requires the verifier only the client knows."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "pkce",
+        "oauth-roles"
+      ]
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": {
+        "tr": "Gece çalışan bir faturalama işi, kullanıcı etkileşimi olmadan başka bir iç servisin API'sini çağıracak. Hangi akış uygundur?",
+        "en": "A nightly billing job must call another internal service's API with no user interaction. Which flow fits?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Client credentials",
+            "en": "Client credentials"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Implicit",
+            "en": "Implicit"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "Resource owner password",
+            "en": "Resource owner password"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Device authorization",
+            "en": "Device authorization"
+          }
+        }
+      ],
+      "correct": [
+        "a"
+      ],
+      "explanation": {
+        "tr": "Kullanıcı olmadığında istemci kendi kimliğiyle token alır: client credentials. Implicit ve password akışları kullanımdan kaldırılmıştır; device akışı ise onayı başka bir cihazda verecek bir kullanıcı gerektirir.",
+        "en": "With no user, the client obtains a token as itself: client credentials. Implicit and password grants are deprecated; the device flow needs a user who approves on another device."
+      },
+      "difficulty": "easy",
+      "concepts": [
+        "client-credentials"
+      ]
+    },
+    {
+      "id": "q4",
+      "type": "multiple",
+      "prompt": {
+        "tr": "OIDC ile 'Google ile giriş' uygularken hangileri doğru uygulamalardır? (Birden fazla seçin)",
+        "en": "When implementing 'Sign in with Google' via OIDC, which are correct practices? (Select all that apply)"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "ID token'ın imzasını sağlayıcının JWKS'iyle ve aud değerinin kendi client_id'niz olduğunu doğrulamak",
+            "en": "Verify the ID token signature with the provider's JWKS and that aud is your own client_id"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Kullanıcıyı iss + sub çiftiyle eşlemek",
+            "en": "Map the user by the iss + sub pair"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "ID token'ı kendi API'nize taşıyıcı token olarak göndermek",
+            "en": "Send the ID token to your own API as a bearer token"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Geri dönen nonce değerini kendi ürettiğinizle karşılaştırmak",
+            "en": "Compare the returned nonce with the one you generated"
+          }
+        }
+      ],
+      "correct": [
+        "a",
+        "b",
+        "d"
+      ],
+      "explanation": {
+        "tr": "ID token istemci içindir; API erişimi için access token ya da platformun kendi token'ı kullanılır (c yanlış). İmza ve aud kontrolü, iss + sub ile eşleme ve nonce karşılaştırması OIDC'nin temel güvenlik adımlarıdır.",
+        "en": "The ID token is for the client; API access uses an access token or the platform's own token (c is wrong). Signature and aud checks, iss + sub mapping and nonce comparison are the core OIDC security steps."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "openid-connect",
+        "id-token"
+      ]
+    },
+    {
+      "id": "q5",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "İstemci geri dönüşte state değerini kontrol etmezse, saldırgan kendi hesabına ait bir kodu kurbanın tarayıcısına teslim ederek kurbanı kendi hesabına bağlayabilir.",
+        "en": "If the client does not check state on return, an attacker can deliver a code for their own account to the victim's browser and link the victim to the attacker's account."
+      },
+      "options": [
+        {
+          "id": "t",
+          "text": {
+            "tr": "Doğru",
+            "en": "True"
+          }
+        },
+        {
+          "id": "f",
+          "text": {
+            "tr": "Yanlış",
+            "en": "False"
+          }
+        }
+      ],
+      "correct": [
+        "t"
+      ],
+      "explanation": {
+        "tr": "Doğru. Bu OAuth'a özgü bir CSRF türüdür: istemci yanıtın kendi başlattığı akışa ait olup olmadığını bilemez. Rastgele, oturumda saklanan ve birebir karşılaştırılan state bunu engeller.",
+        "en": "True. This is an OAuth-specific CSRF: the client cannot tell whether the response belongs to a flow it started. A random state stored in the session and compared exactly prevents it."
+      },
+      "difficulty": "hard",
+      "concepts": [
+        "oauth-state",
+        "authorization-code-flow"
+      ]
+    }
+  ]
+}

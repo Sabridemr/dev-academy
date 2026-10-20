@@ -1,0 +1,110 @@
+{
+  "id": "n-05-owasp-top-10-quiz",
+  "title": { "tr": "OWASP Top 10 Quiz", "en": "OWASP Top 10 Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "SQL enjeksiyonuna karşı en sağlam savunma hangisidir?",
+        "en": "What is the most robust defence against SQL injection?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Girdideki tırnak işaretlerini silmek", "en": "Strip quote characters from input" } },
+        { "id": "b", "text": { "tr": "Parametreli sorgu kullanmak; parametreleştirilemeyen sütun adlarını izin listesinden seçmek", "en": "Use parameterised queries; pick non-parameterisable column names from an allowlist" } },
+        { "id": "c", "text": { "tr": "Önüne bir WAF koymak", "en": "Put a WAF in front" } },
+        { "id": "d", "text": { "tr": "Hata mesajlarını gizlemek", "en": "Hide error messages" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Parametreli sorgu veriyi sorgu metninden yapısal olarak ayırır; değer ne içerirse içersin kod olarak yorumlanmaz. Karakter silmek kolayca atlatılır ve meşru veriyi bozar (a). WAF ek bir katmandır ama güvensiz kodun yerini tutmaz (c). Hata gizlemek saldırıyı zorlaştırır, engellemez (d).",
+        "en": "Parameterised queries structurally separate data from the query text; whatever the value contains, it is never interpreted as code. Stripping characters is easily bypassed and corrupts legitimate data (a). A WAF is an extra layer, not a substitute for safe code (c). Hiding errors makes attacks harder, not impossible (d)."
+      },
+      "difficulty": "easy",
+      "concepts": ["sql-injection"]
+    },
+    {
+      "id": "q2",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Bir React uygulamasında XSS riskini azaltan önlemler hangileridir? (Birden fazla seçin)",
+        "en": "Which measures reduce XSS risk in a React application? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Kullanıcı metnini JSX içinde {değer} olarak göstermek", "en": "Rendering user text as {value} inside JSX" } },
+        { "id": "b", "text": { "tr": "İstek başına nonce kullanan, 'unsafe-inline' içermeyen bir CSP", "en": "A CSP with a per-request nonce and no 'unsafe-inline'" } },
+        { "id": "c", "text": { "tr": "Zengin HTML'i göstermeden önce DOMPurify ile temizlemek", "en": "Sanitising rich HTML with DOMPurify before rendering" } },
+        { "id": "d", "text": { "tr": "Uzun ömürlü token'ı localStorage'da tutmak", "en": "Keeping a long-lived token in localStorage" } }
+      ],
+      "correct": ["a", "b", "c"],
+      "explanation": {
+        "tr": "React metni varsayılan olarak kaçışlar; CSP enjekte edilmiş betiğin çalışmasını engeller; temizleyici zengin içerikteki tehlikeli öğeleri çıkarır. localStorage'daki token XSS'i azaltmaz, tam tersine bir XSS açığını kalıcı hesap ele geçirmeye çevirir (d).",
+        "en": "React escapes text by default; CSP blocks injected scripts from running; a sanitiser removes dangerous elements from rich content. A token in localStorage does not reduce XSS; it turns an XSS bug into a lasting account takeover (d)."
+      },
+      "difficulty": "medium",
+      "concepts": ["xss", "content-security-policy"]
+    },
+    {
+      "id": "q3",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Kimlik doğrulaması yalnızca Authorization: Bearer başlığıyla yapılan ve çerez kullanmayan bir API, klasik CSRF saldırısından etkilenmez.",
+        "en": "An API that authenticates only via the Authorization: Bearer header and uses no cookies is not affected by classic CSRF."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["t"],
+      "explanation": {
+        "tr": "Doğru. CSRF, tarayıcının kimlik bilgisini (çerezi) otomatik eklemesine dayanır. Başka bir sitedeki sayfa, kurbanın tarayıcısına sizin token'ınızı içeren bir Authorization başlığı ekletemez. Ancak token XSS ile çalınabiliyorsa bu ayrı bir risktir.",
+        "en": "True. CSRF relies on the browser automatically attaching a credential (the cookie). A page on another site cannot make the victim's browser add an Authorization header containing your token. If the token can be stolen via XSS, that is a separate risk."
+      },
+      "difficulty": "medium",
+      "concepts": ["csrf"]
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": {
+        "tr": "Saldırgan, sızmış bir listeden bir milyon farklı hesaba yalnızca birer şifre deniyor. Hesap başına '5 hatada kilitle' kuralı neden yetersizdir ve hangi ek önlem en etkilidir?",
+        "en": "An attacker tries just one password each against a million accounts from a leaked list. Why is a per-account 'lock after 5 failures' rule insufficient, and which extra measure is most effective?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Kural yeterlidir; kilit süresini 24 saate çıkarmak sorunu çözer", "en": "The rule is enough; raising the lockout to 24 hours solves it" } },
+        { "id": "b", "text": { "tr": "Her hesaba tek deneme yapıldığı için sayaç hiç tetiklenmez; IP/ağ bazlı hız sınırı, sızmış şifre kontrolü ve MFA gerekir", "en": "With one attempt per account the counter never triggers; IP/network rate limiting, breached-password checks and MFA are needed" } },
+        { "id": "c", "text": { "tr": "Hata mesajını 'şifre yanlış' olarak değiştirmek", "en": "Change the error message to 'wrong password'" } },
+        { "id": "d", "text": { "tr": "Şifre hash'ini MD5'ten SHA-1'e geçirmek", "en": "Move the password hash from MD5 to SHA-1" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Kimlik bilgisi doldurma hesap sayaçlarının altında kalır; kilit süresini uzatmak bu yüzden bir şey değiştirmez (a). Ayrıntılı hata mesajı hesap varlığını sızdırır (c). Hash değişikliği çevrimiçi denemeleri etkilemez ve SHA-1 de şifre saklamaya uygun değildir (d). Ağ eksenli hız sınırı ve MFA bu saldırı türünü etkisizleştirir.",
+        "en": "Credential stuffing stays under per-account counters, so a longer lockout changes nothing (a). A detailed error message leaks account existence (c). Changing the hash does not affect online attempts, and SHA-1 is not suitable for passwords either (d). Network-level rate limiting and MFA neutralise this attack."
+      },
+      "difficulty": "hard",
+      "concepts": ["brute-force-defense"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "Şifre sıfırlama bağlantısı süresiz geçerli ve tekrar kullanılabilir. Kod tam olarak yazıldığı gibi çalışıyor. Bu hangi kategoriye girer?",
+        "en": "A password-reset link never expires and can be reused. The code works exactly as written. Which category does this fall into?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Güvensiz tasarım", "en": "Insecure design" } },
+        { "id": "b", "text": { "tr": "SSRF", "en": "SSRF" } },
+        { "id": "c", "text": { "tr": "XSS", "en": "XSS" } },
+        { "id": "d", "text": { "tr": "SQL enjeksiyonu", "en": "SQL injection" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "Hata bir uygulama kusurunda değil iş kuralındadır: token'ın ömrü ve tek kullanımlığı tasarlanmamıştır. Bu tür zafiyetler kod taramasıyla değil, tasarım aşamasındaki kötüye kullanım analiziyle bulunur.",
+        "en": "The flaw is not an implementation bug but a business rule: the token's lifetime and single use were never designed. Such issues are found through abuse-case analysis at design time, not by code scanning."
+      },
+      "difficulty": "easy",
+      "concepts": ["insecure-design", "owasp-top-10"]
+    }
+  ]
+}

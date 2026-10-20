@@ -1,0 +1,156 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "n-01-session-vs-token",
+  "title": { "tr": "Oturum Çerezi ve Taşıyıcı Token", "en": "Session Cookie and Bearer Token" },
+  "summary": {
+    "tr": "Önce sunucu taraflı oturum: giriş, Redis'e kayıt, çerezle gelen isteklerde depo araması. Ardından taşıyıcı token: imzalı token, yerelde doğrulama ve çıkışta iki modelin farkı.",
+    "en": "First a server-side session: login, a Redis record and a store lookup on every cookie request. Then a bearer token: a signed token, local verification and the difference between the two models on logout."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda tarayıcı, ortada API sunucusu, sağ üstte Redis oturum deposu, sağ altta imza anahtarı bulunur. İlk üç adımda tarayıcı giriş yapar, sunucu oturumu Redis'e yazar ve çerez döndürür; sonraki istekte sunucu çerezdeki kimliği Redis'te arar. Dördüncü ve beşinci adımlarda sunucu imzalı bir access token verir ve sonraki istekleri Redis'e gitmeden imza anahtarıyla doğrular. Son adımda çıkış yapılınca Redis kaydı silinir ve oturum anında biter, token ise süresi dolana kadar geçerli kalır.",
+      "en": "A browser on the left, an API server in the middle, a Redis session store at the top right and a signing key at the bottom right. In the first three steps the browser logs in, the server writes the session to Redis and returns a cookie; on the next request the server looks up the cookie id in Redis. In steps four and five the server issues a signed access token and verifies later requests with the signing key without touching Redis. In the last step, on logout the Redis record is deleted and the session ends immediately, while the token stays valid until it expires."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "browser", "kind": "browser", "label": { "tr": "Tarayıcı", "en": "Browser" }, "x": 130, "y": 300, "w": 140, "h": 80 },
+    { "id": "api", "kind": "server", "label": "API", "sublabel": { "tr": "Uygulama sunucusu", "en": "App server" }, "x": 480, "y": 300, "w": 160, "h": 90 },
+    { "id": "redis", "kind": "cache", "label": "Redis", "sublabel": { "tr": "Oturum deposu", "en": "Session store" }, "x": 840, "y": 160, "w": 150, "h": 80 },
+    { "id": "key", "kind": "generic", "label": { "tr": "İmza anahtarı", "en": "Signing key" }, "sublabel": { "tr": "yerel doğrulama", "en": "local verification" }, "x": 840, "y": 450, "w": 150, "h": 80 }
+  ],
+  "edges": [
+    { "id": "b-api", "from": "browser", "to": "api", "kind": "request", "label": { "tr": "HTTPS", "en": "HTTPS" } },
+    { "id": "api-redis", "from": "api", "to": "redis", "kind": "data", "curvature": -0.15 },
+    { "id": "api-key", "from": "api", "to": "key", "kind": "control", "style": "dotted", "curvature": 0.15 }
+  ],
+  "steps": [
+    {
+      "id": "login",
+      "title": { "tr": "Giriş ve oturum kaydı", "en": "Login and session record" },
+      "narration": {
+        "tr": "Tarayıcı e-posta ve şifreyi gönderir. Sunucu şifreyi doğrular, yeni ve rastgele bir oturum kimliği üretir ve kullanıcı bilgisini bu anahtarla Redis'e TTL'li olarak yazar.",
+        "en": "The browser sends email and password. The server verifies the password, generates a new random session id and writes the user record to Redis under that key with a TTL."
+      },
+      "durationMs": 3600,
+      "inherit": false,
+      "highlight": { "nodes": ["browser", "api", "redis"], "edges": ["b-api", "api-redis"] },
+      "nodeStates": {
+        "api": { "status": "active" },
+        "redis": { "status": "active", "badge": "SET" }
+      },
+      "edgeStates": { "api-key": { "status": "muted" } },
+      "packets": [
+        { "edge": "b-api", "shape": "envelope", "label": "POST /login", "durationMs": 1200 },
+        { "edge": "api-redis", "shape": "square", "label": "sess:7f3a…", "startAt": 1500, "durationMs": 1100 }
+      ]
+    },
+    {
+      "id": "set-cookie",
+      "title": { "tr": "Set-Cookie: HttpOnly; Secure; SameSite", "en": "Set-Cookie: HttpOnly; Secure; SameSite" },
+      "narration": {
+        "tr": "Sunucu yalnızca anlamsız kimliği çerezde döndürür. HttpOnly sayesinde JavaScript çerezi okuyamaz; tarayıcı onu sonraki isteklere kendiliğinden ekler.",
+        "en": "The server returns only the meaningless id in a cookie. Thanks to HttpOnly, JavaScript cannot read it; the browser attaches it to later requests automatically."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["browser", "api"], "edges": ["b-api"] },
+      "nodeStates": {
+        "browser": { "status": "success", "badge": "sid" },
+        "redis": { "status": "idle", "badge": "1" }
+      },
+      "packets": [
+        { "edge": "b-api", "direction": "backward", "shape": "envelope", "label": "Set-Cookie: sid", "color": "success", "durationMs": 1300 }
+      ]
+    },
+    {
+      "id": "session-lookup",
+      "title": { "tr": "Her istekte depo araması", "en": "Store lookup on every request" },
+      "narration": {
+        "tr": "Sonraki istekte çerez gelir; sunucu kimliği Redis'te arar ve kullanıcıyı bulur. Kontrol tamamen sunucudadır, ama her istek bir ek gidiş-dönüş öder.",
+        "en": "On the next request the cookie arrives; the server looks up the id in Redis and finds the user. Control stays fully on the server, but every request pays one extra round trip."
+      },
+      "durationMs": 4200,
+      "highlight": { "nodes": ["api", "redis"], "edges": ["b-api", "api-redis"] },
+      "nodeStates": {
+        "api": { "status": "busy" },
+        "redis": { "status": "active", "badge": "GET" }
+      },
+      "packets": [
+        { "edge": "b-api", "shape": "envelope", "label": "GET /me + çerez", "durationMs": 1000 },
+        { "edge": "api-redis", "shape": "dot", "label": "GET sess:7f3a…", "startAt": 1100, "durationMs": 800 },
+        { "edge": "api-redis", "direction": "backward", "shape": "dot", "label": "{ userId }", "startAt": 2000, "durationMs": 800 },
+        { "edge": "b-api", "direction": "backward", "shape": "envelope", "label": "200", "color": "success", "startAt": 2900, "durationMs": 1000 }
+      ],
+      "annotations": [
+        { "id": "rtt-note", "x": 700, "y": 80, "text": { "tr": "+1 gidiş-dönüş / istek", "en": "+1 round trip / request" }, "tone": "warning", "target": "redis" }
+      ]
+    },
+    {
+      "id": "issue-token",
+      "title": { "tr": "Taşıyıcı token verilir", "en": "A bearer token is issued" },
+      "narration": {
+        "tr": "Token modelinde sunucu girişten sonra kullanıcı kimliğini ve son kullanma zamanını içeren kısa ömürlü bir access token'ı imza anahtarıyla imzalayıp gövdede döndürür. İstemci onu bellekte tutar.",
+        "en": "In the token model the server signs a short-lived access token containing the user id and expiry with the signing key and returns it in the body. The client keeps it in memory."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["api", "key", "browser"], "edges": ["api-key", "b-api"] },
+      "nodeStates": {
+        "browser": { "status": "active", "badge": "JWT" },
+        "api": { "status": "active" },
+        "redis": { "status": "muted" },
+        "key": { "status": "active", "badge": "sign" }
+      },
+      "edgeStates": { "api-key": { "status": "active" }, "api-redis": { "status": "muted" } },
+      "packets": [
+        { "edge": "api-key", "shape": "diamond", "label": "HMAC", "durationMs": 900 },
+        { "edge": "b-api", "direction": "backward", "shape": "envelope", "label": "access_token (15 dk)", "startAt": 1100, "durationMs": 1400 }
+      ]
+    },
+    {
+      "id": "verify-local",
+      "title": { "tr": "Yerel imza doğrulaması", "en": "Local signature verification" },
+      "narration": {
+        "tr": "İstemci token'ı Authorization: Bearer başlığında gönderir. Sunucu yalnızca imzayı ve süreyi kontrol eder; Redis'e hiç gitmez. Gecikme düşer, ama token'ı taşıyan herkes yetkilidir.",
+        "en": "The client sends the token in the Authorization: Bearer header. The server only checks signature and expiry; it never touches Redis. Latency drops, but whoever bears the token is authorised."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["api", "key"], "edges": ["b-api", "api-key"] },
+      "nodeStates": {
+        "api": { "status": "success" },
+        "key": { "status": "active", "badge": "verify" }
+      },
+      "packets": [
+        { "edge": "b-api", "shape": "envelope", "label": "Bearer eyJ…", "durationMs": 1000 },
+        { "edge": "api-key", "shape": "diamond", "label": "✓ imza", "startAt": 1100, "durationMs": 700 },
+        { "edge": "b-api", "direction": "backward", "shape": "envelope", "label": "200", "color": "success", "startAt": 2000, "durationMs": 1000 }
+      ]
+    },
+    {
+      "id": "logout",
+      "title": { "tr": "Çıkışta fark ortaya çıkar", "en": "The difference shows on logout" },
+      "narration": {
+        "tr": "Çıkışta oturum modelinde Redis kaydı silinir ve çerez anında işe yaramaz hâle gelir. İmzalı access token ise süresi dolana kadar geçerlidir; bu yüzden ömrü kısa tutulur ve iptal, sunucuda kayıtlı refresh token üzerinden yapılır.",
+        "en": "On logout, the session model deletes the Redis record and the cookie becomes useless immediately. The signed access token stays valid until it expires; that is why it is kept short-lived and revocation happens through the server-side refresh token."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["redis", "browser"], "edges": ["api-redis"] },
+      "nodeStates": {
+        "redis": { "status": "warning", "badge": "DEL" },
+        "browser": { "status": "warning", "badge": "exp" },
+        "api": { "status": "idle" }
+      },
+      "edgeStates": { "api-redis": { "status": "active" }, "api-key": { "status": "idle" } },
+      "packets": [
+        { "edge": "b-api", "shape": "envelope", "label": "POST /logout", "durationMs": 1000 },
+        { "edge": "api-redis", "shape": "square", "label": "DEL sess:7f3a…", "color": "danger", "startAt": 1100, "durationMs": 900 }
+      ],
+      "annotations": [
+        { "id": "revoke-note", "x": 160, "y": 430, "text": { "tr": "token: exp'e kadar geçerli", "en": "token: valid until exp" }, "tone": "danger", "target": "browser" }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["session", "cookie", "bearer-token", "revocation"]
+}

@@ -1,0 +1,109 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Platformun güven sınırı diyagramı</title>
+  <desc id="desc">Soldan sağa dört bölge kesik çizgili güven sınırlarıyla ayrılmıştır: internet (tarayıcı, mobil uygulama), kenar (web sunucusu), uygulama bölgesi (API, zamanlanmış işler), veri bölgesi (PostgreSQL, Redis, nesne deposu). Altta dış servisler bölgesi: Google ve Apple kimlik sağlayıcıları, push ve e-posta servisleri. Üstte ayrı bir bölgede geliştirici, kod deposu ve CI. Sınır geçişlerinde 1'den 8'e kadar numaralı tehdit noktaları vardır.</desc>
+  <defs>
+    <marker id="n07-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted)"/>
+    </marker>
+  </defs>
+
+  <!-- Bölgeler (güven sınırları) -->
+  <g fill="none" stroke="var(--da-danger)" stroke-width="1.6" stroke-dasharray="8 6">
+    <rect x="16" y="110" width="190" height="300" rx="14"/>
+    <rect x="226" y="110" width="170" height="300" rx="14"/>
+    <rect x="416" y="110" width="250" height="300" rx="14"/>
+    <rect x="686" y="110" width="258" height="300" rx="14"/>
+    <rect x="416" y="428" width="528" height="96" rx="14"/>
+    <rect x="16" y="16" width="380" height="76" rx="14"/>
+  </g>
+  <g font-size="12" font-weight="600" fill="var(--da-danger)">
+    <text x="30" y="132">İnternet (güvenilmez)</text>
+    <text x="240" y="132">Kenar</text>
+    <text x="430" y="132">Uygulama bölgesi</text>
+    <text x="700" y="132">Veri bölgesi (özel ağ)</text>
+    <text x="430" y="448">Dış servisler</text>
+    <text x="30" y="36">Geliştirme ve teslim</text>
+  </g>
+
+  <!-- Geliştirme -->
+  <g font-size="12" text-anchor="middle">
+    <rect x="30" y="46" width="100" height="36" rx="8" fill="var(--da-surface)" stroke="var(--da-fg)"/>
+    <text x="80" y="69" fill="var(--da-fg)">Geliştirici</text>
+    <rect x="148" y="46" width="100" height="36" rx="8" fill="var(--da-surface)" stroke="var(--da-fg)"/>
+    <text x="198" y="69" fill="var(--da-fg)">Kod deposu</text>
+    <rect x="266" y="46" width="116" height="36" rx="8" fill="var(--da-accent)" fill-opacity="0.12" stroke="var(--da-accent)"/>
+    <text x="324" y="69" fill="var(--da-fg)">CI · bağımlılıklar</text>
+  </g>
+  <g stroke="var(--da-muted)" stroke-width="1.4" fill="none" marker-end="url(#n07-arrow)">
+    <path d="M 130 64 L 146 64"/>
+    <path d="M 248 64 L 264 64"/>
+    <path d="M 382 64 C 470 64, 520 90, 520 158"/>
+  </g>
+  <text x="470" y="80" font-size="11" fill="var(--da-muted)">dağıtım</text>
+
+  <!-- İnternet -->
+  <g font-size="13" text-anchor="middle">
+    <rect x="40" y="160" width="140" height="56" rx="10" fill="var(--da-surface)" stroke="var(--da-fg)" stroke-width="1.5"/>
+    <text x="110" y="193" fill="var(--da-fg)">Tarayıcı</text>
+    <rect x="40" y="300" width="140" height="56" rx="10" fill="var(--da-surface)" stroke="var(--da-fg)" stroke-width="1.5"/>
+    <text x="110" y="333" fill="var(--da-fg)">Mobil uygulama</text>
+  </g>
+
+  <!-- Kenar -->
+  <rect x="246" y="160" width="130" height="56" rx="10" fill="var(--da-surface)" stroke="var(--da-fg)" stroke-width="1.5"/>
+  <text x="311" y="186" text-anchor="middle" font-size="13" fill="var(--da-fg)">Web sunucusu</text>
+  <text x="311" y="204" text-anchor="middle" font-size="11" fill="var(--da-muted)">SSR · CSP nonce</text>
+
+  <!-- Uygulama -->
+  <rect x="436" y="170" width="210" height="110" rx="12" fill="var(--da-primary)" fill-opacity="0.12" stroke="var(--da-primary)" stroke-width="2"/>
+  <text x="541" y="200" text-anchor="middle" font-size="15" font-weight="600" fill="var(--da-primary)">API</text>
+  <text x="541" y="222" text-anchor="middle" font-size="11" fill="var(--da-fg)">/auth · içerik · ilerleme</text>
+  <text x="541" y="240" text-anchor="middle" font-size="11" fill="var(--da-fg)">rol koruyucusu · hız sınırı</text>
+  <text x="541" y="258" text-anchor="middle" font-size="11" fill="var(--da-muted)">JWT doğrulama</text>
+  <rect x="436" y="310" width="210" height="56" rx="10" fill="var(--da-surface)" stroke="var(--da-fg)" stroke-width="1.5"/>
+  <text x="541" y="343" text-anchor="middle" font-size="13" fill="var(--da-fg)">Zamanlanmış işler</text>
+
+  <!-- Veri -->
+  <g font-size="13" text-anchor="middle">
+    <rect x="706" y="160" width="218" height="56" rx="10" fill="var(--da-surface)" stroke="var(--da-fg)" stroke-width="1.5"/>
+    <text x="815" y="186" fill="var(--da-fg)">PostgreSQL</text>
+    <text x="815" y="204" font-size="11" fill="var(--da-muted)">argon2id · token özetleri</text>
+    <rect x="706" y="236" width="218" height="56" rx="10" fill="var(--da-surface)" stroke="var(--da-fg)" stroke-width="1.5"/>
+    <text x="815" y="262" fill="var(--da-fg)">Redis</text>
+    <text x="815" y="280" font-size="11" fill="var(--da-muted)">hız sınırı · kimlik durumu</text>
+    <rect x="706" y="312" width="218" height="56" rx="10" fill="var(--da-surface)" stroke="var(--da-fg)" stroke-width="1.5"/>
+    <text x="815" y="345" fill="var(--da-fg)">Nesne deposu</text>
+  </g>
+
+  <!-- Dış servisler -->
+  <g font-size="12" text-anchor="middle">
+    <rect x="436" y="462" width="230" height="46" rx="10" fill="var(--da-surface)" stroke="var(--da-fg)"/>
+    <text x="551" y="490" fill="var(--da-fg)">Google / Apple (OIDC · JWKS)</text>
+    <rect x="696" y="462" width="228" height="46" rx="10" fill="var(--da-surface)" stroke="var(--da-fg)"/>
+    <text x="810" y="490" fill="var(--da-fg)">Push · e-posta</text>
+  </g>
+
+  <!-- Akışlar -->
+  <g stroke="var(--da-muted)" stroke-width="1.6" fill="none" marker-end="url(#n07-arrow)">
+    <path d="M 180 188 L 244 188"/>
+    <path d="M 376 188 L 434 200"/>
+    <path d="M 180 328 C 300 328, 360 260, 434 250"/>
+    <path d="M 646 195 L 704 188"/>
+    <path d="M 646 240 L 704 262"/>
+    <path d="M 646 266 L 704 334"/>
+    <path d="M 541 282 L 541 460"/>
+    <path d="M 600 366 C 660 420, 760 430, 790 460"/>
+  </g>
+
+  <!-- Tehdit noktaları -->
+  <g font-size="12" font-weight="600" text-anchor="middle" fill="var(--da-surface)">
+    <circle cx="212" cy="188" r="11" fill="var(--da-danger)"/><text x="212" y="192">1</text>
+    <circle cx="405" cy="194" r="11" fill="var(--da-danger)"/><text x="405" y="198">2</text>
+    <circle cx="405" cy="232" r="11" fill="var(--da-danger)"/><text x="405" y="236">3</text>
+    <circle cx="410" cy="272" r="11" fill="var(--da-danger)"/><text x="410" y="276">4</text>
+    <circle cx="300" cy="300" r="11" fill="var(--da-danger)"/><text x="300" y="304">5</text>
+    <circle cx="541" cy="420" r="11" fill="var(--da-danger)"/><text x="541" y="424">6</text>
+    <circle cx="676" cy="190" r="11" fill="var(--da-danger)"/><text x="676" y="194">7</text>
+    <circle cx="410" cy="64" r="11" fill="var(--da-danger)"/><text x="410" y="68">8</text>
+  </g>
+</svg>

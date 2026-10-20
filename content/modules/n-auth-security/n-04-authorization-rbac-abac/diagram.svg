@@ -1,0 +1,105 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 500" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">PEP, PDP ve yetkilendirme modelleri</title>
+  <desc id="desc">Üstte istek uygulamadaki PEP'e gelir; PEP özne, eylem, kaynak ve bağlamı PDP'ye sorar. PDP politika deposu ve öznitelik kaynaklarını kullanarak izin ya da ret döndürür. Altta solda RBAC: kullanıcı, rol ve izin zinciri. Sağda ABAC: özne, kaynak ve bağlam özniteliklerinin koşulla birleştiği tek bir politika.</desc>
+  <defs>
+    <marker id="n04-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted)"/>
+    </marker>
+    <marker id="n04-arrow-p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-primary)"/>
+    </marker>
+  </defs>
+
+  <!-- Üst: mimari -->
+  <rect x="30" y="50" width="150" height="70" rx="12" fill="var(--da-surface)" stroke="var(--da-fg)" stroke-width="1.5"/>
+  <text x="105" y="80" text-anchor="middle" font-size="14" fill="var(--da-fg)">İstek</text>
+  <text x="105" y="100" text-anchor="middle" font-size="11" fill="var(--da-muted)">PUT /drafts/91</text>
+
+  <rect x="250" y="40" width="190" height="90" rx="12" fill="var(--da-accent)" fill-opacity="0.12" stroke="var(--da-accent)" stroke-width="2"/>
+  <text x="345" y="72" text-anchor="middle" font-size="15" font-weight="600" fill="var(--da-accent)">PEP</text>
+  <text x="345" y="94" text-anchor="middle" font-size="12" fill="var(--da-fg)">uç nokta / ara katman</text>
+  <text x="345" y="112" text-anchor="middle" font-size="11" fill="var(--da-muted)">kararı uygular</text>
+
+  <rect x="530" y="40" width="190" height="90" rx="12" fill="var(--da-primary)" fill-opacity="0.12" stroke="var(--da-primary)" stroke-width="2"/>
+  <text x="625" y="72" text-anchor="middle" font-size="15" font-weight="600" fill="var(--da-primary)">PDP</text>
+  <text x="625" y="94" text-anchor="middle" font-size="12" fill="var(--da-fg)">politika motoru</text>
+  <text x="625" y="112" text-anchor="middle" font-size="11" fill="var(--da-muted)">izin / ret verir</text>
+
+  <rect x="790" y="30" width="150" height="50" rx="10" fill="var(--da-surface)" stroke="var(--da-border)"/>
+  <text x="865" y="52" text-anchor="middle" font-size="12" fill="var(--da-fg)">Politika deposu</text>
+  <text x="865" y="68" text-anchor="middle" font-size="11" fill="var(--da-muted)">kod gibi, testli</text>
+  <rect x="790" y="95" width="150" height="50" rx="10" fill="var(--da-surface)" stroke="var(--da-border)"/>
+  <text x="865" y="117" text-anchor="middle" font-size="12" fill="var(--da-fg)">Öznitelikler (PIP)</text>
+  <text x="865" y="133" text-anchor="middle" font-size="11" fill="var(--da-muted)">ekip, durum, kiracı</text>
+
+  <path d="M 182 85 L 248 85" stroke="var(--da-muted)" stroke-width="1.8" fill="none" marker-end="url(#n04-arrow)"/>
+  <path d="M 442 72 L 528 72" stroke="var(--da-primary)" stroke-width="2" fill="none" marker-end="url(#n04-arrow-p)"/>
+  <text x="485" y="62" text-anchor="middle" font-size="11" fill="var(--da-muted)">özne·eylem·kaynak·bağlam</text>
+  <path d="M 528 104 L 442 104" stroke="var(--da-success)" stroke-width="2" fill="none" stroke-dasharray="5 4" marker-end="url(#n04-arrow)"/>
+  <text x="485" y="124" text-anchor="middle" font-size="11" fill="var(--da-success)">allow / deny</text>
+  <path d="M 722 70 L 788 56" stroke="var(--da-muted)" stroke-width="1.5" fill="none" marker-end="url(#n04-arrow)"/>
+  <path d="M 722 100 L 788 118" stroke="var(--da-muted)" stroke-width="1.5" fill="none" marker-end="url(#n04-arrow)"/>
+
+  <text x="480" y="175" text-anchor="middle" font-size="12" fill="var(--da-muted)">varsayılan ret · açık ret her izni ezer</text>
+
+  <!-- Alt sol: RBAC -->
+  <rect x="30" y="200" width="430" height="280" rx="14" fill="var(--da-surface)" stroke="var(--da-border)"/>
+  <text x="245" y="228" text-anchor="middle" font-size="15" font-weight="600" fill="var(--da-fg)">RBAC</text>
+  <g font-size="12" text-anchor="middle">
+    <rect x="50" y="250" width="110" height="40" rx="8" fill="var(--da-surface)" stroke="var(--da-fg)"/>
+    <text x="105" y="275" fill="var(--da-fg)">Ayşe</text>
+    <rect x="50" y="310" width="110" height="40" rx="8" fill="var(--da-surface)" stroke="var(--da-fg)"/>
+    <text x="105" y="335" fill="var(--da-fg)">Mert</text>
+    <rect x="190" y="250" width="110" height="40" rx="8" fill="var(--da-accent)" fill-opacity="0.12" stroke="var(--da-accent)"/>
+    <text x="245" y="275" fill="var(--da-fg)">editor</text>
+    <rect x="190" y="310" width="110" height="40" rx="8" fill="var(--da-accent)" fill-opacity="0.12" stroke="var(--da-accent)"/>
+    <text x="245" y="335" fill="var(--da-fg)">admin</text>
+    <rect x="330" y="240" width="115" height="34" rx="8" fill="var(--da-surface)" stroke="var(--da-border)"/>
+    <text x="387" y="262" fill="var(--da-fg)">draft:edit</text>
+    <rect x="330" y="284" width="115" height="34" rx="8" fill="var(--da-surface)" stroke="var(--da-border)"/>
+    <text x="387" y="306" fill="var(--da-fg)">draft:publish</text>
+    <rect x="330" y="328" width="115" height="34" rx="8" fill="var(--da-surface)" stroke="var(--da-border)"/>
+    <text x="387" y="350" fill="var(--da-fg)">user:manage</text>
+  </g>
+  <g stroke="var(--da-muted)" stroke-width="1.5" fill="none" marker-end="url(#n04-arrow)">
+    <path d="M 160 270 L 188 270"/>
+    <path d="M 160 330 L 188 330"/>
+    <path d="M 300 265 L 328 257"/>
+    <path d="M 300 275 L 328 299"/>
+    <path d="M 300 335 L 328 345"/>
+    <path d="M 245 308 L 245 292"/>
+  </g>
+  <text x="254" y="303" font-size="10" fill="var(--da-muted)">devralır</text>
+  <g font-size="12" fill="var(--da-fg)">
+    <text x="50" y="398"><tspan fill="var(--da-success)">✓</tspan> basit, hızlı, denetlenebilir</text>
+    <text x="50" y="420"><tspan fill="var(--da-danger)">✗</tspan> "kendi ekibi" gibi kurallar → rol patlaması</text>
+    <text x="50" y="442" fill="var(--da-muted)">editor-team-a, editor-team-b, editor-team-c …</text>
+  </g>
+
+  <!-- Alt sağ: ABAC -->
+  <rect x="500" y="200" width="430" height="280" rx="14" fill="var(--da-surface)" stroke="var(--da-border)"/>
+  <text x="715" y="228" text-anchor="middle" font-size="15" font-weight="600" fill="var(--da-fg)">ABAC</text>
+  <g font-size="12" text-anchor="middle">
+    <rect x="520" y="250" width="125" height="58" rx="8" fill="var(--da-surface)" stroke="var(--da-fg)"/>
+    <text x="582" y="272" fill="var(--da-fg)">özne</text>
+    <text x="582" y="292" fill="var(--da-muted)">rol, ekip, kiracı</text>
+    <rect x="652" y="250" width="125" height="58" rx="8" fill="var(--da-surface)" stroke="var(--da-fg)"/>
+    <text x="714" y="272" fill="var(--da-fg)">kaynak</text>
+    <text x="714" y="292" fill="var(--da-muted)">ekip, durum, sahip</text>
+    <rect x="784" y="250" width="125" height="58" rx="8" fill="var(--da-surface)" stroke="var(--da-fg)"/>
+    <text x="846" y="272" fill="var(--da-fg)">bağlam</text>
+    <text x="846" y="292" fill="var(--da-muted)">saat, MFA, IP</text>
+    <rect x="540" y="340" width="350" height="48" rx="10" fill="var(--da-primary)" fill-opacity="0.12" stroke="var(--da-primary)"/>
+    <text x="715" y="361" fill="var(--da-fg)">rol = editor ∧ özne.ekip = kaynak.ekip</text>
+    <text x="715" y="379" fill="var(--da-fg)">∧ kaynak.durum = taslak → edit</text>
+  </g>
+  <g stroke="var(--da-primary)" stroke-width="1.5" fill="none" marker-end="url(#n04-arrow-p)">
+    <path d="M 582 310 L 640 338"/>
+    <path d="M 714 310 L 714 338"/>
+    <path d="M 846 310 L 790 338"/>
+  </g>
+  <g font-size="12" fill="var(--da-fg)">
+    <text x="520" y="420"><tspan fill="var(--da-success)">✓</tspan> yeni ekip → politika değişmez</text>
+    <text x="520" y="442"><tspan fill="var(--da-danger)">✗</tspan> test ve "kim neye erişir?" sorusu zorlaşır</text>
+  </g>
+</svg>

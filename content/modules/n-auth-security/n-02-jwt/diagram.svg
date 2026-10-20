@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 480" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">JWT yapısı, imzalama ve doğrulama</title>
+  <desc id="desc">Üstte JWT'nin üç parçası: başlık, gövde ve imza. Başlık ve gövde birleşerek imza girdisini oluşturur. Ortada HS256 için tek paylaşılan sır, RS256 için özel anahtarla imzalama ve açık anahtarla doğrulama. Altta doğrulayıcının sırasıyla yaptığı kontroller: algoritmayı sabitle, imzayı doğrula, exp ve nbf, iss ve aud, uygulama kuralları.</desc>
+  <defs>
+    <marker id="n02-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted)"/>
+    </marker>
+  </defs>
+
+  <!-- Üç parça -->
+  <rect x="40" y="30" width="250" height="90" rx="12" fill="var(--da-primary)" fill-opacity="0.12" stroke="var(--da-primary)" stroke-width="2"/>
+  <text x="165" y="58" text-anchor="middle" font-size="15" font-weight="600" fill="var(--da-primary)">Başlık (header)</text>
+  <text x="165" y="82" text-anchor="middle" font-size="12" fill="var(--da-fg)">{"alg":"HS256","typ":"JWT"}</text>
+  <text x="165" y="104" text-anchor="middle" font-size="11" fill="var(--da-muted)">base64url · okunabilir</text>
+
+  <text x="305" y="82" text-anchor="middle" font-size="22" fill="var(--da-muted)">.</text>
+
+  <rect x="320" y="30" width="320" height="90" rx="12" fill="var(--da-accent)" fill-opacity="0.12" stroke="var(--da-accent)" stroke-width="2"/>
+  <text x="480" y="58" text-anchor="middle" font-size="15" font-weight="600" fill="var(--da-accent)">Gövde (payload)</text>
+  <text x="480" y="82" text-anchor="middle" font-size="12" fill="var(--da-fg)">{"sub":"u_42","role":"user","exp":…}</text>
+  <text x="480" y="104" text-anchor="middle" font-size="11" fill="var(--da-muted)">base64url · şifreli DEĞİL</text>
+
+  <text x="655" y="82" text-anchor="middle" font-size="22" fill="var(--da-muted)">.</text>
+
+  <rect x="670" y="30" width="250" height="90" rx="12" fill="var(--da-success)" fill-opacity="0.12" stroke="var(--da-success)" stroke-width="2"/>
+  <text x="795" y="58" text-anchor="middle" font-size="15" font-weight="600" fill="var(--da-success)">İmza</text>
+  <text x="795" y="82" text-anchor="middle" font-size="12" fill="var(--da-fg)">SIGN(başlık + "." + gövde)</text>
+  <text x="795" y="104" text-anchor="middle" font-size="11" fill="var(--da-muted)">bütünlük + köken</text>
+
+  <!-- İmza girdisi -->
+  <path d="M 165 122 C 165 150, 330 150, 380 168" stroke="var(--da-muted)" stroke-width="1.5" fill="none" marker-end="url(#n02-arrow)"/>
+  <path d="M 480 122 L 480 166" stroke="var(--da-muted)" stroke-width="1.5" fill="none" marker-end="url(#n02-arrow)"/>
+  <rect x="330" y="170" width="300" height="40" rx="10" fill="var(--da-surface)" stroke="var(--da-border)"/>
+  <text x="480" y="195" text-anchor="middle" font-size="13" fill="var(--da-fg)">imza girdisi = base64url(başlık).base64url(gövde)</text>
+  <path d="M 632 190 C 720 190, 795 170, 795 124" stroke="var(--da-muted)" stroke-width="1.5" fill="none" marker-end="url(#n02-arrow)"/>
+
+  <!-- HS256 / RS256 -->
+  <rect x="40" y="240" width="430" height="110" rx="12" fill="var(--da-surface)" stroke="var(--da-border)"/>
+  <text x="255" y="266" text-anchor="middle" font-size="14" font-weight="600" fill="var(--da-fg)">HS256 · simetrik</text>
+  <text x="255" y="290" text-anchor="middle" font-size="12" fill="var(--da-fg)">tek paylaşılan sır: imzalar VE doğrular</text>
+  <text x="255" y="312" text-anchor="middle" font-size="12" fill="var(--da-muted)">doğrulayan herkes token da üretebilir</text>
+  <text x="255" y="334" text-anchor="middle" font-size="12" fill="var(--da-muted)">uygun: aynı süreç üretir ve doğrular</text>
+
+  <rect x="490" y="240" width="430" height="110" rx="12" fill="var(--da-surface)" stroke="var(--da-border)"/>
+  <text x="705" y="266" text-anchor="middle" font-size="14" font-weight="600" fill="var(--da-fg)">RS256 / ES256 · asimetrik</text>
+  <text x="705" y="290" text-anchor="middle" font-size="12" fill="var(--da-fg)">özel anahtar imzalar, açık anahtar doğrular</text>
+  <text x="705" y="312" text-anchor="middle" font-size="12" fill="var(--da-muted)">JWKS + kid ile anahtar seçimi ve rotasyon</text>
+  <text x="705" y="334" text-anchor="middle" font-size="12" fill="var(--da-muted)">uygun: farklı güven alanlarındaki doğrulayıcılar</text>
+
+  <!-- Doğrulama hattı -->
+  <text x="480" y="384" text-anchor="middle" font-size="13" font-weight="600" fill="var(--da-fg)">Doğrulayıcının sırası</text>
+  <g font-size="12" text-anchor="middle">
+    <rect x="40" y="398" width="160" height="50" rx="10" fill="var(--da-surface)" stroke="var(--da-primary)"/>
+    <text x="120" y="420" fill="var(--da-fg)">1. alg'ı sabitle</text>
+    <text x="120" y="438" fill="var(--da-danger)">none / karışıklık</text>
+    <rect x="220" y="398" width="160" height="50" rx="10" fill="var(--da-surface)" stroke="var(--da-primary)"/>
+    <text x="300" y="420" fill="var(--da-fg)">2. kid → anahtar</text>
+    <text x="300" y="438" fill="var(--da-muted)">bilinmeyeni reddet</text>
+    <rect x="400" y="398" width="160" height="50" rx="10" fill="var(--da-surface)" stroke="var(--da-primary)"/>
+    <text x="480" y="420" fill="var(--da-fg)">3. imzayı doğrula</text>
+    <text x="480" y="438" fill="var(--da-muted)">decode ≠ verify</text>
+    <rect x="580" y="398" width="160" height="50" rx="10" fill="var(--da-surface)" stroke="var(--da-primary)"/>
+    <text x="660" y="420" fill="var(--da-fg)">4. exp · nbf</text>
+    <text x="660" y="438" fill="var(--da-muted)">± birkaç saniye</text>
+    <rect x="760" y="398" width="160" height="50" rx="10" fill="var(--da-surface)" stroke="var(--da-primary)"/>
+    <text x="840" y="420" fill="var(--da-fg)">5. iss · aud</text>
+    <text x="840" y="438" fill="var(--da-muted)">birebir eşleşme</text>
+  </g>
+  <g stroke="var(--da-muted)" stroke-width="1.5" fill="none" marker-end="url(#n02-arrow)">
+    <path d="M 200 423 L 218 423"/>
+    <path d="M 380 423 L 398 423"/>
+    <path d="M 560 423 L 578 423"/>
+    <path d="M 740 423 L 758 423"/>
+  </g>
+</svg>

@@ -1,0 +1,262 @@
+{
+  "id": "n-07-threat-modeling-quiz",
+  "title": {
+    "tr": "Tehdit Modelleme Quiz",
+    "en": "Threat Modelling Quiz"
+  },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Bir kullanıcı, JWT gövdesindeki role alanını 'admin' yapıp imzası bozulmuş token'ı göndermeyi deniyor. Bu deneme STRIDE'da öncelikle hangi kategoriye girer?",
+        "en": "A user tries to change the role field in a JWT payload to 'admin' and send the token with a broken signature. Which STRIDE category does this attempt primarily fall into?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Tampering (kurcalama)",
+            "en": "Tampering"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Repudiation (inkâr)",
+            "en": "Repudiation"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "Denial of service",
+            "en": "Denial of service"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Information disclosure",
+            "en": "Information disclosure"
+          }
+        }
+      ],
+      "correct": [
+        "a"
+      ],
+      "explanation": {
+        "tr": "Veriyi yetkisiz biçimde değiştirmek bütünlük ihlalidir: tampering. Amaç yetki yükseltme (E) olsa da kullanılan yöntem kurcalamadır; imza doğrulaması tam olarak bu kategoriye karşı bir savunmadır.",
+        "en": "Modifying data without authorisation violates integrity: tampering. The goal may be elevation of privilege (E), but the technique is tampering, and signature verification is exactly the defence against this category."
+      },
+      "difficulty": "easy",
+      "concepts": [
+        "stride"
+      ]
+    },
+    {
+      "id": "q2",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Aşağıdakilerden hangileri bir veri akış diyagramında güven sınırı olarak çizilmelidir? (Birden fazla seçin)",
+        "en": "Which of the following should be drawn as trust boundaries in a data flow diagram? (Select all that apply)"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "İnternet ile API sunucusu arası",
+            "en": "Between the internet and the API server"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "API süreci ile veritabanı arası",
+            "en": "Between the API process and the database"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "Sizin altyapınız ile dış kimlik sağlayıcısı arası",
+            "en": "Between your infrastructure and an external identity provider"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Aynı süreç içindeki iki fonksiyon çağrısı arası",
+            "en": "Between two function calls inside the same process"
+          }
+        }
+      ],
+      "correct": [
+        "a",
+        "b",
+        "c"
+      ],
+      "explanation": {
+        "tr": "Güven sınırı, iki tarafın farklı güven seviyelerinde ya da farklı yönetim alanlarında olduğu yerdir. Aynı süreç içindeki fonksiyonlar aynı ayrıcalıkla ve aynı bellekte çalışır; aralarında bir güven sınırı yoktur.",
+        "en": "A trust boundary is wherever two sides sit at different trust levels or in different administrative domains. Functions in the same process run with the same privileges and memory; there is no trust boundary between them."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "trust-boundary",
+        "data-flow-diagram"
+      ]
+    },
+    {
+      "id": "q3",
+      "type": "order",
+      "prompt": {
+        "tr": "Bir geliştirici üretim veritabanı parolasını içeren .env dosyasını herkese açık bir depoya gönderdiğini fark etti. Doğru müdahale sırası nedir?",
+        "en": "A developer notices they pushed a .env file containing the production database password to a public repository. What is the correct order of response?"
+      },
+      "options": [
+        {
+          "id": "c",
+          "text": {
+            "tr": "Dosyayı depodan ve geçmişten temizlemek, .gitignore'u düzeltmek",
+            "en": "Remove the file from the repo and its history, fix .gitignore"
+          }
+        },
+        {
+          "id": "a",
+          "text": {
+            "tr": "Parolayı iptal edip yenisiyle döndürmek",
+            "en": "Revoke the password and rotate to a new one"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "CI'a gizli bilgi taraması ekleyip olayı tehdit modeline yazmak",
+            "en": "Add secret scanning to CI and record the incident in the threat model"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Erişim loglarında sızıntı süresince şüpheli kullanım aramak",
+            "en": "Search access logs for suspicious use during the exposure window"
+          }
+        }
+      ],
+      "correct": [
+        "a",
+        "b",
+        "c",
+        "d"
+      ],
+      "explanation": {
+        "tr": "Sızmış bir sır, geçmiş temizlense bile sızmıştır; önce iptal edilip döndürülür. Ardından kötüye kullanılıp kullanılmadığı araştırılır, sonra depo temizlenir ve son olarak tekrarını önleyecek süreç kontrolleri eklenir.",
+        "en": "A leaked secret stays leaked even after history is cleaned; it is revoked and rotated first. Then you investigate whether it was abused, then clean the repository, and finally add process controls that prevent a repeat."
+      },
+      "difficulty": "hard",
+      "concepts": [
+        "secrets-management"
+      ]
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": {
+        "tr": "CI iş akışınızda üçüncü taraf eylemleri değişebilen etiketler (ör. @v3) yerine tam commit özetleriyle sabitlemek hangi riski azaltır?",
+        "en": "Which risk is reduced by pinning third-party actions in your CI workflow to full commit SHAs instead of mutable tags (e.g. @v3)?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Etiketin zararlı bir sürüme taşınmasıyla CI'daki sırların çalınması (tedarik zinciri)",
+            "en": "Theft of CI secrets after the tag is moved to a malicious version (supply chain)"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Uygulamadaki SQL enjeksiyonu",
+            "en": "SQL injection in the application"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "Kullanıcıların zayıf şifre seçmesi",
+            "en": "Users choosing weak passwords"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Tarayıcıda XSS",
+            "en": "XSS in the browser"
+          }
+        }
+      ],
+      "correct": [
+        "a"
+      ],
+      "explanation": {
+        "tr": "Etiketler değiştirilebilir; eylemin bakımcı hesabı ele geçirilirse aynı etiket zararlı koda işaret edebilir ve iş akışınız onu sırlarınıza erişimle çalıştırır. Commit özeti değişmez. Diğer seçenekler uygulama düzeyindeki risklerdir.",
+        "en": "Tags are mutable; if the action maintainer's account is compromised, the same tag can point to malicious code that your workflow runs with access to your secrets. A commit SHA is immutable. The other options are application-level risks."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "supply-chain-security"
+      ]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "Saldırı yüzeyini küçültmenin en doğrudan örneği hangisidir?",
+        "en": "Which is the most direct example of reducing the attack surface?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "API dokümantasyon arayüzünü ve kullanılmayan uç noktaları üretimde kapatmak",
+            "en": "Disabling the API documentation UI and unused endpoints in production"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Her uç noktaya daha ayrıntılı hata mesajı eklemek",
+            "en": "Adding more detailed error messages to every endpoint"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "Veritabanını internetten erişilebilir yapmak ama güçlü parola koymak",
+            "en": "Making the database reachable from the internet but with a strong password"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Yeni bir yönetim arayüzü eklemek",
+            "en": "Adding a new admin interface"
+          }
+        }
+      ],
+      "correct": [
+        "a"
+      ],
+      "explanation": {
+        "tr": "Var olmayan bir giriş noktası saldırılamaz. Ayrıntılı hata mesajları bilgi sızdırır (b); internete açık veritabanı ve yeni yönetim arayüzü yüzeyi büyütür (c, d).",
+        "en": "An entry point that does not exist cannot be attacked. Detailed errors leak information (b); an internet-facing database and a new admin interface enlarge the surface (c, d)."
+      },
+      "difficulty": "easy",
+      "concepts": [
+        "attack-surface",
+        "threat-modeling"
+      ]
+    }
+  ]
+}

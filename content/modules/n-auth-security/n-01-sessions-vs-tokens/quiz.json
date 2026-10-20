@@ -1,0 +1,110 @@
+{
+  "id": "n-01-sessions-vs-tokens-quiz",
+  "title": { "tr": "Oturum mu, Token mı? Quiz", "en": "Sessions or Tokens? Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Bir yönetici bir kullanıcının hesabını askıya aldığında erişimin anında kesilmesi isteniyor. Ek bir mekanizma kurmadan bunu en doğal sağlayan model hangisidir?",
+        "en": "When an admin suspends a user's account, access must be cut off immediately. Which model provides this most naturally without extra machinery?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Sunucu taraflı oturum (oturum deposundaki kaydı silmek)", "en": "Server-side session (deleting the record in the session store)" } },
+        { "id": "b", "text": { "tr": "Bir saat ömürlü imzalı access token", "en": "A signed access token with a one-hour lifetime" } },
+        { "id": "c", "text": { "tr": "localStorage'da tutulan uzun ömürlü token", "en": "A long-lived token kept in localStorage" } },
+        { "id": "d", "text": { "tr": "İmza anahtarını her gün döndürmek", "en": "Rotating the signing key every day" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "Oturum kimliği yalnızca bir referanstır; kayıt silindiğinde bir sonraki istek reddedilir. İmzalı token süresi dolana kadar geçerlidir (b ve c). Anahtarı döndürmek tüm kullanıcıların token'larını geçersiz kılar, tek bir hesabı hedeflemez ve günlük döngüyle anında da değildir (d).",
+        "en": "A session id is just a reference; once the record is deleted, the next request is rejected. A signed token stays valid until it expires (b and c). Rotating the key invalidates every user's tokens, does not target one account and on a daily cycle is not immediate either (d)."
+      },
+      "difficulty": "easy",
+      "concepts": ["server-side-session", "token-revocation"]
+    },
+    {
+      "id": "q2",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Oturum çerezi için aşağıdaki özniteliklerden hangileri doğru eşleşmiştir? (Birden fazla seçin)",
+        "en": "Which of these session-cookie attributes are matched correctly with what they do? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "HttpOnly: çerezi JavaScript'in okumasına kapatır", "en": "HttpOnly: hides the cookie from JavaScript" } },
+        { "id": "b", "text": { "tr": "Secure: çerez yalnızca HTTPS üzerinden gönderilir", "en": "Secure: the cookie is only sent over HTTPS" } },
+        { "id": "c", "text": { "tr": "SameSite=Lax: başka siteden gelen POST isteklerinde çerez gönderilmez", "en": "SameSite=Lax: the cookie is not sent on POST requests coming from another site" } },
+        { "id": "d", "text": { "tr": "HttpOnly: XSS ile kullanıcının tarayıcısından istek gönderilmesini tamamen engeller", "en": "HttpOnly: fully prevents XSS from sending requests from the user's browser" } }
+      ],
+      "correct": ["a", "b", "c"],
+      "explanation": {
+        "tr": "HttpOnly çerezin okunmasını engeller ama kullanılmasını engellemez: sayfaya enjekte edilmiş betik yine istek gönderebilir ve tarayıcı çerezi ekler. Bu yüzden d yanlıştır; XSS'in asıl ilacı CSP ve çıktı kaçışlamadır.",
+        "en": "HttpOnly stops the cookie from being read but not from being used: an injected script can still send requests and the browser attaches the cookie. So d is false; the real cure for XSS is CSP and output escaping."
+      },
+      "difficulty": "medium",
+      "concepts": ["cookie-attributes", "samesite"]
+    },
+    {
+      "id": "q3",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Refresh token rotasyonunda, iptal edilmiş bir refresh token yeniden kullanılırsa sunucunun yalnızca o isteği reddetmesi yeterlidir.",
+        "en": "With refresh token rotation, if a revoked refresh token is reused, it is enough for the server to just reject that one request."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "Yanlış. İptal edilmiş bir token'ın yeniden kullanılması, iki tarafın aynı token'ı tuttuğunun (yani hırsızlığın) işaretidir. Hangisinin gerçek kullanıcı olduğunu bilemeyeceğimiz için o ailenin tüm token'ları iptal edilir ve yeniden giriş istenir.",
+        "en": "False. Reuse of a revoked token signals that two parties hold the same token, i.e. theft. Since we cannot tell which one is the real user, every token in that family is revoked and a fresh login is required."
+      },
+      "difficulty": "hard",
+      "concepts": ["refresh-token", "token-revocation"]
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": {
+        "tr": "Bir SPA için XSS ve CSRF'yi birlikte düşündüğümüzde en dengeli token saklama düzeni hangisidir?",
+        "en": "For an SPA, considering XSS and CSRF together, which token storage layout is the most balanced?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Access ve refresh token'ı localStorage'da tutmak", "en": "Keep both access and refresh tokens in localStorage" } },
+        { "id": "b", "text": { "tr": "Access token'ı bellekte, refresh token'ı HttpOnly + Secure + SameSite çerezde tutmak", "en": "Keep the access token in memory and the refresh token in an HttpOnly + Secure + SameSite cookie" } },
+        { "id": "c", "text": { "tr": "Her iki token'ı da HttpOnly olmayan bir çerezde tutmak", "en": "Keep both tokens in a non-HttpOnly cookie" } },
+        { "id": "d", "text": { "tr": "Refresh token'ı URL sorgu parametresinde taşımak", "en": "Carry the refresh token in a URL query parameter" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "localStorage ve HttpOnly olmayan çerez XSS ile tek satırda okunur (a, c). URL'deki token geçmişe, loglara ve Referer başlığına sızar (d). Bellekteki kısa ömürlü access token ile yalnızca yenileme uç noktasına giden HttpOnly refresh çerezi, iki saldırının hasarını da sınırlar.",
+        "en": "localStorage and non-HttpOnly cookies are readable by XSS in one line (a, c). A token in the URL leaks into history, logs and the Referer header (d). A short-lived in-memory access token plus an HttpOnly refresh cookie that only goes to the refresh endpoint limits the damage of both attacks."
+      },
+      "difficulty": "medium",
+      "concepts": ["token-storage", "bearer-token"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "Uygulama, kullanıcı giriş yaptıktan sonra girişten önce verdiği oturum kimliğini kullanmaya devam ediyor. Bu hangi zafiyete yol açar?",
+        "en": "After login, an application keeps using the session id it issued before login. Which vulnerability does this create?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Oturum sabitleme (session fixation)", "en": "Session fixation" } },
+        { "id": "b", "text": { "tr": "SQL enjeksiyonu", "en": "SQL injection" } },
+        { "id": "c", "text": { "tr": "Açık yönlendirme (open redirect)", "en": "Open redirect" } },
+        { "id": "d", "text": { "tr": "Zamanlama saldırısı", "en": "Timing attack" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "Saldırgan kurbanın tarayıcısına bildiği bir kimliği yerleştirebilirse, kurban giriş yaptığında o kimlik yetkili hâle gelir. Çözüm, giriş anında kimliği yeniden üretmektir. Diğer seçenekler oturum kimliğinin yeniden kullanılmasıyla ilgili değildir.",
+        "en": "If an attacker can plant a known id in the victim's browser, that id becomes authenticated when the victim logs in. The fix is to regenerate the id at login. The other options have nothing to do with reusing the session id."
+      },
+      "difficulty": "easy",
+      "concepts": ["server-side-session", "session-cookie"]
+    }
+  ]
+}
