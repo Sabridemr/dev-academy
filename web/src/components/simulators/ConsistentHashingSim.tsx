@@ -245,7 +245,7 @@ export default function ConsistentHashingSim({ params, onInteract }: SimulatorPr
                 opacity={0.5}
               />
             </svg>
-            <p className="text-[11px] text-muted">
+            <p className="text-xs text-muted">
               ┆ {l.ideal} ≈ {ideal.toFixed(1)}
             </p>
           </div>

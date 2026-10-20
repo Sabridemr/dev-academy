@@ -36,7 +36,7 @@ export function ModulesView() {
                 return (
                   <li key={m.id} className="relative">
                     <span
-                      className="absolute -left-[37px] top-5 flex h-6 w-6 items-center justify-center rounded-full border-2 border-bg text-[10px] font-bold text-white"
+                      className="absolute -left-[37px] top-5 flex h-6 w-6 items-center justify-center rounded-full border-2 border-bg text-xs font-bold text-white"
                       style={{ background: m.color }}
                     >
                       {m.code}

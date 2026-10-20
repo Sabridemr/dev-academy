@@ -495,7 +495,7 @@ export default function GradientDescentSim({ params, onInteract }: SimulatorProp
               b
             </text>
           </svg>
-          <p className="text-[11px] text-muted">{l.hint}</p>
+          <p className="text-xs text-muted">{l.hint}</p>
         </figure>
       </div>
       <figure className="mt-3">

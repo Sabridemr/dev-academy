@@ -63,7 +63,7 @@ function Value({ value }: { value: TraceValue }) {
   return (
     <span
       data-ref={value.id}
-      className="inline-flex items-center gap-1 rounded-md border px-1.5 font-mono text-[11px]"
+      className="inline-flex items-center gap-1 rounded-md border px-1.5 font-mono text-xs"
       style={{ borderColor: `hsl(${hue} 70% 50%)`, color: `hsl(${hue} 70% 42%)` }}
       title={`→ #${value.id}`}
     >
@@ -88,7 +88,7 @@ function ObjectLabel({ obj }: { obj: TraceHeapObject }) {
           ? 'function'
           : obj.type;
   return (
-    <p className="mb-1 flex items-center justify-between gap-2 text-[11px] text-muted">
+    <p className="mb-1 flex items-center justify-between gap-2 text-xs text-muted">
       <span className="font-medium">{label}</span>
       <span className="font-mono" style={{ color: `hsl(${hue} 70% 42%)` }}>
         #{obj.id}
@@ -385,7 +385,7 @@ export function TraceViewer({
             })}
           </div>
           <div className="border-t border-border bg-elevated/40 px-4 py-2">
-            <p className="mb-1 flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-muted">
+            <p className="mb-1 flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-muted">
               <TerminalSquare size={12} /> {t('trace.output')}
             </p>
             <pre
@@ -409,7 +409,7 @@ export function TraceViewer({
           className="relative grid gap-4 p-4 sm:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]"
         >
           <div data-col="frames">
-            <p className="mb-2 text-[11px] font-medium uppercase tracking-wide text-muted">
+            <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted">
               {t('trace.frames')}
             </p>
             <div className="space-y-2">
@@ -459,7 +459,7 @@ export function TraceViewer({
             </div>
           </div>
           <div data-col="heap">
-            <p className="mb-2 text-[11px] font-medium uppercase tracking-wide text-muted">
+            <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted">
               {t('trace.heap')}
             </p>
             {step.heap.length === 0 ? (

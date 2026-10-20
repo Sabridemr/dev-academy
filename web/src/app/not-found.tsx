@@ -1,13 +1,30 @@
+'use client';
+
 import Link from 'next/link';
+import { Compass } from 'lucide-react';
+import { useI18n } from '@/i18n';
+import { EmptyState } from '@/components/ui/EmptyState';
 
 export default function NotFound() {
+  const { t } = useI18n();
   return (
-    <div className="mx-auto max-w-xl px-4 py-24 text-center">
-      <p className="text-6xl font-bold text-primary">404</p>
-      <p className="mt-4 text-lg">Sayfa bulunamadı · Page not found</p>
-      <Link href="/" className="btn-primary mt-6">
-        DevAcademy
-      </Link>
+    <div className="mx-auto max-w-xl px-4 py-16">
+      <p className="t-display t-gradient text-center">404</p>
+      <EmptyState
+        icon={Compass}
+        title={t('common.notFound')}
+        description={t('common.notFoundHint')}
+        action={
+          <>
+            <Link href="/" className="btn-primary">
+              {t('common.goHome')}
+            </Link>
+            <Link href="/modules" className="btn-ghost">
+              {t('nav.modules')}
+            </Link>
+          </>
+        }
+      />
     </div>
   );
 }

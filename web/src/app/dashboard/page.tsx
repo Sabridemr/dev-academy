@@ -143,7 +143,7 @@ function Dashboard() {
                 >
                   <Award className="mx-auto text-accent" />
                   <p className="mt-1 text-sm font-semibold">{tl(b.title)}</p>
-                  <p className="text-[11px] text-muted">{tl(b.description)}</p>
+                  <p className="text-xs text-muted">{tl(b.description)}</p>
                 </li>
               ))}
             </ul>

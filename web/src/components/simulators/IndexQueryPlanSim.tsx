@@ -396,7 +396,7 @@ export default function IndexQueryPlanSim({ params, onInteract }: SimulatorProps
               value={plan.idxCost === null ? '—' : fmt(plan.idxCost * scale)}
             />
           </div>
-          {scale !== 1 && <p className="text-[11px] text-muted">{l.scaled(fmt(tableRows))}</p>}
+          {scale !== 1 && <p className="text-xs text-muted">{l.scaled(fmt(tableRows))}</p>}
         </>
       }
     >
@@ -443,7 +443,7 @@ export default function IndexQueryPlanSim({ params, onInteract }: SimulatorProps
           );
         })}
       </svg>
-      <p className="text-[11px] text-muted">
+      <p className="text-xs text-muted">
         <span className="text-success">■</span> {l.returned} ·{' '}
         <span className="text-danger">■</span> {l.examined} · 1 ■ = 1{' '}
         {locale === 'tr' ? 'satır' : 'row'}

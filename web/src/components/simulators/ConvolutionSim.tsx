@@ -283,7 +283,7 @@ export default function ConvolutionSim({ params, onInteract }: SimulatorProps) {
             <p className="label">
               {l.calc} ({orow}, {ocol})
             </p>
-            <p className="font-mono text-[11px] leading-5">
+            <p className="font-mono text-xs leading-5">
               {kernel
                 .map((k, i) => `${fmtK(k)}×${px(r0 + Math.floor(i / 3), c0 + (i % 3)).toFixed(1)}`)
                 .join(' + ')}
@@ -381,7 +381,7 @@ export default function ConvolutionSim({ params, onInteract }: SimulatorProps) {
               );
             })}
           </svg>
-          <p className="text-[11px] text-muted">
+          <p className="text-xs text-muted">
             {l.hint} <span className="text-primary">■ +</span>{' '}
             <span className="text-danger">■ −</span>
           </p>

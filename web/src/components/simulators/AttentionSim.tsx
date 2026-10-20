@@ -93,7 +93,7 @@ export default function AttentionSim({ params, onInteract }: SimulatorProps) {
               }}
             />
           </Field>
-          <p className="text-[11px] text-muted">{l.maxTokens}</p>
+          <p className="text-xs text-muted">{l.maxTokens}</p>
           <Range
             label={t('sim.temperature')}
             value={temperature}

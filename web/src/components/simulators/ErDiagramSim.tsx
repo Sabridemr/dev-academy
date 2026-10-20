@@ -623,7 +623,7 @@ export default function ErDiagramSim({ params, onInteract }: SimulatorProps) {
       <figure className="mt-3">
         <figcaption className="label">{l.ddl}</figcaption>
         <pre
-          className="max-h-72 overflow-auto rounded-xl border border-border bg-bg/60 p-3 font-mono text-[11px] leading-5"
+          className="max-h-72 overflow-auto rounded-xl border border-border bg-bg/60 p-3 font-mono text-xs leading-5"
           aria-live="polite"
         >
           {ddl}

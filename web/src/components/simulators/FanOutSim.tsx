@@ -405,7 +405,7 @@ export default function FanOutSim({ params, onInteract }: SimulatorProps) {
                 key={s.label}
                 className="rounded-xl border border-border bg-elevated/50 px-3 py-2"
               >
-                <p className="text-[11px] uppercase tracking-wide text-muted">{s.label}</p>
+                <p className="text-xs uppercase tracking-wide text-muted">{s.label}</p>
                 <p className={`text-lg font-semibold tabular-nums ${s.tone}`}>{s.v}</p>
               </div>
             ))}

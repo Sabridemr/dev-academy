@@ -591,7 +591,7 @@ export default function IsolationLevelsSim({ params, onInteract }: SimulatorProp
           </div>
           <div>
             <p className="label">{l.matrix}</p>
-            <table className="w-full text-[10px]">
+            <table className="w-full text-xs">
               <thead>
                 <tr className="text-muted">
                   <th />
@@ -619,7 +619,7 @@ export default function IsolationLevelsSim({ params, onInteract }: SimulatorProp
                 ))}
               </tbody>
             </table>
-            <p className="mt-1 text-[10px] text-muted">{l.pgNote}</p>
+            <p className="mt-1 text-xs text-muted">{l.pgNote}</p>
           </div>
         </>
       }

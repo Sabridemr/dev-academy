@@ -35,7 +35,8 @@ describe('Header çıkış', () => {
     });
 
     renderWithProviders(<Header />, 'tr', client);
-    fireEvent.click(screen.getAllByRole('button', { name: 'Çıkış' })[0]);
+    fireEvent.click(screen.getByRole('button', { name: 'Kullanıcı menüsü' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Çıkış' }));
 
     await waitFor(() => expect(useAuthStore.getState().accessToken).toBeNull());
     expect(client.getQueryData(['me'])).toBeUndefined();

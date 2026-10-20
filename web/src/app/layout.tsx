@@ -4,6 +4,8 @@ import { Inter, JetBrains_Mono } from 'next/font/google';
 import { DEFAULT_LOCALE, isLocale } from '@devacademy/shared';
 import { Providers, themeInitScript } from '@/components/providers';
 import { Header } from '@/components/layout/Header';
+import { Footer } from '@/components/layout/Footer';
+import { CommandPalette } from '@/components/layout/CommandPalette';
 import { LOCALE_COOKIE } from '@/i18n';
 import './globals.css';
 
@@ -23,8 +25,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#f8fafc' },
-    { media: '(prefers-color-scheme: dark)', color: '#0b0f19' },
+    { media: '(prefers-color-scheme: light)', color: '#f6f8fc' },
+    { media: '(prefers-color-scheme: dark)', color: '#0a0f1e' },
   ],
 };
 
@@ -38,10 +40,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <head>
         <script nonce={nonce} dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
-      <body className="min-h-screen font-sans">
+      <body className="flex min-h-screen flex-col font-sans">
         <Providers locale={locale}>
           <Header />
-          <main id="main">{children}</main>
+          <main id="main" className="flex-1">
+            {children}
+          </main>
+          <Footer />
+          <CommandPalette />
         </Providers>
       </body>
     </html>

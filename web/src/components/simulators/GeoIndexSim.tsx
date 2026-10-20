@@ -409,7 +409,7 @@ export default function GeoIndexSim({ params, onInteract }: SimulatorProps) {
           </text>
         </g>
       </svg>
-      <p className="mt-1 text-[11px] text-muted">
+      <p className="mt-1 text-xs text-muted">
         <span className="text-success">●</span> {l.found} · <span className="text-primary">●</span>{' '}
         {l.checked} · <span className="text-danger">●</span> {l.missed}
       </p>

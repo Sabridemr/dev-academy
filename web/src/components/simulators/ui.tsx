@@ -45,7 +45,7 @@ export function Stat({
 }) {
   return (
     <div className="rounded-xl border border-border bg-elevated/50 px-3 py-2">
-      <p className="text-[11px] uppercase tracking-wide text-muted">{label}</p>
+      <p className="text-xs uppercase tracking-wide text-muted">{label}</p>
       <p
         className={cn(
           'text-lg font-semibold tabular-nums',
@@ -139,7 +139,7 @@ export function LogList({
 }) {
   return (
     <ol
-      className="max-h-48 space-y-1 overflow-auto rounded-xl border border-border bg-bg/60 p-2 font-mono text-[11px] leading-5"
+      className="max-h-48 space-y-1 overflow-auto rounded-xl border border-border bg-bg/60 p-2 font-mono text-xs leading-5"
       aria-live="polite"
     >
       {items.length === 0 && <li className="text-muted">{empty}</li>}
