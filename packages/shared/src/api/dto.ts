@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { LocalizedString } from '../i18n';
-import type { LessonBlock, LessonLevel, ModuleGroup } from '../content/schema';
+import type { LessonBlock, LessonLevel, ModuleGroup, QuestionType } from '../content/schema';
 import type { AnimationScene } from '../scene/schema';
 
 /**
@@ -102,6 +102,8 @@ export const UpdateProfileSchema = z.object({
   locale: z.enum(['tr', 'en']).optional(),
   selectedPathId: z.string().nullable().optional(),
   reminderHour: z.number().int().min(0).max(23).nullable().optional(),
+  /** Günlük çalışma hedefi (dakika); null = hedef yok */
+  dailyGoalMinutes: z.number().int().min(5).max(240).nullable().optional(),
   timezone: z
     .string()
     .max(64)
@@ -302,6 +304,135 @@ export interface ProgressSummary {
   dueReviews: number;
   /** Bekleyen kart yoksa bir sonraki kartın vadesi (ISO); hiç kart yoksa null */
   nextReviewAt?: string | null;
+  /** Toplam XP ve seviye bilgisi */
+  xp?: number;
+  level?: { level: number; xpIntoLevel: number; xpForNextLevel: number; progress: number };
+  /** Günlük hedef (dakika) ve bugün biriken saniye */
+  dailyGoalMinutes?: number | null;
+  todaySeconds?: number;
+  /** Kullanılabilir seri dondurma hakkı */
+  streakFreezes?: number;
+}
+
+/* ------------------------ Aktivite, XP, sertifika ------------------------ */
+export interface DailyActivityDto {
+  /** YYYY-MM-DD (kullanıcının saat dilimi) */
+  date: string;
+  seconds: number;
+  lessonsCompleted: number;
+  quizzesPassed: number;
+  xp: number;
+}
+
+export interface XpEventDto {
+  id: string;
+  kind: string;
+  amount: number;
+  refId: string | null;
+  createdAt: string;
+}
+
+export type CertificateTarget = 'module' | 'path';
+
+export interface CertificateDto {
+  id: string;
+  /** Paylaşılabilir, tahmin edilemez kimlik (/certificates/[publicId]) */
+  publicId: string;
+  targetType: CertificateTarget;
+  targetId: string;
+  title: LocalizedString;
+  userName: string;
+  issuedAt: string;
+  lessonCount: number;
+}
+
+export const LessonFeedbackSchema = z.object({
+  /** 1 = beğendim, -1 = beğenmedim */
+  rating: z.union([z.literal(1), z.literal(-1)]),
+  difficulty: z.enum(['easy', 'ok', 'hard']).optional(),
+  comment: z.string().max(1000).optional(),
+});
+export type LessonFeedbackDto = z.infer<typeof LessonFeedbackSchema>;
+
+export interface LessonFeedbackSummary {
+  lessonId: string;
+  up: number;
+  down: number;
+  difficulty: { easy: number; ok: number; hard: number };
+  /** Oturum açmış kullanıcının kendi geri bildirimi */
+  mine?: LessonFeedbackDto | null;
+}
+
+/* -------------------------- Şifre sıfırlama ------------------------- */
+export const ForgotPasswordSchema = z.object({ email: z.string().email() });
+export const ResetPasswordSchema = z.object({
+  token: z.string().min(16).max(256),
+  newPassword: z.string().min(8).max(128),
+});
+export const VerifyEmailSchema = z.object({ token: z.string().min(16).max(256) });
+
+/* ------------------------------ Sınav ------------------------------- */
+export const CreateExamSchema = z.object({
+  /** Soru havuzu: yol ya da modül listesi (ikisi de boşsa tüm yayındaki dersler) */
+  pathId: z.string().optional(),
+  moduleIds: z.array(z.string()).max(20).optional(),
+  count: z.number().int().min(5).max(40).default(20),
+  /** Süre (saniye); 0 = süresiz */
+  durationSec: z.number().int().min(0).max(7200).default(1500),
+});
+export type CreateExamDto = z.infer<typeof CreateExamSchema>;
+
+export interface ExamQuestion {
+  /** examId içinde benzersiz: `${quizId}:${questionKey}` */
+  id: string;
+  lessonId: string;
+  moduleId: string;
+  type: QuestionType;
+  prompt: LocalizedString;
+  options: { id: string; text: LocalizedString }[];
+  concepts: string[];
+}
+
+export interface ExamDto {
+  id: string;
+  startedAt: string;
+  durationSec: number;
+  passScore: number;
+  questions: ExamQuestion[];
+}
+
+export const SubmitExamSchema = z.object({
+  answers: z.array(z.object({ questionId: z.string(), selected: z.array(z.string()) })),
+});
+export type SubmitExamDto = z.infer<typeof SubmitExamSchema>;
+
+export interface ExamResult {
+  examId: string;
+  score: number;
+  passed: boolean;
+  correctCount: number;
+  totalCount: number;
+  timedOut: boolean;
+  results: { questionId: string; correct: boolean; correctAnswer: string[]; explanation: LocalizedString }[];
+  perConcept: { concept: string; correct: number; total: number }[];
+  perModule: { moduleId: string; correct: number; total: number }[];
+  xpEarned: number;
+}
+
+export interface AdminLessonAnalytics {
+  lessonId: string;
+  title: LocalizedString;
+  moduleId: string;
+  started: number;
+  completed: number;
+  /** completed / started */
+  completionRate: number;
+  avgSecondsSpent: number;
+  quizAttempts: number;
+  quizPassRate: number;
+  feedbackUp: number;
+  feedbackDown: number;
+  hardVotes: number;
 }
 
 export interface ReviewItem {
@@ -457,6 +588,8 @@ export type WsServerEvent =
   | { type: 'progress.updated'; payload: ProgressItem }
   | { type: 'badge.earned'; payload: BadgeDto }
   | { type: 'streak.updated'; payload: { currentStreak: number } }
+  | { type: 'xp.updated'; payload: { xp: number; level: number; delta: number } }
+  | { type: 'certificate.issued'; payload: CertificateDto }
   | { type: 'content.published'; payload: { lessonId: string; version: number } }
   | { type: 'content.unpublished'; payload: { lessonId: string } }
   | { type: 'simulation.tick'; payload: { simulationId: string; data: unknown } };

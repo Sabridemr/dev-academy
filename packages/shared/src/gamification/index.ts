@@ -231,3 +231,5 @@ export function gradeAnswer(
   const b = [...correct].sort();
   return a.length === b.length && a.every((v, i) => v === b[i]);
 }
+
+export * from './xp';

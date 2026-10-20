@@ -258,6 +258,7 @@ export const LESSON_BLOCK_TYPES = [
 /* ------------------------------ Quiz ------------------------------- */
 
 export const QuestionTypeSchema = z.enum(['single', 'multiple', 'truefalse', 'order']);
+export type QuestionType = z.infer<typeof QuestionTypeSchema>;
 
 export const QuizOptionSchema = z
   .object({
