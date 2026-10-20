@@ -9,10 +9,10 @@ title:
 summary:
   tr: "REST, HTTP yöntemleri, durum kodları, kimlik doğrulama, CORS ve Postman testiyle API temellerini kavra."
   en: "Grasp API basics through REST, HTTP methods, status codes, authentication, CORS and Postman testing."
-durationMinutes: 17
+durationMinutes: 25
 level: beginner
 tags: [api, rest, http, authentication, cors, postman]
-prerequisites: []
+prerequisites: [i-01-how-apis-are-created-and-called, a-01-client-server-dns-http]
 concepts: [rest, http-methods, http-status-codes, idempotency, authentication, jwt, cors, api-gateway]
 ---
 
@@ -717,72 +717,6 @@ Böylece aynı isteği değiştirmeden farklı sunucularda test edebilirsin.
 Böylece tasarım, ürün listeleme, sepet ve kullanıcı akışları backend beklenmeden geliştirilebilir. Ancak canlıya çıkmadan önce mock yerine gerçek API ile entegrasyon mutlaka test edilmelidir.
 
 :::quiz{src="quiz.json"}
-:::
-
-## Orijinal PDF sayfaları
-
-:::callout{tone="info" title="Özgün görünüm"}
-Bu dersin metni *API REST Rehberi* PDF dosyasının 1–15. sayfalarının özgün hâlidir; sayfalar aşağıda PDF'teki görünümüyle yer alır.
-:::
-
-:::diagram{src="pdf-sayfa-01.png" alt="API REST Rehberi - PDF sayfa 1"}
-PDF sayfa 1 / 31
-:::
-
-:::diagram{src="pdf-sayfa-02.png" alt="API REST Rehberi - PDF sayfa 2"}
-PDF sayfa 2 / 31
-:::
-
-:::diagram{src="pdf-sayfa-03.png" alt="API REST Rehberi - PDF sayfa 3"}
-PDF sayfa 3 / 31
-:::
-
-:::diagram{src="pdf-sayfa-04.png" alt="API REST Rehberi - PDF sayfa 4"}
-PDF sayfa 4 / 31
-:::
-
-:::diagram{src="pdf-sayfa-05.png" alt="API REST Rehberi - PDF sayfa 5"}
-PDF sayfa 5 / 31
-:::
-
-:::diagram{src="pdf-sayfa-06.png" alt="API REST Rehberi - PDF sayfa 6"}
-PDF sayfa 6 / 31
-:::
-
-:::diagram{src="pdf-sayfa-07.png" alt="API REST Rehberi - PDF sayfa 7"}
-PDF sayfa 7 / 31
-:::
-
-:::diagram{src="pdf-sayfa-08.png" alt="API REST Rehberi - PDF sayfa 8"}
-PDF sayfa 8 / 31
-:::
-
-:::diagram{src="pdf-sayfa-09.png" alt="API REST Rehberi - PDF sayfa 9"}
-PDF sayfa 9 / 31
-:::
-
-:::diagram{src="pdf-sayfa-10.png" alt="API REST Rehberi - PDF sayfa 10"}
-PDF sayfa 10 / 31
-:::
-
-:::diagram{src="pdf-sayfa-11.png" alt="API REST Rehberi - PDF sayfa 11"}
-PDF sayfa 11 / 31
-:::
-
-:::diagram{src="pdf-sayfa-12.png" alt="API REST Rehberi - PDF sayfa 12"}
-PDF sayfa 12 / 31
-:::
-
-:::diagram{src="pdf-sayfa-13.png" alt="API REST Rehberi - PDF sayfa 13"}
-PDF sayfa 13 / 31
-:::
-
-:::diagram{src="pdf-sayfa-14.png" alt="API REST Rehberi - PDF sayfa 14"}
-PDF sayfa 14 / 31
-:::
-
-:::diagram{src="pdf-sayfa-15.png" alt="API REST Rehberi - PDF sayfa 15"}
-PDF sayfa 15 / 31
 :::
 
 :::next{lesson="i-03-api-ve-rest-api-tasarim-guvenlik-ve-idempotency"}

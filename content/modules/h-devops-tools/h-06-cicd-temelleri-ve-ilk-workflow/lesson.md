@@ -9,10 +9,10 @@ title:
 summary:
   tr: "CI/CD kavramlarını, pipeline aşamalarını ve branch protection'ı öğrenip ilk GitHub Actions workflow'unu yaz."
   en: "Learn CI/CD concepts, pipeline stages and branch protection, then write your first GitHub Actions workflow."
-durationMinutes: 12
+durationMinutes: 20
 level: beginner
 tags: [ci-cd, github-actions, pipeline, git, yaml]
-prerequisites: []
+prerequisites: [h-04-git-notes, f-02-code-journey-ci-cd]
 concepts: [continuous-integration, continuous-delivery, continuous-deployment, pipeline, fail-fast, build-once-deploy-many, branch-protection, workflow]
 ---
 
@@ -77,7 +77,7 @@ Continuous Delivery'de kod her an yayınlanabilir durumdadır ama canlıya çık
 
 **Pipeline**, kodun commit'ten canlı ortama kadar geçtiği otomatik adımlar zinciridir. Bir adım başarısız olursa zincir durur ve sonraki adımlar çalışmaz.
 
-:::diagram{src="sekil-01.png" alt="Pipeline adımları: Commit/Push, Build, Lint, Test, Güvenlik, Paketleme, Staging, Onay ve Canlı kutularının oklarla sıralandığı akış"}
+:::diagram{src="sekil-01.png" alt="Pipeline adımları: Commit/Push, Build, Lint, Test, Güvenlik, Paketleme, Staging, Onay ve Canlı kutularının oklarla sıralandığı akış|Pipeline stages: Commit/Push, Build, Lint, Test, Security, Package, Staging, Approval and Production boxes connected by arrows"}
 :::
 
 Aşamalar:
@@ -202,7 +202,7 @@ Avantajları:
 
 ## Temel kavramlar
 
-:::diagram{src="sekil-02.png" alt="GitHub Actions temel kavram zinciri: Event (push, pull_request), Workflow (.github/workflows/ci.yml), Job (test, build, deploy), Step (run / uses) ve Runner (ubuntu-latest)"}
+:::diagram{src="sekil-02.png" alt="GitHub Actions temel kavram zinciri: Event (push, pull_request), Workflow (.github/workflows/ci.yml), Job (test, build, deploy), Step (run / uses) ve Runner (ubuntu-latest)|GitHub Actions concept chain: Event (push, pull_request), Workflow (.github/workflows/ci.yml), Job (test, build, deploy), Step (run / uses) and Runner (ubuntu-latest)"}
 :::
 
 | Kavram | Anlamı |
@@ -309,45 +309,19 @@ Dosyayı push ettiğinde GitHub'da **Actions** sekmesinde çalıştığını gö
 CI'da npm install yerine npm ci kullanırım; lock dosyasına birebir uyar, daha hızlıdır ve her çalıştırmada aynı bağımlılık sürümlerini garanti eder.
 :::
 
+## Dene: pipeline aşamaları
+
+:::interactive{type="pipeline" stages=5 failureStage=0 retries=0}
+Aşamaları ekleyip çıkar, bir aşamayı başarısız yap ve "fail fast" davranışını izle: hata hangi aşamada olursa olsun sonraki aşamalar çalışmaz.
+:::
+
+:::callout{tone="info" title="İlgili dersler"}
+Bu konuyu başka bir açıdan anlatan dersler:
+
+- [Kodun Yolculuğu ve CI/CD (Kod ve Altyapı modülü)](/lessons/f-02-code-journey-ci-cd)
+:::
+
 :::quiz{src="quiz.json"}
-:::
-
-## Orijinal PDF sayfaları
-
-:::callout{tone="info" title="Özgün görünüm"}
-Bu dersin metni *CICD GitHub Actions Rehberi* PDF dosyasının 1–8. sayfalarının özgün hâlidir; sayfalar aşağıda PDF'teki görünümüyle yer alır.
-:::
-
-:::diagram{src="pdf-sayfa-01.png" alt="CICD GitHub Actions Rehberi - PDF sayfa 1"}
-PDF sayfa 1 / 33
-:::
-
-:::diagram{src="pdf-sayfa-02.png" alt="CICD GitHub Actions Rehberi - PDF sayfa 2"}
-PDF sayfa 2 / 33
-:::
-
-:::diagram{src="pdf-sayfa-03.png" alt="CICD GitHub Actions Rehberi - PDF sayfa 3"}
-PDF sayfa 3 / 33
-:::
-
-:::diagram{src="pdf-sayfa-04.png" alt="CICD GitHub Actions Rehberi - PDF sayfa 4"}
-PDF sayfa 4 / 33
-:::
-
-:::diagram{src="pdf-sayfa-05.png" alt="CICD GitHub Actions Rehberi - PDF sayfa 5"}
-PDF sayfa 5 / 33
-:::
-
-:::diagram{src="pdf-sayfa-06.png" alt="CICD GitHub Actions Rehberi - PDF sayfa 6"}
-PDF sayfa 6 / 33
-:::
-
-:::diagram{src="pdf-sayfa-07.png" alt="CICD GitHub Actions Rehberi - PDF sayfa 7"}
-PDF sayfa 7 / 33
-:::
-
-:::diagram{src="pdf-sayfa-08.png" alt="CICD GitHub Actions Rehberi - PDF sayfa 8"}
-PDF sayfa 8 / 33
 :::
 
 :::next{lesson="h-07-tetikleyiciler-secrets-cache-ve-testler"}

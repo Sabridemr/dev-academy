@@ -9,10 +9,10 @@ title:
 summary:
   tr: "Uçtan uca bir e-ticaret API'si, Google ile giriş ve veritabanı taslağıyla API mülakatına hazırlan."
   en: "Prepare for API interviews with an end-to-end e-commerce API, Sign in with Google and a database draft."
-durationMinutes: 15
+durationMinutes: 22
 level: intermediate
 tags: [api, e-commerce, oauth, postgresql, interview, cheat-sheet]
-prerequisites: []
+prerequisites: [i-03-api-ve-rest-api-tasarim-guvenlik-ve-idempotency]
 concepts: [endpoint-design, order-lifecycle, authorization-code-flow, database-schema, stock-reservation, race-condition, http-status-codes]
 ---
 
@@ -355,44 +355,6 @@ Koleksiyonda Auth, Products, Cart, Orders, Admin ve Webhooks klasörleri ile dur
 | **Latency** | İstek-cevap arası süre (ms) |
 
 :::quiz{src="quiz.json"}
-:::
-
-## Orijinal PDF sayfaları
-
-:::callout{tone="info" title="Özgün görünüm"}
-Bu dersin metni *API REST Rehberi* PDF dosyasının 24–31. sayfalarının özgün hâlidir; sayfalar aşağıda PDF'teki görünümüyle yer alır.
-:::
-
-:::diagram{src="pdf-sayfa-24.png" alt="API REST Rehberi - PDF sayfa 24"}
-PDF sayfa 24 / 31
-:::
-
-:::diagram{src="pdf-sayfa-25.png" alt="API REST Rehberi - PDF sayfa 25"}
-PDF sayfa 25 / 31
-:::
-
-:::diagram{src="pdf-sayfa-26.png" alt="API REST Rehberi - PDF sayfa 26"}
-PDF sayfa 26 / 31
-:::
-
-:::diagram{src="pdf-sayfa-27.png" alt="API REST Rehberi - PDF sayfa 27"}
-PDF sayfa 27 / 31
-:::
-
-:::diagram{src="pdf-sayfa-28.png" alt="API REST Rehberi - PDF sayfa 28"}
-PDF sayfa 28 / 31
-:::
-
-:::diagram{src="pdf-sayfa-29.png" alt="API REST Rehberi - PDF sayfa 29"}
-PDF sayfa 29 / 31
-:::
-
-:::diagram{src="pdf-sayfa-30.png" alt="API REST Rehberi - PDF sayfa 30"}
-PDF sayfa 30 / 31
-:::
-
-:::diagram{src="pdf-sayfa-31.png" alt="API REST Rehberi - PDF sayfa 31"}
-PDF sayfa 31 / 31
 :::
 
 :::next{lesson="i-05-api-testing-notes"}

@@ -67,6 +67,10 @@ export interface LoadedImage {
 
 /** Tek bir ders görselinin üst sınırı (API'den tek parça sunulur, veritabanında tutulur) */
 const MAX_IMAGE_BYTES = 15 * 1024 * 1024;
+/** Bu boyutun üstündeki görseller için uyarı (sayfa ağırlığı) */
+const WARN_IMAGE_BYTES = 500 * 1024;
+/** Ders başına önerilen en az düzyazı kelime sayısı */
+const MIN_PROSE_WORDS = 400;
 
 export interface LoadedModule {
   dir: string;
@@ -373,6 +377,47 @@ export function loadContent(root = findContentRoot()): LoadedContent {
         traces[f] = parsed.data;
       }
 
+      // İçerik kalitesi kontrolleri (uyarı; --strict ile hata)
+      const rawMd = readFileSync(mdFile, 'utf8');
+      if (/tüm hakları (yazarına|sahibine) aittir|not setinin \d+ sayfasından oluşur/i.test(rawMd)) {
+        issues.push({
+          severity: 'error',
+          file: rel(mdFile),
+          message:
+            'Üçüncü taraf not seti ifadesi: ders özgün metinle yazılmalı (telif riski)',
+        });
+      }
+      const proseWords = doc.blocks
+        .filter((b) => b.type === 'text')
+        .map((b) => (b.type === 'text' ? b.markdown : ''))
+        .join(' ')
+        .replace(/```[\s\S]*?```/g, ' ')
+        .split(/\s+/)
+        .filter(Boolean).length;
+      if (proseWords < MIN_PROSE_WORDS) {
+        issues.push({
+          severity: 'warning',
+          file: rel(mdFile),
+          message: `Düzyazı çok kısa (${proseWords} kelime, en az ${MIN_PROSE_WORDS} önerilir)`,
+        });
+      }
+      if (doc.meta.order > 1 && doc.meta.prerequisites.length === 0) {
+        issues.push({
+          severity: 'warning',
+          file: rel(mdFile),
+          message: 'Ön koşul tanımlı değil (prerequisites boş); ders ağı için en az bir ders bağlayın',
+        });
+      }
+      for (const [f, img] of Object.entries(images)) {
+        if (img.bytes > WARN_IMAGE_BYTES) {
+          issues.push({
+            severity: 'warning',
+            file: rel(join(lessonDir, f)),
+            message: `Görsel büyük (${Math.round(img.bytes / 1024)} KB, ${Math.round(WARN_IMAGE_BYTES / 1024)} KB üstü); webp ya da yeniden boyutlandırma önerilir`,
+          });
+        }
+      }
+
       // Blok referansları
       for (const b of doc.blocks) {
         if (b.type === 'trace' && !traces[b.src]) {
@@ -381,6 +426,16 @@ export function loadContent(root = findContentRoot()): LoadedContent {
             file: rel(mdFile),
             message: `İz dosyası bulunamadı ya da geçersiz: ${b.src}`,
           });
+        }
+        if (b.type === 'diagram' && images[b.src]) {
+          const alt = typeof b.alt === 'string' ? b.alt : b.alt.en;
+          if (!alt || typeof b.alt === 'string') {
+            issues.push({
+              severity: 'warning',
+              file: rel(mdFile),
+              message: `Raster görselin İngilizce alt metni yok (alt="tr|en"): ${b.src}`,
+            });
+          }
         }
         if (b.type === 'diagram' && !/^https?:\/\//.test(b.src) && !svgs[b.src] && !images[b.src]) {
           issues.push({

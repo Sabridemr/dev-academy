@@ -9,10 +9,10 @@ title:
 summary:
   tr: "Versiyonlama, webhook, pagination, hata yönetimi, güvenlik ve idempotency ile sağlam API tasarlamayı öğren."
   en: "Learn to design robust APIs with versioning, webhooks, pagination, error handling, security and idempotency."
-durationMinutes: 13
+durationMinutes: 25
 level: intermediate
 tags: [api, versioning, webhook, openapi, api-security, idempotency]
-prerequisites: []
+prerequisites: [i-02-api-ve-rest-api-temeller-ve-guvenlik, a-06-api-gateway]
 concepts: [api-versioning, webhook, pagination, error-handling, openapi, rest-vs-graphql, idor, idempotency]
 ---
 
@@ -578,53 +578,13 @@ Sunucu aynı anahtarla gelen tekrar isteği yeni sipariş yaratmak yerine ilk i�
 GET, PUT ve DELETE idempotenttir; POST değildir. Ödeme ve sipariş gibi işlemlerde Idempotency-Key ile tekrarları güvenli hale getiririm.
 :::
 
+## Dene: API rate limiting
+
+:::interactive{type="rate-limiter" algorithm="token-bucket" capacity=10 refillPerSec=2}
+Token bucket ve sliding window algoritmalarını karşılaştır; ani istek patlamasında hangi isteklerin 429 ile reddedildiğini izle.
+:::
+
 :::quiz{src="quiz.json"}
-:::
-
-## Orijinal PDF sayfaları
-
-:::callout{tone="info" title="Özgün görünüm"}
-Bu dersin metni *API REST Rehberi* PDF dosyasının 15–24. sayfalarının özgün hâlidir; sayfalar aşağıda PDF'teki görünümüyle yer alır.
-:::
-
-:::diagram{src="pdf-sayfa-15.png" alt="API REST Rehberi - PDF sayfa 15"}
-PDF sayfa 15 / 31
-:::
-
-:::diagram{src="pdf-sayfa-16.png" alt="API REST Rehberi - PDF sayfa 16"}
-PDF sayfa 16 / 31
-:::
-
-:::diagram{src="pdf-sayfa-17.png" alt="API REST Rehberi - PDF sayfa 17"}
-PDF sayfa 17 / 31
-:::
-
-:::diagram{src="pdf-sayfa-18.png" alt="API REST Rehberi - PDF sayfa 18"}
-PDF sayfa 18 / 31
-:::
-
-:::diagram{src="pdf-sayfa-19.png" alt="API REST Rehberi - PDF sayfa 19"}
-PDF sayfa 19 / 31
-:::
-
-:::diagram{src="pdf-sayfa-20.png" alt="API REST Rehberi - PDF sayfa 20"}
-PDF sayfa 20 / 31
-:::
-
-:::diagram{src="pdf-sayfa-21.png" alt="API REST Rehberi - PDF sayfa 21"}
-PDF sayfa 21 / 31
-:::
-
-:::diagram{src="pdf-sayfa-22.png" alt="API REST Rehberi - PDF sayfa 22"}
-PDF sayfa 22 / 31
-:::
-
-:::diagram{src="pdf-sayfa-23.png" alt="API REST Rehberi - PDF sayfa 23"}
-PDF sayfa 23 / 31
-:::
-
-:::diagram{src="pdf-sayfa-24.png" alt="API REST Rehberi - PDF sayfa 24"}
-PDF sayfa 24 / 31
 :::
 
 :::next{lesson="i-04-api-ve-rest-api-uctan-uca-ornek-ve-mulakat"}

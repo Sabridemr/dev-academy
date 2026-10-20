@@ -9,10 +9,10 @@ title:
 summary:
   tr: "SQL/NoSQL, CAP ve tutarlılık ödünleşimlerini mülakatta gerekçeleriyle savunmayı öğren."
   en: "Learn to defend SQL/NoSQL, CAP and consistency trade-offs with clear reasoning in interviews."
-durationMinutes: 12
+durationMinutes: 18
 level: intermediate
 tags: [system-design, food-delivery, trade-offs, interview-prep]
-prerequisites: []
+prerequisites: [j-10-sadakat-olcekleme-ve-en-iyi-uygulamalar]
 concepts: [sql-vs-nosql, acid, cap-theorem, eventual-consistency, horizontal-scaling, modular-monolith]
 ---
 
@@ -187,32 +187,5 @@ Notların son bölümündeki öneriler:
 :::quiz{src="quiz.json"}
 :::
 
-## Orijinal PDF sayfaları
-
-:::callout{tone="info" title="Özgün görünüm"}
-Bu dersin metni *Sistem Tasarimi Yemek Siparisi* PDF dosyasının 38–43. sayfalarının özgün hâlidir; sayfalar aşağıda PDF'teki görünümüyle yer alır.
-:::
-
-:::diagram{src="pdf-sayfa-38.png" alt="Sistem Tasarimi Yemek Siparisi - PDF sayfa 38"}
-PDF sayfa 38 / 43
-:::
-
-:::diagram{src="pdf-sayfa-39.png" alt="Sistem Tasarimi Yemek Siparisi - PDF sayfa 39"}
-PDF sayfa 39 / 43
-:::
-
-:::diagram{src="pdf-sayfa-40.png" alt="Sistem Tasarimi Yemek Siparisi - PDF sayfa 40"}
-PDF sayfa 40 / 43
-:::
-
-:::diagram{src="pdf-sayfa-41.png" alt="Sistem Tasarimi Yemek Siparisi - PDF sayfa 41"}
-PDF sayfa 41 / 43
-:::
-
-:::diagram{src="pdf-sayfa-42.png" alt="Sistem Tasarimi Yemek Siparisi - PDF sayfa 42"}
-PDF sayfa 42 / 43
-:::
-
-:::diagram{src="pdf-sayfa-43.png" alt="Sistem Tasarimi Yemek Siparisi - PDF sayfa 43"}
-PDF sayfa 43 / 43
+:::next{lesson="k-01-python-nasil-calisir"}
 :::

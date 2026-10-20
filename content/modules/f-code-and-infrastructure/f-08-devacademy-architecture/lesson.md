@@ -134,3 +134,6 @@ Duolingo, milyonlarca günlük kullanıcıya hizmet veren bir öğrenme uygulama
 
 :::quiz{src="quiz.json"}
 :::
+
+:::next{lesson="g-01-ml-foundations"}
+:::

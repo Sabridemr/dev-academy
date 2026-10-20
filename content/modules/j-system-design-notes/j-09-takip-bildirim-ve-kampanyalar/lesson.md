@@ -9,10 +9,10 @@ title:
 summary:
   tr: "Canlı sipariş takibi, güvenilir bildirim gönderimi ve kupon doğrulama sistemlerini tasarlamayı öğren."
   en: "Learn to design live order tracking, reliable notification delivery and coupon validation systems."
-durationMinutes: 13
+durationMinutes: 22
 level: intermediate
 tags: [system-design, food-delivery, real-time, notifications, promotions]
-prerequisites: []
+prerequisites: [j-08-sepet-odeme-ve-kurye-atama, e-03-twitter-timeline]
 concepts: [websocket, server-sent-events, pubsub, eta, exponential-backoff, dead-letter-queue, coupon-validation]
 ---
 
@@ -177,7 +177,7 @@ Kargo ile gönderimde canlı GPS gerekmez. Kargo firmasının webhook'unu veya A
 
 ### Mimari
 
-:::diagram{src="sekil-01.png" alt="Bildirim mimarisi: olay kaynakları, Kafka, Notification Service, kanallar ve kullanıcı"}
+:::diagram{src="sekil-01.png" alt="Bildirim mimarisi: olay kaynakları, Kafka, Notification Service, kanallar ve kullanıcı|Notification architecture: event sources, Kafka, Notification Service, channels and the user"}
 :::
 
 - **Push Service:** FCM / APNs
@@ -402,49 +402,19 @@ Kupon kullanım sayısı, dönüşüm oranı (kampanya gösterildi → kullanıl
 Toptan satışta en etkili kampanyalar kupon kodundan çok kademeli indirimlerdir: "10 koli üzeri %5, 50 koli üzeri %10", "5.000 TL üzeri kargo bedava", "Ramazan öncesi kuru meyve kampanyası". Aynı offers tablosu yapısına type = 'TIERED_QUANTITY' türü eklenerek kurulabilir. İlk siparişe özel bayi kuponu yeni bayi kazanmak için iyi bir başlangıçtır.
 :::
 
+## Dene: bildirim fan-out
+
+:::interactive{type="fan-out" mode="hybrid" avgFollowers=200 celebrityThreshold=5000}
+Kampanya bildiriminin milyonlarca kullanıcıya dağıtımında push (yazarken) ve pull (okurken) modellerini karşılaştır; ünlü hesap eşiğini değiştir.
+:::
+
+:::callout{tone="info" title="İlgili dersler"}
+Bu konuyu başka bir açıdan anlatan dersler:
+
+- [Twitter/X Timeline Fan-out vaka çalışması](/lessons/e-03-twitter-timeline)
+:::
+
 :::quiz{src="quiz.json"}
-:::
-
-## Orijinal PDF sayfaları
-
-:::callout{tone="info" title="Özgün görünüm"}
-Bu dersin metni *Sistem Tasarimi Yemek Siparisi* PDF dosyasının 23–31. sayfalarının özgün hâlidir; sayfalar aşağıda PDF'teki görünümüyle yer alır.
-:::
-
-:::diagram{src="pdf-sayfa-23.png" alt="Sistem Tasarimi Yemek Siparisi - PDF sayfa 23"}
-PDF sayfa 23 / 43
-:::
-
-:::diagram{src="pdf-sayfa-24.png" alt="Sistem Tasarimi Yemek Siparisi - PDF sayfa 24"}
-PDF sayfa 24 / 43
-:::
-
-:::diagram{src="pdf-sayfa-25.png" alt="Sistem Tasarimi Yemek Siparisi - PDF sayfa 25"}
-PDF sayfa 25 / 43
-:::
-
-:::diagram{src="pdf-sayfa-26.png" alt="Sistem Tasarimi Yemek Siparisi - PDF sayfa 26"}
-PDF sayfa 26 / 43
-:::
-
-:::diagram{src="pdf-sayfa-27.png" alt="Sistem Tasarimi Yemek Siparisi - PDF sayfa 27"}
-PDF sayfa 27 / 43
-:::
-
-:::diagram{src="pdf-sayfa-28.png" alt="Sistem Tasarimi Yemek Siparisi - PDF sayfa 28"}
-PDF sayfa 28 / 43
-:::
-
-:::diagram{src="pdf-sayfa-29.png" alt="Sistem Tasarimi Yemek Siparisi - PDF sayfa 29"}
-PDF sayfa 29 / 43
-:::
-
-:::diagram{src="pdf-sayfa-30.png" alt="Sistem Tasarimi Yemek Siparisi - PDF sayfa 30"}
-PDF sayfa 30 / 43
-:::
-
-:::diagram{src="pdf-sayfa-31.png" alt="Sistem Tasarimi Yemek Siparisi - PDF sayfa 31"}
-PDF sayfa 31 / 43
 :::
 
 :::next{lesson="j-10-sadakat-olcekleme-ve-en-iyi-uygulamalar"}

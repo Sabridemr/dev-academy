@@ -9,10 +9,10 @@ title:
 summary:
   tr: "Güvenlik taraması, SemVer sürümleme ve izlemeyle projen için uçtan uca bir CI/CD pipeline'ı kur."
   en: "Build an end-to-end CI/CD pipeline with security scanning, SemVer releases and monitoring."
-durationMinutes: 11
+durationMinutes: 20
 level: intermediate
 tags: [ci-cd, github-actions, monitoring, release, devops]
-prerequisites: []
+prerequisites: [h-08-docker-deploy-ve-guvenlik, a-13-observability-12-factor]
 concepts: [dependabot, codeql, semantic-versioning, health-check, dora-metrics, gitops, full-pipeline]
 ---
 
@@ -228,7 +228,7 @@ test:
 
 Toptan gıda e-ticaret siten (Node.js + PostgreSQL) için önerilen yapı:
 
-:::diagram{src="sekil-01.png" alt="Proje pipeline akışı: PR açıldı, Lint + Unit, Entegrasyon (PostgreSQL), Güvenlik (npm audit), Birleştirme (review); ardından main'e merge, Docker build (GHCR + SHA), Staging (migrate + smoke), Onay, Production (migrate + smoke)"}
+:::diagram{src="sekil-01.png" alt="Proje pipeline akışı: PR açıldı, Lint + Unit, Entegrasyon (PostgreSQL), Güvenlik (npm audit), Birleştirme (review); ardından main'e merge, Docker build (GHCR + SHA), Staging (migrate + smoke), Onay, Production (migrate + smoke)|Project pipeline flow: PR opened, Lint + Unit, Integration (PostgreSQL), Security (npm audit), Merge (review); then merge to main, Docker build (GHCR + SHA), Staging (migrate + smoke), Approval, Production (migrate + smoke)"}
 :::
 
 Dosya yapısı:
@@ -420,45 +420,19 @@ Kurulum kontrol listesi:
 6. Dependabot'u ve CodeQL'i etkinleştir.
 7. İlk deploy'dan önce rollback workflow'unu staging'de dene.
 
+## Dene: tam pipeline
+
+:::interactive{type="pipeline" stages=8 failureStage=0 retries=1}
+Lint, test, güvenlik taraması, paketleme, staging ve canlı aşamalarını içeren tam pipeline'ı çalıştır; bir aşamayı bozup hangi noktada durduğunu izle.
+:::
+
+:::callout{tone="info" title="İlgili dersler"}
+Bu konuyu başka bir açıdan anlatan dersler:
+
+- [Observability ve 12-Factor App](/lessons/a-13-observability-12-factor)
+:::
+
 :::quiz{src="quiz.json"}
-:::
-
-## Orijinal PDF sayfaları
-
-:::callout{tone="info" title="Özgün görünüm"}
-Bu dersin metni *CICD GitHub Actions Rehberi* PDF dosyasının 23–30. sayfalarının özgün hâlidir; sayfalar aşağıda PDF'teki görünümüyle yer alır.
-:::
-
-:::diagram{src="pdf-sayfa-23.png" alt="CICD GitHub Actions Rehberi - PDF sayfa 23"}
-PDF sayfa 23 / 33
-:::
-
-:::diagram{src="pdf-sayfa-24.png" alt="CICD GitHub Actions Rehberi - PDF sayfa 24"}
-PDF sayfa 24 / 33
-:::
-
-:::diagram{src="pdf-sayfa-25.png" alt="CICD GitHub Actions Rehberi - PDF sayfa 25"}
-PDF sayfa 25 / 33
-:::
-
-:::diagram{src="pdf-sayfa-26.png" alt="CICD GitHub Actions Rehberi - PDF sayfa 26"}
-PDF sayfa 26 / 33
-:::
-
-:::diagram{src="pdf-sayfa-27.png" alt="CICD GitHub Actions Rehberi - PDF sayfa 27"}
-PDF sayfa 27 / 33
-:::
-
-:::diagram{src="pdf-sayfa-28.png" alt="CICD GitHub Actions Rehberi - PDF sayfa 28"}
-PDF sayfa 28 / 33
-:::
-
-:::diagram{src="pdf-sayfa-29.png" alt="CICD GitHub Actions Rehberi - PDF sayfa 29"}
-PDF sayfa 29 / 33
-:::
-
-:::diagram{src="pdf-sayfa-30.png" alt="CICD GitHub Actions Rehberi - PDF sayfa 30"}
-PDF sayfa 30 / 33
 :::
 
 :::next{lesson="h-10-mulakat-soru-cevap-ve-ozet"}

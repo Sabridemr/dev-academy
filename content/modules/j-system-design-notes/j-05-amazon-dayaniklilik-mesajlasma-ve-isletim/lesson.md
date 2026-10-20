@@ -9,10 +9,10 @@ title:
 summary:
   tr: "Dayanıklılık desenleri, Kafka/RabbitMQ, kapasite hesabı ve Kubernetes ile sistemi ayakta tutmayı öğren."
   en: "Keep systems running with resilience patterns, Kafka/RabbitMQ messaging, capacity math and Kubernetes."
-durationMinutes: 12
+durationMinutes: 25
 level: advanced
 tags: [system-design, kafka, rabbitmq, kubernetes, observability, reliability]
-prerequisites: []
+prerequisites: [j-04-amazon-mimari-veri-ve-siparis-akisi, a-09-message-queues-event-driven]
 concepts: [circuit-breaker, slo, canary-deploy, capacity-estimation, kafka-partition, dead-letter-queue, service-discovery, hpa]
 ---
 
@@ -72,13 +72,13 @@ Bu hesap neyin darboğaz olacağını gösterir: okumalar cache ve CDN ile çöz
 
 Büyük sistemlerin kan damarı mesaj kuyruklarıdır. Servisler birbirini doğrudan çağırmak yerine mesaj bırakır. Böylece bir servis yavaşlasa ya da çökse bile diğerleri çalışmaya devam eder, ani yük patlamaları kuyrukta birikip sırayla işlenir.
 
-:::diagram{src="sekil-13.png" alt="Dört mesajlaşma deseni: Point-to-point (RabbitMQ, SQS), Pub/Sub (Kafka, SNS), Event sourcing (Kafka log) ve CQRS (Kafka + Elastic)"}
+:::diagram{src="sekil-13.png" alt="Dört mesajlaşma deseni: Point-to-point (RabbitMQ, SQS), Pub/Sub (Kafka, SNS), Event sourcing (Kafka log) ve CQRS (Kafka + Elastic)|Four messaging patterns: point-to-point (RabbitMQ, SQS), pub/sub (Kafka, SNS), event sourcing (Kafka log) and CQRS (Kafka + Elastic)"}
 Şekil 13 – Mesajlaşma desenleri
 :::
 
 ### Apache Kafka: dağıtık commit log
 
-:::diagram{src="sekil-11.png" alt="Sipariş servisi (producer) 3 partition'lı orders topic'ine yazar; P0, P1, P2 partition'ları offset'li kalıcı log tutar; Stok consumer group'unda Stok-1 P0 ve P1'i, Stok-2 P2'yi, E-posta grubunda Mail-1 üç partition'ı da okur"}
+:::diagram{src="sekil-11.png" alt="Sipariş servisi (producer) 3 partition'lı orders topic'ine yazar; P0, P1, P2 partition'ları offset'li kalıcı log tutar; Stok consumer group'unda Stok-1 P0 ve P1'i, Stok-2 P2'yi, E-posta grubunda Mail-1 üç partition'ı da okur|The order service (producer) writes to the orders topic with 3 partitions; P0, P1 and P2 keep a durable log with offsets; in the Inventory consumer group Inventory-1 reads P0 and P1 and Inventory-2 reads P2, while Mail-1 in the Email group reads all three partitions"}
 Şekil 11 – Kafka: topic, partition, offset ve consumer group
 :::
 
@@ -93,7 +93,7 @@ Büyük sistemlerin kan damarı mesaj kuyruklarıdır. Servisler birbirini doğr
 
 ### RabbitMQ: akıllı yönlendiren mesaj kuyruğu
 
-:::diagram{src="sekil-12.png" alt="Producer mesajı Exchange'e gönderir; exchange routing key'e göre q.email, q.sms ve q.invoice kuyruklarına dağıtır, her kuyruğun consumer'ı ACK verir; 3 denemede başarısız olan mesaj DLQ'ya düşer"}
+:::diagram{src="sekil-12.png" alt="Producer mesajı Exchange'e gönderir; exchange routing key'e göre q.email, q.sms ve q.invoice kuyruklarına dağıtır, her kuyruğun consumer'ı ACK verir; 3 denemede başarısız olan mesaj DLQ'ya düşer|The producer sends a message to an exchange; the exchange routes it by routing key to the q.email, q.sms and q.invoice queues, each queue's consumer ACKs; a message that fails three attempts lands in the DLQ"}
 Şekil 12 – RabbitMQ: exchange, routing key, queue, ACK ve Dead Letter Queue
 :::
 
@@ -139,7 +139,7 @@ Aynı mesaj iki kez gelebilir (idempotent tüketici yaz). Mesajların sırası b
 
 ## 18. Konteyner ve Kubernetes
 
-:::diagram{src="sekil-14.png" alt="3 AZ'li Kubernetes cluster: Ingress dış trafiği stok-svc Service'ine iletir, Service üç stok:v2 pod'una dağıtır; HPA CPU yüzde 70'i geçince pod ekler; ConfigMap ve Secret ayar ve şifreleri tutar"}
+:::diagram{src="sekil-14.png" alt="3 AZ'li Kubernetes cluster: Ingress dış trafiği stok-svc Service'ine iletir, Service üç stok:v2 pod'una dağıtır; HPA CPU yüzde 70'i geçince pod ekler; ConfigMap ve Secret ayar ve şifreleri tutar|A 3-AZ Kubernetes cluster: Ingress forwards external traffic to the stock-svc Service, which spreads it across three stock:v2 pods; the HPA adds pods above 70% CPU; ConfigMap and Secret hold settings and credentials"}
 Şekil 14 – Kubernetes: Ingress, Service, Pod, HPA
 :::
 
@@ -170,37 +170,20 @@ Aynı mesaj iki kez gelebilir (idempotent tüketici yaz). Mesajların sırası b
 Amazon'u Amazon yapan tek bir teknoloji değil; bağımsız ekipler, bağımsız servisler, her şeyin ölçülmesi ve "hata olacak" varsayımıyla tasarım yapılmasıdır. Kritik veride (stok, para) tutarlılık, geri kalan her yerde hız ve erişilebilirlik seçilir.
 :::
 
+## Dene: sipariş olayları kuyrukta
+
+:::interactive{type="message-queue" partitions=3 consumers=3 producers=2 failureRate=0.1 idempotent=true maxRetries=2}
+Consumer sayısını ve hata oranını değiştir; yeniden denemelerin ve idempotent tüketimin çift işlemeyi nasıl önlediğini gözle.
+:::
+
+:::callout{tone="info" title="İlgili dersler"}
+Bu konuyu başka bir açıdan anlatan dersler:
+
+- [Amazon Ölçeğinde E-ticaret vaka çalışması](/lessons/e-01-amazon-scale-ecommerce)
+- [Mesaj Kuyrukları ve Event-Driven Mimari](/lessons/a-09-message-queues-event-driven)
+:::
+
 :::quiz{src="quiz.json"}
-:::
-
-## Orijinal PDF sayfaları
-
-:::callout{tone="info" title="Özgün görünüm"}
-Bu dersin metni *Amazon Sistem Tasarimi* PDF dosyasının 9–14. sayfalarının özgün hâlidir; sayfalar aşağıda PDF'teki görünümüyle yer alır.
-:::
-
-:::diagram{src="pdf-sayfa-09.png" alt="Amazon Sistem Tasarimi - PDF sayfa 9"}
-PDF sayfa 9 / 14
-:::
-
-:::diagram{src="pdf-sayfa-10.png" alt="Amazon Sistem Tasarimi - PDF sayfa 10"}
-PDF sayfa 10 / 14
-:::
-
-:::diagram{src="pdf-sayfa-11.png" alt="Amazon Sistem Tasarimi - PDF sayfa 11"}
-PDF sayfa 11 / 14
-:::
-
-:::diagram{src="pdf-sayfa-12.png" alt="Amazon Sistem Tasarimi - PDF sayfa 12"}
-PDF sayfa 12 / 14
-:::
-
-:::diagram{src="pdf-sayfa-13.png" alt="Amazon Sistem Tasarimi - PDF sayfa 13"}
-PDF sayfa 13 / 14
-:::
-
-:::diagram{src="pdf-sayfa-14.png" alt="Amazon Sistem Tasarimi - PDF sayfa 14"}
-PDF sayfa 14 / 14
 :::
 
 :::next{lesson="j-06-giris-mimari-ve-siparis-akisi"}

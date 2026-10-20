@@ -934,11 +934,11 @@ export const CURRICULUM: CurriculumModule[] = [
         12,
         'ai-for-devops-notes',
         {
-          tr: 'DevOps için Yapay Zeka: Başlangıçtan İleri Seviyeye Tam Notlar',
+          tr: 'DevOps için Yapay Zekâ: Başlangıçtan İleri Seviyeye Tam Notlar',
           en: 'AI for DevOps Complete Notes (Beginner to Advanced)',
         },
         {
-          tr: "Yapay zekanın CI/CD, altyapı yönetimi, izleme ve gözlemlenebilirlik, AIOps, olay yönetimi, log analizi, bulut maliyeti, DevSecOps, otomasyon, kodlama asistanları, Kubernetes ve Docker'da kullanımını, araçları, en iyi uygulamaları ve mülakat sorularını kapsar.",
+          tr: "Yapay zekânın CI/CD, altyapı yönetimi, izleme ve gözlemlenebilirlik, AIOps, olay yönetimi, log analizi, bulut maliyeti, DevSecOps, otomasyon, kodlama asistanları, Kubernetes ve Docker'da kullanımını, araçları, en iyi uygulamaları ve mülakat sorularını kapsar.",
           en: 'Covers how AI is used in CI/CD, infrastructure management, monitoring and observability, AIOps, incident management, log analysis, cloud cost, DevSecOps, automation, coding assistants, Kubernetes and Docker, along with tools, best practices and interview questions.',
         },
       ),

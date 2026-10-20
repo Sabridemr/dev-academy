@@ -9,10 +9,10 @@ title:
 summary:
   tr: "Restoran araması, menü önbelleği ve Saga ile Outbox desenli sipariş servisini tasarlamayı öğren."
   en: "Learn to design restaurant search, menu caching and an order service using the Saga and Outbox patterns."
-durationMinutes: 14
+durationMinutes: 22
 level: intermediate
 tags: [system-design, food-delivery, search, caching, order-service]
-prerequisites: []
+prerequisites: [j-06-giris-mimari-ve-siparis-akisi, e-04-uber-geo-matching]
 concepts: [elasticsearch, cache-aside, ttl, state-machine, saga-pattern, outbox-pattern, idempotency]
 ---
 
@@ -39,7 +39,7 @@ concepts: [elasticsearch, cache-aside, ttl, state-machine, saga-pattern, outbox-
 
 ### Mimari
 
-:::diagram{src="sekil-01.png" alt="Arama mimarisi: Mobil uygulama, API Gateway, Search Service ve Elasticsearch"}
+:::diagram{src="sekil-01.png" alt="Arama mimarisi: Mobil uygulama, API Gateway, Search Service ve Elasticsearch|Search architecture: mobile app, API Gateway, Search Service and Elasticsearch"}
 :::
 
 | Bileşen | Görevi |
@@ -67,7 +67,7 @@ concepts: [elasticsearch, cache-aside, ttl, state-machine, saga-pattern, outbox-
 
 ### Arama sorgusu akışı (önbellek mantığı)
 
-:::diagram{src="sekil-02.png" alt="Arama sorgusu akışı: Redis önbellek kontrolü, Elasticsearch sorgusu, sıralama ve Redis'e yazma"}
+:::diagram{src="sekil-02.png" alt="Arama sorgusu akışı: Redis önbellek kontrolü, Elasticsearch sorgusu, sıralama ve Redis'e yazma|Search query flow: Redis cache check, Elasticsearch query, ranking and writing back to Redis"}
 :::
 
 **TTL (Time To Live):** Önbellekteki verinin ne kadar süre geçerli kalacağıdır. 5–10 dakika sonra veri silinir ve bir sonraki istekte tazesi alınır. Bu, hız ile güncellik arasındaki dengeyi sağlar.
@@ -129,7 +129,7 @@ Birkaç yüz ürünlük bir katalogda Elasticsearch'e gerek yok. PostgreSQL'in t
 
 ### Restoran kayıt akışı
 
-:::diagram{src="sekil-03.png" alt="Restoran kayıt akışı: kayıt, belge doğrulama, admin onayı ve yayına alma"}
+:::diagram{src="sekil-03.png" alt="Restoran kayıt akışı: kayıt, belge doğrulama, admin onayı ve yayına alma|Restaurant onboarding flow: registration, document verification, admin approval and going live"}
 :::
 
 Notlardaki GST (Hindistan vergi kaydı) ve FSSAI (Hindistan gıda güvenliği ruhsatı), Türkiye'de vergi levhası ve işletme kayıt/gıda belgelerine karşılık gelir.
@@ -256,7 +256,7 @@ Restoran yerine tedarikçi veya kendi depon, menü yerine ürün kataloğu düş
 
 ### Sipariş yaşam döngüsü (state machine)
 
-:::diagram{src="sekil-04.png" alt="Sipariş yaşam döngüsü: CREATED durumundan DELIVERED durumuna geçişler"}
+:::diagram{src="sekil-04.png" alt="Sipariş yaşam döngüsü: CREATED durumundan DELIVERED durumuna geçişler|Order lifecycle: transitions from CREATED to DELIVERED"}
 :::
 
 - Ödeme başarısız olursa veya kullanıcı iptal ederse: → **CANCELLED**
@@ -392,45 +392,19 @@ Metrikler: sipariş oluşturma başarı oranı, iptal oranı, ortalama işlem s�
 Toptan satış sipariş durumları: PENDING_PAYMENT → PAID (veya havalede AWAITING_TRANSFER) → PREPARING → SHIPPED → DELIVERED, ayrıca CANCELLED ve REFUNDED. Outbox desenini tek bir uygulamada da kullanabilirsin: sipariş ile "e-posta gönder" görevi aynı transaction'da kaydedilir, böylece onay e-postası asla kaybolmaz.
 :::
 
+## Dene: yakındaki restoranları bulmak
+
+:::interactive{type="geo-index" drivers=40 resolution=7 showBoundaryProblem=true}
+Coğrafi ızgara çözünürlüğünü değiştir; hücre sınırlarındaki "yakın ama farklı hücrede" problemini ve komşu hücre sorgusunu gözle.
+:::
+
+:::callout{tone="info" title="İlgili dersler"}
+Bu konuyu başka bir açıdan anlatan dersler:
+
+- [Uber: Coğrafi Eşleştirme vaka çalışması](/lessons/e-04-uber-geo-matching)
+:::
+
 :::quiz{src="quiz.json"}
-:::
-
-## Orijinal PDF sayfaları
-
-:::callout{tone="info" title="Özgün görünüm"}
-Bu dersin metni *Sistem Tasarimi Yemek Siparisi* PDF dosyasının 8–15. sayfalarının özgün hâlidir; sayfalar aşağıda PDF'teki görünümüyle yer alır.
-:::
-
-:::diagram{src="pdf-sayfa-08.png" alt="Sistem Tasarimi Yemek Siparisi - PDF sayfa 8"}
-PDF sayfa 8 / 43
-:::
-
-:::diagram{src="pdf-sayfa-09.png" alt="Sistem Tasarimi Yemek Siparisi - PDF sayfa 9"}
-PDF sayfa 9 / 43
-:::
-
-:::diagram{src="pdf-sayfa-10.png" alt="Sistem Tasarimi Yemek Siparisi - PDF sayfa 10"}
-PDF sayfa 10 / 43
-:::
-
-:::diagram{src="pdf-sayfa-11.png" alt="Sistem Tasarimi Yemek Siparisi - PDF sayfa 11"}
-PDF sayfa 11 / 43
-:::
-
-:::diagram{src="pdf-sayfa-12.png" alt="Sistem Tasarimi Yemek Siparisi - PDF sayfa 12"}
-PDF sayfa 12 / 43
-:::
-
-:::diagram{src="pdf-sayfa-13.png" alt="Sistem Tasarimi Yemek Siparisi - PDF sayfa 13"}
-PDF sayfa 13 / 43
-:::
-
-:::diagram{src="pdf-sayfa-14.png" alt="Sistem Tasarimi Yemek Siparisi - PDF sayfa 14"}
-PDF sayfa 14 / 43
-:::
-
-:::diagram{src="pdf-sayfa-15.png" alt="Sistem Tasarimi Yemek Siparisi - PDF sayfa 15"}
-PDF sayfa 15 / 43
 :::
 
 :::next{lesson="j-08-sepet-odeme-ve-kurye-atama"}

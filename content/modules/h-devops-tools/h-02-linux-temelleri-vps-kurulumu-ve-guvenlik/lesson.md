@@ -9,10 +9,10 @@ title:
 summary:
   tr: "Linux temellerini öğren, bir VPS kurup SSH anahtarı, UFW ve Fail2ban ile güvenli hâle getir."
   en: "Learn Linux basics, then set up a VPS and secure it with SSH keys, UFW and Fail2ban."
-durationMinutes: 15
+durationMinutes: 25
 level: beginner
 tags: [linux, vps, terminal, ssh, guvenlik, dns]
-prerequisites: []
+prerequisites: [h-01-linux-notes]
 concepts: [dosya-sistemi, dosya-izinleri, paket-yonetimi, systemd, ssh-anahtari, ufw, fail2ban, dns-kaydi]
 ---
 
@@ -507,48 +507,6 @@ dig alanadi.com +short
 :::
 
 :::quiz{src="quiz.json"}
-:::
-
-## Orijinal PDF sayfaları
-
-:::callout{tone="info" title="Özgün görünüm"}
-Bu dersin metni *Linux VPS Rehberi* PDF dosyasının 1–9. sayfalarının özgün hâlidir; sayfalar aşağıda PDF'teki görünümüyle yer alır.
-:::
-
-:::diagram{src="pdf-sayfa-01.png" alt="Linux VPS Rehberi - PDF sayfa 1"}
-PDF sayfa 1 / 19
-:::
-
-:::diagram{src="pdf-sayfa-02.png" alt="Linux VPS Rehberi - PDF sayfa 2"}
-PDF sayfa 2 / 19
-:::
-
-:::diagram{src="pdf-sayfa-03.png" alt="Linux VPS Rehberi - PDF sayfa 3"}
-PDF sayfa 3 / 19
-:::
-
-:::diagram{src="pdf-sayfa-04.png" alt="Linux VPS Rehberi - PDF sayfa 4"}
-PDF sayfa 4 / 19
-:::
-
-:::diagram{src="pdf-sayfa-05.png" alt="Linux VPS Rehberi - PDF sayfa 5"}
-PDF sayfa 5 / 19
-:::
-
-:::diagram{src="pdf-sayfa-06.png" alt="Linux VPS Rehberi - PDF sayfa 6"}
-PDF sayfa 6 / 19
-:::
-
-:::diagram{src="pdf-sayfa-07.png" alt="Linux VPS Rehberi - PDF sayfa 7"}
-PDF sayfa 7 / 19
-:::
-
-:::diagram{src="pdf-sayfa-08.png" alt="Linux VPS Rehberi - PDF sayfa 8"}
-PDF sayfa 8 / 19
-:::
-
-:::diagram{src="pdf-sayfa-09.png" alt="Linux VPS Rehberi - PDF sayfa 9"}
-PDF sayfa 9 / 19
 :::
 
 :::next{lesson="h-03-canliya-alma-yedekleme-ve-bakim"}

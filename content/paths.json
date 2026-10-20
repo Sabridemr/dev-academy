@@ -55,7 +55,8 @@
     "items": [
       "g-artificial-intelligence",
       "a-system-design-fundamentals/a-07-caching",
-      "a-system-design-fundamentals/a-09-message-queues-event-driven"
+      "a-system-design-fundamentals/a-09-message-queues-event-driven",
+      "h-devops-tools/h-12-ai-for-devops-notes"
     ]
   },
   {
@@ -96,7 +97,51 @@
       "a-system-design-fundamentals/a-12-replication",
       "d-database-design/d-04-sql-vs-nosql",
       "e-case-studies",
-      "c-design-patterns/c-04-distributed-patterns"
+      "c-design-patterns/c-04-distributed-patterns",
+      "j-system-design-notes/j-01-must-know-system-design-patterns",
+      "j-system-design-notes/j-02-system-design-notes-part-1",
+      "h-devops-tools/h-10-mulakat-soru-cevap-ve-ozet",
+      "i-api-sql-testing/i-04-api-ve-rest-api-uctan-uca-ornek-ve-mulakat",
+      "j-system-design-notes/j-11-odunlesimler-mulakat-ve-ozet"
+    ]
+  },
+  {
+    "id": "devops",
+    "slug": "devops",
+    "title": {
+      "tr": "DevOps ve Altyapı",
+      "en": "DevOps and Infrastructure"
+    },
+    "description": {
+      "tr": "Linux ve Git'ten CI/CD, Docker, Kubernetes ve gözlemlenebilirliğe.",
+      "en": "From Linux and Git to CI/CD, Docker, Kubernetes and observability."
+    },
+    "icon": "container",
+    "items": [
+      "h-devops-tools",
+      "f-code-and-infrastructure",
+      "a-system-design-fundamentals/a-13-observability-12-factor"
+    ]
+  },
+  {
+    "id": "beginner",
+    "slug": "beginner",
+    "title": {
+      "tr": "Yeni Başlayan",
+      "en": "Beginner"
+    },
+    "description": {
+      "tr": "Programlamaya Python ile başla; web'in ve sistemlerin nasıl çalıştığını öğren.",
+      "en": "Start programming with Python and learn how the web and systems work."
+    },
+    "icon": "rocket",
+    "items": [
+      "k-python",
+      "i-api-sql-testing/i-01-how-apis-are-created-and-called",
+      "a-system-design-fundamentals/a-01-client-server-dns-http",
+      "a-system-design-fundamentals/a-03-horizontal-vertical-scaling",
+      "h-devops-tools/h-01-linux-notes",
+      "h-devops-tools/h-04-git-notes"
     ]
   }
 ]

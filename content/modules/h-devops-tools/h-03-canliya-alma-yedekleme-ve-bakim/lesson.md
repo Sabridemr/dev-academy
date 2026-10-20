@@ -9,10 +9,10 @@ title:
 summary:
   tr: "Uygulamanı VPS'te Nginx, systemd ya da Docker Compose ile yayına al; yedekle, izle ve sorun gider."
   en: "Deploy your app on a VPS with Nginx, systemd or Docker Compose, then back it up, monitor and fix it."
-durationMinutes: 12
+durationMinutes: 22
 level: intermediate
 tags: [linux, vps, deployment, nginx, docker, backup]
-prerequisites: []
+prerequisites: [h-02-linux-temelleri-vps-kurulumu-ve-guvenlik, f-03-kubernetes-basics]
 concepts: [ters-vekil, lets-encrypt, systemd-servisi, docker-compose, caddy, github-actions, cron, yedekleme]
 ---
 
@@ -543,52 +543,6 @@ rsync -avz ./site/ magaza:/var/www/magaza/
 :::
 
 :::quiz{src="quiz.json"}
-:::
-
-## Orijinal PDF sayfaları
-
-:::callout{tone="info" title="Özgün görünüm"}
-Bu dersin metni *Linux VPS Rehberi* PDF dosyasının 10–19. sayfalarının özgün hâlidir; sayfalar aşağıda PDF'teki görünümüyle yer alır.
-:::
-
-:::diagram{src="pdf-sayfa-10.png" alt="Linux VPS Rehberi - PDF sayfa 10"}
-PDF sayfa 10 / 19
-:::
-
-:::diagram{src="pdf-sayfa-11.png" alt="Linux VPS Rehberi - PDF sayfa 11"}
-PDF sayfa 11 / 19
-:::
-
-:::diagram{src="pdf-sayfa-12.png" alt="Linux VPS Rehberi - PDF sayfa 12"}
-PDF sayfa 12 / 19
-:::
-
-:::diagram{src="pdf-sayfa-13.png" alt="Linux VPS Rehberi - PDF sayfa 13"}
-PDF sayfa 13 / 19
-:::
-
-:::diagram{src="pdf-sayfa-14.png" alt="Linux VPS Rehberi - PDF sayfa 14"}
-PDF sayfa 14 / 19
-:::
-
-:::diagram{src="pdf-sayfa-15.png" alt="Linux VPS Rehberi - PDF sayfa 15"}
-PDF sayfa 15 / 19
-:::
-
-:::diagram{src="pdf-sayfa-16.png" alt="Linux VPS Rehberi - PDF sayfa 16"}
-PDF sayfa 16 / 19
-:::
-
-:::diagram{src="pdf-sayfa-17.png" alt="Linux VPS Rehberi - PDF sayfa 17"}
-PDF sayfa 17 / 19
-:::
-
-:::diagram{src="pdf-sayfa-18.png" alt="Linux VPS Rehberi - PDF sayfa 18"}
-PDF sayfa 18 / 19
-:::
-
-:::diagram{src="pdf-sayfa-19.png" alt="Linux VPS Rehberi - PDF sayfa 19"}
-PDF sayfa 19 / 19
 :::
 
 :::next{lesson="h-04-git-notes"}
