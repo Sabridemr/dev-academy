@@ -102,10 +102,11 @@ test('CSP başlığı var ve ders sayfası (kod, diyagram, animasyon) ihlalsiz �
   expect(violations).toEqual([]);
 });
 
-test('komut paleti ⌘K ile açılır ve ders bulur', async ({ page }) => {
+test('komut paleti açılır ve ders bulur', async ({ page }) => {
   await page.goto('/');
-  await page.keyboard.press('ControlOrMeta+K');
-  const box = page.getByRole('combobox');
+  // Masaüstünde ⌘K, mobilde başlıktaki arama düğmesi; ikisi de aynı paleti açar
+  await page.getByRole('button', { name: 'Ara', exact: true }).first().click();
+  const box = page.getByRole('combobox', { name: 'Ara' });
   await expect(box).toBeVisible();
   await box.fill('round-robin');
   await expect(page.getByRole('option', { name: /Load Balancer/ }).first()).toBeVisible();

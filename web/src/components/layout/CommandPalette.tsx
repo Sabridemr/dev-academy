@@ -162,6 +162,7 @@ export function CommandPalette() {
           placeholder={t('palette.placeholder')}
           className="h-14 w-full bg-transparent text-base outline-none placeholder:text-muted/70"
           role="combobox"
+          aria-label={t('nav.search')}
           aria-expanded="true"
           aria-controls="palette-list"
           aria-activedescendant={items[active] ? `palette-${items[active].key}` : undefined}
