@@ -6,6 +6,7 @@
   "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",
+    "start:lan": "pnpm --filter @devacademy/shared build && expo start --lan",
     "dev": "expo start",
     "android": "expo run:android",
     "ios": "expo run:ios",

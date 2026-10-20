@@ -47,7 +47,7 @@ Tam yığını Docker ile çalıştırmak için:
 
 ```bash
 docker compose --profile app up -d --build
-docker compose run --rm seed
+docker compose run --rm --build seed
 ```
 
 ## Ev sunucusunda (LAN) çalıştırma
@@ -57,7 +57,7 @@ Tam yığın Docker'da, mobil uygulama ise sunucudaki Metro'dan telefona yüklen
 ```bash
 cp .env.example .env            # PUBLIC_HOST=<sunucunun LAN IP'si>, JWT_ACCESS_SECRET'ı değiştirin
 docker compose --profile app up -d --build
-docker compose run --rm seed    # içeriği yükler (ilk kurulum ve içerik değiştikçe)
+docker compose run --rm --build seed   # içeriği yükler (ilk kurulum ve içerik değiştikçe; --build eski imajı kullanmayı önler)
 ```
 
 - Web: `http://<LAN-IP>:3000`, API: `http://<LAN-IP>:4000/api/v1`. `PUBLIC_HOST` değişince `--build` ile web
@@ -66,12 +66,21 @@ docker compose run --rm seed    # içeriği yükler (ilk kurulum ve içerik değ
   (expo-dev-client) üretilip telefona kurulur, sonra JS sunucudaki Metro'dan gelir:
 
 ```bash
-cd mobile && cp .env.example .env    # EXPO_PUBLIC_API_URL=http://<LAN-IP>:4000/api/v1, EXPO_PUBLIC_WEB_URL=http://<LAN-IP>:3000
-npx eas-cli login && npx eas-cli build --profile development --platform android   # tek seferlik; APK'yı telefona kurun
-pnpm start --lan                     # Metro :8081; telefondaki DevAcademy (Dev) uygulaması QR/adresle bağlanır
+pnpm install                                   # depo kökünde (Docker'dan bağımsız; Metro için Node 22+ gerekir)
+cd mobile && npx eas-cli login && npx eas-cli build --profile development --platform android   # tek seferlik; APK'yı telefona kurun
+pnpm start:lan                                 # shared paketini derler + Metro'yu LAN'da açar (:8081)
 ```
 
-Telefon ve sunucu aynı ağda olmalı; 3000, 4000 ve 8081 portları sunucu güvenlik duvarında açık olmalıdır.
+- `pnpm start:lan` çıktısındaki `exp+devacademy://expo-development-client/?url=http://<LAN-IP>:8081` adresini
+  telefondaki **DevAcademy (Dev)** uygulamasına girin (ya da QR'ı okutun). API ve web adresi geliştirme
+  derlemesinde Metro'nun çalıştığı makineden otomatik türetilir; `mobile/.env` yalnızca farklı bir adres
+  gerekiyorsa (ör. API başka sunucuda) doldurulur.
+- Metro çalışmadan `@devacademy/shared` çözülemez: `pnpm start` yerine `pnpm start:lan` kullanın ya da önce
+  `pnpm --filter @devacademy/shared build` çalıştırın.
+
+Telefon ve sunucu aynı ağda olmalı; 3000, 4000 ve 8081 portları sunucu güvenlik duvarında açık olmalıdır. Sunucuya
+modemden sabit IP (DHCP rezervasyonu) verin: IP değişirse `PUBLIC_HOST` güncellenip web imajı `--build` ile
+yeniden derlenmeli ve seed tekrar çalıştırılmalıdır (`docker compose run --rm --build seed`).
 
 ## Sık kullanılan komutlar
 
