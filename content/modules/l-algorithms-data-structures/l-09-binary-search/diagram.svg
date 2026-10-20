@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 400" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">İkili arama adımları</title>
+  <desc id="desc">Sıralı [3, 8, 12, 17, 23, 31, 42, 56] dizisinde 31 aranıyor. Birinci turda orta 17, sol yarı elenir; ikinci turda orta 31 bulunur. Altta adım sayısının log n ile büyüdüğü not edilir.</desc>
+  <text x="40" y="40" font-size="16" font-weight="600" fill="var(--da-fg)" font-family="inherit">Hedef: 31 · dizi sıralı</text>
+
+  <!-- Tur 1 -->
+  <text x="40" y="100" font-size="13" fill="var(--da-muted)" font-family="inherit">Tur 1</text>
+  <g stroke="var(--da-border)" stroke-width="1.5">
+    <rect x="120" y="76" width="80" height="44" rx="6" fill="var(--da-surface)"/>
+    <rect x="210" y="76" width="80" height="44" rx="6" fill="var(--da-surface)"/>
+    <rect x="300" y="76" width="80" height="44" rx="6" fill="var(--da-surface)"/>
+    <rect x="390" y="76" width="80" height="44" rx="6" fill="var(--da-accent)" fill-opacity="0.25" stroke="var(--da-accent)"/>
+    <rect x="480" y="76" width="80" height="44" rx="6" fill="var(--da-surface)"/>
+    <rect x="570" y="76" width="80" height="44" rx="6" fill="var(--da-surface)"/>
+    <rect x="660" y="76" width="80" height="44" rx="6" fill="var(--da-surface)"/>
+    <rect x="750" y="76" width="80" height="44" rx="6" fill="var(--da-surface)"/>
+  </g>
+  <g font-size="15" fill="var(--da-fg)" text-anchor="middle" font-family="inherit">
+    <text x="160" y="104">3</text><text x="250" y="104">8</text><text x="340" y="104">12</text><text x="430" y="104">17</text>
+    <text x="520" y="104">23</text><text x="610" y="104">31</text><text x="700" y="104">42</text><text x="790" y="104">56</text>
+  </g>
+  <g font-size="12" fill="var(--da-primary)" text-anchor="middle" font-family="inherit">
+    <text x="160" y="140">sol=0</text><text x="430" y="140">orta=3</text><text x="790" y="140">sag=7</text>
+  </g>
+  <text x="430" y="66" font-size="12" text-anchor="middle" fill="var(--da-fg)" font-family="inherit">17 &lt; 31 → sol = orta + 1</text>
+
+  <!-- Tur 2 -->
+  <text x="40" y="210" font-size="13" fill="var(--da-muted)" font-family="inherit">Tur 2</text>
+  <g stroke="var(--da-border)" stroke-width="1.5">
+    <rect x="120" y="186" width="80" height="44" rx="6" fill="var(--da-border)" fill-opacity="0.4"/>
+    <rect x="210" y="186" width="80" height="44" rx="6" fill="var(--da-border)" fill-opacity="0.4"/>
+    <rect x="300" y="186" width="80" height="44" rx="6" fill="var(--da-border)" fill-opacity="0.4"/>
+    <rect x="390" y="186" width="80" height="44" rx="6" fill="var(--da-border)" fill-opacity="0.4"/>
+    <rect x="480" y="186" width="80" height="44" rx="6" fill="var(--da-surface)"/>
+    <rect x="570" y="186" width="80" height="44" rx="6" fill="var(--da-success)" fill-opacity="0.25" stroke="var(--da-success)"/>
+    <rect x="660" y="186" width="80" height="44" rx="6" fill="var(--da-surface)"/>
+    <rect x="750" y="186" width="80" height="44" rx="6" fill="var(--da-surface)"/>
+  </g>
+  <g font-size="15" text-anchor="middle" font-family="inherit">
+    <text x="160" y="214" fill="var(--da-muted)">3</text><text x="250" y="214" fill="var(--da-muted)">8</text><text x="340" y="214" fill="var(--da-muted)">12</text><text x="430" y="214" fill="var(--da-muted)">17</text>
+    <text x="520" y="214" fill="var(--da-fg)">23</text><text x="610" y="214" fill="var(--da-fg)">31</text><text x="700" y="214" fill="var(--da-fg)">42</text><text x="790" y="214" fill="var(--da-fg)">56</text>
+  </g>
+  <g font-size="12" fill="var(--da-primary)" text-anchor="middle" font-family="inherit">
+    <text x="520" y="250">sol=4</text><text x="610" y="250">orta=5</text><text x="790" y="250">sag=7</text>
+  </g>
+  <text x="610" y="176" font-size="12" text-anchor="middle" fill="var(--da-success)" font-family="inherit">31 == 31 → bulundu, indeks 5</text>
+  <text x="260" y="176" font-size="12" text-anchor="middle" fill="var(--da-danger)" font-family="inherit">elenen yarı</text>
+
+  <!-- Alt bilgi -->
+  <rect x="120" y="290" width="710" height="70" rx="10" fill="var(--da-primary)" fill-opacity="0.08" stroke="var(--da-primary)"/>
+  <text x="475" y="318" font-size="14" text-anchor="middle" fill="var(--da-fg)" font-family="inherit">Her tur aday sayısını yarıya indirir: 8 → 4 → 2 → 1</text>
+  <text x="475" y="342" font-size="13" text-anchor="middle" fill="var(--da-muted)" font-family="inherit">n = 1.000.000 için en fazla ≈ 20 tur: O(log n)</text>
+</svg>

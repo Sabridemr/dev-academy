@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 490" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Dizi bellek düzeni, kayan pencere ve iki işaretçi</title>
+  <desc id="desc">Üstte bellekte ardışık duran altı hücreli bir dizi ve her hücrenin adresi: taban adres artı indeks çarpı sekiz. Ortada üç elemanlık bir pencerenin bir adım sağa kayması. Altta sıralı bir dizide soldan ve sağdan içeri doğru ilerleyen iki işaretçi.</desc>
+  <defs><marker id="ok" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-primary)"/></marker></defs>
+  <text x="40" y="46" font-size="14" font-weight="600" fill="var(--da-fg)">1. Bellekte ardışık dizi</text>
+  <rect x="200" y="60" width="72" height="48" rx="6" fill="var(--da-surface)" stroke="var(--da-fg)" stroke-width="1.5"/>
+  <text x="236" y="90" text-anchor="middle" font-size="16" fill="var(--da-fg)">2</text>
+  <text x="236" y="126" text-anchor="middle" font-size="11" fill="var(--da-muted)">[0]</text>
+  <rect x="280" y="60" width="72" height="48" rx="6" fill="var(--da-surface)" stroke="var(--da-fg)" stroke-width="1.5"/>
+  <text x="316" y="90" text-anchor="middle" font-size="16" fill="var(--da-fg)">1</text>
+  <text x="316" y="126" text-anchor="middle" font-size="11" fill="var(--da-muted)">[1]</text>
+  <rect x="360" y="60" width="72" height="48" rx="6" fill="var(--da-surface)" stroke="var(--da-fg)" stroke-width="1.5"/>
+  <text x="396" y="90" text-anchor="middle" font-size="16" fill="var(--da-fg)">5</text>
+  <text x="396" y="126" text-anchor="middle" font-size="11" fill="var(--da-muted)">[2]</text>
+  <rect x="440" y="60" width="72" height="48" rx="6" fill="var(--da-surface)" stroke="var(--da-fg)" stroke-width="1.5"/>
+  <text x="476" y="90" text-anchor="middle" font-size="16" fill="var(--da-fg)">1</text>
+  <text x="476" y="126" text-anchor="middle" font-size="11" fill="var(--da-muted)">[3]</text>
+  <rect x="520" y="60" width="72" height="48" rx="6" fill="var(--da-surface)" stroke="var(--da-fg)" stroke-width="1.5"/>
+  <text x="556" y="90" text-anchor="middle" font-size="16" fill="var(--da-fg)">3</text>
+  <text x="556" y="126" text-anchor="middle" font-size="11" fill="var(--da-muted)">[4]</text>
+  <rect x="600" y="60" width="72" height="48" rx="6" fill="var(--da-surface)" stroke="var(--da-fg)" stroke-width="1.5"/>
+  <text x="636" y="90" text-anchor="middle" font-size="16" fill="var(--da-fg)">2</text>
+  <text x="636" y="126" text-anchor="middle" font-size="11" fill="var(--da-muted)">[5]</text>
+  <text x="236" y="52" text-anchor="middle" font-size="10" fill="var(--da-muted)">0x3E8</text>
+  <text x="316" y="52" text-anchor="middle" font-size="10" fill="var(--da-muted)">0x3F0</text>
+  <text x="396" y="52" text-anchor="middle" font-size="10" fill="var(--da-muted)">0x3F8</text>
+  <text x="476" y="52" text-anchor="middle" font-size="10" fill="var(--da-muted)">0x400</text>
+  <text x="556" y="52" text-anchor="middle" font-size="10" fill="var(--da-muted)">0x408</text>
+  <text x="636" y="52" text-anchor="middle" font-size="10" fill="var(--da-muted)">0x410</text>
+  <text x="700" y="80" font-size="12" fill="var(--da-muted)">adres(i) = taban + i × 8</text>
+  <text x="700" y="98" font-size="12" fill="var(--da-muted)">→ dizi[i] erişimi O(1)</text>
+  <text x="40" y="196" font-size="14" font-weight="600" fill="var(--da-fg)">2. Kayan pencere (k = 3)</text>
+  <rect x="200" y="210" width="72" height="48" rx="6" fill="var(--da-surface)" stroke="var(--da-fg)" stroke-width="1.5"/>
+  <text x="236" y="240" text-anchor="middle" font-size="16" fill="var(--da-fg)">2</text>
+  <text x="236" y="276" text-anchor="middle" font-size="11" fill="var(--da-muted)">[0]</text>
+  <rect x="280" y="210" width="72" height="48" rx="6" fill="var(--da-surface)" stroke="var(--da-fg)" stroke-width="1.5"/>
+  <text x="316" y="240" text-anchor="middle" font-size="16" fill="var(--da-fg)">1</text>
+  <text x="316" y="276" text-anchor="middle" font-size="11" fill="var(--da-muted)">[1]</text>
+  <rect x="360" y="210" width="72" height="48" rx="6" fill="var(--da-surface)" stroke="var(--da-fg)" stroke-width="1.5"/>
+  <text x="396" y="240" text-anchor="middle" font-size="16" fill="var(--da-fg)">5</text>
+  <text x="396" y="276" text-anchor="middle" font-size="11" fill="var(--da-muted)">[2]</text>
+  <rect x="440" y="210" width="72" height="48" rx="6" fill="var(--da-surface)" stroke="var(--da-fg)" stroke-width="1.5"/>
+  <text x="476" y="240" text-anchor="middle" font-size="16" fill="var(--da-fg)">1</text>
+  <text x="476" y="276" text-anchor="middle" font-size="11" fill="var(--da-muted)">[3]</text>
+  <rect x="520" y="210" width="72" height="48" rx="6" fill="var(--da-surface)" stroke="var(--da-fg)" stroke-width="1.5"/>
+  <text x="556" y="240" text-anchor="middle" font-size="16" fill="var(--da-fg)">3</text>
+  <text x="556" y="276" text-anchor="middle" font-size="11" fill="var(--da-muted)">[4]</text>
+  <rect x="600" y="210" width="72" height="48" rx="6" fill="var(--da-surface)" stroke="var(--da-fg)" stroke-width="1.5"/>
+  <text x="636" y="240" text-anchor="middle" font-size="16" fill="var(--da-fg)">2</text>
+  <text x="636" y="276" text-anchor="middle" font-size="11" fill="var(--da-muted)">[5]</text>
+  <rect x="194" y="204" width="236" height="60" rx="10" fill="none" stroke="var(--da-muted)" stroke-width="2" stroke-dasharray="6 5"/>
+  <rect x="274" y="200" width="236" height="68" rx="10" fill="var(--da-accent)" opacity="0.12" stroke="var(--da-accent)" stroke-width="2.5"/>
+  <text x="236" y="302" text-anchor="middle" font-size="12" fill="var(--da-danger)">− 2 çıkar</text>
+  <text x="476" y="302" text-anchor="middle" font-size="12" fill="var(--da-success)">+ 1 ekle</text>
+  <text x="700" y="230" font-size="12" fill="var(--da-muted)">eski toplam 8</text>
+  <text x="700" y="248" font-size="12" fill="var(--da-muted)">yeni toplam 8 − 2 + 1 = 7</text>
+  <text x="40" y="346" font-size="14" font-weight="600" fill="var(--da-fg)">3. İki işaretçi (hedef 10)</text>
+  <rect x="200" y="360" width="72" height="48" rx="6" fill="var(--da-surface)" stroke="var(--da-fg)" stroke-width="1.5"/>
+  <text x="236" y="390" text-anchor="middle" font-size="16" fill="var(--da-fg)">1</text>
+  <text x="236" y="426" text-anchor="middle" font-size="11" fill="var(--da-muted)">[0]</text>
+  <rect x="280" y="360" width="72" height="48" rx="6" fill="var(--da-surface)" stroke="var(--da-fg)" stroke-width="1.5"/>
+  <text x="316" y="390" text-anchor="middle" font-size="16" fill="var(--da-fg)">3</text>
+  <text x="316" y="426" text-anchor="middle" font-size="11" fill="var(--da-muted)">[1]</text>
+  <rect x="360" y="360" width="72" height="48" rx="6" fill="var(--da-surface)" stroke="var(--da-fg)" stroke-width="1.5"/>
+  <text x="396" y="390" text-anchor="middle" font-size="16" fill="var(--da-fg)">4</text>
+  <text x="396" y="426" text-anchor="middle" font-size="11" fill="var(--da-muted)">[2]</text>
+  <rect x="440" y="360" width="72" height="48" rx="6" fill="var(--da-surface)" stroke="var(--da-fg)" stroke-width="1.5"/>
+  <text x="476" y="390" text-anchor="middle" font-size="16" fill="var(--da-fg)">6</text>
+  <text x="476" y="426" text-anchor="middle" font-size="11" fill="var(--da-muted)">[3]</text>
+  <rect x="520" y="360" width="72" height="48" rx="6" fill="var(--da-surface)" stroke="var(--da-fg)" stroke-width="1.5"/>
+  <text x="556" y="390" text-anchor="middle" font-size="16" fill="var(--da-fg)">8</text>
+  <text x="556" y="426" text-anchor="middle" font-size="11" fill="var(--da-muted)">[4]</text>
+  <rect x="600" y="360" width="72" height="48" rx="6" fill="var(--da-surface)" stroke="var(--da-fg)" stroke-width="1.5"/>
+  <text x="636" y="390" text-anchor="middle" font-size="16" fill="var(--da-fg)">11</text>
+  <text x="636" y="426" text-anchor="middle" font-size="11" fill="var(--da-muted)">[5]</text>
+  <path d="M 236 460 L 236 436" stroke="var(--da-primary)" stroke-width="2" marker-end="url(#ok)"/>
+  <text x="236" y="462" text-anchor="middle" dominant-baseline="hanging" font-size="12" fill="var(--da-primary)">sol →</text>
+  <path d="M 636 460 L 636 436" stroke="var(--da-primary)" stroke-width="2" marker-end="url(#ok)"/>
+  <text x="636" y="462" text-anchor="middle" dominant-baseline="hanging" font-size="12" fill="var(--da-primary)">← sağ</text>
+  <text x="700" y="380" font-size="12" fill="var(--da-muted)">toplam küçük → sol++</text>
+  <text x="700" y="398" font-size="12" fill="var(--da-muted)">toplam büyük → sağ−−</text>
+</svg>

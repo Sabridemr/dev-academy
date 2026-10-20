@@ -1,0 +1,112 @@
+{
+  "id": "l-01-big-o-complexity-quiz",
+  "title": { "tr": "Big-O Quiz", "en": "Big-O Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Bir algoritma 4n² + 100n + 7 işlem yapıyor. Big-O gösterimiyle karmaşıklığı nedir?",
+        "en": "An algorithm performs 4n² + 100n + 7 operations. What is its complexity in Big-O notation?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "O(4n²)", "en": "O(4n²)" } },
+        { "id": "b", "text": { "tr": "O(n²)", "en": "O(n²)" } },
+        { "id": "c", "text": { "tr": "O(n² + n)", "en": "O(n² + n)" } },
+        { "id": "d", "text": { "tr": "O(100n)", "en": "O(100n)" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Big-O yalnızca en hızlı büyüyen terimi tutar ve sabit çarpanları atar. n büyüdükçe n² terimi 100n ve 7'yi ezer; 4 çarpanı da büyüme şeklini değiştirmez. O(4n²) ve O(n² + n) teknik olarak aynı kümeyi anlatır ama sadeleştirilmemiş yazımlardır; O(100n) ise karesel terimi yok sayar.",
+        "en": "Big-O keeps only the fastest-growing term and drops constant factors. As n grows, n² dominates 100n and 7; the factor 4 does not change the shape of growth. O(4n²) and O(n² + n) describe the same set but are unsimplified; O(100n) ignores the quadratic term."
+      },
+      "difficulty": "easy",
+      "concepts": ["big-o-notation", "growth-rate"]
+    },
+    {
+      "id": "q2",
+      "type": "order",
+      "prompt": {
+        "tr": "Büyüme sınıflarını büyük n için en yavaş büyüyenden en hızlı büyüyene sıralayın.",
+        "en": "Order the growth classes from slowest-growing to fastest-growing for large n."
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "O(n log n)", "en": "O(n log n)" } },
+        { "id": "b", "text": { "tr": "O(1)", "en": "O(1)" } },
+        { "id": "c", "text": { "tr": "O(2ⁿ)", "en": "O(2ⁿ)" } },
+        { "id": "d", "text": { "tr": "O(log n)", "en": "O(log n)" } },
+        { "id": "e", "text": { "tr": "O(n²)", "en": "O(n²)" } },
+        { "id": "f", "text": { "tr": "O(n)", "en": "O(n)" } }
+      ],
+      "correct": ["b", "d", "f", "a", "e", "c"],
+      "explanation": {
+        "tr": "Doğru sıra: O(1) < O(log n) < O(n) < O(n log n) < O(n²) < O(2ⁿ). Logaritmik büyüme girdi ikiye katlanınca yalnızca bir adım ekler; üstel büyüme ise her yeni elemanda işi ikiye katlar.",
+        "en": "The correct order is O(1) < O(log n) < O(n) < O(n log n) < O(n²) < O(2ⁿ). Logarithmic growth adds a single step when the input doubles; exponential growth doubles the work with every new element."
+      },
+      "difficulty": "easy",
+      "concepts": ["growth-rate"]
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": {
+        "tr": "`for x in a:` döngüsünün içinde `if x in b:` kontrolü yapılıyor; a ve b n elemanlı Python listeleri. Toplam zaman karmaşıklığı nedir ve b'yi ne yapmak onu düşürür?",
+        "en": "Inside a `for x in a:` loop there is an `if x in b:` check; a and b are Python lists of n elements. What is the total time complexity, and what change to b lowers it?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "O(n); değişiklik gerekmez", "en": "O(n); no change needed" } },
+        { "id": "b", "text": { "tr": "O(n²); b'yi sıralamak tek başına O(n)'e indirir", "en": "O(n²); sorting b alone brings it down to O(n)" } },
+        { "id": "c", "text": { "tr": "O(n²); b'yi bir set'e çevirmek ortalama O(n)'e indirir", "en": "O(n²); converting b to a set brings it down to O(n) on average" } },
+        { "id": "d", "text": { "tr": "O(n log n); b'yi bir set'e çevirmek O(1)'e indirir", "en": "O(n log n); converting b to a set brings it down to O(1)" } }
+      ],
+      "correct": ["c"],
+      "explanation": {
+        "tr": "Listede `in` doğrusal aramadır (O(n)); n kez yapılınca O(n²) olur. Küme (set) hash tablosudur, `in` ortalama O(1)'dir; kümeyi kurmak O(n), n arama O(n) eder. Sadece sıralamak `in` operatörünü hızlandırmaz, çünkü `in` listede yine baştan sona tarar. Toplam iş hiçbir zaman O(1) olamaz, çünkü a'daki her elemana bakmak gerekir.",
+        "en": "`in` on a list is a linear search (O(n)); doing it n times gives O(n²). A set is a hash table where `in` is O(1) on average; building it is O(n) and n lookups are O(n). Merely sorting does not speed up `in`, because `in` still scans the list from start to end. The total can never be O(1) because every element of a must be visited."
+      },
+      "difficulty": "medium",
+      "concepts": ["time-complexity", "nested-loops"]
+    },
+    {
+      "id": "q4",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Aşağıdaki ifadelerden hangileri doğrudur? (Birden fazla seçin)",
+        "en": "Which of the following statements are true? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Python listesine append amortize O(1)'dir, ama tek bir append O(n) sürebilir", "en": "Appending to a Python list is amortized O(1), but a single append can take O(n)" } },
+        { "id": "b", "text": { "tr": "Derinliği n olan bir özyineleme, liste oluşturmasa bile O(n) bellek kullanır", "en": "A recursion of depth n uses O(n) memory even if it creates no lists" } },
+        { "id": "c", "text": { "tr": "O(n log n) bir algoritma her n için O(n²) bir algoritmadan daha hızlı çalışır", "en": "An O(n log n) algorithm runs faster than an O(n²) algorithm for every n" } },
+        { "id": "d", "text": { "tr": "Hash tablosunda arama en kötü durumda O(n) olabilir", "en": "A hash table lookup can be O(n) in the worst case" } }
+      ],
+      "correct": ["a", "b", "d"],
+      "explanation": {
+        "tr": "Kapasite dolunca liste kopyalanır (tek sefer O(n)) ama maliyet yayıldığında amortize O(1) çıkar. Her çağrı çerçevesi bellek tutar, bu yüzden derin özyineleme O(n) bellek ister. Tüm anahtarlar aynı kovaya düşerse hash araması O(n) olur. (c) yanlıştır: Big-O büyük n davranışını anlatır; küçük n için sabitleri küçük O(n²) bir algoritma daha hızlı olabilir.",
+        "en": "When capacity runs out the list is copied (a one-off O(n)), but spread over all appends the cost is amortized O(1). Every call frame holds memory, so deep recursion needs O(n) memory. If every key lands in one bucket, a hash lookup becomes O(n). (c) is false: Big-O describes behaviour for large n; for small n an O(n²) algorithm with small constants can be faster."
+      },
+      "difficulty": "hard",
+      "concepts": ["amortized-analysis", "space-complexity", "worst-case"]
+    },
+    {
+      "id": "q5",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Her turda n'yi yarıya bölen `while n > 1: n //= 2` döngüsü O(log n) kez döner.",
+        "en": "The loop `while n > 1: n //= 2`, which halves n every round, runs O(log n) times."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["t"],
+      "explanation": {
+        "tr": "Doğru. n'yi 1'e indirmek için kaç kez yarıya bölmen gerektiği sorusunun cevabı log₂ n'dir; 1.000.000 için yaklaşık 20 tur. Problemi her adımda sabit oranda küçültmek logaritmik karmaşıklığın imzasıdır.",
+        "en": "True. The number of halvings needed to bring n down to 1 is log₂ n; about 20 rounds for 1,000,000. Shrinking the problem by a constant factor each step is the signature of logarithmic complexity."
+      },
+      "difficulty": "medium",
+      "concepts": ["time-complexity", "growth-rate"]
+    }
+  ]
+}

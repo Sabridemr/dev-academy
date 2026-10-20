@@ -1,0 +1,111 @@
+{
+  "id": "l-02-arrays-strings-two-pointers-quiz",
+  "title": { "tr": "Diziler ve İki İşaretçi Quiz", "en": "Arrays and Two Pointers Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Bir dizide indeksle erişim neden O(1)'dir?",
+        "en": "Why is index access in an array O(1)?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Diziler her zaman önbellekte tutulduğu için", "en": "Because arrays are always kept in cache" } },
+        { "id": "b", "text": { "tr": "Elemanın adresi taban + i × eleman boyutu ile doğrudan hesaplandığı için", "en": "Because the element's address is computed directly as base + i × element size" } },
+        { "id": "c", "text": { "tr": "Dizi her zaman sıralı tutulduğu için", "en": "Because the array is always kept sorted" } },
+        { "id": "d", "text": { "tr": "Python her indeks için ayrı bir hash tablosu tuttuğu için", "en": "Because Python keeps a separate hash table for every index" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Elemanlar bellekte ardışık ve aynı boyutta durduğu için adres tek bir aritmetik işlemle bulunur; dizinin uzunluğu bunu etkilemez. Önbellek dostu olmak taramayı hızlandırır ama O(1) erişimin nedeni değildir; sıralılık ve hash tabloları ise indeksle erişimle ilgisizdir.",
+        "en": "Elements sit contiguously and are the same size, so the address is found with one arithmetic operation regardless of length. Cache friendliness speeds up scans but is not why access is O(1); sortedness and hash tables are unrelated to index access."
+      },
+      "difficulty": "easy",
+      "concepts": ["contiguous-array"]
+    },
+    {
+      "id": "q2",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Python listesinde hangi işlemler O(n) maliyetlidir? (Birden fazla seçin)",
+        "en": "Which operations on a Python list cost O(n)? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "liste.insert(0, x)", "en": "list.insert(0, x)" } },
+        { "id": "b", "text": { "tr": "liste.append(x) (amortize)", "en": "list.append(x) (amortized)" } },
+        { "id": "c", "text": { "tr": "x in liste", "en": "x in list" } },
+        { "id": "d", "text": { "tr": "liste.pop(0)", "en": "list.pop(0)" } },
+        { "id": "e", "text": { "tr": "liste[-1] okumak", "en": "reading list[-1]" } }
+      ],
+      "correct": ["a", "c", "d"],
+      "explanation": {
+        "tr": "Baştan ekleme ve baştan çıkarma tüm elemanları kaydırır; `in` doğrusal aramadır. `append` amortize O(1)'dir ve son elemanı okumak indeksle erişim olduğu için O(1)'dir.",
+        "en": "Inserting or removing at the front shifts every element; `in` is a linear search. `append` is amortized O(1), and reading the last element is index access, so O(1)."
+      },
+      "difficulty": "medium",
+      "concepts": ["dynamic-array", "amortized-append"]
+    },
+    {
+      "id": "q3",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Bir döngüde n kez `s = s + parca` yazmak ile parçaları listede toplayıp sonda `''.join(...)` çağırmak her durumda aynı karmaşıklığa sahiptir.",
+        "en": "Writing `s = s + part` n times in a loop and collecting the parts in a list then calling `''.join(...)` once always have the same complexity."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "Yanlış. Stringler değiştirilemez; her birleştirme o ana kadarki metni yeni bir stringe kopyalayabilir ve toplam O(n²) olur. `join` toplam uzunluğu önceden hesaplar ve her karakteri bir kez kopyalar: O(n).",
+        "en": "False. Strings are immutable; each concatenation may copy the text so far into a new string, giving O(n²) in total. `join` computes the total length up front and copies each character once: O(n)."
+      },
+      "difficulty": "medium",
+      "concepts": ["string-immutability"]
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": {
+        "tr": "Sıralı bir dizide iki işaretçiyle toplamı hedefe eşit bir çift arıyorsun. sirali[sol] + sirali[sag] hedeften büyük çıktı. Doğru hamle hangisidir ve neden güvenlidir?",
+        "en": "You are searching a sorted array for a pair summing to a target with two pointers. sorted[left] + sorted[right] is greater than the target. What is the correct move and why is it safe?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "sol += 1; çünkü sol eleman çok küçük", "en": "left += 1; because the left element is too small" } },
+        { "id": "b", "text": { "tr": "sag -= 1; çünkü sağdaki eleman en küçük eşle bile hedefi aşıyor, hiçbir çiftte yer alamaz", "en": "right -= 1; because the right element exceeds the target even with the smallest partner, so it cannot be in any pair" } },
+        { "id": "c", "text": { "tr": "İki işaretçiyi de hareket ettir; böylece daha hızlı biter", "en": "Move both pointers; that finishes faster" } },
+        { "id": "d", "text": { "tr": "Baştan başla ve sol'u bir artır", "en": "Start over and increment left by one" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "sirali[sol] kalan adaylar arasındaki en küçük sayıdır. sağdaki eleman onunla bile hedefi aşıyorsa, başka hiçbir solla eşleşemez; güvenle elenir. Sol'u artırmak toplamı daha da büyütür. İki işaretçiyi birlikte oynatmak, sol elemanın daha küçük bir sağ elemanla oluşturabileceği doğru çifti atlayabilir.",
+        "en": "sorted[left] is the smallest remaining candidate. If the right element overshoots even with it, it cannot pair with anything else and is safely eliminated. Incrementing left makes the sum even bigger. Moving both pointers can skip the correct pair formed by the left element and a smaller right element."
+      },
+      "difficulty": "hard",
+      "concepts": ["two-pointers"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "n elemanlı bir dizide k elemanlık ardışık pencerelerin en büyük toplamını kayan pencereyle bulmanın zaman karmaşıklığı nedir?",
+        "en": "What is the time complexity of finding the maximum sum of k-element consecutive windows in an n-element array using a sliding window?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "O(n · k)", "en": "O(n · k)" } },
+        { "id": "b", "text": { "tr": "O(n²)", "en": "O(n²)" } },
+        { "id": "c", "text": { "tr": "O(n)", "en": "O(n)" } },
+        { "id": "d", "text": { "tr": "O(k)", "en": "O(k)" } }
+      ],
+      "correct": ["c"],
+      "explanation": {
+        "tr": "İlk pencere O(k)'da toplanır, sonraki her kaydırma bir ekleme ve bir çıkarmayla O(1)'de güncellenir; toplam O(k + n) = O(n). O(n · k), her pencereyi sıfırdan toplayan kaba kuvvet çözümüdür.",
+        "en": "The first window is summed in O(k), and each later slide is an O(1) update with one addition and one subtraction; the total is O(k + n) = O(n). O(n · k) is the brute-force solution that re-sums every window."
+      },
+      "difficulty": "easy",
+      "concepts": ["sliding-window"]
+    }
+  ]
+}

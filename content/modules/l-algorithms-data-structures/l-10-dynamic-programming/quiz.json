@@ -1,0 +1,110 @@
+{
+  "id": "l-10-dynamic-programming-quiz",
+  "title": { "tr": "Dinamik Programlama Quiz", "en": "Dynamic Programming Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Bir problemin dinamik programlama ile verimli çözülebilmesi için hangi iki özellik gerekir? (Birden fazla seçin)",
+        "en": "Which two properties does a problem need for dynamic programming to solve it efficiently? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Optimal alt yapı", "en": "Optimal substructure" } },
+        { "id": "b", "text": { "tr": "Örtüşen alt problemler", "en": "Overlapping subproblems" } },
+        { "id": "c", "text": { "tr": "Girdinin sıralı olması", "en": "Sorted input" } },
+        { "id": "d", "text": { "tr": "Açgözlü seçimin her zaman doğru olması", "en": "The greedy choice always being correct" } }
+      ],
+      "correct": ["a", "b"],
+      "explanation": {
+        "tr": "Optimal alt yapı büyük cevabın alt cevaplardan kurulabilmesini, örtüşen alt problemler ise sonuçları saklamanın işe yaramasını sağlar. Sıralılık ikili aramanın ön koşuludur; açgözlü seçim her zaman doğruysa DP'ye gerek kalmaz, daha basit açgözlü çözüm yeterlidir.",
+        "en": "Optimal substructure lets the big answer be built from sub-answers, and overlapping subproblems make storing results pay off. Sortedness is a precondition of binary search; if the greedy choice is always right, DP is unnecessary and the simpler greedy solution suffices."
+      },
+      "difficulty": "easy",
+      "concepts": ["optimal-substructure", "overlapping-subproblems"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "Saf özyinelemeli fib(n) ile memoization eklenmiş fib(n)'in zaman karmaşıklıkları nedir?",
+        "en": "What are the time complexities of naive recursive fib(n) and memoized fib(n)?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "O(n²) ve O(n)", "en": "O(n²) and O(n)" } },
+        { "id": "b", "text": { "tr": "O(2ⁿ) ve O(log n)", "en": "O(2ⁿ) and O(log n)" } },
+        { "id": "c", "text": { "tr": "O(2ⁿ) ve O(n)", "en": "O(2ⁿ) and O(n)" } },
+        { "id": "d", "text": { "tr": "O(n) ve O(1)", "en": "O(n) and O(1)" } }
+      ],
+      "correct": ["c"],
+      "explanation": {
+        "tr": "Saf özyinelemede çağrı ağacı her seviyede ikiye dallanır ve aynı değerler tekrar hesaplanır: kabaca O(2ⁿ). Memoization ile her k için gövde bir kez çalışır: O(n). O(log n) matris üssü gibi farklı bir yöntem gerektirir; O(1) ise yalnızca tabulation'daki bellek iyileştirmesinin belleğidir, süresi değil.",
+        "en": "Naive recursion branches in two at every level and recomputes the same values: roughly O(2ⁿ). With memoization the body runs once per k: O(n). O(log n) needs a different method such as matrix exponentiation; O(1) is the memory of the tabulation space optimisation, not its time."
+      },
+      "difficulty": "easy",
+      "concepts": ["memoization"]
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": {
+        "tr": "Tek boyutlu tabloyla 0/1 sırt çantası çözerken kapasite döngüsü neden büyükten küçüğe gezilir?",
+        "en": "When solving 0/1 knapsack with a one-dimensional table, why is the capacity loop walked from large to small?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Daha hızlı olduğu için; sonuç her iki yönde de aynıdır", "en": "Because it is faster; the result is the same in both directions" } },
+        { "id": "b", "text": { "tr": "Aynı tur içinde güncellenmiş hücre tekrar kullanılıp aynı eşya birden çok kez alınmasın diye", "en": "So a cell updated in the same round is not reused, which would take the same item more than once" } },
+        { "id": "c", "text": { "tr": "Python'da range negatif adımla daha az bellek kullandığı için", "en": "Because range with a negative step uses less memory in Python" } },
+        { "id": "d", "text": { "tr": "Açgözlü seçimin en ağır eşyadan başlaması gerektiği için", "en": "Because the greedy choice must start from the heaviest item" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Küçükten büyüğe gezilirse tablo[c - ağırlık] hücresi bu turda zaten güncellenmiş olabilir; bu da eşyanın ikinci kez eklenmesi demektir (sınırsız sırt çantası). İki yönün sonucu bu yüzden farklıdır; range'in yönü bellek kullanımını değiştirmez ve tabloda açgözlü bir seçim yapılmaz.",
+        "en": "Walking small to large, tablo[c - weight] may already have been updated in this round, which means adding the item a second time (unbounded knapsack). That is why the two directions give different results; range's direction does not change memory use, and the table makes no greedy choice."
+      },
+      "difficulty": "hard",
+      "concepts": ["knapsack", "tabulation"]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Memoization uygulanmış özyinelemeli bir fonksiyon, çok büyük n değerlerinde CPython'da RecursionError verebilir.",
+        "en": "A memoized recursive function can still raise RecursionError in CPython for very large n."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["t"],
+      "explanation": {
+        "tr": "Doğru. Memoization tekrar hesaplamayı ortadan kaldırır ama ilk çağrıda yığın yine n derinliğe iner; varsayılan sınır 1000 civarındadır. Tabulation özyineleme kullanmadığı için bu sınırdan etkilenmez.",
+        "en": "True. Memoization removes recomputation, but the first call still descends n frames deep; the default limit is around 1000. Tabulation uses no recursion, so it is unaffected by that limit."
+      },
+      "difficulty": "medium",
+      "concepts": ["memoization", "tabulation"]
+    },
+    {
+      "id": "q5",
+      "type": "order",
+      "prompt": {
+        "tr": "Yeni bir DP problemini çözerken izlenecek adımları sıraya koyun.",
+        "en": "Order the steps for tackling a new DP problem."
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Durumu tanımla (ör. lcs(i, j): a'nın ilk i, b'nin ilk j karakteri)", "en": "Define the state (e.g. lcs(i, j): first i chars of a, first j of b)" } },
+        { "id": "b", "text": { "tr": "Son seçime göre geçiş bağıntısını yaz", "en": "Write the recurrence from the last choice" } },
+        { "id": "c", "text": { "tr": "Temel durumları belirle (boş metin → 0)", "en": "Fix the base cases (empty string → 0)" } },
+        { "id": "d", "text": { "tr": "Tablonun doldurulma sırasını seç ve cevabın olduğu hücreyi döndür", "en": "Choose the fill order and return the cell holding the answer" } }
+      ],
+      "correct": ["a", "b", "c", "d"],
+      "explanation": {
+        "tr": "Önce alt problemi tanımlayan durum seçilir; geçiş bu duruma göre yazılır, temel durumlar özyinelemeyi sonlandırır. En son, her hücre hesaplanırken bağlı olduğu hücrelerin dolu olacağı bir sıra seçilir. LCS için tablo satır satır doldurulur ve cevap t[m][n]'dedir.",
+        "en": "First pick the state that defines a subproblem; the recurrence is written in terms of it, and base cases stop the recursion. Last, choose an order in which every cell's dependencies are already filled. For LCS the table is filled row by row and the answer is t[m][n]."
+      },
+      "difficulty": "medium",
+      "concepts": ["dynamic-programming", "lcs"]
+    }
+  ]
+}

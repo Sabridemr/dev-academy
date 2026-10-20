@@ -1,0 +1,110 @@
+{
+  "id": "l-09-binary-search-quiz",
+  "title": { "tr": "İkili Arama Quiz", "en": "Binary Search Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Sıralı ve 1.000.000 elemanlı bir dizide ikili arama en kötü durumda yaklaşık kaç karşılaştırma yapar?",
+        "en": "Roughly how many comparisons does binary search make in the worst case on a sorted array of 1,000,000 elements?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Yaklaşık 20", "en": "About 20" } },
+        { "id": "b", "text": { "tr": "Yaklaşık 1.000", "en": "About 1,000" } },
+        { "id": "c", "text": { "tr": "Yaklaşık 500.000", "en": "About 500,000" } },
+        { "id": "d", "text": { "tr": "Yaklaşık 1.000.000", "en": "About 1,000,000" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "Her adım adayları yarıya indirir; log₂(1.000.000) ≈ 20. 1.000 karekök ölçeğidir (√n), 500.000 doğrusal aramanın ortalama durumu, 1.000.000 ise doğrusal aramanın en kötü durumudur.",
+        "en": "Each step halves the candidates; log₂(1,000,000) ≈ 20. 1,000 is the square-root scale (√n), 500,000 is linear search's average case and 1,000,000 is linear search's worst case."
+      },
+      "difficulty": "easy",
+      "concepts": ["binary-search"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "Kapalı aralık [sol, sag] ile yazılan klasik ikili aramada döngü koşulu ve sol taraf güncellemesi ne olmalıdır?",
+        "en": "In classic binary search written with a closed range [sol, sag], what should the loop condition and the left update be?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "while sol < sag ve sol = orta", "en": "while sol < sag and sol = orta" } },
+        { "id": "b", "text": { "tr": "while sol <= sag ve sol = orta + 1", "en": "while sol <= sag and sol = orta + 1" } },
+        { "id": "c", "text": { "tr": "while sol <= sag ve sol = orta", "en": "while sol <= sag and sol = orta" } },
+        { "id": "d", "text": { "tr": "while sol < sag ve sag = orta + 1", "en": "while sol < sag and sag = orta + 1" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Kapalı aralıkta sol == sag iken hâlâ bir aday vardır, bu yüzden koşul <= olmalıdır; orta zaten kontrol edildiği için sol = orta + 1 ile elenir. sol = orta güncellemesi iki elemanlı aralıkta ilerlemeyi durdurup sonsuz döngüye yol açabilir; < koşulu ise son adayı hiç kontrol etmeden döngüden çıkar.",
+        "en": "With a closed range there is still a candidate when sol == sag, so the condition must be <=; orta has already been checked, so it is discarded with sol = orta + 1. The update sol = orta can stall on a two-element range and loop forever; the < condition exits without checking the last candidate."
+      },
+      "difficulty": "medium",
+      "concepts": ["loop-invariant", "off-by-one"]
+    },
+    {
+      "id": "q3",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Sıralı notlar = [40, 55, 55, 55, 70, 85] için hangi ifadeler doğrudur? (Birden fazla seçin)",
+        "en": "For the sorted notlar = [40, 55, 55, 55, 70, 85], which statements are true? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "bisect_left(notlar, 55) == 1", "en": "bisect_left(notlar, 55) == 1" } },
+        { "id": "b", "text": { "tr": "bisect_right(notlar, 55) == 4", "en": "bisect_right(notlar, 55) == 4" } },
+        { "id": "c", "text": { "tr": "bisect_left(notlar, 60) == bisect_right(notlar, 60)", "en": "bisect_left(notlar, 60) == bisect_right(notlar, 60)" } },
+        { "id": "d", "text": { "tr": "bisect_left(notlar, 100) == 5", "en": "bisect_left(notlar, 100) == 5" } }
+      ],
+      "correct": ["a", "b", "c"],
+      "explanation": {
+        "tr": "İlk 55 indeks 1'de, 55'ten büyük ilk eleman (70) indeks 4'tedir. 60 dizide olmadığı için iki sınır da aynı ekleme yerini (4) gösterir. Tüm elemanlar 100'den küçük olduğundan alt sınır dizinin uzunluğu olan 6'dır, 5 değil.",
+        "en": "The first 55 is at index 1 and the first element greater than 55 (70) is at index 4. Since 60 is absent, both bounds point to the same insertion point (4). Every element is smaller than 100, so the lower bound is the array length, 6, not 5."
+      },
+      "difficulty": "hard",
+      "concepts": ["lower-bound", "upper-bound", "bisect"]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Sıralı olmayan bir dizide ikili arama çalıştırılırsa Python bir hata fırlatır.",
+        "en": "If binary search is run on an unsorted array, Python raises an error."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "Yanlış. Ne elle yazılan döngü ne de bisect sıralamayı kontrol eder; kod sorunsuz çalışır ama sessizce yanlış bir indeks ya da -1 döndürür. Sıralılık, çağıranın sağlaması gereken bir ön koşuldur.",
+        "en": "False. Neither a hand-written loop nor bisect checks sortedness; the code runs fine but silently returns a wrong index or -1. Sortedness is a precondition the caller must guarantee."
+      },
+      "difficulty": "easy",
+      "concepts": ["binary-search"]
+    },
+    {
+      "id": "q5",
+      "type": "order",
+      "prompt": {
+        "tr": "'Paketleri D günde taşıyacak en küçük kamyon kapasitesi' problemini cevap üzerinde ikili aramayla çözme adımlarını sıraya koyun.",
+        "en": "Order the steps for solving 'the smallest truck capacity that ships the packages within D days' with binary search on the answer."
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Yeter mi? yükleminin monoton olduğunu göster (k yetiyorsa k+1 de yeter)", "en": "Show the 'is it enough?' predicate is monotonic (if k works, k+1 works)" } },
+        { "id": "b", "text": { "tr": "Arama aralığını belirle: [en ağır paket, toplam ağırlık]", "en": "Set the search range: [heaviest package, total weight]" } },
+        { "id": "c", "text": { "tr": "Ortadaki kapasite için yeter_mi(orta) fonksiyonunu O(n) sürede çalıştır", "en": "Run yeter_mi(orta) for the middle capacity in O(n)" } },
+        { "id": "d", "text": { "tr": "Sonuca göre aralığı daralt; sol == sag olduğunda en küçük kapasiteyi döndür", "en": "Narrow the range from the result; return the smallest capacity when sol == sag" } }
+      ],
+      "correct": ["a", "b", "c", "d"],
+      "explanation": {
+        "tr": "Önce ikili aramanın neden uygulanabildiğini (monotonluk) görürüz, sonra aralığın sınırlarını belirleriz; her turda orta değeri yüklemle test edip aralığı alt sınır kalıbıyla daraltırız. Toplam süre O(n · log(toplam)) olur.",
+        "en": "First we see why binary search applies (monotonicity), then fix the range bounds; each round tests the middle value with the predicate and narrows the range with the lower-bound pattern. Total time is O(n · log(total))."
+      },
+      "difficulty": "medium",
+      "concepts": ["binary-search-on-answer"]
+    }
+  ]
+}

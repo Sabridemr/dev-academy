@@ -1,0 +1,111 @@
+{
+  "id": "l-04-stacks-queues-quiz",
+  "title": { "tr": "Yığın ve Kuyruk Quiz", "en": "Stacks and Queues Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Boş bir yığına sırayla 1, 2, 3 eklenip (push) iki kez pop yapılıyor, ardından 4 ekleniyor. Tepede hangi eleman vardır?",
+        "en": "1, 2, 3 are pushed in order onto an empty stack, then pop is called twice and 4 is pushed. Which element is on top?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "1", "en": "1" } },
+        { "id": "b", "text": { "tr": "3", "en": "3" } },
+        { "id": "c", "text": { "tr": "4", "en": "4" } },
+        { "id": "d", "text": { "tr": "2", "en": "2" } }
+      ],
+      "correct": ["c"],
+      "explanation": {
+        "tr": "İki pop önce 3'ü, sonra 2'yi çıkarır; yığında yalnızca 1 kalır. Ardından eklenen 4 tepeye geçer. LIFO: en son eklenen her zaman tepededir.",
+        "en": "The two pops remove 3 and then 2, leaving only 1. The 4 pushed afterwards goes on top. LIFO: the most recently pushed element is always on top."
+      },
+      "difficulty": "easy",
+      "concepts": ["stack", "lifo"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "Python'da büyük bir kuyruğu list ile tutup her seferinde list.pop(0) çağırmanın sorunu nedir?",
+        "en": "What is the problem with keeping a large queue in a list and calling list.pop(0) each time?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "pop(0) her çağrıda kalan elemanları kaydırdığı için O(n) sürer", "en": "pop(0) shifts the remaining elements on every call, so it takes O(n)" } },
+        { "id": "b", "text": { "tr": "pop(0) son elemanı döndürür, bu yüzden sıra LIFO olur", "en": "pop(0) returns the last element, so the order becomes LIFO" } },
+        { "id": "c", "text": { "tr": "Liste 1000 elemandan fazlasını tutamaz", "en": "A list cannot hold more than 1000 elements" } },
+        { "id": "d", "text": { "tr": "pop(0) listeyi kopyalayıp yeni bir liste döndürür", "en": "pop(0) copies the list and returns a new one" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "Liste bellekte ardışık bir dizidir; baştaki eleman silinince geri kalanların hepsi bir sola kaydırılır. pop(0) ilk elemanı döndürür (b yanlış), listenin sabit bir sınırı yoktur (c yanlış) ve liste yerinde değiştirilir (d yanlış). Çözüm collections.deque ve popleft().",
+        "en": "A list is a contiguous array; removing the first element shifts all the rest one slot left. pop(0) returns the first element (b is wrong), lists have no fixed limit (c is wrong) and the list is modified in place (d is wrong). The fix is collections.deque with popleft()."
+      },
+      "difficulty": "medium",
+      "concepts": ["deque", "queue"]
+    },
+    {
+      "id": "q3",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Aşağıdaki problemlerden hangileri doğal olarak bir yığınla (stack) çözülür? (Birden fazla seçin)",
+        "en": "Which of the following problems are naturally solved with a stack? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Bir metindeki parantezlerin dengeli olup olmadığını kontrol etmek", "en": "Checking whether the brackets in a text are balanced" } },
+        { "id": "b", "text": { "tr": "Metin düzenleyicide geri al (undo) özelliği", "en": "The undo feature of a text editor" } },
+        { "id": "c", "text": { "tr": "Yazıcıya gönderilen belgeleri geliş sırasıyla basmak", "en": "Printing documents in the order they were sent to the printer" } },
+        { "id": "d", "text": { "tr": "Her gün için daha sıcak bir güne kaç gün kaldığını bulmak", "en": "Finding how many days until a warmer day for each day" } }
+      ],
+      "correct": ["a", "b", "d"],
+      "explanation": {
+        "tr": "Parantez eşleme ve geri al, en son açılan/yapılan işe ilk dönmeyi gerektirir (LIFO). Daha sıcak gün problemi monotonik yığınla O(n)'de çözülür. Yazıcı ise geliş sırasıyla çalışır; bu FIFO, yani kuyruktur.",
+        "en": "Bracket matching and undo require returning to the most recently opened/done item first (LIFO). The warmer-day problem is solved in O(n) with a monotonic stack. A printer works in arrival order; that is FIFO, i.e. a queue."
+      },
+      "difficulty": "medium",
+      "concepts": ["stack", "bracket-matching", "monotonic-stack"]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Monotonik yığın ile 'bir sonraki büyük eleman' problemi, içteki while döngüsüne rağmen toplamda O(n) sürer.",
+        "en": "With a monotonic stack, the 'next greater element' problem runs in O(n) overall despite the inner while loop."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["t"],
+      "explanation": {
+        "tr": "Doğru. İç döngü bazı turlarda çok eleman çıkarabilir, ama her indeks yığına yalnızca bir kez girer ve en fazla bir kez çıkar. Tüm turlar boyunca toplam pop sayısı n'yi geçemez; bu amortize bir argümandır.",
+        "en": "True. The inner loop may pop many elements in some iterations, but every index is pushed once and popped at most once. Across all iterations the total number of pops cannot exceed n; this is an amortised argument."
+      },
+      "difficulty": "hard",
+      "concepts": ["monotonic-stack"]
+    },
+    {
+      "id": "q5",
+      "type": "order",
+      "prompt": {
+        "tr": "A'dan başlayan BFS'te komşular A: [B, C], B: [D], C: [E] ise düğümler kuyruktan hangi sırayla çıkar?",
+        "en": "In a BFS from A with neighbours A: [B, C], B: [D], C: [E], in which order do nodes leave the queue?"
+      },
+      "options": [
+        { "id": "d", "text": { "tr": "D", "en": "D" } },
+        { "id": "b", "text": { "tr": "B", "en": "B" } },
+        { "id": "e", "text": { "tr": "E", "en": "E" } },
+        { "id": "a", "text": { "tr": "A", "en": "A" } },
+        { "id": "c", "text": { "tr": "C", "en": "C" } }
+      ],
+      "correct": ["a", "b", "c", "d", "e"],
+      "explanation": {
+        "tr": "Kuyruk FIFO çalışır: A çıkınca B ve C eklenir; B çıkınca D, C çıkınca E eklenir. Böylece önce A, sonra birinci katman (B, C), sonra ikinci katman (D, E) işlenir.",
+        "en": "The queue is FIFO: when A leaves, B and C are added; when B leaves D is added, when C leaves E is added. So A comes first, then layer one (B, C), then layer two (D, E)."
+      },
+      "difficulty": "easy",
+      "concepts": ["queue", "fifo"]
+    }
+  ]
+}

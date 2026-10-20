@@ -1,0 +1,163 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 420" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Merge sort ve quick sort</title>
+  <desc id="desc">Solda 8 elemanlı [38, 27, 43, 3, 9, 82, 10, 5] dizisi merge sort ile tek elemanlı parçalara bölünüp üç seviyede sıralı biçimde birleştiriliyor. Sağda quick sort'un bölümleme adımı: pivot 5 seçiliyor, küçükler sola, büyükler sağa toplanıyor ve pivot son yerine oturuyor.</desc>
+  <text x="280" y="36" text-anchor="middle" font-size="15" font-weight="600" fill="var(--da-fg)">Merge sort: böl ve birleştir</text>
+  <text x="720" y="36" text-anchor="middle" font-size="15" font-weight="600" fill="var(--da-fg)">Quick sort: bölümleme</text>
+  <text x="530" y="150" text-anchor="end" font-size="11" fill="var(--da-primary)">böl</text>
+  <text x="530" y="300" text-anchor="end" font-size="11" fill="var(--da-success)">birleştir</text>
+  <line x1="40" y1="246" x2="530" y2="246" stroke="var(--da-border)" stroke-dasharray="4 4"/>
+  <text x="280" y="405" text-anchor="middle" font-size="12" fill="var(--da-muted)">log₂ 8 = 3 seviye, her seviyede n iş: O(n log n)</text>
+    <rect x="184.0" y="60" width="24" height="26" fill="var(--da-surface)" stroke="var(--da-primary)" stroke-width="1.5"/>
+  <text x="196.0" y="78" text-anchor="middle" font-size="12" fill="var(--da-fg)">38</text>
+  <rect x="208.0" y="60" width="24" height="26" fill="var(--da-surface)" stroke="var(--da-primary)" stroke-width="1.5"/>
+  <text x="220.0" y="78" text-anchor="middle" font-size="12" fill="var(--da-fg)">27</text>
+  <rect x="232.0" y="60" width="24" height="26" fill="var(--da-surface)" stroke="var(--da-primary)" stroke-width="1.5"/>
+  <text x="244.0" y="78" text-anchor="middle" font-size="12" fill="var(--da-fg)">43</text>
+  <rect x="256.0" y="60" width="24" height="26" fill="var(--da-surface)" stroke="var(--da-primary)" stroke-width="1.5"/>
+  <text x="268.0" y="78" text-anchor="middle" font-size="12" fill="var(--da-fg)">3</text>
+  <rect x="280.0" y="60" width="24" height="26" fill="var(--da-surface)" stroke="var(--da-primary)" stroke-width="1.5"/>
+  <text x="292.0" y="78" text-anchor="middle" font-size="12" fill="var(--da-fg)">9</text>
+  <rect x="304.0" y="60" width="24" height="26" fill="var(--da-surface)" stroke="var(--da-primary)" stroke-width="1.5"/>
+  <text x="316.0" y="78" text-anchor="middle" font-size="12" fill="var(--da-fg)">82</text>
+  <rect x="328.0" y="60" width="24" height="26" fill="var(--da-surface)" stroke="var(--da-primary)" stroke-width="1.5"/>
+  <text x="340.0" y="78" text-anchor="middle" font-size="12" fill="var(--da-fg)">10</text>
+  <rect x="352.0" y="60" width="24" height="26" fill="var(--da-surface)" stroke="var(--da-primary)" stroke-width="1.5"/>
+  <text x="364.0" y="78" text-anchor="middle" font-size="12" fill="var(--da-fg)">5</text>
+  <rect x="112.0" y="110" width="24" height="26" fill="var(--da-surface)" stroke="var(--da-primary)" stroke-width="1.5"/>
+  <text x="124.0" y="128" text-anchor="middle" font-size="12" fill="var(--da-fg)">38</text>
+  <rect x="136.0" y="110" width="24" height="26" fill="var(--da-surface)" stroke="var(--da-primary)" stroke-width="1.5"/>
+  <text x="148.0" y="128" text-anchor="middle" font-size="12" fill="var(--da-fg)">27</text>
+  <rect x="160.0" y="110" width="24" height="26" fill="var(--da-surface)" stroke="var(--da-primary)" stroke-width="1.5"/>
+  <text x="172.0" y="128" text-anchor="middle" font-size="12" fill="var(--da-fg)">43</text>
+  <rect x="184.0" y="110" width="24" height="26" fill="var(--da-surface)" stroke="var(--da-primary)" stroke-width="1.5"/>
+  <text x="196.0" y="128" text-anchor="middle" font-size="12" fill="var(--da-fg)">3</text>
+  <rect x="352.0" y="110" width="24" height="26" fill="var(--da-surface)" stroke="var(--da-primary)" stroke-width="1.5"/>
+  <text x="364.0" y="128" text-anchor="middle" font-size="12" fill="var(--da-fg)">9</text>
+  <rect x="376.0" y="110" width="24" height="26" fill="var(--da-surface)" stroke="var(--da-primary)" stroke-width="1.5"/>
+  <text x="388.0" y="128" text-anchor="middle" font-size="12" fill="var(--da-fg)">82</text>
+  <rect x="400.0" y="110" width="24" height="26" fill="var(--da-surface)" stroke="var(--da-primary)" stroke-width="1.5"/>
+  <text x="412.0" y="128" text-anchor="middle" font-size="12" fill="var(--da-fg)">10</text>
+  <rect x="424.0" y="110" width="24" height="26" fill="var(--da-surface)" stroke="var(--da-primary)" stroke-width="1.5"/>
+  <text x="436.0" y="128" text-anchor="middle" font-size="12" fill="var(--da-fg)">5</text>
+  <rect x="76.0" y="160" width="24" height="26" fill="var(--da-surface)" stroke="var(--da-primary)" stroke-width="1.5"/>
+  <text x="88.0" y="178" text-anchor="middle" font-size="12" fill="var(--da-fg)">38</text>
+  <rect x="100.0" y="160" width="24" height="26" fill="var(--da-surface)" stroke="var(--da-primary)" stroke-width="1.5"/>
+  <text x="112.0" y="178" text-anchor="middle" font-size="12" fill="var(--da-fg)">27</text>
+  <rect x="196.0" y="160" width="24" height="26" fill="var(--da-surface)" stroke="var(--da-primary)" stroke-width="1.5"/>
+  <text x="208.0" y="178" text-anchor="middle" font-size="12" fill="var(--da-fg)">43</text>
+  <rect x="220.0" y="160" width="24" height="26" fill="var(--da-surface)" stroke="var(--da-primary)" stroke-width="1.5"/>
+  <text x="232.0" y="178" text-anchor="middle" font-size="12" fill="var(--da-fg)">3</text>
+  <rect x="316.0" y="160" width="24" height="26" fill="var(--da-surface)" stroke="var(--da-primary)" stroke-width="1.5"/>
+  <text x="328.0" y="178" text-anchor="middle" font-size="12" fill="var(--da-fg)">9</text>
+  <rect x="340.0" y="160" width="24" height="26" fill="var(--da-surface)" stroke="var(--da-primary)" stroke-width="1.5"/>
+  <text x="352.0" y="178" text-anchor="middle" font-size="12" fill="var(--da-fg)">82</text>
+  <rect x="436.0" y="160" width="24" height="26" fill="var(--da-surface)" stroke="var(--da-primary)" stroke-width="1.5"/>
+  <text x="448.0" y="178" text-anchor="middle" font-size="12" fill="var(--da-fg)">10</text>
+  <rect x="460.0" y="160" width="24" height="26" fill="var(--da-surface)" stroke="var(--da-primary)" stroke-width="1.5"/>
+  <text x="472.0" y="178" text-anchor="middle" font-size="12" fill="var(--da-fg)">5</text>
+  <rect x="58.0" y="210" width="24" height="26" fill="var(--da-surface)" stroke="var(--da-muted)" stroke-width="1.5"/>
+  <text x="70.0" y="228" text-anchor="middle" font-size="12" fill="var(--da-fg)">38</text>
+  <rect x="118.0" y="210" width="24" height="26" fill="var(--da-surface)" stroke="var(--da-muted)" stroke-width="1.5"/>
+  <text x="130.0" y="228" text-anchor="middle" font-size="12" fill="var(--da-fg)">27</text>
+  <rect x="178.0" y="210" width="24" height="26" fill="var(--da-surface)" stroke="var(--da-muted)" stroke-width="1.5"/>
+  <text x="190.0" y="228" text-anchor="middle" font-size="12" fill="var(--da-fg)">43</text>
+  <rect x="238.0" y="210" width="24" height="26" fill="var(--da-surface)" stroke="var(--da-muted)" stroke-width="1.5"/>
+  <text x="250.0" y="228" text-anchor="middle" font-size="12" fill="var(--da-fg)">3</text>
+  <rect x="298.0" y="210" width="24" height="26" fill="var(--da-surface)" stroke="var(--da-muted)" stroke-width="1.5"/>
+  <text x="310.0" y="228" text-anchor="middle" font-size="12" fill="var(--da-fg)">9</text>
+  <rect x="358.0" y="210" width="24" height="26" fill="var(--da-surface)" stroke="var(--da-muted)" stroke-width="1.5"/>
+  <text x="370.0" y="228" text-anchor="middle" font-size="12" fill="var(--da-fg)">82</text>
+  <rect x="418.0" y="210" width="24" height="26" fill="var(--da-surface)" stroke="var(--da-muted)" stroke-width="1.5"/>
+  <text x="430.0" y="228" text-anchor="middle" font-size="12" fill="var(--da-fg)">10</text>
+  <rect x="478.0" y="210" width="24" height="26" fill="var(--da-surface)" stroke="var(--da-muted)" stroke-width="1.5"/>
+  <text x="490.0" y="228" text-anchor="middle" font-size="12" fill="var(--da-fg)">5</text>
+  <rect x="76.0" y="260" width="24" height="26" fill="var(--da-surface)" stroke="var(--da-success)" stroke-width="1.5"/>
+  <text x="88.0" y="278" text-anchor="middle" font-size="12" fill="var(--da-fg)">27</text>
+  <rect x="100.0" y="260" width="24" height="26" fill="var(--da-surface)" stroke="var(--da-success)" stroke-width="1.5"/>
+  <text x="112.0" y="278" text-anchor="middle" font-size="12" fill="var(--da-fg)">38</text>
+  <rect x="196.0" y="260" width="24" height="26" fill="var(--da-surface)" stroke="var(--da-success)" stroke-width="1.5"/>
+  <text x="208.0" y="278" text-anchor="middle" font-size="12" fill="var(--da-fg)">3</text>
+  <rect x="220.0" y="260" width="24" height="26" fill="var(--da-surface)" stroke="var(--da-success)" stroke-width="1.5"/>
+  <text x="232.0" y="278" text-anchor="middle" font-size="12" fill="var(--da-fg)">43</text>
+  <rect x="316.0" y="260" width="24" height="26" fill="var(--da-surface)" stroke="var(--da-success)" stroke-width="1.5"/>
+  <text x="328.0" y="278" text-anchor="middle" font-size="12" fill="var(--da-fg)">9</text>
+  <rect x="340.0" y="260" width="24" height="26" fill="var(--da-surface)" stroke="var(--da-success)" stroke-width="1.5"/>
+  <text x="352.0" y="278" text-anchor="middle" font-size="12" fill="var(--da-fg)">82</text>
+  <rect x="436.0" y="260" width="24" height="26" fill="var(--da-surface)" stroke="var(--da-success)" stroke-width="1.5"/>
+  <text x="448.0" y="278" text-anchor="middle" font-size="12" fill="var(--da-fg)">5</text>
+  <rect x="460.0" y="260" width="24" height="26" fill="var(--da-surface)" stroke="var(--da-success)" stroke-width="1.5"/>
+  <text x="472.0" y="278" text-anchor="middle" font-size="12" fill="var(--da-fg)">10</text>
+  <rect x="112.0" y="310" width="24" height="26" fill="var(--da-surface)" stroke="var(--da-success)" stroke-width="1.5"/>
+  <text x="124.0" y="328" text-anchor="middle" font-size="12" fill="var(--da-fg)">3</text>
+  <rect x="136.0" y="310" width="24" height="26" fill="var(--da-surface)" stroke="var(--da-success)" stroke-width="1.5"/>
+  <text x="148.0" y="328" text-anchor="middle" font-size="12" fill="var(--da-fg)">27</text>
+  <rect x="160.0" y="310" width="24" height="26" fill="var(--da-surface)" stroke="var(--da-success)" stroke-width="1.5"/>
+  <text x="172.0" y="328" text-anchor="middle" font-size="12" fill="var(--da-fg)">38</text>
+  <rect x="184.0" y="310" width="24" height="26" fill="var(--da-surface)" stroke="var(--da-success)" stroke-width="1.5"/>
+  <text x="196.0" y="328" text-anchor="middle" font-size="12" fill="var(--da-fg)">43</text>
+  <rect x="352.0" y="310" width="24" height="26" fill="var(--da-surface)" stroke="var(--da-success)" stroke-width="1.5"/>
+  <text x="364.0" y="328" text-anchor="middle" font-size="12" fill="var(--da-fg)">5</text>
+  <rect x="376.0" y="310" width="24" height="26" fill="var(--da-surface)" stroke="var(--da-success)" stroke-width="1.5"/>
+  <text x="388.0" y="328" text-anchor="middle" font-size="12" fill="var(--da-fg)">9</text>
+  <rect x="400.0" y="310" width="24" height="26" fill="var(--da-surface)" stroke="var(--da-success)" stroke-width="1.5"/>
+  <text x="412.0" y="328" text-anchor="middle" font-size="12" fill="var(--da-fg)">10</text>
+  <rect x="424.0" y="310" width="24" height="26" fill="var(--da-surface)" stroke="var(--da-success)" stroke-width="1.5"/>
+  <text x="436.0" y="328" text-anchor="middle" font-size="12" fill="var(--da-fg)">82</text>
+  <rect x="184.0" y="360" width="24" height="26" fill="var(--da-surface)" stroke="var(--da-success)" stroke-width="1.5"/>
+  <text x="196.0" y="378" text-anchor="middle" font-size="12" fill="var(--da-fg)">3</text>
+  <rect x="208.0" y="360" width="24" height="26" fill="var(--da-surface)" stroke="var(--da-success)" stroke-width="1.5"/>
+  <text x="220.0" y="378" text-anchor="middle" font-size="12" fill="var(--da-fg)">5</text>
+  <rect x="232.0" y="360" width="24" height="26" fill="var(--da-surface)" stroke="var(--da-success)" stroke-width="1.5"/>
+  <text x="244.0" y="378" text-anchor="middle" font-size="12" fill="var(--da-fg)">9</text>
+  <rect x="256.0" y="360" width="24" height="26" fill="var(--da-surface)" stroke="var(--da-success)" stroke-width="1.5"/>
+  <text x="268.0" y="378" text-anchor="middle" font-size="12" fill="var(--da-fg)">10</text>
+  <rect x="280.0" y="360" width="24" height="26" fill="var(--da-surface)" stroke="var(--da-success)" stroke-width="1.5"/>
+  <text x="292.0" y="378" text-anchor="middle" font-size="12" fill="var(--da-fg)">27</text>
+  <rect x="304.0" y="360" width="24" height="26" fill="var(--da-surface)" stroke="var(--da-success)" stroke-width="1.5"/>
+  <text x="316.0" y="378" text-anchor="middle" font-size="12" fill="var(--da-fg)">38</text>
+  <rect x="328.0" y="360" width="24" height="26" fill="var(--da-surface)" stroke="var(--da-success)" stroke-width="1.5"/>
+  <text x="340.0" y="378" text-anchor="middle" font-size="12" fill="var(--da-fg)">43</text>
+  <rect x="352.0" y="360" width="24" height="26" fill="var(--da-surface)" stroke="var(--da-success)" stroke-width="1.5"/>
+  <text x="364.0" y="378" text-anchor="middle" font-size="12" fill="var(--da-fg)">82</text>
+  <line x1="570" y1="60" x2="570" y2="380" stroke="var(--da-border)"/>
+  <text x="600" y="90" font-size="12" fill="var(--da-muted)">Giriş (pivot = son eleman)</text>
+  <rect x="600" y="100" width="34" height="26" fill="var(--da-surface)" stroke="var(--da-border)" stroke-width="1.5"/>
+  <text x="617.0" y="118" text-anchor="middle" font-size="12" fill="var(--da-fg)">38</text>
+  <rect x="634" y="100" width="34" height="26" fill="var(--da-surface)" stroke="var(--da-border)" stroke-width="1.5"/>
+  <text x="651.0" y="118" text-anchor="middle" font-size="12" fill="var(--da-fg)">27</text>
+  <rect x="668" y="100" width="34" height="26" fill="var(--da-surface)" stroke="var(--da-border)" stroke-width="1.5"/>
+  <text x="685.0" y="118" text-anchor="middle" font-size="12" fill="var(--da-fg)">43</text>
+  <rect x="702" y="100" width="34" height="26" fill="var(--da-surface)" stroke="var(--da-border)" stroke-width="1.5"/>
+  <text x="719.0" y="118" text-anchor="middle" font-size="12" fill="var(--da-fg)">3</text>
+  <rect x="736" y="100" width="34" height="26" fill="var(--da-surface)" stroke="var(--da-border)" stroke-width="1.5"/>
+  <text x="753.0" y="118" text-anchor="middle" font-size="12" fill="var(--da-fg)">9</text>
+  <rect x="770" y="100" width="34" height="26" fill="var(--da-surface)" stroke="var(--da-border)" stroke-width="1.5"/>
+  <text x="787.0" y="118" text-anchor="middle" font-size="12" fill="var(--da-fg)">82</text>
+  <rect x="804" y="100" width="34" height="26" fill="var(--da-surface)" stroke="var(--da-border)" stroke-width="1.5"/>
+  <text x="821.0" y="118" text-anchor="middle" font-size="12" fill="var(--da-fg)">10</text>
+  <rect x="838" y="100" width="34" height="26" fill="var(--da-accent)" opacity="0.25" stroke="var(--da-accent)" stroke-width="2"/>
+  <text x="855" y="118" text-anchor="middle" font-size="12" font-weight="600" fill="var(--da-fg)">5</text>
+  <text x="600" y="180" font-size="12" fill="var(--da-muted)">Bölümleme sonrası</text>
+  <rect x="600" y="190" width="34" height="26" fill="var(--da-surface)" stroke="var(--da-success)" stroke-width="1.5"/>
+  <text x="617.0" y="208" text-anchor="middle" font-size="12" fill="var(--da-fg)">3</text>
+  <rect x="634" y="190" width="34" height="26" fill="var(--da-accent)" opacity="0.25" stroke="var(--da-accent)" stroke-width="2"/>
+  <text x="651" y="208" text-anchor="middle" font-size="12" font-weight="600" fill="var(--da-fg)">5</text>
+  <rect x="668" y="190" width="34" height="26" fill="var(--da-surface)" stroke="var(--da-danger)" stroke-width="1.5"/>
+  <text x="685.0" y="208" text-anchor="middle" font-size="12" fill="var(--da-fg)">43</text>
+  <rect x="702" y="190" width="34" height="26" fill="var(--da-surface)" stroke="var(--da-danger)" stroke-width="1.5"/>
+  <text x="719.0" y="208" text-anchor="middle" font-size="12" fill="var(--da-fg)">38</text>
+  <rect x="736" y="190" width="34" height="26" fill="var(--da-surface)" stroke="var(--da-danger)" stroke-width="1.5"/>
+  <text x="753.0" y="208" text-anchor="middle" font-size="12" fill="var(--da-fg)">9</text>
+  <rect x="770" y="190" width="34" height="26" fill="var(--da-surface)" stroke="var(--da-danger)" stroke-width="1.5"/>
+  <text x="787.0" y="208" text-anchor="middle" font-size="12" fill="var(--da-fg)">82</text>
+  <rect x="804" y="190" width="34" height="26" fill="var(--da-surface)" stroke="var(--da-danger)" stroke-width="1.5"/>
+  <text x="821.0" y="208" text-anchor="middle" font-size="12" fill="var(--da-fg)">10</text>
+  <rect x="838" y="190" width="34" height="26" fill="var(--da-surface)" stroke="var(--da-danger)" stroke-width="1.5"/>
+  <text x="855.0" y="208" text-anchor="middle" font-size="12" fill="var(--da-fg)">27</text>
+  <text x="617" y="240" text-anchor="middle" font-size="11" fill="var(--da-success)">&lt; 5</text>
+  <text x="770" y="240" text-anchor="middle" font-size="11" fill="var(--da-danger)">≥ 5</text>
+  <text x="600" y="290" font-size="12" fill="var(--da-fg)">Pivot kesin yerinde; sol ve sağ</text>
+  <text x="600" y="308" font-size="12" fill="var(--da-fg)">parçalar ayrı ayrı sıralanır.</text>
+  <text x="600" y="345" font-size="12" fill="var(--da-muted)">Dengeli bölünme: O(n log n)</text>
+  <text x="600" y="365" font-size="12" fill="var(--da-danger)">Hep uçtaki pivot: O(n²)</text>
+</svg>

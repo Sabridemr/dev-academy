@@ -1,0 +1,111 @@
+{
+  "id": "l-05-trees-bst-quiz",
+  "title": { "tr": "Ağaçlar ve BST Quiz", "en": "Trees and BST Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Bir ikili arama ağacının hangi dolaşma sırası değerleri küçükten büyüğe sıralı verir?",
+        "en": "Which traversal order of a binary search tree yields the values in ascending order?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Preorder (düğüm → sol → sağ)", "en": "Preorder (node → left → right)" } },
+        { "id": "b", "text": { "tr": "Inorder (sol → düğüm → sağ)", "en": "Inorder (left → node → right)" } },
+        { "id": "c", "text": { "tr": "Postorder (sol → sağ → düğüm)", "en": "Postorder (left → right → node)" } },
+        { "id": "d", "text": { "tr": "Seviye sırası (level-order)", "en": "Level-order" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "BST kuralına göre sol alt ağaç düğümden küçük, sağ alt ağaç büyüktür. Inorder önce soldaki küçükleri, sonra düğümü, sonra sağdaki büyükleri verdiği için çıktı sıralıdır. Preorder kökü önce verir; postorder kökü en sona bırakır; seviye sırası ise derinliğe göre gruplar, değere göre değil.",
+        "en": "By the BST rule the left subtree is smaller than the node and the right subtree is larger. Inorder emits the smaller left values, then the node, then the larger right values, so the output is sorted. Preorder emits the root first, postorder leaves it last, and level-order groups by depth rather than by value."
+      },
+      "difficulty": "easy",
+      "concepts": ["inorder-traversal", "tree-traversal"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "1, 2, 3, …, n sayıları bu sırayla boş ve dengelenmeyen bir BST'ye eklenirse, bir değeri aramanın en kötü durum maliyeti nedir?",
+        "en": "If the numbers 1, 2, 3, …, n are inserted in that order into an empty, non-balancing BST, what is the worst-case cost of searching for a value?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "O(1)", "en": "O(1)" } },
+        { "id": "b", "text": { "tr": "O(log n)", "en": "O(log n)" } },
+        { "id": "c", "text": { "tr": "O(n)", "en": "O(n)" } },
+        { "id": "d", "text": { "tr": "O(n log n)", "en": "O(n log n)" } }
+      ],
+      "correct": ["c"],
+      "explanation": {
+        "tr": "Her yeni değer öncekinden büyük olduğu için hep sağa eklenir ve ağaç bir bağlı listeye dönüşür; yükseklik n − 1 olur. Arama maliyeti O(h) olduğundan O(n)'e düşer. O(log n) yalnızca ağaç dengeli kaldığında geçerlidir.",
+        "en": "Each new value is larger than the previous one, so it always goes right and the tree degenerates into a linked list of height n − 1. Search costs O(h), so it drops to O(n). O(log n) only holds while the tree stays balanced."
+      },
+      "difficulty": "medium",
+      "concepts": ["tree-height", "bst-search"]
+    },
+    {
+      "id": "q3",
+      "type": "multiple",
+      "prompt": {
+        "tr": "İki çocuklu bir düğümü BST'den silerken onun yerine hangi değerler sıralama kuralını bozmadan konabilir? (Birden fazla seçin)",
+        "en": "When deleting a node with two children from a BST, which values can replace it without breaking the ordering rule? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Sağ alt ağacın en küçük değeri (inorder ardılı)", "en": "The smallest value of the right subtree (inorder successor)" } },
+        { "id": "b", "text": { "tr": "Sol alt ağacın en büyük değeri (inorder öncülü)", "en": "The largest value of the left subtree (inorder predecessor)" } },
+        { "id": "c", "text": { "tr": "Düğümün doğrudan sol çocuğunun değeri", "en": "The value of the node's direct left child" } },
+        { "id": "d", "text": { "tr": "Ağacın kökündeki değer", "en": "The value at the root of the tree" } }
+      ],
+      "correct": ["a", "b"],
+      "explanation": {
+        "tr": "Ardıl, sol alt ağaçtaki her şeyden büyük ve sağ alt ağaçtaki geri kalan her şeyden küçüktür; öncül de simetrik olarak aynı özelliği taşır. Doğrudan sol çocuğun kendi sağ alt ağacında ondan büyük değerler olabilir, bu yüzden sıralama bozulabilir. Kökün değeri ise silinen düğümün alt ağacıyla ilgisizdir.",
+        "en": "The successor is larger than everything in the left subtree and smaller than everything else in the right subtree; the predecessor has the symmetric property. The direct left child may have larger values in its own right subtree, so ordering could break. The root's value is unrelated to the deleted node's subtree."
+      },
+      "difficulty": "medium",
+      "concepts": ["bst-delete"]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Her düğümün değeri sol çocuğundan büyük ve sağ çocuğundan küçükse, ağaç kesinlikle geçerli bir BST'dir.",
+        "en": "If every node's value is greater than its left child's and smaller than its right child's, the tree is definitely a valid BST."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "Yanlış. BST kuralı alt ağacın tamamı için geçerlidir. Örneğin kökü 8, sol çocuğu 3 ve 3'ün sağ çocuğu 12 olan ağaçta tüm ebeveyn-çocuk çiftleri kurala uyar, ama 12 kökün sol alt ağacında olup 8'den büyüktür. Doğrulama için her düğüme bir (alt, üst) sınır taşınmalı ya da inorder çıktısı kontrol edilmelidir.",
+        "en": "False. The BST rule applies to the whole subtree. For example, with root 8, left child 3 and 3's right child 12, every parent-child pair obeys the rule, yet 12 sits in the root's left subtree while being greater than 8. Validation must carry (low, high) bounds down to each node or check the inorder output."
+      },
+      "difficulty": "hard",
+      "concepts": ["bst-search", "inorder-traversal"]
+    },
+    {
+      "id": "q5",
+      "type": "order",
+      "prompt": {
+        "tr": "Kökü 8, sol çocuğu 3 (çocukları 1 ve 6), sağ çocuğu 10 olan ağacın preorder dolaşma sırasını oluşturun.",
+        "en": "Build the preorder traversal of the tree with root 8, left child 3 (children 1 and 6) and right child 10."
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "8", "en": "8" } },
+        { "id": "b", "text": { "tr": "3", "en": "3" } },
+        { "id": "c", "text": { "tr": "1", "en": "1" } },
+        { "id": "d", "text": { "tr": "6", "en": "6" } },
+        { "id": "e", "text": { "tr": "10", "en": "10" } }
+      ],
+      "correct": ["a", "b", "c", "d", "e"],
+      "explanation": {
+        "tr": "Preorder önce düğümü, sonra sol alt ağacın tamamını, en son sağ alt ağacı ziyaret eder: 8, ardından 3'ün alt ağacı (3, 1, 6), sonra 10. Bu sıra ağacı aynı şekliyle yeniden kurmak için kullanılabilir.",
+        "en": "Preorder visits the node first, then the entire left subtree, then the right subtree: 8, then 3's subtree (3, 1, 6), then 10. This order can be used to rebuild the tree with the same shape."
+      },
+      "difficulty": "easy",
+      "concepts": ["tree-traversal", "tree-terminology"]
+    }
+  ]
+}

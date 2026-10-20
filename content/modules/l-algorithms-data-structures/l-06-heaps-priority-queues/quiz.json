@@ -1,0 +1,110 @@
+{
+  "id": "l-06-heaps-priority-queues-quiz",
+  "title": { "tr": "Heap ve Öncelik Kuyruğu Quiz", "en": "Heaps and Priority Queues Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Sıfırdan başlayan dizi yerleşiminde 4 indeksli düğümün ebeveyni hangi indekstedir?",
+        "en": "In a zero-based array layout, at which index is the parent of the node at index 4?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "1", "en": "1" } },
+        { "id": "b", "text": { "tr": "2", "en": "2" } },
+        { "id": "c", "text": { "tr": "3", "en": "3" } },
+        { "id": "d", "text": { "tr": "9", "en": "9" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "Ebeveyn (i − 1) // 2 formülüyle bulunur: (4 − 1) // 2 = 1. Gerçekten de 1 indeksinin çocukları 2·1 + 1 = 3 ve 2·1 + 2 = 4'tür. 9, 4 indeksinin sağ çocuğunun indeksidir.",
+        "en": "The parent is (i − 1) // 2: (4 − 1) // 2 = 1. Indeed, index 1 has children 2·1 + 1 = 3 and 2·1 + 2 = 4. 9 is the index of node 4's right child."
+      },
+      "difficulty": "easy",
+      "concepts": ["heap-array-layout"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "n elemanlı bir akıştan en büyük k elemanı O(k) bellekle bulmak için hangi yapı kullanılır?",
+        "en": "To find the k largest elements of an n-element stream with O(k) memory, which structure is used?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "k boyutlu bir max-heap", "en": "A max-heap of size k" } },
+        { "id": "b", "text": { "tr": "k boyutlu bir min-heap", "en": "A min-heap of size k" } },
+        { "id": "c", "text": { "tr": "n boyutlu bir min-heap", "en": "A min-heap of size n" } },
+        { "id": "d", "text": { "tr": "Sıralı bir liste ve bisect", "en": "A sorted list with bisect" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Min-heap'in kökü, şimdiye kadarki en büyük k elemanın en küçüğüdür; yeni sayı bundan büyükse kök atılır ve sayı eklenir. Toplam maliyet O(n log k). Max-heap kökte en büyüğü tutar, hangi elemanın atılacağını ucuza söyleyemez. n boyutlu heap O(n) bellek ister; k boyutlu sıralı listeye ekleme ise her seferinde O(k) kaydırma gerektirir.",
+        "en": "The min-heap's root is the smallest of the k largest seen so far; if a new number beats it, the root is dropped and the number inserted. Total cost O(n log k). A max-heap keeps the largest at the root and cannot cheaply tell which element to evict. A size-n heap needs O(n) memory, and inserting into a size-k sorted list costs O(k) shifting each time."
+      },
+      "difficulty": "medium",
+      "concepts": ["top-k", "binary-heap"]
+    },
+    {
+      "id": "q3",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Python'un heapq modülü hakkında hangileri doğrudur? (Birden fazla seçin)",
+        "en": "Which statements about Python's heapq module are true? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Sıradan bir list üzerinde çalışır ve her zaman min-heap davranışı sunar", "en": "It works on a plain list and always behaves as a min-heap" } },
+        { "id": "b", "text": { "tr": "heapify, hazır bir listeyi O(n) sürede heap'e çevirir", "en": "heapify turns an existing list into a heap in O(n)" } },
+        { "id": "c", "text": { "tr": "heappush sonrası liste baştan sona sıralı olur", "en": "After heappush the list is fully sorted" } },
+        { "id": "d", "text": { "tr": "Max-heap için ayrı bir heapq.MaxHeap sınıfı vardır", "en": "There is a separate heapq.MaxHeap class for max-heaps" } }
+      ],
+      "correct": ["a", "b"],
+      "explanation": {
+        "tr": "heapq ayrı bir sınıf değil, list üzerinde çalışan fonksiyonlardır ve min-heap kuralını korur; heapify alt seviyelerden köke sift-down yaparak O(n)'de çalışır. Liste tamamen sıralı değildir, yalnızca heap[0] en küçüktür. Max-heap için genellikle değerler negatif saklanır; standart bir MaxHeap sınıfı yoktur.",
+        "en": "heapq is a set of functions on a list, not a class, and it maintains the min-heap rule; heapify runs sift-down from the lower levels up to the root in O(n). The list is not fully sorted; only heap[0] is guaranteed smallest. For a max-heap you usually store negated values; there is no standard MaxHeap class."
+      },
+      "difficulty": "medium",
+      "concepts": ["heapq", "heapify"]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Min-heap'te kökü çıkardıktan sonra sift-down sırasında düğüm, çocuklarından herhangi biriyle yer değiştirebilir; hangisinin seçildiği heap kuralı açısından önemli değildir.",
+        "en": "In a min-heap, after removing the root, sift-down may swap the node with either child; which one is chosen does not matter for the heap rule."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "Yanlış. Düğüm her zaman iki çocuğundan küçük olanla yer değiştirmelidir. Büyük çocuk yukarı taşınırsa, artık kardeşinin ebeveyni olur ve kardeşinden büyük olduğu için heap kuralı bozulur.",
+        "en": "False. The node must always swap with the smaller of its two children. If the larger child moves up, it becomes the parent of its sibling while being larger than it, breaking the heap rule."
+      },
+      "difficulty": "hard",
+      "concepts": ["sift-down"]
+    },
+    {
+      "id": "q5",
+      "type": "order",
+      "prompt": {
+        "tr": "Min-heap'e yeni bir eleman eklemenin (push) adımlarını doğru sıraya koyun.",
+        "en": "Put the steps of pushing a new element into a min-heap in the correct order."
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Elemanı dizinin sonuna ekle", "en": "Append the element to the end of the array" } },
+        { "id": "b", "text": { "tr": "Ebeveyn indeksini (i − 1) // 2 ile hesapla", "en": "Compute the parent index as (i − 1) // 2" } },
+        { "id": "c", "text": { "tr": "Eleman ebeveyninden küçükse yer değiştir", "en": "Swap if the element is smaller than its parent" } },
+        { "id": "d", "text": { "tr": "Köke ulaşınca ya da ebeveyn daha küçükse dur", "en": "Stop at the root or when the parent is smaller" } }
+      ],
+      "correct": ["a", "b", "c", "d"],
+      "explanation": {
+        "tr": "Önce şekil kuralı korunur: eleman sona eklenir. Sonra sift-up başlar: ebeveyn bulunur, eleman ondan küçükse yer değiştirilir ve bu döngü köke ulaşılana ya da ebeveyn daha küçük çıkana kadar sürer. Toplam maliyet O(log n).",
+        "en": "The shape rule comes first: the element is appended. Then sift-up begins: find the parent, swap if the element is smaller, and repeat until reaching the root or finding a smaller parent. Total cost O(log n)."
+      },
+      "difficulty": "easy",
+      "concepts": ["sift-up", "priority-queue"]
+    }
+  ]
+}
