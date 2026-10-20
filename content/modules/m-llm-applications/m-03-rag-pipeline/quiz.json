@@ -1,0 +1,110 @@
+{
+  "id": "m-03-rag-pipeline-quiz",
+  "title": { "tr": "RAG Quiz", "en": "RAG Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Şirket içi iade politikası her ay değişiyor ve cevapların kaynak göstermesi gerekiyor. En uygun yaklaşım hangisi?",
+        "en": "The internal return policy changes every month and answers must cite their source. Which approach fits best?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Modeli her ay politika metniyle fine-tune etmek", "en": "Fine-tune the model on the policy text every month" } },
+        { "id": "b", "text": { "tr": "RAG: politikayı dizinleyip her soruda ilgili parçaları bağlama koymak", "en": "RAG: index the policy and put the relevant chunks into context on each question" } },
+        { "id": "c", "text": { "tr": "Politikayı modelin hatırlaması için sistem mesajında 'ezberle' demek", "en": "Tell the model to 'memorise' the policy in the system message" } },
+        { "id": "d", "text": { "tr": "Temperature değerini sıfıra çekmek", "en": "Set the temperature to zero" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "RAG'da bilgi güncellenince yalnızca dizin güncellenir ve cevap, getirilen belgeye dayandığı için kaynak gösterilebilir. Fine-tuning olgu öğretmek için güvenilir değildir ve kaynak gösteremez; model çağrılar arasında bir şey ezberlemez; temperature bilgi eklemez.",
+        "en": "With RAG, updating knowledge means updating the index, and answers can cite sources because they rest on retrieved documents. Fine-tuning is unreliable for teaching facts and cannot cite; the model memorises nothing between calls; temperature adds no knowledge."
+      },
+      "difficulty": "easy",
+      "concepts": ["rag"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "Chunk boyutunu 150 tokendan 1 200 tokena çıkardınız. En olası etki hangisidir?",
+        "en": "You raised the chunk size from 150 to 1,200 tokens. What is the most likely effect?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Her parça daha çok bağlam taşır ama gömmesi birçok fikrin ortalaması olur; eşleşme bulanıklaşır ve bağlam bütçesi daha hızlı dolar", "en": "Each chunk carries more context but its embedding averages many ideas; matching gets fuzzier and the context budget fills faster" } },
+        { "id": "b", "text": { "tr": "Getirme isabeti her durumda artar", "en": "Retrieval precision increases in every case" } },
+        { "id": "c", "text": { "tr": "Dizin boyutu ve parça sayısı artar", "en": "Index size and chunk count increase" } },
+        { "id": "d", "text": { "tr": "Örtüşme artık gereksizdir çünkü sınır kalmaz", "en": "Overlap becomes unnecessary because there are no boundaries left" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "Büyük parça bağlamı korur ama tek bir vektör artık birçok konuyu temsil eder; alakasız sorgular da eşleşebilir ve top-k parça pencerede daha çok yer kaplar. Parça sayısı azalır, sınırlar ise hâlâ vardır.",
+        "en": "A large chunk keeps context but one vector now represents several topics; unrelated queries may match and top-k chunks take more room in the window. The chunk count goes down, and boundaries still exist."
+      },
+      "difficulty": "medium",
+      "concepts": ["chunking", "embedding"]
+    },
+    {
+      "id": "q3",
+      "type": "order",
+      "prompt": {
+        "tr": "Sorgu hattının adımlarını sıralayın.",
+        "en": "Order the steps of the query pipeline."
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Soruyu aynı gömme modeliyle vektöre çevir", "en": "Embed the question with the same embedding model" } },
+        { "id": "b", "text": { "tr": "Vektör veritabanından yetki filtresiyle en yakın k parçayı getir", "en": "Retrieve the k nearest chunks from the vector database with an access filter" } },
+        { "id": "c", "text": { "tr": "Parçaları kaynak etiketleriyle prompt'a ekleyip LLM'i çağır", "en": "Add chunks to the prompt with source tags and call the LLM" } },
+        { "id": "d", "text": { "tr": "Cevaptaki kaynak kimliklerini doğrulayıp kullanıcıya göster", "en": "Verify the source ids in the answer and show it to the user" } }
+      ],
+      "correct": ["a", "b", "c", "d"],
+      "explanation": {
+        "tr": "Soru önce vektöre çevrilir, sonra en yakın parçalar getirilir, ardından bağlamla birlikte üretim yapılır ve son olarak uygulama kaynakları doğrular.",
+        "en": "The question is embedded first, then the nearest chunks are retrieved, then generation runs with that context, and finally the application verifies the sources."
+      },
+      "difficulty": "easy",
+      "concepts": ["retrieval", "citation"]
+    },
+    {
+      "id": "q4",
+      "type": "multiple",
+      "prompt": {
+        "tr": "RAG sistemi yanlış cevap verdi. Loglarda doğru parçanın getirilen 3 parça arasında olmadığını görüyorsunuz. Hangi müdahaleler bu hatayı hedefler? (Birden fazla seçin)",
+        "en": "The RAG system gave a wrong answer. Logs show the correct chunk was not among the 3 retrieved. Which interventions target this failure? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Geniş aday kümesi getirip yeniden sıralayıcı (reranker) eklemek", "en": "Retrieve a wider candidate set and add a reranker" } },
+        { "id": "b", "text": { "tr": "Anahtar kelime aramasıyla birleştirilmiş hibrit arama kullanmak", "en": "Use hybrid search combined with keyword search" } },
+        { "id": "c", "text": { "tr": "Sohbet bağlamına göre sorguyu yeniden yazmak", "en": "Rewrite the query using the conversation context" } },
+        { "id": "d", "text": { "tr": "Sistem mesajına 'daha dikkatli ol' eklemek", "en": "Add 'be more careful' to the system message" } }
+      ],
+      "correct": ["a", "b", "c"],
+      "explanation": {
+        "tr": "Bu bir getirme hatasıdır: doğru parça hiç bağlama girmemiş. Yeniden sıralama, hibrit arama ve sorgu yeniden yazma doğrudan getirmeyi iyileştirir. Model bağlamda olmayan bilgiyi doğru söyleyemeyeceği için üretim talimatını değiştirmek bu hatayı çözmez.",
+        "en": "This is a retrieval failure: the right chunk never reached the context. Reranking, hybrid search and query rewriting improve retrieval directly. Changing the generation instruction cannot fix it, because the model cannot state information that is not in its context."
+      },
+      "difficulty": "hard",
+      "concepts": ["retrieval", "reranking", "top-k"]
+    },
+    {
+      "id": "q5",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "200 tokenlık parçalar 40 token örtüşürse, sınırda bölünen bir cümle iki komşu parçadan en az birinde bütün olarak yer alabilir.",
+        "en": "If 200-token chunks overlap by 40 tokens, a sentence split at a boundary can appear whole in at least one of the two neighbouring chunks."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["t"],
+      "explanation": {
+        "tr": "Doğru. Örtüşme payından kısa bir cümle, sınıra denk gelse bile parçalardan birinde bütün kalır. Bedeli, aynı metnin iki kez gömülmesi ve dizinin büyümesidir.",
+        "en": "True. A sentence shorter than the overlap stays whole in one of the chunks even if it falls on the boundary. The cost is embedding the same text twice and a larger index."
+      },
+      "difficulty": "medium",
+      "concepts": ["chunk-overlap"]
+    }
+  ]
+}

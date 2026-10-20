@@ -1,0 +1,143 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "m-06-agent-loop",
+  "title": { "tr": "Ajan Döngüsü: Araç Çağrısı ve Gözlem", "en": "The Agent Loop: Tool Call and Observation" },
+  "summary": {
+    "tr": "Bir ajanın kullanıcı sorusunu, hava durumu ve sipariş veritabanı araçlarını çağırarak, gözlemleri LLM'e geri verip döngüyle cevaplaması; geçici bir araç hatası ve yeniden deneme dahil.",
+    "en": "An agent answers a user question by calling weather and order-database tools and feeding observations back to the LLM in a loop, including a transient tool error and a retry."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda kullanıcı, ortada ajan çalıştırıcısı, üstte LLM, sağda iki araç: hava durumu API'si ve sipariş veritabanı. Kullanıcı yarınki teslimatı ve havayı sorar. LLM önce sipariş aracını ister; çalıştırıcı veritabanını çağırır, ilk deneme zaman aşımına uğrar, yeniden deneme başarılı olur. Gözlem LLM'e döner, LLM hava durumu aracını ister, sonuç yine LLM'e döner. LLM artık araç istemez ve nihai cevap kullanıcıya iletilir.",
+      "en": "User on the left, the agent runtime in the middle, the LLM on top, two tools on the right: a weather API and an order database. The user asks about tomorrow's delivery and the weather. The LLM first requests the order tool; the runtime calls the database, the first attempt times out and the retry succeeds. The observation returns to the LLM, which then requests the weather tool, and that result also returns. The LLM stops requesting tools and the final answer is delivered to the user."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "user", "kind": "user", "label": { "tr": "Kullanıcı", "en": "User" }, "x": 110, "y": 330 },
+    { "id": "runtime", "kind": "service", "label": { "tr": "Ajan çalıştırıcı", "en": "Agent runtime" }, "sublabel": { "tr": "döngü + sınırlar", "en": "loop + limits" }, "x": 420, "y": 330, "w": 170, "h": 80 },
+    { "id": "llm", "kind": "model", "label": "LLM", "sublabel": { "tr": "karar verir", "en": "decides" }, "x": 420, "y": 110, "w": 150, "h": 70 },
+    { "id": "orders", "kind": "db", "label": { "tr": "Sipariş DB", "en": "Order DB" }, "sublabel": { "tr": "siparis_durumu()", "en": "order_status()" }, "x": 820, "y": 230, "w": 160, "h": 70 },
+    { "id": "weather", "kind": "function", "label": { "tr": "Hava durumu API", "en": "Weather API" }, "sublabel": { "tr": "hava_durumu()", "en": "weather()" }, "x": 820, "y": 450, "w": 160, "h": 70 }
+  ],
+  "edges": [
+    { "id": "user-runtime", "from": "user", "to": "runtime", "kind": "request", "label": { "tr": "soru", "en": "question" } },
+    { "id": "runtime-llm", "from": "runtime", "to": "llm", "kind": "request", "curvature": -0.25, "label": { "tr": "geçmiş + araçlar", "en": "history + tools" } },
+    { "id": "llm-runtime", "from": "llm", "to": "runtime", "kind": "response", "curvature": -0.25, "label": { "tr": "tool_use / cevap", "en": "tool_use / answer" } },
+    { "id": "runtime-orders", "from": "runtime", "to": "orders", "kind": "request", "label": { "tr": "araç çağrısı", "en": "tool call" } },
+    { "id": "runtime-weather", "from": "runtime", "to": "weather", "kind": "request", "label": { "tr": "araç çağrısı", "en": "tool call" } }
+  ],
+  "steps": [
+    {
+      "id": "ask",
+      "title": { "tr": "1. Soru ve araç tanımları", "en": "1. Question and tool definitions" },
+      "narration": {
+        "tr": "Kullanıcı \"12345 numaralı siparişim yarın gelir mi, hava nasıl olacak?\" diye sorar. Çalıştırıcı soruyu, araçların adını, açıklamasını ve JSON şemasını LLM'e gönderir.",
+        "en": "The user asks \"Will order 12345 arrive tomorrow, and what will the weather be?\" The runtime sends the question plus each tool's name, description and JSON schema to the LLM."
+      },
+      "durationMs": 3500,
+      "inherit": false,
+      "highlight": { "nodes": ["user", "runtime", "llm"], "edges": ["user-runtime", "runtime-llm"] },
+      "nodeStates": { "runtime": { "status": "active", "badge": "adım 1" } },
+      "packets": [
+        { "edge": "user-runtime", "shape": "envelope", "label": { "tr": "soru", "en": "question" }, "durationMs": 1000 },
+        { "edge": "runtime-llm", "shape": "envelope", "startAt": 1100, "label": { "tr": "soru + 2 araç", "en": "question + 2 tools" }, "durationMs": 1100 }
+      ]
+    },
+    {
+      "id": "tool-call-orders",
+      "title": { "tr": "2. LLM araç ister", "en": "2. The LLM requests a tool" },
+      "narration": {
+        "tr": "LLM metin yerine yapılandırılmış bir araç çağrısı döndürür: siparis_durumu(siparis_no=\"12345\"). Model aracı kendisi çalıştırmaz; çalıştırıcı argümanları doğrulayıp veritabanını çağırır.",
+        "en": "Instead of text the LLM returns a structured tool call: order_status(order_no=\"12345\"). The model does not run the tool itself; the runtime validates the arguments and calls the database."
+      },
+      "durationMs": 3500,
+      "highlight": { "nodes": ["llm", "runtime", "orders"], "edges": ["llm-runtime", "runtime-orders"] },
+      "nodeStates": { "llm": { "status": "success", "badge": "tool_use" }, "orders": { "status": "active" } },
+      "packets": [
+        { "edge": "llm-runtime", "shape": "diamond", "label": "siparis_durumu", "durationMs": 1000 },
+        { "edge": "runtime-orders", "shape": "dot", "startAt": 1200, "durationMs": 1000 }
+      ]
+    },
+    {
+      "id": "tool-error-retry",
+      "title": { "tr": "3. Zaman aşımı ve yeniden deneme", "en": "3. Timeout and retry" },
+      "narration": {
+        "tr": "İlk çağrı zaman aşımına uğrar. Bu geçici bir hatadır; çalıştırıcı modele sormadan kısa bir beklemeyle bir kez yeniden dener ve bu kez sonuç gelir. Kalıcı bir hata olsaydı açıklayıcı bir gözlem olarak modele verilirdi.",
+        "en": "The first call times out. This is a transient error; the runtime retries once after a short backoff without asking the model, and this time the result arrives. A permanent error would be passed to the model as a descriptive observation."
+      },
+      "durationMs": 4200,
+      "highlight": { "nodes": ["runtime", "orders"], "edges": ["runtime-orders"] },
+      "nodeStates": { "orders": { "status": "warning", "badge": "retry 1" } },
+      "edgeStates": { "runtime-orders": { "status": "error", "label": { "tr": "timeout → retry", "en": "timeout → retry" } } },
+      "packets": [
+        { "edge": "runtime-orders", "shape": "square", "color": "danger", "durationMs": 1100, "label": "✕" },
+        { "edge": "runtime-orders", "shape": "dot", "startAt": 1600, "durationMs": 900 },
+        { "edge": "runtime-orders", "shape": "square", "direction": "backward", "startAt": 2700, "durationMs": 900, "label": { "tr": "kargoda", "en": "shipped" } }
+      ],
+      "annotations": [
+        { "id": "retry-note", "x": 640, "y": 175, "text": { "tr": "geçici hata: çalıştırıcı yeniden dener", "en": "transient error: the runtime retries" }, "tone": "warning", "target": "orders" }
+      ]
+    },
+    {
+      "id": "observe-orders",
+      "title": { "tr": "4. Gözlem LLM'e döner", "en": "4. The observation returns to the LLM" },
+      "narration": {
+        "tr": "Çalıştırıcı sonucu bir araç sonucu mesajı olarak geçmişe ekler ve LLM'i yeniden çağırır. LLM teslimatın yarın olduğunu öğrenir ve bu kez hava durumu aracını ister.",
+        "en": "The runtime appends the result to the history as a tool-result message and calls the LLM again. The LLM learns delivery is tomorrow and now requests the weather tool."
+      },
+      "durationMs": 3800,
+      "highlight": { "nodes": ["runtime", "llm"], "edges": ["runtime-llm", "llm-runtime"] },
+      "nodeStates": {
+        "orders": { "status": "success", "badge": "✓" },
+        "runtime": { "badge": "adım 2" },
+        "llm": { "status": "busy", "badge": "" }
+      },
+      "edgeStates": { "runtime-orders": { "status": "idle", "label": { "tr": "araç çağrısı", "en": "tool call" } } },
+      "packets": [
+        { "edge": "runtime-llm", "shape": "envelope", "label": { "tr": "gözlem: yarın", "en": "observation: tomorrow" }, "durationMs": 1100 },
+        { "edge": "llm-runtime", "shape": "diamond", "startAt": 1500, "label": "hava_durumu", "durationMs": 1000 }
+      ]
+    },
+    {
+      "id": "tool-call-weather",
+      "title": { "tr": "5. İkinci araç", "en": "5. The second tool" },
+      "narration": {
+        "tr": "Çalıştırıcı hava_durumu(sehir=\"İstanbul\", gun=\"yarin\") aracını çağırır ve yalnızca gerekli alanları içeren kısa bir sonucu gözlem olarak LLM'e geri verir.",
+        "en": "The runtime calls weather(city=\"Istanbul\", day=\"tomorrow\") and returns a short result containing only the needed fields to the LLM as an observation."
+      },
+      "durationMs": 3800,
+      "highlight": { "nodes": ["runtime", "weather", "llm"], "edges": ["runtime-weather", "runtime-llm"] },
+      "nodeStates": { "weather": { "status": "active" }, "runtime": { "badge": "adım 3" } },
+      "packets": [
+        { "edge": "runtime-weather", "shape": "dot", "durationMs": 900 },
+        { "edge": "runtime-weather", "shape": "square", "direction": "backward", "startAt": 1000, "durationMs": 900, "label": "18°C, yağmur" },
+        { "edge": "runtime-llm", "shape": "envelope", "startAt": 2100, "label": { "tr": "gözlem", "en": "observation" }, "durationMs": 1000 }
+      ]
+    },
+    {
+      "id": "answer",
+      "title": { "tr": "6. Nihai cevap", "en": "6. Final answer" },
+      "narration": {
+        "tr": "LLM artık araç istemez ve cevabı yazar: \"Siparişiniz yarın teslim edilecek; İstanbul'da yağmur bekleniyor.\" Döngü biter. Model araç istemeye devam etseydi adım, süre ve bütçe sınırları döngüyü keserdi.",
+        "en": "The LLM stops requesting tools and writes the answer: \"Your order arrives tomorrow; rain is expected in Istanbul.\" The loop ends. Had the model kept asking for tools, step, time and budget limits would have cut the loop."
+      },
+      "durationMs": 4200,
+      "highlight": { "nodes": ["llm", "runtime", "user"], "edges": ["llm-runtime", "user-runtime"] },
+      "nodeStates": {
+        "weather": { "status": "success", "badge": "✓" },
+        "llm": { "status": "success", "badge": "end_turn" },
+        "runtime": { "status": "success" },
+        "user": { "status": "success", "badge": "✓" }
+      },
+      "packets": [
+        { "edge": "llm-runtime", "shape": "envelope", "label": { "tr": "cevap", "en": "answer" }, "durationMs": 1000 },
+        { "edge": "user-runtime", "shape": "envelope", "direction": "backward", "startAt": 1200, "label": { "tr": "yarın, yağmurlu", "en": "tomorrow, rainy" }, "durationMs": 1100 }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["agents", "tool-use", "llm", "retry"]
+}

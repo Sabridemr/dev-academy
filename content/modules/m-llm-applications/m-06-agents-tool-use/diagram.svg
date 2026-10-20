@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 400" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Ajan çalıştırıcısının kontrol noktaları</title>
+  <desc id="desc">Solda LLM araç çağrısı üretir. Ortada ajan çalıştırıcısı dört kontrol noktasından geçirir: şema doğrulama, kullanıcı yetkisi, yüksek etkili eylemde insan onayı, adım ve bütçe sınırları. Sağda araçlar: okuma araçları, yan etkili araçlar ve MCP sunucuları. Araç sonucu gözlem olarak LLM'e döner. Altta iz kaydı tüm adımları toplar.</desc>
+  <defs>
+    <marker id="m06-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted)"/>
+    </marker>
+  </defs>
+
+  <!-- LLM -->
+  <rect x="30" y="120" width="140" height="100" rx="16" fill="var(--da-primary)" opacity="0.14" stroke="var(--da-primary)" stroke-width="2"/>
+  <text x="100" y="164" text-anchor="middle" font-size="16" font-weight="600" fill="var(--da-fg)">LLM</text>
+  <text x="100" y="186" text-anchor="middle" font-size="12" fill="var(--da-muted)">tool_use üretir</text>
+
+  <!-- Çalıştırıcı -->
+  <rect x="220" y="40" width="420" height="260" rx="16" fill="var(--da-surface)" stroke="var(--da-border)"/>
+  <text x="430" y="66" text-anchor="middle" font-size="15" font-weight="600" fill="var(--da-fg)">Ajan çalıştırıcı (sizin kodunuz)</text>
+  <g font-size="13" fill="var(--da-fg)">
+    <rect x="240" y="84" width="180" height="90" rx="10" fill="var(--da-surface)" stroke="var(--da-primary)"/>
+    <text x="330" y="112" text-anchor="middle" font-weight="600">1. Şema doğrulama</text>
+    <text x="330" y="134" text-anchor="middle" font-size="11" fill="var(--da-muted)">argüman tipleri, enum,</text>
+    <text x="330" y="150" text-anchor="middle" font-size="11" fill="var(--da-muted)">desen; asla eval yok</text>
+    <rect x="440" y="84" width="180" height="90" rx="10" fill="var(--da-surface)" stroke="var(--da-primary)"/>
+    <text x="530" y="112" text-anchor="middle" font-weight="600">2. Kullanıcı yetkisi</text>
+    <text x="530" y="134" text-anchor="middle" font-size="11" fill="var(--da-muted)">ajanın değil, kullanıcının</text>
+    <text x="530" y="150" text-anchor="middle" font-size="11" fill="var(--da-muted)">izinleriyle; en az ayrıcalık</text>
+    <rect x="240" y="190" width="180" height="90" rx="10" fill="var(--da-surface)" stroke="var(--da-danger)"/>
+    <text x="330" y="218" text-anchor="middle" font-weight="600">3. İnsan onayı</text>
+    <text x="330" y="240" text-anchor="middle" font-size="11" fill="var(--da-muted)">ödeme, silme, toplu e-posta</text>
+    <text x="330" y="256" text-anchor="middle" font-size="11" fill="var(--da-muted)">çalışmadan önce özetle</text>
+    <rect x="440" y="190" width="180" height="90" rx="10" fill="var(--da-surface)" stroke="var(--da-accent)"/>
+    <text x="530" y="218" text-anchor="middle" font-weight="600">4. Sınırlar ve hata</text>
+    <text x="530" y="240" text-anchor="middle" font-size="11" fill="var(--da-muted)">adım/süre/bütçe; geçici</text>
+    <text x="530" y="256" text-anchor="middle" font-size="11" fill="var(--da-muted)">hatada retry + idempotency</text>
+  </g>
+
+  <!-- Araçlar -->
+  <g font-size="13" fill="var(--da-fg)">
+    <rect x="700" y="50" width="170" height="64" rx="12" fill="var(--da-surface)" stroke="var(--da-success)" stroke-width="1.5"/>
+    <text x="785" y="78" text-anchor="middle">Okuma araçları</text>
+    <text x="785" y="98" text-anchor="middle" font-size="11" fill="var(--da-muted)">hava_durumu, siparis_durumu</text>
+    <rect x="700" y="138" width="170" height="64" rx="12" fill="var(--da-surface)" stroke="var(--da-danger)" stroke-width="1.5"/>
+    <text x="785" y="166" text-anchor="middle">Yan etkili araçlar</text>
+    <text x="785" y="186" text-anchor="middle" font-size="11" fill="var(--da-muted)">iade_et, eposta_gonder</text>
+    <rect x="700" y="226" width="170" height="64" rx="12" fill="var(--da-surface)" stroke="var(--da-accent)" stroke-width="1.5"/>
+    <text x="785" y="254" text-anchor="middle">MCP sunucuları</text>
+    <text x="785" y="274" text-anchor="middle" font-size="11" fill="var(--da-muted)">sürümü sabit, güvenilir kaynak</text>
+  </g>
+
+  <g stroke="var(--da-muted)" stroke-width="2" fill="none" marker-end="url(#m06-arrow)">
+    <path d="M 170 150 L 236 128"/>
+    <path d="M 640 128 L 698 84"/>
+    <path d="M 640 170 L 698 170"/>
+    <path d="M 640 240 L 698 256"/>
+  </g>
+  <path d="M 236 250 C 190 250, 180 230, 150 222" fill="none" stroke="var(--da-success)" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#m06-arrow)"/>
+  <text x="150" y="262" font-size="12" fill="var(--da-success)">gözlem (tool_result)</text>
+
+  <!-- İz -->
+  <rect x="220" y="326" width="650" height="44" rx="10" fill="var(--da-surface)" stroke="var(--da-border)" stroke-dasharray="5 4"/>
+  <text x="545" y="353" text-anchor="middle" font-size="13" fill="var(--da-fg)">İz (trace): her adım, araç adı, argümanlar, sonuç, süre ve token → değerlendirme ve hata ayıklama</text>
+</svg>

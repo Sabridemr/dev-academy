@@ -1,0 +1,110 @@
+{
+  "id": "m-05-evaluation-quiz",
+  "title": { "tr": "LLM Değerlendirme Quiz", "en": "LLM Evaluation Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Bir RAG cevabının geçerli JSON olup olmadığını ve cevaptaki kaynak kimliklerinin bağlamda var olup olmadığını kontrol etmek için en uygun yöntem hangisidir?",
+        "en": "What is the best way to check whether a RAG answer is valid JSON and whether its source ids exist in the context?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Deterministik kod kontrolü", "en": "A deterministic code check" } },
+        { "id": "b", "text": { "tr": "LLM yargıcı", "en": "An LLM judge" } },
+        { "id": "c", "text": { "tr": "Uzman insan değerlendirmesi", "en": "Expert human review" } },
+        { "id": "d", "text": { "tr": "A/B testi", "en": "An A/B test" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "Kodla kontrol edilebilen bir özellik için model çağırmak hem pahalı hem güvenilmezdir. JSON ayrıştırma ve kimlik kümesi kontrolü birkaç satır koddur, her değişiklikte bedavaya çalışır.",
+        "en": "Calling a model for something code can check is both expensive and unreliable. JSON parsing and an id set check are a few lines of code that run for free on every change."
+      },
+      "difficulty": "easy",
+      "concepts": ["regression-testing"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "Değerlendirmede sadakat (faithfulness) yüksek ama cevap doğruluğu (answer correctness) düşük çıkıyor. Sorun büyük olasılıkla nerededir?",
+        "en": "Evaluation shows high faithfulness but low answer correctness. Where is the problem most likely?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Getirmede: model bağlama sadık ama bağlam yanlış ya da eksik", "en": "In retrieval: the model is faithful to the context, but the context is wrong or incomplete" } },
+        { "id": "b", "text": { "tr": "Üretimde: model bağlamın dışına çıkıp uyduruyor", "en": "In generation: the model goes beyond the context and makes things up" } },
+        { "id": "c", "text": { "tr": "Yargıçta: sadakat ve doğruluk birlikte yüksek olmalıdır", "en": "In the judge: faithfulness and correctness must always be high together" } },
+        { "id": "d", "text": { "tr": "Temperature çok düşük", "en": "The temperature is too low" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "Yüksek sadakat, modelin bağlamda olanı söylediğini gösterir. Buna rağmen cevap yanlışsa bağlamın kendisi yanlış ya da eksiktir; context recall'u kontrol edin. Uydurma olsaydı sadakat düşük çıkardı.",
+        "en": "High faithfulness shows the model says what is in the context. If the answer is still wrong, the context itself is wrong or incomplete; check context recall. If it were making things up, faithfulness would be low."
+      },
+      "difficulty": "hard",
+      "concepts": ["faithfulness", "answer-correctness", "context-recall"]
+    },
+    {
+      "id": "q3",
+      "type": "multiple",
+      "prompt": {
+        "tr": "LLM yargıcının güvenilirliğini artıran uygulamalar hangileridir? (Birden fazla seçin)",
+        "en": "Which practices make an LLM judge more reliable? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Açık bir rubrik ve ikili (evet/hayır) sorular kullanmak", "en": "Using a clear rubric and binary (yes/no) questions" } },
+        { "id": "b", "text": { "tr": "İkili karşılaştırmada cevap sırasını değiştirip iki kez sormak", "en": "Asking twice with swapped answer order in pairwise comparisons" } },
+        { "id": "c", "text": { "tr": "Yargıcın kararlarını insan etiketli bir örneklemle karşılaştırıp kalibre etmek", "en": "Calibrating the judge's verdicts against a human-labelled sample" } },
+        { "id": "d", "text": { "tr": "Daha uzun cevaplara otomatik olarak ek puan vermek", "en": "Automatically giving extra points to longer answers" } }
+      ],
+      "correct": ["a", "b", "c"],
+      "explanation": {
+        "tr": "Rubrik ve ikili kararlar tutarlılığı, sıra değiştirme konum önyargısını, insan kalibrasyonu da sayıların anlamlı olduğunu güvence altına alır. Uzun cevaplara ek puan vermek zaten var olan uzunluk önyargısını büyütür.",
+        "en": "Rubrics and binary verdicts improve consistency, swapping order counters position bias, and human calibration ensures the numbers mean something. Rewarding longer answers amplifies the length bias that already exists."
+      },
+      "difficulty": "medium",
+      "concepts": ["llm-as-judge", "rubric"]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "LLM çıktıları olasılıksal olduğu için CI kapısını tek tek test sonuçlarına değil, toplu eşiklere ve kırılım bazlı gerilemeye bağlamak daha sağlıklıdır.",
+        "en": "Because LLM outputs are probabilistic, it is healthier to tie the CI gate to aggregate thresholds and per-slice regression rather than to individual test results."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["t"],
+      "explanation": {
+        "tr": "Doğru. Tek bir örneğin çalıştırmalar arasında gidip gelmesi normaldir; kararı tek teste bağlamak kapıyı rastgele kapatır. Toplu eşikler ve etiket kırılımlarında gerileme kontrolü gerçek bozulmaları yakalar.",
+        "en": "True. A single example flipping between runs is normal; tying the gate to one test closes it at random. Aggregate thresholds plus regression checks per tag slice catch real degradations."
+      },
+      "difficulty": "medium",
+      "concepts": ["regression-testing"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "Üretimde bir kullanıcı yanlış bir cevap bildirdi. Değerlendirme döngüsü açısından en doğru sonraki adım hangisidir?",
+        "en": "A user reported a wrong answer in production. From the evaluation loop's point of view, what is the best next step?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Prompt'a hemen o vakaya özel bir kural eklemek", "en": "Immediately add a rule for that case to the prompt" } },
+        { "id": "b", "text": { "tr": "Vakayı nedeniyle birlikte altın veri setine eklemek, sonra düzeltmeyi tüm setle doğrulamak", "en": "Add the case with its cause to the golden dataset, then verify the fix against the whole set" } },
+        { "id": "c", "text": { "tr": "Daha büyük bir modele geçmek", "en": "Switch to a larger model" } },
+        { "id": "d", "text": { "tr": "Geri bildirimi tek seferlik sayıp yok saymak", "en": "Treat the feedback as a one-off and ignore it" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Hata önce tekrarlanabilir bir teste dönüşmelidir; ancak o zaman düzeltmenin bu vakayı çözüp eskileri bozmadığını ölçebilirsiniz. Doğrudan kural eklemek ya da model değiştirmek ölçümsüz bir tahmindir.",
+        "en": "The failure should first become a repeatable test; only then can you measure that the fix solves it without breaking older cases. Adding a rule directly or switching models is an unmeasured guess."
+      },
+      "difficulty": "easy",
+      "concepts": ["golden-dataset", "online-evaluation"]
+    }
+  ]
+}

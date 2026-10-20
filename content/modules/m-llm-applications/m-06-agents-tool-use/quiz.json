@@ -1,0 +1,110 @@
+{
+  "id": "m-06-agents-tool-use-quiz",
+  "title": { "tr": "Ajanlar ve Araç Kullanımı Quiz", "en": "Agents and Tool Use Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Araç çağırma (tool calling) akışında aracı kim çalıştırır?",
+        "en": "In a tool-calling flow, who executes the tool?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Model, sağlayıcının sunucularında", "en": "The model, on the provider's servers" } },
+        { "id": "b", "text": { "tr": "Uygulamanın ajan çalıştırıcısı; model yalnızca çağrıyı ve argümanları üretir", "en": "The application's agent runtime; the model only produces the call and its arguments" } },
+        { "id": "c", "text": { "tr": "Kullanıcının tarayıcısı", "en": "The user's browser" } },
+        { "id": "d", "text": { "tr": "Vektör veritabanı", "en": "The vector database" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Model yapılandırılmış bir araç çağrısı döndürür; aracı çalıştıran, argümanları doğrulayan, yetkiyi kontrol eden ve sonucu gözlem olarak geri veren uygulamanızdır. Bu yüzden güvenlik kontrolleri de çalıştırıcıda olmalıdır.",
+        "en": "The model returns a structured tool call; your application runs the tool, validates arguments, checks authorisation and returns the result as an observation. That is why security checks belong in the runtime."
+      },
+      "difficulty": "easy",
+      "concepts": ["tool-calling", "agent-loop"]
+    },
+    {
+      "id": "q2",
+      "type": "order",
+      "prompt": {
+        "tr": "Ajan döngüsünün bir turunu sıralayın.",
+        "en": "Order one turn of the agent loop."
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Geçmiş ve araç tanımları modele gönderilir", "en": "History and tool definitions are sent to the model" } },
+        { "id": "b", "text": { "tr": "Model bir araç çağrısı döndürür", "en": "The model returns a tool call" } },
+        { "id": "c", "text": { "tr": "Çalıştırıcı argümanları doğrulayıp aracı çalıştırır", "en": "The runtime validates arguments and runs the tool" } },
+        { "id": "d", "text": { "tr": "Sonuç gözlem olarak geçmişe eklenir ve model yeniden çağrılır", "en": "The result is appended as an observation and the model is called again" } }
+      ],
+      "correct": ["a", "b", "c", "d"],
+      "explanation": {
+        "tr": "Model bağlamı görür, karar verir; çalıştırıcı eylemi güvenle yürütür; gözlem yeniden modele döner. Model araç istemeyi bırakana ya da bir sınır aşılana kadar bu tur tekrarlanır.",
+        "en": "The model sees the context and decides; the runtime executes the action safely; the observation goes back to the model. The turn repeats until the model stops requesting tools or a limit is hit."
+      },
+      "difficulty": "easy",
+      "concepts": ["agent-loop"]
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": {
+        "tr": "iade_et aracı ödeme sağlayıcısına istek gönderdi ve zaman aşımına uğradı; iadenin yapılıp yapılmadığı bilinmiyor. En güvenli davranış hangisidir?",
+        "en": "The refund tool sent a request to the payment provider and timed out; it is unknown whether the refund happened. What is the safest behaviour?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Aynı isteği hemen yeni bir istek olarak tekrar göndermek", "en": "Immediately resend the same request as a new request" } },
+        { "id": "b", "text": { "tr": "Aynı idempotency anahtarıyla yeniden denemek; böylece iade en fazla bir kez gerçekleşir", "en": "Retry with the same idempotency key so the refund happens at most once" } },
+        { "id": "c", "text": { "tr": "Modelden iadenin yapılıp yapılmadığını tahmin etmesini istemek", "en": "Ask the model to guess whether the refund happened" } },
+        { "id": "d", "text": { "tr": "Kullanıcıya iadenin tamamlandığını söylemek", "en": "Tell the user the refund is complete" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Yan etkili bir işlemde zaman aşımı, işlemin gerçekleşmediği anlamına gelmez. Yeni bir istek çift iadeye yol açabilir; idempotency anahtarı sağlayıcının aynı işlemi tekrar uygulamasını engeller. Modelin tahmini ya da doğrulanmamış bir 'tamamlandı' mesajı kabul edilemez.",
+        "en": "A timeout on a side-effecting operation does not mean it did not happen. A new request can cause a double refund; an idempotency key stops the provider applying the same operation twice. A model's guess or an unverified 'done' message is unacceptable."
+      },
+      "difficulty": "hard",
+      "concepts": ["tool-error-handling"]
+    },
+    {
+      "id": "q4",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Ajan güvenliği için hangi ilkeler doğrudur? (Birden fazla seçin)",
+        "en": "Which principles are correct for agent safety? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Araçlar isteği yapan kullanıcının yetkileriyle çalışmalı", "en": "Tools should run with the permissions of the requesting user" } },
+        { "id": "b", "text": { "tr": "Geri alınamaz eylemler çalışmadan önce kullanıcıya onaylatılmalı", "en": "Irreversible actions should be confirmed by the user before running" } },
+        { "id": "c", "text": { "tr": "Döngüye adım, süre ve bütçe sınırı konmalı", "en": "The loop should have step, time and budget limits" } },
+        { "id": "d", "text": { "tr": "Model ürettiği SQL'i daha iyi bildiği için doğrudan çalıştırılmalı", "en": "SQL produced by the model should be executed directly since it knows best" } }
+      ],
+      "correct": ["a", "b", "c"],
+      "explanation": {
+        "tr": "Kullanıcı bağlamında yetki, insan onayı ve sınırlar ajanın hata ve saldırı etkisini sınırlar. Modelin ürettiği metin güvenilmeyen girdidir; doğrudan SQL ya da kabuk komutu olarak çalıştırmak enjeksiyon kapısı açar.",
+        "en": "User-scoped authorisation, human approval and limits bound the impact of errors and attacks. Model-produced text is untrusted input; executing it directly as SQL or shell opens an injection door."
+      },
+      "difficulty": "medium",
+      "concepts": ["least-privilege", "human-in-the-loop"]
+    },
+    {
+      "id": "q5",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "MCP, araçları ajanlara standart bir protokolle sunmayı sağlar; bu nedenle bir MCP sunucusu eklemek ajanın güvenlik risklerini otomatik olarak ortadan kaldırır.",
+        "en": "MCP lets you expose tools to agents through a standard protocol; therefore adding an MCP server automatically removes the agent's security risks."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "Yanlış. MCP biçimi standartlaştırır, güvenliği değil. Her sunucu yeni bir yetenek ve saldırı yüzeyi ekler; güvenilmeyen bir sunucunun araç açıklamaları bile modele talimat sızdırabilir. Sunucuları bağımlılık gibi doğrulayın ve en az ayrıcalıkla çalıştırın.",
+        "en": "False. MCP standardises the format, not security. Each server adds a new capability and attack surface; even the tool descriptions of an untrusted server can smuggle instructions to the model. Vet servers like dependencies and run them with least privilege."
+      },
+      "difficulty": "medium",
+      "concepts": ["mcp"]
+    }
+  ]
+}

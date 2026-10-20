@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 420" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Guardrail katmanları</title>
+  <desc id="desc">Solda kullanıcı girdisi ve dış içerik (web sayfası, e-posta, araç çıktısı). İkisi girdi filtresinden geçer; dış içerik etiketlerle sarılır. Ortada LLM. Sağda çıktı filtresi: şema, kaynak kimliği ve sızıntı kontrolü; geçerse kullanıcıya gider. Araç çağrıları alttaki eylem kapısında yetki ve insan onayından geçer. Reddedilen her yol güvenli geri dönüş kutusuna gider.</desc>
+  <defs>
+    <marker id="m07-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted)"/>
+    </marker>
+    <marker id="m07-arrow-d" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-danger)"/>
+    </marker>
+  </defs>
+
+  <!-- Girdiler -->
+  <rect x="20" y="60" width="140" height="60" rx="10" fill="var(--da-surface)" stroke="var(--da-fg)" stroke-width="1.5"/>
+  <text x="90" y="86" text-anchor="middle" font-size="13" fill="var(--da-fg)">Kullanıcı girdisi</text>
+  <text x="90" y="104" text-anchor="middle" font-size="11" fill="var(--da-muted)">doğrudan enjeksiyon</text>
+  <rect x="20" y="170" width="140" height="70" rx="10" fill="var(--da-surface)" stroke="var(--da-danger)" stroke-width="1.5" stroke-dasharray="5 4"/>
+  <text x="90" y="196" text-anchor="middle" font-size="13" fill="var(--da-fg)">Dış içerik</text>
+  <text x="90" y="214" text-anchor="middle" font-size="11" fill="var(--da-muted)">web, e-posta, araç</text>
+  <text x="90" y="230" text-anchor="middle" font-size="11" fill="var(--da-danger)">dolaylı enjeksiyon</text>
+
+  <!-- Girdi filtresi -->
+  <rect x="200" y="50" width="20" height="200" rx="6" fill="var(--da-primary)" opacity="0.5"/>
+  <text x="210" y="272" text-anchor="middle" font-size="12" fill="var(--da-primary)">girdi filtresi</text>
+  <text x="210" y="288" text-anchor="middle" font-size="11" fill="var(--da-muted)">PII maske, uzunluk,</text>
+  <text x="210" y="302" text-anchor="middle" font-size="11" fill="var(--da-muted)">enjeksiyon işareti</text>
+
+  <!-- Bağlam -->
+  <rect x="250" y="90" width="180" height="110" rx="12" fill="var(--da-surface)" stroke="var(--da-border)"/>
+  <text x="340" y="116" text-anchor="middle" font-size="13" font-weight="600" fill="var(--da-fg)">Bağlam hijyeni</text>
+  <text x="340" y="140" text-anchor="middle" font-size="11" fill="var(--da-fg)">&lt;veri&gt; … &lt;/veri&gt;</text>
+  <text x="340" y="160" text-anchor="middle" font-size="11" fill="var(--da-muted)">yalnızca yetkili belgeler</text>
+  <text x="340" y="178" text-anchor="middle" font-size="11" fill="var(--da-muted)">araç çıktısı kırpılır</text>
+
+  <!-- LLM -->
+  <rect x="470" y="105" width="120" height="80" rx="16" fill="var(--da-primary)" opacity="0.15" stroke="var(--da-primary)" stroke-width="2"/>
+  <text x="530" y="150" text-anchor="middle" font-size="16" font-weight="600" fill="var(--da-fg)">LLM</text>
+
+  <!-- Çıktı filtresi -->
+  <rect x="630" y="50" width="20" height="200" rx="6" fill="var(--da-accent)" opacity="0.55"/>
+  <text x="640" y="40" text-anchor="middle" font-size="12" fill="var(--da-accent)">çıktı filtresi</text>
+  <rect x="680" y="60" width="200" height="90" rx="12" fill="var(--da-surface)" stroke="var(--da-success)" stroke-width="1.5"/>
+  <text x="780" y="86" text-anchor="middle" font-size="13" fill="var(--da-fg)">Kullanıcıya cevap</text>
+  <text x="780" y="106" text-anchor="middle" font-size="11" fill="var(--da-muted)">şema ✓ kaynak kimliği ✓</text>
+  <text x="780" y="124" text-anchor="middle" font-size="11" fill="var(--da-muted)">PII / prompt sızıntısı yok ✓</text>
+
+  <!-- Eylem kapısı -->
+  <rect x="440" y="300" width="200" height="80" rx="12" fill="var(--da-surface)" stroke="var(--da-danger)" stroke-width="1.5"/>
+  <text x="540" y="328" text-anchor="middle" font-size="13" font-weight="600" fill="var(--da-fg)">Eylem kapısı</text>
+  <text x="540" y="348" text-anchor="middle" font-size="11" fill="var(--da-muted)">kullanıcı yetkisi, tutar sınırı</text>
+  <text x="540" y="364" text-anchor="middle" font-size="11" fill="var(--da-muted)">yüksek etkide insan onayı</text>
+  <rect x="700" y="300" width="180" height="80" rx="12" fill="var(--da-surface)" stroke="var(--da-fg)" stroke-width="1.2"/>
+  <text x="790" y="336" text-anchor="middle" font-size="13" fill="var(--da-fg)">Araçlar</text>
+  <text x="790" y="356" text-anchor="middle" font-size="11" fill="var(--da-muted)">en az ayrıcalık</text>
+
+  <!-- Güvenli geri dönüş -->
+  <rect x="680" y="190" width="200" height="60" rx="12" fill="var(--da-surface)" stroke="var(--da-danger)" stroke-dasharray="6 4"/>
+  <text x="780" y="216" text-anchor="middle" font-size="13" fill="var(--da-danger)">Güvenli geri dönüş</text>
+  <text x="780" y="234" text-anchor="middle" font-size="11" fill="var(--da-muted)">reddet, insana aktar, logla</text>
+
+  <g stroke="var(--da-muted)" stroke-width="2" fill="none" marker-end="url(#m07-arrow)">
+    <path d="M 160 90 L 198 100"/>
+    <path d="M 160 205 L 198 195"/>
+    <path d="M 220 145 L 248 145"/>
+    <path d="M 430 145 L 468 145"/>
+    <path d="M 590 135 L 628 110"/>
+    <path d="M 650 105 L 678 105"/>
+    <path d="M 530 185 L 530 298"/>
+    <path d="M 640 340 L 698 340"/>
+  </g>
+  <text x="540" y="250" font-size="11" fill="var(--da-muted)">tool_use</text>
+  <g stroke="var(--da-danger)" stroke-width="1.6" fill="none" stroke-dasharray="5 4" marker-end="url(#m07-arrow-d)">
+    <path d="M 650 200 L 678 215"/>
+    <path d="M 600 300 C 640 270, 650 250, 690 250"/>
+  </g>
+</svg>

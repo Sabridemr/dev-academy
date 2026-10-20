@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 430" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">İstek yolu ve maliyet kaldıraçları</title>
+  <desc id="desc">Soldan gelen soru önce semantik önbelleğe bakar; isabet varsa cevap model çağrılmadan döner. Iskalarsa yönlendirici isteği küçük ya da büyük modele gönderir; küçük modelin cevabı doğrulamadan geçemezse büyük modele yükseltilir. Prompt önbelleği sabit ön eki ucuzlatır. Cevap akışla kullanıcıya gider. Altta toplu işler ayrı bir kuyruktan indirimli işlenir ve tüm çağrılar bütçe sayacına yazılır.</desc>
+  <defs>
+    <marker id="m08-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted)"/>
+    </marker>
+  </defs>
+
+  <!-- Soru -->
+  <rect x="20" y="130" width="110" height="60" rx="10" fill="var(--da-surface)" stroke="var(--da-fg)" stroke-width="1.5"/>
+  <text x="75" y="165" text-anchor="middle" font-size="13" fill="var(--da-fg)">Soru</text>
+
+  <!-- Semantik önbellek -->
+  <path d="M 230 110 L 290 160 L 230 210 L 170 160 Z" fill="var(--da-surface)" stroke="var(--da-success)" stroke-width="2"/>
+  <text x="230" y="155" text-anchor="middle" font-size="12" fill="var(--da-fg)">Semantik</text>
+  <text x="230" y="171" text-anchor="middle" font-size="12" fill="var(--da-fg)">önbellek</text>
+  <text x="230" y="96" text-anchor="middle" font-size="11" fill="var(--da-success)">isabet → ~10 ms, 0 token</text>
+
+  <!-- Yönlendirici -->
+  <rect x="330" y="130" width="120" height="60" rx="10" fill="var(--da-surface)" stroke="var(--da-primary)" stroke-width="1.5"/>
+  <text x="390" y="157" text-anchor="middle" font-size="13" fill="var(--da-fg)">Yönlendirici</text>
+  <text x="390" y="175" text-anchor="middle" font-size="11" fill="var(--da-muted)">görev / zorluk</text>
+
+  <!-- Modeller -->
+  <rect x="500" y="60" width="150" height="70" rx="12" fill="var(--da-primary)" opacity="0.12" stroke="var(--da-primary)"/>
+  <text x="575" y="90" text-anchor="middle" font-size="13" fill="var(--da-fg)">Küçük model</text>
+  <text x="575" y="110" text-anchor="middle" font-size="11" fill="var(--da-muted)">ucuz, hızlı · çoğu istek</text>
+  <rect x="500" y="190" width="150" height="70" rx="12" fill="var(--da-accent)" opacity="0.14" stroke="var(--da-accent)"/>
+  <text x="575" y="220" text-anchor="middle" font-size="13" fill="var(--da-fg)">Büyük model</text>
+  <text x="575" y="240" text-anchor="middle" font-size="11" fill="var(--da-muted)">zor istekler</text>
+  <path d="M 575 130 L 575 188" stroke="var(--da-danger)" stroke-width="1.6" stroke-dasharray="5 4" fill="none" marker-end="url(#m08-arrow)"/>
+  <text x="585" y="164" font-size="11" fill="var(--da-danger)">doğrulama kaldı → yükselt</text>
+
+  <!-- Prompt önbelleği -->
+  <rect x="680" y="40" width="200" height="56" rx="10" fill="var(--da-surface)" stroke="var(--da-border)" stroke-dasharray="5 4"/>
+  <text x="780" y="64" text-anchor="middle" font-size="12" fill="var(--da-fg)">Prompt önbelleği</text>
+  <text x="780" y="82" text-anchor="middle" font-size="11" fill="var(--da-muted)">[sabit ön ek ✓][değişken son]</text>
+
+  <!-- Akış -->
+  <rect x="700" y="140" width="180" height="70" rx="12" fill="var(--da-surface)" stroke="var(--da-success)" stroke-width="1.5"/>
+  <text x="790" y="168" text-anchor="middle" font-size="13" fill="var(--da-fg)">Akışla cevap</text>
+  <text x="790" y="188" text-anchor="middle" font-size="11" fill="var(--da-muted)">ilk kelime TTFT'de</text>
+
+  <g stroke="var(--da-muted)" stroke-width="2" fill="none" marker-end="url(#m08-arrow)">
+    <path d="M 130 160 L 168 160"/>
+    <path d="M 290 160 L 328 160"/>
+    <path d="M 450 150 L 498 105"/>
+    <path d="M 450 170 L 498 215"/>
+    <path d="M 650 95 L 698 165"/>
+    <path d="M 650 225 L 698 190"/>
+    <path d="M 650 80 L 678 72"/>
+  </g>
+  <path d="M 230 110 C 230 20, 790 10, 790 138" fill="none" stroke="var(--da-success)" stroke-width="1.6" stroke-dasharray="6 4" marker-end="url(#m08-arrow)"/>
+  <text x="310" y="196" font-size="11" fill="var(--da-muted)">ıska</text>
+
+  <!-- Toplu ve bütçe -->
+  <rect x="20" y="300" width="400" height="90" rx="12" fill="var(--da-surface)" stroke="var(--da-border)"/>
+  <text x="220" y="328" text-anchor="middle" font-size="14" font-weight="600" fill="var(--da-fg)">Toplu işleme kuyruğu</text>
+  <text x="220" y="350" text-anchor="middle" font-size="12" fill="var(--da-muted)">gece sınıflandırma, çeviri, değerlendirme</text>
+  <text x="220" y="370" text-anchor="middle" font-size="12" fill="var(--da-success)">gerçek zamanlı değil → indirimli fiyat</text>
+  <rect x="480" y="300" width="400" height="90" rx="12" fill="var(--da-surface)" stroke="var(--da-danger)" stroke-width="1.5"/>
+  <text x="680" y="328" text-anchor="middle" font-size="14" font-weight="600" fill="var(--da-fg)">Bütçe sayacı</text>
+  <text x="680" y="350" text-anchor="middle" font-size="12" fill="var(--da-muted)">her çağrı: model, sürüm, özellik, kiracı, tokenlar</text>
+  <text x="680" y="370" text-anchor="middle" font-size="12" fill="var(--da-danger)">kota + alarm: döngüye giren ajanı durdur</text>
+</svg>
