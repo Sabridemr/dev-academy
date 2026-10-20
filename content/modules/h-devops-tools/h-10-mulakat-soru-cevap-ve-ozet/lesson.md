@@ -9,10 +9,10 @@ title:
 summary:
   tr: "CI/CD ve GitHub Actions bilgini 30 mülakat sorusu ve tek sayfalık özetle pekiştir."
   en: "Reinforce your CI/CD and GitHub Actions knowledge with 30 interview questions and a one-page summary."
-durationMinutes: 7
+durationMinutes: 15
 level: intermediate
 tags: [interview, ci-cd, github-actions, summary]
-prerequisites: []
+prerequisites: [h-09-kalite-izleme-ve-tam-pipeline]
 concepts: [continuous-delivery, pipeline, deployment-strategies, secrets, gitops, dora-metrics]
 ---
 
@@ -118,29 +118,13 @@ concepts: [continuous-delivery, pipeline, deployment-strategies, secrets, gitops
 |---|
 | Secret'ları koda yazma · permissions kısıtla · action'ları SHA ile sabitle · pull_request_target'a dikkat · Dependabot + CodeQL aç · branch protection kur · production'a onay koy |
 
+:::callout{tone="info" title="İlgili dersler"}
+Bu konuyu başka bir açıdan anlatan dersler:
+
+- [Kodun Yolculuğu ve CI/CD](/lessons/f-02-code-journey-ci-cd)
+:::
+
 :::quiz{src="quiz.json"}
-:::
-
-## Orijinal PDF sayfaları
-
-:::callout{tone="info" title="Özgün görünüm"}
-Bu dersin metni *CICD GitHub Actions Rehberi* PDF dosyasının 30–33. sayfalarının özgün hâlidir; sayfalar aşağıda PDF'teki görünümüyle yer alır.
-:::
-
-:::diagram{src="pdf-sayfa-30.png" alt="CICD GitHub Actions Rehberi - PDF sayfa 30"}
-PDF sayfa 30 / 33
-:::
-
-:::diagram{src="pdf-sayfa-31.png" alt="CICD GitHub Actions Rehberi - PDF sayfa 31"}
-PDF sayfa 31 / 33
-:::
-
-:::diagram{src="pdf-sayfa-32.png" alt="CICD GitHub Actions Rehberi - PDF sayfa 32"}
-PDF sayfa 32 / 33
-:::
-
-:::diagram{src="pdf-sayfa-33.png" alt="CICD GitHub Actions Rehberi - PDF sayfa 33"}
-PDF sayfa 33 / 33
 :::
 
 :::next{lesson="h-11-grafana-notes"}

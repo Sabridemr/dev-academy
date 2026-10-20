@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 420" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">HNSW ve IVF indeksleri</title>
+  <desc id="desc">Solda HNSW: üstte iki düğümlü katman 2, ortada beş düğümlü katman 1, altta çok düğümlü katman 0. Arama yolu üst katmandaki giriş noktasından başlar, her katmanda sorguya yaklaşır ve aşağı iner. Sağda IVF: vektörler dört kümeye ayrılmış; sorgu noktasına en yakın iki küme vurgulanmış, arama yalnızca bu kümelerde yapılır.</desc>
+  <defs>
+    <marker id="m04-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-danger)"/>
+    </marker>
+  </defs>
+
+  <text x="220" y="30" text-anchor="middle" font-size="16" font-weight="600" fill="var(--da-fg)">HNSW — katmanlı graf</text>
+
+  <!-- Katman düzlemleri -->
+  <g fill="var(--da-surface)" stroke="var(--da-border)">
+    <rect x="30" y="50" width="380" height="80" rx="10"/>
+    <rect x="30" y="150" width="380" height="90" rx="10"/>
+    <rect x="30" y="260" width="380" height="120" rx="10"/>
+  </g>
+  <g font-size="11" fill="var(--da-muted)">
+    <text x="40" y="66">katman 2</text><text x="40" y="166">katman 1</text><text x="40" y="276">katman 0 (tüm vektörler)</text>
+  </g>
+
+  <!-- Kenarlar -->
+  <g stroke="var(--da-muted)" stroke-width="1.2" opacity="0.7">
+    <line x1="100" y1="95" x2="320" y2="95"/>
+    <line x1="100" y1="195" x2="180" y2="210"/><line x1="180" y1="210" x2="260" y2="185"/><line x1="260" y1="185" x2="340" y2="205"/><line x1="180" y1="210" x2="230" y2="225"/>
+    <line x1="80" y1="310" x2="130" y2="340"/><line x1="130" y1="340" x2="180" y2="300"/><line x1="180" y1="300" x2="230" y2="330"/>
+    <line x1="230" y1="330" x2="280" y2="300"/><line x1="280" y1="300" x2="320" y2="345"/><line x1="320" y1="345" x2="370" y2="310"/>
+    <line x1="230" y1="330" x2="270" y2="360"/><line x1="270" y1="360" x2="320" y2="345"/><line x1="130" y1="340" x2="170" y2="365"/>
+  </g>
+  <!-- Düğümler -->
+  <g fill="var(--da-primary)">
+    <circle cx="100" cy="95" r="7"/><circle cx="320" cy="95" r="7"/>
+    <circle cx="100" cy="195" r="6"/><circle cx="180" cy="210" r="6"/><circle cx="260" cy="185" r="6"/><circle cx="340" cy="205" r="6"/><circle cx="230" cy="225" r="6"/>
+    <circle cx="80" cy="310" r="5"/><circle cx="130" cy="340" r="5"/><circle cx="180" cy="300" r="5"/><circle cx="230" cy="330" r="5"/>
+    <circle cx="280" cy="300" r="5"/><circle cx="320" cy="345" r="5"/><circle cx="370" cy="310" r="5"/><circle cx="270" cy="360" r="5"/><circle cx="170" cy="365" r="5"/>
+  </g>
+  <!-- Arama yolu -->
+  <g stroke="var(--da-danger)" stroke-width="2.2" fill="none" marker-end="url(#m04-arrow)">
+    <path d="M 100 95 L 310 95"/>
+    <path d="M 320 102 L 262 180" stroke-dasharray="5 4"/>
+    <path d="M 260 185 L 234 219"/>
+    <path d="M 230 232 L 230 322" stroke-dasharray="5 4"/>
+    <path d="M 230 330 L 263 355"/>
+  </g>
+  <circle cx="290" cy="372" r="7" fill="none" stroke="var(--da-danger)" stroke-width="2"/>
+  <text x="300" y="398" font-size="12" fill="var(--da-danger)">sorgu q</text>
+  <text x="100" y="118" font-size="11" fill="var(--da-fg)" text-anchor="middle">giriş</text>
+
+  <!-- IVF -->
+  <text x="670" y="30" text-anchor="middle" font-size="16" font-weight="600" fill="var(--da-fg)">IVF — kümelere bölünmüş uzay</text>
+  <rect x="470" y="50" width="400" height="330" rx="10" fill="var(--da-surface)" stroke="var(--da-border)"/>
+  <g stroke="var(--da-border)" stroke-width="1.5" stroke-dasharray="6 4">
+    <line x1="670" y1="50" x2="670" y2="380"/>
+    <line x1="470" y1="215" x2="870" y2="215"/>
+  </g>
+  <rect x="670" y="50" width="200" height="165" fill="var(--da-accent)" opacity="0.12"/>
+  <rect x="670" y="215" width="200" height="165" fill="var(--da-accent)" opacity="0.12"/>
+  <g fill="var(--da-muted)">
+    <circle cx="520" cy="90" r="4"/><circle cx="560" cy="130" r="4"/><circle cx="610" cy="100" r="4"/><circle cx="540" cy="170" r="4"/>
+    <circle cx="520" cy="260" r="4"/><circle cx="590" cy="300" r="4"/><circle cx="540" cy="340" r="4"/><circle cx="620" cy="250" r="4"/>
+  </g>
+  <g fill="var(--da-accent)">
+    <circle cx="720" cy="90" r="4"/><circle cx="780" cy="120" r="4"/><circle cx="820" cy="80" r="4"/><circle cx="750" cy="180" r="4"/>
+    <circle cx="720" cy="270" r="4"/><circle cx="800" cy="250" r="4"/><circle cx="760" cy="330" r="4"/><circle cx="830" cy="310" r="4"/>
+  </g>
+  <g fill="var(--da-fg)">
+    <rect x="566" y="126" width="10" height="10" transform="rotate(45 571 131)"/>
+    <rect x="566" y="291" width="10" height="10" transform="rotate(45 571 296)"/>
+    <rect x="766" y="126" width="10" height="10" transform="rotate(45 771 131)"/>
+    <rect x="766" y="276" width="10" height="10" transform="rotate(45 771 281)"/>
+  </g>
+  <circle cx="690" cy="205" r="8" fill="none" stroke="var(--da-danger)" stroke-width="2.2"/>
+  <text x="700" y="200" font-size="12" fill="var(--da-danger)">q</text>
+  <text x="670" y="404" text-anchor="middle" font-size="12" fill="var(--da-fg)">◆ küme merkezi · nprobe = 2 → yalnızca vurgulu kümeler taranır</text>
+</svg>

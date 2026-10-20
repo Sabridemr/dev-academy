@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 420" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Dört adımlı sistem tasarımı mülakat çerçevesi</title>
+  <desc id="desc">Soldan sağa dört adım: gereksinimleri netleştir (0-10 dk), kapasite tahmini (5-10 dk), üst düzey tasarım (10-25 dk), derinleşme ve ödünleşimler (25-40 dk). Her adımın altında çıktısı yazar; adımlar oklarla birbirine bağlıdır ve altta 45 dakikalık zaman çizgisi bulunur.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+  </defs>
+
+  <!-- Adım kutuları -->
+  <g stroke-width="2">
+    <rect x="30" y="70" width="200" height="150" rx="14" fill="var(--da-surface, #f8fafc)" stroke="var(--da-primary, #6366f1)"/>
+    <rect x="262" y="70" width="200" height="150" rx="14" fill="var(--da-surface, #f8fafc)" stroke="var(--da-accent, #f59e0b)"/>
+    <rect x="494" y="70" width="200" height="150" rx="14" fill="var(--da-surface, #f8fafc)" stroke="var(--da-primary, #6366f1)"/>
+    <rect x="726" y="70" width="200" height="150" rx="14" fill="var(--da-surface, #f8fafc)" stroke="var(--da-success, #10b981)"/>
+  </g>
+
+  <!-- Adım numaraları -->
+  <g font-size="12" font-weight="600" text-anchor="middle">
+    <circle cx="56" cy="96" r="13" fill="var(--da-primary, #6366f1)"/>
+    <text x="56" y="100" fill="var(--da-surface, #ffffff)">1</text>
+    <circle cx="288" cy="96" r="13" fill="var(--da-accent, #f59e0b)"/>
+    <text x="288" y="100" fill="var(--da-surface, #ffffff)">2</text>
+    <circle cx="520" cy="96" r="13" fill="var(--da-primary, #6366f1)"/>
+    <text x="520" y="100" fill="var(--da-surface, #ffffff)">3</text>
+    <circle cx="752" cy="96" r="13" fill="var(--da-success, #10b981)"/>
+    <text x="752" y="100" fill="var(--da-surface, #ffffff)">4</text>
+  </g>
+
+  <!-- Başlıklar -->
+  <g font-size="15" font-weight="600" fill="var(--da-fg, #0f172a)">
+    <text x="78" y="101">Gereksinimler</text>
+    <text x="310" y="101">Kapasite tahmini</text>
+    <text x="542" y="101">Üst düzey tasarım</text>
+    <text x="774" y="101">Derinleşme</text>
+  </g>
+
+  <!-- İçerik satırları -->
+  <g font-size="12" fill="var(--da-fg, #0f172a)">
+    <text x="48" y="130">• Fonksiyonel: ne yapar?</text>
+    <text x="48" y="150">• Fonksiyonel olmayan:</text>
+    <text x="60" y="168">ölçek, gecikme, erişilebilirlik</text>
+    <text x="48" y="190">• Kapsam dışı listesi</text>
+
+    <text x="280" y="130">• QPS (okuma / yazma)</text>
+    <text x="280" y="150">• Depolama (GB/gün → TB)</text>
+    <text x="280" y="170">• Bant genişliği (MB/s)</text>
+    <text x="280" y="190">• Önbellek boyutu (80/20)</text>
+
+    <text x="512" y="130">• Uçtan uca iskelet</text>
+    <text x="512" y="150">• API uç noktaları</text>
+    <text x="512" y="170">• Veri modeli, ana tablolar</text>
+    <text x="512" y="190">• Yapı taşları: LB, cache, DB</text>
+
+    <text x="744" y="130">• Darboğazı bul</text>
+    <text x="744" y="150">• SPOF, sıcak anahtar</text>
+    <text x="744" y="170">• Her bileşenin bedeli</text>
+    <text x="744" y="190">• Ödünleşimleri söyle</text>
+  </g>
+
+  <!-- Oklar -->
+  <g stroke="var(--da-muted, #64748b)" stroke-width="2" fill="none" marker-end="url(#arrow)">
+    <path d="M 230 145 L 260 145"/>
+    <path d="M 462 145 L 492 145"/>
+    <path d="M 694 145 L 724 145"/>
+  </g>
+
+  <!-- Çıktılar -->
+  <g font-size="11" fill="var(--da-muted, #64748b)" text-anchor="middle">
+    <text x="130" y="248">çıktı: kapsam + hedef sayılar</text>
+    <text x="362" y="248">çıktı: büyüklük mertebeleri</text>
+    <text x="594" y="248">çıktı: çalışan iskelet</text>
+    <text x="826" y="248">çıktı: gerekçeli kararlar</text>
+  </g>
+
+  <!-- Zaman çizgisi -->
+  <line x1="40" y1="310" x2="920" y2="310" stroke="var(--da-border, #cbd5e1)" stroke-width="6" stroke-linecap="round"/>
+  <line x1="40" y1="310" x2="138" y2="310" stroke="var(--da-primary, #6366f1)" stroke-width="6" stroke-linecap="round"/>
+  <line x1="138" y1="310" x2="236" y2="310" stroke="var(--da-accent, #f59e0b)" stroke-width="6"/>
+  <line x1="236" y1="310" x2="529" y2="310" stroke="var(--da-primary, #6366f1)" stroke-width="6"/>
+  <line x1="529" y1="310" x2="822" y2="310" stroke="var(--da-success, #10b981)" stroke-width="6"/>
+  <line x1="822" y1="310" x2="920" y2="310" stroke="var(--da-muted, #64748b)" stroke-width="6" stroke-linecap="round"/>
+
+  <g font-size="11" fill="var(--da-muted, #64748b)" text-anchor="middle">
+    <text x="40" y="335">0 dk</text>
+    <text x="138" y="335">5</text>
+    <text x="236" y="335">10</text>
+    <text x="529" y="335">25</text>
+    <text x="822" y="335">40</text>
+    <text x="920" y="335">45 dk</text>
+  </g>
+  <g font-size="11" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="89" y="292">sor</text>
+    <text x="187" y="292">hesapla</text>
+    <text x="382" y="292">çiz</text>
+    <text x="675" y="292">derinleş</text>
+    <text x="871" y="292">özetle</text>
+  </g>
+
+  <text x="480" y="385" text-anchor="middle" font-size="12" fill="var(--da-muted, #64748b)">Her adım bir öncekinin çıktısına dayanır: sayı yoksa tasarım, tasarım yoksa derinleşme olmaz.</text>
+</svg>

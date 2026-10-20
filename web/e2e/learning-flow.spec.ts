@@ -23,7 +23,10 @@ test.afterEach(async ({ page }) => {
 test('ana sayfa modülleri ve hero animasyonunu gösterir', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-  await expect(page.getByRole('button', { name: /Oynat|Play/ }).first()).toBeVisible();
+  // Vitrin otomatik oynar: oynat ya da duraklat düğmesi görünür
+  await expect(
+    page.getByRole('button', { name: /Oynat|Play|Duraklat|Pause/ }).first(),
+  ).toBeVisible();
   await expect(page.getByText('Sistem Tasarımı Temelleri').first()).toBeVisible();
 });
 
@@ -97,4 +100,56 @@ test('CSP başlığı var ve ders sayfası (kod, diyagram, animasyon) ihlalsiz �
     .evaluate((el) => el.scrollIntoView());
   await expect(page.locator('pre.shiki').first()).toBeVisible({ timeout: 15_000 });
   expect(violations).toEqual([]);
+});
+
+test('komut paleti açılır ve ders bulur', async ({ page }) => {
+  await page.goto('/');
+  // Masaüstünde ⌘K, mobilde başlıktaki arama düğmesi; ikisi de aynı paleti açar
+  await page.getByRole('button', { name: 'Ara', exact: true }).first().click();
+  const box = page.getByRole('combobox', { name: 'Ara' });
+  await expect(box).toBeVisible();
+  await box.fill('round-robin');
+  await expect(page.getByRole('option', { name: /Load Balancer/ }).first()).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(box).toBeHidden();
+});
+
+test('modül sayfası: başlık, içerik özeti ve ilk derse başla', async ({ page }) => {
+  await page.goto('/modules/a-system-design-fundamentals');
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('Sistem Tasarımı Temelleri');
+  await expect(page.getByText(/animasyon/).first()).toBeVisible();
+  await page.getByRole('link', { name: /İlk derse başla/ }).click();
+  await expect(page).toHaveURL(/\/lessons\/a-01/);
+});
+
+test('öğrenme yolu sayfası modülleri sıralı listeler', async ({ page }) => {
+  await page.goto('/paths/backend');
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('Backend');
+  await expect(page.getByRole('link', { name: /Sistem Tasarımı Temelleri/ }).first()).toBeVisible();
+});
+
+test('oturumlu kullanıcı: ayarlar, geçmiş ve kütüphane sayfaları açılır', async ({
+  page,
+}, testInfo) => {
+  const email = `pw2_${testInfo.project.name}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}@test.local`;
+  await page.goto('/register');
+  await page.getByLabel('Ad soyad').fill('Playwright Ayarlar');
+  await page.getByLabel('E-posta').fill(email);
+  await page.getByLabel('Şifre').fill('Sifre1234!');
+  await page.getByRole('button', { name: 'Kayıt ol' }).last().click();
+  await expect(page).toHaveURL(/onboarding/);
+
+  await page.goto('/settings');
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('Ayarlar');
+  await expect(page.getByLabel('Ad soyad')).toHaveValue('Playwright Ayarlar');
+  await page.getByLabel('Ad soyad').fill('Playwright Yeni Ad');
+  await page.getByRole('button', { name: 'Kaydet', exact: true }).click();
+  await expect(page.getByText('Ayarlar kaydedildi')).toBeVisible();
+
+  await page.goto('/history');
+  await expect(page.getByText('Henüz quiz çözmedin.')).toBeVisible();
+
+  await page.goto('/library');
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('Kütüphane');
+  await expect(page.getByText('Henüz bir şey yok.').first()).toBeVisible();
 });

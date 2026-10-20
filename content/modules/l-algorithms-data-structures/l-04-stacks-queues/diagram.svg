@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 420" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Yığın (LIFO) ve kuyruk (FIFO)</title>
+  <desc id="desc">Solda üst üste dört kutudan oluşan bir yığın; push ve pop okları aynı tepe ucunu gösterir. Sağda yatay dört kutudan oluşan bir kuyruk; elemanlar sağdan girer, soldan çıkar.</desc>
+  <defs>
+    <marker id="ok" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-primary)"/>
+    </marker>
+    <marker id="ok-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-accent)"/>
+    </marker>
+  </defs>
+
+  <text x="210" y="40" text-anchor="middle" font-size="16" font-weight="600" fill="var(--da-fg)">Yığın · LIFO</text>
+  <text x="640" y="40" text-anchor="middle" font-size="16" font-weight="600" fill="var(--da-fg)">Kuyruk · FIFO</text>
+
+  <path d="M 140 130 L 140 350 L 280 350 L 280 130" fill="none" stroke="var(--da-border)" stroke-width="2"/>
+  <g fill="var(--da-surface)" stroke="var(--da-fg)" stroke-width="1.5">
+    <rect x="150" y="296" width="120" height="46" rx="6"/>
+    <rect x="150" y="244" width="120" height="46" rx="6"/>
+    <rect x="150" y="192" width="120" height="46" rx="6"/>
+  </g>
+  <rect x="150" y="140" width="120" height="46" rx="6" fill="var(--da-surface)" stroke="var(--da-primary)" stroke-width="2.2"/>
+  <g font-size="15" fill="var(--da-fg)" text-anchor="middle">
+    <text x="210" y="324">"{"</text>
+    <text x="210" y="272">"["</text>
+    <text x="210" y="220">"("</text>
+    <text x="210" y="168">"("</text>
+  </g>
+  <text x="300" y="168" font-size="12" fill="var(--da-primary)">← tepe (top)</text>
+  <path d="M 175 70 L 175 132" stroke="var(--da-primary)" stroke-width="2" fill="none" marker-end="url(#ok)"/>
+  <path d="M 245 132 L 245 70" stroke="var(--da-accent)" stroke-width="2" fill="none" marker-end="url(#ok-a)"/>
+  <text x="165" y="64" text-anchor="end" font-size="13" fill="var(--da-primary)">push</text>
+  <text x="255" y="64" font-size="13" fill="var(--da-accent)">pop</text>
+  <text x="210" y="380" text-anchor="middle" font-size="12" fill="var(--da-muted)">ekleme ve çıkarma aynı uçta: O(1)</text>
+
+  <path d="M 460 170 L 820 170 M 460 250 L 820 250" stroke="var(--da-border)" stroke-width="2"/>
+  <g fill="var(--da-surface)" stroke="var(--da-fg)" stroke-width="1.5">
+    <rect x="560" y="182" width="76" height="56" rx="6"/>
+    <rect x="644" y="182" width="76" height="56" rx="6"/>
+    <rect x="728" y="182" width="76" height="56" rx="6"/>
+  </g>
+  <rect x="476" y="182" width="76" height="56" rx="6" fill="var(--da-surface)" stroke="var(--da-success)" stroke-width="2.2"/>
+  <g font-size="15" fill="var(--da-fg)" text-anchor="middle">
+    <text x="514" y="215">A</text>
+    <text x="598" y="215">B</text>
+    <text x="682" y="215">C</text>
+    <text x="766" y="215">D</text>
+  </g>
+  <text x="514" y="160" text-anchor="middle" font-size="12" fill="var(--da-success)">baş (front)</text>
+  <text x="766" y="160" text-anchor="middle" font-size="12" fill="var(--da-muted)">son (rear)</text>
+  <path d="M 880 210 L 812 210" stroke="var(--da-primary)" stroke-width="2" fill="none" marker-end="url(#ok)"/>
+  <path d="M 470 210 L 405 210" stroke="var(--da-accent)" stroke-width="2" fill="none" marker-end="url(#ok-a)"/>
+  <text x="850" y="290" text-anchor="middle" font-size="13" fill="var(--da-primary)">append</text>
+  <text x="850" y="308" text-anchor="middle" font-size="11" fill="var(--da-muted)">(enqueue)</text>
+  <text x="430" y="290" text-anchor="middle" font-size="13" fill="var(--da-accent)">popleft</text>
+  <text x="430" y="308" text-anchor="middle" font-size="11" fill="var(--da-muted)">(dequeue)</text>
+  <text x="640" y="380" text-anchor="middle" font-size="12" fill="var(--da-muted)">collections.deque: iki uçta da O(1)</text>
+</svg>

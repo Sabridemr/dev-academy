@@ -1,0 +1,162 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "git-commit-graph",
+  "title": { "tr": "Commit Grafiği: Dal, Ayrışma ve Merge", "en": "Commit Graph: Branch, Divergence and Merge" },
+  "summary": {
+    "tr": "main üzerinde iki commit, feature dalının açılması, iki tarafta ilerleme ve üç yollu birleştirmeyle merge commit'in oluşması.",
+    "en": "Two commits on main, a feature branch opening, progress on both sides and a merge commit created by a three-way merge."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Altta main dalının commit'leri C1, C2, C3 soldan sağa dizilir; üstte feature dalının commit'leri F1 ve F2 C2'den ayrılır. Son adımda C3 ve F2, sağdaki M merge commit'inde birleşir ve main işaretçisi M'ye taşınır.",
+      "en": "At the bottom the main branch commits C1, C2, C3 run left to right; at the top the feature branch commits F1 and F2 diverge from C2. In the last step C3 and F2 join at the merge commit M on the right and the main pointer moves to M."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "c1", "kind": "generic", "label": "C1", "sublabel": { "tr": "ilk commit", "en": "initial commit" }, "x": 130, "y": 400, "w": 110, "h": 64, "color": "primary" },
+    { "id": "c2", "kind": "generic", "label": "C2", "sublabel": { "tr": "README ekle", "en": "add README" }, "x": 320, "y": 400, "w": 110, "h": 64, "color": "primary" },
+    { "id": "c3", "kind": "generic", "label": "C3", "sublabel": { "tr": "hotfix (main)", "en": "hotfix (main)" }, "x": 560, "y": 400, "w": 110, "h": 64, "color": "primary" },
+    { "id": "f1", "kind": "generic", "label": "F1", "sublabel": { "tr": "login formu", "en": "login form" }, "x": 500, "y": 190, "w": 110, "h": 64, "color": "accent" },
+    { "id": "f2", "kind": "generic", "label": "F2", "sublabel": { "tr": "login testi", "en": "login test" }, "x": 690, "y": 190, "w": 110, "h": 64, "color": "accent" },
+    { "id": "m", "kind": "generic", "label": "M", "sublabel": { "tr": "merge commit", "en": "merge commit" }, "x": 880, "y": 400, "w": 110, "h": 64, "color": "success" }
+  ],
+  "edges": [
+    { "id": "c1-c2", "from": "c1", "to": "c2", "kind": "data" },
+    { "id": "c2-c3", "from": "c2", "to": "c3", "kind": "data" },
+    { "id": "c2-f1", "from": "c2", "to": "f1", "kind": "data", "curvature": -0.2 },
+    { "id": "f1-f2", "from": "f1", "to": "f2", "kind": "data" },
+    { "id": "c3-m", "from": "c3", "to": "m", "kind": "data" },
+    { "id": "f2-m", "from": "f2", "to": "m", "kind": "data", "curvature": 0.2 }
+  ],
+  "steps": [
+    {
+      "id": "main-start",
+      "title": { "tr": "main üzerinde ilk commit'ler", "en": "First commits on main" },
+      "narration": {
+        "tr": "Her commit projenin tam bir anlık görüntüsüdür ve ebeveynini işaret eder. main dalı yalnızca en son commit'i (C2) gösteren bir işaretçidir; HEAD de main'dedir.",
+        "en": "Every commit is a full snapshot of the project and points to its parent. The main branch is just a pointer to the latest commit (C2); HEAD is on main."
+      },
+      "durationMs": 3500,
+      "inherit": false,
+      "highlight": { "nodes": ["c1", "c2"], "edges": ["c1-c2"] },
+      "nodeStates": {
+        "c1": { "status": "active" },
+        "c2": { "status": "active", "badge": "main · HEAD" },
+        "c3": { "visible": false },
+        "f1": { "visible": false },
+        "f2": { "visible": false },
+        "m": { "visible": false }
+      },
+      "edgeStates": {
+        "c2-c3": { "visible": false },
+        "c2-f1": { "visible": false },
+        "f1-f2": { "visible": false },
+        "c3-m": { "visible": false },
+        "f2-m": { "visible": false }
+      },
+      "packets": [{ "edge": "c1-c2", "shape": "dot", "label": "git commit", "durationMs": 1200 }],
+      "annotations": [
+        { "id": "lane-main", "x": 130, "y": 500, "text": { "tr": "main dalı", "en": "main branch" }, "tone": "info" }
+      ]
+    },
+    {
+      "id": "branch",
+      "title": { "tr": "feature dalı açılır", "en": "A feature branch opens" },
+      "narration": {
+        "tr": "git switch -c feature/login yeni bir işaretçi oluşturur; hiçbir dosya kopyalanmaz. İlk commit F1, ebeveyni olarak C2'yi işaret eder — iki dal artık ortak bir atayı paylaşır.",
+        "en": "git switch -c feature/login creates a new pointer; no files are copied. The first commit F1 points to C2 as its parent — the two branches now share a common ancestor."
+      },
+      "durationMs": 3800,
+      "highlight": { "nodes": ["c2", "f1"], "edges": ["c2-f1"] },
+      "nodeStates": {
+        "c2": { "status": "active", "badge": "main" },
+        "f1": { "visible": true, "status": "active", "badge": "feature · HEAD" }
+      },
+      "edgeStates": { "c2-f1": { "visible": true, "status": "active" } },
+      "packets": [{ "edge": "c2-f1", "shape": "dot", "label": "F1", "color": "accent", "durationMs": 1200 }],
+      "annotations": [
+        { "id": "lane-feature", "x": 300, "y": 190, "text": { "tr": "feature/login dalı", "en": "feature/login branch" }, "tone": "warning" },
+        { "id": "cmd-branch", "x": 330, "y": 290, "text": { "tr": "git switch -c feature/login", "en": "git switch -c feature/login" }, "target": "f1" }
+      ]
+    },
+    {
+      "id": "diverge",
+      "title": { "tr": "İki taraf da ilerler", "en": "Both sides move on" },
+      "narration": {
+        "tr": "Siz feature dalında F2'yi eklerken bir ekip arkadaşınız main'e acil bir düzeltme (C3) alır. Dallar ayrışmıştır: ortak ata C2, uçlar C3 ve F2.",
+        "en": "While you add F2 on the feature branch, a teammate lands an urgent fix (C3) on main. The branches have diverged: common ancestor C2, tips C3 and F2."
+      },
+      "durationMs": 4200,
+      "highlight": { "nodes": ["c3", "f2"], "edges": ["c2-c3", "f1-f2"] },
+      "nodeStates": {
+        "c2": { "status": "idle", "badge": "" },
+        "c3": { "visible": true, "status": "active", "badge": "main" },
+        "f1": { "status": "idle", "badge": "" },
+        "f2": { "visible": true, "status": "active", "badge": "feature · HEAD" }
+      },
+      "edgeStates": {
+        "c2-c3": { "visible": true, "status": "active" },
+        "f1-f2": { "visible": true, "status": "active" },
+        "c2-f1": { "status": "idle" }
+      },
+      "packets": [
+        { "edge": "f1-f2", "shape": "dot", "label": "F2", "color": "accent", "durationMs": 1200 },
+        { "edge": "c2-c3", "shape": "dot", "label": "C3", "startAt": 900, "durationMs": 1200 }
+      ],
+      "annotations": [
+        { "id": "diverged", "x": 430, "y": 300, "text": { "tr": "dallar ayrıştı", "en": "branches diverged" }, "tone": "warning" }
+      ]
+    },
+    {
+      "id": "three-way",
+      "title": { "tr": "Üç yollu birleştirme hazırlığı", "en": "Preparing the three-way merge" },
+      "narration": {
+        "tr": "git switch main && git merge feature/login: main hiç ilerlememiş olsaydı işaretçi öne kayardı (fast-forward). Ama C3 var; Git ortak ata C2 ile iki ucu (C3, F2) karşılaştırır. Aynı satırlar iki yanda da değiştiyse çakışma çıkar.",
+        "en": "git switch main && git merge feature/login: had main not moved, the pointer would simply advance (fast-forward). But C3 exists; Git compares the common ancestor C2 with both tips (C3, F2). If the same lines changed on both sides, a conflict appears."
+      },
+      "durationMs": 4200,
+      "highlight": { "nodes": ["c2", "c3", "f2"], "edges": [] },
+      "nodeStates": {
+        "c2": { "status": "warning", "badge": "ortak ata" },
+        "c3": { "status": "active", "badge": "main · HEAD" },
+        "f2": { "status": "active", "badge": "feature" }
+      },
+      "annotations": [
+        { "id": "cmd-merge", "x": 560, "y": 520, "text": { "tr": "git merge feature/login", "en": "git merge feature/login" }, "target": "c3" },
+        { "id": "ancestor", "x": 320, "y": 300, "text": { "tr": "3 nokta: C2, C3, F2", "en": "3 points: C2, C3, F2" }, "target": "c2", "tone": "warning" }
+      ]
+    },
+    {
+      "id": "merge",
+      "title": { "tr": "Merge commit oluşur", "en": "The merge commit is created" },
+      "narration": {
+        "tr": "Birleştirme sonucu iki ebeveynli yeni bir commit (M) yazılır ve main işaretçisi M'ye taşınır. Her iki dalın geçmişi olduğu gibi korunur; feature dalı artık silinebilir.",
+        "en": "The merge writes a new commit (M) with two parents and moves the main pointer to M. Both histories are preserved intact; the feature branch can now be deleted."
+      },
+      "durationMs": 4200,
+      "highlight": { "nodes": ["m"], "edges": ["c3-m", "f2-m"] },
+      "nodeStates": {
+        "c2": { "status": "idle", "badge": "" },
+        "c3": { "status": "idle", "badge": "" },
+        "f2": { "status": "idle", "badge": "" },
+        "m": { "visible": true, "status": "success", "badge": "main · HEAD" }
+      },
+      "edgeStates": {
+        "c3-m": { "visible": true, "status": "active" },
+        "f2-m": { "visible": true, "status": "active" }
+      },
+      "packets": [
+        { "edge": "c3-m", "shape": "dot", "durationMs": 1200 },
+        { "edge": "f2-m", "shape": "dot", "color": "accent", "durationMs": 1200 }
+      ],
+      "annotations": [
+        { "id": "two-parents", "x": 880, "y": 520, "text": { "tr": "iki ebeveyn: C3 ve F2", "en": "two parents: C3 and F2" }, "target": "m", "tone": "success" }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["git", "merge", "branching", "commit-graph"]
+}

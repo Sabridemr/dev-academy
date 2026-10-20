@@ -1,0 +1,198 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "j-03-order-events-kafka",
+  "title": { "tr": "Sipariş Olayları: Kafka Partition ve Consumer Group", "en": "Order Events: Kafka Partitions and Consumer Groups" },
+  "summary": {
+    "tr": "Sipariş servisi OrderCreated olayını üç partition'lı orders topic'ine yazar; envanter ve bildirim consumer group'ları aynı olayı bağımsız okur; bir consumer düşünce rebalance olur.",
+    "en": "The order service writes an OrderCreated event to the three-partition orders topic; the inventory and notification consumer groups read it independently; when a consumer dies a rebalance happens."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda sipariş servisi, ortada orders topic'inin üç partition'ı (P0, P1, P2), sağda iki consumer group bulunur: üstte envanter grubu (inv-1, inv-2), altta bildirim grubu (ntf-1, ntf-2). Olay orderId anahtarıyla P1'e yazılır. Her grup partition'ları kendi üyelerine paylaştırıp bağımsız okur. inv-2 çökünce envanter grubunda rebalance olur ve P2, inv-1'e devredilir; bildirim grubu etkilenmez.",
+      "en": "The order service is on the left, the three partitions of the orders topic (P0, P1, P2) in the middle and two consumer groups on the right: the inventory group (inv-1, inv-2) at the top and the notification group (ntf-1, ntf-2) at the bottom. The event is written to P1 by its orderId key. Each group splits the partitions among its members and reads independently. When inv-2 crashes the inventory group rebalances and P2 is handed to inv-1; the notification group is unaffected."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "producer", "kind": "service", "label": { "tr": "Sipariş servisi", "en": "Order service" }, "sublabel": { "tr": "producer", "en": "producer" }, "x": 120, "y": 300, "w": 150, "h": 80 },
+    { "id": "topic", "kind": "group", "label": { "tr": "topic: orders", "en": "topic: orders" }, "x": 450, "y": 300, "w": 200, "h": 400 },
+    { "id": "p0", "kind": "queue", "label": "P0", "sublabel": { "tr": "partition 0", "en": "partition 0" }, "x": 450, "y": 190, "w": 140, "h": 64, "parent": "topic" },
+    { "id": "p1", "kind": "queue", "label": "P1", "sublabel": { "tr": "partition 1", "en": "partition 1" }, "x": 450, "y": 300, "w": 140, "h": 64, "parent": "topic" },
+    { "id": "p2", "kind": "queue", "label": "P2", "sublabel": { "tr": "partition 2", "en": "partition 2" }, "x": 450, "y": 410, "w": 140, "h": 64, "parent": "topic" },
+    { "id": "grp-inv", "kind": "group", "label": { "tr": "consumer group: inventory", "en": "consumer group: inventory" }, "x": 820, "y": 160, "w": 300, "h": 210 },
+    { "id": "inv1", "kind": "service", "label": "inv-1", "sublabel": { "tr": "P0, P1", "en": "P0, P1" }, "x": 740, "y": 170, "w": 120, "h": 64, "parent": "grp-inv" },
+    { "id": "inv2", "kind": "service", "label": "inv-2", "sublabel": { "tr": "P2", "en": "P2" }, "x": 900, "y": 170, "w": 120, "h": 64, "parent": "grp-inv" },
+    { "id": "grp-ntf", "kind": "group", "label": { "tr": "consumer group: notification", "en": "consumer group: notification" }, "x": 820, "y": 440, "w": 300, "h": 210 },
+    { "id": "ntf1", "kind": "service", "label": "ntf-1", "sublabel": { "tr": "P0", "en": "P0" }, "x": 740, "y": 450, "w": 120, "h": 64, "parent": "grp-ntf" },
+    { "id": "ntf2", "kind": "service", "label": "ntf-2", "sublabel": { "tr": "P1, P2", "en": "P1, P2" }, "x": 900, "y": 450, "w": 120, "h": 64, "parent": "grp-ntf" }
+  ],
+  "edges": [
+    { "id": "pr-p0", "from": "producer", "to": "p0", "kind": "event", "curvature": -0.15 },
+    { "id": "pr-p1", "from": "producer", "to": "p1", "kind": "event", "label": { "tr": "hash(orderId) mod 3", "en": "hash(orderId) mod 3" } },
+    { "id": "pr-p2", "from": "producer", "to": "p2", "kind": "event", "curvature": 0.15 },
+    { "id": "p0-inv1", "from": "p0", "to": "inv1", "kind": "data", "curvature": -0.1 },
+    { "id": "p1-inv1", "from": "p1", "to": "inv1", "kind": "data", "curvature": -0.2 },
+    { "id": "p2-inv2", "from": "p2", "to": "inv2", "kind": "data", "curvature": -0.35 },
+    { "id": "p2-inv1", "from": "p2", "to": "inv1", "kind": "data", "curvature": -0.3, "style": "dashed" },
+    { "id": "p0-ntf1", "from": "p0", "to": "ntf1", "kind": "data", "curvature": 0.2 },
+    { "id": "p1-ntf2", "from": "p1", "to": "ntf2", "kind": "data", "curvature": 0.35 },
+    { "id": "p2-ntf2", "from": "p2", "to": "ntf2", "kind": "data", "curvature": 0.1 }
+  ],
+  "steps": [
+    {
+      "id": "produce",
+      "title": { "tr": "Olay üretilir", "en": "The event is produced" },
+      "narration": {
+        "tr": "Sipariş veritabanına yazıldıktan sonra sipariş servisi bir OrderCreated olayı üretir. Olayın anahtarı orderId'dir; aynı siparişin tüm olayları aynı anahtarı taşır. Producer idempotent ve acks=all ile yapılandırılmıştır.",
+        "en": "After the order is written to the database, the order service produces an OrderCreated event. Its key is the orderId; every event of the same order carries the same key. The producer is configured as idempotent with acks=all."
+      },
+      "durationMs": 3500,
+      "inherit": false,
+      "highlight": { "nodes": ["producer"], "edges": [] },
+      "nodeStates": {
+        "producer": { "status": "active", "badge": "OrderCreated" }
+      },
+      "edgeStates": { "p2-inv1": { "visible": false } },
+      "annotations": [
+        { "id": "key-note", "x": 120, "y": 400, "text": { "tr": "key = orderId, acks = all", "en": "key = orderId, acks = all" }, "target": "producer" }
+      ]
+    },
+    {
+      "id": "partition",
+      "title": { "tr": "Partition'a yazılır", "en": "Written to a partition" },
+      "narration": {
+        "tr": "Producer anahtarı hash'ler ve 3'e göre mod alır: bu sipariş P1'e düşer. Kayıt P1'in sonuna eklenir ve bir offset alır (41). Sıralama yalnızca partition içinde korunur; farklı siparişler farklı partition'lara dağılır.",
+        "en": "The producer hashes the key and takes it modulo 3: this order lands in P1. The record is appended to the end of P1 and gets an offset (41). Ordering is preserved only within a partition; different orders spread across partitions."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["producer", "p1"], "edges": ["pr-p1"] },
+      "nodeStates": {
+        "producer": { "status": "active", "badge": "" },
+        "p1": { "status": "active", "badge": "offset 41", "progress": 0.6 },
+        "p0": { "status": "idle", "progress": 0.5 },
+        "p2": { "status": "idle", "progress": 0.3 }
+      },
+      "edgeStates": { "pr-p1": { "status": "active" } },
+      "packets": [
+        { "edge": "pr-p1", "shape": "envelope", "label": "order#9", "durationMs": 1200 },
+        { "edge": "pr-p0", "shape": "envelope", "label": "order#10", "startAt": 1400, "durationMs": 1200 }
+      ],
+      "annotations": [
+        { "id": "order-note", "x": 450, "y": 540, "text": { "tr": "sıra garantisi: yalnızca partition içinde", "en": "ordering guarantee: only within a partition" }, "target": "p1" }
+      ]
+    },
+    {
+      "id": "inventory-reads",
+      "title": { "tr": "Envanter grubu okur", "en": "The inventory group reads" },
+      "narration": {
+        "tr": "inventory consumer group'unda iki üye vardır; üç partition aralarında paylaştırılır: inv-1 P0 ve P1'i, inv-2 P2'yi okur. Bir partition, grup içinde yalnızca tek bir consumer'a aittir. inv-1 olayı işler, stoğu düşer ve offset 42'yi commit eder.",
+        "en": "The inventory consumer group has two members; the three partitions are split between them: inv-1 reads P0 and P1, inv-2 reads P2. Within a group a partition belongs to exactly one consumer. inv-1 processes the event, decrements stock and commits offset 42."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["grp-inv", "inv1", "inv2"], "edges": ["p0-inv1", "p1-inv1", "p2-inv2"] },
+      "nodeStates": {
+        "p1": { "status": "idle" },
+        "inv1": { "status": "active", "badge": "commit 42" },
+        "inv2": { "status": "active" }
+      },
+      "edgeStates": {
+        "pr-p1": { "status": "idle" },
+        "p0-inv1": { "status": "active" },
+        "p1-inv1": { "status": "active" },
+        "p2-inv2": { "status": "active" }
+      },
+      "packets": [
+        { "edge": "p1-inv1", "shape": "envelope", "label": "order#9", "durationMs": 1100 },
+        { "edge": "p0-inv1", "shape": "envelope", "label": "order#10", "startAt": 900, "durationMs": 1100 },
+        { "edge": "p2-inv2", "shape": "envelope", "label": "order#8", "startAt": 1800, "durationMs": 1100 }
+      ]
+    },
+    {
+      "id": "notification-reads",
+      "title": { "tr": "Bildirim grubu bağımsız okur", "en": "The notification group reads independently" },
+      "narration": {
+        "tr": "notification grubu aynı topic'i kendi offset'leriyle okur: ntf-1 P0'ı, ntf-2 P1 ve P2'yi. Envanter grubunun ne kadar ilerlediği onu ilgilendirmez; aynı OrderCreated olayı iki gruba da ayrı ayrı ulaşır. Kayıtlar okununca silinmez, retention süresince kalır.",
+        "en": "The notification group reads the same topic with its own offsets: ntf-1 reads P0, ntf-2 reads P1 and P2. It does not care how far the inventory group has got; the same OrderCreated event reaches both groups separately. Records are not deleted on read; they stay for the retention period."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["grp-ntf", "ntf1", "ntf2"], "edges": ["p0-ntf1", "p1-ntf2", "p2-ntf2"] },
+      "nodeStates": {
+        "inv1": { "status": "idle", "badge": "" },
+        "inv2": { "status": "idle" },
+        "ntf1": { "status": "active" },
+        "ntf2": { "status": "active", "badge": "commit 42" }
+      },
+      "edgeStates": {
+        "p0-inv1": { "status": "idle" },
+        "p1-inv1": { "status": "idle" },
+        "p2-inv2": { "status": "idle" },
+        "p0-ntf1": { "status": "active" },
+        "p1-ntf2": { "status": "active" },
+        "p2-ntf2": { "status": "active" }
+      },
+      "packets": [
+        { "edge": "p1-ntf2", "shape": "envelope", "label": "order#9", "durationMs": 1100 },
+        { "edge": "p0-ntf1", "shape": "envelope", "label": "order#10", "startAt": 900, "durationMs": 1100 },
+        { "edge": "p2-ntf2", "shape": "envelope", "label": "order#8", "startAt": 1800, "durationMs": 1100 }
+      ],
+      "annotations": [
+        { "id": "offset-note", "x": 820, "y": 575, "text": { "tr": "her grup kendi offset'ini tutar", "en": "each group keeps its own offsets" }, "target": "grp-ntf" }
+      ]
+    },
+    {
+      "id": "crash",
+      "title": { "tr": "inv-2 düşer", "en": "inv-2 crashes" },
+      "narration": {
+        "tr": "inv-2 kalp atışı göndermeyi keser. Grup koordinatörü session.timeout süresi dolunca onu gruptan çıkarır. Bu sırada P2'deki kayıtlar envanter grubu için okunmadan bekler; bildirim grubu etkilenmez, okumaya devam eder.",
+        "en": "inv-2 stops sending heartbeats. When session.timeout expires the group coordinator removes it from the group. Meanwhile the records in P2 wait unread for the inventory group; the notification group is unaffected and keeps reading."
+      },
+      "durationMs": 3500,
+      "highlight": { "nodes": ["inv2", "p2"], "edges": ["p2-inv2"] },
+      "nodeStates": {
+        "ntf1": { "status": "idle" },
+        "ntf2": { "status": "idle", "badge": "" },
+        "inv2": { "status": "down", "badge": "✕", "sublabel": { "tr": "kalp atışı yok", "en": "no heartbeat" } },
+        "p2": { "status": "warning", "badge": "lag ↑", "progress": 0.7 }
+      },
+      "edgeStates": {
+        "p0-ntf1": { "status": "idle" },
+        "p1-ntf2": { "status": "idle" },
+        "p2-ntf2": { "status": "idle" },
+        "p2-inv2": { "status": "error", "label": { "tr": "timeout", "en": "timeout" } }
+      },
+      "annotations": [
+        { "id": "crash-note", "x": 900, "y": 260, "text": { "tr": "session.timeout doldu", "en": "session.timeout expired" }, "tone": "danger", "target": "inv2" }
+      ]
+    },
+    {
+      "id": "rebalance",
+      "title": { "tr": "Rebalance", "en": "Rebalance" },
+      "narration": {
+        "tr": "Grup yeniden dengelenir: P2 artık inv-1'e atanır ve inv-1 üç partition'ı da okur. P2'de son commit edilen offset'ten devam edilir; inv-2'nin işleyip commit edemediği kayıt yeniden gelir. Bu at-least-once teslimdir; inv-1 eventId'yi Redis'te SET NX ile kontrol edip tekrarı atlar.",
+        "en": "The group rebalances: P2 is now assigned to inv-1, which reads all three partitions. P2 resumes from the last committed offset; a record inv-2 processed but could not commit is delivered again. That is at-least-once delivery; inv-1 checks the eventId in Redis with SET NX and skips the duplicate."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["inv1", "p2"], "edges": ["p2-inv1"] },
+      "nodeStates": {
+        "inv2": { "status": "muted", "badge": "OUT", "sublabel": { "tr": "grup dışı", "en": "out of group" } },
+        "inv1": { "status": "active", "badge": "P0 P1 P2", "sublabel": { "tr": "P0, P1, P2", "en": "P0, P1, P2" } },
+        "p2": { "status": "active", "badge": "", "progress": 0.4 }
+      },
+      "edgeStates": {
+        "p2-inv2": { "status": "muted", "visible": false, "label": "" },
+        "p2-inv1": { "visible": true, "status": "active", "label": { "tr": "yeniden atandı", "en": "reassigned" } }
+      },
+      "packets": [
+        { "edge": "p2-inv1", "shape": "envelope", "label": "order#8", "durationMs": 1200 },
+        { "edge": "p2-inv1", "shape": "envelope", "label": "order#11", "startAt": 1300, "durationMs": 1200 }
+      ],
+      "annotations": [
+        { "id": "idem-note", "x": 740, "y": 60, "text": { "tr": "order#8 tekrar geldi → SET NX ile atlandı", "en": "order#8 arrived again → skipped via SET NX" }, "tone": "success", "target": "inv1" }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["kafka", "partition", "consumer-group", "rebalance", "idempotency"]
+}

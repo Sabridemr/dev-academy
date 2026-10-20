@@ -410,7 +410,7 @@ export default function CapTheoremSim({ params, onInteract }: SimulatorProps) {
                 <div className="flex justify-center gap-1">
                   <button
                     type="button"
-                    className="inline-flex items-center gap-1 rounded-md bg-primary px-1.5 py-0.5 text-[10px] text-white"
+                    className="inline-flex items-center gap-1 rounded-md bg-primary px-1.5 py-0.5 text-xs text-primary-fg"
                     aria-label={`${l.write} N${r.id}`}
                     onClick={() => write(r.id)}
                   >
@@ -418,7 +418,7 @@ export default function CapTheoremSim({ params, onInteract }: SimulatorProps) {
                   </button>
                   <button
                     type="button"
-                    className="inline-flex items-center gap-1 rounded-md border border-border bg-surface px-1.5 py-0.5 text-[10px]"
+                    className="inline-flex items-center gap-1 rounded-md border border-border bg-surface px-1.5 py-0.5 text-xs"
                     aria-label={`${l.read} N${r.id}`}
                     onClick={() => read(r.id)}
                   >

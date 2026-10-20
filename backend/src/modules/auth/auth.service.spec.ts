@@ -79,8 +79,48 @@ function createService(
   const base = createPrismaMock();
   const users = opts.users ?? [];
   const accounts = opts.accounts ?? [];
+  const resets: {
+    id: string;
+    userId: string;
+    tokenHash: string;
+    purpose: 'reset' | 'verify';
+    expiresAt: Date;
+    usedAt: Date | null;
+  }[] = [];
   const prisma = {
     ...base,
+    resets,
+    $transaction: jest.fn(async (ops: Promise<unknown>[]) => Promise.all(ops)),
+    passwordReset: {
+      deleteMany: jest.fn(async ({ where }) => {
+        const before = resets.length;
+        for (let i = resets.length - 1; i >= 0; i--)
+          if (
+            resets[i].userId === where.userId &&
+            resets[i].purpose === where.purpose &&
+            !resets[i].usedAt
+          )
+            resets.splice(i, 1);
+        return { count: before - resets.length };
+      }),
+      create: jest.fn(async ({ data }) => {
+        const row = { id: `r${resets.length + 1}`, usedAt: null, ...data };
+        resets.push(row);
+        return row;
+      }),
+      findUnique: jest.fn(async ({ where }) => {
+        const r = resets.find((x) => x.tokenHash === where.tokenHash);
+        return r ? { ...r, user: { deletedAt: null } } : null;
+      }),
+      updateMany: jest.fn(async ({ where, data }) => {
+        const r = resets.find(
+          (x) => x.id === where.id && x.usedAt === null && x.expiresAt > where.expiresAt.gt,
+        );
+        if (!r) return { count: 0 };
+        Object.assign(r, data);
+        return { count: 1 };
+      }),
+    },
     user: {
       findUnique: jest.fn(
         async ({ where }) =>
@@ -104,7 +144,12 @@ function createService(
         users.push(u);
         return u;
       }),
-      update: jest.fn(async ({ data }) => data),
+      update: jest.fn(async ({ where, data }) => {
+        const u = users.find((x) => x.id === where.id);
+        if (u) Object.assign(u, data);
+        return u ?? data;
+      }),
+      updateMany: jest.fn(async () => ({ count: 1 })),
       delete: jest.fn(async ({ where }) => {
         const i = users.findIndex((u) => u.id === where.id);
         return i >= 0 ? users.splice(i, 1)[0] : null;
@@ -121,10 +166,18 @@ function createService(
   };
   const config = {
     get: (k: string) =>
-      ({ JWT_ACCESS_TTL: 900, JWT_REFRESH_TTL: 3600, JWT_ACCESS_SECRET: 'x'.repeat(32) })[k],
+      ({
+        JWT_ACCESS_TTL: 900,
+        JWT_REFRESH_TTL: 3600,
+        JWT_ACCESS_SECRET: 'x'.repeat(32),
+        WEB_URL: 'https://web.test',
+      })[k],
   };
   const oauth = { verify: jest.fn(async () => opts.identity) };
   const authState = { revokeAccessTokens: jest.fn(async () => undefined) };
+  const notifications = {
+    sendEmail: jest.fn(async (_to: string, _subject: string, _text: string) => undefined),
+  };
   const service = new AuthService(
     prisma as never,
     new JwtService({}),
@@ -132,8 +185,9 @@ function createService(
     oauth as never,
     { acquireLock: async () => true } as never,
     authState as never,
+    notifications as never,
   );
-  return { service, prisma, authState };
+  return { service, prisma, authState, notifications };
 }
 
 const userRow = (over: Record<string, unknown> = {}) => ({
@@ -301,5 +355,79 @@ describe('AuthService', () => {
     const { service, authState } = createService({ users: [userRow()] });
     await service.logout(undefined, 'u1', true);
     expect(authState.revokeAccessTokens).toHaveBeenCalledWith('u1');
+  });
+
+  describe('şifre sıfırlama ve e-posta doğrulama', () => {
+    const tokenFromMail = (text: string) => {
+      const m = text.match(/token=([A-Za-z0-9_%-]+)/);
+      return decodeURIComponent(m![1]);
+    };
+
+    it('kayıtlı olmayan e-posta için sessizce döner, e-posta gönderilmez', async () => {
+      const { service, notifications, prisma } = createService({ users: [userRow()] });
+      await expect(service.forgotPassword('yok@b.c')).resolves.toBeUndefined();
+      expect(notifications.sendEmail).not.toHaveBeenCalled();
+      expect(prisma.resets).toHaveLength(0);
+    });
+
+    it('sıfırlama bağlantısı WEB_URL ile gönderilir; yalnızca token özeti saklanır, 1 saat geçerli', async () => {
+      const { service, notifications, prisma } = createService({ users: [userRow()] });
+      await service.forgotPassword('  A@B.C ');
+      expect(notifications.sendEmail).toHaveBeenCalledTimes(1);
+      const [to, , text] = notifications.sendEmail.mock.calls[0];
+      expect(to).toBe('a@b.c');
+      expect(text).toContain('https://web.test/reset-password?token=');
+      const token = tokenFromMail(text);
+      expect(Buffer.from(token, 'base64url')).toHaveLength(32);
+      expect(prisma.resets).toHaveLength(1);
+      expect(prisma.resets[0].tokenHash).toBe(hashToken(token));
+      expect(prisma.resets[0].tokenHash).not.toContain(token);
+      const ttl = prisma.resets[0].expiresAt.getTime() - Date.now();
+      expect(ttl).toBeGreaterThan(59 * 60 * 1000);
+      expect(ttl).toBeLessThanOrEqual(60 * 60 * 1000);
+
+      // Yeni istek önceki bağlantıyı geçersiz kılar
+      await service.forgotPassword('a@b.c');
+      expect(prisma.resets).toHaveLength(1);
+      expect(prisma.resets[0].tokenHash).not.toBe(hashToken(token));
+    });
+
+    it('şifreyi günceller, oturumları kapatır; token ikinci kez kullanılamaz', async () => {
+      const users: Record<string, unknown>[] = [userRow({ emailVerifiedAt: null })];
+      const { service, notifications, authState } = createService({ users });
+      await service.forgotPassword('a@b.c');
+      const token = tokenFromMail(notifications.sendEmail.mock.calls[0][2]);
+      await service.resetPassword(token, 'YeniSifre123!');
+      const argon2 = await import('argon2');
+      expect(await argon2.verify(users[0].passwordHash as string, 'YeniSifre123!')).toBe(true);
+      expect(users[0].emailVerifiedAt).toBeInstanceOf(Date);
+      expect(authState.revokeAccessTokens).toHaveBeenCalledWith('u1');
+      await expect(service.resetPassword(token, 'BaskaSifre123!')).rejects.toBeInstanceOf(
+        BadRequestException,
+      );
+    });
+
+    it('süresi dolmuş, bilinmeyen ya da başka amaçlı token reddedilir', async () => {
+      const { service, notifications, prisma } = createService({ users: [userRow()] });
+      await expect(service.resetPassword('x'.repeat(43), 'YeniSifre123!')).rejects.toBeInstanceOf(
+        BadRequestException,
+      );
+      await service.requestEmailVerification('u1');
+      const verifyToken = tokenFromMail(notifications.sendEmail.mock.calls[0][2]);
+      expect(notifications.sendEmail.mock.calls[0][2]).toContain('/verify-email?token=');
+      await expect(service.resetPassword(verifyToken, 'YeniSifre123!')).rejects.toBeInstanceOf(
+        BadRequestException,
+      );
+      prisma.resets[0].expiresAt = new Date(Date.now() - 1000);
+      await expect(service.verifyEmail(verifyToken)).rejects.toBeInstanceOf(BadRequestException);
+    });
+
+    it('doğrulanmış e-posta için yeni doğrulama bağlantısı gönderilmez', async () => {
+      const { service, notifications } = createService({
+        users: [userRow({ emailVerifiedAt: new Date() })],
+      });
+      await service.requestEmailVerification('u1');
+      expect(notifications.sendEmail).not.toHaveBeenCalled();
+    });
   });
 });

@@ -9,10 +9,10 @@ title:
 summary:
   tr: "Tetikleyici, secret, matrix, cache ve servis konteyneriyle hızlı ve güvenli workflow'lar kur."
   en: "Build fast, secure workflows with triggers, secrets, matrix builds, caching and service containers."
-durationMinutes: 11
+durationMinutes: 20
 level: intermediate
 tags: [github-actions, secrets, cache, testing, postgresql]
-prerequisites: []
+prerequisites: [h-06-cicd-temelleri-ve-ilk-workflow]
 concepts: [events, needs, expressions, contexts, secrets, matrix-strategy, artifacts, service-containers]
 ---
 
@@ -100,7 +100,7 @@ jobs:
 ```
 :::
 
-:::diagram{src="sekil-01.png" alt="Job bağımlılığı: lint ve test paralel çalışır, ikisi build adımına bağlanır, build ardından deploy gelir"}
+:::diagram{src="sekil-01.png" alt="Job bağımlılığı: lint ve test paralel çalışır, ikisi build adımına bağlanır, build ardından deploy gelir|Job dependency: lint and test run in parallel, both feed the build job, and deploy follows build"}
 :::
 
 `lint` ve `test` aynı anda çalışır, ikisi bitince `build`, sonra `deploy` çalışır.
@@ -445,45 +445,19 @@ E2E testi için Playwright örneği:
 ```
 :::
 
+## Dene: başarısız test ve yeniden deneme
+
+:::interactive{type="pipeline" stages=6 failureStage=4 retries=1}
+Test aşamasını başarısız yap, yeniden deneme sayısını artır ve pipeline'ın toplam süresinin nasıl değiştiğini gözle.
+:::
+
+:::callout{tone="info" title="İlgili dersler"}
+Bu konuyu başka bir açıdan anlatan dersler:
+
+- [Kodun Yolculuğu ve CI/CD (Kod ve Altyapı modülü)](/lessons/f-02-code-journey-ci-cd)
+:::
+
 :::quiz{src="quiz.json"}
-:::
-
-## Orijinal PDF sayfaları
-
-:::callout{tone="info" title="Özgün görünüm"}
-Bu dersin metni *CICD GitHub Actions Rehberi* PDF dosyasının 8–15. sayfalarının özgün hâlidir; sayfalar aşağıda PDF'teki görünümüyle yer alır.
-:::
-
-:::diagram{src="pdf-sayfa-08.png" alt="CICD GitHub Actions Rehberi - PDF sayfa 8"}
-PDF sayfa 8 / 33
-:::
-
-:::diagram{src="pdf-sayfa-09.png" alt="CICD GitHub Actions Rehberi - PDF sayfa 9"}
-PDF sayfa 9 / 33
-:::
-
-:::diagram{src="pdf-sayfa-10.png" alt="CICD GitHub Actions Rehberi - PDF sayfa 10"}
-PDF sayfa 10 / 33
-:::
-
-:::diagram{src="pdf-sayfa-11.png" alt="CICD GitHub Actions Rehberi - PDF sayfa 11"}
-PDF sayfa 11 / 33
-:::
-
-:::diagram{src="pdf-sayfa-12.png" alt="CICD GitHub Actions Rehberi - PDF sayfa 12"}
-PDF sayfa 12 / 33
-:::
-
-:::diagram{src="pdf-sayfa-13.png" alt="CICD GitHub Actions Rehberi - PDF sayfa 13"}
-PDF sayfa 13 / 33
-:::
-
-:::diagram{src="pdf-sayfa-14.png" alt="CICD GitHub Actions Rehberi - PDF sayfa 14"}
-PDF sayfa 14 / 33
-:::
-
-:::diagram{src="pdf-sayfa-15.png" alt="CICD GitHub Actions Rehberi - PDF sayfa 15"}
-PDF sayfa 15 / 33
 :::
 
 :::next{lesson="h-08-docker-deploy-ve-guvenlik"}

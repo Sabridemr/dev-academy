@@ -1,0 +1,162 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "m-03-rag-pipeline",
+  "title": { "tr": "RAG Hattı: Dizinleme ve Sorgulama", "en": "RAG Pipeline: Indexing and Querying" },
+  "summary": {
+    "tr": "Belgelerin parçalanıp gömülerek vektör veritabanına yazılması, ardından bir sorunun gömülüp en yakın k parçayla birlikte LLM'e gönderilmesi.",
+    "en": "Documents are chunked, embedded and written to a vector database; then a question is embedded and sent to the LLM together with the k nearest chunks."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Üst sırada soldan sağa belge deposu, parçalayıcı ve gömme modeli; sağda vektör veritabanı. Alt sırada kullanıcı, RAG servisi ve LLM. Önce belgeler parçalara bölünür, her parça vektöre çevrilip veritabanına yazılır. Sonra kullanıcının sorusu aynı gömme modeliyle vektöre çevrilir, veritabanından en yakın üç parça getirilir, soru ile birlikte LLM'e gönderilir ve kaynaklı cevap kullanıcıya döner.",
+      "en": "Top row from left to right: document store, chunker and embedding model; the vector database on the right. Bottom row: user, RAG service and LLM. First documents are split into chunks, each chunk is embedded and written to the database. Then the user's question is embedded with the same model, the three nearest chunks are retrieved, sent to the LLM with the question, and a cited answer returns to the user."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "docs", "kind": "storage", "label": { "tr": "Belgeler", "en": "Documents" }, "sublabel": { "tr": "PDF, wiki, Markdown", "en": "PDF, wiki, Markdown" }, "x": 110, "y": 140, "w": 140, "h": 70 },
+    { "id": "chunker", "kind": "worker", "label": { "tr": "Parçalayıcı", "en": "Chunker" }, "sublabel": { "tr": "200 token, 40 örtüşme", "en": "200 tokens, 40 overlap" }, "x": 340, "y": 140, "w": 150, "h": 70 },
+    { "id": "embedder", "kind": "model", "label": { "tr": "Gömme modeli", "en": "Embedding model" }, "sublabel": { "tr": "metin → vektör", "en": "text → vector" }, "x": 580, "y": 140, "w": 150, "h": 70 },
+    { "id": "vdb", "kind": "db", "label": { "tr": "Vektör DB", "en": "Vector DB" }, "sublabel": { "tr": "ANN indeksi", "en": "ANN index" }, "x": 850, "y": 300, "w": 140, "h": 80 },
+    { "id": "user", "kind": "user", "label": { "tr": "Kullanıcı", "en": "User" }, "x": 110, "y": 460 },
+    { "id": "app", "kind": "service", "label": { "tr": "RAG servisi", "en": "RAG service" }, "sublabel": { "tr": "prompt kurar", "en": "builds the prompt" }, "x": 340, "y": 460, "w": 150, "h": 70 },
+    { "id": "llm", "kind": "model", "label": "LLM", "sublabel": { "tr": "üretim", "en": "generation" }, "x": 620, "y": 480, "w": 140, "h": 70 }
+  ],
+  "edges": [
+    { "id": "docs-chunker", "from": "docs", "to": "chunker", "kind": "data", "label": { "tr": "metin", "en": "text" } },
+    { "id": "chunker-embedder", "from": "chunker", "to": "embedder", "kind": "data", "label": { "tr": "parçalar", "en": "chunks" } },
+    { "id": "embedder-vdb", "from": "embedder", "to": "vdb", "kind": "data", "curvature": 0.2, "label": { "tr": "vektör + meta", "en": "vector + meta" } },
+    { "id": "user-app", "from": "user", "to": "app", "kind": "request", "label": { "tr": "soru", "en": "question" } },
+    { "id": "app-embedder", "from": "app", "to": "embedder", "kind": "request", "style": "dashed", "curvature": -0.2, "label": { "tr": "sorguyu göm", "en": "embed query" } },
+    { "id": "app-vdb", "from": "app", "to": "vdb", "kind": "request", "curvature": -0.15, "label": { "tr": "top-k ara", "en": "top-k search" } },
+    { "id": "app-llm", "from": "app", "to": "llm", "kind": "request", "label": { "tr": "soru + parçalar", "en": "question + chunks" } }
+  ],
+  "steps": [
+    {
+      "id": "chunking",
+      "title": { "tr": "1. Parçalama", "en": "1. Chunking" },
+      "narration": {
+        "tr": "Dizinleme çevrim dışı çalışır. Belgeler temizlenir ve örtüşmeli parçalara bölünür; her parçaya kaynak belge, bölüm başlığı ve yetki bilgisi gibi meta veriler eklenir.",
+        "en": "Indexing runs offline. Documents are cleaned and split into overlapping chunks; each chunk gets metadata such as source document, section heading and access rights."
+      },
+      "durationMs": 3500,
+      "inherit": false,
+      "highlight": { "nodes": ["docs", "chunker"], "edges": ["docs-chunker"] },
+      "nodeStates": {
+        "docs": { "status": "active" },
+        "chunker": { "status": "busy", "badge": "×12" }
+      },
+      "packets": [
+        { "edge": "docs-chunker", "shape": "envelope", "label": "iade.md", "durationMs": 1100 },
+        { "edge": "docs-chunker", "shape": "envelope", "label": "kargo.md", "startAt": 900, "durationMs": 1100 }
+      ]
+    },
+    {
+      "id": "embedding",
+      "title": { "tr": "2. Gömme ve yazma", "en": "2. Embed and write" },
+      "narration": {
+        "tr": "Her parça gömme modeliyle sabit boyutlu bir vektöre çevrilir ve meta verisiyle birlikte vektör veritabanına yazılır. Belge değişince yalnızca o belgenin parçaları yeniden üretilir.",
+        "en": "Each chunk is turned into a fixed-size vector by the embedding model and written to the vector database with its metadata. When a document changes, only its chunks are regenerated."
+      },
+      "durationMs": 3800,
+      "highlight": { "nodes": ["chunker", "embedder", "vdb"], "edges": ["chunker-embedder", "embedder-vdb"] },
+      "nodeStates": {
+        "chunker": { "status": "success", "badge": "✓" },
+        "embedder": { "status": "busy" },
+        "vdb": { "status": "active", "counter": 12 }
+      },
+      "packets": [
+        { "edge": "chunker-embedder", "shape": "square", "durationMs": 700, "repeat": 4, "repeatGapMs": 200 },
+        { "edge": "embedder-vdb", "shape": "dot", "startAt": 900, "durationMs": 800, "repeat": 4, "repeatGapMs": 200 }
+      ],
+      "annotations": [
+        { "id": "vec-note", "x": 760, "y": 210, "text": { "tr": "[0.12, −0.48, 0.91, …]", "en": "[0.12, −0.48, 0.91, …]" }, "target": "vdb" }
+      ]
+    },
+    {
+      "id": "query",
+      "title": { "tr": "3. Soru gelir", "en": "3. A question arrives" },
+      "narration": {
+        "tr": "Sorgu hattı her istekte çalışır. Kullanıcının sorusu, belgelerde kullanılan aynı gömme modeliyle vektöre çevrilir; farklı model kullanılırsa vektörler aynı uzayda olmaz.",
+        "en": "The query pipeline runs on every request. The user's question is embedded with the same model used for the documents; a different model would put the vectors in a different space."
+      },
+      "durationMs": 3500,
+      "highlight": { "nodes": ["user", "app", "embedder"], "edges": ["user-app", "app-embedder"] },
+      "nodeStates": {
+        "docs": { "status": "muted" },
+        "chunker": { "status": "muted" },
+        "embedder": { "status": "active" },
+        "app": { "status": "active" },
+        "user": { "status": "active" }
+      },
+      "packets": [
+        { "edge": "user-app", "shape": "envelope", "label": { "tr": "İade süresi?", "en": "Return period?" }, "durationMs": 1000 },
+        { "edge": "app-embedder", "shape": "dot", "startAt": 1100, "durationMs": 800 },
+        { "edge": "app-embedder", "shape": "dot", "direction": "backward", "startAt": 2000, "durationMs": 800, "label": "q⃗" }
+      ]
+    },
+    {
+      "id": "retrieve",
+      "title": { "tr": "4. En yakın k parça", "en": "4. The k nearest chunks" },
+      "narration": {
+        "tr": "Servis, sorgu vektörüne en yakın üç parçayı ister; yetki filtresi aramayla birlikte uygulanır. Gerekirse daha geniş bir aday kümesi bir yeniden sıralayıcıdan geçirilir.",
+        "en": "The service asks for the three chunks nearest to the query vector; the access filter is applied together with the search. If needed, a wider candidate set goes through a reranker."
+      },
+      "durationMs": 3800,
+      "highlight": { "nodes": ["app", "vdb"], "edges": ["app-vdb"] },
+      "nodeStates": {
+        "embedder": { "status": "muted" },
+        "vdb": { "status": "busy", "badge": "k=3" }
+      },
+      "packets": [
+        { "edge": "app-vdb", "shape": "dot", "label": "q⃗", "durationMs": 900 },
+        { "edge": "app-vdb", "shape": "square", "direction": "backward", "startAt": 1100, "durationMs": 900, "label": "#4" },
+        { "edge": "app-vdb", "shape": "square", "direction": "backward", "startAt": 1400, "durationMs": 900, "label": "#7" },
+        { "edge": "app-vdb", "shape": "square", "direction": "backward", "startAt": 1700, "durationMs": 900, "label": "#9" }
+      ],
+      "annotations": [
+        { "id": "score-note", "x": 640, "y": 330, "text": { "tr": "kosinüs: 0.86 · 0.81 · 0.77", "en": "cosine: 0.86 · 0.81 · 0.77" }, "target": "vdb" }
+      ]
+    },
+    {
+      "id": "generate",
+      "title": { "tr": "5. Bağlamla üretim", "en": "5. Generation with context" },
+      "narration": {
+        "tr": "Servis, üç parçayı kimlik ve kaynak etiketleriyle soruya ekler ve LLM'e gönderir. Talimat açıktır: yalnızca bu kaynaklara dayan, kaynak göster, cevap yoksa bilmediğini söyle.",
+        "en": "The service adds the three chunks to the question with id and source tags and sends it to the LLM. The instruction is explicit: rely only on these sources, cite them, and say you don't know if the answer is missing."
+      },
+      "durationMs": 3800,
+      "highlight": { "nodes": ["app", "llm"], "edges": ["app-llm"] },
+      "nodeStates": {
+        "vdb": { "status": "success", "badge": "✓" },
+        "llm": { "status": "busy" }
+      },
+      "packets": [
+        { "edge": "app-llm", "shape": "envelope", "label": { "tr": "soru + 3 kaynak", "en": "question + 3 sources" }, "durationMs": 1200 }
+      ]
+    },
+    {
+      "id": "answer",
+      "title": { "tr": "6. Kaynaklı cevap", "en": "6. Cited answer" },
+      "narration": {
+        "tr": "LLM cevabı kaynak kimlikleriyle döndürür. Servis, cevaptaki kimliklerin gerçekten bağlama verilen parçalara karşılık geldiğini doğrular ve cevabı kaynak bağlantılarıyla kullanıcıya iletir.",
+        "en": "The LLM returns the answer with source ids. The service checks that the ids really match chunks given in the context and forwards the answer to the user with source links."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["llm", "app", "user"], "edges": ["app-llm", "user-app"] },
+      "nodeStates": {
+        "llm": { "status": "success" },
+        "app": { "status": "success" },
+        "user": { "status": "success", "badge": "✓" }
+      },
+      "packets": [
+        { "edge": "app-llm", "shape": "envelope", "direction": "backward", "label": { "tr": "14 gün [4]", "en": "14 days [4]" }, "durationMs": 1100 },
+        { "edge": "user-app", "shape": "envelope", "direction": "backward", "startAt": 1300, "label": { "tr": "cevap + kaynak", "en": "answer + source" }, "durationMs": 1100 }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["rag", "embedding", "vector-database", "retrieval"]
+}

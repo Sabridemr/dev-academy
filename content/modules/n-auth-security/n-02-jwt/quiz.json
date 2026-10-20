@@ -1,0 +1,110 @@
+{
+  "id": "n-02-jwt-quiz",
+  "title": { "tr": "JWT Quiz", "en": "JWT Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Standart bir imzalı JWT'nin gövdesi şifrelidir; anahtarı bilmeyen biri içindeki talepleri okuyamaz.",
+        "en": "The payload of a standard signed JWT is encrypted; someone without the key cannot read its claims."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "Yanlış. Başlık ve gövde yalnızca base64url ile kodlanır; herkes okuyabilir. İmza bütünlüğü ve kökeni garanti eder, gizliliği değil. Gizlilik için JWE gerekir ya da gövdeye gizli veri konmaz.",
+        "en": "False. Header and payload are only base64url-encoded; anyone can read them. The signature guarantees integrity and origin, not confidentiality. Confidentiality needs JWE, or simply keeping secrets out of the payload."
+      },
+      "difficulty": "easy",
+      "concepts": ["jwt-structure"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "On mikroservisin kimlik servisinin ürettiği token'ları doğruladığı bir sistemde, servislerden biri ele geçirilirse saldırganın sahte token basamaması için hangi seçim yapılmalıdır?",
+        "en": "In a system where ten microservices verify tokens issued by an identity service, what should be chosen so that an attacker who compromises one service cannot mint forged tokens?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Tüm servislerde aynı HS256 sırrını paylaşmak", "en": "Share the same HS256 secret across all services" } },
+        { "id": "b", "text": { "tr": "RS256/ES256: kimlik servisi özel anahtarla imzalar, diğerleri JWKS'teki açık anahtarla doğrular", "en": "RS256/ES256: the identity service signs with a private key, others verify with the public key from JWKS" } },
+        { "id": "c", "text": { "tr": "Token gövdesini base64 yerine hex ile kodlamak", "en": "Encode the payload as hex instead of base64" } },
+        { "id": "d", "text": { "tr": "exp süresini bir haftaya çıkarmak", "en": "Increase exp to one week" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "HMAC'te doğrulayan herkes sırrı bilir, dolayısıyla token da üretebilir (a). Asimetrik imzada doğrulayıcılar yalnızca açık anahtarı bilir; imza üretemezler. Kodlama biçimi güvenliği değiştirmez (c), uzun exp ise riski büyütür (d).",
+        "en": "With HMAC every verifier knows the secret and can therefore mint tokens (a). With asymmetric signatures verifiers only know the public key and cannot sign. The encoding has no security effect (c) and a longer exp increases the risk (d)."
+      },
+      "difficulty": "medium",
+      "concepts": ["hs256-vs-rs256", "jwks"]
+    },
+    {
+      "id": "q3",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Aşağıdakilerden hangileri JWT doğrulayıcısının mutlaka yapması gereken kontrollerdir? (Birden fazla seçin)",
+        "en": "Which of the following must a JWT verifier always do? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Kabul edilen algoritmayı yapılandırmadan sabitlemek", "en": "Pin the accepted algorithm from configuration" } },
+        { "id": "b", "text": { "tr": "aud talebinin kendi servisini içerdiğini kontrol etmek", "en": "Check that the aud claim contains its own service" } },
+        { "id": "c", "text": { "tr": "exp talebini küçük bir saat kayması toleransıyla kontrol etmek", "en": "Check exp with a small clock-skew tolerance" } },
+        { "id": "d", "text": { "tr": "Başlıktaki alg değerine göre doğrulama algoritmasını seçmek", "en": "Choose the verification algorithm from the alg value in the header" } }
+      ],
+      "correct": ["a", "b", "c"],
+      "explanation": {
+        "tr": "Başlık saldırganın kontrolündedir; algoritmayı oradan seçmek alg=none ve algoritma karışıklığı saldırılarının köküdür (d yanlış). Algoritma, aud ve exp kontrolleri ise doğrulamanın temel parçalarıdır.",
+        "en": "The header is attacker-controlled; choosing the algorithm from it is the root of alg=none and algorithm-confusion attacks (d is wrong). Pinning the algorithm and checking aud and exp are core parts of verification."
+      },
+      "difficulty": "medium",
+      "concepts": ["jwt-validation", "jwt-claims", "alg-none"]
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": {
+        "tr": "Sunucu RS256 bekliyor ama kütüphane başlıktaki alg değerine göre davranıyor. Saldırgan başlığa HS256 yazıp token'ı sunucunun açık anahtarıyla HMAC olarak imzalıyor. Bu saldırının adı ve kalıcı savunması nedir?",
+        "en": "The server expects RS256 but the library follows the alg in the header. An attacker writes HS256 in the header and HMAC-signs the token with the server's public key. What is this attack called and what is the lasting defence?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Algoritma karışıklığı; algoritmayı ve anahtar türünü sunucu tarafında sabitlemek", "en": "Algorithm confusion; pinning the algorithm and key type on the server" } },
+        { "id": "b", "text": { "tr": "Replay saldırısı; jti kara listesi tutmak", "en": "Replay attack; keeping a jti denylist" } },
+        { "id": "c", "text": { "tr": "Oturum sabitleme; girişte token'ı yeniden üretmek", "en": "Session fixation; regenerating the token at login" } },
+        { "id": "d", "text": { "tr": "Zayıf sır; HMAC sırrını uzatmak", "en": "Weak secret; making the HMAC secret longer" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "Açık anahtar herkese açık olduğu için HMAC sırrı gibi kullanıldığında imza tutar. Sırrı uzatmak işe yaramaz çünkü kullanılan 'sır' açık anahtarın kendisidir (d). jti listesi ve oturum yenileme bu saldırıyla ilgili değildir. Tek kalıcı çözüm algoritmayı token'dan değil yapılandırmadan almaktır.",
+        "en": "Because the public key is public, using it as an HMAC secret makes the signature verify. A longer secret does not help since the 'secret' used is the public key itself (d). A jti list and session regeneration are unrelated. The only lasting fix is taking the algorithm from configuration, not from the token."
+      },
+      "difficulty": "hard",
+      "concepts": ["algorithm-confusion", "hs256-vs-rs256"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "Kullanıcı şifresini değiştirdiğinde, her isteği bir iptal listesine bağlamadan eski access token'ların hızla reddedilmesini sağlayan en dengeli yöntem hangisidir?",
+        "en": "When a user changes their password, which is the most balanced way to quickly reject old access tokens without tying every request to a revocation list?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "İmza anahtarını hemen döndürmek", "en": "Rotate the signing key immediately" } },
+        { "id": "b", "text": { "tr": "Kullanıcı kaydında tokenVersion tutup token'a gömmek ve kısa süreli önbellekle karşılaştırmak", "en": "Keep a tokenVersion on the user record, embed it in the token and compare it via a short-lived cache" } },
+        { "id": "c", "text": { "tr": "Access token ömrünü 30 güne çıkarıp kullanıcıya uyarı göstermek", "en": "Raise the access token lifetime to 30 days and show the user a warning" } },
+        { "id": "d", "text": { "tr": "Token'ı localStorage'dan silmesini istemciye bırakmak", "en": "Leave it to the client to delete the token from localStorage" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Kullanıcı sürümü yalnızca o kullanıcının token'larını etkiler ve kullanıcı başına tek bir değerin kısa süreli önbelleğe alınmasıyla ucuzdur. Anahtar rotasyonu herkesi çıkışa zorlar (a); uzun ömür riski artırır (c); istemciye güvenmek, token'ı çalmış bir saldırganı durdurmaz (d).",
+        "en": "A per-user version only affects that user's tokens and is cheap because a single per-user value is cached briefly. Key rotation logs everyone out (a); a long lifetime increases risk (c); trusting the client does not stop an attacker who already stole the token (d)."
+      },
+      "difficulty": "medium",
+      "concepts": ["jwt-revocation"]
+    }
+  ]
+}

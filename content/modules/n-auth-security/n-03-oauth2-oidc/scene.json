@@ -1,0 +1,150 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "n-03-oauth-code-pkce",
+  "title": { "tr": "Authorization Code + PKCE Akışı", "en": "Authorization Code + PKCE Flow" },
+  "summary": {
+    "tr": "İstemci PKCE değerlerini üretir, tarayıcı yetkilendirme sunucusuna yönlendirilir, kullanıcı onay verir, kod ön kanalda döner, istemci kodu verifier ile arka kanalda token'a çevirir ve kaynak sunucusuna erişir.",
+    "en": "The client generates PKCE values, the browser is redirected to the authorization server, the user consents, the code returns on the front channel, the client exchanges it with the verifier on the back channel and calls the resource server."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda kullanıcı tarayıcısı, ortada altta istemci uygulama, sağ üstte yetkilendirme sunucusu, sağ altta kaynak sunucusu bulunur. Birinci adımda istemci code_verifier ve code_challenge üretip tarayıcıyı yönlendirir. İkinci adımda tarayıcı challenge ve state ile yetkilendirme sunucusuna gider, kullanıcı giriş yapıp onay verir. Üçüncü adımda sunucu tarayıcıyı kod ve state ile istemciye geri yollar. Dördüncü adımda istemci kodu ve verifier'ı arka kanaldan gönderir; sunucu verifier'ın özetini challenge ile karşılaştırır. Beşinci adımda access token, ID token ve refresh token istemciye döner. Altıncı adımda istemci access token ile kaynak sunucusundan veri alır.",
+      "en": "The user's browser on the left, the client application at the bottom middle, the authorization server at the top right and the resource server at the bottom right. In step one the client generates a code_verifier and code_challenge and redirects the browser. In step two the browser goes to the authorization server with the challenge and state, and the user logs in and consents. In step three the server redirects the browser back to the client with a code and state. In step four the client sends the code and verifier over the back channel; the server compares the verifier's hash with the challenge. In step five access, ID and refresh tokens return to the client. In step six the client fetches data from the resource server with the access token."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "user", "kind": "browser", "label": { "tr": "Kullanıcı tarayıcısı", "en": "User's browser" }, "x": 140, "y": 170, "w": 170, "h": 80 },
+    { "id": "client", "kind": "server", "label": { "tr": "İstemci uygulama", "en": "Client app" }, "sublabel": { "tr": "verifier saklı", "en": "keeps verifier" }, "x": 400, "y": 450, "w": 170, "h": 80 },
+    { "id": "authz", "kind": "service", "label": { "tr": "Yetkilendirme sunucusu", "en": "Authorization server" }, "sublabel": "/authorize · /token", "x": 820, "y": 170, "w": 200, "h": 90 },
+    { "id": "rs", "kind": "server", "label": { "tr": "Kaynak sunucusu", "en": "Resource server" }, "sublabel": "API", "x": 820, "y": 470, "w": 180, "h": 80 }
+  ],
+  "edges": [
+    { "id": "user-client", "from": "user", "to": "client", "kind": "request", "label": { "tr": "ön kanal", "en": "front channel" }, "curvature": -0.1 },
+    { "id": "user-authz", "from": "user", "to": "authz", "kind": "request", "label": { "tr": "ön kanal (yönlendirme)", "en": "front channel (redirect)" } },
+    { "id": "client-authz", "from": "client", "to": "authz", "kind": "data", "label": { "tr": "arka kanal", "en": "back channel" }, "curvature": 0.12 },
+    { "id": "client-rs", "from": "client", "to": "rs", "kind": "request" }
+  ],
+  "steps": [
+    {
+      "id": "prepare",
+      "title": { "tr": "Hazırlık ve yönlendirme", "en": "Prepare and redirect" },
+      "narration": {
+        "tr": "Kullanıcı \"Giriş yap\"a tıklar. İstemci rastgele bir code_verifier üretir, SHA-256 özetinden code_challenge'ı hesaplar, rastgele bir state saklar ve tarayıcıyı yetkilendirme sunucusuna yönlendirir.",
+        "en": "The user clicks \"Log in\". The client generates a random code_verifier, derives the code_challenge from its SHA-256 hash, stores a random state and redirects the browser to the authorization server."
+      },
+      "durationMs": 3600,
+      "inherit": false,
+      "highlight": { "nodes": ["user", "client"], "edges": ["user-client"] },
+      "nodeStates": {
+        "client": { "status": "active", "badge": "verifier" }
+      },
+      "edgeStates": { "client-rs": { "status": "muted" } },
+      "packets": [
+        { "edge": "user-client", "shape": "envelope", "label": { "tr": "Giriş yap", "en": "Log in" }, "durationMs": 1000 },
+        { "edge": "user-client", "direction": "backward", "shape": "envelope", "label": "302 + challenge, state", "startAt": 1300, "durationMs": 1300 }
+      ],
+      "annotations": [
+        { "id": "pkce-note", "x": 400, "y": 560, "text": "challenge = BASE64URL(SHA256(verifier))", "target": "client" }
+      ]
+    },
+    {
+      "id": "authorize",
+      "title": { "tr": "Giriş ve onay", "en": "Login and consent" },
+      "narration": {
+        "tr": "Tarayıcı /authorize uç noktasına client_id, redirect_uri, scope, state ve code_challenge ile gelir. Kullanıcı şifresini yalnızca burada girer ve istenen kapsamları onaylar; istemci şifreyi hiç görmez.",
+        "en": "The browser arrives at /authorize with client_id, redirect_uri, scope, state and code_challenge. The user enters their password only here and approves the requested scopes; the client never sees the password."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["user", "authz"], "edges": ["user-authz"] },
+      "nodeStates": {
+        "client": { "status": "idle" },
+        "authz": { "status": "active", "badge": "consent" }
+      },
+      "packets": [
+        { "edge": "user-authz", "shape": "envelope", "label": "GET /authorize?…&code_challenge", "durationMs": 1500 }
+      ]
+    },
+    {
+      "id": "redirect-code",
+      "title": { "tr": "Kodla geri dönüş", "en": "Return with a code" },
+      "narration": {
+        "tr": "Yetkilendirme sunucusu tarayıcıyı kayıtlı redirect_uri'ye kısa ömürlü, tek kullanımlık bir kod ve state ile geri yollar. İstemci state'in sakladığıyla aynı olduğunu kontrol eder. Kod ön kanalda taşındığı için görülebilir; tek başına işe yaramamalıdır.",
+        "en": "The authorization server redirects the browser to the registered redirect_uri with a short-lived single-use code and the state. The client checks that the state matches what it stored. The code travels on the front channel and may be seen; on its own it must be useless."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["user", "client", "authz"], "edges": ["user-authz", "user-client"] },
+      "nodeStates": {
+        "authz": { "status": "success", "badge": "code" },
+        "client": { "status": "active", "badge": "state ✓" }
+      },
+      "packets": [
+        { "edge": "user-authz", "direction": "backward", "shape": "envelope", "label": "302 ?code&state", "durationMs": 1300 },
+        { "edge": "user-client", "shape": "envelope", "label": "/callback?code&state", "startAt": 1500, "durationMs": 1300 }
+      ],
+      "annotations": [
+        { "id": "front-note", "x": 140, "y": 60, "text": { "tr": "adres çubuğunda görünür", "en": "visible in the address bar" }, "tone": "warning", "target": "user" }
+      ]
+    },
+    {
+      "id": "exchange",
+      "title": { "tr": "Verifier ile token takası", "en": "Token exchange with the verifier" },
+      "narration": {
+        "tr": "İstemci arka kanalda /token uç noktasına kodu ve code_verifier'ı gönderir. Sunucu verifier'ın özetini ilk adımdaki challenge ile karşılaştırır. Kodu yakalayan biri verifier'ı bilmediği için bu adımı geçemez.",
+        "en": "On the back channel the client sends the code and code_verifier to /token. The server compares the verifier's hash with the challenge from the first step. Someone who intercepted the code cannot pass this step because they do not know the verifier."
+      },
+      "durationMs": 3800,
+      "highlight": { "nodes": ["client", "authz"], "edges": ["client-authz"] },
+      "nodeStates": {
+        "user": { "status": "muted" },
+        "authz": { "status": "busy", "badge": "SHA256 ?=" },
+        "client": { "status": "active", "badge": "verifier" }
+      },
+      "edgeStates": { "client-authz": { "status": "active" } },
+      "packets": [
+        { "edge": "client-authz", "shape": "square", "label": "POST /token code + verifier", "durationMs": 1600 }
+      ]
+    },
+    {
+      "id": "tokens",
+      "title": { "tr": "Token'lar arka kanaldan döner", "en": "Tokens return on the back channel" },
+      "narration": {
+        "tr": "Doğrulama tutarsa sunucu access token, OIDC kapsamı istenmişse ID token ve isteğe bağlı olarak refresh token döndürür. Değerli token'lar tarayıcı adres çubuğuna hiç uğramaz.",
+        "en": "If verification succeeds the server returns an access token, an ID token if the OIDC scope was requested, and optionally a refresh token. The valuable tokens never touch the browser address bar."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["client", "authz"], "edges": ["client-authz"] },
+      "nodeStates": {
+        "authz": { "status": "success", "badge": "✓" },
+        "client": { "status": "success", "badge": "tokens" }
+      },
+      "packets": [
+        { "edge": "client-authz", "direction": "backward", "shape": "envelope", "label": "access + id + refresh", "color": "success", "durationMs": 1600 }
+      ]
+    },
+    {
+      "id": "resource",
+      "title": { "tr": "Kaynak sunucusuna erişim", "en": "Calling the resource server" },
+      "narration": {
+        "tr": "İstemci access token'ı Authorization: Bearer başlığıyla kaynak sunucusuna gönderir. Kaynak sunucusu imzayı, aud değerini ve kapsamın işlem için yeterli olup olmadığını kontrol eder, ardından veriyi döndürür. ID token API'ye gönderilmez; o yalnızca istemci içindir.",
+        "en": "The client sends the access token to the resource server in the Authorization: Bearer header. The resource server checks the signature, the aud value and whether the scope covers the operation, then returns the data. The ID token is not sent to the API; it is for the client only."
+      },
+      "durationMs": 3800,
+      "highlight": { "nodes": ["client", "rs"], "edges": ["client-rs"] },
+      "nodeStates": {
+        "authz": { "status": "idle" },
+        "rs": { "status": "success", "badge": "scope ✓" },
+        "client": { "status": "active" }
+      },
+      "edgeStates": { "client-rs": { "status": "active" }, "client-authz": { "status": "idle" } },
+      "packets": [
+        { "edge": "client-rs", "shape": "envelope", "label": "Bearer access_token", "durationMs": 1200 },
+        { "edge": "client-rs", "direction": "backward", "shape": "envelope", "label": "200 JSON", "color": "success", "startAt": 1500, "durationMs": 1200 }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["oauth2", "pkce", "oidc", "authorization-code"]
+}

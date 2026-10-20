@@ -7,8 +7,8 @@
       "id": "q1",
       "type": "single",
       "prompt": {
-        "tr": "Kullanıcı geçerli bir token ile giriş yapmış, ancak yetkisi olmadığı admin paneli endpoint'ine istek atıyor. API'nin dönmesi gereken durum kodu hangisidir?",
-        "en": "A user is logged in with a valid token but sends a request to an admin panel endpoint they have no permission for. Which status code should the API return?"
+        "tr": "Negatif bir testte, geçerli token'ı olan ama admin yetkisi bulunmayan kullanıcıyla `DELETE /v1/users/7` gönderiliyor. Testin beklemesi gereken durum kodu hangisidir?",
+        "en": "In a negative test, `DELETE /v1/users/7` is sent with a user who has a valid token but no admin permission. Which status code should the test expect?"
       },
       "options": [
         { "id": "a", "text": { "tr": "401 Unauthorized", "en": "401 Unauthorized" } },
@@ -18,60 +18,60 @@
       ],
       "correct": ["b"],
       "explanation": {
-        "tr": "403, kimliği doğrulanmış ama izni olmayan istemci içindir: sunucu isteği anlar ama yetkilendirmeyi reddeder. 401 kimlik bilgisi eksik ya da geçersiz olduğunda, 404 kaynak yokken, 400 ise isteğin sözdizimi hatalıyken döner.",
-        "en": "403 is for a client that is authenticated but lacks permission: the server understands the request but refuses to authorize it. 401 is for missing or invalid credentials, 404 for a missing resource and 400 for a malformed request."
+        "tr": "403, kimliği doğrulanmış ama izni olmayan istemci içindir: sunucu kim olduğunu bilir, işlemi reddeder. 401 kimlik bilgisi eksik ya da geçersizken, 404 kaynak yokken, 400 ise isteğin kendisi hatalıyken döner. Negatif testler tam da bu ayrımı güvence altına alır.",
+        "en": "403 is for an authenticated client without permission: the server knows who you are and refuses the action. 401 is for missing or invalid credentials, 404 for a missing resource and 400 for a malformed request. Negative tests exist precisely to lock in this distinction."
       },
       "difficulty": "medium",
-      "concepts": ["http-status-codes", "authentication-authorization"]
+      "concepts": ["status-code-assertions", "negative-testing"]
     },
     {
       "id": "q2",
       "type": "single",
       "prompt": {
-        "tr": "Yanıt gövdesi {\"user\": {\"id\": 101, \"contact\": {\"email\": \"alice@example.com\"}}} olduğunda, \"alice@example.com\" değerini hangi JSONPath ifadesi döndürür?",
-        "en": "Given the response body {\"user\": {\"id\": 101, \"contact\": {\"email\": \"alice@example.com\"}}}, which JSONPath expression returns \"alice@example.com\"?"
+        "tr": "Bir test, `GET /v1/users/42` yanıtının `id` alanının `42` olduğunu doğruluyor ama yanıtın `email` alanının yanlışlıkla sayı olarak döndüğünü fark etmiyor. Hangi doğrulama eksiktir?",
+        "en": "A test asserts that the `id` field of the `GET /v1/users/42` response equals `42` but does not notice that the `email` field is accidentally returned as a number. Which assertion is missing?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "$.email", "en": "$.email" } },
-        { "id": "b", "text": { "tr": "$.user.email", "en": "$.user.email" } },
-        { "id": "c", "text": { "tr": "$.user.contact.email", "en": "$.user.contact.email" } },
-        { "id": "d", "text": { "tr": "$.user.*", "en": "$.user.*" } }
+        { "id": "a", "text": { "tr": "Durum kodu doğrulaması", "en": "Status code assertion" } },
+        { "id": "b", "text": { "tr": "Şema doğrulaması (alan tipleri ve zorunlu alanlar)", "en": "Schema validation (field types and required fields)" } },
+        { "id": "c", "text": { "tr": "Yanıt süresi doğrulaması", "en": "Response time assertion" } },
+        { "id": "d", "text": { "tr": "Yük testi eşiği", "en": "Load test threshold" } }
       ],
-      "correct": ["c"],
+      "correct": ["b"],
       "explanation": {
-        "tr": "JSONPath $ (kök) ile başlar ve iç içe nesnelere nokta ile inilir: user → contact → email. $.email ve $.user.email ara seviyeleri atladığı için boş döner; $.user.* ise user'ın tüm alt alanlarını döndürür, yalnızca e-postayı değil.",
-        "en": "JSONPath starts at $ (root) and walks nested objects with dots: user → contact → email. $.email and $.user.email skip levels and return nothing; $.user.* returns all child properties of user, not just the email."
+        "tr": "Gövde değeri kontrolü yalnızca seçilen alanın içeriğine bakar; alanların tipini ve biçimini bütün olarak doğrulayan şey şema doğrulamasıdır (JSON Schema ya da OpenAPI belgesinden türetilmiş şema). Durum kodu ve süre bu hatayı göremez; yük testi performansla ilgilidir.",
+        "en": "A body-value check looks only at the content of the chosen field; what validates the types and shape of all fields together is schema validation (JSON Schema or a schema derived from the OpenAPI document). Status code and timing cannot see this bug; load testing is about performance."
       },
       "difficulty": "easy",
-      "concepts": ["jsonpath"]
+      "concepts": ["schema-validation"]
     },
     {
       "id": "q3",
       "type": "order",
       "prompt": {
-        "tr": "HTTP istek-yanıt akışının adımlarını doğru sıraya koyun.",
-        "en": "Put the steps of the HTTP request-response flow in the correct order."
+        "tr": "Tüketici odaklı sözleşme testinin (Pact yaklaşımı) adımlarını doğru sıraya koyun.",
+        "en": "Put the steps of consumer-driven contract testing (the Pact approach) in the correct order."
       },
       "options": [
-        { "id": "process", "text": { "tr": "Sunucu isteği işler", "en": "The server processes the request" } },
-        { "id": "receive", "text": { "tr": "İstemci yanıtı alır ve veriyi gösterir", "en": "The client receives the response and displays the data" } },
-        { "id": "request", "text": { "tr": "İstemci (tarayıcı, uygulama) sunucuya HTTP isteği gönderir", "en": "The client (browser, app) sends an HTTP request to the server" } },
-        { "id": "response", "text": { "tr": "Sunucu HTTP yanıtını (ör. 200 OK + veri) istemciye geri gönderir", "en": "The server sends the HTTP response (e.g. 200 OK + data) back to the client" } }
+        { "id": "verify", "text": { "tr": "Sağlayıcının CI'ı sözleşme dosyasını indirip gerçek servise karşı doğrular", "en": "The provider's CI downloads the contract file and verifies it against the real service" } },
+        { "id": "write", "text": { "tr": "Tüketici, sahte sağlayıcıya karşı beklentilerini içeren testi yazar", "en": "The consumer writes a test with its expectations against a mock provider" } },
+        { "id": "deploy", "text": { "tr": "İki taraf da sözleşmenin yeşil olduğunu görüp dağıtım yapar", "en": "Both sides see the contract is green and deploy" } },
+        { "id": "publish", "text": { "tr": "Test çalışınca pact dosyası üretilir ve sözleşme deposuna yüklenir", "en": "Running the test produces the pact file, which is published to the broker" } }
       ],
-      "correct": ["request", "process", "response", "receive"],
+      "correct": ["write", "publish", "verify", "deploy"],
       "explanation": {
-        "tr": "Her HTTP iletişimi aynı döngüyü izler: istemci isteği gönderir, sunucu işler, sunucu yanıtı geri yollar ve istemci yanıtı alıp gösterir. Sunucu istek gelmeden işlem yapamaz; istemci de yanıt gönderilmeden veriyi gösteremez.",
-        "en": "Every HTTP communication follows the same cycle: the client sends a request, the server processes it, the server sends the response back and the client receives and displays it. The server cannot process before a request arrives, and the client cannot display data before a response is sent."
+        "tr": "Akış tüketiciden başlar: beklentiler test olarak yazılır, bu test pact dosyasını üretip depoya yükler, sağlayıcı kendi CI'ında dosyayı alıp gerçek servisle doğrular ve ancak her iki taraf da yeşil görünce dağıtım yapılır. Sağlayıcı, dosya üretilmeden doğrulama yapamaz.",
+        "en": "The flow starts with the consumer: expectations are written as a test, that test produces the pact file and publishes it to the broker, the provider verifies the file against the real service in its own CI, and only when both sides are green does deployment happen. The provider cannot verify before the file exists."
       },
-      "difficulty": "easy",
-      "concepts": ["request-response-cycle"]
+      "difficulty": "medium",
+      "concepts": ["contract-testing", "consumer-driven-contracts"]
     },
     {
       "id": "q4",
       "type": "truefalse",
       "prompt": {
-        "tr": "POST idempotent bir metottur; aynı POST /users isteğini iki kez göndermek her zaman tek bir kullanıcı kaydıyla sonuçlanır.",
-        "en": "POST is an idempotent method; sending the same POST /users request twice always results in a single user record."
+        "tr": "Aynı `POST /orders` isteğini iki kez göndermenin her zaman tek bir sipariş yaratacağı varsayılabilir; bu yüzden idempotency testine gerek yoktur.",
+        "en": "It can be assumed that sending the same `POST /orders` request twice always creates a single order, so no idempotency test is needed."
       },
       "options": [
         { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
@@ -79,32 +79,32 @@
       ],
       "correct": ["f"],
       "explanation": {
-        "tr": "Idempotency, aynı isteği birden çok kez göndermenin aynı etkiyi yaratması demektir. POST yeni kaynak oluşturur ve idempotent değildir; tekrar gönderilirse ikinci bir kayıt oluşabilir. GET, PUT ve DELETE ise idempotent'tir.",
-        "en": "Idempotency means sending the same request multiple times has the same effect. POST creates a new resource and is not idempotent; repeating it can create a second record. GET, PUT and DELETE, on the other hand, are idempotent."
+        "tr": "Yanlış. POST varsayılan olarak idempotent değildir; yanıt yolda kaybolup istemci tekrar denediğinde ikinci bir sipariş oluşabilir. Sunucu `Idempotency-Key` desteklediğini iddia ediyorsa bu davranış açıkça test edilmelidir: aynı anahtarla ikinci istek aynı sipariş kimliğini döndürmeli, veritabanında tek kayıt olmalıdır.",
+        "en": "False. POST is not idempotent by default; when the response is lost and the client retries, a second order can be created. If the server claims `Idempotency-Key` support, that behaviour must be tested explicitly: the second request with the same key should return the same order id and the database should hold a single record."
       },
       "difficulty": "easy",
-      "concepts": ["idempotency", "http-methods"]
+      "concepts": ["idempotency-testing"]
     },
     {
       "id": "q5",
       "type": "multiple",
       "prompt": {
-        "tr": "Kimlik doğrulama yöntemleriyle ilgili hangi ifadeler doğrudur? (Birden fazla seçin.)",
-        "en": "Which statements about authentication methods are correct? (Select all that apply.)"
+        "tr": "Test çiftleri ve yük testi hakkında hangi ifadeler doğrudur? (Birden fazla seçin)",
+        "en": "Which statements about test doubles and load testing are correct? (Select all that apply)"
       },
       "options": [
-        { "id": "a", "text": { "tr": "Basic Auth, kullanıcı adı:şifre bilgisini Base64 ile kodlayarak gönderir; basittir ama çok güvenli değildir.", "en": "Basic Auth sends username:password encoded in Base64; it is simple but not very secure." } },
-        { "id": "b", "text": { "tr": "API key kullanıcıyı değil, istemciyi (uygulamayı) tanımlar.", "en": "An API key identifies the client (application), not the user." } },
-        { "id": "c", "text": { "tr": "OAuth 2.0 bir kimlik doğrulama (authentication) çerçevesidir, yetkilendirme yapmaz.", "en": "OAuth 2.0 is an authentication framework and does not handle authorization." } },
-        { "id": "d", "text": { "tr": "JWT üç parçadan oluşur: header, payload ve signature.", "en": "A JWT consists of three parts: header, payload and signature." } }
+        { "id": "a", "text": { "tr": "Stub sabit bir yanıt döner; mock ek olarak nasıl çağrıldığını (kaç kez, hangi argümanla) doğrular", "en": "A stub returns a canned response; a mock additionally verifies how it was called (how many times, with which arguments)" } },
+        { "id": "b", "text": { "tr": "Fake, gerçeğin çalışan ama basitleştirilmiş sürümüdür; bellek içi veritabanı buna örnektir", "en": "A fake is a working but simplified version of the real thing; an in-memory database is an example" } },
+        { "id": "c", "text": { "tr": "Yük testinde başarı ölçütü olarak ortalama yanıt süresi yeterlidir; yüzdelik dilimlere bakmak gerekmez", "en": "Average response time is a sufficient success criterion in load testing; percentiles need not be examined" } },
+        { "id": "d", "text": { "tr": "Her bağımlılığı stub'layan bir süit, üçüncü taraf API değiştiğinde yeşil kalmaya devam edebilir; stub'lar sözleşme ya da sandbox testleriyle doğrulanmalıdır", "en": "A suite that stubs every dependency can stay green after a third-party API changes; stubs should be validated with contract or sandbox tests" } }
       ],
       "correct": ["a", "b", "d"],
       "explanation": {
-        "tr": "Basic Auth Base64 ile kodlanmış kullanıcı adı:şifre taşır ve zayıftır; API key istemciyi tanımlar; JWT header.payload.signature yapısındadır. OAuth 2.0 ise tersine bir yetkilendirme (authorization) çerçevesidir, kimlik doğrulama çerçevesi değildir.",
-        "en": "Basic Auth carries a Base64-encoded username:password and is weak; an API key identifies the client; a JWT has a header.payload.signature structure. OAuth 2.0, on the contrary, is an authorization framework, not an authentication one."
+        "tr": "Stub/mock/fake tanımları ve mock'a aşırı güvenme riski doğrudur. Yük testinde ortalama yanıltıcıdır: ortalama bütçede kalırken p95 ya da p99 patlayabilir, bu yüzden eşikler yüzdelik dilimlerle (ör. p95 < 300 ms) tanımlanır.",
+        "en": "The stub/mock/fake definitions and the risk of over-relying on mocks are correct. In load testing the average is misleading: it can stay within budget while p95 or p99 blows up, which is why thresholds are defined with percentiles (e.g. p95 < 300 ms)."
       },
       "difficulty": "hard",
-      "concepts": ["authentication-authorization", "oauth-2"]
+      "concepts": ["test-doubles", "load-testing"]
     }
   ]
 }

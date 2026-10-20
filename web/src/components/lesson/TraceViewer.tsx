@@ -1,15 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import {
-  ChevronLeft,
-  ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
-  Pause,
-  Play,
-  TerminalSquare,
-} from 'lucide-react';
+import { TerminalSquare } from 'lucide-react';
 import {
   changedTraceObjects,
   changedTraceVars,
@@ -25,6 +17,7 @@ import { useI18n } from '@/i18n';
 import { cn } from '@/lib/utils';
 import { usePrefersReducedMotion } from '@/lib/hooks';
 import { getHighlighter } from './CodeBlock';
+import { PlayerControls } from '../ui/PlayerControls';
 
 type Token = { content: string; htmlStyle?: Record<string, string> };
 
@@ -63,7 +56,7 @@ function Value({ value }: { value: TraceValue }) {
   return (
     <span
       data-ref={value.id}
-      className="inline-flex items-center gap-1 rounded-md border px-1.5 font-mono text-[11px]"
+      className="inline-flex items-center gap-1 rounded-md border px-1.5 font-mono text-xs"
       style={{ borderColor: `hsl(${hue} 70% 50%)`, color: `hsl(${hue} 70% 42%)` }}
       title={`→ #${value.id}`}
     >
@@ -88,7 +81,7 @@ function ObjectLabel({ obj }: { obj: TraceHeapObject }) {
           ? 'function'
           : obj.type;
   return (
-    <p className="mb-1 flex items-center justify-between gap-2 text-[11px] text-muted">
+    <p className="mb-1 flex items-center justify-between gap-2 text-xs text-muted">
       <span className="font-medium">{label}</span>
       <span className="font-mono" style={{ color: `hsl(${hue} 70% 42%)` }}>
         #{obj.id}
@@ -385,7 +378,7 @@ export function TraceViewer({
             })}
           </div>
           <div className="border-t border-border bg-elevated/40 px-4 py-2">
-            <p className="mb-1 flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-muted">
+            <p className="mb-1 flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-muted">
               <TerminalSquare size={12} /> {t('trace.output')}
             </p>
             <pre
@@ -409,7 +402,7 @@ export function TraceViewer({
           className="relative grid gap-4 p-4 sm:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]"
         >
           <div data-col="frames">
-            <p className="mb-2 text-[11px] font-medium uppercase tracking-wide text-muted">
+            <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted">
               {t('trace.frames')}
             </p>
             <div className="space-y-2">
@@ -459,7 +452,7 @@ export function TraceViewer({
             </div>
           </div>
           <div data-col="heap">
-            <p className="mb-2 text-[11px] font-medium uppercase tracking-wide text-muted">
+            <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted">
               {t('trace.heap')}
             </p>
             {step.heap.length === 0 ? (
@@ -510,75 +503,38 @@ export function TraceViewer({
       </div>
 
       {/* Kontroller */}
-      <div className="flex flex-wrap items-center gap-2 border-t border-border px-3 py-2.5">
-        <button
-          type="button"
-          className="btn-icon"
-          onClick={() => go(0)}
-          disabled={index === 0}
-          aria-label={t('trace.first')}
-          title={t('trace.first')}
-        >
-          <ChevronsLeft size={18} />
-        </button>
-        <button
-          type="button"
-          className="btn-icon"
-          onClick={() => go(index - 1)}
-          disabled={index === 0}
-          aria-label={t('player.stepBack')}
-          title={t('player.stepBack')}
-        >
-          <ChevronLeft size={18} />
-        </button>
-        <button
-          type="button"
-          className="btn-primary h-9 px-3"
-          onClick={() => {
-            if (index >= total - 1) setIndex(0);
-            setPlaying((p) => !p);
-          }}
-          aria-label={playing ? t('player.pause') : t('player.play')}
-        >
-          {playing ? <Pause size={16} /> : <Play size={16} />}
-          <span className="hidden sm:inline">{playing ? t('player.pause') : t('player.play')}</span>
-        </button>
-        <button
-          type="button"
-          className="btn-icon"
-          onClick={() => go(index + 1)}
-          disabled={index === total - 1}
-          aria-label={t('player.stepForward')}
-          title={t('player.stepForward')}
-        >
-          <ChevronRight size={18} />
-        </button>
-        <button
-          type="button"
-          className="btn-icon"
-          onClick={() => go(total - 1)}
-          disabled={index === total - 1}
-          aria-label={t('trace.last')}
-          title={t('trace.last')}
-        >
-          <ChevronsRight size={18} />
-        </button>
-        <input
-          type="range"
-          min={0}
-          max={total - 1}
-          value={index}
-          onChange={(e) => {
-            setPlaying(false);
-            go(Number(e.target.value));
-          }}
-          className="mx-1 min-w-[120px] flex-1 accent-[var(--da-primary)]"
-          aria-label={t('player.step', { current: index + 1, total })}
-        />
-        <span className="w-16 text-right font-mono text-xs text-muted">
-          {index + 1}/{total}
-        </span>
-      </div>
+      <PlayerControls
+        playing={playing}
+        onTogglePlay={() => {
+          if (index >= total - 1) setIndex(0);
+          setPlaying((p) => !p);
+        }}
+        onPrev={() => go(index - 1)}
+        onNext={() => go(index + 1)}
+        onFirst={() => go(0)}
+        onLast={() => go(total - 1)}
+        canPrev={index > 0}
+        canNext={index < total - 1}
+        timeline={
+          <input
+            type="range"
+            min={0}
+            max={total - 1}
+            value={index}
+            onChange={(e) => {
+              setPlaying(false);
+              go(Number(e.target.value));
+            }}
+            className="w-full accent-[var(--da-primary)]"
+            aria-label={t('player.step', { current: index + 1, total })}
+          />
+        }
+        right={
+          <span className="w-14 text-right font-mono text-xs tabular-nums text-muted">
+            {index + 1}/{total}
+          </span>
+        }
+      />
 
       {caption && (
         <figcaption className="border-t border-border px-4 py-2 text-xs text-muted">

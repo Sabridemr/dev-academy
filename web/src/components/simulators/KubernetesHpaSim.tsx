@@ -302,7 +302,7 @@ export default function KubernetesHpaSim({ params, onInteract }: SimulatorProps)
               value={`${Math.floor((tick * SYNC_SEC) / 60)}m ${(tick * SYNC_SEC) % 60}s`}
             />
           </div>
-          <p className="font-mono text-[11px] text-muted">{l.formula}</p>
+          <p className="font-mono text-xs text-muted">{l.formula}</p>
           <p className="text-xs text-muted">{l.note}</p>
         </>
       }
@@ -320,7 +320,7 @@ export default function KubernetesHpaSim({ params, onInteract }: SimulatorProps)
                 animate={{ opacity: p.state === 'terminating' ? 0.35 : 1, scale: 1 }}
                 exit={reduced ? undefined : { opacity: 0, scale: 0.5 }}
                 transition={{ duration: reduced ? 0 : 0.3 }}
-                className={`w-16 rounded-lg border px-1.5 py-1 text-center text-[10px] ${p.state === 'pending' ? 'border-dashed border-warning' : p.state === 'terminating' ? 'border-danger' : 'border-border'} bg-surface`}
+                className={`w-16 rounded-lg border px-1.5 py-1 text-center text-xs ${p.state === 'pending' ? 'border-dashed border-warning' : p.state === 'terminating' ? 'border-danger' : 'border-border'} bg-surface`}
                 aria-label={`pod-${p.id} ${p.state}`}
               >
                 <p className="font-mono font-semibold">pod-{p.id}</p>

@@ -181,3 +181,6 @@ Bu dersteki playground, Google'ın 2016'da yayımladığı **TensorFlow Playgrou
 
 :::quiz{src="quiz.json"}
 :::
+
+:::next{lesson="h-01-linux-notes"}
+:::

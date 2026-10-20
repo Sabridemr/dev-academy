@@ -1,0 +1,249 @@
+{
+  "id": "l-07-graphs-bfs-dfs-quiz",
+  "title": {
+    "tr": "Graflar: BFS, DFS ve En Kısa Yol Quiz",
+    "en": "Graphs: BFS, DFS and Shortest Paths Quiz"
+  },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Ağırlıksız bir grafta iki düğüm arasındaki en az kenarlı yolu bulmak için hangi algoritma doğrudan doğru sonucu verir?",
+        "en": "In an unweighted graph, which algorithm directly gives the path with the fewest edges between two nodes?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "DFS (derinlik öncelikli arama)",
+            "en": "DFS (depth-first search)"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "BFS (genişlik öncelikli arama)",
+            "en": "BFS (breadth-first search)"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "Topolojik sıralama",
+            "en": "Topological sort"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Bellman-Ford",
+            "en": "Bellman-Ford"
+          }
+        }
+      ],
+      "correct": [
+        "b"
+      ],
+      "explanation": {
+        "tr": "BFS düğümleri uzaklık katmanlarına göre işler; bir düğüm ilk keşfedildiğinde ona en az kenarlı yolla ulaşılmıştır. DFS en kısa yolu garanti etmez. Topolojik sıralama yalnızca DAG'lerde bağımlılık sırası verir. Bellman-Ford doğru sonuç verir ama ağırlıklı (negatif kenarlı) graflar için tasarlanmıştır ve O(V·E) ile gereksiz yavaştır.",
+        "en": "BFS processes nodes by distance layer; when a node is first discovered it has been reached by a path with the fewest edges. DFS does not guarantee shortest paths. Topological sort only orders dependencies in a DAG. Bellman-Ford gives a correct answer but is meant for weighted (negative-edge) graphs and is needlessly slow at O(V·E)."
+      },
+      "difficulty": "easy",
+      "concepts": [
+        "bfs"
+      ]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "Milyonlarca düğümlü ama her düğümün ortalama birkaç yüz komşusu olan bir sosyal ağ grafı için en uygun temsil hangisidir?",
+        "en": "For a social graph with millions of nodes but only a few hundred neighbours per node on average, which representation fits best?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Komşuluk matrisi, çünkü kenar sorgusu O(1)",
+            "en": "Adjacency matrix, because edge lookup is O(1)"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Komşuluk listesi, çünkü bellek O(V + E)",
+            "en": "Adjacency list, because memory is O(V + E)"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "Tüm kenarların tek bir sıralı listesi",
+            "en": "A single sorted list of all edges"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Her düğüm için ayrı bir ikili arama ağacı dosyası",
+            "en": "A separate binary search tree file per node"
+          }
+        }
+      ],
+      "correct": [
+        "b"
+      ],
+      "explanation": {
+        "tr": "Seyrek graflarda komşuluk matrisi O(V²) bellek ister ve hücrelerin neredeyse hepsi boş kalır. Komşuluk listesi yalnızca var olan kenarları saklar ve BFS/DFS'nin ihtiyaç duyduğu 'komşuları gez' işlemini doğrudan sağlar. Tek bir kenar listesi komşulara erişimi yavaşlatır.",
+        "en": "For sparse graphs an adjacency matrix needs O(V²) memory with almost every cell empty. An adjacency list stores only existing edges and directly supports the 'iterate neighbours' operation BFS/DFS need. A single edge list makes neighbour access slow."
+      },
+      "difficulty": "easy",
+      "concepts": [
+        "graph-representation",
+        "adjacency-list"
+      ]
+    },
+    {
+      "id": "q3",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Aşağıdakilerden hangileri DFS ile doğal biçimde çözülür? (Birden fazla seçin)",
+        "en": "Which of the following are naturally solved with DFS? (Select all that apply)"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Yönlü grafta döngü tespiti",
+            "en": "Cycle detection in a directed graph"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Bir haritadaki ada (bağlı bileşen) sayısını bulmak",
+            "en": "Counting islands (connected components) on a map"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "Ağırlıklı grafta en kısa yol",
+            "en": "Shortest path in a weighted graph"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Topolojik sıralama (bitiş sırasının tersi)",
+            "en": "Topological sort (reverse finishing order)"
+          }
+        }
+      ],
+      "correct": [
+        "a",
+        "b",
+        "d"
+      ],
+      "explanation": {
+        "tr": "DFS, yığında hâlâ duran bir düğüme geri kenar bularak döngüyü tespit eder; her yeni başlatma bir bileşeni boyar; düğümlerin bitiş sırasının tersi de topolojik sıralamayı verir. Ağırlıklı en kısa yol ise Dijkstra (ya da negatif kenarda Bellman-Ford) gerektirir; DFS en kısa yolu garanti etmez.",
+        "en": "DFS detects cycles by finding a back edge to a node still on the stack; each new start paints a component; and the reverse of finishing order gives a topological sort. Weighted shortest paths need Dijkstra (or Bellman-Ford with negative edges); DFS does not guarantee shortest paths."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "dfs",
+        "topological-sort"
+      ]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Dijkstra algoritması, grafta negatif ağırlıklı bir kenar olsa bile (negatif döngü yoksa) her zaman doğru en kısa mesafeleri verir.",
+        "en": "Dijkstra's algorithm always returns correct shortest distances even if the graph has a negative-weight edge (as long as there is no negative cycle)."
+      },
+      "options": [
+        {
+          "id": "t",
+          "text": {
+            "tr": "Doğru",
+            "en": "True"
+          }
+        },
+        {
+          "id": "f",
+          "text": {
+            "tr": "Yanlış",
+            "en": "False"
+          }
+        }
+      ],
+      "correct": [
+        "f"
+      ],
+      "explanation": {
+        "tr": "Yanlış. Dijkstra heap'ten çıkan düğümün mesafesini kesinleşmiş sayar; bu ancak ağırlıklar negatif değilse geçerlidir. Negatif bir kenar, kesinleşmiş sanılan bir mesafeyi sonradan küçültebilir. Negatif döngü olmasa bile bu durumda Bellman-Ford kullanılmalıdır.",
+        "en": "False. Dijkstra treats a node's distance as final once it leaves the heap, which only holds for non-negative weights. A negative edge can later shrink a distance assumed final. Even without negative cycles, Bellman-Ford is the right tool here."
+      },
+      "difficulty": "hard",
+      "concepts": [
+        "dijkstra"
+      ]
+    },
+    {
+      "id": "q5",
+      "type": "order",
+      "prompt": {
+        "tr": "Kuyruk kullanan BFS'nin bir döngü turundaki adımları doğru sıraya koyun.",
+        "en": "Put the steps of one loop iteration of queue-based BFS in the correct order."
+      },
+      "options": [
+        {
+          "id": "c",
+          "text": {
+            "tr": "Komşu ziyaret edilmemişse onu ziyaret edildi olarak işaretle",
+            "en": "If a neighbour is unvisited, mark it visited"
+          }
+        },
+        {
+          "id": "a",
+          "text": {
+            "tr": "Kuyruğun başından bir düğüm çıkar",
+            "en": "Pop a node from the front of the queue"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "İşaretlenen komşuyu kuyruğun sonuna ekle",
+            "en": "Append the marked neighbour to the back of the queue"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Düğümün komşularını tek tek gez",
+            "en": "Iterate over the node's neighbours"
+          }
+        }
+      ],
+      "correct": [
+        "a",
+        "b",
+        "c",
+        "d"
+      ],
+      "explanation": {
+        "tr": "BFS önce en eski düğümü çıkarır, sonra komşularını inceler. Ziyaret edilmemiş komşu kuyruğa eklenmeden önce (ya da eklenirken) işaretlenir; böylece aynı düğüm iki kez kuyruğa girmez.",
+        "en": "BFS first pops the oldest node, then inspects its neighbours. An unvisited neighbour is marked before (or as) it is enqueued so that the same node never enters the queue twice."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "bfs",
+        "visited-set"
+      ]
+    }
+  ]
+}

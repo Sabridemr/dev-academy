@@ -9,10 +9,10 @@ title:
 summary:
   tr: "Docker image'ını güvenle canlıya çıkar; onay kapıları, migration, deploy stratejileri ve rollback'i öğren."
   en: "Ship Docker images safely with approval gates, migrations, deployment strategies and rollback."
-durationMinutes: 12
+durationMinutes: 20
 level: intermediate
 tags: [docker, deployment, github-actions, security, rollback]
-prerequisites: []
+prerequisites: [h-07-tetikleyiciler-secrets-cache-ve-testler, h-05-devops-ve-docker-kullanim-rehberi]
 concepts: [docker-image, environments, database-migrations, blue-green, canary, concurrency, reusable-workflow, least-privilege]
 ---
 
@@ -253,7 +253,7 @@ Büyük tablolarda kilitlenmeye dikkat: PostgreSQL'de index eklerken `CREATE IND
 | Canary | Trafiğin küçük bir kısmı (%5) yeni sürüme gider | Risk en aza iner | İzleme ve trafik yönetimi gerekir |
 | Feature flag | Kod canlıdadır ama özellik kapalıdır | Deploy ile yayın ayrılır | Bayrak yönetimi gerekir |
 
-:::diagram{src="sekil-01.png" alt="Blue-Green yapısı: Kullanıcılar load balancer üzerinden Blue (v1.4, şu an canlı) ortamına gider; Green (v1.5) test ediliyor"}
+:::diagram{src="sekil-01.png" alt="Blue-Green yapısı: Kullanıcılar load balancer üzerinden Blue (v1.4, şu an canlı) ortamına gider; Green (v1.5) test ediliyor|Blue-green setup: users reach the Blue environment (v1.4, currently live) through the load balancer while Green (v1.5) is being tested"}
 :::
 
 Blue-Green'de yeni sürüm (Green) hazırlanır ve test edilir. Hazır olunca load balancer trafiği Green'e çevirir. Sorun olursa trafik tekrar Blue'ya döner.
@@ -490,49 +490,20 @@ permissions:
 ```
 :::
 
+## Dene: deploy aşamasında hata
+
+:::interactive{type="pipeline" stages=7 failureStage=6 retries=0}
+Son aşamada (deploy) hata oluştuğunda önceki aşamaların çıktılarının (artifact) korunduğuna, yalnızca deploy'un tekrarlandığına dikkat et.
+:::
+
+:::callout{tone="info" title="İlgili dersler"}
+Bu konuyu başka bir açıdan anlatan dersler:
+
+- [Kodun Yolculuğu ve CI/CD](/lessons/f-02-code-journey-ci-cd)
+- [Kubernetes temelleri](/lessons/f-03-kubernetes-basics)
+:::
+
 :::quiz{src="quiz.json"}
-:::
-
-## Orijinal PDF sayfaları
-
-:::callout{tone="info" title="Özgün görünüm"}
-Bu dersin metni *CICD GitHub Actions Rehberi* PDF dosyasının 15–23. sayfalarının özgün hâlidir; sayfalar aşağıda PDF'teki görünümüyle yer alır.
-:::
-
-:::diagram{src="pdf-sayfa-15.png" alt="CICD GitHub Actions Rehberi - PDF sayfa 15"}
-PDF sayfa 15 / 33
-:::
-
-:::diagram{src="pdf-sayfa-16.png" alt="CICD GitHub Actions Rehberi - PDF sayfa 16"}
-PDF sayfa 16 / 33
-:::
-
-:::diagram{src="pdf-sayfa-17.png" alt="CICD GitHub Actions Rehberi - PDF sayfa 17"}
-PDF sayfa 17 / 33
-:::
-
-:::diagram{src="pdf-sayfa-18.png" alt="CICD GitHub Actions Rehberi - PDF sayfa 18"}
-PDF sayfa 18 / 33
-:::
-
-:::diagram{src="pdf-sayfa-19.png" alt="CICD GitHub Actions Rehberi - PDF sayfa 19"}
-PDF sayfa 19 / 33
-:::
-
-:::diagram{src="pdf-sayfa-20.png" alt="CICD GitHub Actions Rehberi - PDF sayfa 20"}
-PDF sayfa 20 / 33
-:::
-
-:::diagram{src="pdf-sayfa-21.png" alt="CICD GitHub Actions Rehberi - PDF sayfa 21"}
-PDF sayfa 21 / 33
-:::
-
-:::diagram{src="pdf-sayfa-22.png" alt="CICD GitHub Actions Rehberi - PDF sayfa 22"}
-PDF sayfa 22 / 33
-:::
-
-:::diagram{src="pdf-sayfa-23.png" alt="CICD GitHub Actions Rehberi - PDF sayfa 23"}
-PDF sayfa 23 / 33
 :::
 
 :::next{lesson="h-09-kalite-izleme-ve-tam-pipeline"}

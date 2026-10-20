@@ -1,0 +1,127 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 520" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">İstek yolu üzerinde 15 sistem tasarımı kalıbı</title>
+  <desc id="desc">Soldan sağa bir isteğin yolu: istemci, CDN, uç katman (API gateway, rate limiting, load balancer), servis katmanı (circuit breaker, idempotency, CQRS, event sourcing, saga), veri katmanı (cache, replication, sharding, consistent hashing) ve altta asenkron katman (outbox, message queue, pub/sub). Numaralar dersteki kalıp sırasını gösterir.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+    <marker id="arrow-async" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-accent, #f59e0b)"/>
+    </marker>
+  </defs>
+
+  <!-- Katman arka planları -->
+  <rect x="150" y="30" width="190" height="330" rx="14" fill="var(--da-surface, #f8fafc)" stroke="var(--da-border, #cbd5e1)" stroke-dasharray="6 6"/>
+  <rect x="360" y="30" width="250" height="330" rx="14" fill="var(--da-surface, #f8fafc)" stroke="var(--da-border, #cbd5e1)" stroke-dasharray="6 6"/>
+  <rect x="630" y="30" width="310" height="330" rx="14" fill="var(--da-surface, #f8fafc)" stroke="var(--da-border, #cbd5e1)" stroke-dasharray="6 6"/>
+  <rect x="150" y="380" width="790" height="120" rx="14" fill="var(--da-accent, #f59e0b)" opacity="0.08" stroke="var(--da-accent, #f59e0b)" stroke-dasharray="6 6"/>
+  <g font-size="12" fill="var(--da-muted, #64748b)" text-anchor="middle">
+    <text x="245" y="52">Uç katman</text>
+    <text x="485" y="52">Servis katmanı</text>
+    <text x="785" y="52">Veri katmanı</text>
+    <text x="545" y="402">Asenkron katman</text>
+  </g>
+
+  <!-- İstemci + CDN -->
+  <rect x="20" y="110" width="110" height="50" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5"/>
+  <text x="75" y="140" text-anchor="middle" font-size="13" fill="var(--da-fg, #0f172a)">İstemci</text>
+  <rect x="20" y="200" width="110" height="50" rx="10" fill="var(--da-primary, #6366f1)" opacity="0.12" stroke="var(--da-primary, #6366f1)" stroke-width="1.5"/>
+  <text x="75" y="222" text-anchor="middle" font-size="12" font-weight="600" fill="var(--da-primary, #6366f1)">5 · CDN</text>
+  <text x="75" y="239" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">statik içerik</text>
+  <path d="M 75 160 L 75 198" stroke="var(--da-muted, #64748b)" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
+
+  <!-- Uç katman kutuları -->
+  <g fill="var(--da-primary, #6366f1)" opacity="0.12" stroke="var(--da-primary, #6366f1)" stroke-width="1.5">
+    <rect x="170" y="80" width="150" height="46" rx="10"/>
+    <rect x="170" y="170" width="150" height="46" rx="10"/>
+    <rect x="170" y="260" width="150" height="46" rx="10"/>
+  </g>
+  <g font-size="12" font-weight="600" fill="var(--da-primary, #6366f1)" text-anchor="middle">
+    <text x="245" y="108">2 · API gateway</text>
+    <text x="245" y="198">3 · Rate limiting</text>
+    <text x="245" y="288">1 · Load balancer</text>
+  </g>
+  <g stroke="var(--da-muted, #64748b)" stroke-width="1.5" fill="none" marker-end="url(#arrow)">
+    <path d="M 130 135 L 168 110"/>
+    <path d="M 245 126 L 245 168"/>
+    <path d="M 245 216 L 245 258"/>
+    <path d="M 320 283 L 375 283"/>
+  </g>
+
+  <!-- Servis katmanı -->
+  <g fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5">
+    <rect x="380" y="80" width="210" height="40" rx="10"/>
+    <rect x="380" y="132" width="210" height="40" rx="10"/>
+    <rect x="380" y="184" width="210" height="40" rx="10"/>
+    <rect x="380" y="236" width="210" height="40" rx="10"/>
+    <rect x="380" y="288" width="210" height="40" rx="10"/>
+  </g>
+  <g font-size="12" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="485" y="105">15 · Idempotency anahtarı</text>
+    <text x="485" y="157">11 · Circuit breaker</text>
+    <text x="485" y="209">12 · CQRS (komut / sorgu)</text>
+    <text x="485" y="261">13 · Event sourcing</text>
+    <text x="485" y="313">14 · Saga koordinasyonu</text>
+  </g>
+  <text x="485" y="345" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">uygulama servisleri (stateless)</text>
+
+  <!-- Veri katmanı -->
+  <g fill="var(--da-success, #10b981)" opacity="0.12" stroke="var(--da-success, #10b981)" stroke-width="1.5">
+    <rect x="650" y="80" width="130" height="46" rx="10"/>
+    <rect x="650" y="170" width="130" height="46" rx="10"/>
+    <rect x="800" y="80" width="130" height="46" rx="10"/>
+    <rect x="800" y="170" width="130" height="46" rx="10"/>
+  </g>
+  <g font-size="12" font-weight="600" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="715" y="100">4 · Cache</text>
+    <text x="715" y="190">6 · Replication</text>
+    <text x="865" y="100">7 · Sharding</text>
+    <text x="865" y="190">8 · Consistent</text>
+  </g>
+  <g font-size="10" fill="var(--da-muted, #64748b)" text-anchor="middle">
+    <text x="715" y="116">LRU · TTL</text>
+    <text x="715" y="206">lider → takipçi</text>
+    <text x="865" y="116">shard anahtarı</text>
+    <text x="865" y="206">hashing halkası</text>
+  </g>
+  <!-- Veritabanı silindiri -->
+  <ellipse cx="790" cy="262" rx="70" ry="12" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5"/>
+  <path d="M 720 262 L 720 318 A 70 12 0 0 0 860 318 L 860 262" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5"/>
+  <text x="790" y="298" text-anchor="middle" font-size="12" fill="var(--da-fg, #0f172a)">Veritabanı</text>
+  <g stroke="var(--da-muted, #64748b)" stroke-width="1.5" fill="none" marker-end="url(#arrow)">
+    <path d="M 590 150 C 620 150, 620 103, 648 103"/>
+    <path d="M 715 126 L 715 168"/>
+    <path d="M 715 216 C 715 240, 740 240, 760 250"/>
+    <path d="M 865 126 L 865 168"/>
+    <path d="M 865 216 C 865 240, 840 240, 820 250"/>
+  </g>
+  <text x="620" y="135" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">önce</text>
+
+  <!-- Asenkron katman -->
+  <g fill="var(--da-surface, #ffffff)" stroke="var(--da-accent, #f59e0b)" stroke-width="1.5">
+    <rect x="200" y="425" width="170" height="50" rx="10"/>
+    <rect x="430" y="425" width="170" height="50" rx="10"/>
+    <rect x="660" y="425" width="170" height="50" rx="10"/>
+  </g>
+  <g font-size="12" font-weight="600" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="285" y="446">15 · Outbox tablosu</text>
+    <text x="515" y="446">9 · Message queue</text>
+    <text x="745" y="446">10 · Pub/sub</text>
+  </g>
+  <g font-size="10" fill="var(--da-muted, #64748b)" text-anchor="middle">
+    <text x="285" y="463">aynı transaction</text>
+    <text x="515" y="463">tek tüketici · yeniden deneme</text>
+    <text x="745" y="463">çok abone · stok, bildirim</text>
+  </g>
+  <g stroke="var(--da-accent, #f59e0b)" stroke-width="1.5" fill="none" stroke-dasharray="5 4" marker-end="url(#arrow-async)">
+    <path d="M 720 322 C 600 360, 400 360, 300 423"/>
+    <path d="M 370 450 L 428 450"/>
+    <path d="M 600 450 L 658 450"/>
+    <path d="M 745 423 C 745 380, 600 370, 540 330"/>
+  </g>
+  <text x="640" y="395" text-anchor="middle" font-size="10" fill="var(--da-accent, #f59e0b)">olaylar servislere geri döner</text>
+
+  <!-- Alt not -->
+  <text x="75" y="330" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">numaralar =</text>
+  <text x="75" y="344" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">dersteki sıra</text>
+</svg>

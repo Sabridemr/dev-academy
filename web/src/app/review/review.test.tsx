@@ -47,6 +47,7 @@ const orderCard = {
 const reviews = { cards: [singleCard] as unknown[] };
 vi.mock('@/lib/hooks', () => ({
   useReviews: () => ({ isLoading: false, data: reviews.cards }),
+  useProgressSummary: () => ({ data: undefined }),
 }));
 
 beforeEach(() => {
@@ -80,12 +81,12 @@ describe('Tekrar sayfası', () => {
     renderWithProviders(<ReviewPage />);
     fireEvent.click(screen.getByRole('button', { name: 'Round-robin' }));
     fireEvent.click(screen.getByRole('button', { name: 'Cevabımı kontrol et' }));
-    const [first] = screen.getAllByRole('button', { name: /^5 · / });
+    const [first] = screen.getAllByRole('button', { name: /^5 / });
     await act(async () => {
       fireEvent.click(first);
       fireEvent.click(first);
     });
     expect(api).toHaveBeenCalledTimes(1);
-    expect(screen.getByText('2/2')).toBeInTheDocument();
+    expect(screen.getByText('Kart 2/2')).toBeInTheDocument();
   });
 });

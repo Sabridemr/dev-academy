@@ -1,0 +1,110 @@
+{
+  "id": "m-02-prompt-engineering-quiz",
+  "title": { "tr": "Prompt Mühendisliği Quiz", "en": "Prompt Engineering Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Uygulamanın kalıcı kuralları (görev, ton, yasaklar) hangi rolde yer almalıdır?",
+        "en": "Which role should carry the application's persistent rules (task, tone, prohibitions)?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Sistem mesajı", "en": "System message" } },
+        { "id": "b", "text": { "tr": "Her kullanıcı mesajının sonu", "en": "The end of every user message" } },
+        { "id": "c", "text": { "tr": "Sahte bir asistan mesajı", "en": "A fake assistant message" } },
+        { "id": "d", "text": { "tr": "Fark etmez; model rolleri ayırt etmez", "en": "It does not matter; the model does not distinguish roles" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "Sistem mesajı kalıcı kurallar içindir ve modeller ona genellikle daha yüksek öncelik verecek biçimde eğitilir. Kuralları her kullanıcı mesajına eklemek token israfıdır; asistan mesajları ise modelin önceki cevaplarını temsil eder.",
+        "en": "The system message is for persistent rules and models are usually trained to give it higher priority. Repeating the rules in every user message wastes tokens; assistant messages represent the model's previous answers."
+      },
+      "difficulty": "easy",
+      "concepts": ["system-prompt", "message-roles"]
+    },
+    {
+      "id": "q2",
+      "type": "multiple",
+      "prompt": {
+        "tr": "İyi few-shot örnekleri için hangileri geçerlidir? (Birden fazla seçin)",
+        "en": "Which of these hold for good few-shot examples? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Farklı kategorileri kapsayacak kadar çeşitli olmalı", "en": "They should be diverse enough to cover different categories" } },
+        { "id": "b", "text": { "tr": "Sınırdaki zor vakaları içermeli", "en": "They should include borderline hard cases" } },
+        { "id": "c", "text": { "tr": "Çıktıları istenen biçimle birebir aynı olmalı", "en": "Their outputs should match the required format exactly" } },
+        { "id": "d", "text": { "tr": "Ne kadar çok örnek o kadar iyi; sayı sınırsız artırılmalı", "en": "The more the better; the count should grow without limit" } }
+      ],
+      "correct": ["a", "b", "c"],
+      "explanation": {
+        "tr": "Çeşitlilik modelin tek kategoriye kaymasını, zor vakalar ince ayrımları, biçim tutarlılığı da fazladan alan üretilmesini önler. Örnek sayısı arttıkça kalite bir noktada düzleşir ama maliyet artmaya devam eder; çok örnek gerekiyorsa dinamik few-shot daha verimlidir.",
+        "en": "Diversity prevents drifting to one category, hard cases teach subtle distinctions and format consistency stops extra fields. Quality plateaus as examples grow but cost keeps rising; if many examples are needed, dynamic few-shot is more efficient."
+      },
+      "difficulty": "medium",
+      "concepts": ["few-shot"]
+    },
+    {
+      "id": "q3",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Sağlayıcının JSON şeması modu açıksa, uygulama tarafında çıktıyı ayrıca doğrulamaya gerek yoktur.",
+        "en": "If the provider's JSON schema mode is on, there is no need to validate the output again on the application side."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "Yanlış. Şema modu biçimi korur ama içeriği garanti etmez: geçersiz bir kategori adı, negatif tutar ya da anlamsız bir gerekçe yine gelebilir. Uygulama tarafındaki doğrulama, LLM çıktısını güvenilmeyen girdi olarak ele almanın temelidir.",
+        "en": "False. Schema mode protects the shape but not the content: an invalid category name, a negative amount or a meaningless rationale can still arrive. Application-side validation is the basis of treating LLM output as untrusted input."
+      },
+      "difficulty": "medium",
+      "concepts": ["structured-output"]
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": {
+        "tr": "Günde milyonlarca destek mesajını dört kategoriye ayıran bir sistemde zincirleme düşünmeyi (chain of thought) her istekte açmak için en güçlü karşı argüman hangisidir?",
+        "en": "In a system that sorts millions of support messages a day into four categories, what is the strongest argument against enabling chain of thought on every request?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Zincirleme düşünme her zaman doğruluğu düşürür", "en": "Chain of thought always lowers accuracy" } },
+        { "id": "b", "text": { "tr": "Akıl yürütme çıkış tokenıdır; basit sınıflandırmada maliyeti ve gecikmeyi kat kat artırırken kazancı genellikle küçüktür", "en": "Reasoning is output tokens; for simple classification it multiplies cost and latency while the gain is usually small" } },
+        { "id": "c", "text": { "tr": "Zincirleme düşünme yalnızca yüksek temperature ile çalışır", "en": "Chain of thought only works with high temperature" } },
+        { "id": "d", "text": { "tr": "Model düşünürken sistem mesajını unutur", "en": "The model forgets the system message while reasoning" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Akıl yürütme metni en pahalı ve en yavaş üretilen tokenlardır. Çok adımlı görevlerde değerlidir ama basit, yüksek hacimli sınıflandırmada kazanç maliyeti nadiren karşılar. Doğruluğu her zaman düşürmez, temperature'a bağlı değildir ve sistem mesajını silmez.",
+        "en": "Reasoning text is the most expensive and slowest tokens to produce. It pays off on multi-step tasks, but on simple high-volume classification the gain rarely covers the cost. It does not always lower accuracy, does not depend on temperature and does not erase the system message."
+      },
+      "difficulty": "hard",
+      "concepts": ["chain-of-thought", "temperature"]
+    },
+    {
+      "id": "q5",
+      "type": "order",
+      "prompt": {
+        "tr": "Bir prompt değişikliğini güvenle üretime almak için adımları sıralayın.",
+        "en": "Order the steps for safely shipping a prompt change to production."
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Başarısız örneği değerlendirme setine ekle", "en": "Add the failing example to the evaluation set" } },
+        { "id": "b", "text": { "tr": "Şablonu yeni sürüm numarasıyla değiştir", "en": "Change the template under a new version number" } },
+        { "id": "c", "text": { "tr": "Tüm değerlendirme setini eski ve yeni sürümle çalıştırıp karşılaştır", "en": "Run the whole evaluation set with the old and new versions and compare" } },
+        { "id": "d", "text": { "tr": "Kademeli dağıt ve loglarda sürümü izle", "en": "Roll out gradually and track the version in logs" } }
+      ],
+      "correct": ["a", "b", "c", "d"],
+      "explanation": {
+        "tr": "Önce hatayı tekrarlanabilir bir teste çevirirsiniz, sonra değişikliği sürümlü olarak yaparsınız, ardından hem yeni vakanın düzeldiğini hem eskilerin bozulmadığını ölçersiniz ve en son kademeli dağıtırsınız.",
+        "en": "First turn the failure into a repeatable test, then make a versioned change, then measure that the new case is fixed and old ones did not break, and finally roll out gradually."
+      },
+      "difficulty": "medium",
+      "concepts": ["prompt-versioning", "prompt-template"]
+    }
+  ]
+}

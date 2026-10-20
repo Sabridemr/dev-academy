@@ -2,10 +2,11 @@
 
 import { useMemo, useState } from 'react';
 import DOMPurify from 'isomorphic-dompurify';
-import { Maximize2, X } from 'lucide-react';
+import { Maximize2 } from 'lucide-react';
 import { useI18n } from '@/i18n';
 import { resolveAssetUrl, type LocalizedString } from '@devacademy/shared';
 import { API_URL } from '@/lib/api';
+import { Dialog } from '../ui/Dialog';
 
 /**
  * İçerik SVG'lerini güvenli biçimde gösterir. DOMPurify (SVG profili) script, olay işleyicileri,
@@ -82,9 +83,10 @@ export function Diagram({
         {content}
         <button
           type="button"
-          className="btn-icon absolute right-3 top-3"
+          className="btn-icon btn-icon-sm absolute right-3 top-3"
           onClick={() => setZoom(true)}
-          aria-label={altText}
+          aria-label={t('common.zoom')}
+          title={t('common.zoom')}
         >
           <Maximize2 size={15} />
         </button>
@@ -94,30 +96,11 @@ export function Diagram({
           {tl(caption)}
         </figcaption>
       )}
-      {zoom && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-label={altText}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
-          onClick={() => setZoom(false)}
-        >
-          <div
-            className="relative max-h-full w-full max-w-6xl overflow-auto rounded-2xl bg-surface p-6"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              type="button"
-              className="btn-icon absolute right-3 top-3"
-              onClick={() => setZoom(false)}
-              aria-label={t('common.close')}
-            >
-              <X size={16} />
-            </button>
-            {content}
-          </div>
+      <Dialog open={zoom} onClose={() => setZoom(false)} size="xl" srTitle={altText} bare>
+        <div className="max-h-[85vh] overflow-auto p-6 [&_.diagram-svg_svg]:max-h-none">
+          {content}
         </div>
-      )}
+      </Dialog>
     </figure>
   );
 }

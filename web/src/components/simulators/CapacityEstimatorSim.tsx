@@ -248,7 +248,7 @@ export default function CapacityEstimatorSim({ params, onInteract }: SimulatorPr
           })}
         </svg>
       </figure>
-      <p className="mt-2 font-mono text-[11px] text-muted">{l.formula}</p>
+      <p className="mt-2 font-mono text-xs text-muted">{l.formula}</p>
     </SimShell>
   );
 }

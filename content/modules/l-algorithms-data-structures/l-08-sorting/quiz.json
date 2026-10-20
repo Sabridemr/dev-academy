@@ -1,0 +1,111 @@
+{
+  "id": "l-08-sorting-quiz",
+  "title": { "tr": "Sıralama Algoritmaları Quiz", "en": "Sorting Algorithms Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Neredeyse sıralı, birkaç elemanı yerinden oynamış bir dizi için aşağıdaki basit algoritmalardan hangisi en hızlı çalışır?",
+        "en": "For a nearly sorted array with only a few elements out of place, which of these simple algorithms runs fastest?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Selection sort", "en": "Selection sort" } },
+        { "id": "b", "text": { "tr": "Insertion sort", "en": "Insertion sort" } },
+        { "id": "c", "text": { "tr": "Pivotu hep ilk eleman seçen quick sort", "en": "Quick sort that always picks the first element as pivot" } },
+        { "id": "d", "text": { "tr": "Hepsi aynı sürede biter, çünkü hepsi O(n²)", "en": "They all take the same time, since they are all O(n²)" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Insertion sort'ta her eleman yalnızca yerinden oynadığı kadar kayar; neredeyse sıralı girdide süre O(n)'e yaklaşır. Selection sort girdiden bağımsız olarak hep yaklaşık n²/2 karşılaştırma yapar. İlk elemanı pivot seçen quick sort sıralıya yakın girdide en kötü durumuna, O(n²)'ye düşer. En kötü durum karmaşıklığının aynı olması, gerçek girdideki davranışın aynı olduğu anlamına gelmez.",
+        "en": "In insertion sort each element shifts only as far as it is out of place, so nearly sorted input runs close to O(n). Selection sort always does about n²/2 comparisons regardless of input. Quick sort with the first element as pivot hits its O(n²) worst case on nearly sorted input. Equal worst-case complexity does not mean equal behaviour on real input."
+      },
+      "difficulty": "easy",
+      "concepts": ["insertion-sort", "selection-sort"]
+    },
+    {
+      "id": "q2",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Standart hâlleriyle hangi algoritmalar kararlıdır? (Birden fazla seçin)",
+        "en": "Which algorithms are stable in their standard form? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Merge sort", "en": "Merge sort" } },
+        { "id": "b", "text": { "tr": "Insertion sort", "en": "Insertion sort" } },
+        { "id": "c", "text": { "tr": "Quick sort", "en": "Quick sort" } },
+        { "id": "d", "text": { "tr": "Heap sort", "en": "Heap sort" } }
+      ],
+      "correct": ["a", "b"],
+      "explanation": {
+        "tr": "Merge sort, eşitlikte sol yarıdan aldığı için; insertion sort ise yalnızca kesin büyük elemanları kaydırdığı için eşit elemanların sırasını korur. Quick sort'un bölümlemesi ve heap sort'un kökü sona taşıması uzak elemanları yer değiştirir; bu yüzden ikisi de kararsızdır.",
+        "en": "Merge sort keeps equal elements in order because it takes from the left half on ties; insertion sort does so because it only shifts strictly larger elements. Quick sort's partition and heap sort's moving the root to the end swap distant elements, so both are unstable."
+      },
+      "difficulty": "medium",
+      "concepts": ["sort-stability", "merge-sort", "insertion-sort"]
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": {
+        "tr": "Pivotu her zaman son eleman seçen bir quick sort'a zaten sıralı bir dizi verilirse ne olur?",
+        "en": "What happens if a quick sort that always picks the last element as pivot is given an already sorted array?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "En iyi durum olur: O(n)", "en": "It is the best case: O(n)" } },
+        { "id": "b", "text": { "tr": "Yine dengeli bölünür: O(n log n)", "en": "It still splits evenly: O(n log n)" } },
+        { "id": "c", "text": { "tr": "Bir parça hep boş kalır, derinlik n olur: O(n²)", "en": "One side is always empty and depth becomes n: O(n²)" } },
+        { "id": "d", "text": { "tr": "Algoritma kararlı hâle gelir", "en": "The algorithm becomes stable" } }
+      ],
+      "correct": ["c"],
+      "explanation": {
+        "tr": "Sıralı dizide son eleman her zaman en büyüktür; bölümlemeden sonra sağ parça boş, sol parça n−1 elemanlı kalır. Derinlik n'e çıkar ve toplam iş n + (n−1) + ... ≈ n²/2 olur. Rastgele pivot ya da üçün medyanı bu durumu önler.",
+        "en": "In a sorted array the last element is always the largest; after partitioning the right side is empty and the left has n−1 elements. Depth grows to n and total work is n + (n−1) + ... ≈ n²/2. A random pivot or median of three prevents this."
+      },
+      "difficulty": "medium",
+      "concepts": ["quick-sort"]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Yalnızca iki elemanı karşılaştırarak karar veren hiçbir sıralama algoritması, en kötü durumda Ω(n log n) karşılaştırmadan daha azıyla genel bir diziyi sıralayamaz; counting sort bu sınıra tabi değildir.",
+        "en": "No sorting algorithm that decides only by comparing two elements can sort a general array with fewer than Ω(n log n) comparisons in the worst case; counting sort is not subject to this bound."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["t"],
+      "explanation": {
+        "tr": "Doğru. n! diziliş arasında ayrım yapmak için her biri evet/hayır cevabı veren en az log₂(n!) ≈ n log n karşılaştırma gerekir. Counting sort ise eleman karşılaştırmaz; değerleri dizin olarak kullanıp sayar, bu yüzden küçük bir tam sayı aralığında O(n + k) sürede çalışabilir.",
+        "en": "True. Distinguishing among n! orderings with yes/no answers takes at least log₂(n!) ≈ n log n comparisons. Counting sort does not compare elements; it uses values as indices and counts, so it can run in O(n + k) on a small integer range."
+      },
+      "difficulty": "hard",
+      "concepts": ["comparison-lower-bound"]
+    },
+    {
+      "id": "q5",
+      "type": "order",
+      "prompt": {
+        "tr": "Merge sort'un bir çağrısındaki adımları doğru sıraya koyun.",
+        "en": "Put the steps of a single merge sort call in the correct order."
+      },
+      "options": [
+        { "id": "c", "text": { "tr": "Sol yarıyı özyinelemeli olarak sırala", "en": "Recursively sort the left half" } },
+        { "id": "e", "text": { "tr": "İki sıralı yarıyı iki işaretçiyle birleştir", "en": "Merge the two sorted halves with two pointers" } },
+        { "id": "a", "text": { "tr": "Dizi 0 ya da 1 elemanlıysa olduğu gibi döndür", "en": "If the array has 0 or 1 elements, return it as is" } },
+        { "id": "d", "text": { "tr": "Sağ yarıyı özyinelemeli olarak sırala", "en": "Recursively sort the right half" } },
+        { "id": "b", "text": { "tr": "Orta noktayı bulup diziyi ikiye böl", "en": "Find the midpoint and split the array in two" } }
+      ],
+      "correct": ["a", "b", "c", "d", "e"],
+      "explanation": {
+        "tr": "Önce temel durum kontrol edilir; sonra dizi bölünür, iki yarı ayrı ayrı sıralanır ve en son birleştirilir. Quick sort'ta ise sıra terstir: önce bölümleme yapılır, sonra parçalar sıralanır ve birleştirme adımı yoktur.",
+        "en": "The base case is checked first; then the array is split, both halves are sorted and finally merged. Quick sort reverses this: it partitions first, then sorts the parts, and has no merge step."
+      },
+      "difficulty": "easy",
+      "concepts": ["merge-sort"]
+    }
+  ]
+}

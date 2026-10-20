@@ -19,6 +19,7 @@ import {
   ModuleGroupSchema,
 } from '@devacademy/shared';
 import type {
+  AdminLessonAnalytics,
   AdminLessonUpsertDto,
   AdminQuizUpsertDto,
   AdminSceneUpsertDto,
@@ -59,6 +60,15 @@ export class AdminController {
   @ApiOperation({ summary: 'Panel istatistikleri' })
   stats() {
     return this.admin.stats();
+  }
+
+  @Get('analytics')
+  @ApiOperation({
+    summary:
+      'Ders analitiği: başlayan/tamamlayan, ortalama süre, quiz deneme/geçme oranı, geri bildirim',
+  })
+  analytics(): Promise<AdminLessonAnalytics[]> {
+    return this.admin.lessonAnalytics();
   }
 
   /* Dersler */

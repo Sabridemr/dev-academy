@@ -313,7 +313,7 @@ export function SceneEditor({
                   {t('admin.validation')}: {errors.length} hata
                 </p>
               )}
-              <p className="px-2 pb-1 text-[11px] text-muted">
+              <p className="px-2 pb-1 text-xs text-muted">
                 Düğüme tıkla → seç; seçiliyken sürükle → taşı; Shift+tıkla → seçili düğümden kenar
                 ekle.
               </p>
@@ -640,7 +640,7 @@ export function SceneEditor({
                 >
                   <Trash2 size={14} /> step
                 </button>
-                <p className="text-[11px] text-muted">
+                <p className="text-xs text-muted">
                   {tl(validation.scene?.steps[stepIndex]?.title ?? '')}
                 </p>
               </div>

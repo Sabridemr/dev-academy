@@ -388,7 +388,7 @@ export default function NeuralNetworkPlaygroundSim({ params, onInteract }: Simul
               }}
             />
           </Field>
-          <p className="text-[11px] text-muted">{l.hiddenHint}</p>
+          <p className="text-xs text-muted">{l.hiddenHint}</p>
           <Range
             label={t('sim.learningRate')}
             value={lrExp}

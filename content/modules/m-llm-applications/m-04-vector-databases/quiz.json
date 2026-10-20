@@ -1,0 +1,110 @@
+{
+  "id": "m-04-vector-databases-quiz",
+  "title": { "tr": "Vektör Veritabanları Quiz", "en": "Vector Databases Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Vektörler birim uzunluğa normalize edilmişse hangisi doğrudur?",
+        "en": "If vectors are normalised to unit length, which statement is true?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Kosinüs benzerliği, iç çarpım ve L2 mesafesi aynı komşu sıralamasını verir", "en": "Cosine similarity, dot product and L2 distance give the same neighbour ranking" } },
+        { "id": "b", "text": { "tr": "Yalnızca L2 mesafesi anlamlı olur", "en": "Only L2 distance remains meaningful" } },
+        { "id": "c", "text": { "tr": "İç çarpım artık kullanılamaz", "en": "The dot product can no longer be used" } },
+        { "id": "d", "text": { "tr": "Kosinüs benzerliği her zaman 1 çıkar", "en": "Cosine similarity always equals 1" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "Birim vektörlerde iç çarpım kosinüse eşittir ve L2 mesafesinin karesi 2 − 2·kosinüs olur; üçü de aynı sıralamayı verir. Bu yüzden normalize edip en ucuz işlem olan iç çarpımı kullanmak yaygındır.",
+        "en": "For unit vectors the dot product equals the cosine and squared L2 distance equals 2 − 2·cosine; all three rank the same. That is why normalising and using the cheapest operation, the dot product, is common."
+      },
+      "difficulty": "medium",
+      "concepts": ["cosine-similarity", "embedding-space"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "HNSW indeksinde ef_search değerini artırmanın etkisi nedir?",
+        "en": "What is the effect of increasing ef_search in an HNSW index?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Daha çok düğüm ziyaret edilir; recall artar, gecikme de artar", "en": "More nodes are visited; recall goes up, and so does latency" } },
+        { "id": "b", "text": { "tr": "İndeks belleği azalır", "en": "Index memory shrinks" } },
+        { "id": "c", "text": { "tr": "Kümelerin yeniden eğitilmesi gerekir", "en": "Clusters must be retrained" } },
+        { "id": "d", "text": { "tr": "Sonuçlar tam (flat) aramayla her zaman birebir aynı olur", "en": "Results always become identical to exact (flat) search" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "ef_search sorgu sırasındaki aday listesinin genişliğidir; büyüdükçe recall–gecikme dengesi recall lehine kayar. Belleği bağlantı sayısı M belirler; küme eğitimi IVF'ye özgüdür; ANN tam aramayı garanti etmez.",
+        "en": "ef_search is the width of the candidate list at query time; increasing it shifts the recall–latency balance towards recall. Memory is set by the link count M; cluster training is specific to IVF; ANN does not guarantee exact results."
+      },
+      "difficulty": "medium",
+      "concepts": ["hnsw", "recall-at-k"]
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": {
+        "tr": "Çok kiracılı bir sistemde kiracı filtresi verinin %1'ini seçiyor. Önce en yakın 10 vektörü bulup sonra kiracıya göre filtrelerseniz (post-filtering) ne olur?",
+        "en": "In a multi-tenant system the tenant filter selects 1% of the data. What happens if you find the 10 nearest vectors first and then filter by tenant (post-filtering)?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Sonuç listesi büyük olasılıkla boş ya da çok kısa kalır", "en": "The result list will most likely be empty or very short" } },
+        { "id": "b", "text": { "tr": "Sonuçlar önceden filtrelemeyle aynı olur, yalnızca daha hızlıdır", "en": "Results match pre-filtering, only faster" } },
+        { "id": "c", "text": { "tr": "Diğer kiracıların belgeleri sonuçta görünür", "en": "Other tenants' documents appear in the result" } },
+        { "id": "d", "text": { "tr": "İndeks otomatik olarak düz aramaya geçer", "en": "The index automatically switches to flat search" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "Genel en yakın 10 vektörün kiracıya ait olma olasılığı düşüktür; filtre sonrası çok az ya da hiç sonuç kalmaz. Yetkisiz belge sızmaz çünkü filtre uygulanır, ama recall çöker. Seçici filtrelerde önceden ya da arama sırasında filtreleme gerekir.",
+        "en": "The global 10 nearest vectors are unlikely to belong to the tenant; after filtering few or none remain. Nothing leaks because the filter is applied, but recall collapses. Selective filters need pre-filtering or filtering during the search."
+      },
+      "difficulty": "hard",
+      "concepts": ["metadata-filtering", "recall-at-k"]
+    },
+    {
+      "id": "q4",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Hangi sorgularda hibrit aramanın (BM25 + vektör) saf vektör aramasından daha iyi sonuç vermesi beklenir? (Birden fazla seçin)",
+        "en": "For which queries is hybrid search (BM25 + vector) expected to beat pure vector search? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "\"ERR-4012 hatası ne anlama geliyor?\"", "en": "\"What does error ERR-4012 mean?\"" } },
+        { "id": "b", "text": { "tr": "\"SKU 88-1203 stokta var mı?\"", "en": "\"Is SKU 88-1203 in stock?\"" } },
+        { "id": "c", "text": { "tr": "\"Siparişimi nasıl geri gönderirim?\" (belgelerde 'iade süreci' yazıyor)", "en": "\"How do I send my order back?\" (documents say 'return process')" } },
+        { "id": "d", "text": { "tr": "\"Ayşe Yılmaz'ın onayladığı sözleşmeler\"", "en": "\"Contracts approved by Ayşe Yılmaz\"" } }
+      ],
+      "correct": ["a", "b", "d"],
+      "explanation": {
+        "tr": "Hata kodu, ürün kodu ve kişi adı tam eşleşme gerektirir; BM25 bunları en üste taşır. 'Geri göndermek' ile 'iade süreci' farklı kelimelerle aynı anlamı taşır; bu tam olarak vektör aramasının güçlü olduğu durumdur.",
+        "en": "An error code, a product code and a person's name need exact matching; BM25 brings them to the top. 'Send back' and 'return process' carry the same meaning with different words; that is exactly where vector search shines."
+      },
+      "difficulty": "medium",
+      "concepts": ["hybrid-search"]
+    },
+    {
+      "id": "q5",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Ürün nicemlemesi (PQ) belleği büyük ölçüde azaltır ama doğruluktan ödün verir; bu yüzden ilk adaylar genellikle tam vektörlerle yeniden puanlanır.",
+        "en": "Product quantisation (PQ) greatly reduces memory but trades away accuracy; that is why the top candidates are usually re-scored with full vectors."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["t"],
+      "explanation": {
+        "tr": "Doğru. PQ vektörleri kod kitabı girdileriyle yaklaşık temsil eder; mesafeler yaklaşık hesaplanır. Sıkıştırılmış vektörlerle aday bulup ilk birkaç yüzünü tam vektörlerle yeniden puanlamak hem bellek hem doğruluk açısından iyi bir dengedir.",
+        "en": "True. PQ approximates vectors with codebook entries, so distances are approximate. Finding candidates with compressed vectors and re-scoring the top few hundred with full vectors balances memory and accuracy well."
+      },
+      "difficulty": "easy",
+      "concepts": ["quantization", "ivf", "ann"]
+    }
+  ]
+}

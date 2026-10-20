@@ -1,7 +1,6 @@
 'use client';
 
-import Link from 'next/link';
-import { ArrowRight, Building2, Info, Lightbulb, AlertTriangle, OctagonAlert } from 'lucide-react';
+import { Building2, Info, Lightbulb, AlertTriangle, OctagonAlert } from 'lucide-react';
 import type { LessonBlock, LessonDetail } from '@devacademy/shared';
 import { useI18n } from '@/i18n';
 import { cn } from '@/lib/utils';
@@ -78,7 +77,10 @@ export function BlockRenderer({ block, lesson }: { block: LessonBlock; lesson: L
       return (
         <aside className={cn('rounded-2xl border p-4', style.cls)} role="note">
           <p className={cn('mb-1 flex items-center gap-2 text-sm font-semibold', style.iconCls)}>
-            <Icon size={16} /> {block.title ? tl(block.title) : null}
+            <Icon size={16} />{' '}
+            {block.title
+              ? tl(block.title)
+              : t(`lesson.calloutTone.${block.tone}` as 'lesson.calloutTone.info')}
           </p>
           <Markdown className="max-w-none text-sm [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
             {md(block.markdown, block.markdownEn)}
@@ -92,24 +94,9 @@ export function BlockRenderer({ block, lesson }: { block: LessonBlock; lesson: L
       return block.trace ? (
         <TraceViewer trace={block.trace} title={block.title} caption={block.caption} />
       ) : null;
-    case 'next': {
-      const target = lesson.next && lesson.next.id === block.lesson ? lesson.next : null;
-      return (
-        <Link
-          href={`/lessons/${block.lesson}`}
-          className="card group flex items-center justify-between gap-4 p-5 transition hover:border-primary"
-        >
-          <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-primary">
-              {t('lesson.nextStep')}
-            </p>
-            <p className="mt-1 font-semibold">{target ? tl(target.title) : block.lesson}</p>
-            {block.note && <p className="mt-1 text-sm text-muted">{tl(block.note)}</p>}
-          </div>
-          <ArrowRight className="shrink-0 text-primary transition group-hover:translate-x-1" />
-        </Link>
-      );
-    }
+    case 'next':
+      // Sıradaki ders, ders sonu kartında (LessonFinish) tek yerden gösterilir
+      return null;
     default:
       return null;
   }

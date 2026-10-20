@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 430" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Parçalama stratejileri ve chunk boyutu ödünleşimi</title>
+  <desc id="desc">Üst solda sabit boyutlu parçalar ve ardışık parçalar arasındaki örtüşme payı. Üst sağda başlıklara göre yapısal bölme; her parçanın başına bölüm yolu eklenir. Altta yatay bir eksen: solda küçük chunk yüksek hassasiyet ve az bağlam, sağda büyük chunk çok bağlam ve bulanık eşleşme.</desc>
+
+  <!-- Sabit boyut + örtüşme -->
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--da-fg)">Sabit boyut + örtüşme</text>
+  <rect x="30" y="50" width="400" height="26" rx="4" fill="var(--da-surface)" stroke="var(--da-border)"/>
+  <text x="40" y="68" font-size="12" fill="var(--da-muted)">belge metni …………………………………………………………</text>
+  <rect x="30" y="92" width="160" height="30" rx="6" fill="var(--da-primary)" opacity="0.25" stroke="var(--da-primary)"/>
+  <rect x="150" y="132" width="160" height="30" rx="6" fill="var(--da-accent)" opacity="0.25" stroke="var(--da-accent)"/>
+  <rect x="270" y="172" width="160" height="30" rx="6" fill="var(--da-primary)" opacity="0.25" stroke="var(--da-primary)"/>
+  <g font-size="12" fill="var(--da-fg)">
+    <text x="60" y="112">parça 1 (200)</text>
+    <text x="180" y="152">parça 2 (200)</text>
+    <text x="300" y="192">parça 3 (200)</text>
+  </g>
+  <rect x="150" y="92" width="40" height="70" fill="var(--da-danger)" opacity="0.15"/>
+  <rect x="270" y="132" width="40" height="70" fill="var(--da-danger)" opacity="0.15"/>
+  <text x="170" y="222" text-anchor="middle" font-size="12" fill="var(--da-danger)">örtüşme 40</text>
+  <text x="290" y="222" text-anchor="middle" font-size="12" fill="var(--da-danger)">örtüşme 40</text>
+
+  <!-- Yapısal bölme -->
+  <text x="490" y="34" font-size="15" font-weight="600" fill="var(--da-fg)">Yapısal bölme</text>
+  <rect x="490" y="50" width="380" height="160" rx="10" fill="var(--da-surface)" stroke="var(--da-border)"/>
+  <g font-size="12" fill="var(--da-fg)">
+    <text x="506" y="74" font-weight="600"># Faturalama</text>
+    <rect x="506" y="84" width="348" height="34" rx="6" fill="var(--da-success)" opacity="0.18" stroke="var(--da-success)"/>
+    <text x="516" y="105">[Kılavuz › Faturalama › İade] ## İade …</text>
+    <rect x="506" y="126" width="348" height="34" rx="6" fill="var(--da-success)" opacity="0.18" stroke="var(--da-success)"/>
+    <text x="516" y="147">[Kılavuz › Faturalama › Kargo] ## Kargo …</text>
+    <rect x="506" y="168" width="348" height="30" rx="6" fill="var(--da-surface)" stroke="var(--da-border)" stroke-dasharray="4 3"/>
+    <text x="516" y="188" fill="var(--da-muted)">tablo bütün kalır, ortadan bölünmez</text>
+  </g>
+
+  <!-- Ödünleşim ekseni -->
+  <text x="450" y="268" text-anchor="middle" font-size="15" font-weight="600" fill="var(--da-fg)">Chunk boyutu ödünleşimi</text>
+  <defs>
+    <linearGradient id="m03-grad" x1="0" x2="1" y1="0" y2="0">
+      <stop offset="0" stop-color="var(--da-primary)" stop-opacity="0.5"/>
+      <stop offset="1" stop-color="var(--da-accent)" stop-opacity="0.5"/>
+    </linearGradient>
+  </defs>
+  <rect x="80" y="290" width="740" height="16" rx="8" fill="url(#m03-grad)"/>
+  <circle cx="300" cy="298" r="10" fill="var(--da-surface)" stroke="var(--da-fg)" stroke-width="2"/>
+  <text x="300" y="330" text-anchor="middle" font-size="12" fill="var(--da-fg)">çoğu metin için başlangıç: 200–500 token</text>
+
+  <g font-size="13">
+    <text x="80" y="360" fill="var(--da-primary)" font-weight="600">Küçük (100–200)</text>
+    <text x="80" y="380" fill="var(--da-fg)">+ isabetli eşleşme, ucuz bağlam</text>
+    <text x="80" y="400" fill="var(--da-fg)">− cümlenin öncesi/sonrası kaybolur</text>
+    <text x="820" y="360" text-anchor="end" fill="var(--da-accent)" font-weight="600">Büyük (800–1500)</text>
+    <text x="820" y="380" text-anchor="end" fill="var(--da-fg)">+ bağlam korunur, tablolar bütün</text>
+    <text x="820" y="400" text-anchor="end" fill="var(--da-fg)">− bulanık gömme, bağlam bütçesi dolar</text>
+  </g>
+</svg>

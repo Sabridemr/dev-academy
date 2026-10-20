@@ -4,9 +4,24 @@ import dynamic from 'next/dynamic';
 import type { ComponentType } from 'react';
 import type { InteractiveType } from '@devacademy/shared';
 import type { SimulatorProps } from './types';
+import { Skeleton } from '../ui/Skeleton';
 
 function Loading() {
-  return <div className="card h-64 animate-pulse bg-elevated/60" aria-busy="true" />;
+  return (
+    <div className="card overflow-hidden" aria-busy="true">
+      <div className="border-b border-border px-4 py-3">
+        <Skeleton className="h-4 w-40" />
+      </div>
+      <div className="grid gap-4 p-4 lg:grid-cols-[1fr_280px]">
+        <Skeleton className="h-72 w-full" />
+        <div className="space-y-3">
+          <Skeleton className="h-9 w-full" />
+          <Skeleton className="h-9 w-full" />
+          <Skeleton className="h-9 w-2/3" />
+        </div>
+      </div>
+    </div>
+  );
 }
 
 const load = (loader: () => Promise<{ default: ComponentType<SimulatorProps> }>) =>
@@ -44,4 +59,15 @@ export const SIMULATORS: Partial<Record<InteractiveType, ComponentType<Simulator
   'traffic-wave': load(() => import('./TrafficWaveSim')),
   'fan-out': load(() => import('./FanOutSim')),
   'geo-index': load(() => import('./GeoIndexSim')),
+  'sorting-visualizer': load(() => import('./SortingVisualizerSim')),
+  'graph-traversal': load(() => import('./GraphTraversalSim')),
+  'hash-table': load(() => import('./HashTableSim')),
+  'big-o-plotter': load(() => import('./BigOPlotterSim')),
+  'rag-pipeline': load(() => import('./RagPipelineSim')),
+  'prompt-playground': load(() => import('./PromptPlaygroundSim')),
+  'token-cost': load(() => import('./TokenCostSim')),
+  'oauth-flow': load(() => import('./OAuthFlowSim')),
+  'jwt-inspector': load(() => import('./JwtInspectorSim')),
+  'bruteforce-login': load(() => import('./BruteforceLoginSim')),
+  'git-graph': load(() => import('./GitGraphSim')),
 };

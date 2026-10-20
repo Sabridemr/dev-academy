@@ -1,25 +1,25 @@
 {
   "id": "h-12-ai-for-devops-notes-quiz",
-  "title": { "tr": "DevOps için Yapay Zeka Quiz", "en": "AI for DevOps Quiz" },
+  "title": { "tr": "DevOps için Yapay Zekâ Quiz", "en": "AI for DevOps Quiz" },
   "passScore": 70,
   "questions": [
     {
       "id": "q1",
       "type": "single",
       "prompt": {
-        "tr": "ML tabanlı anomali tespiti, sabit eşik değerli klasik uyarılara göre neden daha az yanlış alarm (false positive) üretir?",
-        "en": "Why does ML-based anomaly detection produce fewer false positives than classic fixed-threshold alerts?"
+        "tr": "Öğrenilmiş beklenti bandına dayalı anomali tespiti, sabit eşikli klasik uyarılara göre neden daha az yanlış alarm üretir?",
+        "en": "Why does anomaly detection based on a learned expectation band produce fewer false alarms than classic fixed-threshold alerts?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "Model sistemin normal davranış örüntülerini öğrenir ve yalnızca bu örüntüden gerçek zamanlı sapmaları işaretler", "en": "The model learns the system's normal behavior patterns and flags only real-time deviations from them" } },
-        { "id": "b", "text": { "tr": "Uyarı eşiklerini kalıcı olarak yükselterek daha az uyarı gönderir", "en": "It permanently raises the alert thresholds so fewer alerts are sent" } },
-        { "id": "c", "text": { "tr": "Yalnızca loglara bakar; metrik ve trace verilerini yok sayar", "en": "It only looks at logs and ignores metrics and traces" } },
-        { "id": "d", "text": { "tr": "Önceden yazılmış kurallara göre çalıştığı için hiç yanılmaz", "en": "It never makes mistakes because it runs on pre-written rules" } }
+        { "id": "a", "text": { "tr": "Metriğin günün saati ve haftanın gününe göre normal aralığını öğrenir; yalnızca bu aralığın dışına çıkan değerleri işaretler", "en": "It learns the metric's normal range by time of day and day of week and flags only values outside that range" } },
+        { "id": "b", "text": { "tr": "Tüm eşikleri kalıcı olarak yükselterek daha az bildirim gönderir", "en": "It permanently raises every threshold so fewer notifications are sent" } },
+        { "id": "c", "text": { "tr": "Yalnızca loglara bakar, metrikleri ve izleri hesaba katmaz", "en": "It only looks at logs and ignores metrics and traces" } },
+        { "id": "d", "text": { "tr": "Elle yazılmış kurallara dayandığı için hiç yanılmaz", "en": "It never errs because it relies on hand-written rules" } }
       ],
       "correct": ["a"],
       "explanation": {
-        "tr": "Notlarda ML modellerinin normal davranış örüntülerini öğrendiği, sapmaları gerçek zamanlı tespit ettiği ve böylece yanlış alarmları azalttığı anlatılır. Eşiği körlemesine yükseltmek gerçek sorunları da kaçırır; tek veri kaynağına bakmak bağlamı kaybettirir; kurala dayalı çalışma ise AI'nin değil geleneksel otomasyonun özelliğidir.",
-        "en": "The notes explain that ML models learn normal behavior patterns, detect deviations in real time and thereby reduce false positives. Blindly raising thresholds also misses real issues, looking at a single data source loses context, and rule-based operation describes traditional automation, not AI."
+        "tr": "Sabit eşik, gece 03:00 ile kampanya günü için aynı sayıyı kullanır; öğrenilmiş bant ise 'bu saatte normalde ne olur' sorusunu sorar ve yalnızca gerçek sapmaları işaretler. Eşiği körlemesine yükseltmek gerçek sorunları da kaçırır; tek veri kaynağına bakmak bağlamı kaybettirir; kural tabanlı çalışma ise klasik otomasyonun özelliğidir ve yanılmazlık garantisi vermez.",
+        "en": "A fixed threshold uses the same number at 3 AM and on a campaign day; a learned band asks 'what is normal at this hour' and flags only real deviations. Blindly raising thresholds also hides real problems, a single data source loses context, and rule-based operation describes classic automation and guarantees nothing about accuracy."
       },
       "difficulty": "easy",
       "concepts": ["anomaly-detection"]
@@ -28,83 +28,86 @@
       "id": "q2",
       "type": "single",
       "prompt": {
-        "tr": "Bir veritabanı sorunu yüzünden veritabanından, API'den ve ön yüzden aynı anda onlarca uyarı geliyor. AIOps'un hangi bileşeni bu olayları tek bir olayda (incident) birleştirip asıl kök nedeni öne çıkarır?",
-        "en": "Because of a database problem, dozens of alerts arrive at once from the database, the API and the frontend. Which AIOps component merges these events into a single incident and surfaces the real root cause?"
+        "tr": "Veritabanı yavaşlayınca API, ön yüz ve sentetik kontrollerden aynı dakikada onlarca alarm geliyor. Bu alarmları tek bir olaya indirgeyip ilk düşen bileşeni kök neden adayı olarak öne çıkaran yetenek hangisidir?",
+        "en": "When the database slows down, dozens of alerts arrive within the same minute from the API, the frontend and synthetic checks. Which capability collapses them into one incident and surfaces the first failing component as the root-cause candidate?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "Veri toplama (Data Collection)", "en": "Data Collection" } },
-        { "id": "b", "text": { "tr": "Korelasyon motoru (Correlation Engine)", "en": "Correlation Engine" } },
-        { "id": "c", "text": { "tr": "Otomasyon motoru (Automation Engine)", "en": "Automation Engine" } },
-        { "id": "d", "text": { "tr": "Görselleştirme ve içgörüler (Visualization & Insights)", "en": "Visualization & Insights" } }
+        { "id": "a", "text": { "tr": "Log özetleme", "en": "Log summarization" } },
+        { "id": "b", "text": { "tr": "Alarm ilişkilendirme (correlation)", "en": "Alert correlation" } },
+        { "id": "c", "text": { "tr": "Doğru boyutlandırma (right-sizing)", "en": "Right-sizing" } },
+        { "id": "d", "text": { "tr": "Test üretimi", "en": "Test generation" } }
       ],
       "correct": ["b"],
       "explanation": {
-        "tr": "Korelasyon motoru farklı kaynaklardan gelen olay ve uyarıları sistemler arasında ilişkilendirerek gürültüyü ve yanlış alarmları azaltır, kök nedeni daha hızlı bulur. Veri toplama yalnızca veriyi getirir, otomasyon motoru düzeltme aksiyonlarını çalıştırır, görselleştirme ise sonuçları panolarda sunar.",
-        "en": "The correlation engine relates events and alerts from different sources across systems, reducing noise and false positives and finding the root cause faster. Data collection only gathers the data, the automation engine runs remediation actions, and visualization presents results on dashboards."
+        "tr": "Alarm ilişkilendirme; zaman yakınlığı, servis bağımlılık grafiği ve geçmişte birlikte görülme sıklığına bakarak belirtileri tek bir olayda toplar ve gürültüyü azaltır. Log özetleme metni kısaltır, right-sizing maliyetle ilgilidir, test üretimi ise CI'da kod kalitesine yöneliktir.",
+        "en": "Alert correlation groups symptoms into a single incident using time proximity, the service dependency graph and historical co-occurrence, reducing noise. Log summarization shortens text, right-sizing is about cost, and test generation targets code quality in CI."
       },
       "difficulty": "medium",
-      "concepts": ["event-correlation", "root-cause-analysis"]
+      "concepts": ["alert-noise-reduction", "aiops"]
     },
     {
       "id": "q3",
       "type": "order",
       "prompt": {
-        "tr": "AIOps'taki kendini iyileştiren (self-healing) sistem akışının adımlarını doğru sıraya koyun.",
-        "en": "Put the steps of the AIOps self-healing system flow in the correct order."
+        "tr": "Başarısız bir CI job'unun logunu LLM ile özetleyip PR'a yorum bırakan akışın adımlarını doğru sıraya koyun.",
+        "en": "Put the steps of a flow that summarizes a failed CI job's log with an LLM and comments on the PR in the correct order."
       },
       "options": [
-        { "id": "a", "text": { "tr": "Otomatik aksiyon (ör. pod'u yeniden başlatma)", "en": "Automated action (e.g. restarting a pod)" } },
-        { "id": "b", "text": { "tr": "Sorun tespit edilir", "en": "Issue detected" } },
-        { "id": "c", "text": { "tr": "Sorun çözülür", "en": "Issue resolved" } },
-        { "id": "d", "text": { "tr": "AI karar verir", "en": "AI decision" } }
+        { "id": "mask", "text": { "tr": "Loglardaki token, parola ve anahtar benzeri değerler maskelenir", "en": "Token, password and key-like values in the logs are masked" } },
+        { "id": "fail", "text": { "tr": "Test job'u başarısız olur ve `if: failure()` koşullu job tetiklenir", "en": "The test job fails and the job guarded by `if: failure()` is triggered" } },
+        { "id": "comment", "text": { "tr": "Özet, 'doğrulayın' uyarısıyla PR'a yorum olarak yazılır", "en": "The summary is posted as a PR comment with a 'verify this' notice" } },
+        { "id": "fetch", "text": { "tr": "Başarısız adımların logu çekilir", "en": "The logs of the failed steps are fetched" } },
+        { "id": "llm", "text": { "tr": "Maskelenmiş log bir LLM API'sine gönderilip kısa özet istenir", "en": "The masked log is sent to an LLM API and a short summary is requested" } }
       ],
-      "correct": ["b", "d", "a", "c"],
+      "correct": ["fail", "fetch", "mask", "llm", "comment"],
       "explanation": {
-        "tr": "Önce sorun tespit edilir, ardından AI hangi düzeltmenin uygulanacağına karar verir, otomatik aksiyon çalışır ve sorun çözülür. Karar verilmeden aksiyon alınamaz; tespit olmadan da karar verilecek bir durum yoktur. Bu akış bilinen sorunlarda insan müdahalesi olmadan çalışır.",
-        "en": "First the issue is detected, then AI decides which fix to apply, the automated action runs and the issue is resolved. No action can be taken before a decision, and there is nothing to decide without detection. This flow runs without human intervention for known issues."
+        "tr": "Önce hata oluşur ve koşullu job başlar, log çekilir, modele gitmeden önce gizli değerler maskelenir, ardından özet istenir ve en son PR'a yorum bırakılır. Maskelemenin LLM çağrısından önce gelmesi zorunludur; aksi hâlde gizli veri üçüncü tarafa gitmiş olur.",
+        "en": "First the failure happens and the conditional job starts, the log is fetched, secrets are masked before anything goes to the model, then the summary is requested and finally the PR comment is posted. Masking must come before the LLM call; otherwise secrets leave the organization."
       },
       "difficulty": "easy",
-      "concepts": ["self-healing", "auto-remediation"]
+      "concepts": ["log-summarization", "data-leakage"]
     },
     {
       "id": "q4",
       "type": "multiple",
       "prompt": {
-        "tr": "DevOps'ta yapay zekayı sorumlu kullanmak için notlarda önerilen uygulamalar hangileridir? (Birden fazla seçin)",
-        "en": "Which practices do the notes recommend for using AI responsibly in DevOps? (Select all that apply)"
+        "tr": "DevOps süreçlerinde yapay zekâyı sorumlu kullanmanın ilkeleri hangileridir? (Birden fazla seçin)",
+        "en": "Which of these are principles of responsible AI use in DevOps processes? (Select all that apply)"
       },
       "options": [
-        { "id": "a", "text": { "tr": "Kritik aksiyonlarda son kararı insanlar verir; AI çıktıları uygulanmadan önce gözden geçirilir", "en": "Humans make the final decision on critical actions; AI outputs are reviewed before being applied" } },
-        { "id": "b", "text": { "tr": "AI önerileri önce staging ya da test ortamında doğrulanır", "en": "AI recommendations are first verified in a staging or test environment" } },
-        { "id": "c", "text": { "tr": "Daha iyi bağlam için secret'lar ve üretim verisi doğrudan herkese açık AI araçlarına verilir", "en": "Secrets and production data are given directly to public AI tools for better context" } },
-        { "id": "d", "text": { "tr": "Veri AI ile kullanılmadan önce maskelenir ya da anonimleştirilir", "en": "Data is masked or anonymized before being used with AI" } }
+        { "id": "a", "text": { "tr": "Üretimi değiştiren aksiyonlar bir insan onay kapısından geçer; model önerir, insan uygular", "en": "Actions that change production pass through a human approval gate; the model suggests, a human applies" } },
+        { "id": "b", "text": { "tr": "Modelin önerileri üretime uygulanmadan önce staging ortamında denenir", "en": "Model suggestions are tried in a staging environment before being applied to production" } },
+        { "id": "c", "text": { "tr": "Daha iyi bağlam için üretim logları ve anahtarlar maskelenmeden herkese açık bir sohbet aracına yapıştırılır", "en": "For better context, production logs and keys are pasted unmasked into a public chat tool" } },
+        { "id": "d", "text": { "tr": "Modelin kaç kez doğru, kaç kez yanlış yönlendirdiği ölçülür ve izlenir", "en": "How often the model guided correctly or incorrectly is measured and tracked" } }
       ],
       "correct": ["a", "b", "d"],
       "explanation": {
-        "tr": "İnsanı döngüde tutmak, önerileri staging'de doğrulamak ve veriyi maskelemek notlardaki en iyi uygulamalardır. Secret, anahtar ya da PII'yi herkese açık AI araçlarıyla paylaşmak ise açıkça yaygın hatalar arasında sayılır; gerekirse şirket içi ya da özel modeller kullanılmalıdır.",
-        "en": "Keeping humans in the loop, validating suggestions in staging and masking data are the best practices in the notes. Sharing secrets, keys or PII with public AI tools is explicitly listed as a common mistake; on-prem or private models should be used when needed."
+        "tr": "İnsan onay kapısı, staging'de doğrulama ve doğruluk oranını ölçmek sorumlu kullanımın temel ilkeleridir. Üretim logunu ve anahtarları maskelemeden harici bir araca vermek ise gizli veri sızıntısıdır; maskeleme ya da kendi altyapınızda çalışan bir model gerekir.",
+        "en": "A human approval gate, validation in staging and measuring the model's accuracy are core principles of responsible use. Handing unmasked production logs and keys to an external tool is a data leak; masking or a model running on your own infrastructure is required."
       },
       "difficulty": "medium",
-      "concepts": ["human-in-the-loop"]
+      "concepts": ["human-in-the-loop", "data-leakage"]
     },
     {
       "id": "q5",
-      "type": "truefalse",
+      "type": "single",
       "prompt": {
-        "tr": "AI destekli bulut optimizasyonunda right-sizing bir kez yapılır; kaynaklar doğru boyuta getirildikten sonra tekrar bakmaya gerek yoktur.",
-        "en": "In AI-powered cloud optimization, right-sizing is done once; after resources are brought to the right size there is no need to revisit them."
+        "tr": "Bir asistan, nöbetçiye 'geçen ay aynı belirtiyle açılan olayda `kubectl delete pvc orders-data` komutu sorunu çözdü' diyor; ekip böyle bir olayı hatırlamıyor ve komut veri silecek. En doğru davranış hangisidir?",
+        "en": "An assistant tells the on-call engineer 'last month an incident with the same symptom was fixed by running `kubectl delete pvc orders-data`'; nobody on the team remembers such an incident and the command would delete data. What is the best course of action?"
       },
       "options": [
-        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
-        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+        { "id": "a", "text": { "tr": "Asistan geçmiş olaylara erişebildiği için komutu hemen çalıştırmak", "en": "Run the command immediately because the assistant has access to past incidents" } },
+        { "id": "b", "text": { "tr": "Komutu staging'de çalıştırıp sonucu beklemeden üretimde tekrarlamak", "en": "Run it in staging and repeat it in production without waiting for the result" } },
+        { "id": "c", "text": { "tr": "Bunu olası bir halüsinasyon olarak ele alıp olay kaydını istemek; kaynak yoksa öneriyi reddedip geri alınabilir bir adımla (ör. pod'u yeniden başlatmak) ilerlemek", "en": "Treat it as a likely hallucination and ask for the incident record; if there is none, reject the suggestion and proceed with a reversible step (e.g. restarting the pod)" } },
+        { "id": "d", "text": { "tr": "Komutu çalıştırıp hemen ardından yedekten geri yüklemek", "en": "Run the command and immediately restore from backup afterwards" } }
       ],
-      "correct": ["f"],
+      "correct": ["c"],
       "explanation": {
-        "tr": "Yanlış. Notlar sürekli right-sizing yapmayı, AI önerilerini düzenli kullanmayı ve maliyet ile kullanımı izlemeyi önerir; iş yükü ve trafik zamanla değiştiği için tek seferlik boyutlandırma kısa sürede aşırı ya da yetersiz kaynağa döner. Kullanılmayan kaynakları temizlememek ve önerileri izlememek yaygın hatalar arasındadır.",
-        "en": "False. The notes recommend right-sizing continuously, using AI recommendations regularly and monitoring cost and usage; because workloads and traffic change over time, one-off sizing soon turns into over- or under-provisioning. Not removing unused resources and not monitoring recommendations are listed as common mistakes."
+        "tr": "Model, var olmayan bir olayı aynı kendinden emin tonla uydurabilir; bu halüsinasyondur. Doğru refleks, önerinin dayanağını (olay kaydı, runbook bağlantısı) istemek ve geri alınamaz, veri silen bir aksiyonu kaynak olmadan asla uygulamamaktır. Geri alınabilir ve dar kapsamlı adımlar önce denenir; yedekten geri yüklemeye güvenerek veri silmek ise kabul edilemez bir risktir.",
+        "en": "A model can fabricate a non-existent incident with the same confident tone; that is a hallucination. The right reflex is to ask for the evidence (incident record, runbook link) and never apply an irreversible, data-deleting action without a source. Reversible, narrow steps come first; deleting data while relying on a backup restore is an unacceptable risk."
       },
-      "difficulty": "easy",
-      "concepts": ["right-sizing"]
+      "difficulty": "hard",
+      "concepts": ["hallucination", "runbook-assistant", "human-in-the-loop"]
     }
   ]
 }

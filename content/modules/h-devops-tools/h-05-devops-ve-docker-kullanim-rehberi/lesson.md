@@ -9,10 +9,10 @@ title:
 summary:
   tr: "Docker, Compose ve GitHub Actions ile uygulamanı konteynerleştirip otomatik olarak üretime taşı."
   en: "Containerize your app with Docker and Compose and ship it to production automatically with GitHub Actions."
-durationMinutes: 16
+durationMinutes: 25
 level: beginner
 tags: [devops, docker, docker-compose, ci-cd, kubernetes, iac]
-prerequisites: []
+prerequisites: [h-04-git-notes, f-03-kubernetes-basics]
 concepts: [konteyner, dockerfile, volume, docker-compose, github-actions, reverse-proxy, terraform, yedekleme]
 ---
 
@@ -600,64 +600,6 @@ kubectl get pods -A              # Tüm pod'lar
 :::
 
 :::quiz{src="quiz.json"}
-:::
-
-## Orijinal PDF sayfaları
-
-:::callout{tone="info" title="Özgün görünüm"}
-Bu dersin metni *DevOps Docker Rehberi* PDF dosyasının 1–13. sayfalarının özgün hâlidir; sayfalar aşağıda PDF'teki görünümüyle yer alır.
-:::
-
-:::diagram{src="pdf-sayfa-01.png" alt="DevOps Docker Rehberi - PDF sayfa 1"}
-PDF sayfa 1 / 13
-:::
-
-:::diagram{src="pdf-sayfa-02.png" alt="DevOps Docker Rehberi - PDF sayfa 2"}
-PDF sayfa 2 / 13
-:::
-
-:::diagram{src="pdf-sayfa-03.png" alt="DevOps Docker Rehberi - PDF sayfa 3"}
-PDF sayfa 3 / 13
-:::
-
-:::diagram{src="pdf-sayfa-04.png" alt="DevOps Docker Rehberi - PDF sayfa 4"}
-PDF sayfa 4 / 13
-:::
-
-:::diagram{src="pdf-sayfa-05.png" alt="DevOps Docker Rehberi - PDF sayfa 5"}
-PDF sayfa 5 / 13
-:::
-
-:::diagram{src="pdf-sayfa-06.png" alt="DevOps Docker Rehberi - PDF sayfa 6"}
-PDF sayfa 6 / 13
-:::
-
-:::diagram{src="pdf-sayfa-07.png" alt="DevOps Docker Rehberi - PDF sayfa 7"}
-PDF sayfa 7 / 13
-:::
-
-:::diagram{src="pdf-sayfa-08.png" alt="DevOps Docker Rehberi - PDF sayfa 8"}
-PDF sayfa 8 / 13
-:::
-
-:::diagram{src="pdf-sayfa-09.png" alt="DevOps Docker Rehberi - PDF sayfa 9"}
-PDF sayfa 9 / 13
-:::
-
-:::diagram{src="pdf-sayfa-10.png" alt="DevOps Docker Rehberi - PDF sayfa 10"}
-PDF sayfa 10 / 13
-:::
-
-:::diagram{src="pdf-sayfa-11.png" alt="DevOps Docker Rehberi - PDF sayfa 11"}
-PDF sayfa 11 / 13
-:::
-
-:::diagram{src="pdf-sayfa-12.png" alt="DevOps Docker Rehberi - PDF sayfa 12"}
-PDF sayfa 12 / 13
-:::
-
-:::diagram{src="pdf-sayfa-13.png" alt="DevOps Docker Rehberi - PDF sayfa 13"}
-PDF sayfa 13 / 13
 :::
 
 :::next{lesson="h-06-cicd-temelleri-ve-ilk-workflow"}

@@ -1,9 +1,6 @@
 {
   "id": "h-11-grafana-notes-quiz",
-  "title": {
-    "tr": "Grafana Quiz",
-    "en": "Grafana Quiz"
-  },
+  "title": { "tr": "Gözlemlenebilirlik ve Grafana Quiz", "en": "Observability and Grafana Quiz" },
   "passScore": 70,
   "questions": [
     {
@@ -14,46 +11,18 @@
         "en": "Which statement best describes Grafana's relationship with data?"
       },
       "options": [
-        {
-          "id": "a",
-          "text": {
-            "tr": "Veriyi Prometheus, Loki gibi veri kaynaklarından sorgular ve görselleştirir; kendisi veri toplamaz ve saklamaz.",
-            "en": "It queries data from data sources such as Prometheus and Loki and visualizes it; it does not collect or store data itself."
-          }
-        },
-        {
-          "id": "b",
-          "text": {
-            "tr": "Sunuculardan metrikleri kendisi toplar ve kendi zaman serisi veritabanında saklar.",
-            "en": "It collects metrics from servers itself and stores them in its own time-series database."
-          }
-        },
-        {
-          "id": "c",
-          "text": {
-            "tr": "Prometheus'un yerine geçer; ayrı bir veri kaynağına ihtiyaç duymaz.",
-            "en": "It replaces Prometheus and needs no separate data source."
-          }
-        },
-        {
-          "id": "d",
-          "text": {
-            "tr": "Yalnızca logları saklar; metrik ve trace için başka bir arayüz gerekir.",
-            "en": "It only stores logs; metrics and traces need a different UI."
-          }
-        }
+        { "id": "a", "text": { "tr": "Veriyi Prometheus, Loki gibi veri kaynaklarından sorgular ve görselleştirir; kendisi veri toplamaz ve saklamaz.", "en": "It queries data from data sources such as Prometheus and Loki and visualizes it; it does not collect or store data itself." } },
+        { "id": "b", "text": { "tr": "Sunuculardan metrikleri kendisi toplar ve kendi zaman serisi veritabanında saklar.", "en": "It collects metrics from servers itself and stores them in its own time-series database." } },
+        { "id": "c", "text": { "tr": "Prometheus'un yerine geçer; ayrı bir veri kaynağına ihtiyaç duymaz.", "en": "It replaces Prometheus and needs no separate data source." } },
+        { "id": "d", "text": { "tr": "Yalnızca logları saklar; metrik ve iz için başka bir arayüz gerekir.", "en": "It only stores logs; metrics and traces need a different UI." } }
       ],
-      "correct": [
-        "a"
-      ],
+      "correct": ["a"],
       "explanation": {
-        "tr": "Notlar açıkça 'Grafana veri toplamaz ve saklamaz' der: veriyi kaynaklardan sorgular ve dashboard'larda gösterir. Toplama ve saklama Prometheus, Loki, Tempo gibi kaynakların işidir; Grafana metrik, log ve trace'i birlikte görselleştirebilir.",
-        "en": "The notes state plainly that Grafana does not collect or store data: it queries sources and shows the data in dashboards. Collecting and storing is the job of sources like Prometheus, Loki and Tempo; Grafana can visualize metrics, logs and traces together."
+        "tr": "Grafana bir görselleştirme ve uyarı katmanıdır: Prometheus, Loki, Tempo, SQL veritabanları gibi kaynaklara sorgu atar, sonucu panellerde gösterir. Toplama ve saklama veri kaynaklarının işidir; Grafana metrik, log ve izi aynı ekranda birleştirebilir.",
+        "en": "Grafana is a visualization and alerting layer: it queries sources such as Prometheus, Loki, Tempo and SQL databases and shows the results in panels. Collecting and storing is the job of the data sources; Grafana can combine metrics, logs and traces on one screen."
       },
       "difficulty": "easy",
-      "concepts": [
-        "data-source"
-      ]
+      "concepts": ["data-source", "metrics-logs-traces"]
     },
     {
       "id": "q2",
@@ -63,193 +32,82 @@
         "en": "What does the PromQL query `rate(http_requests_total[5m])` return in a panel?"
       },
       "options": [
-        {
-          "id": "a",
-          "text": {
-            "tr": "Son 5 dakika üzerinden hesaplanan saniye başına istek sayısını",
-            "en": "Requests per second calculated over the last 5 minutes"
-          }
-        },
-        {
-          "id": "b",
-          "text": {
-            "tr": "Son 5 dakikada gelen toplam istek sayısını",
-            "en": "The total number of requests received in the last 5 minutes"
-          }
-        },
-        {
-          "id": "c",
-          "text": {
-            "tr": "Ayakta olan hedeflerin sayısını",
-            "en": "The number of targets that are up"
-          }
-        },
-        {
-          "id": "d",
-          "text": {
-            "tr": "İsteklerin ortalama yanıt süresini",
-            "en": "The average response time of requests"
-          }
-        }
+        { "id": "a", "text": { "tr": "Son 5 dakika üzerinden hesaplanan saniye başına istek sayısını", "en": "Requests per second calculated over the last 5 minutes" } },
+        { "id": "b", "text": { "tr": "Son 5 dakikada gelen toplam istek sayısını", "en": "The total number of requests received in the last 5 minutes" } },
+        { "id": "c", "text": { "tr": "Ayakta olan hedeflerin sayısını", "en": "The number of targets that are up" } },
+        { "id": "d", "text": { "tr": "İsteklerin ortalama yanıt süresini", "en": "The average response time of requests" } }
       ],
-      "correct": [
-        "a"
-      ],
+      "correct": ["a"],
       "explanation": {
-        "tr": "`rate(...[5m])` son 5 dakikalık pencerede saniye başına artış hızını verir. Toplam sayı değil, hızdır; aktif hedef sayısı `count(up)` ile, gecikme ise ayrı bir metrikle ölçülür.",
-        "en": "`rate(...[5m])` gives the per-second rate over the last 5-minute window. It is a rate, not a total; the number of active targets comes from `count(up)`, and latency is a separate metric."
+        "tr": "`rate(...[5m])` bir counter'ın son 5 dakikalık penceredeki saniye başına artış hızını verir; toplam değil hızdır. Toplam artış için `increase()`, ayakta hedef sayısı için `count(up == 1)`, gecikme için histogram metrikleri kullanılır.",
+        "en": "`rate(...[5m])` gives a counter's per-second rate of increase over the last 5-minute window; it is a rate, not a total. The total increase comes from `increase()`, the number of healthy targets from `count(up == 1)`, and latency from histogram metrics."
       },
       "difficulty": "medium",
-      "concepts": [
-        "promql"
-      ]
+      "concepts": ["promql", "prometheus-data-model"]
     },
     {
       "id": "q3",
       "type": "order",
       "prompt": {
-        "tr": "Grafana'da bir uyarının veriden ekibe ulaşana kadar izlediği akışı doğru sıraya koyun.",
-        "en": "Put the steps an alert follows in Grafana, from data to the team, in the correct order."
+        "tr": "Bir uyarının veriden nöbetçi mühendise ulaşana kadar izlediği akışı doğru sıraya koyun.",
+        "en": "Put the steps an alert follows, from data to the on-call engineer, in the correct order."
       },
       "options": [
-        {
-          "id": "cp",
-          "text": {
-            "tr": "Contact point: uyarı yapılandırılmış kanala (ör. Slack) gönderilir",
-            "en": "Contact point: the alert is sent to the configured channel (e.g. Slack)"
-          }
-        },
-        {
-          "id": "rule",
-          "text": {
-            "tr": "Alert rule: Grafana veriyi sorgular ve kuralı değerlendirir",
-            "en": "Alert rule: Grafana queries the data and evaluates the rule"
-          }
-        },
-        {
-          "id": "ds",
-          "text": {
-            "tr": "Data source: metrik, log ve trace kaynaklardan toplanır",
-            "en": "Data source: metrics, logs and traces are collected from sources"
-          }
-        },
-        {
-          "id": "policy",
-          "text": {
-            "tr": "Notification policy: uyarı etiket ve önem derecesine göre yönlendirilir",
-            "en": "Notification policy: the alert is routed by labels and severity"
-          }
-        },
-        {
-          "id": "cond",
-          "text": {
-            "tr": "Alert condition: koşul belirlenen süre boyunca doğru kalır",
-            "en": "Alert condition: the condition stays true for the configured duration"
-          }
-        }
+        { "id": "cp", "text": { "tr": "İletişim noktası: uyarı Slack ya da çağrı sistemine gönderilir", "en": "Contact point: the alert is sent to Slack or the paging system" } },
+        { "id": "rule", "text": { "tr": "Alert kuralı: sorgu çalışır ve eşikle karşılaştırılır", "en": "Alert rule: the query runs and is compared with the threshold" } },
+        { "id": "ds", "text": { "tr": "Veri kaynağı: Prometheus metrikleri kazır ve saklar", "en": "Data source: Prometheus scrapes and stores the metrics" } },
+        { "id": "policy", "text": { "tr": "Bildirim politikası: uyarı etiketlerine göre yönlendirilir ve gruplanır", "en": "Notification policy: the alert is routed and grouped by its labels" } },
+        { "id": "cond", "text": { "tr": "for süresi: koşul belirlenen süre boyunca doğru kalır", "en": "for duration: the condition stays true for the configured period" } }
       ],
-      "correct": [
-        "ds",
-        "rule",
-        "cond",
-        "policy",
-        "cp"
-      ],
+      "correct": ["ds", "rule", "cond", "policy", "cp"],
       "explanation": {
-        "tr": "Akış: veri kaynağı → kuralın değerlendirilmesi → koşulun süre boyunca sağlanması → politikanın uyarıyı yönlendirmesi → contact point'e gönderim. Politika, koşul tetiklenmeden yönlendirme yapamaz; contact point de en sondaki teslim noktasıdır.",
-        "en": "The flow is: data source → rule evaluation → condition holding for the duration → policy routing the alert → delivery to the contact point. A policy cannot route before the condition fires, and the contact point is the final delivery target."
+        "tr": "Akış: veri kaynağı → kuralın sorgusu ve eşiği → koşulun `for` süresince sürmesi → politikanın etiketlere göre yönlendirmesi → iletişim noktasına teslim. Politika, kural tetiklenmeden devreye giremez; iletişim noktası zincirin son halkasıdır.",
+        "en": "The flow is: data source → the rule's query and threshold → the condition holding for the `for` duration → the policy routing by labels → delivery to the contact point. The policy cannot act before the rule fires; the contact point is the last link."
       },
       "difficulty": "medium",
-      "concepts": [
-        "alert-rule",
-        "notification-policy"
-      ]
+      "concepts": ["alert-rule", "notification-policy", "contact-point"]
     },
     {
       "id": "q4",
       "type": "multiple",
       "prompt": {
-        "tr": "Grafana uyarı bileşenleriyle ilgili hangi ifadeler doğrudur? (Birden fazla seçin)",
-        "en": "Which statements about Grafana alerting components are correct? (Select all that apply)"
+        "tr": "Prometheus veri modeli ve pull yaklaşımıyla ilgili hangi ifadeler doğrudur? (Birden fazla seçin)",
+        "en": "Which statements about the Prometheus data model and pull approach are correct? (Select all that apply)"
       },
       "options": [
-        {
-          "id": "a",
-          "text": {
-            "tr": "Alert rule neyin izleneceğini ve ne zaman uyarı verileceğini tanımlar.",
-            "en": "An alert rule defines what to monitor and when to alert."
-          }
-        },
-        {
-          "id": "b",
-          "text": {
-            "tr": "Notification policy uyarıları etiket, önem derecesi ve gruplama kurallarına göre contact point'lere yönlendirir.",
-            "en": "A notification policy routes alerts to contact points based on labels, severity and grouping rules."
-          }
-        },
-        {
-          "id": "c",
-          "text": {
-            "tr": "Contact point, uyarının hangi eşikte tetikleneceğine karar verir.",
-            "en": "A contact point decides at which threshold the alert fires."
-          }
-        },
-        {
-          "id": "d",
-          "text": {
-            "tr": "Notification policy, eşik değerini ve For süresini tanımlar.",
-            "en": "A notification policy defines the threshold value and the For duration."
-          }
-        }
+        { "id": "a", "text": { "tr": "Her zaman serisi metrik adı ve etiket çiftleriyle tanımlanır; farklı etiket değeri ayrı bir seridir.", "en": "Each time series is identified by a metric name and label pairs; a different label value is a separate series." } },
+        { "id": "b", "text": { "tr": "Prometheus hedeflerin /metrics uç noktasını belirli aralıklarla kendisi kazır.", "en": "Prometheus scrapes the targets' /metrics endpoint itself at a fixed interval." } },
+        { "id": "c", "text": { "tr": "Kullanıcı kimliği gibi sınırsız değerleri etiket yapmak, sorguları hızlandırdığı için önerilir.", "en": "Using unbounded values such as user IDs as labels is recommended because it speeds up queries." } },
+        { "id": "d", "text": { "tr": "Counter metriklerin ham değeri doğrudan dashboard'da gösterilir; rate() yalnızca gauge'lar içindir.", "en": "Raw counter values are shown directly on dashboards; rate() is only for gauges." } }
       ],
-      "correct": [
-        "a",
-        "b"
-      ],
+      "correct": ["a", "b"],
       "explanation": {
-        "tr": "Kural 'ne ve ne zaman' sorusunu, politika 'kime ve nasıl yönlendirilecek' sorusunu cevaplar. Eşik ve For süresi kuralın koşuluna aittir; contact point yalnızca bildirimin nereye (e-posta, Slack, webhook) gideceğini belirler.",
-        "en": "The rule answers 'what and when', the policy answers 'whom and how to route'. Threshold and For duration belong to the rule's condition; a contact point only defines where the notification goes (email, Slack, webhook)."
+        "tr": "Seri = ad + etiketler ve Prometheus pull modeliyle hedefleri kendisi kazır (a, b doğru). Sınırsız etiket değerleri kardinalite patlamasına yol açar ve bellek ile sorgu süresini şişirir (c yanlış). Counter'lar yalnızca artar; anlamlı hâle gelmeleri için rate() ya da increase() ile işlenir, gauge'lar ise doğrudan okunur (d yanlış).",
+        "en": "A series is name + labels, and Prometheus scrapes targets itself with the pull model (a, b correct). Unbounded label values cause cardinality explosion and inflate memory and query time (c wrong). Counters only increase; they become meaningful through rate() or increase(), while gauges are read directly (d wrong)."
       },
       "difficulty": "medium",
-      "concepts": [
-        "alert-rule",
-        "contact-point"
-      ]
+      "concepts": ["prometheus-data-model", "pull-model"]
     },
     {
       "id": "q5",
-      "type": "truefalse",
+      "type": "single",
       "prompt": {
-        "tr": "Grafana RBAC'de Viewer rolündeki bir kullanıcı dashboard oluşturup düzenleyebilir.",
-        "en": "In Grafana RBAC, a user with the Viewer role can create and edit dashboards."
+        "tr": "Bir servisin SLO'su 30 günlük pencerede %99,9 erişilebilirliktir. Ayın ilk 10 gününde toplam 30 dakika tam kesinti yaşandı. Hata bütçesinin durumu nedir?",
+        "en": "A service's SLO is 99.9% availability over a 30-day window. In the first 10 days of the month there were 30 minutes of total outage. What is the state of the error budget?"
       },
       "options": [
-        {
-          "id": "t",
-          "text": {
-            "tr": "Doğru",
-            "en": "True"
-          }
-        },
-        {
-          "id": "f",
-          "text": {
-            "tr": "Yanlış",
-            "en": "False"
-          }
-        }
+        { "id": "a", "text": { "tr": "Bütçe yaklaşık 43 dakikadır; 30 dakikası harcandı, kalan ~13 dakika ile dağıtımlar yavaşlatılmalı", "en": "The budget is about 43 minutes; 30 are spent, so with ~13 minutes left deployments should slow down" } },
+        { "id": "b", "text": { "tr": "Bütçe 30 günde 7,2 saattir; 30 dakika önemsizdir", "en": "The budget is 7.2 hours per 30 days; 30 minutes is negligible" } },
+        { "id": "c", "text": { "tr": "Bütçe günlük hesaplanır; her gün 1,44 dakika olduğu için çoktan aşılmıştır", "en": "The budget is computed daily; at 1.44 minutes per day it has already been exceeded" } },
+        { "id": "d", "text": { "tr": "SLO yalnızca yanıt süresini ölçer; kesinti süresi bütçeyi etkilemez", "en": "The SLO only measures latency; outage time does not affect the budget" } }
       ],
-      "correct": [
-        "f"
-      ],
+      "correct": ["a"],
       "explanation": {
-        "tr": "Yanlış. Viewer yalnızca dashboard ve panelleri görüntüler; dashboard oluşturma ve düzenleme Editor rolünün yetkisidir. Kullanıcı, veri kaynağı ve ayar yönetimi ise Admin'e aittir.",
-        "en": "False. A Viewer can only view dashboards and panels; creating and editing dashboards is the Editor role's permission. Managing users, data sources and settings belongs to Admin."
+        "tr": "%99,9 hedefi %0,1 hata payı demektir: 30 gün × 24 saat × 60 dakika = 43 200 dakika, bunun %0,1'i ≈ 43 dakika. 30 dakika harcanmışsa bütçenin yaklaşık %70'i 10 günde gitmiştir; kalan 20 gün için ~13 dakika vardır, bu yüzden ekip riskli dağıtımları yavaşlatır. 7,2 saat %99 hedefine karşılık gelir (b); bütçe pencere boyunca birikir, günlük sıfırlanmaz (c); erişilebilirlik SLO'su kesinti süresini doğrudan ölçer (d).",
+        "en": "A 99.9% target leaves a 0.1% error allowance: 30 days × 24 hours × 60 minutes = 43,200 minutes, and 0.1% of that is about 43 minutes. With 30 minutes spent, roughly 70% of the budget is gone in 10 days; about 13 minutes remain for the next 20 days, so the team slows risky deployments. 7.2 hours corresponds to a 99% target (b); the budget accumulates over the window and does not reset daily (c); an availability SLO measures outage time directly (d)."
       },
-      "difficulty": "easy",
-      "concepts": [
-        "rbac"
-      ]
+      "difficulty": "hard",
+      "concepts": ["slo", "error-budget"]
     }
   ]
 }

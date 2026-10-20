@@ -1,0 +1,17 @@
+{
+  "id": "n-auth-security",
+  "slug": "auth-security",
+  "code": "N",
+  "order": 14,
+  "title": {
+    "tr": "Kimlik Doğrulama ve Güvenlik",
+    "en": "Authentication and Security"
+  },
+  "description": {
+    "tr": "Oturum ve token'dan JWT, OAuth2/OIDC, yetkilendirme, OWASP Top 10, kriptografi temelleri ve tehdit modellemeye.",
+    "en": "From sessions and tokens to JWT, OAuth2/OIDC, authorisation, OWASP Top 10, cryptography basics and threat modelling."
+  },
+  "icon": "shield",
+  "color": "#ef4444",
+  "group": "software"
+}

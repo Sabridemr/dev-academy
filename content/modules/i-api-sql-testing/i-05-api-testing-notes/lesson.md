@@ -4,118 +4,303 @@ slug: api-testing-notes
 module: i-api-sql-testing
 order: 5
 title:
-  tr: "API Testi: Kapsamlı Notlar"
-  en: "API Testing Complete Notes"
+  tr: "API Testi: Piramit, Contract Test ve Yük Testi"
+  en: "API Testing: Pyramid, Contract Tests and Load Tests"
 summary:
   tr: "HTTP, durum kodları, kimlik doğrulama ve JSONPath ile API yanıtlarını eksiksiz doğrulamayı öğren."
   en: "Learn to fully validate API responses using HTTP, status codes, authentication and JSONPath."
-durationMinutes: 24
-level: beginner
-tags: [api-testing, http, rest-api, postman, rest-assured, qa]
-prerequisites: []
-concepts: [http-methods, http-status-codes, request-response-cycle, authentication-authorization, jwt, oauth-2, jsonpath, schema-validation, idempotency, newman]
+durationMinutes: 28
+level: intermediate
+tags: [api-testing, test-pyramid, contract-testing, pact, postman, newman, pytest, k6, ci, qa]
+prerequisites: [i-01-how-apis-are-created-and-called, i-03-api-ve-rest-api-tasarim-guvenlik-ve-idempotency, h-07-tetikleyiciler-secrets-cache-ve-testler]
+concepts: [test-pyramid, status-code-assertions, schema-validation, response-time-assertions, contract-testing, consumer-driven-contracts, test-doubles, negative-testing, boundary-testing, idempotency-testing, load-testing, ci-test-stage, test-data-management]
 ---
 
-:::callout{tone="info" title="Kaynak"}
-Bu ders, **@qa_insights** tarafından hazırlanan *API Testing Complete Notes* not setinin 16 sayfasından oluşur. Sayfalar özgün hâliyle, değiştirilmeden yer alır; tüm hakları yazarına aittir. Kişisel çalışma notu olarak eklenmiştir.
+## Kavram: arayüzü değil sözleşmeyi test etmek
+
+Bir web uygulamasını tarayıcıdan tıklayarak test etmek yavaş, kırılgan ve pahalıdır: düğme bir piksel kayınca test kırılır, her senaryo saniyeler sürer. Oysa uygulamanın asıl davranışı API'de yaşar; ön yüz çoğu zaman API'nin döndürdüğünü boyayan bir katmandır. **API testi**, uygulamanın bu sözleşme katmanını doğrudan HTTP istekleriyle sınamaktır: doğru girdiye doğru durum kodu, doğru şema ve doğru veri dönüyor mu; yanlış girdiye anlaşılır bir hata veriliyor mu; sistem yük altında ve ağ hatalarında nasıl davranıyor?
+
+API testlerinin değeri üç yerden gelir. Hızlıdırlar: bir istek milisaniyeler sürer, bir test dosyası yüzlerce senaryoyu dakikada bitirir. Kararlıdırlar: HTTP sözleşmesi arayüzden çok daha yavaş değişir. Ve erken çalışırlar: arayüz daha yazılmadan, hatta servis daha yazılmadan (sözleşme testleriyle) hataları yakalarlar.
+
+:::diagram{src="diagram.svg" alt="Test piramidi: altta çok sayıda birim testi, ortada API ve entegrasyon testleri, üstte az sayıda uçtan uca test; yanında tüketici ile sağlayıcı arasındaki sözleşme dosyası ve CI'da çalışan test aşaması|The test pyramid: many unit tests at the bottom, API and integration tests in the middle, few end-to-end tests at the top; beside it the contract file between consumer and provider and the test stage running in CI"}
+Piramidin ortası API testlerinin yaşadığı yerdir: birim testinden gerçekçi, uçtan uca testten hızlı ve kararlı.
 :::
 
-:::diagram{src="sayfa-01.png" alt="Kapak: API Testing Complete Notes. Başlangıçtan ileri seviyeye API testi notları, @qa_insights imzalı."}
-Sayfa 1 / 16 · API TESTING COMPLETE NOTES
+## Test piramidi
+
+**Birim testleri** tek bir fonksiyonu, dış bağımlılık olmadan sınar: "fiyat hesaplayıcı %18 KDV'yi doğru ekliyor mu?" Binlercesi saniyeler içinde çalışır; piramidin geniş tabanıdır.
+
+**Entegrasyon / API testleri** servisi gerçek ya da gerçeğe yakın bağımlılıklarıyla sınar: HTTP isteği gönderilir, yanıt doğrulanır, veritabanına gerçekten yazılıp yazılmadığına bakılır. Bu katman, birim testlerinin göremediği hataları yakalar: yanlış serileştirme, eksik `Content-Type`, unutulmuş yetki kontrolü, yanlış durum kodu.
+
+**Uçtan uca (E2E) testler** gerçek bir kullanıcı gibi davranır: tarayıcı açar, giriş yapar, sipariş verir. En gerçekçi ama en yavaş ve en kırılgan testlerdir; yalnızca kritik akışlar için az sayıda yazılır.
+
+Piramidin biçimi bir uyarıdır: üstteki test sayısı alttakinden fazlaysa (ters piramit ya da "dondurma külahı") test süiti yavaşlar, rastgele kırılır ve ekip ona güvenmeyi bırakır. API testleri, "yeterince gerçekçi ama hâlâ hızlı" dengesini sağladığı için orta katmanın omurgasıdır.
+
+## Bir API testinde ne doğrulanır?
+
+Tek bir `GET /v1/users/42` isteği için bile beş ayrı doğrulama vardır:
+
+1. **Durum kodu** — beklenen `200` mü geldi? Olmayan kullanıcı için `404`, token yoksa `401`, yetki yoksa `403`?
+2. **Şema** — gövde beklenen biçimde mi: `id` tam sayı, `email` e-posta biçiminde, zorunlu alanlar yerinde, fazladan beklenmeyen alan yok?
+3. **Gövde değerleri** — `id` gerçekten `42` mi, `email` veritabanındaki değerle aynı mı? Şema "biçim"i, değer "içerik"i doğrular; ikisi birbirinin yerine geçmez.
+4. **Başlıklar** — `Content-Type: application/json`, önbellek kuralları, `X-Request-Id` gibi izleme başlıkları, güvenlik başlıkları.
+5. **Süre** — yanıt belirlenen bütçenin (örneğin 300 ms) altında mı? Tek bir isteğin süresi gürültülüdür; bu kontrol yük testinde yüzdelik dilimlerle (p95) daha anlamlıdır, ama fonksiyonel testte kaba bir sınır bile ani gerilemeleri yakalar.
+
+Aşağıdaki örnek, Python'da `pytest` ve `requests` ile bu beş doğrulamayı tek testte toplar. Şema doğrulaması için `jsonschema` kütüphanesi kullanılır; şema, OpenAPI belgesinden alınabilir.
+
+:::code{lang="python" title="pytest + requests: durum kodu, şema, gövde, başlık ve süre doğrulaması"}
+```python
+import os
+import pytest
+import requests
+from jsonschema import validate
+
+BASE = os.environ.get("API_BASE", "http://localhost:3000")
+TOKEN = os.environ["API_TOKEN"]
+HEADERS = {"Authorization": f"Bearer {TOKEN}", "Accept": "application/json"}
+
+USER_SCHEMA = {
+    "type": "object",
+    "required": ["id", "name", "email"],
+    "additionalProperties": False,            # beklenmeyen alan sızmasın
+    "properties": {
+        "id": {"type": "integer"},
+        "name": {"type": "string", "minLength": 1},
+        "email": {"type": "string", "format": "email"},
+    },
+}
+
+@pytest.fixture
+def user():
+    """Her test kendi verisini yaratır ve sonunda temizler."""
+    res = requests.post(f"{BASE}/v1/users", headers=HEADERS,
+                        json={"name": "Test Kullanıcı", "email": "t-1@example.com"})
+    assert res.status_code == 201
+    created = res.json()
+    yield created
+    requests.delete(f"{BASE}/v1/users/{created['id']}", headers=HEADERS)
+
+def test_get_user_happy_path(user):
+    res = requests.get(f"{BASE}/v1/users/{user['id']}", headers=HEADERS, timeout=5)
+
+    assert res.status_code == 200                                   # 1. durum kodu
+    validate(instance=res.json(), schema=USER_SCHEMA)               # 2. şema
+    assert res.json()["email"] == "t-1@example.com"                 # 3. gövde değeri
+    assert res.headers["Content-Type"].startswith("application/json")  # 4. başlık
+    assert res.elapsed.total_seconds() < 0.3                        # 5. süre
+
+@pytest.mark.parametrize("user_id,expected", [(999_999, 404), ("abc", 400)])
+def test_get_user_negative(user_id, expected):
+    res = requests.get(f"{BASE}/v1/users/{user_id}", headers=HEADERS)
+    assert res.status_code == expected
+    assert "error" in res.json()                                    # hata gövdesi sabit biçimde
+
+def test_get_user_without_token_is_401():
+    res = requests.get(f"{BASE}/v1/users/1")
+    assert res.status_code == 401
+```
 :::
 
-## API TESTING INTRODUCTION
+## Postman ve Newman
 
-:::diagram{src="sayfa-02.png" alt="API testine giriş: API nedir, API ile web servis farkı, REST ile SOAP karşılaştırması, API testinin neden yapıldığı ve ödeme, hava durumu, harita gibi gerçek dünya örnekleri."}
-Sayfa 2 / 16 · API TESTING INTRODUCTION
+**Postman**, istekleri koleksiyonlar hâlinde düzenleyen ve her isteğe JavaScript ile test betiği eklemeye izin veren bir araçtır; keşif ve hata ayıklama için idealdir. **Newman** ise aynı koleksiyonu komut satırında çalıştıran motorudur; koleksiyonu CI'da koşturmanın yolu budur. Ortam değişkenleri (`{{baseUrl}}`, `{{token}}`) bir ortam dosyasında tutulur ve böylece aynı koleksiyon staging ve üretim için ayrı ayrı çalıştırılır.
+
+:::code{lang="js" title="Postman test betiği ve Newman ile çalıştırma"}
+```js
+// Postman → istek → "Tests" sekmesi
+pm.test("durum kodu 200", () => pm.response.to.have.status(200));
+
+pm.test("yanıt 300 ms altında", () => pm.expect(pm.response.responseTime).to.be.below(300));
+
+pm.test("şemaya uyuyor", () => {
+  const schema = {
+    type: "object",
+    required: ["id", "name", "email"],
+    properties: { id: { type: "integer" }, name: { type: "string" }, email: { type: "string" } },
+  };
+  pm.response.to.have.jsonSchema(schema);
+});
+
+pm.test("e-posta doğru", () => {
+  const body = pm.response.json();
+  pm.expect(body.email).to.eql(pm.environment.get("expectedEmail"));
+});
+
+// Sonraki istekte kullanmak üzere id'yi ortam değişkenine yaz (istek zincirleme)
+pm.environment.set("userId", pm.response.json().id);
+```
+```bash
+# Koleksiyonu staging ortamıyla çalıştır; JUnit raporu CI'ın test sekmesinde görünür
+newman run users.postman_collection.json \
+  -e staging.postman_environment.json \
+  --env-var "token=$API_TOKEN" \
+  --reporters cli,junit --reporter-junit-export results/newman.xml
+```
 :::
 
-## HTTP FUNDAMENTALS
+## Sözleşme testi: tüketici ne bekliyor, sağlayıcı ne veriyor?
 
-:::diagram{src="sayfa-03.png" alt="HTTP temelleri: istemci-sunucu mimarisi, istek-yanıt döngüsü, URL yapısı (protokol, alan adı, port, yol, sorgu) ve durumsuz iletişim. İpucu: her zaman HTTPS kullan."}
-Sayfa 3 / 16 · HTTP FUNDAMENTALS
+Mikroservis dünyasında bir API'nin birden çok tüketicisi vardır ve en sık görülen üretim hatası şudur: sağlayıcı ekibi bir alanı yeniden adlandırır, kendi testleri geçer, ama mobil uygulama çöker. **Sözleşme testi** (contract testing) bu sınıfı yakalar. Fikir basittir: tüketici, sağlayıcıdan *ne beklediğini* makine tarafından okunabilir bir dosyaya yazar; sağlayıcı kendi CI'ında bu dosyayı alıp "ben hâlâ bu beklentileri karşılıyor muyum" diye kontrol eder.
+
+**Tüketici odaklı sözleşmeler** (consumer-driven contracts) ve bunun en bilinen aracı **Pact**, akışı şöyle kurar:
+
+1. Tüketici testi, sahte bir sağlayıcıya karşı yazılır: "`GET /v1/users/42` çağırırsam `id`, `name` ve `email` içeren 200 beklerim."
+2. Test çalışınca bu beklenti bir **pact dosyası** (JSON) olarak üretilir ve bir sözleşme deposuna (broker) yüklenir.
+3. Sağlayıcının CI'ı pact dosyasını indirir, gerçek servise bu istekleri gönderir ve yanıtların beklentiyle uyuştuğunu doğrular.
+4. İki taraf da "sözleşme yeşil" sinyalini görmeden dağıtım yapmaz.
+
+Sözleşme testinin kritik inceliği şudur: tüketici yalnızca *kullandığı* alanları yazar. Böylece sağlayıcı kullanılmayan alanları özgürce değiştirebilir, ama bir tüketicinin gerçekten dayandığı alanı kırarsa anında öğrenir. OpenAPI belgesiyle uyum kontrolü (şema uyumu) bunun daha hafif bir biçimidir; Pact ise "kim neye dayanıyor" bilgisini ekler.
+
+## Mock, stub ve fake: bağımlılıkları yerine koymak
+
+Testte gerçek bağımlılıkları kullanmak her zaman mümkün ya da akıllıca değildir: ödeme sağlayıcısı gerçek para çeker, üçüncü taraf API'nin kotası vardır, bir bağımlılık henüz yazılmamıştır. Bu durumda **test çiftleri** (test doubles) devreye girer ve adları sıkça karıştırılır:
+
+- **Stub**: sabit, önceden hazırlanmış yanıt döner. "Döviz kuru servisi her zaman 1 USD = 34,20 TL desin." Davranışı sınamaz, yalnızca testin ilerlemesini sağlar.
+- **Mock**: stub gibi yanıt döner ama ek olarak *nasıl çağrıldığını* kaydeder ve bunu doğrular. "E-posta servisi tam bir kez, doğru adresle çağrıldı mı?" sorusu mock'un işidir.
+- **Fake**: gerçeğin çalışan ama basitleştirilmiş sürümü. Bellek içi bir veritabanı ya da diske yazmayan bir dosya sistemi gibi. Gerçeğe en yakın olanıdır; davranışın tamamını sınar ama üretim altyapısı gerektirmez.
+
+API testinde bu araçlar iki yönde kullanılır. **Dışa doğru**: servisimizin çağırdığı üçüncü taraf API'ler, WireMock ya da benzeri bir araçla stub'lanır; böylece testler ağ olmadan ve belirlenimci biçimde çalışır. **İçe doğru**: henüz hazır olmayan bir servis için OpenAPI belgesinden bir mock sunucu üretilir ve tüketici ekibi gerçek servisi beklemeden geliştirmeye başlar.
+
+:::callout{tone="warning" title="Mock'a aşırı güvenmek"}
+Her şeyi mock'layan bir test süiti, yalnızca mock'ların doğru olduğunu kanıtlar. Üçüncü taraf API bir alanı değiştirdiğinde stub eski yanıtı vermeye devam eder ve testler yeşil kalırken üretim kırılır. Bu yüzden stub'lar sözleşme testleriyle gerçek servise karşı doğrulanmalı, en azından kritik entegrasyonlar için gerçek bir sandbox ortamına karşı düzenli "duman testi" çalıştırılmalıdır.
 :::
 
-## HTTP METHODS
+## Negatif ve sınır testleri
 
-:::diagram{src="sayfa-04.png" alt="HTTP metotları ve örnek istekleri: GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS. Güvenli metotlar GET, HEAD, OPTIONS; PUT ve DELETE idempotent, POST idempotent değil."}
-Sayfa 4 / 16 · HTTP METHODS
+Mutlu yol testleri API'nin çalıştığını gösterir; **negatif testler** doğru biçimde *reddettiğini* gösterir ve üretimdeki hataların çoğu bu ikinci gruptan çıkar. Her uç nokta için sorulacak sorular:
+
+- **Eksik ve hatalı girdi**: zorunlu alan yok, yanlış tip (`"age": "on iki"`), geçersiz JSON, boş gövde, yanlış `Content-Type`. Beklenen: `400` ya da `422` ve açıklayıcı hata gövdesi; asla `500`.
+- **Kimlik ve yetki**: token yok (`401`), süresi dolmuş token (`401`), başka kullanıcının kaynağına erişim (`403` ya da bilgi sızdırmamak için `404`), yetkisiz rolle silme (`403`).
+- **Olmayan kaynak**: `GET /users/999999` → `404`, `DELETE` aynı kaynak ikinci kez → `404` ya da `204`, ama tutarlı.
+- **Güvenlik girdileri**: SQL ve betik enjeksiyonu kalıpları, çok uzun dizgeler, Unicode ve emoji, baştaki/sondaki boşluklar.
+
+**Sınır testleri** ise değer aralığının kenarlarını hedefler: sayfalama için `limit=0`, `limit=1`, `limit=100` (üst sınır), `limit=101` (reddedilmeli), negatif değer; metin alanları için tam olarak izin verilen uzunluk ve bir fazlası; tarih alanları için yıl sonu, artık yıl ve saat dilimi sınırları. Hataların kenarlarda birikmesi bir deneyim kuralıdır ve "0, 1, N, N+1" kalıbı ucuz ama etkili bir araçtır.
+
+## Idempotency ve yeniden deneme testleri
+
+Ağ güvenilmezdir: istemci isteği gönderir, sunucu işler, ama yanıt yolda kaybolur. İstemci tekrar dener. Sonuç ne olmalı? `GET`, `PUT` ve `DELETE` için ikinci istek zararsız olmalıdır; `POST` için ise sunucu bir **idempotency anahtarı** desteklemiyorsa iki kayıt oluşur. Bu davranış doğrudan test edilmelidir:
+
+- Aynı `PUT /users/42` gövdesini iki kez gönder; ikinci yanıt da `200` olmalı ve veri değişmemeli.
+- `DELETE /users/42` iki kez; ikinci yanıt tutarlı (`404` ya da `204`) olmalı ve hata üretmemeli.
+- Aynı `Idempotency-Key` başlığıyla `POST /orders` iki kez; ikinci yanıt ilkiyle aynı sipariş kimliğini döndürmeli, veritabanında tek sipariş olmalı.
+- Aynı anahtarla *farklı* gövde gönderildiğinde `409` ya da `422` gibi bir çatışma yanıtı beklenmeli.
+
+Yeniden deneme testleri ise istemci tarafını sınar: sunucu stub'ı ilk çağrıda `503`, ikincide `200` döndürecek şekilde kurulur ve istemcinin bekleyip yeniden denediği, ama `400` gibi kalıcı hatalarda denemeyi bıraktığı doğrulanır. Bu, üretimde "yeniden deneme fırtınası" yaratmayan bir istemcinin garantisidir.
+
+## Yük testi: k6 ile performans sınırlarını görmek
+
+Fonksiyonel testler "doğru mu" sorusunu yanıtlar; **yük testi** "kaç kullanıcıyla hâlâ doğru mu" sorusunu sorar. **k6**, test senaryolarını JavaScript ile yazdıran ve sanal kullanıcı (VU) sayısını zamanla değiştirebilen bir araçtır. Başarı ölçütü ortalama değil **yüzdelik dilimlerdir**: p95 300 ms demek, isteklerin %95'inin 300 ms altında bittiği anlamına gelir; ortalama güzel görünürken p99'un patlaması tipik bir üretim sorunudur.
+
+:::code{lang="js" title="k6: kademeli yük ve eşik (threshold) tanımı"}
+```js
+import http from "k6/http";
+import { check, sleep } from "k6";
+
+export const options = {
+  stages: [
+    { duration: "1m", target: 20 },   // ısınma: 20 sanal kullanıcıya çık
+    { duration: "3m", target: 100 },  // yük: 100 kullanıcı sabit
+    { duration: "1m", target: 0 },    // soğuma
+  ],
+  thresholds: {
+    http_req_duration: ["p(95)<300", "p(99)<800"],  // gecikme bütçesi
+    http_req_failed: ["rate<0.01"],                  // hata oranı %1'in altında
+  },
+};
+
+const BASE = __ENV.API_BASE;
+const headers = { Authorization: `Bearer ${__ENV.API_TOKEN}` };
+
+export default function () {
+  const id = Math.floor(Math.random() * 1000) + 1;        // sıcak önbelleği kandırmamak için farklı id'ler
+  const res = http.get(`${BASE}/v1/users/${id}`, { headers });
+  check(res, {
+    "200 veya 404": (r) => r.status === 200 || r.status === 404,
+    "JSON gövde": (r) => r.headers["Content-Type"].includes("application/json"),
+  });
+  sleep(1);                                               // gerçek kullanıcı düşünme süresi
+}
+```
+```bash
+# Eşik ihlalinde k6 sıfırdan farklı çıkış kodu döner; CI adımı böylece kırılır
+k6 run --env API_BASE=https://staging.example.com --env API_TOKEN="$API_TOKEN" load.js
+```
 :::
 
-## API REQUEST STRUCTURE
+Yük testi türleri amaçla ayrılır: **yük testi** beklenen trafiği, **stres testi** kırılma noktasını, **dayanıklılık (soak) testi** saatler süren sabit yükte bellek sızıntısı ve bağlantı tükenmesini, **ani yük (spike) testi** kampanya anını simüle eder. Hepsi üretime değil, üretimle aynı boyutta bir staging ortamına karşı çalıştırılır; aksi hâlde ölçtüğünüz şey ortamın küçüklüğüdür.
 
-:::diagram{src="sayfa-05.png" alt="API isteğinin parçaları: endpoint (URL), header'lar, path parametreleri, query parametreleri, istek gövdesi (JSON) ve Content-Type, her biri örnekle."}
-Sayfa 5 / 16 · API REQUEST STRUCTURE
+## CI'da çalıştırma
+
+API testleri, CI pipeline'ında birim testlerinden sonra ve dağıtımdan önce kendi aşamasında çalışır. Tipik düzen: servis ve bağımlılıkları (veritabanı, önbellek) konteyner olarak ayağa kalkar, servis sağlıklı olana kadar beklenir, testler koşar, raporlar JUnit biçiminde toplanır. Yük testleri her commit'te değil, gece ya da sürüm öncesi çalıştırılır; sözleşme doğrulaması ise her iki tarafın CI'ında her commit'te çalışır.
+
+:::code{lang="yaml" title="GitHub Actions: API test aşaması (pytest + Newman) ve gece yük testi"}
+```yaml
+name: api-tests
+on:
+  pull_request:
+  schedule:
+    - cron: "0 2 * * *"          # gece 02:00 — yalnızca yük testi için
+
+jobs:
+  api-tests:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env: { POSTGRES_PASSWORD: test, POSTGRES_DB: app }
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: npm ci && npm run migrate && (npm start &)
+        env: { DATABASE_URL: postgres://postgres:test@localhost:5432/app }
+      - name: Servisin hazır olmasını bekle
+        run: npx wait-on http://localhost:3000/health/ready --timeout 60000
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install pytest requests jsonschema
+      - run: pytest tests/api --junitxml=results/pytest.xml
+        env: { API_BASE: http://localhost:3000, API_TOKEN: ${{ secrets.TEST_API_TOKEN }} }
+      - run: npx newman run tests/postman/users.json -e tests/postman/ci.json --env-var "token=${{ secrets.TEST_API_TOKEN }}" --reporters cli,junit --reporter-junit-export results/newman.xml
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: api-test-results, path: results/ }
+
+  load-test:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: grafana/setup-k6-action@v1
+      - run: k6 run tests/load/load.js
+        env: { API_BASE: https://staging.example.com, API_TOKEN: ${{ secrets.STAGING_API_TOKEN }} }
+```
 :::
 
-## API RESPONSE STRUCTURE
+## Test verisi yönetimi
 
-:::diagram{src="sayfa-06.png" alt="API yanıtının yapısı: durum kodu, yanıt gövdesi, header'lar, çerezler, yanıt süresi (ms) ve JSON yanıt örneği. Önce durum kodunu doğrula."}
-Sayfa 6 / 16 · API RESPONSE STRUCTURE
+API testlerinin en sık ihmal edilen parçası veridir. Üç ilke işi büyük ölçüde çözer. **Her test kendi verisini yaratır ve temizler**: yukarıdaki `pytest` fixture'ı gibi; testler paylaşılan "sihirli" kayıtlara dayanırsa birbirine bağımlı hâle gelir ve sırayla çalışmak zorunda kalır. **Veri üretilir, kopyalanmaz**: `faker` benzeri kütüphanelerle sentetik veri üretmek, üretim veritabanını kopyalamaktan hem daha güvenli hem daha tekrarlanabilirdir; üretim verisi mutlaka kullanılacaksa önce anonimleştirilir. **Ortam izole edilir**: her CI çalışması taze bir veritabanı konteyneriyle başlar; testler paralel koşacaksa her biri kendi şemasını ya da benzersiz ön ekli kayıtlarını kullanır.
+
+Bu ilkelerin karşılığı, "benim makinemde geçiyordu" ve "testler bazen kırılıyor" cümlelerinin ortadan kalkmasıdır; kararsız (flaky) test süitlerinin kök nedeni çoğunlukla paylaşılan ve kirlenen veridir.
+
+:::realworld{company="Stripe"}
+Stripe, API'sini kullanan binlerce ekibin test yazabilmesi için bu dersteki fikirlerin çoğunu ürünleştirmiştir. **Test modu** anahtarları ile tüm uç noktalar gerçek para hareketi olmadan çağrılabilir; `4242 4242 4242 4242` gibi özel test kart numaraları başarılı ödeme, red, 3-D Secure gibi senaryoları belirlenimci biçimde tetikler — negatif testlerin hazır bir kataloğu gibidir. Açık kaynak **stripe-mock** sunucusu, OpenAPI belgesinden üretilir ve ağa çıkmadan şema uyumlu yanıtlar döndürür; Stripe'ın kendi istemci kütüphaneleri de CI'da ona karşı test edilir. `Idempotency-Key` desteği sayesinde yeniden deneme davranışı da aynı sandbox'ta güvenle sınanabilir.
 :::
 
-## HTTP STATUS CODES
-
-:::diagram{src="sayfa-07.png" alt="HTTP durum kodları: 1xx bilgi, 2xx başarı, 3xx yönlendirme, 4xx istemci hatası, 5xx sunucu hatası. Mülakat tablosu: 200, 201, 204, 400, 401, 403, 404, 409, 500, 503."}
-Sayfa 7 / 16 · HTTP STATUS CODES
-:::
-
-## AUTHENTICATION & AUTHORIZATION
-
-:::diagram{src="sayfa-08.png" alt="Kimlik doğrulama ve yetkilendirme: Basic Auth, Bearer token, API key, OAuth 2.0, JWT (header, payload, signature) ve iki kavramın farkı; tipik token akışı."}
-Sayfa 8 / 16 · AUTHENTICATION & AUTHORIZATION
-:::
-
-## JSON & JSONPath
-
-:::diagram{src="sayfa-09.png" alt="JSON ve JSONPath: nesneler, diziler, veri tipleri, iç içe JSON, $ ile başlayan JSONPath ifadeleri ve durum kodu, header, gövde doğrulama örnekleri."}
-Sayfa 9 / 16 · JSON & JSONPath
-:::
-
-## API TESTING WORKFLOW
-
-:::diagram{src="sayfa-10.png" alt="API test iş akışı: tasarla, isteği hazırla, çalıştır, doğrula, raporla ve otomatikleştir (CI/CD). Pozitif ve negatif senaryoları birlikte doğrula."}
-Sayfa 10 / 16 · API TESTING WORKFLOW
-:::
-
-## API VALIDATION CHECKLIST
-
-:::diagram{src="sayfa-11.png" alt="API doğrulama kontrol listesi: durum kodu, header'lar, gövde, şema, yanıt süresi, veritabanı ve iş kuralları doğrulaması. Yalnızca 200 OK'e bakma."}
-Sayfa 11 / 16 · API VALIDATION CHECKLIST
-:::
-
-## POSTMAN COMPLETE GUIDE
-
-:::diagram{src="sayfa-12.png" alt="Postman rehberi: koleksiyonlar, ortam değişkenleri, pre-request script'ler, pm.test ile testler, Collection Runner ve CI/CD için Newman (CLI) komutu."}
-Sayfa 12 / 16 · POSTMAN COMPLETE GUIDE
-:::
-
-## REST ASSURED AUTOMATION
-
-:::diagram{src="sayfa-13.png" alt="REST Assured ile Java otomasyonu: proje yapısı, given-when-then istek tanımı, assertion'lar, serialization ve deserialization (POJO, Jackson) ve loglama."}
-Sayfa 13 / 16 · REST ASSURED AUTOMATION
-:::
-
-## API INTERVIEW QUESTIONS
-
-:::diagram{src="sayfa-14.png" alt="API mülakat soruları ve tek satırlık cevaplar: API, GET ile POST farkı, durum kodları, REST, kimlik doğrulama ile yetkilendirme, JSON, JSONPath, idempotency, Newman."}
-Sayfa 14 / 16 · API INTERVIEW QUESTIONS
-:::
-
-## COMMON API ERRORS & DEBUGGING
-
-:::diagram{src="sayfa-15.png" alt="Yaygın API hataları ve hata ayıklama: 400, 401, 403, 404, 405, 409, 415, 429, 500, 503 için anlam ve hızlı çözüm ipuçları, genel hata ayıklama kontrol listesi."}
-Sayfa 15 / 16 · COMMON API ERRORS & DEBUGGING
-:::
-
-## ULTIMATE API TESTING CHEAT SHEET
-
-:::diagram{src="sayfa-16.png" alt="API testi kopya kağıdı: HTTP metotları, durum kodu aralıkları, kimlik doğrulama türleri, istek ve yanıt örneği, JSONPath, Postman, REST Assured ve doğrulama listesi."}
-Sayfa 16 / 16 · ULTIMATE API TESTING CHEAT SHEET
+:::callout{tone="tip" title="Mülakat özeti"}
+- Piramidi ve API testinin orta katmandaki rolünü anlatın: birim testinden gerçekçi, E2E'den hızlı.
+- Beş doğrulama: durum kodu, şema, gövde değeri, başlıklar, süre.
+- Stub / mock / fake farkını bir cümleyle: sabit yanıt / çağrıyı doğrular / çalışan basit sürüm.
+- Sözleşme testini "tüketici ne bekliyor, sağlayıcı CI'ında bunu doğruluyor" diye özetleyin.
+- Yük testinde ortalamaya değil p95/p99'a baktığınızı söyleyin.
 :::
 
 :::quiz{src="quiz.json"}
 :::
 
 :::next{lesson="i-06-sql-notes"}
+Sırada: API'lerin arkasındaki veriyi sorgulamak — SELECT, JOIN, GROUP BY ve window fonksiyonlarıyla SQL.
 :::

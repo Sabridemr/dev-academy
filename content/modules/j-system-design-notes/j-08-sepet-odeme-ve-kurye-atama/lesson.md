@@ -9,10 +9,10 @@ title:
 summary:
   tr: "Güvenli sepet ve ödeme akışını, webhook doğrulamasını ve puanlamayla kurye atamayı tasarlamayı öğren."
   en: "Learn to design a secure cart and payment flow, webhook verification and score-based courier assignment."
-durationMinutes: 13
+durationMinutes: 25
 level: intermediate
 tags: [system-design, food-delivery, checkout, payments, courier-assignment]
-prerequisites: []
+prerequisites: [j-07-kesif-menu-ve-siparis-servisi, c-04-distributed-patterns]
 concepts: [shopping-cart, price-calculation, payment-gateway, webhook-signature, reconciliation, redis-geo, assignment-algorithm]
 ---
 
@@ -38,7 +38,7 @@ concepts: [shopping-cart, price-calculation, payment-gateway, webhook-signature,
 
 ### Mimari
 
-:::diagram{src="sekil-01.png" alt="Sepet mimarisi: Kullanıcı uygulaması, API Gateway, Cart Service ve Redis"}
+:::diagram{src="sekil-01.png" alt="Sepet mimarisi: Kullanıcı uygulaması, API Gateway, Cart Service ve Redis|Cart architecture: user app, API Gateway, Cart Service and Redis"}
 :::
 
 Cart Service, **Pricing Service**'i çağırır. Pricing Service; Restaurant Service'ten güncel menü fiyatlarını, User Service'ten kullanıcı ve adres bilgisini, Offer Service'ten kupon ve indirimleri alarak toplamı hesaplar.
@@ -142,7 +142,7 @@ Toptan satışta sepet daha uzun yaşamalı; bayi sepeti bugün hazırlayıp yar
 
 ### Mimari
 
-:::diagram{src="sekil-02.png" alt="Ödeme mimarisi: İstemci, API Gateway, Payment Service ve ödeme altyapısı arasında çift yönlü iletişim"}
+:::diagram{src="sekil-02.png" alt="Ödeme mimarisi: İstemci, API Gateway, Payment Service ve ödeme altyapısı arasında çift yönlü iletişim|Payment architecture: two-way communication between the client, API Gateway, Payment Service and the payment provider"}
 :::
 
 - Order Service, sipariş oluşturunca Payment Service'i çağırır ve ödeme durumunu ondan öğrenir.
@@ -178,7 +178,7 @@ Toptan satışta sepet daha uzun yaşamalı; bayi sepeti bugün hazırlayıp yar
 
 ### Ödeme durumları
 
-:::diagram{src="sekil-03.png" alt="Ödeme durumları: INITIATED, PROCESSING, SUCCESS ve PROCESSING durumundan FAILED durumuna geçiş"}
+:::diagram{src="sekil-03.png" alt="Ödeme durumları: INITIATED, PROCESSING, SUCCESS ve PROCESSING durumundan FAILED durumuna geçiş|Payment states: INITIATED, PROCESSING, SUCCESS, and the transition from PROCESSING to FAILED"}
 :::
 
 Tüm uç durumlar yönetilmeli ve sipariş durumu buna göre güncellenmelidir.
@@ -312,7 +312,7 @@ Toptan satışta ödeme yöntemleri farklıdır: kredi kartı (iyzico/PayTR), ha
 
 ### Kurye durumları
 
-:::diagram{src="sekil-04.png" alt="Kurye durumları: OFFLINE, ONLINE, BUSY, ON_BREAK ve DISABLED"}
+:::diagram{src="sekil-04.png" alt="Kurye durumları: OFFLINE, ONLINE, BUSY, ON_BREAK ve DISABLED|Courier states: OFFLINE, ONLINE, BUSY, ON_BREAK and DISABLED"}
 :::
 
 ### Atama akışı
@@ -398,49 +398,13 @@ Ortalama atama süresi, kurye kabul oranı, kurye kullanım oranı, kurye kaynak
 Kendi kuryen yoksa bu bölümün karşılığı kargo firması seçimidir. Aynı puanlama mantığını kullanabilirsin: varış iline göre fiyat, teslim süresi, desi/ağırlık ve hasar oranı ile en uygun kargoyu otomatik seç. İstanbul içi toptan teslimatlar için kendi aracın varsa rota planlama (aynı gün, aynı bölgedeki siparişleri birleştirme) en büyük tasarrufu sağlar.
 :::
 
+## Dene: ödeme olayları ve çift işleme
+
+:::interactive{type="message-queue" partitions=2 consumers=2 producers=1 failureRate=0.2 idempotent=false maxRetries=3}
+Idempotent tüketimi kapalıyken hata oranını artır ve aynı ödemenin iki kez işlenebildiğini gör; sonra idempotent'i açıp farkı karşılaştır.
+:::
+
 :::quiz{src="quiz.json"}
-:::
-
-## Orijinal PDF sayfaları
-
-:::callout{tone="info" title="Özgün görünüm"}
-Bu dersin metni *Sistem Tasarimi Yemek Siparisi* PDF dosyasının 15–23. sayfalarının özgün hâlidir; sayfalar aşağıda PDF'teki görünümüyle yer alır.
-:::
-
-:::diagram{src="pdf-sayfa-15.png" alt="Sistem Tasarimi Yemek Siparisi - PDF sayfa 15"}
-PDF sayfa 15 / 43
-:::
-
-:::diagram{src="pdf-sayfa-16.png" alt="Sistem Tasarimi Yemek Siparisi - PDF sayfa 16"}
-PDF sayfa 16 / 43
-:::
-
-:::diagram{src="pdf-sayfa-17.png" alt="Sistem Tasarimi Yemek Siparisi - PDF sayfa 17"}
-PDF sayfa 17 / 43
-:::
-
-:::diagram{src="pdf-sayfa-18.png" alt="Sistem Tasarimi Yemek Siparisi - PDF sayfa 18"}
-PDF sayfa 18 / 43
-:::
-
-:::diagram{src="pdf-sayfa-19.png" alt="Sistem Tasarimi Yemek Siparisi - PDF sayfa 19"}
-PDF sayfa 19 / 43
-:::
-
-:::diagram{src="pdf-sayfa-20.png" alt="Sistem Tasarimi Yemek Siparisi - PDF sayfa 20"}
-PDF sayfa 20 / 43
-:::
-
-:::diagram{src="pdf-sayfa-21.png" alt="Sistem Tasarimi Yemek Siparisi - PDF sayfa 21"}
-PDF sayfa 21 / 43
-:::
-
-:::diagram{src="pdf-sayfa-22.png" alt="Sistem Tasarimi Yemek Siparisi - PDF sayfa 22"}
-PDF sayfa 22 / 43
-:::
-
-:::diagram{src="pdf-sayfa-23.png" alt="Sistem Tasarimi Yemek Siparisi - PDF sayfa 23"}
-PDF sayfa 23 / 43
 :::
 
 :::next{lesson="j-09-takip-bildirim-ve-kampanyalar"}

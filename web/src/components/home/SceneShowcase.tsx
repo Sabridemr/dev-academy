@@ -21,7 +21,14 @@ const FALLBACK: ShowcaseScene[] = [
 ];
 
 /** Ana sayfa vitrini: farklı modüllerden animasyonlar, sekmeyle seçilir; altta ilgili derse bağlantı */
-export function SceneShowcase({ scenes }: { scenes: ShowcaseScene[] }) {
+export function SceneShowcase({
+  scenes,
+  autoPlay = false,
+}: {
+  scenes: ShowcaseScene[];
+  /** Vitrinde otomatik ve döngülü oynat */
+  autoPlay?: boolean;
+}) {
   const { t, tl } = useI18n();
   const items = scenes.length ? scenes : FALLBACK;
   const [index, setIndex] = useState(0);
@@ -56,7 +63,7 @@ export function SceneShowcase({ scenes }: { scenes: ShowcaseScene[] }) {
               onClick={() => setIndex(i)}
               className={cn(
                 'chip shrink-0 whitespace-nowrap transition',
-                i === index ? 'border-primary bg-primary/10 text-primary' : 'hover:bg-elevated',
+                i === index ? 'chip-primary' : 'hover:bg-elevated',
               )}
             >
               {tl(s.label)}
@@ -66,11 +73,14 @@ export function SceneShowcase({ scenes }: { scenes: ShowcaseScene[] }) {
       )}
       <div id="showcase-panel" role="tabpanel" aria-labelledby={`showcase-tab-${current.scene.id}`}>
         {/* key: sekme değişince oynatıcı durumu sıfırlanır */}
-        <ScenePlayer key={current.scene.id} scene={current.scene} />
-        <Link
-          href={`/lessons/${current.lessonId}`}
-          className="mt-3 inline-flex items-center gap-1 text-sm text-primary hover:underline"
-        >
+        <ScenePlayer
+          key={current.scene.id}
+          scene={current.scene}
+          autoPlay={autoPlay}
+          loop={autoPlay}
+          className="shadow-pop"
+        />
+        <Link href={`/lessons/${current.lessonId}`} className="btn-link mt-3">
           {t('home.goToLesson')} <ArrowRight size={14} />
         </Link>
       </div>

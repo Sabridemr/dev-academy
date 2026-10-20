@@ -27,6 +27,9 @@ import { RealtimeModule } from './modules/realtime/realtime.module';
 import { HealthModule } from './modules/health/health.module';
 import { OfflineModule } from './modules/offline/offline.module';
 import { AssetsModule } from './modules/assets/assets.module';
+import { CertificatesModule } from './modules/certificates/certificates.module';
+import { FeedbackModule } from './modules/feedback/feedback.module';
+import { ExamsModule } from './modules/exams/exams.module';
 
 @Module({
   imports: [
@@ -82,6 +85,9 @@ import { AssetsModule } from './modules/assets/assets.module';
     HealthModule,
     OfflineModule,
     AssetsModule,
+    CertificatesModule,
+    FeedbackModule,
+    ExamsModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: HttpExceptionFilter },

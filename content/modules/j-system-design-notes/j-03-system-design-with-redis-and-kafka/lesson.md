@@ -4,230 +4,265 @@ slug: system-design-with-redis-and-kafka
 module: j-system-design-notes
 order: 3
 title:
-  tr: "Redis ve Kafka ile Sistem Tasarımı: Kapsamlı Notlar"
-  en: "System Design with Redis & Kafka (Complete Notes)"
+  tr: "Redis ve Kafka ile Sistem Tasarımı"
+  en: "System Design with Redis and Kafka"
 summary:
   tr: "Redis önbellekleme ve Kafka olay akışıyla ölçeklenebilir, dayanıklı sistemler tasarlamayı öğren."
   en: "Learn to design scalable, resilient systems with Redis caching and Kafka event streaming."
-durationMinutes: 53
+durationMinutes: 35
 level: intermediate
-tags: [system-design, redis, kafka, distributed-systems, caching, event-streaming]
-prerequisites: []
-concepts: [cap-theorem, cache-aside, eviction-policies, consistency-models, consumer-groups, partitions, delivery-guarantees, redis-cluster, log-compaction, dead-letter-queue]
+tags: [system-design, redis, kafka, caching, event-streaming, distributed-systems, interview-prep]
+prerequisites: [a-07-caching, a-09-message-queues-event-driven, j-02-system-design-notes-part-1]
+concepts: [redis-data-structures, cache-aside, rate-limiter, distributed-lock, redis-persistence, redis-cluster, kafka-partitions, consumer-groups, replication-isr, idempotent-producer, dead-letter-topic, log-compaction, event-driven-order-flow]
 ---
 
-:::callout{tone="info" title="Kaynak"}
-Bu ders, **TheAgenticAIEngineer** tarafından hazırlanan *System Design with Redis & Kafka (Complete Notes)* not setinin 35 sayfasından oluşur. Sayfalar özgün hâliyle, değiştirilmeden yer alır; tüm hakları yazarına aittir. Kişisel çalışma notu olarak eklenmiştir.
+## Kavram: bellek hızında durum, disk dayanıklılığında olay
+
+Önceki derste bir mülakatın üçüncü ve dördüncü adımında "yapı taşlarını gerekçeyle yerleştirmek" gerektiğini gördük. Bu derste en sık başvurulan iki yapı taşını yakından tanıyacağız. **Redis**, verinin tamamını bellekte tutan ve mikrosaniyeler içinde yanıt veren bir veri yapısı sunucusudur; sıcak veriyi, sayaçları ve kısa ömürlü durumu barındırır. **Kafka**, olayları diske sıralı olarak yazan ve onları birden fazla tüketiciye bağımsız biçimde dağıtan bir olay akışı platformudur; servisleri birbirinden ayırır ve tepe trafiği yumuşatır.
+
+İkisi rakip değil, tamamlayıcıdır: Redis "şu anda ne durumdayız?" sorusuna, Kafka "ne oldu ve kim bundan haberdar olmalı?" sorusuna cevap verir. Dersin sonunda ikisini aynı sipariş akışında birlikte kullanacağız.
+
+## Redis veri yapıları ve tipik kullanımları
+
+Redis'i yalnızca anahtar-değer önbelleği olarak düşünmek, en değerli yanını kaçırmaktır. Her anahtarın bir **veri yapısı** vardır ve bu yapı üzerinde atomik işlemler sunucu tarafında çalışır. Doğru yapıyı seçmek, uygulama kodundan onlarca satır ve bir yarış koşulu eksiltir.
+
+| Yapı | Ne tutar | Tipik komutlar | Sistem tasarımında kullanım |
+|---|---|---|---|
+| String | Metin, sayı, ikili veri | `SET`, `GET`, `INCR`, `SET NX PX` | Önbellek girdisi, sayaç, dağıtık kilit, oturum belirteci |
+| Hash | Alan → değer haritası | `HSET`, `HGET`, `HINCRBY` | Kullanıcı profili, sepet, ürün özeti (tek anahtar, çok alan) |
+| List | Sıralı dizi, iki uçtan erişim | `LPUSH`, `RPOP`, `LRANGE` | Basit iş kuyruğu, son N etkinlik |
+| Set | Tekil üyeler | `SADD`, `SISMEMBER`, `SINTER` | Takipçi kümesi, etiketler, "bugün görülen" tekilleştirme |
+| Sorted Set | Skorla sıralı üyeler | `ZADD`, `ZRANGE`, `ZRANK` | Liderlik tablosu, zaman penceresi, öncelik kuyruğu |
+| Stream | Ekle-yalnız kayıt günlüğü | `XADD`, `XREADGROUP`, `XACK` | Hafif olay akışı, tüketici grupları |
+
+Birkaç kullanım kalıbı üzerinden düşünelim:
+
+- **Önbellek**: `product:123` anahtarında ürün JSON'u, 10 dakikalık TTL ile. Okuma/yazma oranı yüksek her veri için ilk aday.
+- **Oturum**: `session:<token>` hash'inde kullanıcı kimliği ve roller; sunucular durumsuz kalır, yük dengeleyici dilediği sunucuya yollar.
+- **Sayaç**: `INCR views:post:42` tek bir atomik komutla, kilitsiz sayar.
+- **Liderlik tablosu**: `ZINCRBY leaderboard 10 user:7` ile puan ekle, `ZREVRANGE leaderboard 0 9` ile ilk onu getir; sıralama Redis'te, uygulamada değil.
+- **Rate limiter**: `INCR rl:<kullanıcı>:<dakika>` ve ilk artışta `EXPIRE 60`; sayaç limiti aşınca 429 döndür. Daha pürüzsüz bir kayan pencere için Sorted Set'te zaman damgaları tutulur.
+- **Dağıtık kilit**: `SET lock:order:9 <rastgele-değer> NX PX 5000`; yalnızca anahtar yoksa yazılır ve 5 saniye sonra kendiliğinden düşer. Serbest bırakırken değerin kendi değeriniz olduğunu Lua ile doğrulamak, başka birinin kilidini silmenizi engeller.
+
+:::interactive{type="cache" capacity=5 policy="lru" writePolicy="write-through"}
+Beş slotlu bir Redis önbelleği düşünün. Anahtarlara tıklayarak okuyun; altıncı farklı anahtarda LRU'nun hangi anahtarı kurban seçtiğini izleyin. "Rastgele 10 okuma" ile hit oranını ölçün, sonra politikayı LFU'ya çevirip aynı trafikte oranın nasıl değiştiğini karşılaştırın. Yazma politikasını write-through'dan cache-aside'a alıp "DB yazma" sayacının ve kirli slotların davranışını gözleyin.
 :::
 
-:::diagram{src="sayfa-01.jpg" alt="Kapak: System Design with Redis and Kafka, Complete Notes. İstemci, yük dengeleyici, Redis, Kafka, veritabanı ve servisler şeması; From Fundamentals to Production Systems sloganı."}
-Sayfa 1 / 35 · SYSTEM DESIGN WITH REDIS & KAFKA (COMPLETE NOTES)
+:::code{lang="python" title="Dağıtık kilit: güvenli alma ve bırakma"}
+```python
+import uuid
+import redis
+
+r = redis.Redis()
+
+RELEASE = """
+if redis.call('GET', KEYS[1]) == ARGV[1] then
+  return redis.call('DEL', KEYS[1])
+end
+return 0
+"""
+
+def acquire(key: str, ttl_ms: int = 5000) -> str | None:
+    token = uuid.uuid4().hex
+    # NX: yalnızca anahtar yoksa yaz; PX: ms cinsinden otomatik süre
+    ok = r.set(key, token, nx=True, px=ttl_ms)
+    return token if ok else None
+
+def release(key: str, token: str) -> bool:
+    # Lua betiği atomik çalışır: "benim kilidim mi?" ve "sil" arasına kimse giremez
+    return bool(r.eval(RELEASE, 1, key, token))
+
+token = acquire("lock:order:9")
+if token:
+    try:
+        ...  # siparişi işle (TTL'den kısa sürmeli)
+    finally:
+        release("lock:order:9", token)
+```
+```ts
+import { randomUUID } from 'node:crypto';
+import Redis from 'ioredis';
+
+const r = new Redis();
+const RELEASE = `
+if redis.call('GET', KEYS[1]) == ARGV[1] then
+  return redis.call('DEL', KEYS[1])
+end
+return 0`;
+
+export async function acquire(key: string, ttlMs = 5000) {
+  const token = randomUUID();
+  const ok = await r.set(key, token, 'PX', ttlMs, 'NX'); // yalnızca anahtar yoksa
+  return ok === 'OK' ? token : null;
+}
+
+export async function release(key: string, token: string) {
+  return (await r.eval(RELEASE, 1, key, token)) === 1; // atomik "benimse sil"
+}
+```
 :::
 
-## SYSTEM DESIGN SYLLABUS
-
-:::diagram{src="sayfa-02.jpg" alt="12 modüllük müfredat: temeller, mimari, ağ, veritabanları, önbellekleme, dağıtık sistemler, mesajlaşma, ölçeklenebilirlik, depolama, güvenlik, gözlemlenebilirlik ve vaka çalışmaları."}
-Sayfa 2 / 35 · SYSTEM DESIGN SYLLABUS
+:::callout{tone="warning" title="Kilidin süresi işten kısa olursa"}
+TTL, kilidi tutan süreç çökerse sistemin kilitli kalmamasını sağlar; ama iş TTL'den uzun sürerse kilit düşer ve ikinci bir süreç aynı işi paralel yapmaya başlar. Bu yüzden kritik işlerde kilit süresini uzatan bir "kalp atışı" ya da kilidin yanında veritabanında koşullu güncelleme (`UPDATE ... WHERE version = ?`) kullanılır. Tek Redis düğümündeki kilit, failover sırasında da kaybolabilir; mutlak güvence gereken yerde kilidi veritabanına bırakın.
 :::
 
-## System Design Fundamentals (Part1)
+## Kalıcılık: RDB ve AOF
 
-:::diagram{src="sayfa-03.jpg" alt="Sistem tasarımı temelleri 1: tasarım temelleri, fonksiyonel ve fonksiyonel olmayan gereksinimler, ölçeklenebilirlik, erişilebilirlik, güvenilirlik, performans ve gecikme."}
-Sayfa 3 / 35 · System Design Fundamentals (Part1)
+Redis bellekte çalışır ama süreç yeniden başladığında verinin yok olması çoğu senaryoda kabul edilemez. İki kalıcılık mekanizması vardır:
+
+**RDB (snapshot)**, belirli aralıklarla (örneğin "5 dakikada en az 100 değişiklik olduysa") tüm veri setinin sıkıştırılmış bir anlık görüntüsünü diske yazar. Dosya küçüktür, yeniden başlatma hızlıdır ve yedekleme için idealdir; ancak son anlık görüntüden sonraki dakikalar kaybedilebilir.
+
+**AOF (append-only file)**, her yazma komutunu bir günlüğe ekler. `fsync` politikası `everysec` ise en fazla bir saniyelik veri kaybı riski vardır; `always` ise her komutta disk senkronu yapılır ve gecikme artar. Dosya zamanla büyüdüğü için Redis arka planda yeniden yazarak sıkıştırır.
+
+Üretimde yaygın seçim **ikisini birlikte** açmaktır: AOF güncel, RDB taşınabilir yedek sağlar. Yalnızca önbellek olarak kullanılan bir Redis'te kalıcılığı tamamen kapatmak da meşru bir tercihtir; veri zaten veritabanından yeniden üretilebilir.
+
+## Yüksek erişilebilirlik: Sentinel ve Cluster
+
+Tek bir Redis süreci tek hata noktasıdır. İki farklı sorun için iki farklı araç vardır:
+
+**Sentinel**, *erişilebilirlik* sorununu çözer. Bir ana düğüm ve bir ya da daha fazla replika vardır; Sentinel süreçleri ana düğümü izler, erişilemez olduğunda çoğunlukla karar verip bir replikayı ana düğüme terfi ettirir ve istemcilere yeni adresi duyurur. Veri seti hâlâ tek makinenin belleğine sığmalıdır.
+
+**Cluster**, *kapasite* sorununu çözer. Anahtar uzayı 16.384 hash slotuna bölünür ve slotlar düğümlere dağıtılır; her düğümün kendi replikaları vardır, failover kümenin içinde gerçekleşir. Bedeli şudur: farklı slotlardaki anahtarları aynı işlemde kullanamazsınız (hash tag `{user:7}` ile aynı slota zorlanabilir) ve istemcinin yönlendirmeyi (`MOVED`) anlaması gerekir.
+
+Mülakatta "Redis'i nasıl ölçeklersiniz?" sorusuna cevap şudur: önce okuma için replika, erişilebilirlik için Sentinel ya da yönetilen servis, veri bellek sınırını aşınca Cluster.
+
+## Kafka: topic, partition ve offset
+
+Kafka'da her olay bir **topic**'e yazılır. Topic, mantıksal bir isimdir (`orders`); fiziksel saklama birimi ise **partition**'dır. Her partition, diskte ekle-yalnız (append-only) bir günlüktür ve her kaydın partition içinde artan bir **offset**'i vardır. Sıralama garantisi yalnızca **partition içindedir**; aynı siparişin olaylarının sıralı kalmasını istiyorsanız, hepsini aynı anahtarla (`orderId`) üretirsiniz; Kafka anahtarı hash'leyip aynı partition'a düşürür.
+
+Partition sayısı, paralelliğin üst sınırıdır: bir consumer group içinde en fazla partition sayısı kadar consumer çalışabilir. Üç partition'lı bir topic'e beş consumer bağlarsanız ikisi boş bekler. Bu yüzden partition sayısı, beklenen tepe üretim hızı ve tüketicinin işleme süresi düşünülerek baştan seçilir; sonradan artırmak mümkündür ama anahtar → partition eşlemesini bozar.
+
+Kafka kayıtları okunduktan sonra silmez; **retention** süresi (örneğin 7 gün) ya da boyutu dolana kadar tutar. Bu, yeni bir tüketicinin geçmişi baştan okuyabilmesi ve hatalı bir tüketicinin offset'ini geri alıp yeniden işleyebilmesi demektir.
+
+## Producer, consumer ve consumer group
+
+**Producer**, kaydı bir anahtar ve değerle gönderir; `acks` ayarı ne kadar onay bekleyeceğini belirler. `acks=0` onay beklemez, `acks=1` yalnızca lider yazınca döner, `acks=all` senkron replikaların tamamı yazınca döner.
+
+**Consumer**, bir partition'dan offset sırasıyla okur ve işlediği yeri **commit** eder. Commit edilen offset, consumer yeniden başladığında kaldığı yerden devam etmesini sağlar. Commit zamanlaması teslim garantisini belirler: işlemeden önce commit edilirse "en fazla bir kez" (kayıp olabilir), işledikten sonra commit edilirse "en az bir kez" (tekrar olabilir).
+
+**Consumer group**, aynı `group.id` ile çalışan consumer'ların kümesidir. Topic'in partition'ları grup üyelerine paylaştırılır; her partition grup içinde yalnızca bir consumer tarafından okunur. Farklı gruplar ise aynı topic'i **bağımsız** okur ve kendi offset'lerini tutar: envanter servisi ile bildirim servisi aynı `orders` topic'ini birbirinden habersiz tüketir. Bir consumer gruptan ayrılır ya da kalp atışı kesilirse **rebalance** tetiklenir ve partition'lar kalan üyelere yeniden dağıtılır; bu sırada kısa bir duraklama olur ve son commit'ten sonraki kayıtlar yeni sahibi tarafından yeniden okunabilir.
+
+## Replication ve ISR
+
+Her partition'ın bir **lideri** ve yapılandırılan replikasyon faktörü kadar (genelde 3) kopyası vardır; üretim ve tüketim liderden yapılır, takipçiler lideri kopyalar. Lideri yakından takip eden replikalar **ISR** (in-sync replicas) kümesini oluşturur. `acks=all` ile birlikte `min.insync.replicas=2` ayarlandığında bir yazma, en az iki kopyaya ulaşmadan onaylanmaz; lider çökse bile ISR'den seçilen yeni lider veriyi kaybetmez. ISR, iki replikanın altına düşerse Kafka yazmayı reddeder; bu, dayanıklılığı erişilebilirliğe tercih eden bilinçli bir tasarımdır.
+
+## Teslim garantileri: idempotent producer ve exactly-once
+
+Ağ hatasında producer yeniden gönderim yapar; onay gelmemiş ama lider yazmışsa kayıt **çiftlenir**. **Idempotent producer** (`enable.idempotence=true`) her partition için bir üretici kimliği ve sıra numarası taşır; broker aynı sıra numarasını ikinci kez görünce kaydı sessizce atar. Böylece tek bir partition'a yazma "tam olarak bir kez" olur.
+
+Birden fazla partition'a ya da "oku-işle-yaz" zincirine exactly-once vermek için **transaction** API'si kullanılır: consumer offset commit'i ile üretilen kayıtlar aynı işlemde atomik olarak kesinleşir. Bu, Kafka'dan Kafka'ya akışlarda (Kafka Streams) güçlü bir garanti sağlar; ancak akışın sonunda veritabanına yazan ya da e-posta gönderen bir tüketici varsa, garanti Kafka'nın sınırında biter. Pratik kural: **at-least-once + idempotent tüketici**. Tüketici, işlediği olay kimliğini (Redis'te `SET NX` ya da veritabanında tekil kısıt) kaydeder ve aynı olayı ikinci kez görünce atlar.
+
+## Dead letter topic ve log compaction
+
+Bir kayıt bozuk JSON içeriyorsa ya da işlenirken her seferinde aynı hatayı veriyorsa, tüketiciyi sonsuza dek bloke etmemelidir. Birkaç yeniden denemeden sonra kayıt, hata bilgisiyle birlikte bir **dead letter topic**'e (`orders.DLT`) yazılır ve ana akış devam eder. Operasyon ekibi DLT'yi izler, kök nedeni düzeltir ve kayıtları yeniden oynatır. Yeniden denemeler arasında üstel gecikme (backoff) kullanmak, geçici hataların kendiliğinden geçmesine izin verir.
+
+**Log compaction**, retention'ın alternatifidir: Kafka her anahtar için yalnızca **en son değeri** tutar, eski değerleri arka planda temizler. Bu, topic'i bir "değişiklik günlüğü" yerine "güncel durum tablosu" hâline getirir: `product-prices` topic'ini baştan okuyan yeni bir servis her ürünün son fiyatını elde eder, tarihçenin tamamını değil. Kafka'nın kendi `__consumer_offsets` topic'i de bu şekilde çalışır.
+
+## Birlikte: sipariş olayı mimarisi
+
+Şimdi bir e-ticaret sipariş akışında ikisini birleştirelim. Kullanıcı "Siparişi tamamla" dediğinde:
+
+1. **API / sipariş servisi** isteğin `Idempotency-Key` başlığını Redis'te `SET NX` ile kaydeder; aynı anahtar tekrar gelirse önceki yanıtı döner, çift sipariş oluşmaz.
+2. Stok için Redis'te `DECRBY stock:sku:42 1` atomik olarak çalışır; sonuç negatifse geri alınır ve kullanıcıya "tükendi" denir. Bu, veritabanına gitmeden milisaniyeler içinde verilen bir ön karardır; kesin stok kaydı yine veritabanındadır.
+3. Sipariş veritabanına yazılır ve `OrderCreated` olayı `orders` topic'ine, anahtarı `orderId` olacak şekilde üretilir (`acks=all`, idempotent producer).
+4. **Envanter** consumer group'u olayı okur, kalıcı stok düşümünü yapar; **bildirim** grubu aynı olayı bağımsız okuyup SMS/e-posta gönderir; **analitik** grubu veri ambarına yazar. Hiçbiri diğerini beklemez.
+5. Her tüketici, işlediği `eventId`'yi Redis'te 24 saatlik TTL ile saklar; rebalance sonrası aynı olay ikinci kez gelirse atlanır.
+
+:::diagram{src="diagram.svg" alt="Sipariş olayı mimarisi: istemci API gateway üzerinden sipariş servisine gelir; sipariş servisi Redis'te idempotency anahtarı ve stok sayacı kullanır, veritabanına yazar ve OrderCreated olayını üç partition'lı Kafka orders topic'ine üretir; envanter, bildirim ve analitik consumer group'ları topic'i bağımsız okur, hatalı kayıtlar dead letter topic'e gider|Order event architecture: a client reaches the order service through the API gateway; the service uses Redis for an idempotency key and a stock counter, writes to the database and produces an OrderCreated event to the three-partition Kafka orders topic; inventory, notification and analytics consumer groups read the topic independently and failing records go to a dead letter topic"}
+Redis senkron yolda hızlı kararlar verir, Kafka asenkron yolda servisleri ayrıştırır.
 :::
 
-## System Design Fundamentals (Part2)
-
-:::diagram{src="sayfa-04.jpg" alt="Sistem tasarımı temelleri 2: CAP teoremi ve CA, CP, AP örnekleri, dikey ve yatay ölçekleme, durumsuz ve durumlu sistemler, hangi ölçeklemenin ne zaman seçileceği tablosu."}
-Sayfa 4 / 35 · System Design Fundamentals (Part2)
+:::animation{scene="scene.json"}
+OrderCreated olayının partition'a yazılması, iki consumer group'un bağımsız okuması ve bir consumer düştüğünde rebalance.
 :::
 
-## System Architecture (Part1)
-
-:::diagram{src="sayfa-05.jpg" alt="Sistem mimarisi 1: monolitik mimari, API Gateway ve servis başına veritabanlı mikroservis mimarisi, katmanlı mimari ve istemci-sunucu mimarisi, her biri şemayla."}
-Sayfa 5 / 35 · System Architecture (Part1)
+:::interactive{type="message-queue" partitions=3 consumers=2 producers=2 failureRate=0.1 idempotent=true}
+İki üretici, üç partition ve iki tüketici ile başlayın; "5 mesaj üret" düğmesiyle akışı başlatın ve günlükte yeniden deneme ile ACK kaybı satırlarını bulun. "Idempotent tüketici" kutusunu kapatıp aynı trafiği tekrar üretin: "Çift işleme" sayacının artışı, idempotency anahtarı olmadan at-least-once teslimatın bedelidir. Hata oranını yükseltip "Maks. yeniden deneme" sınırını düşürerek kaç mesajın DLQ'ya gittiğini izleyin.
 :::
 
-## System Architecture (Part2)
+:::code{lang="python" title="OrderCreated: idempotent producer ve tekilleştiren tüketici"}
+```python
+import json
+import redis
+from confluent_kafka import Producer, Consumer
 
-:::diagram{src="sayfa-06.jpg" alt="Sistem mimarisi 2: mesaj aracılı olay güdümlü mimari, servis odaklı mimari (SOA), senkron iletişimde istemci yanıt bekler, asenkron iletişimde mesaj kuyruğu kullanılır."}
-Sayfa 6 / 35 · System Architecture (Part2)
+r = redis.Redis()
+
+producer = Producer({
+    "bootstrap.servers": "kafka:9092",
+    "enable.idempotence": True,   # PID + sıra numarası: broker tekrarları atar
+    "acks": "all",                # ISR'deki tüm replikalar yazmadan onay yok
+})
+
+def publish_order_created(order: dict) -> None:
+    producer.produce(
+        "orders",
+        key=order["orderId"],     # aynı sipariş → aynı partition → sıralı
+        value=json.dumps({"eventId": order["eventId"], **order}),
+    )
+    producer.flush()
+
+consumer = Consumer({
+    "bootstrap.servers": "kafka:9092",
+    "group.id": "inventory",      # bildirim servisi farklı group.id kullanır
+    "enable.auto.commit": False,  # önce işle, sonra commit: at-least-once
+})
+consumer.subscribe(["orders"])
+
+while True:
+    msg = consumer.poll(1.0)
+    if msg is None or msg.error():
+        continue
+    event = json.loads(msg.value())
+    # 24 saatlik tekilleştirme: rebalance sonrası aynı olay gelirse atla
+    if not r.set(f"seen:inventory:{event['eventId']}", 1, nx=True, ex=86_400):
+        consumer.commit(msg)
+        continue
+    reserve_stock(event)          # kalıcı stok düşümü (DB)
+    consumer.commit(msg)
+```
+```ts
+import { Kafka } from 'kafkajs';
+import Redis from 'ioredis';
+
+const kafka = new Kafka({ brokers: ['kafka:9092'] });
+const r = new Redis();
+
+const producer = kafka.producer({ idempotent: true }); // acks=-1 (all) ile birlikte zorunlu
+export async function publishOrderCreated(order: { orderId: string; eventId: string }) {
+  await producer.send({
+    topic: 'orders',
+    messages: [{ key: order.orderId, value: JSON.stringify(order) }],
+  });
+}
+
+const consumer = kafka.consumer({ groupId: 'inventory' });
+await consumer.subscribe({ topic: 'orders' });
+await consumer.run({
+  autoCommit: false,
+  eachMessage: async ({ message, partition, topic }) => {
+    const event = JSON.parse(message.value!.toString());
+    const fresh = await r.set(`seen:inventory:${event.eventId}`, 1, 'EX', 86_400, 'NX');
+    if (fresh) await reserveStock(event); // tekrar gelen olay atlanır
+    await consumer.commitOffsets([{ topic, partition, offset: (Number(message.offset) + 1).toString() }]);
+  },
+});
+```
 :::
 
-## Networking Fundamentals
-
-:::diagram{src="sayfa-07.jpg" alt="Ağ temelleri: HTTP ve HTTPS, TCP/IP, DNS, IP adresi ve portlar, yük dengeleyiciler, Nginx gibi reverse proxy, WebSocket kalıcı bağlantısı, REST API ve gRPC karşılaştırması."}
-Sayfa 7 / 35 · Networking Fundamentals
+:::realworld{company="Getir"}
+Getir gibi dakikalar içinde teslimat vadeden bir hızlı ticaret uygulamasında, bu dersteki iki yapı taşı tam olarak iki farklı ihtiyaca karşılık gelir. Kullanıcı uygulamayı açtığında bulunduğu bölgedeki deponun ürün listesi ve stok durumu milisaniyeler içinde gelmelidir; bu, bölge bazlı anahtarlarla önbelleklenen ve stok değiştikçe güncellenen Redis'in işidir. Sipariş verildiğinde ise toplama, kurye atama, müşteri bildirimi ve raporlama gibi birbirinden bağımsız işler tetiklenir; bunların birbirini beklememesi ve biri geçici olarak yavaşladığında diğerlerinin etkilenmemesi için olay akışı kullanılır. Kampanya anlarında sipariş yazma hızı aniden yükseldiğinde tüketiciler kendi hızlarında ilerler, kuyruk gecikmesi izlenir ve gerekirse consumer sayısı partition sayısına kadar artırılır. Genel bilgi düzeyindeki bu örnek, Redis'in "şu anki durum", Kafka'nın "olan biten" rolünü somutlaştırır.
 :::
 
-## Databases
-
-:::diagram{src="sayfa-08.jpg" alt="Veritabanları: SQL ve NoSQL, B-tree indeksleme, işlemler ve ACID, normalizasyon, replikasyon, sharding, partitioning, okuma replikaları ve kullanım durumuna göre veritabanı seçimi tablosu."}
-Sayfa 8 / 35 · Databases
-:::
-
-## Caching (Part1)
-
-:::diagram{src="sayfa-09.jpg" alt="Önbellekleme 1: önbellek temelleri, Redis bellek içi anahtar-değer veritabanı ve veri tipleri, Cache-Aside kalıbında okuma akışı (hit ve miss) ve yazma sonrası önbelleği geçersiz kılma."}
-Sayfa 9 / 35 · Caching (Part1)
-:::
-
-## Caching (Part2)
-
-:::diagram{src="sayfa-10.jpg" alt="Önbellekleme 2: Write-Through ve Write-Back, TTL, LRU, LFU, FIFO ve Random tahliye politikaları, önbellek geçersiz kılma yöntemleri ve Redis Cluster ile dağıtık önbellekleme."}
-Sayfa 10 / 35 · Caching (Part2)
-:::
-
-## Distributed Systems (Part1)
-
-:::diagram{src="sayfa-11.jpg" alt="Dağıtık sistemler 1: temel kavramlar, güçlü, nihai, nedensel tutarlılık gibi tutarlılık modelleri, lider-takipçi mimarisi ve Paxos, Raft, Zab uzlaşma algoritmaları."}
-Sayfa 11 / 35 · Distributed Systems (Part1)
-:::
-
-## Distributed Systems (Part2)
-
-:::diagram{src="sayfa-12.jpg" alt="Dağıtık sistemler 2: iki aşamalı commit ve Saga ile dağıtık işlemler, idempotency, hata toleransı, üstel geri çekilmeli retry ve timeout, Closed, Open, Half-Open durumlu circuit breaker."}
-Sayfa 12 / 35 · Distributed Systems (Part2)
-:::
-
-## Messaging & Event Systems (Part1)
-
-:::diagram{src="sayfa-13.jpg" alt="Mesajlaşma 1: mesaj kuyruğu üretici ile tüketiciyi ayırır, Kafka topic ve partition yapısı, exchange ve kuyruklu RabbitMQ, paralel çalışan üretici ve tüketiciler."}
-Sayfa 13 / 35 · Messaging & Event Systems (Part1)
-:::
-
-## Messaging & Event Systems (Part2)
-
-:::diagram{src="sayfa-14.jpg" alt="Mesajlaşma 2: Pub/Sub, olay akışı, tüketici grupları, dead letter queue, mesaj sıralaması ve at most once, at least once, exactly once teslim garantileri."}
-Sayfa 14 / 35 · Messaging & Event Systems (Part2)
-:::
-
-## Module 8: Scalability & Reliability (Part1)
-
-:::diagram{src="sayfa-15.jpg" alt="Ölçeklenebilirlik ve güvenilirlik 1: yük dengeleme algoritmaları, metriklere göre otomatik ölçekleme, Token Bucket gibi algoritmalarla hız sınırlama ve 429 yanıtı, backpressure."}
-Sayfa 15 / 35 · Module 8: Scalability & Reliability (Part1)
-:::
-
-## Module 8: Scalability & Reliability (Part2)
-
-:::diagram{src="sayfa-16.jpg" alt="Ölçeklenebilirlik ve güvenilirlik 2: replikasyon, aktif-pasif failover, RTO ve RPO ile felaket kurtarma, tam ve artımlı yedekleme, yedek sunuculu yüksek erişilebilirlik."}
-Sayfa 16 / 35 · Module 8: Scalability & Reliability (Part2)
-:::
-
-## Storage & File Systems (Part1)
-
-:::diagram{src="sayfa-17.jpg" alt="Depolama ve dosya sistemleri 1: düz yapıda nesne depolama (S3, Blob), sunucuya bağlanan sabit boyutlu blok depolama (EBS), klasörlü paylaşımlı dosya depolama (NFS, EFS) ve S3 kavramları."}
-Sayfa 17 / 35 · Storage & File Systems (Part1)
-:::
-
-## Storage & File Systems (Part2)
-
-:::diagram{src="sayfa-18.jpg" alt="Depolama ve dosya sistemleri 2: uç konumlarda önbellekleyen CDN, paralel parçalı multipart upload, Standard, IA, Glacier, Deep Archive veri yaşam döngüsü ve başarısız parçaları sürdüren büyük dosya yönetimi."}
-Sayfa 18 / 35 · Storage & File Systems (Part2)
-:::
-
-## Security (Part1)
-
-:::diagram{src="sayfa-19.jpg" alt="Güvenlik 1: önce kimlik doğrulama sonra yetkilendirme, OAuth 2.0 ve OIDC ile Google girişi akışı, header, payload ve signature içeren JWT, rollere izin atayan RBAC (Admin, Editor, Viewer)."}
-Sayfa 19 / 35 · Security (Part1)
-:::
-
-## Security (Part2)
-
-:::diagram{src="sayfa-20.jpg" alt="Güvenlik 2: API Gateway ve WAF ile API güvenliği, AES ve RSA ile şifreleme, AWS Secrets Manager ve Vault ile gizli bilgi yönetimi, VPC ve firewall ile ağ güvenliği, 429 dönen hız sınırlama."}
-Sayfa 20 / 35 · Security (Part2)
-:::
-
-## Redis Fundamentals
-
-:::diagram{src="sayfa-21.jpg" alt="Redis temelleri: açık kaynak, bellek içi anahtar-değer deposu, neden Redis, master ve okuma replikaları ile RDB, AOF kalıcılığı, anahtar-değer modeli, komut tablosu ve Redis ile veritabanı karşılaştırması."}
-Sayfa 21 / 35 · Redis Fundamentals
-:::
-
-## Redis Data Types
-
-:::diagram{src="sayfa-22.jpg" alt="Redis veri tipleri ve örnek komutlar: Strings (SET, GET, INCR), Lists (LPUSH, LRANGE), Sets (SADD), Hashes (HSET, HGETALL), Sorted Sets ile liderlik tablosu (ZADD) ve Streams (XADD, XREADGROUP)."}
-Sayfa 22 / 35 · Redis Data Types
-:::
-
-## Redis Caching
-
-:::diagram{src="sayfa-23.jpg" alt="Redis ile önbellekleme: önbellek temelleri, Cache-Aside (Lazy Loading), Write-Through, Write-Back (Write-Behind), SET EX ve PERSIST ile TTL, noeviction, allkeys-lru, volatile-ttl gibi tahliye politikaları."}
-Sayfa 23 / 35 · Redis Caching
-:::
-
-## Redis Advanced Features
-
-:::diagram{src="sayfa-24.jpg" alt="Redis ileri özellikler: kanallarla Pub/Sub, MULTI ve EXEC ile atomik işlemler, Python örnekli pipeline, EVAL ile Lua script'leri, SET NX EX ile dağıtık kilit ve en iyi uygulamalar."}
-Sayfa 24 / 35 · Redis Advanced Features
-:::
-
-## Redis Persistence & Reliability
-
-:::diagram{src="sayfa-25.jpg" alt="Redis kalıcılık ve güvenilirlik: RDB anlık görüntü (SAVE, BGSAVE), fsync politikalı AOF, REPLICAOF ile replikasyon, master izleyen Redis Sentinel ve replikayı yeni master yapan otomatik failover."}
-Sayfa 25 / 35 · Redis Persistence & Reliability
-:::
-
-## Redis Scaling
-
-:::diagram{src="sayfa-26.jpg" alt="Redis ölçekleme: çok düğümlü Redis Cluster, CRC16 tabanlı sharding, 0-16383 arası 16384 hash slot, replika terfisiyle yüksek erişilebilirlik ve önbellek, oturum, liderlik tablosu gibi kullanım alanları."}
-Sayfa 26 / 35 · Redis Scaling
-:::
-
-## Kafka Fundamentals
-
-:::diagram{src="sayfa-27.jpg" alt="Kafka temelleri: dağıtık olay akışı platformu ve neden Kafka, broker küme mimarisi, ZooKeeper veya KRaft, topic'ler, sıralı ve değişmez log olan partition'lar, partitioner kullanan üreticiler, tüketici grupları."}
-Sayfa 27 / 35 · Kafka Fundamentals
-:::
-
-## Kafka Producer & Consumer
-
-:::diagram{src="sayfa-28.jpg" alt="Kafka üretici ve tüketici: mesaj, partitioner ve ack ile üretici akışı, poll, işle, commit tüketici döngüsü, partition paylaşan tüketici grupları, __consumer_offsets ile offset ve rebalancing."}
-Sayfa 28 / 35 · Kafka Producer & Consumer
-:::
-
-## Kafka Reliability & Delivery
-
-:::diagram{src="sayfa-29.jpg" alt="Kafka güvenilirlik ve teslim: partition replikasyonu, lider-takipçi ve lider seçimi, acks 0, 1, all tablosu, yalnızca partition içinde sıralama, at-most-once, at-least-once ve exactly-once."}
-Sayfa 29 / 35 · Kafka Reliability & Delivery
-:::
-
-## Kafka Storage & Management
-
-:::diagram{src="sayfa-30.jpg" alt="Kafka depolama ve yönetim: segment dosyalarında append-only log, zamana ve boyuta göre retention, anahtar başına son değeri tutan log compaction, partition sayısını artırma ve tüketici offset yönetimi."}
-Sayfa 30 / 35 · Kafka Storage & Management
-:::
-
-## Kafka Advanced
-
-:::diagram{src="sayfa-31.jpg" alt="Kafka ileri konular: üstel geri çekilmeli retry mekanizmaları, başarısız mesajlar için Dead Letter Topic (DLT), serileştirme ve doğrulama hatalarının yönetimi, Kafka Streams ve olay güdümlü mimari."}
-Sayfa 31 / 35 · Kafka Advanced
-:::
-
-## Kafka in System Design (Part 1)
-
-:::diagram{src="sayfa-32.jpg" alt="Sistem tasarımında Kafka 1: kaynaklardan tüketicilere gerçek zamanlı olay akışı, bir olayı birden çok servisin okuduğu Pub/Sub, saniyede milyonlarca mesajla yüksek verim, broker ekleyerek ölçekleme."}
-Sayfa 32 / 35 · Kafka in System Design (Part 1)
-:::
-
-## Kafka in System Design (Part 2)
-
-:::diagram{src="sayfa-33.jpg" alt="Sistem tasarımında Kafka 2: replikasyon ve yeni lider seçimiyle hata toleransı, Kafka ile Redis'i birleştiren gerçek zamanlı mimari ve örnek gerçek zamanlı sipariş işleme sistemi."}
-Sayfa 33 / 35 · Kafka in System Design (Part 2)
-:::
-
-## zomato System Design
-
-:::diagram{src="sayfa-34.jpg" alt="Zomato sistem tasarımı: istemciler, DNS ve yük dengeleyici, API Gateway, kullanıcı, restoran, sipariş, teslimat mikroservisleri, veri katmanı, Kafka olay akışı, gerçek zamanlı işleme ve izleme."}
-Sayfa 34 / 35 · zomato System Design
-:::
-
-:::diagram{src="sayfa-35.jpg" alt="Kapanış sayfası: PDF'i almak için takip edip yorum yapma çağrısı. TheAgenticAIEngineer logosu, Learn. Build. Automate. Grow. sloganı, PDF simgesi ve AI, LLMs, RAG, Agents konu etiketleri."}
-Sayfa 35 / 35 · FOLLOW & COMMENT TO GET THE PDF
+:::callout{tone="tip" title="Mülakat özeti"}
+- Redis'te **veri yapısını** söyleyin: "önbellek koyarım" değil, "ürünü hash'te, liderlik tablosunu sorted set'te, rate limiter'ı TTL'li sayaçta tutarım".
+- Kafka'da üç soruya hazır olun: **sıra** (anahtar → partition), **tekrar** (at-least-once + idempotent tüketici) ve **arıza** (acks=all, ISR, rebalance).
+- İkisini birleştirirken sınırı çizin: Redis senkron yolda hızlı karar, Kafka asenkron yolda ayrıştırma; kalıcı gerçek her zaman veritabanında.
 :::
 
 :::quiz{src="quiz.json"}
 :::
 
 :::next{lesson="j-04-amazon-mimari-veri-ve-siparis-akisi"}
+Sırada: bu yapı taşlarının Amazon ölçeğinde bir e-ticaret mimarisinde nasıl bir araya geldiği — veri katmanı, çift satışı önleme ve Saga ile sipariş akışı.
 :::

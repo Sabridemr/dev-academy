@@ -198,7 +198,7 @@
         "b"
       ],
       "explanation": {
-        "tr": "Mikroservislerde tek bir transaction tüm servisleri kapsayamaz; Saga, başarısız adımda önceki adımları geri alan telafi işlemlerini çalıştırır. Notlardaki örnek: restoran reddetti → ödemeyi iade et → CANCELLED → kullanıcıya bildir.",
+        "tr": "Mikroservislerde tek bir transaction tüm servisleri kapsayamaz; Saga, başarısız adımda önceki adımları geri alan telafi işlemlerini çalıştırır. Örnek: restoran reddetti → ödemeyi iade et → CANCELLED → kullanıcıya bildir.",
         "en": "In microservices a single transaction cannot span all services; Saga runs compensating transactions that undo earlier steps when one fails. The notes' example: restaurant rejected → refund payment → CANCELLED → notify the user."
       },
       "difficulty": "medium",

@@ -9,10 +9,10 @@ title:
 summary:
   tr: "Sadakat ve davet sistemini kurmayı, canlı takibi milyonlara ölçeklemeyi ve dayanıklılık desenlerini öğren."
   en: "Learn to build loyalty and referral systems, scale live tracking to millions and apply resilience patterns."
-durationMinutes: 14
+durationMinutes: 22
 level: advanced
 tags: [system-design, food-delivery, loyalty, scalability, real-time]
-prerequisites: []
+prerequisites: [j-09-takip-bildirim-ve-kampanyalar, a-03-horizontal-vertical-scaling]
 concepts: [referral-program, points-ledger, back-of-the-envelope, geohash, cqrs, circuit-breaker, observability, p95-latency]
 ---
 
@@ -45,7 +45,7 @@ Mobil ve web uygulaması → API Gateway → **Loyalty Service** (puan, ödül, 
 
 ### Sadakat akışı (kazanma ve harcama)
 
-:::diagram{src="sekil-01.png" alt="Sadakat akışı: sipariş, puan hesaplama, bakiye güncelleme, ödeme adımında puan kullanımı, indirim ve güncelleme"}
+:::diagram{src="sekil-01.png" alt="Sadakat akışı: sipariş, puan hesaplama, bakiye güncelleme, ödeme adımında puan kullanımı, indirim ve güncelleme|Loyalty flow: order, point calculation, balance update, redeeming points at checkout, discount and update"}
 :::
 
 ### Davet akışı
@@ -171,7 +171,7 @@ Her güncelleme yaklaşık 200 bayt ise saniyede 20 MB, günde yaklaşık 1,7 TB
 
 ### Yüksek seviye mimari
 
-:::diagram{src="sekil-02.png" alt="Takip sistemi mimarisi: kurye uygulamasından API Gateway, Location Ingestion Service, Redis, Kafka ve Tracking Service üzerinden kullanıcıya"}
+:::diagram{src="sekil-02.png" alt="Takip sistemi mimarisi: kurye uygulamasından API Gateway, Location Ingestion Service, Redis, Kafka ve Tracking Service üzerinden kullanıcıya|Tracking system architecture: from the courier app through API Gateway, Location Ingestion Service, Redis, Kafka and Tracking Service to the user"}
 :::
 
 Ek bileşenler: Notification Service (sipariş durumu), veritabanı (PostgreSQL/MongoDB, geçmiş veri), harita API'si (Google Maps) ve analitik (takip, ETA, makine öğrenmesi).
@@ -326,45 +326,13 @@ CLOSED (normal) → hata eşiği aşıldı → OPEN (istekler kesilir)
 
 Yapay zekâ tabanlı ETA tahmini, talebe göre dinamik fiyatlama (surge algoritması), makine öğrenmesiyle daha iyi dolandırıcılık tespiti, sesli sipariş takibi, drone/robot teslimat (uzun vadede), çok şehirli ve uluslararası genişleme, sürdürülebilir (çevre dostu) teslimat seçenekleri, kişiselleştirilmiş öneriler, market ve eczane gibi diğer hizmetlerle entegrasyon.
 
+## Dene: kampanya günü trafiği
+
+:::interactive{type="traffic-wave" baselineRps=500 peakMultiplier=6 autoscale=true queueEnabled=true}
+Trafik dalgasında otomatik ölçekleme gecikmesini ve kuyruğun tampon etkisini izle; kuyruğu kapatınca hangi isteklerin düştüğüne bak.
+:::
+
 :::quiz{src="quiz.json"}
-:::
-
-## Orijinal PDF sayfaları
-
-:::callout{tone="info" title="Özgün görünüm"}
-Bu dersin metni *Sistem Tasarimi Yemek Siparisi* PDF dosyasının 31–38. sayfalarının özgün hâlidir; sayfalar aşağıda PDF'teki görünümüyle yer alır.
-:::
-
-:::diagram{src="pdf-sayfa-31.png" alt="Sistem Tasarimi Yemek Siparisi - PDF sayfa 31"}
-PDF sayfa 31 / 43
-:::
-
-:::diagram{src="pdf-sayfa-32.png" alt="Sistem Tasarimi Yemek Siparisi - PDF sayfa 32"}
-PDF sayfa 32 / 43
-:::
-
-:::diagram{src="pdf-sayfa-33.png" alt="Sistem Tasarimi Yemek Siparisi - PDF sayfa 33"}
-PDF sayfa 33 / 43
-:::
-
-:::diagram{src="pdf-sayfa-34.png" alt="Sistem Tasarimi Yemek Siparisi - PDF sayfa 34"}
-PDF sayfa 34 / 43
-:::
-
-:::diagram{src="pdf-sayfa-35.png" alt="Sistem Tasarimi Yemek Siparisi - PDF sayfa 35"}
-PDF sayfa 35 / 43
-:::
-
-:::diagram{src="pdf-sayfa-36.png" alt="Sistem Tasarimi Yemek Siparisi - PDF sayfa 36"}
-PDF sayfa 36 / 43
-:::
-
-:::diagram{src="pdf-sayfa-37.png" alt="Sistem Tasarimi Yemek Siparisi - PDF sayfa 37"}
-PDF sayfa 37 / 43
-:::
-
-:::diagram{src="pdf-sayfa-38.png" alt="Sistem Tasarimi Yemek Siparisi - PDF sayfa 38"}
-PDF sayfa 38 / 43
 :::
 
 :::next{lesson="j-11-odunlesimler-mulakat-ve-ozet"}

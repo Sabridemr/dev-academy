@@ -24,6 +24,8 @@ WORKDIR /app
 RUN addgroup -S app && adduser -S app -G app
 COPY --from=build --chown=app:app /repo/web/.next/standalone ./
 COPY --from=build --chown=app:app /repo/web/.next/static ./web/.next/static
+# PWA manifest, service worker ve ikonlar (standalone çıktısı public/ klasörünü içermez)
+COPY --from=build --chown=app:app /repo/web/public ./web/public
 USER app
 EXPOSE 3000
 CMD ["node", "web/server.js"]

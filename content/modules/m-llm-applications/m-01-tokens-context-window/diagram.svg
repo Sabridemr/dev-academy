@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 400" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Bağlam penceresi bütçesi</title>
+  <desc id="desc">Üstte 128 bin tokenlık bağlam penceresi tek bir çubuk olarak gösterilir: sistem talimatı, araç tanımları, getirilen belgeler, sohbet geçmişi, kullanıcı mesajı ve en sağda çıktı payı. Altta prefill aşamasında tüm girdi paralel işlenir, decode aşamasında tokenlar tek tek üretilir.</desc>
+  <defs>
+    <marker id="m01-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted)"/>
+    </marker>
+  </defs>
+
+  <text x="450" y="34" text-anchor="middle" font-size="16" font-weight="600" fill="var(--da-fg)">Bağlam penceresi = girdi + çıktı (ör. 128 000 token)</text>
+
+  <!-- Bütçe çubuğu -->
+  <rect x="40" y="56" width="820" height="70" rx="10" fill="var(--da-surface)" stroke="var(--da-border)"/>
+  <rect x="40" y="56" width="90" height="70" rx="10" fill="var(--da-primary)" opacity="0.35"/>
+  <rect x="130" y="56" width="80" height="70" fill="var(--da-primary)" opacity="0.2"/>
+  <rect x="210" y="56" width="260" height="70" fill="var(--da-accent)" opacity="0.25"/>
+  <rect x="470" y="56" width="200" height="70" fill="var(--da-muted)" opacity="0.2"/>
+  <rect x="670" y="56" width="70" height="70" fill="var(--da-success)" opacity="0.3"/>
+  <rect x="740" y="56" width="120" height="70" rx="10" fill="var(--da-surface)" stroke="var(--da-danger)" stroke-dasharray="6 4"/>
+
+  <g font-size="13" fill="var(--da-fg)" text-anchor="middle">
+    <text x="85" y="88">Sistem</text><text x="85" y="106">talimatı</text>
+    <text x="170" y="88">Araç</text><text x="170" y="106">tanımları</text>
+    <text x="340" y="88">Getirilen belgeler</text><text x="340" y="106">(RAG)</text>
+    <text x="570" y="88">Sohbet geçmişi</text><text x="570" y="106">(kesilebilir)</text>
+    <text x="705" y="88">Kullanıcı</text><text x="705" y="106">mesajı</text>
+    <text x="800" y="88" fill="var(--da-danger)">Çıktı payı</text><text x="800" y="106" fill="var(--da-danger)">max_tokens</text>
+  </g>
+
+  <!-- Girdi / çıktı köşeli ayraçları -->
+  <path d="M 40 140 L 40 150 L 740 150 L 740 140" fill="none" stroke="var(--da-primary)" stroke-width="1.5"/>
+  <text x="390" y="170" text-anchor="middle" font-size="13" fill="var(--da-primary)">giriş tokenları — ucuz, paralel işlenir</text>
+  <path d="M 742 140 L 742 150 L 860 150 L 860 140" fill="none" stroke="var(--da-danger)" stroke-width="1.5"/>
+  <text x="801" y="170" text-anchor="middle" font-size="13" fill="var(--da-danger)">çıkış — pahalı</text>
+
+  <!-- Prefill -->
+  <rect x="40" y="210" width="380" height="150" rx="14" fill="var(--da-surface)" stroke="var(--da-border)"/>
+  <text x="230" y="238" text-anchor="middle" font-size="15" font-weight="600" fill="var(--da-fg)">1. Prefill</text>
+  <g fill="var(--da-primary)" opacity="0.6">
+    <rect x="70" y="260" width="34" height="26" rx="4"/><rect x="110" y="260" width="34" height="26" rx="4"/>
+    <rect x="150" y="260" width="34" height="26" rx="4"/><rect x="190" y="260" width="34" height="26" rx="4"/>
+    <rect x="230" y="260" width="34" height="26" rx="4"/><rect x="270" y="260" width="34" height="26" rx="4"/>
+    <rect x="310" y="260" width="34" height="26" rx="4"/><rect x="350" y="260" width="34" height="26" rx="4"/>
+  </g>
+  <text x="230" y="312" text-anchor="middle" font-size="13" fill="var(--da-fg)">Tüm girdi tek seferde, paralel işlenir</text>
+  <text x="230" y="334" text-anchor="middle" font-size="12" fill="var(--da-muted)">süre → TTFT (ilk tokena kadar)</text>
+
+  <path d="M 425 285 L 475 285" stroke="var(--da-muted)" stroke-width="2" marker-end="url(#m01-arrow)"/>
+
+  <!-- Decode -->
+  <rect x="480" y="210" width="380" height="150" rx="14" fill="var(--da-surface)" stroke="var(--da-border)"/>
+  <text x="670" y="238" text-anchor="middle" font-size="15" font-weight="600" fill="var(--da-fg)">2. Decode</text>
+  <g fill="var(--da-danger)" opacity="0.55">
+    <rect x="520" y="260" width="34" height="26" rx="4"/>
+    <rect x="580" y="260" width="34" height="26" rx="4"/>
+    <rect x="640" y="260" width="34" height="26" rx="4"/>
+    <rect x="700" y="260" width="34" height="26" rx="4"/>
+  </g>
+  <g stroke="var(--da-muted)" stroke-width="1.5" fill="none" marker-end="url(#m01-arrow)">
+    <path d="M 556 273 L 576 273"/><path d="M 616 273 L 636 273"/><path d="M 676 273 L 696 273"/>
+  </g>
+  <text x="790" y="279" text-anchor="middle" font-size="14" fill="var(--da-muted)">…</text>
+  <text x="670" y="312" text-anchor="middle" font-size="13" fill="var(--da-fg)">Her adımda yalnızca bir token üretilir</text>
+  <text x="670" y="334" text-anchor="middle" font-size="12" fill="var(--da-muted)">süre → çıkış tokenı × TPOT</text>
+</svg>

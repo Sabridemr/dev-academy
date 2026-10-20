@@ -1,0 +1,116 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 460" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Redis ve Kafka ile sipariş olayı mimarisi</title>
+  <desc id="desc">Solda istemci ve API gateway, ortada sipariş servisi. Sipariş servisi üstte Redis (idempotency anahtarı, stok sayacı, oturum) ve altta veritabanı ile senkron konuşur; sağa doğru OrderCreated olayını üç partition'lı Kafka orders topic'ine üretir. Topic'ten envanter, bildirim ve analitik consumer group'ları bağımsız okur; hatalı kayıtlar dead letter topic'e gider.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+    <marker id="arrow-ev" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-primary, #6366f1)"/>
+    </marker>
+    <marker id="arrow-dlt" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-danger, #ef4444)"/>
+    </marker>
+  </defs>
+
+  <!-- Bölge etiketleri -->
+  <text x="190" y="30" text-anchor="middle" font-size="13" fill="var(--da-muted, #64748b)">Senkron yol (ms)</text>
+  <text x="740" y="30" text-anchor="middle" font-size="13" fill="var(--da-muted, #64748b)">Asenkron yol (olaylar)</text>
+  <line x1="470" y1="40" x2="470" y2="430" stroke="var(--da-border, #cbd5e1)" stroke-dasharray="6 6"/>
+
+  <!-- İstemci ve gateway -->
+  <g fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5">
+    <rect x="20" y="200" width="100" height="56" rx="10"/>
+    <rect x="150" y="200" width="110" height="56" rx="10"/>
+  </g>
+  <g font-size="13" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="70" y="233">İstemci</text>
+    <text x="205" y="226">API Gateway</text>
+  </g>
+  <text x="205" y="244" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">auth · rate limit</text>
+
+  <!-- Sipariş servisi -->
+  <rect x="300" y="190" width="140" height="76" rx="14" fill="var(--da-primary, #6366f1)" opacity="0.12" stroke="var(--da-primary, #6366f1)" stroke-width="2"/>
+  <text x="370" y="222" text-anchor="middle" font-size="14" font-weight="600" fill="var(--da-primary, #6366f1)">Sipariş servisi</text>
+  <text x="370" y="242" text-anchor="middle" font-size="11" fill="var(--da-fg, #0f172a)">POST /orders</text>
+
+  <!-- Redis -->
+  <rect x="300" y="60" width="140" height="80" rx="12" fill="var(--da-accent, #f59e0b)" opacity="0.15" stroke="var(--da-accent, #f59e0b)" stroke-width="1.5"/>
+  <text x="370" y="84" text-anchor="middle" font-size="14" font-weight="600" fill="var(--da-fg, #0f172a)">Redis</text>
+  <g font-size="10" fill="var(--da-muted, #64748b)" text-anchor="middle">
+    <text x="370" y="102">SET NX idempotency anahtarı</text>
+    <text x="370" y="116">DECRBY stok sayacı</text>
+    <text x="370" y="130">oturum · önbellek</text>
+  </g>
+
+  <!-- Veritabanı -->
+  <rect x="300" y="320" width="140" height="70" rx="12" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5"/>
+  <text x="370" y="348" text-anchor="middle" font-size="14" fill="var(--da-fg, #0f172a)">Veritabanı</text>
+  <text x="370" y="366" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">orders · kalıcı gerçek</text>
+
+  <!-- Senkron oklar -->
+  <g stroke="var(--da-muted, #64748b)" stroke-width="1.8" fill="none" marker-end="url(#arrow)">
+    <path d="M 120 228 L 148 228"/>
+    <path d="M 260 228 L 298 228"/>
+    <path d="M 370 190 L 370 142"/>
+    <path d="M 370 266 L 370 318"/>
+  </g>
+  <text x="392" y="170" font-size="10" fill="var(--da-muted, #64748b)">1-2</text>
+  <text x="392" y="296" font-size="10" fill="var(--da-muted, #64748b)">3</text>
+
+  <!-- Kafka topic -->
+  <rect x="500" y="120" width="190" height="220" rx="14" fill="var(--da-surface, #f8fafc)" stroke="var(--da-primary, #6366f1)" stroke-width="2"/>
+  <text x="595" y="146" text-anchor="middle" font-size="14" font-weight="600" fill="var(--da-primary, #6366f1)">Kafka · topic orders</text>
+  <g fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)" stroke-width="1.2">
+    <rect x="520" y="162" width="150" height="40" rx="6"/>
+    <rect x="520" y="212" width="150" height="40" rx="6"/>
+    <rect x="520" y="262" width="150" height="40" rx="6"/>
+  </g>
+  <g font-size="11" fill="var(--da-fg, #0f172a)">
+    <text x="530" y="186">P0 │ 0 │ 1 │ 2 │ 3 │ …</text>
+    <text x="530" y="236">P1 │ 0 │ 1 │ 2 │ …</text>
+    <text x="530" y="286">P2 │ 0 │ 1 │ …</text>
+  </g>
+  <text x="595" y="325" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">hash(orderId) mod 3 · RF=3 · acks=all</text>
+
+  <!-- Producer oku -->
+  <path d="M 440 228 L 498 228" stroke="var(--da-primary, #6366f1)" stroke-width="2" fill="none" marker-end="url(#arrow-ev)"/>
+  <text x="469" y="218" text-anchor="middle" font-size="10" fill="var(--da-primary, #6366f1)">OrderCreated</text>
+
+  <!-- Consumer group'lar -->
+  <g fill="var(--da-surface, #ffffff)" stroke="var(--da-success, #10b981)" stroke-width="1.5">
+    <rect x="780" y="100" width="160" height="60" rx="10"/>
+    <rect x="780" y="200" width="160" height="60" rx="10"/>
+    <rect x="780" y="300" width="160" height="60" rx="10"/>
+  </g>
+  <g font-size="13" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="860" y="124">Envanter</text>
+    <text x="860" y="224">Bildirim</text>
+    <text x="860" y="324">Analitik</text>
+  </g>
+  <g font-size="10" fill="var(--da-muted, #64748b)" text-anchor="middle">
+    <text x="860" y="142">group.id=inventory · stok düş</text>
+    <text x="860" y="242">group.id=notify · SMS, e-posta</text>
+    <text x="860" y="342">group.id=analytics · ambar</text>
+  </g>
+
+  <!-- Topic → consumer oklar -->
+  <g stroke="var(--da-success, #10b981)" stroke-width="1.6" fill="none" marker-end="url(#arrow)">
+    <path d="M 690 200 C 730 200, 740 130, 778 130"/>
+    <path d="M 690 230 L 778 230"/>
+    <path d="M 690 260 C 730 260, 740 330, 778 330"/>
+  </g>
+  <text x="735" y="92" text-anchor="middle" font-size="10" fill="var(--da-success, #10b981)">her grup kendi offset'i</text>
+
+  <!-- DLT -->
+  <rect x="520" y="380" width="150" height="40" rx="8" fill="var(--da-danger, #ef4444)" opacity="0.12" stroke="var(--da-danger, #ef4444)" stroke-width="1.2"/>
+  <text x="595" y="398" text-anchor="middle" font-size="11" fill="var(--da-fg, #0f172a)">orders.DLT</text>
+  <text x="595" y="412" text-anchor="middle" font-size="9" fill="var(--da-muted, #64748b)">N denemeden sonra</text>
+  <path d="M 780 345 C 740 400, 700 400, 672 400" stroke="var(--da-danger, #ef4444)" stroke-width="1.3" fill="none" stroke-dasharray="4 4" marker-end="url(#arrow-dlt)"/>
+
+  <!-- Tüketici tekilleştirme notu -->
+  <path d="M 780 115 C 700 60, 520 50, 442 70" stroke="var(--da-accent, #f59e0b)" stroke-width="1.2" fill="none" stroke-dasharray="3 3" marker-end="url(#arrow)"/>
+  <text x="600" y="48" text-anchor="middle" font-size="10" fill="var(--da-accent, #f59e0b)">seen:eventId SET NX EX 86400 (tekilleştirme)</text>
+
+  <text x="480" y="448" text-anchor="middle" font-size="12" fill="var(--da-muted, #64748b)">Redis: "şu anda ne durumdayız?" · Kafka: "ne oldu, kim haberdar olmalı?" · Veritabanı: kalıcı gerçek</text>
+</svg>

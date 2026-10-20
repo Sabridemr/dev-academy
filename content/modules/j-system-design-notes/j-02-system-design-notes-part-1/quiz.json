@@ -1,6 +1,6 @@
 {
   "id": "j-02-system-design-notes-part-1-quiz",
-  "title": { "tr": "Sistem Tasarımı Temelleri Quiz", "en": "System Design Fundamentals Quiz" },
+  "title": { "tr": "Sistem Tasarımı Mülakat Çerçevesi Quiz", "en": "System Design Interview Framework Quiz" },
   "passScore": 70,
   "questions": [
     {
@@ -13,13 +13,13 @@
       "options": [
         { "id": "a", "text": { "tr": "Kullanıcı ürünleri arayabilmeli", "en": "The user can search products" } },
         { "id": "b", "text": { "tr": "Kullanıcı sepete ürün ekleyebilmeli", "en": "The user can add items to the cart" } },
-        { "id": "c", "text": { "tr": "Yanıt süresi 200 ms'nin altında olmalı", "en": "Response time should be under 200 ms" } },
+        { "id": "c", "text": { "tr": "p99 yanıt süresi 200 ms'nin altında olmalı", "en": "p99 response time should be under 200 ms" } },
         { "id": "d", "text": { "tr": "Kullanıcı sipariş verip ödeme yapabilmeli", "en": "The user can place an order and make a payment" } }
       ],
       "correct": ["c"],
       "explanation": {
-        "tr": "Fonksiyonel olmayan gereksinimler sistemin ne kadar iyi çalıştığını (performans, ölçeklenebilirlik, güvenlik) tanımlar; 200 ms yanıt süresi bir performans hedefidir. Arama, sepete ekleme ve sipariş verme ise sistemin ne yaptığını anlatan, kullanıcıya görünen fonksiyonel özelliklerdir.",
-        "en": "Non-functional requirements define how well the system works (performance, scalability, security); a 200 ms response time is a performance target. Searching, adding to cart and placing an order describe what the system does, so they are user-visible functional features."
+        "tr": "Fonksiyonel olmayan gereksinimler sistemin ne kadar iyi çalıştığını (gecikme, ölçek, erişilebilirlik, güvenlik) tanımlar; 200 ms'lik p99 hedefi bir performans gereksinimidir. Arama, sepete ekleme ve sipariş verme ise sistemin ne yaptığını anlatan fonksiyonel gereksinimlerdir.",
+        "en": "Non-functional requirements define how well the system works (latency, scale, availability, security); a 200 ms p99 target is a performance requirement. Searching, adding to cart and placing an order describe what the system does, so they are functional requirements."
       },
       "difficulty": "easy",
       "concepts": ["non-functional-requirements", "functional-requirements"]
@@ -28,84 +28,85 @@
       "id": "q2",
       "type": "order",
       "prompt": {
-        "tr": "Modern ölçeklenebilir bir web uygulamasında kullanıcının isteği hangi bileşenlerden hangi sırayla geçer? Doğru sıraya koyun.",
-        "en": "In a modern scalable web application, in which order does a user's request pass through these components? Put them in the correct order."
+        "tr": "Sistem tasarımı mülakatında dört adımlı çerçevenin adımlarını doğru sıraya koyun.",
+        "en": "Put the steps of the four-step system design interview framework in the correct order."
       },
       "options": [
-        { "id": "lb", "text": { "tr": "Yük dengeleyici", "en": "Load balancer" } },
-        { "id": "db", "text": { "tr": "Veritabanı", "en": "Database" } },
-        { "id": "dns", "text": { "tr": "DNS", "en": "DNS" } },
-        { "id": "app", "text": { "tr": "Uygulama sunucusu", "en": "Application server" } },
-        { "id": "cdn", "text": { "tr": "CDN", "en": "CDN" } }
+        { "id": "deep", "text": { "tr": "Derinleşme ve ödünleşimler", "en": "Deep dive and trade-offs" } },
+        { "id": "req", "text": { "tr": "Gereksinimleri netleştirme", "en": "Clarify requirements" } },
+        { "id": "hld", "text": { "tr": "Üst düzey tasarım", "en": "High-level design" } },
+        { "id": "cap", "text": { "tr": "Kapasite tahmini", "en": "Capacity estimation" } }
       ],
-      "correct": ["dns", "cdn", "lb", "app", "db"],
+      "correct": ["req", "cap", "hld", "deep"],
       "explanation": {
-        "tr": "Önce DNS alan adını IP'ye çevirir, ardından statik içerik en yakın CDN ucundan sunulur, yük dengeleyici isteği sağlıklı bir uygulama sunucusuna yönlendirir, uygulama sunucusu iş mantığını çalıştırır ve gerekirse veritabanından okur ya da yazar. Yanıt aynı yoldan geri döner.",
-        "en": "First DNS resolves the domain to an IP, then static content is served from the nearest CDN edge, the load balancer routes the request to a healthy application server, which runs the business logic and reads from or writes to the database if needed. The response travels back the same path."
+        "tr": "Önce kapsam ve hedefler netleşir, sonra bu hedefler sayıya dökülür (QPS, depolama, bant genişliği); sayılar üst düzey tasarımın hangi yapı taşlarına ihtiyaç duyduğunu belirler ve ancak çalışan bir iskelet varken darboğazlara ve ödünleşimlere derinleşilebilir.",
+        "en": "Scope and goals come first, then they are turned into numbers (QPS, storage, bandwidth); the numbers decide which building blocks the high-level design needs, and only once a working skeleton exists can you dive into bottlenecks and trade-offs."
       },
-      "difficulty": "medium",
-      "concepts": ["cdn", "load-balancing"]
+      "difficulty": "easy",
+      "concepts": ["interview-framework", "interview-time-management"]
     },
     {
       "id": "q3",
-      "type": "multiple",
+      "type": "single",
       "prompt": {
-        "tr": "Bir tabloya indeks eklemenin dezavantajları hangileridir? Tüm doğru seçenekleri işaretleyin.",
-        "en": "What are the drawbacks of adding an index to a table? Select all that apply."
+        "tr": "10 milyon günlük aktif kullanıcının her biri günde 20 okuma yapıyor. Ortalama okuma QPS'i yaklaşık kaçtır?",
+        "en": "10 million daily active users each perform 20 reads per day. What is the approximate average read QPS?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "Ek depolama alanı tüketir", "en": "It consumes additional storage space" } },
-        { "id": "b", "text": { "tr": "INSERT, UPDATE ve DELETE işlemlerini yavaşlatır, çünkü indeksin de güncellenmesi gerekir", "en": "It slows down INSERT, UPDATE and DELETE, because the index must be updated too" } },
-        { "id": "c", "text": { "tr": "SELECT sorgularını yavaşlatır, çünkü veritabanı önce indeksi okumak zorundadır", "en": "It slows down SELECT queries, because the database must read the index first" } },
-        { "id": "d", "text": { "tr": "Çok fazla indeks genel performansı düşürebilir", "en": "Too many indexes can degrade overall performance" } }
+        { "id": "a", "text": { "tr": "~230", "en": "~230" } },
+        { "id": "b", "text": { "tr": "~2.300", "en": "~2,300" } },
+        { "id": "c", "text": { "tr": "~23.000", "en": "~23,000" } },
+        { "id": "d", "text": { "tr": "~200.000", "en": "~200,000" } }
       ],
-      "correct": ["a", "b", "d"],
+      "correct": ["b"],
       "explanation": {
-        "tr": "İndeks ek depolama ister, her yazma işleminde güncellenmesi gerektiği için INSERT/UPDATE/DELETE'i yavaşlatır ve aşırı indeksleme performansı düşürür. SELECT sorgularını ise yavaşlatmaz, tam tablo taramasını önleyerek hızlandırır; indeksin asıl amacı budur.",
-        "en": "An index needs extra storage, slows INSERT/UPDATE/DELETE because it must be updated on every write, and over-indexing degrades performance. It does not slow down SELECT queries; it speeds them up by avoiding a full table scan, which is its whole purpose."
+        "tr": "Günlük okuma sayısı 10M × 20 = 200 milyondur. Bir günde 86.400 saniye olduğundan 200M / 86.400 ≈ 2.315 okuma/sn çıkar; hızlı hesap için günü 100.000 saniye kabul ederseniz 2.000 bulursunuz, mertebe aynıdır. 200.000 seçeneği günlük sayıyı saniyeye bölmeyi unutanların hatasıdır.",
+        "en": "Daily reads are 10M × 20 = 200 million. A day has 86,400 seconds, so 200M / 86,400 ≈ 2,315 reads per second; rounding the day to 100,000 seconds gives 2,000, the same order of magnitude. The 200,000 option is the mistake of forgetting to divide the daily count by seconds."
       },
       "difficulty": "medium",
-      "concepts": ["database-indexing"]
+      "concepts": ["back-of-envelope-estimation", "qps-estimation"]
     },
     {
       "id": "q4",
-      "type": "truefalse",
+      "type": "multiple",
       "prompt": {
-        "tr": "İstemci oturumunu sunucuda saklayan durumlu (stateful) sunucular, durumsuz (stateless) sunuculara göre yatay olarak daha kolay ölçeklenir.",
-        "en": "Stateful servers, which store the client session on the server, are easier to scale horizontally than stateless servers."
+        "tr": "Günde 20 GB yeni veri üreten, veriyi 5 yıl saklayan ve replikasyon faktörü 3 olan bir sistem için hangi ifadeler doğrudur? Tüm doğru seçenekleri işaretleyin.",
+        "en": "A system writes 20 GB of new data per day, keeps it for 5 years and uses a replication factor of 3. Which statements are correct? Select all that apply."
       },
       "options": [
-        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
-        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+        { "id": "a", "text": { "tr": "Replikasız ham veri beş yılda yaklaşık 36 TB olur", "en": "Raw data without replication reaches roughly 36 TB in five years" } },
+        { "id": "b", "text": { "tr": "Replikalarla birlikte toplam disk ihtiyacı yaklaşık 110 TB'dir", "en": "Total disk including replicas is roughly 110 TB" } },
+        { "id": "c", "text": { "tr": "Bu veri tek bir sunucunun diskine rahatça sığar, bölümleme gerekmez", "en": "This data easily fits a single server's disk, so no partitioning is needed" } },
+        { "id": "d", "text": { "tr": "Replikasyon faktörü depolama ihtiyacını değiştirmez, yalnızca erişilebilirliği etkiler", "en": "The replication factor does not change storage needs, it only affects availability" } }
       ],
-      "correct": ["f"],
+      "correct": ["a", "b"],
       "explanation": {
-        "tr": "Tam tersi: durumsuz sunucularda her istek bağımsızdır, bu yüzden yük dengeleyici isteği herhangi bir sunucuya gönderebilir ve sunucu eklemek kolaydır. Durumlu sunucularda istekler önceki duruma bağlı olduğundan yatay ölçekleme zorlaşır.",
-        "en": "The opposite is true: with stateless servers every request is independent, so the load balancer can send it to any server and adding servers is easy. With stateful servers requests depend on previous state, which makes horizontal scaling harder."
+        "tr": "20 GB × 365 × 5 ≈ 36,5 TB ham veri; her kopya diskte yer kapladığından 3 replika ile ~110 TB gerekir. Bu büyüklük tek makineye sığmaz, bölümleme ve nesne depolama planlanmalıdır; replikasyon da erişilebilirliğin yanında depolama maliyetini doğrudan katlar.",
+        "en": "20 GB × 365 × 5 ≈ 36.5 TB of raw data; every copy takes disk space, so 3 replicas need ~110 TB. That does not fit a single machine, so partitioning and object storage must be planned; replication multiplies storage cost as well as improving availability."
       },
-      "difficulty": "easy",
-      "concepts": ["horizontal-scaling"]
+      "difficulty": "medium",
+      "concepts": ["storage-estimation", "back-of-envelope-estimation"]
     },
     {
       "id": "q5",
       "type": "single",
       "prompt": {
-        "tr": "Cache-Aside kalıbında uygulama Redis'te aradığı anahtarı bulamazsa (cache miss) ne olur?",
-        "en": "In the Cache-Aside pattern, what happens when the application does not find the requested key in Redis (a cache miss)?"
+        "tr": "Mülakatın 30. dakikasındasınız; üst düzey tasarım tahtada ve mülakatçı \"Ünlü bir kullanıcı gönderi atınca 10 milyon takipçinin akışı nasıl güncellenir?\" diye soruyor. En iyi yaklaşım hangisidir?",
+        "en": "It is minute 30 of the interview; the high-level design is on the board and the interviewer asks \"When a celebrity posts, how do the feeds of 10 million followers get updated?\" What is the best approach?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "Uygulama kullanıcıya hata döner ve isteği daha sonra tekrar denemesini ister", "en": "The application returns an error and asks the user to retry later" } },
-        { "id": "b", "text": { "tr": "Uygulama veriyi veritabanından okur, kullanıcıya döner ve bir TTL ile önbelleğe yazar", "en": "The application reads the data from the database, returns it to the user and stores it in the cache with a TTL" } },
-        { "id": "c", "text": { "tr": "Redis, eksik veriyi veritabanından kendiliğinden çekip uygulamaya iletir", "en": "Redis automatically fetches the missing data from the database and passes it to the application" } },
-        { "id": "d", "text": { "tr": "İstek CDN'e yönlendirilir ve veri en yakın uç sunucudan sunulur", "en": "The request is redirected to the CDN and served from the nearest edge server" } }
+        { "id": "a", "text": { "tr": "Gereksinimlere dönüp ünlü kullanıcıları kapsam dışına çıkarmayı önermek", "en": "Go back to requirements and propose taking celebrity users out of scope" } },
+        { "id": "b", "text": { "tr": "Fan-out on write ile fan-out on read'i karşılaştırıp bedellerini söyleyerek hibrit bir çözüm önermek", "en": "Compare fan-out on write with fan-out on read, state their costs and propose a hybrid" } },
+        { "id": "c", "text": { "tr": "Daha büyük bir Kafka kümesi ve daha fazla worker ekleyerek sorunun kendiliğinden çözüleceğini söylemek", "en": "Say a bigger Kafka cluster and more workers will make the problem go away" } },
+        { "id": "d", "text": { "tr": "Soruyu not alıp tasarımın geri kalanını anlatmaya devam etmek", "en": "Note the question and keep presenting the rest of the design" } }
       ],
       "correct": ["b"],
       "explanation": {
-        "tr": "Cache-Aside'da önbelleği yöneten uygulamadır: ıskada veriyi veritabanından okur, kullanıcıya döner ve TTL ile önbelleğe yazar; sonraki istek önbellekten (HIT) karşılanır. Redis veritabanına kendisi gitmez, ıska da bir hata ya da CDN yönlendirmesi değildir.",
-        "en": "In Cache-Aside the application manages the cache: on a miss it reads from the database, returns the data and stores it in the cache with a TTL, so the next request is a HIT. Redis does not query the database by itself, and a miss is neither an error nor a CDN redirect."
+        "tr": "Mülakatçının sorusu derinleşme adımına açılan bir kapıdır: darboğaz (sıcak kullanıcı için pahalı fan-out) bulunmuş, sizden alternatifleri ve bedellerini bekliyor. Push yaklaşımı okumayı hızlandırır ama yazmayı pahalılaştırır; pull tersini yapar; ünlüler için pull, diğerleri için push kullanan hibrit yaklaşım ödünleşimi yönetir. Kapsam dışına atmak ipucunu reddetmek, donanım eklemek gerekçesiz, konuyu ertelemek ise sessiz geçiştirmektir.",
+        "en": "The interviewer's question opens the deep-dive step: the bottleneck (expensive fan-out for a hot user) has been found and they expect alternatives with their costs. Push speeds up reads but makes writes expensive; pull does the opposite; a hybrid that pulls for celebrities and pushes for everyone else manages the trade-off. Dropping it from scope rejects the hint, adding hardware is unjustified, and deferring it dodges the question."
       },
-      "difficulty": "medium",
-      "concepts": ["caching"]
+      "difficulty": "hard",
+      "concepts": ["trade-offs", "high-level-design"]
     }
   ]
 }

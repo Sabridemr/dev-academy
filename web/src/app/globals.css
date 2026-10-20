@@ -5,19 +5,29 @@
 /*
  * Tasarım token'ları. --da-*-rgb Tailwind için (alpha desteği), --da-* SVG/inline kullanım için.
  * İçerik klasöründeki SVG diyagramları yalnızca --da-* değişkenlerini kullanır.
+ *
+ * Kimlik: koyu ağırlıklı "teknik" görünüm. Varsayılan tema koyudur (gece mavisi zemin,
+ * elektrik mavisi ana renk, turkuaz vurgu); açık tema aynı token'larla sunulur.
+ * *-fg değişkenleri ilgili rengin ÜZERİNE ya da metin olarak kullanılacak kontrastlı tonudur.
  */
 :root {
-  --da-bg-rgb: 248 250 252;
-  --da-fg-rgb: 15 23 42;
-  --da-muted-rgb: 100 116 139;
+  --da-bg-rgb: 246 248 252;
+  --da-fg-rgb: 11 18 34;
+  --da-muted-rgb: 91 107 133;
   --da-surface-rgb: 255 255 255;
-  --da-elevated-rgb: 241 245 249;
-  --da-border-rgb: 226 232 240;
-  --da-primary-rgb: 99 102 241;
-  --da-accent-rgb: 245 158 11;
-  --da-success-rgb: 16 185 129;
-  --da-warning-rgb: 234 179 8;
-  --da-danger-rgb: 239 68 68;
+  --da-elevated-rgb: 238 242 249;
+  --da-border-rgb: 221 227 238;
+  --da-primary-rgb: 37 99 235;
+  --da-primary-fg-rgb: 255 255 255;
+  --da-accent-rgb: 8 145 178;
+  --da-accent-fg-rgb: 14 116 144;
+  --da-success-rgb: 5 150 105;
+  --da-success-fg-rgb: 4 120 87;
+  --da-warning-rgb: 217 119 6;
+  --da-warning-fg-rgb: 180 83 9;
+  --da-danger-rgb: 220 38 38;
+  --da-danger-fg-rgb: 185 28 28;
+  --da-glow-rgb: 37 99 235;
 
   --da-bg: rgb(var(--da-bg-rgb));
   --da-fg: rgb(var(--da-fg-rgb));
@@ -26,25 +36,38 @@
   --da-elevated: rgb(var(--da-elevated-rgb));
   --da-border: rgb(var(--da-border-rgb));
   --da-primary: rgb(var(--da-primary-rgb));
+  --da-primary-fg: rgb(var(--da-primary-fg-rgb));
   --da-accent: rgb(var(--da-accent-rgb));
+  --da-accent-fg: rgb(var(--da-accent-fg-rgb));
   --da-success: rgb(var(--da-success-rgb));
+  --da-success-fg: rgb(var(--da-success-fg-rgb));
   --da-warning: rgb(var(--da-warning-rgb));
+  --da-warning-fg: rgb(var(--da-warning-fg-rgb));
   --da-danger: rgb(var(--da-danger-rgb));
+  --da-danger-fg: rgb(var(--da-danger-fg-rgb));
+  --da-gradient: linear-gradient(135deg, var(--da-primary) 0%, var(--da-accent) 100%);
+  --da-transition: 160ms cubic-bezier(0.2, 0, 0, 1);
   color-scheme: light;
 }
 
 .dark {
-  --da-bg-rgb: 11 15 25;
-  --da-fg-rgb: 226 232 240;
-  --da-muted-rgb: 148 163 184;
-  --da-surface-rgb: 17 24 39;
-  --da-elevated-rgb: 30 41 59;
-  --da-border-rgb: 51 65 85;
-  --da-primary-rgb: 129 140 248;
-  --da-accent-rgb: 251 191 36;
+  --da-bg-rgb: 10 15 30;
+  --da-fg-rgb: 230 237 247;
+  --da-muted-rgb: 139 155 184;
+  --da-surface-rgb: 17 26 46;
+  --da-elevated-rgb: 26 37 64;
+  --da-border-rgb: 36 51 82;
+  --da-primary-rgb: 79 140 255;
+  --da-primary-fg-rgb: 6 16 42;
+  --da-accent-rgb: 34 211 238;
+  --da-accent-fg-rgb: 103 232 249;
   --da-success-rgb: 52 211 153;
-  --da-warning-rgb: 250 204 21;
+  --da-success-fg-rgb: 110 231 183;
+  --da-warning-rgb: 251 191 36;
+  --da-warning-fg-rgb: 252 211 77;
   --da-danger-rgb: 248 113 113;
+  --da-danger-fg-rgb: 252 165 165;
+  --da-glow-rgb: 79 140 255;
   color-scheme: dark;
 }
 
@@ -57,37 +80,146 @@ body {
 body {
   font-feature-settings: 'cv11', 'ss01';
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
-:focus-visible {
+::selection {
+  background: rgb(var(--da-primary-rgb) / 0.3);
+}
+
+/* :where ile sıfır özgüllük: bileşenler kendi odak stilini (ring, outline-none) tanımlayabilir */
+:where(:focus-visible) {
   outline: 2px solid var(--da-primary);
   outline-offset: 2px;
 }
 
+/* İnce kaydırma çubuğu (WebKit/Blink) */
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-thumb {
+  background: rgb(var(--da-muted-rgb) / 0.35);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
 @layer components {
+  /* ---- Yüzeyler ---- */
   .card {
     @apply rounded-2xl border border-border bg-surface shadow-card;
   }
+  .card-hover {
+    @apply transition hover:-translate-y-0.5 hover:border-primary/60 hover:shadow-pop;
+  }
+  .glass {
+    @apply border border-border/70 bg-surface/70 backdrop-blur-md;
+  }
+
+  /* ---- Düğmeler ---- */
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex h-10 items-center justify-center gap-2 whitespace-nowrap rounded-xl px-4 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-sm {
+    @apply h-8 rounded-lg px-3 text-xs;
+  }
+  .btn-lg {
+    @apply h-12 rounded-xl px-6 text-base;
   }
   .btn-primary {
-    @apply btn bg-primary text-white hover:brightness-110;
+    @apply btn bg-primary text-primary-fg shadow-glow hover:bg-primary/90;
   }
   .btn-ghost {
     @apply btn border border-border bg-surface hover:bg-elevated;
   }
-  .btn-icon {
-    @apply inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-surface hover:bg-elevated disabled:opacity-40;
+  .btn-soft {
+    @apply btn bg-primary/10 text-primary hover:bg-primary/20;
   }
+  .btn-danger {
+    @apply btn border border-danger/30 bg-danger/10 text-danger-fg hover:bg-danger/20;
+  }
+  .btn-link {
+    @apply inline-flex items-center gap-1 text-sm font-medium text-primary underline-offset-4 hover:underline;
+  }
+  .btn-icon {
+    @apply inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border bg-surface transition hover:bg-elevated disabled:opacity-40;
+  }
+  .btn-icon-sm {
+    @apply h-8 w-8 rounded-lg;
+  }
+
+  /* ---- Form ---- */
   .input {
-    @apply w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-primary;
+    @apply h-10 w-full rounded-xl border border-border bg-surface px-3 text-sm outline-none transition placeholder:text-muted/70 focus:border-primary focus:ring-2 focus:ring-primary/25;
+  }
+  textarea.input {
+    @apply h-auto py-2;
   }
   .label {
     @apply mb-1 block text-xs font-medium uppercase tracking-wide text-muted;
   }
   .chip {
     @apply inline-flex items-center gap-1 rounded-full border border-border bg-elevated px-2.5 py-0.5 text-xs text-muted;
+  }
+  .chip-primary {
+    @apply border-primary/40 bg-primary/10 text-primary;
+  }
+  .chip-accent {
+    @apply border-accent/40 bg-accent/10 text-accent-fg;
+  }
+  .kbd {
+    @apply inline-flex h-5 min-w-5 items-center justify-center rounded border border-border bg-elevated px-1 font-mono text-xs text-muted;
+  }
+
+  /* ---- Tipografi ölçeği ---- */
+  .t-display {
+    @apply text-4xl font-bold leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl;
+  }
+  .t-h1 {
+    @apply text-3xl font-bold tracking-tight md:text-4xl;
+  }
+  .t-h2 {
+    @apply text-2xl font-semibold tracking-tight;
+  }
+  .t-h3 {
+    @apply text-lg font-semibold;
+  }
+  .t-eyebrow {
+    @apply text-xs font-semibold uppercase tracking-wider text-muted;
+  }
+  .t-mono-label {
+    @apply font-mono text-xs uppercase tracking-wider text-muted;
+  }
+  .t-gradient {
+    background: var(--da-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* ---- Dokular ---- */
+  .bg-grid {
+    background-image:
+      linear-gradient(to right, rgb(var(--da-border-rgb) / 0.55) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(var(--da-border-rgb) / 0.55) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+  .bg-dots {
+    background-image: radial-gradient(rgb(var(--da-border-rgb) / 0.9) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+  .bg-glow {
+    background-image:
+      radial-gradient(60% 50% at 20% 0%, rgb(var(--da-glow-rgb) / 0.22) 0%, transparent 70%),
+      radial-gradient(40% 40% at 90% 20%, rgb(var(--da-accent-rgb) / 0.14) 0%, transparent 70%);
+  }
+  .mask-fade-b {
+    -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+    mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
   }
 }
 
@@ -142,6 +274,25 @@ body {
   max-height: 70vh;
 }
 
+/* Kod bloğu satır numaraları (Shiki .line sarmalayıcıları ve yüklenmeden önceki düz metin) */
+.code-lines pre {
+  counter-reset: line;
+}
+.code-lines .line {
+  display: inline-block;
+  width: 100%;
+}
+.code-lines .line::before {
+  counter-increment: line;
+  content: counter(line);
+  display: inline-block;
+  width: 2.5em;
+  margin-right: 1em;
+  text-align: right;
+  color: rgb(var(--da-muted-rgb) / 0.6);
+  user-select: none;
+}
+
 /* Shiki: açık/koyu tema değişkenleri */
 .shiki,
 .shiki span {
@@ -151,6 +302,49 @@ body {
 .dark .shiki,
 .dark .shiki span {
   color: var(--shiki-dark);
+}
+
+/* Yazdırma: site kabuğu gizlenir, koyu tema açık token'lara döner (sertifika sayfası) */
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 10mm;
+  }
+  :root,
+  .dark {
+    --da-bg-rgb: 255 255 255;
+    --da-fg-rgb: 11 18 34;
+    --da-muted-rgb: 91 107 133;
+    --da-surface-rgb: 255 255 255;
+    --da-elevated-rgb: 238 242 249;
+    --da-border-rgb: 221 227 238;
+    --da-primary-rgb: 37 99 235;
+    --da-primary-fg-rgb: 255 255 255;
+    --da-accent-rgb: 8 145 178;
+    --da-warning-rgb: 217 119 6;
+    --da-warning-fg-rgb: 180 83 9;
+    --da-success-fg-rgb: 4 120 87;
+    color-scheme: light;
+  }
+  body > header,
+  body > footer,
+  .no-print {
+    display: none !important;
+  }
+  html,
+  body {
+    background: var(--da-bg);
+  }
+  .certificate-page {
+    max-width: none;
+    padding: 0;
+  }
+  .certificate-sheet {
+    box-shadow: none;
+    break-inside: avoid;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

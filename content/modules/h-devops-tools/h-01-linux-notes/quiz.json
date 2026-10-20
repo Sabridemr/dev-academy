@@ -1,6 +1,6 @@
 {
   "id": "h-01-linux-notes-quiz",
-  "title": { "tr": "Linux Temel Notları Quiz", "en": "Linux Core Notes Quiz" },
+  "title": { "tr": "Linux Temelleri Quiz", "en": "Linux Fundamentals Quiz" },
   "passScore": 70,
   "questions": [
     {
@@ -28,23 +28,23 @@
       "id": "q2",
       "type": "order",
       "prompt": {
-        "tr": "Kullanıcının yazdığı bir komutun Linux katmanlarından geçiş sırasını doğru sıraya koyun.",
-        "en": "Put the layers a user's command passes through in Linux in the correct order."
+        "tr": "`ls /var/log` yazdığınızda isteğin izlediği yolu doğru sıraya koyun.",
+        "en": "Put the path a request takes when you type `ls /var/log` in the correct order."
       },
       "options": [
-        { "id": "kernel", "text": { "tr": "Kernel komutu işler", "en": "The kernel processes the command" } },
-        { "id": "shell", "text": { "tr": "Shell komutu yorumlar", "en": "The shell interprets the command" } },
-        { "id": "hardware", "text": { "tr": "Donanım işi yürütür", "en": "The hardware executes the task" } },
-        { "id": "user", "text": { "tr": "Kullanıcı komutu yazar", "en": "The user types the command" } },
-        { "id": "fs", "text": { "tr": "Dosya sistemi veriyi okur/yazar", "en": "The file system reads/writes data" } }
+        { "id": "kernel", "text": { "tr": "Kernel, VFS üzerinden dizin girdilerini okur", "en": "The kernel reads the directory entries through the VFS" } },
+        { "id": "shell", "text": { "tr": "Shell satırı ayrıştırır ve ls programını başlatır", "en": "The shell parses the line and starts the ls program" } },
+        { "id": "hardware", "text": { "tr": "Disk sürücüsü veriyi donanımdan getirir", "en": "The disk driver fetches the data from hardware" } },
+        { "id": "user", "text": { "tr": "Kullanıcı komutu terminale yazar", "en": "The user types the command into the terminal" } },
+        { "id": "syscall", "text": { "tr": "ls, dizini okumak için sistem çağrısı yapar", "en": "ls makes a system call to read the directory" } }
       ],
-      "correct": ["user", "shell", "kernel", "fs", "hardware"],
+      "correct": ["user", "shell", "syscall", "kernel", "hardware"],
       "explanation": {
-        "tr": "Kullanıcı komutu verir, shell onu yorumlayıp kernel'e iletir, kernel işler, dosya sistemi veriyi okur/yazar ve en son donanım işi yürütür. Shell kullanıcı ile kernel arasındaki arayüzdür; donanıma doğrudan kernel ve dosya sistemi üzerinden erişilir.",
-        "en": "The user gives the command, the shell interprets it and passes it to the kernel, the kernel processes it, the file system reads/writes data and finally the hardware executes the task. The shell is the interface between user and kernel; hardware is reached through the kernel and file system."
+        "tr": "Kullanıcı komutu yazar, shell onu ayrıştırıp ls'i çalıştırır, ls kullanıcı alanından kernel'e sistem çağrısıyla geçer, kernel VFS katmanında isteği ilgili dosya sistemine iletir ve en sonunda sürücü diskten veriyi okur. Kullanıcı alanındaki program donanıma doğrudan ulaşamaz.",
+        "en": "The user types the command, the shell parses it and runs ls, ls crosses from user space into the kernel with a system call, the kernel passes the request through the VFS to the file system, and finally the driver reads the data from disk. A user-space program never touches hardware directly."
       },
       "difficulty": "easy",
-      "concepts": ["kernel"]
+      "concepts": ["kernel", "shell"]
     },
     {
       "id": "q3",
@@ -59,8 +59,8 @@
       ],
       "correct": ["f"],
       "explanation": {
-        "tr": "Soft link orijinal dosyanın yolunu gösterir; orijinal silinince bağ kırılır. Orijinal silindiğinde çalışmaya devam eden, inode'u gösteren hard link'tir (`ln`).",
-        "en": "A soft link points to the original file's path, so it breaks when the original is deleted. The one that keeps working is the hard link (`ln`), which points to the inode."
+        "tr": "Sembolik bağ yalnızca hedefin yolunu tutar; hedef silinince bağ kırılır. Orijinal silinse bile veriye ulaşmaya devam eden, aynı inode'u paylaşan sert bağdır (`ln`).",
+        "en": "A symbolic link only stores the target's path, so it breaks when the target is deleted. The one that still reaches the data after the original is removed is the hard link (`ln`), which shares the same inode."
       },
       "difficulty": "medium",
       "concepts": ["file-system-hierarchy"]
@@ -69,43 +69,43 @@
       "id": "q4",
       "type": "multiple",
       "prompt": {
-        "tr": "Süreç yönetimiyle ilgili hangi ifadeler doğrudur? (Birden fazla seçin)",
-        "en": "Which statements about process management are correct? (Select all that apply)"
+        "tr": "Süreç ve servis yönetimiyle ilgili hangi ifadeler doğrudur? (Birden fazla seçin)",
+        "en": "Which statements about process and service management are correct? (Select all that apply)"
       },
       "options": [
-        { "id": "a", "text": { "tr": "`kill 1234` varsayılan olarak sürece TERM sinyali gönderir", "en": "`kill 1234` sends the TERM signal to the process by default" } },
+        { "id": "a", "text": { "tr": "`kill 1234` varsayılan olarak sürece SIGTERM gönderir", "en": "`kill 1234` sends SIGTERM to the process by default" } },
         { "id": "b", "text": { "tr": "`kill -9` yalnızca süreç normal yolla durmadığında kullanılmalıdır", "en": "`kill -9` should only be used when the process does not stop normally" } },
-        { "id": "c", "text": { "tr": "`bg %1`, 1 numaralı işi ön plana (mevcut terminale) getirir", "en": "`bg %1` brings job 1 to the foreground (current terminal)" } },
-        { "id": "d", "text": { "tr": "`nice -n 10 komut`, komutu daha yüksek öncelikle başlatır", "en": "`nice -n 10 command` starts the command with higher priority" } }
+        { "id": "c", "text": { "tr": "`bg %1`, 1 numaralı işi ön plana getirir", "en": "`bg %1` brings job 1 to the foreground" } },
+        { "id": "d", "text": { "tr": "`systemctl enable myapp` servisi hemen başlatır", "en": "`systemctl enable myapp` starts the service immediately" } }
       ],
       "correct": ["a", "b"],
       "explanation": {
-        "tr": "`kill` varsayılan olarak nazik bir TERM isteği gönderir; SIGKILL gönderen `kill -9` ise yanıt vermeyen süreçler için son çaredir. İşi ön plana getiren `fg`'dir, `bg` arka planda sürdürür (c yanlış). `nice` ile daha yüksek değer daha düşük öncelik demektir (d yanlış).",
-        "en": "`kill` sends a polite TERM request by default; `kill -9` sends SIGKILL and is a last resort for unresponsive processes. `fg` brings a job to the foreground, `bg` resumes it in the background (c is wrong). With `nice`, a higher value means lower priority (d is wrong)."
+        "tr": "`kill` varsayılan olarak nazik bir SIGTERM gönderir; SIGKILL yollayan `kill -9` yalnızca yanıt vermeyen süreçler için son çaredir. İşi öne alan `fg`'dir, `bg` arka planda sürdürür (c yanlış). `enable` yalnızca açılışta başlatılmasını ayarlar; hemen başlatmak için `start` ya da `enable --now` gerekir (d yanlış).",
+        "en": "`kill` sends a polite SIGTERM by default; `kill -9` sends SIGKILL and is a last resort for unresponsive processes. `fg` brings a job to the foreground, `bg` resumes it in the background (c is wrong). `enable` only configures the service to start at boot; `start` or `enable --now` is needed to start it immediately (d is wrong)."
       },
       "difficulty": "medium",
-      "concepts": ["process-management"]
+      "concepts": ["process-management", "systemd"]
     },
     {
       "id": "q5",
       "type": "single",
       "prompt": {
-        "tr": "`grep \"error\" app.log | wc -l` komutu ne çıktı verir?",
-        "en": "What does `grep \"error\" app.log | wc -l` output?"
+        "tr": "`awk '{print $1}' access.log | sort | uniq -c | sort -rn | head -5` zinciri ne üretir?",
+        "en": "What does the pipeline `awk '{print $1}' access.log | sort | uniq -c | sort -rn | head -5` produce?"
       },
       "options": [
-        { "id": "a", "text": { "tr": "app.log dosyasındaki toplam satır sayısını", "en": "The total number of lines in app.log" } },
-        { "id": "b", "text": { "tr": "app.log içinde \"error\" geçen satırların sayısını", "en": "The number of lines in app.log that contain \"error\"" } },
-        { "id": "c", "text": { "tr": "\"error\" geçen satırları, numaralarıyla birlikte", "en": "The lines containing \"error\", together with their numbers" } },
-        { "id": "d", "text": { "tr": "\"error\", \"Error\" ve \"ERROR\" geçen satırların toplam sayısını", "en": "The total count of lines containing \"error\", \"Error\" and \"ERROR\"" } }
+        { "id": "a", "text": { "tr": "Dosyanın ilk 5 satırını, alfabetik sıralanmış hâlde", "en": "The first 5 lines of the file, sorted alphabetically" } },
+        { "id": "b", "text": { "tr": "İlk sütundaki (ör. IP) en sık görülen 5 değeri ve her birinin kaç kez geçtiğini", "en": "The 5 most frequent values in the first column (e.g. IPs) and how many times each appears" } },
+        { "id": "c", "text": { "tr": "İlk sütundaki benzersiz değerlerin toplam sayısını", "en": "The total number of unique values in the first column" } },
+        { "id": "d", "text": { "tr": "Rakamla başlayan satırlardan tekrar edenlerin silinmiş hâlini", "en": "Lines starting with a digit, with duplicates removed" } }
       ],
       "correct": ["b"],
       "explanation": {
-        "tr": "Pipe (`|`) grep'in çıktısını, yani \"error\" içeren satırları `wc -l`'e verir; o da bu satırları sayar. Tüm dosyayı saymak için doğrudan `wc -l app.log` gerekirdi (a); satırların kendisi yazdırılmaz (c); grep büyük/küçük harfe duyarlı olduğu için \"ERROR\" satırları sayılmaz (d).",
-        "en": "The pipe (`|`) feeds grep's output — the lines containing \"error\" — into `wc -l`, which counts them. Counting the whole file would need `wc -l app.log` directly (a); the lines themselves are not printed (c); grep is case-sensitive, so \"ERROR\" lines are not counted (d)."
+        "tr": "awk her satırın ilk alanını çıkarır; `uniq -c` yalnızca ardışık tekrarları saydığı için önce `sort` gerekir; `sort -rn` sayıya göre büyükten küçüğe sıralar ve `head -5` ilk beşi alır. Sonuç, en çok istek yapan 5 IP ve istek sayılarıdır. Benzersiz değer sayısı için zincir `| sort -u | wc -l` ile biterdi (c).",
+        "en": "awk extracts the first field of every line; `uniq -c` only counts adjacent duplicates, so `sort` must come first; `sort -rn` orders by the count descending and `head -5` takes the top five. The result is the 5 busiest IPs with their request counts. Counting unique values would end with `| sort -u | wc -l` instead (c)."
       },
-      "difficulty": "medium",
-      "concepts": ["grep"]
+      "difficulty": "hard",
+      "concepts": ["pipes", "grep"]
     }
   ]
 }

@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 500" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Kriptografi araç kutusu ve TLS 1.3 el sıkışması</title>
+  <desc id="desc">Solda altı araç ve sağladıkları garanti: hash bütünlük, şifre hash'i yavaş ve tuzlu saklama, HMAC bütünlük ve köken, AEAD gizlilik ve bütünlük, ECDHE anahtar anlaşması ve ileri gizlilik, imza herkesçe doğrulanabilir köken. Sağda istemci ile sunucu arasında TLS 1.3 mesajları: ClientHello ve anahtar payı, ServerHello ve anahtar payı, şifreli sertifika ve CertificateVerify imzası, Finished HMAC'leri ve AEAD ile uygulama verisi.</desc>
+  <defs>
+    <marker id="n06-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-primary)"/>
+    </marker>
+    <marker id="n06-arrow-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-accent)"/>
+    </marker>
+  </defs>
+
+  <!-- Sol: araç kutusu -->
+  <rect x="16" y="16" width="420" height="468" rx="16" fill="var(--da-surface)" stroke="var(--da-border)"/>
+  <text x="226" y="46" text-anchor="middle" font-size="15" font-weight="600" fill="var(--da-fg)">Araç kutusu</text>
+  <g font-size="12">
+    <rect x="36" y="64" width="380" height="58" rx="10" fill="var(--da-surface)" stroke="var(--da-border)"/>
+    <text x="52" y="88" font-weight="600" fill="var(--da-fg)">Hash · SHA-256</text>
+    <text x="52" y="108" fill="var(--da-muted)">bütünlük (parmak izi) · anahtarsız · gizlilik yok</text>
+
+    <rect x="36" y="130" width="380" height="58" rx="10" fill="var(--da-success)" fill-opacity="0.08" stroke="var(--da-success)"/>
+    <text x="52" y="154" font-weight="600" fill="var(--da-fg)">Şifre hash'i · argon2id / bcrypt</text>
+    <text x="52" y="174" fill="var(--da-muted)">tuzlu · bilerek yavaş · bellek zorlu</text>
+
+    <rect x="36" y="196" width="380" height="58" rx="10" fill="var(--da-surface)" stroke="var(--da-border)"/>
+    <text x="52" y="220" font-weight="600" fill="var(--da-fg)">HMAC · HS256</text>
+    <text x="52" y="240" fill="var(--da-muted)">bütünlük + köken · paylaşılan sır</text>
+
+    <rect x="36" y="262" width="380" height="58" rx="10" fill="var(--da-primary)" fill-opacity="0.10" stroke="var(--da-primary)"/>
+    <text x="52" y="286" font-weight="600" fill="var(--da-fg)">AEAD · AES-GCM / ChaCha20-Poly1305</text>
+    <text x="52" y="306" fill="var(--da-muted)">gizlilik + bütünlük · nonce asla tekrar etmez</text>
+
+    <rect x="36" y="328" width="380" height="58" rx="10" fill="var(--da-accent)" fill-opacity="0.10" stroke="var(--da-accent)"/>
+    <text x="52" y="352" font-weight="600" fill="var(--da-fg)">Anahtar anlaşması · ECDHE</text>
+    <text x="52" y="372" fill="var(--da-muted)">açık kanalda ortak sır · ileri gizlilik</text>
+
+    <rect x="36" y="394" width="380" height="58" rx="10" fill="var(--da-surface)" stroke="var(--da-border)"/>
+    <text x="52" y="418" font-weight="600" fill="var(--da-fg)">İmza · Ed25519 / ECDSA / RSA-PSS</text>
+    <text x="52" y="438" fill="var(--da-muted)">özel anahtar imzalar · herkes doğrular</text>
+  </g>
+
+  <!-- Sağ: TLS 1.3 -->
+  <rect x="456" y="16" width="488" height="468" rx="16" fill="var(--da-surface)" stroke="var(--da-border)"/>
+  <text x="700" y="46" text-anchor="middle" font-size="15" font-weight="600" fill="var(--da-fg)">TLS 1.3 el sıkışması (1 RTT)</text>
+
+  <rect x="476" y="62" width="120" height="44" rx="10" fill="var(--da-surface)" stroke="var(--da-fg)" stroke-width="1.5"/>
+  <text x="536" y="89" text-anchor="middle" font-size="13" fill="var(--da-fg)">İstemci</text>
+  <rect x="804" y="62" width="120" height="44" rx="10" fill="var(--da-surface)" stroke="var(--da-fg)" stroke-width="1.5"/>
+  <text x="864" y="89" text-anchor="middle" font-size="13" fill="var(--da-fg)">Sunucu</text>
+  <path d="M 536 108 L 536 470" stroke="var(--da-border)" stroke-width="1.5" stroke-dasharray="4 4"/>
+  <path d="M 864 108 L 864 470" stroke="var(--da-border)" stroke-width="1.5" stroke-dasharray="4 4"/>
+
+  <g font-size="12" text-anchor="middle" fill="var(--da-fg)">
+    <path d="M 538 140 L 860 140" stroke="var(--da-primary)" stroke-width="2" fill="none" marker-end="url(#n06-arrow)"/>
+    <text x="700" y="132">ClientHello · şifre takımları · ECDHE payı</text>
+
+    <path d="M 862 190 L 540 190" stroke="var(--da-primary)" stroke-width="2" fill="none" marker-end="url(#n06-arrow)"/>
+    <text x="700" y="182">ServerHello · ECDHE payı</text>
+    <text x="700" y="210" fill="var(--da-success)">↓ ortak sır hesaplandı, bundan sonrası şifreli</text>
+
+    <path d="M 862 250 L 540 250" stroke="var(--da-accent)" stroke-width="2" fill="none" marker-end="url(#n06-arrow-a)"/>
+    <text x="700" y="242">Certificate · CA zinciri · alan adı</text>
+    <path d="M 862 290 L 540 290" stroke="var(--da-accent)" stroke-width="2" fill="none" marker-end="url(#n06-arrow-a)"/>
+    <text x="700" y="282">CertificateVerify · dökümün imzası</text>
+
+    <path d="M 862 330 L 540 330" stroke="var(--da-muted)" stroke-width="1.5" fill="none" marker-end="url(#n06-arrow)"/>
+    <text x="700" y="322">Finished · HMAC(döküm)</text>
+    <path d="M 538 370 L 860 370" stroke="var(--da-muted)" stroke-width="1.5" fill="none" marker-end="url(#n06-arrow)"/>
+    <text x="700" y="362">Finished · HMAC(döküm)</text>
+
+    <rect x="560" y="396" width="280" height="56" rx="10" fill="var(--da-primary)" fill-opacity="0.10" stroke="var(--da-primary)"/>
+    <text x="700" y="420" font-weight="600">Uygulama verisi</text>
+    <text x="700" y="440" fill="var(--da-muted)">AES-GCM / ChaCha20-Poly1305</text>
+  </g>
+</svg>

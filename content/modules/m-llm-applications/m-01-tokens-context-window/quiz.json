@@ -1,0 +1,110 @@
+{
+  "id": "m-01-tokens-context-window-quiz",
+  "title": { "tr": "Token ve Bağlam Penceresi Quiz", "en": "Tokens and Context Window Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Bağlam penceresi 128 000 token olan bir modelden en fazla 4 000 tokenlık cevap istiyorsunuz. Girdiye en fazla kaç token ayırabilirsiniz?",
+        "en": "You ask a model with a 128,000-token context window for an answer of at most 4,000 tokens. How many tokens can the input use at most?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "128 000", "en": "128,000" } },
+        { "id": "b", "text": { "tr": "124 000", "en": "124,000" } },
+        { "id": "c", "text": { "tr": "132 000", "en": "132,000" } },
+        { "id": "d", "text": { "tr": "64 000; pencere girdi ve çıktı arasında eşit bölünür", "en": "64,000; the window is split evenly between input and output" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Bağlam penceresi girdi ile çıktının toplamıdır. 4 000 tokenlık çıktı payı pencereden düşülür, girdiye 124 000 kalır. Pencere eşit bölünmez; çıktı payını siz belirlersiniz.",
+        "en": "The context window is the sum of input and output. The 4,000-token output reserve is subtracted from the window, leaving 124,000 for input. The window is not split evenly; you decide the output reserve."
+      },
+      "difficulty": "easy",
+      "concepts": ["context-window"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "Çıkış tokenlarının çoğu sağlayıcıda giriş tokenlarından pahalı olmasının temel nedeni nedir?",
+        "en": "What is the main reason output tokens cost more than input tokens at most providers?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Çıkış tokenları daha uzun kelimelerden oluşur", "en": "Output tokens are made of longer words" } },
+        { "id": "b", "text": { "tr": "Decode aşamasında tokenlar tek tek, sıralı üretilir ve donanım daha az verimli kullanılır", "en": "In the decode phase tokens are produced one at a time, sequentially, using the hardware less efficiently" } },
+        { "id": "c", "text": { "tr": "Çıkış tokenları ayrıca bir güvenlik filtresinden geçirildiği için", "en": "Because output tokens additionally pass through a safety filter" } },
+        { "id": "d", "text": { "tr": "Giriş tokenları önbellekten okunduğu için her zaman bedavadır", "en": "Input tokens are always free because they are read from a cache" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Prefill tüm girdiyi paralel işler; decode ise her adımda bir token üretip bir sonrakine geçer. Bu sıralılık token başına maliyeti artırır. Giriş tokenları bedava değildir; önbellek yalnızca belirli koşullarda indirim sağlar.",
+        "en": "Prefill processes the whole input in parallel; decode produces one token per step before moving on. This sequential work raises the cost per token. Input tokens are not free; caching only gives a discount under certain conditions."
+      },
+      "difficulty": "medium",
+      "concepts": ["prefill-decode", "input-output-tokens"]
+    },
+    {
+      "id": "q3",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Aynı anlamdaki metnin token sayısını artıran durumlar hangileridir? (Birden fazla seçin)",
+        "en": "Which situations increase the token count of text with the same meaning? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Metni İngilizce yerine Türkçe yazmak", "en": "Writing the text in Turkish instead of English" } },
+        { "id": "b", "text": { "tr": "JSON çıktısını derin girintiyle biçimlendirmek", "en": "Formatting JSON output with deep indentation" } },
+        { "id": "c", "text": { "tr": "Sözlükte olmayan emoji ve nadir karakterler kullanmak", "en": "Using emoji and rare characters not in the vocabulary" } },
+        { "id": "d", "text": { "tr": "Aynı metni daha yüksek temperature ile göndermek", "en": "Sending the same text with a higher temperature" } }
+      ],
+      "correct": ["a", "b", "c"],
+      "explanation": {
+        "tr": "Eklemeli diller kelimeleri daha çok parçaya böler, girinti boşlukları token harcar, sözlükte olmayan karakterler bayt tokenlarına düşer. Temperature yalnızca örneklemeyi etkiler; girdinin token sayısını değiştirmez.",
+        "en": "Agglutinative languages split words into more pieces, indentation whitespace consumes tokens, and characters missing from the vocabulary fall back to byte tokens. Temperature only affects sampling; it does not change the input token count."
+      },
+      "difficulty": "medium",
+      "concepts": ["tokenizer", "token"]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Bağlam penceresi yeterince büyükse, tüm belgeleri pencereye koymak getirme (retrieval) yapmaktan her zaman daha iyi sonuç verir.",
+        "en": "If the context window is large enough, putting all documents into it always gives better results than doing retrieval."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "Yanlış. Her token her istekte faturalanır, TTFT girdiyle birlikte uzar ve uzun bağlamın ortasındaki bilgi daha az kullanılabilir (lost in the middle). İlgili parçaları seçmek çoğu zaman hem daha ucuz hem daha isabetlidir.",
+        "en": "False. Every token is billed on every request, TTFT grows with the input, and information in the middle of a long context may be used less (lost in the middle). Selecting the relevant pieces is often both cheaper and more accurate."
+      },
+      "difficulty": "hard",
+      "concepts": ["lost-in-the-middle", "context-window"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "TTFT'si 0,4 s, çıkış tokenı başına süresi 20 ms olan bir model 800 token üretiyor. Cevabı 200 tokenla sınırlarsanız toplam süre yaklaşık ne olur?",
+        "en": "A model with 0.4 s TTFT and 20 ms per output token produces 800 tokens. If you cap the answer at 200 tokens, what is the total time roughly?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "16,4 s", "en": "16.4 s" } },
+        { "id": "b", "text": { "tr": "4,4 s", "en": "4.4 s" } },
+        { "id": "c", "text": { "tr": "0,4 s", "en": "0.4 s" } },
+        { "id": "d", "text": { "tr": "4,0 s", "en": "4.0 s" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Toplam süre ≈ TTFT + çıkış tokenı × TPOT = 0,4 + 200 × 0,02 = 4,4 s. 16,4 s sınırlamadan önceki süredir; 4,0 s TTFT'yi unutmak demektir.",
+        "en": "Total time ≈ TTFT + output tokens × TPOT = 0.4 + 200 × 0.02 = 4.4 s. 16.4 s is the time before the cap; 4.0 s forgets the TTFT."
+      },
+      "difficulty": "easy",
+      "concepts": ["prefill-decode", "token-cost"]
+    }
+  ]
+}

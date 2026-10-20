@@ -1,0 +1,249 @@
+{
+  "id": "l-03-hash-tables-quiz",
+  "title": {
+    "tr": "Hash Tabloları Quiz",
+    "en": "Hash Tables Quiz"
+  },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "8 kovalı bir tabloda bir anahtarın hash değeri 29 ise anahtar hangi kovaya düşer (indeks = hash % kova_sayısı)?",
+        "en": "In a table with 8 buckets, a key's hash is 29. Which bucket does it land in (index = hash % bucket_count)?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "3",
+            "en": "3"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "5",
+            "en": "5"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "29",
+            "en": "29"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "8",
+            "en": "8"
+          }
+        }
+      ],
+      "correct": [
+        "b"
+      ],
+      "explanation": {
+        "tr": "29 = 3 × 8 + 5, yani 29 % 8 = 5. Mod işlemi hash değerini 0 ile 7 arasına sığdırır; 29 ve 8 dizinin sınırlarının dışındadır, 3 ise bölümdür, kalan değil.",
+        "en": "29 = 3 × 8 + 5, so 29 % 8 = 5. The modulus squeezes the hash into the range 0–7; 29 and 8 fall outside the array, and 3 is the quotient, not the remainder."
+      },
+      "difficulty": "easy",
+      "concepts": [
+        "hash-function",
+        "bucket"
+      ]
+    },
+    {
+      "id": "q2",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Aşağıdakilerden hangileri Python'da dict anahtarı olarak kullanılabilir? (Birden fazla seçin)",
+        "en": "Which of the following can be used as dict keys in Python? (Select all that apply)"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "(1, \"a\") demeti",
+            "en": "The tuple (1, \"a\")"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "[1, 2] listesi",
+            "en": "The list [1, 2]"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "frozenset({1, 2})",
+            "en": "frozenset({1, 2})"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "{\"x\": 1} sözlüğü",
+            "en": "The dict {\"x\": 1}"
+          }
+        }
+      ],
+      "correct": [
+        "a",
+        "c"
+      ],
+      "explanation": {
+        "tr": "Anahtar hashable olmalıdır. İçi hashable değerlerden oluşan tuple ve frozenset değiştirilemez olduğu için hash'i sabittir. list ve dict değiştirilebilir; içerikleri değişirse hash'leri de değişir ve yanlış kovada kalırlar, bu yüzden Python TypeError verir.",
+        "en": "Keys must be hashable. A tuple of hashable values and a frozenset are immutable, so their hash is stable. list and dict are mutable; if their contents changed so would their hash and they would sit in the wrong bucket, so Python raises TypeError."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "hashable-keys"
+      ]
+    },
+    {
+      "id": "q3",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Açık adresleme kullanan bir tabloda bir elemanı silerken kovayı tamamen boşaltmak, sonradan aynı yoklama yoluna yerleşmiş elemanların bulunamamasına yol açabilir.",
+        "en": "In an open-addressing table, deleting an element by fully emptying its slot can make elements that were placed later along the same probe path unfindable."
+      },
+      "options": [
+        {
+          "id": "t",
+          "text": {
+            "tr": "Doğru",
+            "en": "True"
+          }
+        },
+        {
+          "id": "f",
+          "text": {
+            "tr": "Yanlış",
+            "en": "False"
+          }
+        }
+      ],
+      "correct": [
+        "t"
+      ],
+      "explanation": {
+        "tr": "Doğru. Arama, boş bir kovaya rastlayınca durur. Ortadaki bir kova boşaltılırsa arama orada biter ve daha ileride duran anahtar 'yok' sanılır. Bu yüzden silinen yere mezar taşı (tombstone) işareti konur.",
+        "en": "True. A lookup stops when it reaches an empty slot. If a slot in the middle is emptied, the search ends there and a key sitting further along is reported missing. That is why deleted slots get a tombstone marker."
+      },
+      "difficulty": "hard",
+      "concepts": [
+        "open-addressing",
+        "collision"
+      ]
+    },
+    {
+      "id": "q4",
+      "type": "order",
+      "prompt": {
+        "tr": "Zincirlemeli bir hash tablosunda yeni bir anahtar eklenirken gerçekleşen adımları doğru sıraya koyun.",
+        "en": "Put the steps of inserting a new key into a chaining hash table in the correct order."
+      },
+      "options": [
+        {
+          "id": "c",
+          "text": {
+            "tr": "Kovadaki zinciri gez; anahtar yoksa sona ekle",
+            "en": "Walk the bucket's chain; append if the key is absent"
+          }
+        },
+        {
+          "id": "a",
+          "text": {
+            "tr": "Anahtarın hash değerini hesapla",
+            "en": "Compute the key's hash"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Yük faktörü eşiği aştıysa tabloyu büyütüp yeniden hash'le",
+            "en": "If the load factor exceeds the threshold, grow and rehash"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "hash % kova_sayısı ile kova indeksini bul",
+            "en": "Find the bucket index with hash % bucket_count"
+          }
+        }
+      ],
+      "correct": [
+        "a",
+        "b",
+        "c",
+        "d"
+      ],
+      "explanation": {
+        "tr": "Önce hash hesaplanır, sonra kovaya indirgenir, kovadaki zincirde anahtar aranıp eklenir; eleman sayısı arttığı için en sonda yük faktörü kontrol edilir ve gerekirse yeniden boyutlanır.",
+        "en": "First the hash is computed, then reduced to a bucket, then the chain is searched and the key appended; because the count grew, the load factor is checked last and the table resized if needed."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "chaining",
+        "load-factor"
+      ]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "Yeniden boyutlama tek başına O(n) sürdüğü hâlde hash tablosuna eklemenin neden O(1) olduğu söylenir?",
+        "en": "Resizing alone takes O(n), so why is insertion into a hash table said to be O(1)?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Yeniden boyutlama arka planda ayrı bir iş parçacığında yapıldığı için",
+            "en": "Because resizing happens on a separate background thread"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Kapasite her seferinde iki katına çıktığından toplam kopyalama işi n eklemeye paylaştırılınca sabit kalır (amortize O(1))",
+            "en": "Because capacity doubles each time, total copying spread over n inserts stays constant per insert (amortised O(1))"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "Elemanlar yeni diziye hash'lenmeden aynı indekslerle kopyalandığı için",
+            "en": "Because elements are copied to the same indices without rehashing"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Yük faktörü hiçbir zaman eşiği aşmadığı için",
+            "en": "Because the load factor never exceeds the threshold"
+          }
+        }
+      ],
+      "correct": [
+        "b"
+      ],
+      "explanation": {
+        "tr": "İkiye katlama sayesinde 1 + 2 + 4 + … + n ≈ 2n kopyalama yapılır; n eklemeye bölünce ekleme başına sabit maliyet kalır. Python'un dict'i büyütmeyi o anki işlemin içinde yapar (a yanlış); kova sayısı değiştiği için anahtarlar yeniden hash'lenmek zorundadır (c yanlış); eşik aşılmasaydı büyütme hiç olmazdı (d yanlış).",
+        "en": "Thanks to doubling, about 1 + 2 + 4 + … + n ≈ 2n copies happen; divided over n inserts that is constant work each. Python's dict resizes inside the triggering operation (a is wrong); keys must be rehashed because the bucket count changed (c is wrong); without crossing the threshold no resize would happen at all (d is wrong)."
+      },
+      "difficulty": "hard",
+      "concepts": [
+        "resizing",
+        "load-factor"
+      ]
+    }
+  ]
+}

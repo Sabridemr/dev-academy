@@ -39,15 +39,6 @@ function QuizForm({ quiz, title }: { quiz: QuizPublic; title: string }) {
   const [result, setResult] = useState<AttemptResult | null>(null);
   const [startedAt] = useState(() => Date.now());
 
-  const toggle = (qid: string, oid: string, multiple: boolean) => {
-    if (result) return;
-    setAnswers((a) => {
-      const cur = a[qid] ?? [];
-      if (!multiple) return { ...a, [qid]: [oid] };
-      return { ...a, [qid]: cur.includes(oid) ? cur.filter((x) => x !== oid) : [...cur, oid] };
-    });
-  };
-
   const allAnswered = quiz.questions.every((q) => (answers[q.id]?.length ?? 0) > 0);
   const onSubmit = async () => {
     // Hata submit.isError ile gösterilir; yakalanmamış promise reddi olmasın
@@ -77,7 +68,6 @@ function QuizForm({ quiz, title }: { quiz: QuizPublic; title: string }) {
         {quiz.questions.map((q, qi) => {
           const r = resultFor(q.id);
           const selected = answers[q.id] ?? [];
-          const multiple = q.type === 'multiple';
           return (
             <li
               key={q.id}
@@ -94,42 +84,16 @@ function QuizForm({ quiz, title }: { quiz: QuizPublic; title: string }) {
                 <span className="mr-2 text-muted">{qi + 1}.</span>
                 {tl(q.prompt)}
               </p>
-              {multiple && <p className="mb-2 text-xs text-muted">{t('quiz.selectAll')}</p>}
-              {q.type === 'order' ? (
-                <OrderList
-                  order={selected}
-                  options={q.options}
-                  disabled={Boolean(result)}
-                  onChange={(next) => setAnswers((a) => ({ ...a, [q.id]: next }))}
-                />
-              ) : (
-                <div role={multiple ? 'group' : 'radiogroup'} className="grid gap-2 sm:grid-cols-2">
-                  {q.options.map((o) => {
-                    const isSel = selected.includes(o.id);
-                    const isCorrect = r?.correctAnswer.includes(o.id);
-                    return (
-                      <button
-                        key={o.id}
-                        type="button"
-                        role={multiple ? 'checkbox' : 'radio'}
-                        aria-checked={isSel}
-                        disabled={Boolean(result)}
-                        onClick={() => toggle(q.id, o.id, multiple)}
-                        className={cn(
-                          'rounded-lg border px-3 py-2 text-left text-sm transition',
-                          isSel
-                            ? 'border-primary bg-primary/10'
-                            : 'border-border bg-surface hover:bg-elevated',
-                          r && isCorrect && 'border-success bg-success/10',
-                          r && isSel && !isCorrect && 'border-danger bg-danger/10',
-                        )}
-                      >
-                        {tl(o.text)}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
+              <QuestionInput
+                type={q.type}
+                options={q.options}
+                selected={selected}
+                disabled={Boolean(result)}
+                correctAnswer={r?.correctAnswer}
+                onChange={(next) => {
+                  if (!result) setAnswers((a) => ({ ...a, [q.id]: next }));
+                }}
+              />
               {r && (
                 <motion.div
                   initial={{ opacity: 0, y: 4 }}
@@ -197,5 +161,66 @@ function QuizForm({ quiz, title }: { quiz: QuizPublic; title: string }) {
         {submit.isError && <p className="text-sm text-danger">{t('common.error')}</p>}
       </div>
     </section>
+  );
+}
+
+/**
+ * Bir sorunun cevap girişi: sıralama sorusunda OrderList, diğerlerinde seçenek düğmeleri.
+ * Quiz, mülakat modu ve benzeri ekranlar ortak kullanır. `correctAnswer` verilirse doğru/yanlış boyanır.
+ */
+export function QuestionInput({
+  type,
+  options,
+  selected,
+  onChange,
+  disabled = false,
+  correctAnswer,
+}: {
+  type: QuizPublic['questions'][number]['type'];
+  options: QuizPublic['questions'][number]['options'];
+  selected: string[];
+  onChange: (next: string[]) => void;
+  disabled?: boolean;
+  correctAnswer?: string[];
+}) {
+  const { t, tl } = useI18n();
+  const multiple = type === 'multiple';
+  if (type === 'order')
+    return <OrderList order={selected} options={options} disabled={disabled} onChange={onChange} />;
+  const toggle = (oid: string) => {
+    if (disabled) return;
+    if (!multiple) onChange([oid]);
+    else onChange(selected.includes(oid) ? selected.filter((x) => x !== oid) : [...selected, oid]);
+  };
+  return (
+    <>
+      {multiple && <p className="mb-2 text-xs text-muted">{t('quiz.selectAll')}</p>}
+      <div role={multiple ? 'group' : 'radiogroup'} className="grid gap-2 sm:grid-cols-2">
+        {options.map((o) => {
+          const isSel = selected.includes(o.id);
+          const isCorrect = correctAnswer?.includes(o.id);
+          return (
+            <button
+              key={o.id}
+              type="button"
+              role={multiple ? 'checkbox' : 'radio'}
+              aria-checked={isSel}
+              disabled={disabled}
+              onClick={() => toggle(o.id)}
+              className={cn(
+                'rounded-lg border px-3 py-2 text-left text-sm transition',
+                isSel
+                  ? 'border-primary bg-primary/10'
+                  : 'border-border bg-surface hover:bg-elevated',
+                correctAnswer && isCorrect && 'border-success bg-success/10',
+                correctAnswer && isSel && !isCorrect && 'border-danger bg-danger/10',
+              )}
+            >
+              {tl(o.text)}
+            </button>
+          );
+        })}
+      </div>
+    </>
   );
 }

@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 440" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Prompt anatomisi ve doğrulama döngüsü</title>
+  <desc id="desc">Solda sistem mesajı: rol ve görev, kısıtlar, çıktı şeması. Altında kullanıcı mesajı: etiketlerle sarılmış bağlam, few-shot örnekleri ve asıl soru. Ortada LLM. Sağda şema doğrulayıcı; geçerse uygulamaya gider, geçmezse hata mesajıyla LLM'e geri döner.</desc>
+  <defs>
+    <marker id="m02-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted)"/>
+    </marker>
+  </defs>
+
+  <!-- Sistem mesajı -->
+  <rect x="30" y="30" width="330" height="170" rx="14" fill="var(--da-surface)" stroke="var(--da-primary)" stroke-width="2"/>
+  <text x="50" y="58" font-size="15" font-weight="600" fill="var(--da-primary)">system</text>
+  <text x="250" y="58" font-size="12" fill="var(--da-muted)">kalıcı kurallar</text>
+  <g font-size="13" fill="var(--da-fg)">
+    <rect x="50" y="72" width="290" height="32" rx="6" fill="var(--da-primary)" opacity="0.12"/>
+    <text x="62" y="93">Rol ve görev</text>
+    <rect x="50" y="112" width="290" height="32" rx="6" fill="var(--da-primary)" opacity="0.12"/>
+    <text x="62" y="133">Kısıtlar ve çıkış yolu</text>
+    <rect x="50" y="152" width="290" height="32" rx="6" fill="var(--da-primary)" opacity="0.12"/>
+    <text x="62" y="173">Çıktı şeması (JSON)</text>
+  </g>
+
+  <!-- Kullanıcı mesajı -->
+  <rect x="30" y="220" width="330" height="190" rx="14" fill="var(--da-surface)" stroke="var(--da-accent)" stroke-width="2"/>
+  <text x="50" y="248" font-size="15" font-weight="600" fill="var(--da-accent)">user</text>
+  <text x="230" y="248" font-size="12" fill="var(--da-muted)">değişken içerik</text>
+  <g font-size="13" fill="var(--da-fg)">
+    <rect x="50" y="262" width="290" height="32" rx="6" fill="var(--da-accent)" opacity="0.14"/>
+    <text x="62" y="283">&lt;politika&gt; … &lt;/politika&gt;</text>
+    <rect x="50" y="302" width="290" height="32" rx="6" fill="var(--da-accent)" opacity="0.14"/>
+    <text x="62" y="323">Örnek 1 → çıktı, Örnek 2 → çıktı</text>
+    <rect x="50" y="342" width="290" height="50" rx="6" fill="var(--da-accent)" opacity="0.14"/>
+    <text x="62" y="363">&lt;mesaj&gt; kullanıcı metni &lt;/mesaj&gt;</text>
+    <text x="62" y="382" font-size="12" fill="var(--da-muted)">asıl soru en sonda</text>
+  </g>
+
+  <!-- LLM -->
+  <rect x="430" y="170" width="140" height="90" rx="16" fill="var(--da-primary)" opacity="0.15" stroke="var(--da-primary)" stroke-width="2"/>
+  <text x="500" y="210" text-anchor="middle" font-size="16" font-weight="600" fill="var(--da-fg)">LLM</text>
+  <text x="500" y="232" text-anchor="middle" font-size="12" fill="var(--da-muted)">temperature 0</text>
+
+  <g stroke="var(--da-muted)" stroke-width="2" fill="none" marker-end="url(#m02-arrow)">
+    <path d="M 360 115 C 400 115, 400 195, 428 200"/>
+    <path d="M 360 315 C 400 315, 400 235, 428 230"/>
+    <path d="M 570 215 L 640 215"/>
+  </g>
+
+  <!-- Doğrulayıcı -->
+  <path d="M 720 160 L 790 215 L 720 270 L 650 215 Z" fill="var(--da-surface)" stroke="var(--da-fg)" stroke-width="1.5"/>
+  <text x="720" y="212" text-anchor="middle" font-size="13" fill="var(--da-fg)">Şemaya</text>
+  <text x="720" y="229" text-anchor="middle" font-size="13" fill="var(--da-fg)">uyuyor mu?</text>
+
+  <!-- Geçti -->
+  <path d="M 790 215 L 840 215 L 840 120" fill="none" stroke="var(--da-success)" stroke-width="2" marker-end="url(#m02-arrow)"/>
+  <rect x="770" y="70" width="110" height="46" rx="10" fill="var(--da-surface)" stroke="var(--da-success)" stroke-width="2"/>
+  <text x="825" y="98" text-anchor="middle" font-size="13" fill="var(--da-success)">Uygulama</text>
+  <text x="852" y="170" font-size="12" fill="var(--da-success)">evet</text>
+
+  <!-- Geçmedi -->
+  <path d="M 720 270 L 720 340 L 500 340 L 500 264" fill="none" stroke="var(--da-danger)" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#m02-arrow)"/>
+  <text x="610" y="362" text-anchor="middle" font-size="12" fill="var(--da-danger)">hayır → hata mesajını geri ver, en fazla 1–2 deneme</text>
+</svg>

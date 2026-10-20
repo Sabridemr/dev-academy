@@ -4,10 +4,12 @@ import { z } from 'zod';
 import { InteractiveTypeSchema, ReviewGradeSchema, UpdateProgressSchema } from '@devacademy/shared';
 import type {
   BadgeDto,
+  DailyActivityDto,
   ProgressItem,
   ProgressSummary,
   ReviewGradeDto,
   UpdateProgressDto,
+  XpEventDto,
 } from '@devacademy/shared';
 import { CurrentUser, Public, type AuthUser } from '../../common/auth/decorators';
 import { zodBody } from '../../common/pipes/zod-validation.pipe';
@@ -43,6 +45,25 @@ export class ProgressController {
   })
   summary(@CurrentUser() user: AuthUser): Promise<ProgressSummary> {
     return this.progress.summary(user.id);
+  }
+
+  @Get('activity')
+  @ApiOperation({
+    summary: 'Günlük aktivite (ısı haritası): süre, tamamlanan ders, geçilen quiz, XP',
+    description: 'Yalnızca kaydı olan günler döner; eksik günleri istemci sıfırla doldurur.',
+  })
+  @ApiQuery({ name: 'days', required: false, description: 'Geriye dönük gün sayısı (1-730)' })
+  activity(
+    @CurrentUser() user: AuthUser,
+    @Query('days') days?: string,
+  ): Promise<DailyActivityDto[]> {
+    return this.progress.activity(user.id, clampInt(days, 365, 1, 730));
+  }
+
+  @Get('xp')
+  @ApiOperation({ summary: 'Son 50 XP olayı' })
+  xp(@CurrentUser() user: AuthUser): Promise<XpEventDto[]> {
+    return this.progress.xpHistory(user.id);
   }
 
   @Put('lessons/:lessonId')

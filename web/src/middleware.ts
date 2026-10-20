@@ -19,8 +19,8 @@ export function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     {
-      // Statik dosyalar ve önceden getirme (prefetch) istekleri nonce gerektirmez
-      source: '/((?!_next/static|_next/image|favicon.ico).*)',
+      // Statik dosyalar (service worker, manifest, ikonlar dahil) ve önceden getirme (prefetch) istekleri nonce gerektirmez
+      source: '/((?!_next/static|_next/image|favicon.ico|sw.js|manifest.webmanifest|icons/).*)',
       missing: [
         { type: 'header', key: 'next-router-prefetch' },
         { type: 'header', key: 'purpose', value: 'prefetch' },

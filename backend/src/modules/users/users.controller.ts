@@ -11,11 +11,11 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { RegisterPushTokenSchema, UpdateProfileSchema } from '@devacademy/shared';
-import type { RegisterPushTokenDto, UpdateProfileDto, UserProfile } from '@devacademy/shared';
+import type { RegisterPushTokenDto, UpdateProfileDto } from '@devacademy/shared';
 import { CurrentUser, type AuthUser } from '../../common/auth/decorators';
 import { zodBody } from '../../common/pipes/zod-validation.pipe';
 import { ApiZodBody } from '../../common/swagger/zod-openapi';
-import { UsersService } from './users.service';
+import { UsersService, type MeProfile } from './users.service';
 
 @ApiTags('users')
 @ApiBearerAuth()
@@ -25,14 +25,14 @@ export class UsersController {
 
   @Get('me')
   @ApiOperation({ summary: 'Oturum açmış kullanıcının profili' })
-  me(
-    @CurrentUser() user: AuthUser,
-  ): Promise<UserProfile & { reminderHour: number | null; timezone: string }> {
+  me(@CurrentUser() user: AuthUser): Promise<MeProfile> {
     return this.users.getProfile(user.id);
   }
 
   @Patch('me')
-  @ApiOperation({ summary: 'Profil güncelle (ad, avatar, dil, öğrenme yolu, hatırlatma saati)' })
+  @ApiOperation({
+    summary: 'Profil güncelle (ad, avatar, dil, öğrenme yolu, hatırlatma saati, günlük hedef)',
+  })
   @ApiZodBody(UpdateProfileSchema)
   update(@CurrentUser() user: AuthUser, @Body(zodBody(UpdateProfileSchema)) dto: UpdateProfileDto) {
     return this.users.updateProfile(user.id, dto);

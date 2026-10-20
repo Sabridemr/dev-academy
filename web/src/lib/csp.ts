@@ -22,7 +22,9 @@ export function buildCsp(nonce: string): string {
     "font-src 'self' data:",
     `connect-src 'self' ${apiOrigin} ${wsOrigin} ${google} https://appleid.apple.com${isDev ? ' ws://localhost:* http://localhost:*' : ''}`,
     `frame-src ${google} https://appleid.apple.com`,
+    // Service worker (/sw.js) ve PWA manifest'i yalnızca aynı origin'den
     "worker-src 'self' blob:",
+    "manifest-src 'self'",
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self' https://appleid.apple.com",

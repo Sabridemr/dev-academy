@@ -327,7 +327,7 @@ export default function LoadBalancerSim({ params, onInteract }: SimulatorProps) 
                   state.algorithm === 'least-connections' ? (
                     <button
                       type="button"
-                      className="rounded bg-elevated px-1 text-[10px]"
+                      className="rounded bg-elevated px-1 text-xs"
                       title={t('sim.weight')}
                       aria-label={`${s.id} ${t('sim.weight')} ${s.weight}`}
                       onClick={() =>

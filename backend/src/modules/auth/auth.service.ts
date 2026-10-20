@@ -18,15 +18,50 @@ import type {
   RegisterDto,
   UserProfile,
 } from '@devacademy/shared';
-import type { User } from '@prisma/client';
+import type { TokenPurpose, User } from '@prisma/client';
 import { AuthStateService } from '../../common/auth/auth-state.service';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { RedisService } from '../../common/redis/redis.service';
 import type { Env } from '../../config/env';
+import { NotificationsService } from '../notifications/notifications.service';
 import { OAuthVerifierService } from './oauth-verifier.service';
 
 /** Zamanlama eşitlemesi için sahte hash (kayıtlı olmayan e-postalarda doğrulanır) */
 const DUMMY_HASH = argon2.hash(randomBytes(16).toString('hex'), { type: argon2.argon2id });
+
+/** Şifre sıfırlama bağlantısı 1 saat, e-posta doğrulama bağlantısı 24 saat geçerli */
+const TOKEN_TTL_MS: Record<TokenPurpose, number> = {
+  reset: 60 * 60 * 1000,
+  verify: 24 * 60 * 60 * 1000,
+};
+
+const MAIL = {
+  tr: {
+    reset: {
+      subject: 'DevAcademy şifre sıfırlama',
+      body: (link: string) =>
+        `Şifreni sıfırlamak için bağlantıyı aç (1 saat geçerli):\n${link}\n\nBu isteği sen yapmadıysan bu e-postayı yok sayabilirsin.`,
+    },
+    verify: {
+      subject: 'DevAcademy e-posta doğrulama',
+      body: (link: string) =>
+        `E-posta adresini doğrulamak için bağlantıyı aç (24 saat geçerli):\n${link}`,
+    },
+  },
+  en: {
+    reset: {
+      subject: 'Reset your DevAcademy password',
+      body: (link: string) =>
+        `Open this link to reset your password (valid for 1 hour):\n${link}\n\nIf you didn't request this, you can ignore this email.`,
+    },
+    verify: {
+      subject: 'Verify your DevAcademy email',
+      body: (link: string) => `Open this link to verify your email (valid for 24 hours):\n${link}`,
+    },
+  },
+} as const;
+
+const INVALID_LINK = 'Bağlantı geçersiz ya da süresi dolmuş';
 
 export interface SessionMeta {
   userAgent?: string;
@@ -49,6 +84,7 @@ export class AuthService {
     private readonly oauth: OAuthVerifierService,
     private readonly redis: RedisService,
     private readonly authState: AuthStateService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   /**
@@ -216,6 +252,97 @@ export class AuthService {
       data: { revokedAt: new Date() },
     });
     await this.authState.revokeAccessTokens(userId);
+  }
+
+  /* ------------------------ Şifre sıfırlama / doğrulama ------------------------ */
+
+  /**
+   * Şifre sıfırlama bağlantısı gönderir. Yanıt kullanıcının var olup olmadığını sızdırmaz: çağıran her
+   * durumda 204 döner ve e-posta beklenmeden (arka planda) gönderilir, yanıt süresi de eşitlenir.
+   */
+  async forgotPassword(rawEmail: string): Promise<void> {
+    const email = rawEmail.toLowerCase().trim();
+    const user = await this.prisma.user.findUnique({ where: { email } });
+    if (!user || user.deletedAt) return;
+    const token = await this.createOneTimeToken(user.id, 'reset');
+    this.sendTokenMail(user, 'reset', token);
+  }
+
+  /** Sıfırlama token'ı tek kullanımlıktır; şifre güncellenir ve tüm oturumlar kapatılır */
+  async resetPassword(rawToken: string, newPassword: string): Promise<void> {
+    const userId = await this.consumeOneTimeToken(rawToken, 'reset');
+    const passwordHash = await argon2.hash(newPassword, { type: argon2.argon2id });
+    const user = await this.prisma.user.findUniqueOrThrow({ where: { id: userId } });
+    await this.prisma.user.update({
+      where: { id: userId },
+      // Bağlantı e-postaya gittiğine göre adres de doğrulanmış olur
+      data: { passwordHash, emailVerifiedAt: user.emailVerifiedAt ?? new Date() },
+    });
+    await this.prisma.refreshToken.updateMany({
+      where: { userId, revokedAt: null },
+      data: { revokedAt: new Date() },
+    });
+    await this.authState.revokeAccessTokens(userId);
+  }
+
+  /** Oturumlu kullanıcıya doğrulama bağlantısı gönderir (zaten doğrulanmışsa bir şey yapmaz) */
+  async requestEmailVerification(userId: string): Promise<void> {
+    const user = await this.prisma.user.findUniqueOrThrow({ where: { id: userId } });
+    if (user.emailVerifiedAt) return;
+    const token = await this.createOneTimeToken(user.id, 'verify');
+    this.sendTokenMail(user, 'verify', token);
+  }
+
+  async verifyEmail(rawToken: string): Promise<void> {
+    const userId = await this.consumeOneTimeToken(rawToken, 'verify');
+    await this.prisma.user.updateMany({
+      where: { id: userId, emailVerifiedAt: null },
+      data: { emailVerifiedAt: new Date() },
+    });
+  }
+
+  /**
+   * Rastgele 32 bayt (base64url) token üretir; yalnızca SHA-256 özeti saklanır. Aynı amaçla verilmiş
+   * önceki kullanılmamış token'lar silinir (her zaman en son gönderilen bağlantı geçerli).
+   */
+  private async createOneTimeToken(userId: string, purpose: TokenPurpose): Promise<string> {
+    const token = randomBytes(32).toString('base64url');
+    await this.prisma.$transaction([
+      this.prisma.passwordReset.deleteMany({ where: { userId, purpose, usedAt: null } }),
+      this.prisma.passwordReset.create({
+        data: {
+          userId,
+          purpose,
+          tokenHash: hashToken(token),
+          expiresAt: new Date(Date.now() + TOKEN_TTL_MS[purpose]),
+        },
+      }),
+    ]);
+    return token;
+  }
+
+  /** Token'ı koşullu olarak kullanılmış işaretler: eş zamanlı iki istekten yalnızca biri kazanır */
+  private async consumeOneTimeToken(rawToken: string, purpose: TokenPurpose): Promise<string> {
+    const stored = await this.prisma.passwordReset.findUnique({
+      where: { tokenHash: hashToken(rawToken) },
+      include: { user: { select: { deletedAt: true } } },
+    });
+    if (!stored || stored.purpose !== purpose || stored.user.deletedAt)
+      throw new BadRequestException(INVALID_LINK);
+    const { count } = await this.prisma.passwordReset.updateMany({
+      where: { id: stored.id, usedAt: null, expiresAt: { gt: new Date() } },
+      data: { usedAt: new Date() },
+    });
+    if (count === 0) throw new BadRequestException(INVALID_LINK);
+    return stored.userId;
+  }
+
+  private sendTokenMail(user: User, purpose: TokenPurpose, token: string): void {
+    const path = purpose === 'reset' ? 'reset-password' : 'verify-email';
+    const link = `${this.config.get('WEB_URL')}/${path}?token=${encodeURIComponent(token)}`;
+    const mail = MAIL[user.locale][purpose];
+    // Beklenmez: SMTP gecikmesi e-postanın kayıtlı olup olmadığını sızdırmasın (sendEmail hatayı loglar)
+    void this.notifications.sendEmail(user.email, mail.subject, mail.body(link));
   }
 
   /* ----------------------------- yardımcılar ----------------------------- */

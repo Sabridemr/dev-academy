@@ -451,7 +451,7 @@ export default function DecisionTreeSim({ params, onInteract }: SimulatorProps) 
               );
             })}
           </svg>
-          <p className="text-[11px] text-muted">
+          <p className="text-xs text-muted">
             {locale === 'tr'
               ? 'Düğüm: sınıf0/sınıf1 · safsızlık'
               : 'Node: class0/class1 · impurity'}{' '}

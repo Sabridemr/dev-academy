@@ -9,10 +9,10 @@ title:
 summary:
   tr: "Yemek siparişi platformunun gereksinimlerini, mikroservis mimarisini ve uçtan uca sipariş akışını kavra."
   en: "Grasp a food delivery platform's requirements, microservice architecture and end-to-end order flow."
-durationMinutes: 10
+durationMinutes: 20
 level: beginner
 tags: [system-design, food-delivery, microservices, architecture]
-prerequisites: []
+prerequisites: [j-02-system-design-notes-part-1, a-05-load-balancing]
 concepts: [functional-requirements, non-functional-requirements, api-gateway, cdn, load-balancer, event-streaming, idempotency]
 ---
 
@@ -90,7 +90,7 @@ Sistem **mikroservis mimarisi** ile kurulur. Kullanıcılar, restoranlar, sipari
 
 ### Mimari şeması
 
-:::diagram{src="sekil-01.png" alt="Mimari şeması: İstemciler, CDN, Load Balancer, API Gateway ve Mikroservisler arasındaki akış"}
+:::diagram{src="sekil-01.png" alt="Mimari şeması: İstemciler, CDN, Load Balancer, API Gateway ve Mikroservisler arasındaki akış|Architecture diagram: flow between clients, CDN, load balancer, API Gateway and microservices"}
 :::
 
 **İstemciler (Clients):** Sistemi kullanan beş farklı uygulama vardır:
@@ -172,7 +172,7 @@ Toptan satış sitesi için başlangıçta mikroservis gereksizdir. Tek bir Node
 
 ### Uçtan uca kullanıcı yolculuğu
 
-:::diagram{src="sekil-02.png" alt="Uçtan uca kullanıcı yolculuğu: uygulamayı açmaktan canlı takibe yedi adım"}
+:::diagram{src="sekil-02.png" alt="Uçtan uca kullanıcı yolculuğu: uygulamayı açmaktan canlı takibe yedi adım|End-to-end user journey: seven steps from opening the app to live tracking"}
 :::
 
 1. **Uygulamayı açma ve giriş:** Kayıt/giriş yapılır, konum GPS ile veya elle belirlenir.
@@ -234,45 +234,13 @@ Notun önemli vurgusu: **Her adım asenkron ve olay güdümlüdür (Kafka).** Si
 Toptan satışta yolculuk şöyle olur: bayi girişi → kategori ve ürün arama → koli/miktar seçimi (minimum sipariş miktarıyla) → sepet → havale/kart/vadeli ödeme → depo hazırlığı → kargoya teslim → kargo takibi. Kurye atama yerine kargo firması entegrasyonu gelir.
 :::
 
+## Dene: bir siparişin yolculuğu
+
+:::interactive{type="request-journey" layers=5 rttMs=30 cacheHitRate=0.4}
+İsteğin istemciden gateway, servis ve veritabanına kadar geçtiği katmanları izle; önbellek isabet oranını artırınca toplam gecikmenin nasıl düştüğüne bak.
+:::
+
 :::quiz{src="quiz.json"}
-:::
-
-## Orijinal PDF sayfaları
-
-:::callout{tone="info" title="Özgün görünüm"}
-Bu dersin metni *Sistem Tasarimi Yemek Siparisi* PDF dosyasının 1–8. sayfalarının özgün hâlidir; sayfalar aşağıda PDF'teki görünümüyle yer alır.
-:::
-
-:::diagram{src="pdf-sayfa-01.png" alt="Sistem Tasarimi Yemek Siparisi - PDF sayfa 1"}
-PDF sayfa 1 / 43
-:::
-
-:::diagram{src="pdf-sayfa-02.png" alt="Sistem Tasarimi Yemek Siparisi - PDF sayfa 2"}
-PDF sayfa 2 / 43
-:::
-
-:::diagram{src="pdf-sayfa-03.png" alt="Sistem Tasarimi Yemek Siparisi - PDF sayfa 3"}
-PDF sayfa 3 / 43
-:::
-
-:::diagram{src="pdf-sayfa-04.png" alt="Sistem Tasarimi Yemek Siparisi - PDF sayfa 4"}
-PDF sayfa 4 / 43
-:::
-
-:::diagram{src="pdf-sayfa-05.png" alt="Sistem Tasarimi Yemek Siparisi - PDF sayfa 5"}
-PDF sayfa 5 / 43
-:::
-
-:::diagram{src="pdf-sayfa-06.png" alt="Sistem Tasarimi Yemek Siparisi - PDF sayfa 6"}
-PDF sayfa 6 / 43
-:::
-
-:::diagram{src="pdf-sayfa-07.png" alt="Sistem Tasarimi Yemek Siparisi - PDF sayfa 7"}
-PDF sayfa 7 / 43
-:::
-
-:::diagram{src="pdf-sayfa-08.png" alt="Sistem Tasarimi Yemek Siparisi - PDF sayfa 8"}
-PDF sayfa 8 / 43
 :::
 
 :::next{lesson="j-07-kesif-menu-ve-siparis-servisi"}

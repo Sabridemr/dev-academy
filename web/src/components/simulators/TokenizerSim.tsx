@@ -235,7 +235,7 @@ export default function TokenizerSim({ params, onInteract }: SimulatorProps) {
           <div>
             <p className="label">{l.table}</p>
             <div className="max-h-64 overflow-auto rounded-xl border border-border">
-              <table className="w-full text-left font-mono text-[11px]">
+              <table className="w-full text-left font-mono text-xs">
                 <thead className="sticky top-0 bg-elevated text-muted">
                   <tr>
                     <th className="px-2 py-1">{l.rank}</th>

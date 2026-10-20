@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 420" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">AIOps veri akışı ve insan onay kapısı</title>
+  <desc id="desc">Solda dört veri kaynağı (loglar, metrikler, izler, bulut faturası) ortadaki model katmanına akar. Model katmanı özet, anomali, öneri ve taslak PR üretir. Bu çıktılar bir insan onay kapısından geçtikten sonra üretim ortamına uygulanır; salt okunur çıktılar doğrudan ekibe gider.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+    <marker id="arrow-p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-primary, #6366f1)"/>
+    </marker>
+    <marker id="arrow-ok" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-success, #10b981)"/>
+    </marker>
+  </defs>
+
+  <!-- Bölge başlıkları -->
+  <g font-size="12" fill="var(--da-muted, #64748b)" text-anchor="middle">
+    <text x="110" y="36">Veri kaynakları</text>
+    <text x="400" y="36">Model katmanı</text>
+    <text x="700" y="36">Aksiyonlar</text>
+  </g>
+
+  <!-- Veri kaynakları -->
+  <g fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5">
+    <rect x="40" y="60" width="140" height="48" rx="10"/>
+    <rect x="40" y="130" width="140" height="48" rx="10"/>
+    <rect x="40" y="200" width="140" height="48" rx="10"/>
+    <rect x="40" y="270" width="140" height="48" rx="10"/>
+  </g>
+  <g font-size="14" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="110" y="89">Loglar</text>
+    <text x="110" y="159">Metrikler</text>
+    <text x="110" y="229">İzler (trace)</text>
+    <text x="110" y="299">Bulut faturası</text>
+  </g>
+
+  <!-- Maskeleme filtresi -->
+  <rect x="210" y="150" width="60" height="80" rx="8" fill="var(--da-accent, #f59e0b)" opacity="0.15" stroke="var(--da-accent, #f59e0b)"/>
+  <text x="240" y="186" text-anchor="middle" font-size="11" fill="var(--da-fg, #0f172a)">maskele</text>
+  <text x="240" y="202" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">secret / PII</text>
+
+  <!-- Kaynak → filtre okları -->
+  <g stroke="var(--da-muted, #64748b)" stroke-width="1.6" fill="none" marker-end="url(#arrow)">
+    <path d="M 180 84 C 200 84, 200 170, 210 172"/>
+    <path d="M 180 154 C 195 154, 195 182, 210 184"/>
+    <path d="M 180 224 C 195 224, 195 198, 210 196"/>
+    <path d="M 180 294 C 200 294, 200 210, 210 208"/>
+  </g>
+
+  <!-- Model katmanı -->
+  <rect x="300" y="110" width="200" height="160" rx="14" fill="var(--da-primary, #6366f1)" opacity="0.12" stroke="var(--da-primary, #6366f1)" stroke-width="2"/>
+  <text x="400" y="145" text-anchor="middle" font-size="15" font-weight="600" fill="var(--da-primary, #6366f1)">Model katmanı</text>
+  <g font-size="12" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="400" y="172">anomali tespiti (ML)</text>
+    <text x="400" y="192">alarm ilişkilendirme</text>
+    <text x="400" y="212">log / plan özetleme (LLM)</text>
+    <text x="400" y="232">runbook asistanı (RAG)</text>
+    <text x="400" y="252">IaC üretimi ve denetimi</text>
+  </g>
+  <path d="M 270 190 L 300 190" stroke="var(--da-muted, #64748b)" stroke-width="1.6" fill="none" marker-end="url(#arrow)"/>
+
+  <!-- Salt okunur çıktılar (üst) -->
+  <g stroke="var(--da-primary, #6366f1)" stroke-width="2" fill="none" marker-end="url(#arrow-p)">
+    <path d="M 500 150 C 560 150, 560 90, 620 90"/>
+  </g>
+  <rect x="622" y="64" width="220" height="52" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5"/>
+  <text x="732" y="86" text-anchor="middle" font-size="13" fill="var(--da-fg, #0f172a)">Özet · PR yorumu · pano</text>
+  <text x="732" y="104" text-anchor="middle" font-size="11" fill="var(--da-muted, #64748b)">salt okunur, doğrudan ekibe</text>
+
+  <!-- Onay kapısı (orta) -->
+  <g stroke="var(--da-primary, #6366f1)" stroke-width="2" fill="none" marker-end="url(#arrow-p)">
+    <path d="M 500 200 L 575 200"/>
+  </g>
+  <rect x="578" y="170" width="110" height="60" rx="10" fill="var(--da-accent, #f59e0b)" opacity="0.18" stroke="var(--da-accent, #f59e0b)" stroke-width="2"/>
+  <text x="633" y="196" text-anchor="middle" font-size="13" font-weight="600" fill="var(--da-fg, #0f172a)">İnsan onayı</text>
+  <text x="633" y="214" text-anchor="middle" font-size="11" fill="var(--da-muted, #64748b)">human-in-the-loop</text>
+
+  <g stroke="var(--da-success, #10b981)" stroke-width="2" fill="none" marker-end="url(#arrow-ok)">
+    <path d="M 688 200 L 735 200"/>
+  </g>
+  <rect x="738" y="170" width="120" height="60" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-success, #10b981)" stroke-width="1.5"/>
+  <text x="798" y="196" text-anchor="middle" font-size="13" fill="var(--da-fg, #0f172a)">Üretim</text>
+  <text x="798" y="214" text-anchor="middle" font-size="11" fill="var(--da-muted, #64748b)">rollback · ölçek · PR merge</text>
+
+  <!-- Reddedilen aksiyon (alt) -->
+  <g stroke="var(--da-danger, #ef4444)" stroke-width="1.6" fill="none" stroke-dasharray="5 4">
+    <path d="M 633 230 L 633 290"/>
+  </g>
+  <rect x="560" y="292" width="146" height="44" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-danger, #ef4444)" stroke-width="1.5"/>
+  <text x="633" y="311" text-anchor="middle" font-size="12" fill="var(--da-danger, #ef4444)">Reddedildi / düzeltildi</text>
+  <text x="633" y="327" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">halüsinasyon yakalandı</text>
+
+  <!-- Geri besleme -->
+  <g stroke="var(--da-muted, #64748b)" stroke-width="1.4" fill="none" stroke-dasharray="4 4" marker-end="url(#arrow)">
+    <path d="M 560 314 C 420 314, 400 300, 400 272"/>
+  </g>
+  <text x="470" y="332" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">geri besleme: doğru/yanlış oranı ölçülür</text>
+
+  <!-- Alt not -->
+  <text x="450" y="395" text-anchor="middle" font-size="12" fill="var(--da-muted, #64748b)">Model özetler ve önerir; üretimi değiştiren her aksiyon onay kapısından geçer ve geri alınabilir olmalıdır.</text>
+</svg>

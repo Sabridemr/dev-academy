@@ -1,0 +1,110 @@
+{
+  "id": "m-08-cost-latency-caching-quiz",
+  "title": { "tr": "Maliyet, Gecikme ve Önbellek Quiz", "en": "Cost, Latency and Caching Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Prompt önbelleği hiç isabet etmiyor. Sistem talimatının en başında kullanıcının adı ve o anki saat yer alıyor. Sorun ve çözüm nedir?",
+        "en": "Prompt caching never hits. The very start of the system prompt contains the user's name and the current time. What is the problem and fix?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Önbellek ön ek eşleşmesiyle çalışır; değişken bilgiyi prompt'un sonuna taşıyın", "en": "The cache works by prefix match; move the variable data to the end of the prompt" } },
+        { "id": "b", "text": { "tr": "Önbellek yalnızca büyük modellerde çalışır; modeli büyütün", "en": "Caching only works on large models; use a bigger model" } },
+        { "id": "c", "text": { "tr": "Temperature sıfır değilse önbellek tutmaz", "en": "The cache does not hit unless the temperature is zero" } },
+        { "id": "d", "text": { "tr": "Önbellek ömrünü sonsuza çıkarın", "en": "Make the cache lifetime infinite" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "Prompt önbelleği aynı ön eki yeniden kullanır. Ön ekin en başı her istekte değişirse hiçbir istek aynı ön eki paylaşmaz. Sabit kısımlar başa, değişkenler sona konmalıdır. Model boyutu ve temperature isabeti belirlemez.",
+        "en": "Prompt caching reuses an identical prefix. If the very beginning changes on every request, no two requests share a prefix. Static parts go first, variables last. Model size and temperature do not determine hits."
+      },
+      "difficulty": "medium",
+      "concepts": ["prompt-caching"]
+    },
+    {
+      "id": "q2",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Semantik önbellek tasarımında hangi önlemler gereklidir? (Birden fazla seçin)",
+        "en": "Which safeguards are required when designing a semantic cache? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Önbelleği kiracıya ve gerekiyorsa kullanıcıya göre ayırmak", "en": "Partition the cache by tenant and, if needed, by user" } },
+        { "id": "b", "text": { "tr": "Benzerlik eşiğini değerlendirme setiyle ayarlamak", "en": "Tune the similarity threshold with an evaluation set" } },
+        { "id": "c", "text": { "tr": "Kaynak belge değişince ona dayanan girdileri geçersiz kılmak", "en": "Invalidate entries based on a source document when it changes" } },
+        { "id": "d", "text": { "tr": "İsabet oranını artırmak için eşiği olabildiğince düşük tutmak", "en": "Keep the threshold as low as possible to raise the hit rate" } }
+      ],
+      "correct": ["a", "b", "c"],
+      "explanation": {
+        "tr": "Ayrım veri sızıntısını, ölçülmüş eşik yanlış isabetleri, geçersiz kılma bayat cevapları önler. Düşük eşik isabet oranını artırır ama farklı sorulara yanlış cevap döndürür; bu, önbelleksiz bir sistemden daha kötüdür.",
+        "en": "Partitioning prevents data leaks, a measured threshold prevents false hits and invalidation prevents stale answers. A low threshold raises the hit rate but returns wrong answers to different questions, which is worse than no cache."
+      },
+      "difficulty": "medium",
+      "concepts": ["semantic-cache", "cache-invalidation"]
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": {
+        "tr": "Akış (streaming) açıldığında hangisi değişir?",
+        "en": "What changes when streaming is turned on?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Toplam üretim süresi yarıya iner", "en": "Total generation time halves" } },
+        { "id": "b", "text": { "tr": "Kullanıcı ilk kelimeleri TTFT kadar sürede görür; algılanan gecikme azalır, toplam süre büyük ölçüde aynı kalır", "en": "The user sees the first words after the TTFT; perceived latency drops while total time stays largely the same" } },
+        { "id": "c", "text": { "tr": "Çıkış tokenları ücretsiz olur", "en": "Output tokens become free" } },
+        { "id": "d", "text": { "tr": "Çıktı guardrail'lerine artık gerek kalmaz", "en": "Output guardrails are no longer needed" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Akış tokenları üretildikçe iletir; model aynı işi yapar, dolayısıyla süre ve maliyet aynıdır. Kazanç algılanan gecikmededir. Guardrail'ler hâlâ gereklidir ve akışla uygulanmaları daha zordur.",
+        "en": "Streaming sends tokens as they are produced; the model does the same work, so time and cost are the same. The gain is perceived latency. Guardrails are still needed and are harder to apply with streaming."
+      },
+      "difficulty": "easy",
+      "concepts": ["streaming", "ttft"]
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": {
+        "tr": "Trafiğin %80'i basit SSS sorusu, %20'si karmaşık analiz. Büyük model istek başına küçük modelin 10 katı maliyetli. Hepsini büyük modele göndermek yerine kademeli yönlendirme (önce küçük, gerekirse büyük) yapılır ve basit soruların tamamı küçük modelde çözülürse ortalama maliyet yaklaşık ne olur? (Karmaşık istekler önce küçük modeli de dener.)",
+        "en": "80% of traffic is simple FAQ, 20% complex analysis. The large model costs 10× the small one per request. Instead of sending everything to the large model you cascade (small first, large if needed) and every simple question is solved by the small model. Roughly what is the average cost? (Complex requests also try the small model first.)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Büyük model maliyetinin yaklaşık %30'u", "en": "About 30% of the large-model cost" } },
+        { "id": "b", "text": { "tr": "Büyük model maliyetinin yaklaşık %80'i", "en": "About 80% of the large-model cost" } },
+        { "id": "c", "text": { "tr": "Büyük model maliyetinin %10'u", "en": "10% of the large-model cost" } },
+        { "id": "d", "text": { "tr": "Değişmez", "en": "It does not change" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "Küçük model maliyeti 1, büyük 10 olsun. Her istek küçük modeli dener: 1. İsteklerin %20'si ayrıca büyük modele gider: 0,2 × 10 = 2. Ortalama 3, yani büyük modelin 10 birimlik maliyetinin %30'u. %10 seçeneği, karmaşık isteklerin büyük modele hiç gitmediğini varsayar.",
+        "en": "Let small = 1 and large = 10. Every request tries the small model: 1. 20% also go to the large model: 0.2 × 10 = 2. The average is 3, i.e. 30% of the large model's 10 units. The 10% option assumes complex requests never reach the large model."
+      },
+      "difficulty": "hard",
+      "concepts": ["model-routing"]
+    },
+    {
+      "id": "q5",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Gece çalışan ve sonucu ertesi sabah gereken bir belge sınıflandırma işi, toplu işleme (batch) arayüzü için uygun bir adaydır.",
+        "en": "A nightly document classification job whose results are needed the next morning is a good candidate for a batch interface."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["t"],
+      "explanation": {
+        "tr": "Doğru. Gerçek zamanlı olmayan işler toplu arayüzlerde genellikle ciddi indirimle işlenir ve gerçek zamanlı trafiğin hız sınırlarını tüketmez. Her çağrı yine bütçe sayacına yazılmalıdır.",
+        "en": "True. Non-real-time work is usually processed at a significant discount through batch interfaces and does not consume the rate limits of real-time traffic. Every call should still be recorded in the budget counter."
+      },
+      "difficulty": "easy",
+      "concepts": ["batching", "budget-tracking"]
+    }
+  ]
+}

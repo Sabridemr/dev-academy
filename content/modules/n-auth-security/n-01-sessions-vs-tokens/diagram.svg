@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 460" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Sunucu taraflı oturum ve taşıyıcı token</title>
+  <desc id="desc">Solda tarayıcı çerezde yalnızca rastgele oturum kimliği taşır, API her istekte Redis oturum deposunda arar. Sağda istemci imzalı access token taşır, API imza anahtarıyla yerelde doğrular; refresh token sunucuda kayıtlıdır ve yalnızca yenileme uç noktasına gider.</desc>
+  <defs>
+    <marker id="n01-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted)"/>
+    </marker>
+    <marker id="n01-arrow-p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-primary)"/>
+    </marker>
+    <marker id="n01-arrow-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-accent)"/>
+    </marker>
+  </defs>
+
+  <!-- Panel başlıkları -->
+  <rect x="16" y="16" width="452" height="428" rx="16" fill="var(--da-surface)" stroke="var(--da-border)"/>
+  <rect x="492" y="16" width="452" height="428" rx="16" fill="var(--da-surface)" stroke="var(--da-border)"/>
+  <text x="242" y="48" text-anchor="middle" font-size="16" font-weight="600" fill="var(--da-fg)">Sunucu taraflı oturum</text>
+  <text x="242" y="68" text-anchor="middle" font-size="12" fill="var(--da-muted)">kanıt = referans</text>
+  <text x="718" y="48" text-anchor="middle" font-size="16" font-weight="600" fill="var(--da-fg)">Taşıyıcı token</text>
+  <text x="718" y="68" text-anchor="middle" font-size="12" fill="var(--da-muted)">kanıt = verinin kendisi</text>
+
+  <!-- SOL: oturum -->
+  <rect x="40" y="110" width="140" height="70" rx="10" fill="var(--da-surface)" stroke="var(--da-fg)" stroke-width="1.5"/>
+  <text x="110" y="140" text-anchor="middle" font-size="14" fill="var(--da-fg)">Tarayıcı</text>
+  <text x="110" y="160" text-anchor="middle" font-size="11" fill="var(--da-muted)">çerez: sid=7f3a…</text>
+
+  <rect x="300" y="110" width="140" height="70" rx="10" fill="var(--da-primary)" fill-opacity="0.12" stroke="var(--da-primary)" stroke-width="2"/>
+  <text x="370" y="140" text-anchor="middle" font-size="14" font-weight="600" fill="var(--da-primary)">API</text>
+  <text x="370" y="160" text-anchor="middle" font-size="11" fill="var(--da-fg)">sid'i depoda ara</text>
+
+  <rect x="300" y="250" width="140" height="70" rx="10" fill="var(--da-accent)" fill-opacity="0.12" stroke="var(--da-accent)" stroke-width="2"/>
+  <text x="370" y="280" text-anchor="middle" font-size="14" font-weight="600" fill="var(--da-accent)">Redis</text>
+  <text x="370" y="300" text-anchor="middle" font-size="11" fill="var(--da-fg)">sess:7f3a → { userId }</text>
+
+  <path d="M 180 135 L 298 135" stroke="var(--da-primary)" stroke-width="2" fill="none" marker-end="url(#n01-arrow-p)"/>
+  <text x="239" y="126" text-anchor="middle" font-size="11" fill="var(--da-muted)">Cookie: sid</text>
+  <path d="M 360 182 L 360 248" stroke="var(--da-accent)" stroke-width="2" fill="none" marker-end="url(#n01-arrow-a)"/>
+  <path d="M 380 248 L 380 182" stroke="var(--da-accent)" stroke-width="2" fill="none" stroke-dasharray="4 4" marker-end="url(#n01-arrow-a)"/>
+  <text x="395" y="222" font-size="11" fill="var(--da-muted)">+1 RTT</text>
+
+  <g font-size="12" fill="var(--da-fg)">
+    <text x="40" y="360"><tspan fill="var(--da-success)">✓</tspan> Anında iptal: kaydı sil</text>
+    <text x="40" y="382"><tspan fill="var(--da-success)">✓</tspan> Çerez korumaları: HttpOnly, Secure, SameSite</text>
+    <text x="40" y="404"><tspan fill="var(--da-danger)">✗</tspan> Her istekte depo araması, depo kritik bağımlılık</text>
+    <text x="40" y="426"><tspan fill="var(--da-danger)">✗</tspan> Çerez otomatik gider: CSRF savunması gerekir</text>
+  </g>
+
+  <!-- SAĞ: token -->
+  <rect x="516" y="110" width="140" height="70" rx="10" fill="var(--da-surface)" stroke="var(--da-fg)" stroke-width="1.5"/>
+  <text x="586" y="140" text-anchor="middle" font-size="14" fill="var(--da-fg)">İstemci</text>
+  <text x="586" y="160" text-anchor="middle" font-size="11" fill="var(--da-muted)">access token (bellek)</text>
+
+  <rect x="776" y="110" width="140" height="70" rx="10" fill="var(--da-primary)" fill-opacity="0.12" stroke="var(--da-primary)" stroke-width="2"/>
+  <text x="846" y="140" text-anchor="middle" font-size="14" font-weight="600" fill="var(--da-primary)">API</text>
+  <text x="846" y="160" text-anchor="middle" font-size="11" fill="var(--da-fg)">imza + exp kontrolü</text>
+
+  <rect x="776" y="250" width="140" height="70" rx="10" fill="var(--da-surface)" stroke="var(--da-border)" stroke-width="1.5" stroke-dasharray="5 4"/>
+  <text x="846" y="280" text-anchor="middle" font-size="13" fill="var(--da-fg)">İmza anahtarı</text>
+  <text x="846" y="300" text-anchor="middle" font-size="11" fill="var(--da-muted)">bellekte, ağ yok</text>
+
+  <rect x="516" y="250" width="140" height="70" rx="10" fill="var(--da-accent)" fill-opacity="0.12" stroke="var(--da-accent)" stroke-width="2"/>
+  <text x="586" y="276" text-anchor="middle" font-size="12" font-weight="600" fill="var(--da-accent)">Refresh token</text>
+  <text x="586" y="294" text-anchor="middle" font-size="11" fill="var(--da-fg)">HttpOnly çerez · 30 gün</text>
+  <text x="586" y="310" text-anchor="middle" font-size="11" fill="var(--da-fg)">DB'de hash, rotasyon</text>
+
+  <path d="M 656 135 L 774 135" stroke="var(--da-primary)" stroke-width="2" fill="none" marker-end="url(#n01-arrow-p)"/>
+  <text x="715" y="126" text-anchor="middle" font-size="11" fill="var(--da-muted)">Bearer eyJ…</text>
+  <path d="M 846 182 L 846 248" stroke="var(--da-muted)" stroke-width="1.5" fill="none" stroke-dasharray="3 3" marker-end="url(#n01-arrow)"/>
+  <path d="M 586 248 L 586 182" stroke="var(--da-accent)" stroke-width="2" fill="none" marker-end="url(#n01-arrow-a)"/>
+  <text x="600" y="222" font-size="11" fill="var(--da-muted)">POST /refresh</text>
+
+  <g font-size="12" fill="var(--da-fg)">
+    <text x="516" y="360"><tspan fill="var(--da-success)">✓</tspan> Depoya gitmeden yerel doğrulama</text>
+    <text x="516" y="382"><tspan fill="var(--da-success)">✓</tspan> Mobil ve servisler arası çağrıya uygun</text>
+    <text x="516" y="404"><tspan fill="var(--da-danger)">✗</tspan> Access token exp'e kadar geçerli (iptal zor)</text>
+    <text x="516" y="426"><tspan fill="var(--da-danger)">✗</tspan> Taşıyan yetkilidir: saklama yeri kritik</text>
+  </g>
+</svg>

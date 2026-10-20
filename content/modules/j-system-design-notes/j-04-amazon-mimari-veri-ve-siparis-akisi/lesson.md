@@ -9,10 +9,10 @@ title:
 summary:
   tr: "Amazon ölçeğinde mimariyi, önbellek ve DB ölçeklemeyi, çift satışı önlemeyi ve Saga ile sipariş akışını öğren."
   en: "Learn Amazon-scale architecture, caching and DB scaling, preventing overselling and Saga-based order flow."
-durationMinutes: 11
+durationMinutes: 25
 level: advanced
 tags: [system-design, microservices, e-commerce, caching, database-scaling, saga]
-prerequisites: []
+prerequisites: [e-01-amazon-scale-ecommerce, a-07-caching]
 concepts: [monolith-vs-microservices, multi-region, api-gateway, cache-aside, sharding, cap-theorem, atomic-conditional-update, saga-pattern]
 ---
 
@@ -20,7 +20,7 @@ concepts: [monolith-vs-microservices, multi-region, api-gateway, cache-aside, sh
 
 Amazon 1995'te tek bir C++ uygulaması (Obidos) ve tek bir Oracle veritabanıyla başladı. Bugün ise binlerce bağımsız servisten oluşuyor. Bu dönüşüm bir anda olmadı. Her darboğaz çıktığında bir sonraki adım atıldı. Senin backend + frontend + DB yapın tam olarak 1. evrede.
 
-:::diagram{src="sekil-01.png" alt="Kullanıcı sayısı arttıkça dört büyüme evresi: 1. Tek sunucu (~1.000), 2. Ayrık DB (~50.000), 3. Yatay ölçek (~1 milyon), 4. Mikroservis (10 milyon+)"}
+:::diagram{src="sekil-01.png" alt="Kullanıcı sayısı arttıkça dört büyüme evresi: 1. Tek sunucu (~1.000), 2. Ayrık DB (~50.000), 3. Yatay ölçek (~1 milyon), 4. Mikroservis (10 milyon+)|Four growth stages as users increase: 1. Single server (~1,000), 2. Separate DB (~50,000), 3. Horizontal scale (~1 million), 4. Microservices (10 million+)"}
 Şekil 1 – Bir e-ticaret sisteminin büyüme evreleri
 :::
 
@@ -36,7 +36,7 @@ Amazon 1995'te tek bir C++ uygulaması (Obidos) ve tek bir Oracle veritabanıyla
 
 ## 2. Monolitten Mikroservise
 
-:::diagram{src="sekil-02.png" alt="Solda tek DB'ye bağlı Kullanıcı, Ürün, Sepet, Sipariş ve Ödeme modüllerinden oluşan monolit; sağda her biri kendi Postgres ya da Redis veritabanına sahip, API Gateway / Kafka ile haberleşen mikroservisler"}
+:::diagram{src="sekil-02.png" alt="Solda tek DB'ye bağlı Kullanıcı, Ürün, Sepet, Sipariş ve Ödeme modüllerinden oluşan monolit; sağda her biri kendi Postgres ya da Redis veritabanına sahip, API Gateway / Kafka ile haberleşen mikroservisler|On the left a monolith with User, Product, Cart, Order and Payment modules on one DB; on the right microservices each with its own Postgres or Redis, talking through an API Gateway and Kafka"}
 Şekil 2 – Monolit ve mikroservis karşılaştırması
 :::
 
@@ -54,7 +54,7 @@ Erken mikroservis bir hatadır. 5 kişilik bir ekip için 30 servis, dağıtık 
 
 ## 3. Global Altyapı
 
-:::diagram{src="sekil-03.png" alt="İstanbul'daki kullanıcının DNS sorgusu Route 53 GeoDNS / Anycast ile en yakın sağlıklı bölgeye yönlendirilir; eu-central, us-east ve ap-south bölgelerinin her birinde CDN Edge + WAF, Load Balancer, Kubernetes ve 3 AZ'li DB, Cache, Kafka katmanları ve bölgeler arası asenkron replikasyon"}
+:::diagram{src="sekil-03.png" alt="İstanbul'daki kullanıcının DNS sorgusu Route 53 GeoDNS / Anycast ile en yakın sağlıklı bölgeye yönlendirilir; eu-central, us-east ve ap-south bölgelerinin her birinde CDN Edge + WAF, Load Balancer, Kubernetes ve 3 AZ'li DB, Cache, Kafka katmanları ve bölgeler arası asenkron replikasyon|A user in Istanbul is routed by Route 53 GeoDNS / Anycast to the nearest healthy region; eu-central, us-east and ap-south each have CDN edge + WAF, load balancer, Kubernetes and 3-AZ DB, cache and Kafka layers with asynchronous cross-region replication"}
 Şekil 3 – Çok bölgeli (multi-region) global dağıtım
 :::
 
@@ -65,7 +65,7 @@ Erken mikroservis bir hatadır. 5 kişilik bir ekip için 30 servis, dağıtık 
 
 ## 4. Uçtan Uca Mimari
 
-:::diagram{src="sekil-04.png" alt="Yukarıdan aşağıya katmanlar: istemciler, CDN ve WAF, API Gateway / BFF, Kimlik-Katalog-Arama-Fiyat-Sepet-Stok-Sipariş-Ödeme-Kargo-Öneri servisleri, Kafka Event Bus, veri depoları (PostgreSQL, DynamoDB, Redis, Elasticsearch, S3) ve yatay gözlemlenebilirlik katmanı"}
+:::diagram{src="sekil-04.png" alt="Yukarıdan aşağıya katmanlar: istemciler, CDN ve WAF, API Gateway / BFF, Kimlik-Katalog-Arama-Fiyat-Sepet-Stok-Sipariş-Ödeme-Kargo-Öneri servisleri, Kafka Event Bus, veri depoları (PostgreSQL, DynamoDB, Redis, Elasticsearch, S3) ve yatay gözlemlenebilirlik katmanı|Top-down layers: clients, CDN and WAF, API Gateway / BFF, Identity-Catalog-Search-Pricing-Cart-Inventory-Order-Payment-Shipping-Recommendation services, Kafka event bus, data stores (PostgreSQL, DynamoDB, Redis, Elasticsearch, S3) and a horizontal observability layer"}
 Şekil 4 – Uçtan uca mimari katmanları
 :::
 
@@ -79,7 +79,7 @@ Erken mikroservis bir hatadır. 5 kişilik bir ekip için 30 servis, dağıtık 
 
 ## 5. Bir İsteğin Yolculuğu
 
-:::diagram{src="sekil-05.png" alt="Ürün sayfası isteğinin yolu: Tarayıcı, CDN, LB, Gateway, Ürün servisi, Redis (cache HIT ~1 ms) ve DB replika (MISS ise ~10 ms); toplam hedef p99 200 ms altı"}
+:::diagram{src="sekil-05.png" alt="Ürün sayfası isteğinin yolu: Tarayıcı, CDN, LB, Gateway, Ürün servisi, Redis (cache HIT ~1 ms) ve DB replika (MISS ise ~10 ms); toplam hedef p99 200 ms altı|Path of a product page request: browser, CDN, LB, gateway, product service, Redis (cache HIT ~1 ms) and DB replica (~10 ms on MISS); target p99 under 200 ms"}
 Şekil 5 – Bir ürün sayfası isteğinin yolu
 :::
 
@@ -87,7 +87,7 @@ Erken mikroservis bir hatadır. 5 kişilik bir ekip için 30 servis, dağıtık 
 
 ## 6. Önbellekleme
 
-:::diagram{src="sekil-10.png" alt="Soldan sağa önbellek katmanları: Tarayıcı cache, CDN edge, Redis, DB buffer ve Disk; sağa gittikçe daha yavaş ve daha pahalı"}
+:::diagram{src="sekil-10.png" alt="Soldan sağa önbellek katmanları: Tarayıcı cache, CDN edge, Redis, DB buffer ve Disk; sağa gittikçe daha yavaş ve daha pahalı|Cache layers from left to right: browser cache, CDN edge, Redis, DB buffer and disk; slower and more expensive further right"}
 Şekil 10 – Çok katmanlı önbellekleme
 :::
 
@@ -98,7 +98,7 @@ Erken mikroservis bir hatadır. 5 kişilik bir ekip için 30 servis, dağıtık 
 
 ## 7. Veritabanı Ölçekleme
 
-:::diagram{src="sekil-09.png" alt="Sipariş servisi yazmaları Primary veritabanına, okumaları üç Read Replica'ya gönderir; veri tek makineye sığmayınca hash(user_id) % N ile dört shard'a bölünür"}
+:::diagram{src="sekil-09.png" alt="Sipariş servisi yazmaları Primary veritabanına, okumaları üç Read Replica'ya gönderir; veri tek makineye sığmayınca hash(user_id) % N ile dört shard'a bölünür|The order service sends writes to the primary database and reads to three read replicas; when data no longer fits one machine it is split into four shards by hash(user_id) % N"}
 Şekil 9 – Veritabanı ölçekleme: replikasyon ve sharding
 :::
 
@@ -115,7 +115,7 @@ Erken mikroservis bir hatadır. 5 kişilik bir ekip için 30 servis, dağıtık 
 
 ## 8. Son 1 Ürün Problemi (Çift Satışı Önlemek)
 
-:::diagram{src="sekil-06.png" alt="Ali ve Ayşe aynı anda stoğu 1 olan ürüne UPDATE ... WHERE stock>=1 gönderir; satır kilidi sayesinde Ali'nin sorgusu 1 satır günceller, Ayşe'ninki kilit açılınca 0 satır döner ve ürün tükenir; altında yanlış (SELECT sonra UPDATE) ve doğru (tek atomik UPDATE) yaklaşım"}
+:::diagram{src="sekil-06.png" alt="Ali ve Ayşe aynı anda stoğu 1 olan ürüne UPDATE ... WHERE stock>=1 gönderir; satır kilidi sayesinde Ali'nin sorgusu 1 satır günceller, Ayşe'ninki kilit açılınca 0 satır döner ve ürün tükenir; altında yanlış (SELECT sonra UPDATE) ve doğru (tek atomik UPDATE) yaklaşım|Ali and Ayşe both send UPDATE ... WHERE stock>=1 for an item with stock 1; thanks to the row lock Ali's query updates 1 row and Ayşe's returns 0 rows once the lock is released, so the item sells out; below, the wrong approach (SELECT then UPDATE) and the right one (a single atomic UPDATE)"}
 Şekil 6 – Son 1 ürün: atomik koşullu güncelleme ile çift satışın önlenmesi
 :::
 
@@ -129,7 +129,7 @@ Erken mikroservis bir hatadır. 5 kişilik bir ekip için 30 servis, dağıtık 
 | Redis atomik DECR / Lua | Stok Redis'te tutulur, düşüm tek atomik komutla yapılır | Flash sale: saniyede on binlerce istek |
 | Kuyrukla seri işleme | Aynı ürüne gelen istekler aynı Kafka partition'ına gider ve tek tek işlenir | Çok yüksek eşzamanlılık |
 
-:::diagram{src="sekil-07.png" alt="Stok durum makinesi: AVAILABLE (satılabilir) checkout ile RESERVED (15 dk TTL) olur, ödeme OK ile SOLD olur; süre dolarsa ya da ödeme başarısız olursa stok AVAILABLE'a geri döner"}
+:::diagram{src="sekil-07.png" alt="Stok durum makinesi: AVAILABLE (satılabilir) checkout ile RESERVED (15 dk TTL) olur, ödeme OK ile SOLD olur; süre dolarsa ya da ödeme başarısız olursa stok AVAILABLE'a geri döner|Inventory state machine: AVAILABLE becomes RESERVED (15-minute TTL) at checkout and SOLD when payment succeeds; on timeout or failed payment stock returns to AVAILABLE"}
 Şekil 7 – Stok rezervasyon durum makinesi
 :::
 
@@ -153,7 +153,7 @@ COMMIT;
 
 ## 9. Sipariş ve Ödeme Akışı (Saga)
 
-:::diagram{src="sekil-08.png" alt="Saga akışı: Sipariş oluştur, Stok ayır, Ödeme al, Siparişi onayla, Kargoya ver; ödeme reddedilirse telafi adımları olarak önce stok serbest bırakılır, sonra sipariş iptal edilir"}
+:::diagram{src="sekil-08.png" alt="Saga akışı: Sipariş oluştur, Stok ayır, Ödeme al, Siparişi onayla, Kargoya ver; ödeme reddedilirse telafi adımları olarak önce stok serbest bırakılır, sonra sipariş iptal edilir|Saga flow: create order, reserve stock, take payment, confirm order, ship; if payment is declined the compensations release stock first and then cancel the order"}
 Şekil 8 – Dağıtık sipariş akışı: Saga deseni ve telafi işlemleri
 :::
 
@@ -173,45 +173,19 @@ Mikroservislerde servisler arasında tek bir DB transaction'ı olamaz. Bu yüzde
 - **Öneri:** "Bunu alanlar şunu da aldı" (item-to-item collaborative filtering) Amazon'un klasik algoritmasıdır. Öneriler gece toplu (batch) olarak hesaplanır ve gerçek zamanlı sinyallerle karıştırılır. Amazon satışlarının önemli bir kısmının önerilerden geldiği sıkça belirtilir.
 - **Fiyat:** Fiyat ayrı bir servistir; kampanya, kupon, kademeli toptan fiyat ve döviz gibi kuralları uygular. Sepetteki fiyat, ödeme anında yeniden doğrulanır.
 
+## Dene: cache-aside ile ürün sayfası
+
+:::interactive{type="cache" capacity=6 policy="lru" writePolicy="cache-aside"}
+Ürün okumalarını önbelleğe al; kapasiteyi değiştirip hit oranının nasıl değiştiğini ve LRU'nun hangi anahtarları attığını izle.
+:::
+
+:::callout{tone="info" title="İlgili dersler"}
+Bu konuyu başka bir açıdan anlatan dersler:
+
+- [Amazon Ölçeğinde E-ticaret vaka çalışması](/lessons/e-01-amazon-scale-ecommerce)
+:::
+
 :::quiz{src="quiz.json"}
-:::
-
-## Orijinal PDF sayfaları
-
-:::callout{tone="info" title="Özgün görünüm"}
-Bu dersin metni *Amazon Sistem Tasarimi* PDF dosyasının 1–8. sayfalarının özgün hâlidir; sayfalar aşağıda PDF'teki görünümüyle yer alır.
-:::
-
-:::diagram{src="pdf-sayfa-01.png" alt="Amazon Sistem Tasarimi - PDF sayfa 1"}
-PDF sayfa 1 / 14
-:::
-
-:::diagram{src="pdf-sayfa-02.png" alt="Amazon Sistem Tasarimi - PDF sayfa 2"}
-PDF sayfa 2 / 14
-:::
-
-:::diagram{src="pdf-sayfa-03.png" alt="Amazon Sistem Tasarimi - PDF sayfa 3"}
-PDF sayfa 3 / 14
-:::
-
-:::diagram{src="pdf-sayfa-04.png" alt="Amazon Sistem Tasarimi - PDF sayfa 4"}
-PDF sayfa 4 / 14
-:::
-
-:::diagram{src="pdf-sayfa-05.png" alt="Amazon Sistem Tasarimi - PDF sayfa 5"}
-PDF sayfa 5 / 14
-:::
-
-:::diagram{src="pdf-sayfa-06.png" alt="Amazon Sistem Tasarimi - PDF sayfa 6"}
-PDF sayfa 6 / 14
-:::
-
-:::diagram{src="pdf-sayfa-07.png" alt="Amazon Sistem Tasarimi - PDF sayfa 7"}
-PDF sayfa 7 / 14
-:::
-
-:::diagram{src="pdf-sayfa-08.png" alt="Amazon Sistem Tasarimi - PDF sayfa 8"}
-PDF sayfa 8 / 14
 :::
 
 :::next{lesson="j-05-amazon-dayaniklilik-mesajlasma-ve-isletim"}

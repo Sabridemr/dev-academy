@@ -1,0 +1,110 @@
+{
+  "id": "n-04-authorization-rbac-abac-quiz",
+  "title": { "tr": "RBAC ve ABAC Quiz", "en": "RBAC and ABAC Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Geçerli bir access token ile gelen kullanıcı, yetkisi olmadığı bir yönetim uç noktasını çağırıyor. Hangi HTTP durum kodu anlamsal olarak doğrudur?",
+        "en": "A user with a valid access token calls an admin endpoint they are not permitted to use. Which HTTP status code is semantically correct?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "401 Unauthorized", "en": "401 Unauthorized" } },
+        { "id": "b", "text": { "tr": "403 Forbidden", "en": "403 Forbidden" } },
+        { "id": "c", "text": { "tr": "400 Bad Request", "en": "400 Bad Request" } },
+        { "id": "d", "text": { "tr": "500 Internal Server Error", "en": "500 Internal Server Error" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Kimlik doğrulanmıştır, yani sorun kimlik değil izindir: 403. 401 kimlik kanıtı eksik ya da geçersiz olduğunda kullanılır. İstek biçimi bozuk olmadığı için 400, sunucu hatası olmadığı için 500 de yanlıştır. Kaynağın varlığını gizlemek için bazı sistemler 404 da tercih edebilir.",
+        "en": "The identity is authenticated, so the problem is permission, not identity: 403. 401 is for a missing or invalid credential. The request is not malformed, so 400 is wrong, and there is no server failure, so 500 is wrong. Some systems prefer 404 to hide that the resource exists."
+      },
+      "difficulty": "easy",
+      "concepts": ["authn-vs-authz"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "'Editörler yalnızca kendi ekiplerinin taslaklarını düzenleyebilir' kuralı 40 ekip için saf RBAC ile uygulanıyor ve rol sayısı hızla büyüyor. Bu sorunun adı ve tipik çözümü nedir?",
+        "en": "The rule 'editors can only edit drafts of their own team' is implemented with pure RBAC for 40 teams and the role count is exploding. What is this problem called and what is the typical fix?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Rol patlaması; ekip eşleşmesini öznitelik koşuluyla (ABAC) ifade etmek", "en": "Role explosion; express the team match as an attribute condition (ABAC)" } },
+        { "id": "b", "text": { "tr": "Yetki yükseltme; tüm editörleri yönetici yapmak", "en": "Privilege escalation; make all editors admins" } },
+        { "id": "c", "text": { "tr": "IDOR; kimlikleri UUID yapmak", "en": "IDOR; switch identifiers to UUIDs" } },
+        { "id": "d", "text": { "tr": "Oturum sabitleme; girişte oturumu yenilemek", "en": "Session fixation; regenerate the session at login" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "Her boyut için ayrı rol üretmek rol patlamasıdır. ABAC, 'özne.ekip = kaynak.ekip' koşuluyla kuralı tek politikaya indirir; yeni ekip eklenince politika değişmez. Herkesi yönetici yapmak en az ayrıcalığı çiğner; diğer seçenekler bu problemle ilgili değildir.",
+        "en": "Creating a role per dimension is role explosion. ABAC reduces the rule to a single policy with 'subject.team = resource.team'; adding a team does not change the policy. Making everyone admin violates least privilege; the other options are unrelated."
+      },
+      "difficulty": "medium",
+      "concepts": ["rbac", "abac"]
+    },
+    {
+      "id": "q3",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Paylaşımlı tablo + tenant_id modelinde kiracılar arası sızıntıyı önlemeye yardımcı olan uygulamalar hangileridir? (Birden fazla seçin)",
+        "en": "In the shared-table + tenant_id model, which practices help prevent cross-tenant leaks? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Kiracı kimliğini doğrulanmış token'dan almak", "en": "Taking the tenant id from the verified token" } },
+        { "id": "b", "text": { "tr": "Veri erişim katmanının her sorguya kiracı filtresini otomatik eklemesi", "en": "Having the data-access layer add the tenant filter to every query automatically" } },
+        { "id": "c", "text": { "tr": "PostgreSQL satır düzeyi güvenliği (RLS) kullanmak", "en": "Using PostgreSQL row-level security (RLS)" } },
+        { "id": "d", "text": { "tr": "Kiracı kimliğini istemcinin gönderdiği X-Tenant-Id başlığından okumak", "en": "Reading the tenant id from an X-Tenant-Id header sent by the client" } }
+      ],
+      "correct": ["a", "b", "c"],
+      "explanation": {
+        "tr": "İstemcinin gönderdiği başlık saldırganın kontrolündedir; kiracı kimliği oradan alınırsa başka kiracıya geçmek tek bir başlık değişikliğidir (d yanlış). Token'dan almak, filtreyi otomatikleştirmek ve RLS ile veritabanı düzeyinde zorlamak katmanlı bir savunma oluşturur.",
+        "en": "A client-sent header is attacker-controlled; reading the tenant from it makes switching tenants a one-header change (d is wrong). Taking it from the token, automating the filter and enforcing it in the database with RLS form a layered defence."
+      },
+      "difficulty": "medium",
+      "concepts": ["tenant-isolation"]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Fatura kimliklerini sıralı sayılar yerine rastgele UUID yapmak, sunucu tarafında sahiplik kontrolü yapmadan IDOR zafiyetini tamamen ortadan kaldırır.",
+        "en": "Switching invoice ids from sequential numbers to random UUIDs fully eliminates IDOR without a server-side ownership check."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "Yanlış. UUID tahmini zorlaştırır ama kimlikler loglardan, paylaşılan bağlantılardan, başka API yanıtlarından sızabilir. Kimliği bilen herkes kaynağa erişebiliyorsa zafiyet hâlâ oradadır. Tek gerçek çözüm her erişimde sahiplik ve kiracı kontrolüdür.",
+        "en": "False. UUIDs make guessing harder, but ids leak through logs, shared links and other API responses. If anyone who knows the id can access the resource, the vulnerability is still there. The only real fix is an ownership and tenant check on every access."
+      },
+      "difficulty": "hard",
+      "concepts": ["idor", "least-privilege"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "Bir politika motoru mimarisinde kararı veren ve kararı uygulayan bileşenlerin adları nelerdir?",
+        "en": "In a policy engine architecture, what are the components that make the decision and enforce it called?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Karar: PDP, uygulama: PEP", "en": "Decision: PDP, enforcement: PEP" } },
+        { "id": "b", "text": { "tr": "Karar: PEP, uygulama: PDP", "en": "Decision: PEP, enforcement: PDP" } },
+        { "id": "c", "text": { "tr": "Karar: PIP, uygulama: PAP", "en": "Decision: PIP, enforcement: PAP" } },
+        { "id": "d", "text": { "tr": "Karar: IdP, uygulama: JWKS", "en": "Decision: IdP, enforcement: JWKS" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "PDP (Policy Decision Point) politikaları değerlendirip izin ya da ret döndürür; PEP (Policy Enforcement Point) isteği karşılayan koddur ve bu kararı uygular. PIP ek öznitelikleri sağlar, PAP politikaların yönetildiği yerdir. IdP ve JWKS kimlik doğrulamayla ilgilidir.",
+        "en": "The PDP (Policy Decision Point) evaluates policies and returns allow or deny; the PEP (Policy Enforcement Point) is the code handling the request and applies that decision. The PIP supplies extra attributes and the PAP is where policies are managed. IdP and JWKS relate to authentication."
+      },
+      "difficulty": "easy",
+      "concepts": ["policy-engine"]
+    }
+  ]
+}

@@ -207,7 +207,7 @@ export const SceneCanvas = memo(function SceneCanvas({
               <text
                 y={-13}
                 textAnchor="middle"
-                fontSize={11}
+                fontSize={12}
                 fontWeight={600}
                 fill="var(--da-fg)"
                 paintOrder="stroke"
@@ -537,7 +537,7 @@ function SceneNodeView({
             x={badge.cx}
             y={badge.cy + 4}
             textAnchor="middle"
-            fontSize={10.5}
+            fontSize={12}
             fontWeight={700}
             fill="#fff"
           >

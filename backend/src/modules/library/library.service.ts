@@ -92,8 +92,26 @@ export class LibraryService {
     const rows = await this.prisma.note.findMany({
       where: { userId, ...(lessonId ? { lessonId } : {}) },
       orderBy: { updatedAt: 'desc' },
+      include: {
+        lesson: {
+          select: {
+            id: true,
+            slug: true,
+            moduleId: true,
+            publishedVersion: { select: { title: true } },
+          },
+        },
+      },
     });
-    return rows.map(toNote);
+    return rows.map((n) => ({
+      ...toNote(n),
+      lesson: {
+        id: n.lesson.id,
+        slug: n.lesson.slug,
+        moduleId: n.lesson.moduleId,
+        title: asLocalized(n.lesson.publishedVersion?.title),
+      },
+    }));
   }
 
   async createNote(userId: string, dto: UpsertNoteDto): Promise<NoteDto> {

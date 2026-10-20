@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { I18nProvider } from '@/i18n';
 import { startAuthSession } from '@/lib/api';
 import { RealtimeBridge } from './realtime';
+import { ToastProvider } from './ui/Toast';
 
 export function Providers({ locale, children }: { locale: string; children: ReactNode }) {
   const [client] = useState(
@@ -23,10 +24,13 @@ export function Providers({ locale, children }: { locale: string; children: Reac
   return (
     <QueryClientProvider client={client}>
       <I18nProvider initialLocale={locale}>
-        <AuthSync />
-        <ThemeSync />
-        <RealtimeBridge />
-        {children}
+        <ToastProvider>
+          <AuthSync />
+          <ThemeSync />
+          <ServiceWorkerRegistration />
+          <RealtimeBridge />
+          {children}
+        </ToastProvider>
       </I18nProvider>
     </QueryClientProvider>
   );
@@ -38,20 +42,53 @@ function AuthSync() {
   return null;
 }
 
-/** Sistem teması değişirse ve kullanıcı manuel seçim yapmadıysa güncelle */
-function ThemeSync() {
+/** PWA: service worker yalnızca production'da ve tarayıcı destekliyorsa kaydedilir */
+function ServiceWorkerRegistration() {
   useEffect(() => {
-    const mq = window.matchMedia('(prefers-color-scheme: dark)');
-    const apply = () => {
-      const stored = localStorage.getItem('da-theme');
-      const dark = stored ? stored === 'dark' : mq.matches;
-      document.documentElement.classList.toggle('dark', dark);
+    if (process.env.NODE_ENV !== 'production' || !('serviceWorker' in navigator)) return;
+    const register = () => {
+      navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => undefined);
     };
-    mq.addEventListener('change', apply);
-    return () => mq.removeEventListener('change', apply);
+    if (document.readyState === 'complete') register();
+    else window.addEventListener('load', register, { once: true });
+    return () => window.removeEventListener('load', register);
   }, []);
   return null;
 }
 
-/** <head> içinde ilk boyamadan önce çalışan tema betiği (FOUC engeller) */
-export const themeInitScript = `(function(){try{var s=localStorage.getItem('da-theme');var d=s?s==='dark':window.matchMedia('(prefers-color-scheme: dark)').matches;if(d)document.documentElement.classList.add('dark');}catch(e){}})();`;
+/**
+ * Tema: varsayılan koyu (marka kimliği). Kullanıcı seçimi localStorage'da ('da-theme') tutulur ve
+ * başka bir sekmede değişirse burada da uygulanır.
+ */
+function ThemeSync() {
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key !== THEME_STORAGE_KEY) return;
+      document.documentElement.classList.toggle('dark', resolveTheme(e.newValue) === 'dark');
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
+  return null;
+}
+
+export const THEME_STORAGE_KEY = 'da-theme';
+export type Theme = 'dark' | 'light';
+
+/** Saklanan değer yoksa koyu tema */
+export function resolveTheme(stored: string | null | undefined): Theme {
+  return stored === 'light' ? 'light' : 'dark';
+}
+
+/** Temayı uygular ve saklar (Header'daki düğme kullanır) */
+export function applyTheme(theme: Theme): void {
+  document.documentElement.classList.toggle('dark', theme === 'dark');
+  try {
+    localStorage.setItem(THEME_STORAGE_KEY, theme);
+  } catch {
+    /* gizli mod vb. */
+  }
+}
+
+/** <head> içinde ilk boyamadan önce çalışan tema betiği (FOUC engeller). Varsayılan koyu. */
+export const themeInitScript = `(function(){try{var s=localStorage.getItem('${THEME_STORAGE_KEY}');if(s!=='light')document.documentElement.classList.add('dark');}catch(e){document.documentElement.classList.add('dark');}})();`;
