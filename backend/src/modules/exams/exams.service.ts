@@ -33,6 +33,8 @@ export interface ExamListItem {
   startedAt: string;
   durationSec: number;
   questionCount: number;
+  /** Web istemcisinin kullandığı takma ad (questionCount ile aynı) */
+  totalCount: number;
   submittedAt: string | null;
   score: number | null;
   passed: boolean | null;
@@ -97,6 +99,7 @@ export class ExamsService {
       startedAt: e.startedAt.toISOString(),
       durationSec: e.durationSec,
       questionCount: e.questionIds.length,
+      totalCount: e.questionIds.length,
       submittedAt: e.submittedAt?.toISOString() ?? null,
       score: e.score,
       passed: e.passed,

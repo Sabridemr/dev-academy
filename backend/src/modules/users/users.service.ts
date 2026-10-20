@@ -13,6 +13,7 @@ export type MeProfile = UserProfile & {
   dailyGoalMinutes: number | null;
   streakFreezes: number;
   emailVerified: boolean;
+  emailVerifiedAt: string | null;
 };
 
 function toMe(user: User): MeProfile {
@@ -23,6 +24,7 @@ function toMe(user: User): MeProfile {
     dailyGoalMinutes: user.dailyGoalMinutes,
     streakFreezes: user.streakFreezes,
     emailVerified: Boolean(user.emailVerifiedAt),
+    emailVerifiedAt: user.emailVerifiedAt?.toISOString() ?? null,
   };
 }
 
