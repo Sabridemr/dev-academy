@@ -1,4 +1,5 @@
 import type { ComponentProps } from 'react';
+import type { ColorValue } from 'react-native';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useProgressSummary } from '@/hooks/content';
@@ -8,7 +9,7 @@ import { useTheme } from '@/theme';
 type IconName = ComponentProps<typeof Ionicons>['name'];
 
 function tabIcon(name: IconName, focusedName: IconName) {
-  return ({ color, size, focused }: { color: string; size: number; focused: boolean }) => (
+  return ({ color, size, focused }: { color: ColorValue; size: number; focused: boolean }) => (
     <Ionicons name={focused ? focusedName : name} size={size} color={color} />
   );
 }

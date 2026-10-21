@@ -6,7 +6,7 @@ push bildirimleri içerir.
 
 | Katman    | Teknoloji                                                                                                   |
 | --------- | ----------------------------------------------------------------------------------------------------------- |
-| Çatı      | Expo SDK 54, React Native 0.81 (New Architecture), React 19.1, TypeScript (strict)                          |
+| Çatı      | Expo SDK 57, React Native 0.86 (New Architecture), React 19.2, TypeScript (strict)                          |
 | Gezinme   | expo-router 6 (dosya tabanlı; `src/app`)                                                                    |
 | Animasyon | react-native-svg 15 + react-native-reanimated 4 (react-native-worklets), Lottie (lottie-react-native 7)     |
 | Veri      | @tanstack/react-query 5, zustand 5                                                                          |
@@ -219,7 +219,7 @@ Varsayılan e2e kullanıcısı seed'in yönetici hesabıdır (`admin@devacademy.
 
 ## 10. Notlar
 
-- Expo SDK 54 Android API 36'yı hedefler (Google Play'in güncel hedef API şartı). Bağımlılıklar
+- Expo SDK 57 Android API 36'yı hedefler (Google Play'in güncel hedef API şartı). Bağımlılıklar
   `npx expo install --fix` ile SDK'ya hizalı tutulur; `npx expo-doctor` temiz olmalıdır.
 - Markdown ayrıştırıcı (Node'a özel `gray-matter`) `@devacademy/shared/node` girişindedir, kök girişte yoktur;
   Metro ve Jest'teki `stubs/gray-matter.js` saplaması yalnızca yanlışlıkla içe aktarmaya karşı güvencedir.

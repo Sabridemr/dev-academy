@@ -28,7 +28,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   platforms: ['ios', 'android'],
   orientation: 'portrait',
   userInterfaceStyle: 'automatic',
-  newArchEnabled: true,
   backgroundColor: '#F8FAFC',
   ios: {
     bundleIdentifier: IS_DEV ? 'com.devacademy.app.dev' : 'com.devacademy.app',
@@ -40,12 +39,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   android: {
     package: IS_DEV ? 'com.devacademy.app.dev' : 'com.devacademy.app',
-    edgeToEdgeEnabled: true,
     // Günlük (DAILY) tetikleyici tam zamanlı alarm gerektirmez; Android 14+'ta SCHEDULE_EXACT_ALARM varsayılan reddedilir
     permissions: ['POST_NOTIFICATIONS'],
   },
   plugins: [
     'expo-router',
+    'expo-status-bar',
     'expo-font',
     'expo-secure-store',
     'expo-sqlite',
