@@ -62,7 +62,9 @@ docker compose run --rm --build seed   # içeriği yükler (ilk kurulum ve içer
 
 - Web: `http://<LAN-IP>:3000`, API: `http://<LAN-IP>:4000/api/v1`. `PUBLIC_HOST` değişince `--build` ile web
   imajı yeniden derlenmelidir (API adresi derleme anında gömülür).
-- Mobil uygulama telefondaki **Expo Go** ile doğrudan açılır (SDK 54); JS sunucudaki Metro'dan gelir:
+- Mobil uygulama telefondaki **Expo Go** ile doğrudan açılır (SDK 57); JS sunucudaki Metro'dan gelir. iOS'ta Expo Go
+  yalnızca en güncel SDK'yı açar: mağazadaki Expo Go yeni SDK'ya geçince proje de `npx expo install expo@^<sdk> --fix`
+  ile yükseltilmelidir.
 
 ```bash
 pnpm install                                   # depo kökünde (Docker'dan bağımsız; Metro için Node 22+ gerekir)
@@ -122,7 +124,7 @@ Admin panelinden (web) dersler taslak olarak düzenlenir, sahne editöründe gö
 
 - **Monorepo + ortak paket**: Sahne şeması, API tipleri ve oyunlaştırma kuralları tek kaynaktan gelir; bir alan değiştiğinde üç katmanda derleme hatası alınır.
 - **İçerik Git’te**: Code review, diff ve CI doğrulaması için. Admin paneli aynı veritabanı sürümlerini düzenler; panelde yapılan değişiklikleri `content/` klasörüne geri yazan bir dışa aktarım henüz yoktur.
-- **Tek React sürümü**: Expo SDK 54 / React Native 0.81, React 19.1.0 gerektirir. `node-linker=hoisted` (Expo/Metro gereği) ile çakışma olmaması için tüm çalışma alanı `pnpm.overrides` ile React 19.1.0’a sabitlenmiştir.
+- **Tek React sürümü**: Expo SDK 57 / React Native 0.86, React 19.2.3 gerektirir. `node-linker=hoisted` (Expo/Metro gereği) ile çakışma olmaması için tüm çalışma alanı `pnpm.overrides` ile React 19.2.3’e sabitlenmiştir.
 - **Kimlik doğrulama**: Web istemcisi refresh token’ı httpOnly çerezde taşır (`X-Auth-Mode: cookie`), access token yalnızca bellektedir; localStorage’da yalnızca profil durur. Web ve API farklı “site”lardaysa `REFRESH_COOKIE_SAMESITE=none` gerekir. CSP istek başına nonce kullanır (`'unsafe-inline'` yok). Mobil token’ları `expo-secure-store`’da tutar. Access token her istekte kullanıcının güncel durumuna (silinmiş mi, rolü, oturumları kapatıldı mı) göre doğrulanır.
 - **Web güvenliği**: İçerik SVG’leri DOMPurify ile temizlenir, sayfalar Content-Security-Policy ile sunulur. CSP’nin `connect-src` değeri build anındaki `NEXT_PUBLIC_API_URL`’den hesaplanır; API adresi değişirse web yeniden build edilmelidir. Swagger (`/docs`) üretimde kapalıdır.
 - **Arama**: PostgreSQL full-text (`simple` sözlük) + ILIKE yedeği; içerik ölçeği ayrı bir arama motorunu gerektirmiyor.

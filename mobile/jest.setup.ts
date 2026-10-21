@@ -17,6 +17,9 @@ jest.mock('expo-secure-store', () => {
   };
 });
 
+// Worklets — resmi mock (Reanimated 4 bunu native köprü yerine kullanır); Reanimated mock'undan ÖNCE gelmeli
+jest.mock('react-native-worklets', () => require('react-native-worklets/lib/module/mock'));
+
 // Reanimated — resmi mock (animasyonlar anında uygulanır)
 jest.mock('react-native-reanimated', () => require('react-native-reanimated/mock'));
 
