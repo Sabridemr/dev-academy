@@ -227,6 +227,12 @@ enum VersionStatus {
   archived
 }
 
+/// Ders sürümünün nereden geldiği (seed, panelde yayınlanmış sürümü content/ değişmedikçe ezmez)
+enum ContentSource {
+  seed
+  admin
+}
+
 model LessonVersion {
   id              String        @id @default(cuid())
   lessonId        String
@@ -242,6 +248,10 @@ model LessonVersion {
   concepts        String[]      @default([])
   /// LessonBlock[] (shared şema)
   blocks          Json
+  /// Sürümün kaynağı: seed (content/ dosyaları) ya da admin paneli
+  source          ContentSource @default(admin)
+  /// Seed sürümlerinde content/ dosyalarından üretilen içeriğin özeti (seed'in panel korumasında kullanılır)
+  contentHash     String?
   authorId        String?
   author          User?         @relation("VersionAuthor", fields: [authorId], references: [id], onDelete: SetNull)
   publishedAt     DateTime?

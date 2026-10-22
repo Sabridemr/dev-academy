@@ -235,6 +235,26 @@ export const tr = {
       diagram: 'Diyagram',
     },
     calloutTone: { info: 'Bilgi', tip: 'İpucu', warning: 'Dikkat', danger: 'Uyarı' },
+    predict: {
+      label: 'Tahmin et',
+      notScored: 'Puanlanmaz',
+      hint: 'Devam etmeden önce sence ne olacağını seç.',
+      correct: 'Doğru tahmin!',
+      incorrect: 'Tam değil. Doğru cevap: {answer}',
+      retry: 'Yeniden dene',
+    },
+    resources: {
+      title: 'Kaynakça',
+      opensInNewTab: '(yeni sekmede açılır)',
+      kind: {
+        book: 'Kitap',
+        article: 'Makale',
+        docs: 'Dokümantasyon',
+        video: 'Video',
+        paper: 'Akademik makale',
+        repo: 'Kod deposu',
+      },
+    },
   },
   trace: {
     role: 'Kod simülasyonu',
@@ -601,6 +621,15 @@ export const tr = {
     descTr: 'Açıklama (TR)',
     descEn: 'Açıklama (EN)',
     lessonCount: '{count} ders',
+    exportContent: 'content/ formatında dışa aktar',
+    exportTitle: 'content/ dışa aktarımı',
+    exportHint:
+      'v{version} ({status}) · {count} dosya. Dosyaları depodaki yollarına koyup pnpm content:validate --strict çalıştırın.',
+    exportWarnings: 'Birebir taşınamayanlar',
+    exportCopy: 'Kopyala',
+    exportCopied: 'Kopyalandı',
+    exportDownload: 'İndir',
+    exportFailed: 'Dışa aktarılamadı',
   },
   xp: {
     toast: '+{delta} XP',

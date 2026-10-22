@@ -22,7 +22,9 @@ import {
   INTERACTIVE_PARAMS,
   TRACE_INTERACTIVES,
   interactiveTraceSrc,
+  LessonBlockSchema,
   LearningPathManifestSchema,
+  RESOURCES_SOFT_MAX,
   QUIZ_QUESTION_RANGE,
   ModuleManifestSchema,
   QuizSchema,
@@ -424,6 +426,32 @@ export function loadContent(root = findContentRoot()): LoadedContent {
 
       // Blok referansları
       for (const b of doc.blocks) {
+        // Seed ve admin aynı şemayı kullanır; ayrıştırıcının ürettiği blok şemaya uymalı
+        const blockParsed = LessonBlockSchema.safeParse(b);
+        if (!blockParsed.success) {
+          issues.push({
+            severity: 'error',
+            file: rel(mdFile),
+            message: `':::${b.type}' (${b.id}) geçersiz → ${blockParsed.error.issues
+              .slice(0, 5)
+              .map((i) => `${i.path.join('.')}: ${i.message}`)
+              .join('; ')}`,
+          });
+        }
+        if (b.type === 'predict' && !b.explanation) {
+          issues.push({
+            severity: 'warning',
+            file: rel(mdFile),
+            message: `':::predict{id=${b.id}}' açıklama içermiyor ('Açıklama:' satırı); öğrenci neden yanıldığını görmeli`,
+          });
+        }
+        if (b.type === 'resources' && b.items.length > RESOURCES_SOFT_MAX) {
+          issues.push({
+            severity: 'warning',
+            file: rel(mdFile),
+            message: `':::resources' ${b.items.length} öğe içeriyor (en fazla ${RESOURCES_SOFT_MAX} önerilir); en değerli kaynakları seçin`,
+          });
+        }
         if (b.type === 'trace' && !traces[b.src]) {
           issues.push({
             severity: 'error',

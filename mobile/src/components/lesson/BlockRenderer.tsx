@@ -14,6 +14,8 @@ import { CodeBlockView } from './CodeBlockView';
 import { DiagramBlockView } from './DiagramBlockView';
 import { MarkdownView } from './MarkdownView';
 import { TraceView } from './TraceView';
+import { PredictBlockView } from './PredictBlockView';
+import { ResourcesBlockView } from './ResourcesBlockView';
 
 /** Dile göre Markdown seçimi (markdownEn yoksa Türkçe) */
 function md(block: { markdown: string; markdownEn?: string }, locale: Locale): string {
@@ -50,6 +52,10 @@ export const BlockRenderer = memo(function BlockRenderer({ block, lesson, onQuiz
       return <QuizBlockView lessonId={lesson.id} onPassed={onQuizPassed} />;
     case 'trace':
       return <TraceView block={block} />;
+    case 'predict':
+      return <PredictBlockView block={block} />;
+    case 'resources':
+      return <ResourcesBlockView block={block} />;
     case 'next':
       return <NextBlockView lessonId={block.lesson} note={block.note} lesson={lesson} />;
     default:

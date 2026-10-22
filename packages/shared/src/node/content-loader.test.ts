@@ -135,6 +135,85 @@ describe('içerik doğrulayıcı', () => {
   });
 });
 
+describe('içerik doğrulayıcı: tahmin ve kaynakça blokları', () => {
+  const warnings = () => loadContent(root).issues.filter((i) => i.severity === 'warning');
+  const append = (dir: string, extra: string) => {
+    const md = join(dir, 'lesson.md');
+    writeFileSync(md, `${readFileSync(md, 'utf8')}\n${extra}\n`);
+  };
+  const predict = (id: string, options: string, explanation = 'Açıklama: Çünkü.') =>
+    `:::predict{id="${id}"}\nNe olur?\n${options}\n${explanation}\n:::\n`;
+
+  it('geçerli predict ve resources bloklarını kabul eder', () => {
+    const dir = fixture();
+    append(
+      dir,
+      predict('t-ok', '- [ ] A\n- [x] B') +
+        '\n:::resources\n- [Kubernetes Service](https://kubernetes.io/docs/concepts/services-networking/service/) — belge\n:::',
+    );
+    expect(errors()).toEqual([]);
+    expect(warnings().filter((w) => w.message.includes('predict'))).toEqual([]);
+  });
+
+  it('tek seçenekli, altı seçenekli ya da iki doğrulu tahmin sorusunu hata sayar', () => {
+    const dir = fixture();
+    append(
+      dir,
+      [
+        predict('t-tek', '- [x] A'),
+        predict('t-alti', '- [x] A\n- [ ] B\n- [ ] C\n- [ ] D\n- [ ] E\n- [ ] F'),
+      ].join('\n'),
+    );
+    const messages = errors().map((e) => e.message);
+    expect(messages).toEqual([
+      expect.stringContaining('options: En az 2 seçenek olmalı'),
+      expect.stringContaining('options: En fazla 5 seçenek olabilir'),
+    ]);
+
+    // Ayrıştırma hatası dersi düşürür (yol öğesi de bu yüzden bilinmeyen derse işaret eder)
+    append(dir, predict('t-iki', '- [x] A\n- [x] B'));
+    expect(errors().map((e) => e.message)).toEqual(
+      expect.arrayContaining([expect.stringContaining('tam olarak bir doğru seçenek')]),
+    );
+  });
+
+  it('ders içinde tekrarlanan tahmin id’sini hata sayar', () => {
+    const dir = fixture();
+    append(
+      dir,
+      predict('t-ayni', '- [ ] A\n- [x] B') + '\n' + predict('t-ayni', '- [x] A\n- [ ] B'),
+    );
+    expect(errors().map((e) => e.message)).toEqual(
+      expect.arrayContaining([expect.stringContaining('benzersiz olmalı: t-ayni')]),
+    );
+  });
+
+  it('açıklamasız tahmin sorusunu ve 8’den fazla kaynağı uyarı sayar', () => {
+    const dir = fixture();
+    const items = Array.from({ length: 9 }, (_, i) => `- [Kaynak ${i}](https://example.org/${i})`);
+    append(
+      dir,
+      predict('t-aciklamasiz', '- [ ] A\n- [x] B', '') + `\n:::resources\n${items.join('\n')}\n:::`,
+    );
+    expect(errors()).toEqual([]);
+    expect(warnings().map((w) => w.message)).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining("':::predict{id=t-aciklamasiz}' açıklama içermiyor"),
+        expect.stringContaining("':::resources' 9 öğe içeriyor"),
+      ]),
+    );
+  });
+
+  it('https olmayan ya da boş kaynakçayı hata sayar', () => {
+    const dir = fixture();
+    append(dir, ':::resources\n- [Eski site](http://example.org)\n:::\n\n:::resources\n:::');
+    expect(errors().map((e) => e.message)).toEqual([
+      expect.stringContaining('https:// ile başlamalı'),
+      expect.stringContaining('En az bir kaynak olmalı'),
+    ]);
+  });
+});
+
 describe('translationReport', () => {
   it('gövdesi tamamen çevrilmiş dersleri ve İngilizcesi olan kısa metinleri sayar', () => {
     const lesson = (id: string, markdownEn?: string) => ({

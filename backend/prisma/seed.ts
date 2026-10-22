@@ -5,7 +5,12 @@
  * rozet tanımlarını veritabanına yükler. İdempotenttir: tekrar çalıştırıldığında mevcut kayıtları günceller,
  * yayındaki ders sürümünü yalnızca içerik değiştiyse yeni sürüm olarak yayınlar.
  *
- * Çalıştır: pnpm db:seed   (CONTENT_DIR ile klasör değiştirilebilir)
+ * Panel koruması: yayındaki sürüm admin panelinde oluşturulmuşsa (LessonVersion.source = admin) ve
+ * dersin content/ dosyaları seed'in son yazdığından beri değişmediyse (LessonVersion.contentHash) ders
+ * atlanır ve uyarı yazılır; panel değişikliği önce `pnpm content:export` ile content/'a alınmalıdır.
+ * `--force` (ya da SEED_FORCE=1) ile panel sürümü content/ sürümüyle ezilir.
+ *
+ * Çalıştır: pnpm db:seed [--strict] [--force]   (CONTENT_DIR ile klasör değiştirilebilir)
  */
 import 'dotenv/config';
 import { createHash } from 'node:crypto';
@@ -21,12 +26,17 @@ import {
   CURRICULUM,
   RASTER_IMAGE_TYPES,
   rasterExtension,
-  interactiveTraceSrc,
   LEARNING_PATHS,
-  type LessonBlock,
   type LocalizedString,
 } from '@devacademy/shared';
 import { coverageReport, loadContent, type LoadedLesson } from '@devacademy/shared/node';
+import {
+  decideSeedAction,
+  hash,
+  resolveLessonBlocks,
+  versionFingerprint,
+  type StoredAsset,
+} from '../src/modules/admin/content-sync';
 
 const prisma = new PrismaClient();
 
@@ -36,26 +46,6 @@ function loc(v: LocalizedString): Prisma.InputJsonValue {
 function json(v: unknown): Prisma.InputJsonValue {
   return v as Prisma.InputJsonValue;
 }
-/** jsonb anahtar sırasını değiştirir ve undefined alanları atar; karşılaştırma için kanonik biçim */
-function canonical(v: unknown): unknown {
-  if (Array.isArray(v)) return v.map(canonical);
-  if (v && typeof v === 'object') {
-    return Object.fromEntries(
-      Object.entries(v as Record<string, unknown>)
-        .filter(([, val]) => val !== undefined)
-        .sort(([a], [b]) => a.localeCompare(b))
-        .map(([k, val]) => [k, canonical(val)]),
-    );
-  }
-  return v;
-}
-function hash(v: unknown): string {
-  return createHash('sha1')
-    .update(JSON.stringify(canonical(v)))
-    .digest('hex');
-}
-
-type StoredAsset = { src: string; width: number; height: number };
 let assetCount = 0;
 
 /**
@@ -91,34 +81,6 @@ async function storeLessonAssets(lesson: LoadedLesson): Promise<Record<string, S
     };
   }
   return out;
-}
-
-/**
- * Ders bloklarını veritabanına yazılabilir hâle getirir: SVG'ler inline, raster görseller API yoluna
- * çevrilmiş (boyutlarıyla), sahne/quiz id'leri çözülmüş
- */
-function resolveBlocks(lesson: LoadedLesson, assets: Record<string, StoredAsset>): LessonBlock[] {
-  return lesson.doc.blocks.map((b) => {
-    switch (b.type) {
-      case 'diagram':
-        return assets[b.src] ? { ...b, ...assets[b.src] } : { ...b, svg: lesson.svgs[b.src] };
-      case 'animation': {
-        const scene = lesson.scenes.find((s) => s.file === b.scene);
-        return { ...b, sceneId: scene?.scene.id };
-      }
-      case 'quiz':
-        return { ...b, quizId: lesson.quiz?.id };
-      case 'trace':
-        return { ...b, trace: lesson.traces[b.src] };
-      case 'interactive': {
-        // İz kullanan simülatör (predict-run): :::trace ile aynı iz bloğa gömülür
-        const src = interactiveTraceSrc(b);
-        return src ? { ...b, trace: lesson.traces[src] } : b;
-      }
-      default:
-        return b;
-    }
-  });
 }
 
 async function seedBadges(): Promise<void> {
@@ -189,29 +151,6 @@ async function clearApiCache(): Promise<void> {
   }
 }
 
-type VersionFields = {
-  title: unknown;
-  summary: unknown;
-  durationMinutes: number;
-  level: unknown;
-  tags: string[];
-  prerequisites: string[];
-  concepts: string[];
-  blocks: unknown;
-};
-function versionFingerprint(v: VersionFields): string {
-  return hash({
-    title: v.title,
-    summary: v.summary,
-    durationMinutes: v.durationMinutes,
-    level: v.level,
-    tags: v.tags,
-    prerequisites: v.prerequisites,
-    concepts: v.concepts,
-    blocks: v.blocks,
-  });
-}
-
 async function main(): Promise<void> {
   const contentDir = resolve(process.cwd(), process.env.CONTENT_DIR ?? '../content');
   console.log(`İçerik kökü: ${contentDir}`);
@@ -249,6 +188,8 @@ async function main(): Promise<void> {
 
   let publishedCount = 0;
   let unchangedCount = 0;
+  let skippedAdminCount = 0;
+  const force = process.argv.includes('--force') || process.env.SEED_FORCE === '1';
   let sceneCount = 0;
   let quizCount = 0;
 
@@ -281,6 +222,63 @@ async function main(): Promise<void> {
 
     for (const lesson of module.lessons) {
       const meta = lesson.doc.meta;
+
+      // Ders sürümünün içeriği (karar için önce hesaplanır)
+      const blocks = resolveLessonBlocks(lesson, await storeLessonAssets(lesson));
+      const versionPayload = {
+        title: loc(meta.title),
+        summary: loc(meta.summary),
+        durationMinutes: meta.durationMinutes,
+        level: meta.level,
+        tags: meta.tags,
+        prerequisites: meta.prerequisites,
+        concepts: meta.concepts,
+        blocks: json(blocks),
+      };
+      const fingerprint = versionFingerprint(versionPayload);
+      const current = await prisma.lesson.findUnique({
+        where: { id: meta.id },
+        include: { publishedVersion: true },
+      });
+      const published = current?.publishedVersion;
+
+      // Panel koruması: yayındaki sürüm panelden geldiyse ve content/ son seed'den beri değişmediyse
+      // dersin hiçbir parçasına (ders kaydı, sahneler, quiz, sürüm) dokunma
+      if (meta.status === 'published' && published?.source === 'admin') {
+        // content/ ile en son eşitlenen sürümün özeti (seed yazdı ya da dışa aktarım sonrası aynı bulundu);
+        // migration öncesi sürümlerde özet yok: son seed sürümünün kendi özeti kullanılır
+        const synced = await prisma.lessonVersion.findFirst({
+          where: { lessonId: meta.id, contentHash: { not: null } },
+          orderBy: { version: 'desc' },
+        });
+        const lastSeed = synced
+          ? null
+          : await prisma.lessonVersion.findFirst({
+              where: { lessonId: meta.id, source: 'seed' },
+              orderBy: { version: 'desc' },
+            });
+        const decision = decideSeedAction({
+          contentFingerprint: fingerprint,
+          published: { source: published.source, fingerprint: versionFingerprint(published) },
+          lastSeedContentHash:
+            synced?.contentHash ?? (lastSeed ? versionFingerprint(lastSeed) : null),
+          force,
+        });
+        if (decision === 'skip-admin') {
+          console.warn(
+            `  ⚠ ${meta.id}: yayındaki v${published.version} admin panelinden ve content/ değişmemiş; atlandı ` +
+              `(panel değişikliğini content/'a almak için: pnpm content:export --lesson ${meta.id}; ezmek için --force)`,
+          );
+          skippedAdminCount += 1;
+          continue;
+        }
+        if (decision === 'overwrite-admin') {
+          console.warn(
+            `  ⚠ ${meta.id}: yayındaki v${published.version} admin panelinden geliyordu; ${force ? '--force ile' : 'content/ değiştiği için'} content/ sürümü yayınlanıyor`,
+          );
+        }
+      }
+
       await prisma.lesson.upsert({
         where: { id: meta.id },
         update: { slug: meta.slug, moduleId: m.id, order: meta.order },
@@ -363,26 +361,6 @@ async function main(): Promise<void> {
         quizCount += 1;
       }
 
-      // Ders sürümü
-      const blocks = resolveBlocks(lesson, await storeLessonAssets(lesson));
-      const versionPayload = {
-        title: loc(meta.title),
-        summary: loc(meta.summary),
-        durationMinutes: meta.durationMinutes,
-        level: meta.level,
-        tags: meta.tags,
-        prerequisites: meta.prerequisites,
-        concepts: meta.concepts,
-        blocks: json(blocks),
-      };
-      const current = await prisma.lesson.findUnique({
-        where: { id: meta.id },
-        include: { publishedVersion: true },
-      });
-      const published = current?.publishedVersion;
-      const fingerprint = versionFingerprint(versionPayload);
-      const existingFingerprint = published ? versionFingerprint(published) : null;
-
       const searchText = buildSearchText(
         lesson.doc.blocks,
         meta.title,
@@ -391,10 +369,22 @@ async function main(): Promise<void> {
         meta.tags,
       );
 
-      if (published && existingFingerprint === fingerprint && meta.status === 'published') {
+      if (
+        published &&
+        versionFingerprint(published) === fingerprint &&
+        meta.status === 'published'
+      ) {
         // İçerik aynı ama arama metninin biçimi değişmiş olabilir (buildSearchText güncellemesi)
         if (current?.searchText !== searchText) {
           await prisma.lesson.update({ where: { id: meta.id }, data: { searchText } });
+        }
+        // Panel sürümü content/'a aktarılmış (dışa aktarım): eşitlendiğini kaydet ki sonraki panel
+        // düzenlemesi "content/ değişti" sanılıp ezilmesin
+        if (published.source === 'admin' && published.contentHash !== fingerprint) {
+          await prisma.lessonVersion.update({
+            where: { id: published.id },
+            data: { contentHash: fingerprint },
+          });
         }
         unchangedCount += 1;
         continue;
@@ -432,6 +422,8 @@ async function main(): Promise<void> {
             status: meta.status === 'published' ? 'published' : 'draft',
             publishedAt: meta.status === 'published' ? new Date() : null,
             authorId: adminId,
+            source: 'seed',
+            contentHash: fingerprint,
           },
         });
         if (meta.status === 'published') {
@@ -509,6 +501,7 @@ async function main(): Promise<void> {
           summary: loc(l.summary),
           blocks: json([]),
           authorId: adminId,
+          source: 'seed',
         },
       });
       placeholders += 1;
@@ -516,7 +509,7 @@ async function main(): Promise<void> {
   }
 
   console.log(
-    `✓ ${publishedCount} ders sürümü yazıldı, ${unchangedCount} değişmedi, ${placeholders} taslak yer tutucu`,
+    `✓ ${publishedCount} ders sürümü yazıldı, ${unchangedCount} değişmedi, ${skippedAdminCount} panel düzenlemesi korundu, ${placeholders} taslak yer tutucu`,
   );
   console.log(`✓ ${sceneCount} sahne, ${quizCount} quiz, ${assetCount} yeni görsel`);
   await clearApiCache();
