@@ -29,6 +29,7 @@ export const en: Messages = {
     searchHint: 'Search…',
     streakTitle: 'Daily streak',
     paths: 'Learning paths',
+    glossary: 'Glossary',
   },
   footer: {
     tagline:
@@ -811,6 +812,25 @@ export const en: Messages = {
     title: 'You’re offline',
     text: 'It looks like you have no internet connection. Pages you’ve opened before may still load from the cache.',
     retry: 'Try again',
+  },
+  glossary: {
+    title: 'Concept glossary',
+    subtitle:
+      'Short definitions of the {count} concepts used in lessons, with the lessons they appear in.',
+    searchPlaceholder: 'Search concepts, abbreviations or definitions…',
+    searchLabel: 'Search the glossary',
+    lettersLabel: 'Filter by letter',
+    allLetters: 'All',
+    resultCount: '{count} concepts',
+    empty: 'No concept matches your search.',
+    lessonCount: 'in {count} lessons',
+    back: 'Back to glossary',
+    aliases: 'Also known as',
+    lessonsTitle: 'Appears in',
+    noLessons: 'This concept does not appear in a published lesson yet.',
+    questionCount: '{count} quiz questions test this concept',
+    relatedTitle: 'Related concepts',
+    lessonConcepts: 'Concepts in this lesson',
   },
   common: {
     loading: 'Loading…',

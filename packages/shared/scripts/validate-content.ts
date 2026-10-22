@@ -53,6 +53,7 @@ const blockCount = (type: string) =>
   );
 const predictCount = blockCount('predict');
 const resourcesCount = blockCount('resources');
+const conceptCount = content.glossary ? Object.keys(content.glossary).length : 0;
 
 if (asJson) {
   console.log(
@@ -69,6 +70,7 @@ if (asJson) {
           predictCount,
           resourcesCount,
           exerciseCount,
+          conceptCount,
         },
         errors,
         warnings,
@@ -80,7 +82,7 @@ if (asJson) {
 } else {
   console.log(`İçerik kökü: ${root}`);
   console.log(
-    `Modül: ${content.modules.length}  Ders: ${coverage.written}/${coverage.total}  Sahne: ${sceneCount}  Quiz: ${quizCount}  SVG: ${svgCount}  İnteraktif: ${interactiveCount}  Tahmin: ${predictCount}  Kaynakça: ${resourcesCount}  Alıştırma: ${exerciseCount}`,
+    `Modül: ${content.modules.length}  Ders: ${coverage.written}/${coverage.total}  Sahne: ${sceneCount}  Quiz: ${quizCount}  SVG: ${svgCount}  İnteraktif: ${interactiveCount}  Tahmin: ${predictCount}  Kaynakça: ${resourcesCount}  Alıştırma: ${exerciseCount}  Kavram: ${conceptCount}`,
   );
   // Bilgi amaçlı (doğrulama sonucunu etkilemez)
   console.log(

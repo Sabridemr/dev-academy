@@ -15,6 +15,7 @@ export function Footer() {
   const learn = [
     { href: '/modules', label: t('nav.modules') },
     { href: '/#paths', label: t('nav.paths') },
+    { href: '/glossary', label: t('nav.glossary') },
     { href: '/search', label: t('nav.search') },
   ];
   const account = authed

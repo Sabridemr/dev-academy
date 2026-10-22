@@ -29,6 +29,7 @@ import {
   Text,
 } from '@/components/ui';
 import { BlockRenderer } from '@/components/lesson/BlockRenderer';
+import { ConceptChips } from '@/components/content/ConceptChips';
 import { NoteModal } from '@/components/lesson/NoteModal';
 
 /**
@@ -159,6 +160,7 @@ export default function LessonScreen() {
             <Chip label={t(`module.level.${l.level}`)} />
             {progress.completed ? <Chip tone="success" label={t('lesson.completed')} /> : null}
           </Row>
+          <ConceptChips concepts={l.concepts} />
         </View>
 
         {blocks.map((block) => (

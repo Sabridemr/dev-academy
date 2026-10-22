@@ -13,6 +13,7 @@ export const en: Messages = {
     register: 'Sign up',
     logout: 'Log out',
     profile: 'Profile',
+    glossary: 'Glossary',
   },
   theme: { light: 'Light', dark: 'Dark', system: 'System' },
   home: {
@@ -391,6 +392,18 @@ export const en: Messages = {
     server: 'Something went wrong on the server. Try again shortly.',
     notFound: 'Content not found.',
     unknown: 'An unexpected error occurred.',
+  },
+  glossary: {
+    title: 'Concept glossary',
+    searchPlaceholder: 'Search concepts, abbreviations or definitions…',
+    resultCount: '{count} concepts',
+    empty: 'No concept matches your search.',
+    lessonCount: 'in {count} lessons',
+    aliases: 'Also known as',
+    lessonsTitle: 'Appears in',
+    noLessons: 'This concept does not appear in a published lesson yet.',
+    relatedTitle: 'Related concepts',
+    lessonConcepts: 'Concepts in this lesson',
   },
   common: {
     loading: 'Loading…',
