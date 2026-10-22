@@ -289,6 +289,10 @@ Simülasyonun sonunda üç ayrı dış liste var, ama `takim` ile `sig` iç list
 "Deniz", `takim[0]`'da da görünüyor. `sig`'e yeni bir eleman eklemek ise yalnızca `sig`'i etkiledi, çünkü dış
 listeler ayrı nesneler. `derin` ise tamamen bağımsız: ona eklenen "Zeynep" başka hiçbir yerde görünmüyor.
 
+:::interactive{type="python-memory" scenario="shallow-vs-deep" title="Kendin dene: sığ ve derin kopya|Try it: shallow vs deep copy"}
+"Adım ileri" ile ilerle. `takma_ad` yalnızca yeni bir isimdir, `orijinal` ile aynı #id'yi gösterir. `sig` yeni bir dış listedir ama yuvalarındaki oklar `orijinal`in iç listelerine gider; `derin` için iç listeler de yeniden oluşturulur. `sig[0].append(99)` adımında vurgulanan kartlara ve çıktıdaki iki listeye bak. Sonra "Kodu düzenle" ile `copy.copy(orijinal)` yerine `orijinal[:]` ya da `list(orijinal)` yazıp "Çalıştır"a bas: sonuç aynıysa onlar da sığ kopyadır.
+:::
+
 :::callout{tone="info" title="deepcopy neden her zaman kullanılmıyor?"}
 Derin kopya bütün yapıyı dolaştığı için büyük verilerde yavaştır ve bellek harcar. Çoğu zaman sığ kopya yeterlidir
 ya da veriyi hiç değiştirmeden yeni bir yapı üretmek (örneğin comprehension ile) daha temizdir. `deepcopy`'yi iç

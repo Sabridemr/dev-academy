@@ -77,6 +77,12 @@ Erken mikroservis bir hatadır. 5 kişilik bir ekip için 30 servis, dağıtık 
 | Mesaj kuyruğu | Servisleri birbirinden ayırır, yük patlamalarını emer | Kafka, SQS, RabbitMQ |
 | Polyglot veri | Her iş için uygun veritabanı | Postgres, DynamoDB, Redis, Elasticsearch, S3 |
 
+Katmanları tek tek görmeden önce, bu dersin sonunda ayrıntısına gireceğimiz en kritik akışı baştan sona izleyelim: sipariş servisinin stok, ödeme ve olay yayınını saga olarak yönetmesi ve ödeme reddedildiğinde telafi adımlarının çalışması. Animasyondaki koşullu `UPDATE` 8. bölümün, telafi zinciri 9. bölümün konusudur.
+
+:::animation{scene="order-saga.scene.json"}
+Stok atomik olarak ayrılır, kart bloke edilir, OrderPlaced yayınlanır; ikinci siparişte ödeme reddedilince stok serbest bırakılır ve sipariş iptal edilir.
+:::
+
 ## 5. Bir İsteğin Yolculuğu
 
 :::diagram{src="sekil-05.png" alt="Ürün sayfası isteğinin yolu: Tarayıcı, CDN, LB, Gateway, Ürün servisi, Redis (cache HIT ~1 ms) ve DB replika (MISS ise ~10 ms); toplam hedef p99 200 ms altı|Path of a product page request: browser, CDN, LB, gateway, product service, Redis (cache HIT ~1 ms) and DB replica (~10 ms on MISS); target p99 under 200 ms"}
@@ -177,6 +183,12 @@ Mikroservislerde servisler arasında tek bir DB transaction'ı olamaz. Bu yüzde
 
 :::interactive{type="cache" capacity=6 policy="lru" writePolicy="cache-aside"}
 Ürün okumalarını önbelleğe al; kapasiteyi değiştirip hit oranının nasıl değiştiğini ve LRU'nun hangi anahtarları attığını izle.
+:::
+
+:::realworld{company="Amazon"}
+Bu dersteki büyüme yolculuğu Amazon'un kendi anlattığı hikâyeye dayanır. CTO Werner Vogels, 2006'da ACM Queue'ya verdiği röportajda Amazon'un tek bir büyük uygulama ve onun veritabanıyla başladığını, ölçek ve ekip sayısı arttıkça bunun yüzlerce servise bölündüğünü anlatır. Bu dönüşümde servislere yalnızca arayüzleri üzerinden erişilir, başka bir servisin veritabanına doğrudan bağlanmak yasaktır ve servisi yazan ekip onu canlıda da işletir ("you build it, you run it").
+
+Veri tarafındaki ödünleşim ise 2007'de yayımlanan Dynamo makalesinde açıkça yazılıdır. Makale, alışveriş sepetinin her koşulda yazılabilir kalması gerektiğini söyler: ağ ya da sunucu sorunlarında bile "sepete ekle" reddedilmemelidir. Bunun için Dynamo tutarlılıktan ödün verir; aynı sepetin çakışan sürümleri oluşabilir ve okuma sırasında birleştirilir. Makale bu seçimin bedelini de saklamaz: birleştirme sonucunda silinmiş bir ürün sepette yeniden görünebilir. Ödeme ve stok düşümünde ise böyle bir esneklik kabul edilmez; bu ayrım, dersteki "sepette erişilebilirlik, parada tutarlılık" kuralının kaynağıdır.
 :::
 
 :::callout{tone="info" title="İlgili dersler"}

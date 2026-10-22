@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 430" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Canlı ortam mimarisi ve yedek akışı</title>
+  <desc id="desc">Kullanıcı alan adını DNS ile çözüp VPS'in 443 portuna gelir. Caddy veya Nginx HTTPS'i sonlandırıp statik dosyaları sunar ve /api isteklerini localhost:3000'deki uygulamaya iletir. Uygulama yalnızca localhost'tan erişilen PostgreSQL'e bağlanır. Alt şeritte cron her gece pg_dump ile yedek alır, /yedek klasörüne yazar ve rclone ile sunucu dışındaki depoya kopyalar. Geri yükleme bu uzak kopyadan yapılır.</desc>
+  <defs>
+    <marker id="h03-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-primary, #6366f1)"/>
+    </marker>
+    <marker id="h03-arrow-ok" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-success, #10b981)"/>
+    </marker>
+  </defs>
+
+  <!-- İstek yolu -->
+  <g fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5">
+    <rect x="20" y="60" width="120" height="70" rx="10"/>
+    <rect x="170" y="60" width="120" height="70" rx="10"/>
+  </g>
+  <g font-size="14" font-weight="600" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="80" y="92">Kullanıcı</text>
+    <text x="230" y="92">DNS</text>
+  </g>
+  <g font-size="11" fill="var(--da-muted, #64748b)" text-anchor="middle">
+    <text x="80" y="112">tarayıcı</text>
+    <text x="230" y="112">A kaydı → IP</text>
+  </g>
+  <line x1="140" y1="95" x2="166" y2="95" stroke="var(--da-primary, #6366f1)" stroke-width="2" marker-end="url(#h03-arrow)"/>
+
+  <!-- VPS -->
+  <rect x="320" y="30" width="560" height="200" rx="16" fill="none" stroke="var(--da-border, #cbd5e1)" stroke-dasharray="6 5"/>
+  <text x="340" y="52" font-size="12" font-weight="600" fill="var(--da-muted, #64748b)">VPS · UFW: 22, 80, 443</text>
+  <line x1="290" y1="95" x2="346" y2="95" stroke="var(--da-primary, #6366f1)" stroke-width="2" marker-end="url(#h03-arrow)"/>
+  <text x="318" y="85" text-anchor="middle" font-size="11" fill="var(--da-muted, #64748b)">:443</text>
+
+  <rect x="350" y="65" width="150" height="80" rx="10" fill="var(--da-primary, #6366f1)" opacity="0.12" stroke="var(--da-primary, #6366f1)" stroke-width="1.5"/>
+  <text x="425" y="96" text-anchor="middle" font-size="14" font-weight="700" fill="var(--da-fg, #0f172a)">Caddy / Nginx</text>
+  <text x="425" y="116" text-anchor="middle" font-size="11" fill="var(--da-muted, #64748b)">HTTPS, ters vekil</text>
+  <text x="425" y="132" text-anchor="middle" font-size="11" fill="var(--da-muted, #64748b)">/ → statik dosyalar</text>
+
+  <g fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5">
+    <rect x="540" y="65" width="140" height="80" rx="10"/>
+    <rect x="720" y="65" width="140" height="80" rx="10"/>
+  </g>
+  <g font-size="14" font-weight="600" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="610" y="98">Uygulama</text>
+    <text x="790" y="98">PostgreSQL</text>
+  </g>
+  <g font-size="11" fill="var(--da-muted, #64748b)" text-anchor="middle">
+    <text x="610" y="118">localhost:3000</text>
+    <text x="790" y="118">localhost:5432</text>
+    <text x="790" y="134">dışarıya kapalı</text>
+  </g>
+  <line x1="500" y1="105" x2="536" y2="105" stroke="var(--da-primary, #6366f1)" stroke-width="2" marker-end="url(#h03-arrow)"/>
+  <text x="518" y="160" text-anchor="middle" font-size="11" fill="var(--da-muted, #64748b)">/api</text>
+  <line x1="680" y1="105" x2="716" y2="105" stroke="var(--da-primary, #6366f1)" stroke-width="2" marker-end="url(#h03-arrow)"/>
+
+  <!-- Yedek şeridi -->
+  <text x="340" y="205" font-size="12" font-weight="600" fill="var(--da-muted, #64748b)">Gece 03:00 · cron → yedek.sh</text>
+  <rect x="20" y="270" width="860" height="140" rx="16" fill="var(--da-success, #10b981)" opacity="0.07" stroke="var(--da-success, #10b981)"/>
+  <text x="40" y="294" font-size="12" font-weight="600" fill="var(--da-success, #10b981)">YEDEK VE GERİ YÜKLEME</text>
+  <g fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5">
+    <rect x="560" y="310" width="140" height="70" rx="10"/>
+    <rect x="360" y="310" width="160" height="70" rx="10"/>
+  </g>
+  <rect x="60" y="310" width="240" height="70" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-success, #10b981)" stroke-width="2"/>
+  <g font-size="13" font-weight="600" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="630" y="340">pg_dump | gzip</text>
+    <text x="440" y="340">/yedek (aynı disk)</text>
+    <text x="180" y="340">Uzak depo (S3 / B2)</text>
+  </g>
+  <g font-size="11" fill="var(--da-muted, #64748b)" text-anchor="middle">
+    <text x="630" y="360">tutarlı döküm</text>
+    <text x="440" y="360">14 gün saklanır</text>
+    <text x="180" y="360">başka sağlayıcı, başka konum</text>
+  </g>
+  <path d="M 790 145 C 790 250, 720 300, 702 330" fill="none" stroke="var(--da-success, #10b981)" stroke-width="2" marker-end="url(#h03-arrow-ok)"/>
+  <line x1="560" y1="345" x2="524" y2="345" stroke="var(--da-success, #10b981)" stroke-width="2" marker-end="url(#h03-arrow-ok)"/>
+  <line x1="360" y1="345" x2="304" y2="345" stroke="var(--da-success, #10b981)" stroke-width="2" marker-end="url(#h03-arrow-ok)"/>
+  <text x="332" y="335" text-anchor="middle" font-size="11" fill="var(--da-muted, #64748b)">rclone</text>
+  <path d="M 180 310 C 180 230, 760 250, 785 150" fill="none" stroke="var(--da-muted, #64748b)" stroke-width="1.5" stroke-dasharray="6 4" marker-end="url(#h03-arrow)"/>
+  <text x="250" y="250" font-size="11" fill="var(--da-muted, #64748b)">geri yükleme: gunzip -c … | psql</text>
+</svg>

@@ -117,6 +117,10 @@ Simülasyondan çıkarılacak önemli noktalar:
 - Aynı fonksiyonun ikinci çağrısı bir öncekinden hiçbir şey hatırlamaz: `ara`, `toplam`, `sonuc` yeniden oluşur.
   Fonksiyonun "hafızası" yoktur; durum tutmak istiyorsan onu bir nesnede ya da closure'da (K-07) saklarsın.
 
+:::interactive{type="python-memory" scenario="function-args" title="Kendin dene: argümanlar nasıl aktarılır?|Try it: how arguments are passed"}
+"Adım ileri" ile ilerle. `ekle(sayilar, 3)` çağrısında isim tablosuna `ekle()` çerçevesi eklenir ve `liste` parametresi `sayilar` ile aynı #id'yi gösterir (listede `ref=2`); `append` listeyi yerinde değiştirdiği için çağıran da değişikliği görür. `yeniden_bagla` içindeki `liste = [0]` yalnızca yerel ismi yeni bir listeye bağlar, `sayilar` etkilenmez. `artir(x)` çağrısında int değiştirilemez olduğu için `n = n + 1` yeni bir nesne üretir. Her çağrının sonunda çerçevenin kapandığını "Bu adımda olanlar" günlüğünden izle.
+:::
+
 :::callout{tone="info" title="Traceback yığını okur"}
 Bir hata oluştuğunda gördüğün `Traceback (most recent call last):` çıktısı, hata anındaki çağrı yığınının
 dökümüdür. En üstte en dış çağrı, en altta hatanın asıl oluştuğu satır vardır. Hata ayıklarken alttan yukarı
@@ -186,7 +190,7 @@ değiştirilebilir bir nesneyse, her çağrı **aynı nesneyi** kullanır:
 `ekle_hatali` iki kez çağrıldığında 'liste' parametresinin iki seferde de aynı heap nesnesini gösterdiğine, `ekle_dogru`da ise her çağrıda yeni bir liste oluştuğuna bak.
 :::
 
-:::callout{tone="danger" title="Varsayılan değer olarak [] ya da {} verme"}
+:::callout{tone="danger" title="Varsayılan değer olarak boş liste ya da sözlük verme"}
 `def f(x, liste=[])` yazdığında bütün çağrılar tek bir listeyi paylaşır ve veri çağrılar arasında sızar. Bu
 hata özellikle web sunucularında farklı kullanıcıların verisinin karışmasına yol açabilir. Doğru kalıp:
 `def f(x, liste=None):` ve gövdenin başında `if liste is None: liste = []`. Aynı kural `dict`, `set` ve kendi

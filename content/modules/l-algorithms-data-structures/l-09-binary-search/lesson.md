@@ -34,6 +34,21 @@ Her satır bir turu gösterir: gri hücreler elenen adaylardır, vurgulu hücre 
 
 Bu karmaşayı çözmenin yolu bir **döngü değişmezi** (loop invariant) seçip ona sadık kalmaktır. Değişmez, döngünün her turunun başında doğru olan bir cümledir. Klasik aramada değişmezimiz şudur: "Hedef dizide varsa, indeksi kapalı aralık `[sol, sag]` içindedir." Başlangıçta `sol = 0` ve `sag = len(dizi) - 1` seçeriz, yani tüm dizi adaydır. Ortadaki değer hedeften küçükse hedef ortanın solunda olamaz; ortanın kendisi de hedef değildir, bu yüzden `sol = orta + 1` yazarız. Büyükse aynı mantıkla `sag = orta - 1`. Aralık kapalı olduğu için `sol == sag` olduğunda hâlâ bir aday vardır; döngü koşulu bu yüzden `sol <= sag` olmalıdır. `sol > sag` olduğunda aralık boşalmıştır ve hedefin dizide olmadığını kesin olarak söyleyebiliriz.
 
+Önce değişmezin aralığı nasıl daralttığını bir sahnede görelim. Dizide olmayan 20'yi arayacağız; sınır koşulları en
+çok bu durumda zorlanır.
+
+:::predict{id="ikili-arama-bos-aralik"}
+[3, 8, 12, 17, 23, 31, 42, 56] dizisinde 20 aranırken döngü bittiğinde `sol` hangi indekste olur? | When searching [3, 8, 12, 17, 23, 31, 42, 56] for 20, at which index is `sol` when the loop ends?
+- [ ] 3, yani 17'nin indeksi | 3, the index of 17
+- [x] 4, yani 23'ün indeksi | 4, the index of 23
+- [ ] −1, çünkü hedef bulunamadı | −1, because the target was not found
+Açıklama: Fonksiyon −1 döndürür ama `sol` değişkeni 4'te kalır: 20'den büyük ilk elemanın, yani 20'nin sırayı bozmadan ekleneceği yerin indeksi. Alt sınır fikri buradan doğar. | The function returns −1, but `sol` stays at 4: the index of the first element larger than 20, i.e. where 20 would be inserted to keep the order. This is where the lower-bound idea comes from.
+:::
+
+:::animation{scene="aralik-yarilama.scene.json"}
+Gri hücreler elenen adaylardır; son adımlarda sınır hatasının neden sonsuz döngüye yol açtığını görürsün.
+:::
+
 Aşağıdaki izde bu mantığı satır satır izleyebilirsin. Önce var olan bir değeri (31), sonra olmayan bir değeri (20) arıyoruz. İkinci aramada aralığın nasıl daralıp sonunda boşaldığına özellikle dikkat et.
 
 :::trace{src="klasik-ikili-arama.trace.json" title="Klasik ikili arama: kapalı aralık [sol, sag]|Classic binary search: closed range [sol, sag]"}

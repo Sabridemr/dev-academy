@@ -1,0 +1,742 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "l-02-kayan-pencere-kayma",
+  "title": {
+    "tr": "Kayan pencere toplamı güncelliyor",
+    "en": "The sliding window updates its sum"
+  },
+  "summary": {
+    "tr": "[4, 2, 7, 1, 8, 3, 5] dizisinde 3 elemanlık pencere kayarken toplamın bir ekleme ve bir çıkarmayla güncellenmesi.",
+    "en": "A 3-element window sliding over [4, 2, 7, 1, 8, 3, 5], its sum updated with one addition and one subtraction."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Yedi hücreli bir dizinin üstünde bir pencere toplamı kutusu ve bir en iyi değer kutusu vardır. İlk pencere 4, 2 ve 7'yi toplayarak 13 bulur. Sonra her adımda pencere bir hücre sağa kayar: sağdan giren eleman artı işaretli, soldan düşen eleman eksi işaretli paketle toplama gider. Toplamlar sırasıyla 10, 16, 12 ve 16 olur; en iyi değer 16'da kalır. Son adım, her kaymada yalnızca iki işlem yapıldığı için toplam sürenin O(n) olduğunu özetler.",
+      "en": "Above a seven-cell array sit a window-sum box and a best-value box. The first window adds 4, 2 and 7 to get 13. Then at every step the window slides one cell right: the incoming element travels to the sum with a plus sign and the outgoing one with a minus sign. The sums become 10, 16, 12 and 16; the best value stays at 16. The last step explains that each slide costs only two operations, so the total is O(n)."
+    }
+  },
+  "canvas": {
+    "width": 1000,
+    "height": 600
+  },
+  "nodes": [
+    {
+      "id": "sum",
+      "kind": "function",
+      "label": {
+        "tr": "pencere toplamı",
+        "en": "window sum"
+      },
+      "x": 330,
+      "y": 110,
+      "w": 240,
+      "h": 74,
+      "sublabel": {
+        "tr": "k = 3",
+        "en": "k = 3"
+      }
+    },
+    {
+      "id": "best",
+      "kind": "storage",
+      "label": {
+        "tr": "en iyi",
+        "en": "best"
+      },
+      "x": 720,
+      "y": 110,
+      "w": 200,
+      "h": 74,
+      "sublabel": {
+        "tr": "henüz yok",
+        "en": "none yet"
+      }
+    },
+    {
+      "id": "c0",
+      "kind": "generic",
+      "label": "4",
+      "x": 140,
+      "y": 330,
+      "w": 100,
+      "h": 56,
+      "sublabel": "[0]"
+    },
+    {
+      "id": "c1",
+      "kind": "generic",
+      "label": "2",
+      "x": 260,
+      "y": 330,
+      "w": 100,
+      "h": 56,
+      "sublabel": "[1]"
+    },
+    {
+      "id": "c2",
+      "kind": "generic",
+      "label": "7",
+      "x": 380,
+      "y": 330,
+      "w": 100,
+      "h": 56,
+      "sublabel": "[2]"
+    },
+    {
+      "id": "c3",
+      "kind": "generic",
+      "label": "1",
+      "x": 500,
+      "y": 330,
+      "w": 100,
+      "h": 56,
+      "sublabel": "[3]"
+    },
+    {
+      "id": "c4",
+      "kind": "generic",
+      "label": "8",
+      "x": 620,
+      "y": 330,
+      "w": 100,
+      "h": 56,
+      "sublabel": "[4]"
+    },
+    {
+      "id": "c5",
+      "kind": "generic",
+      "label": "3",
+      "x": 740,
+      "y": 330,
+      "w": 100,
+      "h": 56,
+      "sublabel": "[5]"
+    },
+    {
+      "id": "c6",
+      "kind": "generic",
+      "label": "5",
+      "x": 860,
+      "y": 330,
+      "w": 100,
+      "h": 56,
+      "sublabel": "[6]"
+    }
+  ],
+  "edges": [
+    {
+      "id": "e0",
+      "from": "c0",
+      "to": "sum",
+      "kind": "data"
+    },
+    {
+      "id": "e1",
+      "from": "c1",
+      "to": "sum",
+      "kind": "data"
+    },
+    {
+      "id": "e2",
+      "from": "c2",
+      "to": "sum",
+      "kind": "data"
+    },
+    {
+      "id": "e3",
+      "from": "c3",
+      "to": "sum",
+      "kind": "data"
+    },
+    {
+      "id": "e4",
+      "from": "c4",
+      "to": "sum",
+      "kind": "data"
+    },
+    {
+      "id": "e5",
+      "from": "c5",
+      "to": "sum",
+      "kind": "data"
+    },
+    {
+      "id": "e6",
+      "from": "c6",
+      "to": "sum",
+      "kind": "data"
+    },
+    {
+      "id": "eb",
+      "from": "sum",
+      "to": "best",
+      "kind": "data"
+    }
+  ],
+  "steps": [
+    {
+      "id": "intro",
+      "title": {
+        "tr": "Ardışık 3 elemanın en büyük toplamı",
+        "en": "Largest sum of 3 consecutive elements"
+      },
+      "narration": {
+        "tr": "Dizideki ardışık 3 elemanlık pencerelerin en büyük toplamını arıyoruz. Kaba kuvvet her pencereyi baştan toplar: 5 pencere × 3 toplama. Kayan pencere toplamı yalnızca **güncelleyecek**.",
+        "en": "We want the largest sum among the windows of 3 consecutive elements. Brute force re-adds every window from scratch: 5 windows × 3 additions. The sliding window will only **update** the sum."
+      },
+      "durationMs": 3200,
+      "inherit": false,
+      "highlight": {
+        "nodes": [],
+        "edges": []
+      },
+      "edgeStates": {
+        "e0": {
+          "visible": false
+        },
+        "e1": {
+          "visible": false
+        },
+        "e2": {
+          "visible": false
+        },
+        "e3": {
+          "visible": false
+        },
+        "e4": {
+          "visible": false
+        },
+        "e5": {
+          "visible": false
+        },
+        "e6": {
+          "visible": false
+        }
+      }
+    },
+    {
+      "id": "w0",
+      "title": {
+        "tr": "İlk pencere: 4 + 2 + 7 = 13",
+        "en": "First window: 4 + 2 + 7 = 13"
+      },
+      "narration": {
+        "tr": "İlk pencerenin toplamı bir kez, baştan hesaplanır: 13. Şimdilik en iyi değer de budur.",
+        "en": "The first window's sum is computed once from scratch: 13. For now that is also the best value."
+      },
+      "durationMs": 3200,
+      "highlight": {
+        "nodes": [
+          "c0",
+          "c1",
+          "c2",
+          "sum"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "c0": {
+          "status": "active"
+        },
+        "c1": {
+          "status": "active"
+        },
+        "c2": {
+          "status": "active"
+        },
+        "c3": {
+          "status": "idle"
+        },
+        "c4": {
+          "status": "idle"
+        },
+        "c5": {
+          "status": "idle"
+        },
+        "c6": {
+          "status": "idle"
+        },
+        "sum": {
+          "badge": "13",
+          "status": "active"
+        },
+        "best": {
+          "badge": "13",
+          "sublabel": {
+            "tr": "[0..2]",
+            "en": "[0..2]"
+          }
+        }
+      },
+      "edgeStates": {
+        "e0": {
+          "visible": true,
+          "status": "active"
+        },
+        "e1": {
+          "visible": true,
+          "status": "active"
+        },
+        "e2": {
+          "visible": true,
+          "status": "active"
+        },
+        "e3": {
+          "visible": false
+        },
+        "e4": {
+          "visible": false
+        },
+        "e5": {
+          "visible": false
+        },
+        "e6": {
+          "visible": false
+        }
+      },
+      "packets": [
+        {
+          "edge": "e0",
+          "label": "4",
+          "durationMs": 900
+        },
+        {
+          "edge": "e1",
+          "label": "2",
+          "startAt": 300,
+          "durationMs": 900
+        },
+        {
+          "edge": "e2",
+          "label": "7",
+          "startAt": 600,
+          "durationMs": 900
+        },
+        {
+          "edge": "eb",
+          "label": "13",
+          "startAt": 1500,
+          "durationMs": 800
+        }
+      ]
+    },
+    {
+      "id": "w1",
+      "title": {
+        "tr": "Kaydır: +1, −4 → 10",
+        "en": "Slide: +1, −4 → 10"
+      },
+      "narration": {
+        "tr": "Pencere bir adım sağa kayar. Ortadaki 2 ve 7 aynı kalır; yalnızca sağdan giren **1 eklenir**, soldan düşen **4 çıkarılır**: 13 + 1 − 4 = 10. İki işlem, pencere ne kadar geniş olursa olsun.",
+        "en": "The window slides one step right. The 2 and 7 in the middle stay; only the incoming **1 is added** and the outgoing **4 is subtracted**: 13 + 1 − 4 = 10. Two operations, however wide the window is."
+      },
+      "durationMs": 3200,
+      "highlight": {
+        "nodes": [
+          "c0",
+          "c3",
+          "sum"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "c0": {
+          "status": "muted"
+        },
+        "c1": {
+          "status": "active"
+        },
+        "c2": {
+          "status": "active"
+        },
+        "c3": {
+          "status": "active"
+        },
+        "c4": {
+          "status": "idle"
+        },
+        "c5": {
+          "status": "idle"
+        },
+        "c6": {
+          "status": "idle"
+        },
+        "sum": {
+          "badge": "10"
+        }
+      },
+      "edgeStates": {
+        "e0": {
+          "visible": true,
+          "status": "active"
+        },
+        "e1": {
+          "visible": false
+        },
+        "e2": {
+          "visible": false
+        },
+        "e3": {
+          "visible": true,
+          "status": "active"
+        },
+        "e4": {
+          "visible": false
+        },
+        "e5": {
+          "visible": false
+        },
+        "e6": {
+          "visible": false
+        }
+      },
+      "packets": [
+        {
+          "edge": "e3",
+          "label": "+1",
+          "durationMs": 900
+        },
+        {
+          "edge": "e0",
+          "label": "−4",
+          "shape": "square",
+          "durationMs": 900
+        }
+      ]
+    },
+    {
+      "id": "w2",
+      "title": {
+        "tr": "Kaydır: +8, −2 → 16 (yeni en iyi)",
+        "en": "Slide: +8, −2 → 16 (new best)"
+      },
+      "narration": {
+        "tr": "8 girer, 2 çıkar: 10 + 8 − 2 = 16. Bu, şimdiye kadarki en büyük toplam; en iyi değer güncellenir.",
+        "en": "8 comes in, 2 goes out: 10 + 8 − 2 = 16. This is the largest sum so far, so the best value is updated."
+      },
+      "durationMs": 3200,
+      "highlight": {
+        "nodes": [
+          "c1",
+          "c4",
+          "sum",
+          "best"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "c0": {
+          "status": "muted"
+        },
+        "c1": {
+          "status": "muted"
+        },
+        "c2": {
+          "status": "active"
+        },
+        "c3": {
+          "status": "active"
+        },
+        "c4": {
+          "status": "active"
+        },
+        "c5": {
+          "status": "idle"
+        },
+        "c6": {
+          "status": "idle"
+        },
+        "sum": {
+          "badge": "16",
+          "status": "success"
+        },
+        "best": {
+          "badge": "16",
+          "status": "success",
+          "sublabel": {
+            "tr": "[2..4]",
+            "en": "[2..4]"
+          }
+        }
+      },
+      "edgeStates": {
+        "e0": {
+          "visible": false
+        },
+        "e1": {
+          "visible": true,
+          "status": "active"
+        },
+        "e2": {
+          "visible": false
+        },
+        "e3": {
+          "visible": false
+        },
+        "e4": {
+          "visible": true,
+          "status": "active"
+        },
+        "e5": {
+          "visible": false
+        },
+        "e6": {
+          "visible": false
+        }
+      },
+      "packets": [
+        {
+          "edge": "e4",
+          "label": "+8",
+          "durationMs": 900
+        },
+        {
+          "edge": "e1",
+          "label": "−2",
+          "shape": "square",
+          "durationMs": 900
+        },
+        {
+          "edge": "eb",
+          "label": "16",
+          "startAt": 1000,
+          "durationMs": 800
+        }
+      ]
+    },
+    {
+      "id": "w3",
+      "title": {
+        "tr": "Kaydır: +3, −7 → 12",
+        "en": "Slide: +3, −7 → 12"
+      },
+      "narration": {
+        "tr": "3 girer, 7 çıkar: 16 + 3 − 7 = 12. En iyi değer 16 olarak kalır.",
+        "en": "3 comes in, 7 goes out: 16 + 3 − 7 = 12. The best value stays at 16."
+      },
+      "durationMs": 3000,
+      "highlight": {
+        "nodes": [
+          "c2",
+          "c5",
+          "sum"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "c0": {
+          "status": "muted"
+        },
+        "c1": {
+          "status": "muted"
+        },
+        "c2": {
+          "status": "muted"
+        },
+        "c3": {
+          "status": "active"
+        },
+        "c4": {
+          "status": "active"
+        },
+        "c5": {
+          "status": "active"
+        },
+        "c6": {
+          "status": "idle"
+        },
+        "sum": {
+          "badge": "12",
+          "status": "active"
+        },
+        "best": {
+          "status": "idle"
+        }
+      },
+      "edgeStates": {
+        "e0": {
+          "visible": false
+        },
+        "e1": {
+          "visible": false
+        },
+        "e2": {
+          "visible": true,
+          "status": "active"
+        },
+        "e3": {
+          "visible": false
+        },
+        "e4": {
+          "visible": false
+        },
+        "e5": {
+          "visible": true,
+          "status": "active"
+        },
+        "e6": {
+          "visible": false
+        }
+      },
+      "packets": [
+        {
+          "edge": "e5",
+          "label": "+3",
+          "durationMs": 900
+        },
+        {
+          "edge": "e2",
+          "label": "−7",
+          "shape": "square",
+          "durationMs": 900
+        }
+      ]
+    },
+    {
+      "id": "w4",
+      "title": {
+        "tr": "Son kaydırma: +5, −1 → 16",
+        "en": "Last slide: +5, −1 → 16"
+      },
+      "narration": {
+        "tr": "5 girer, 1 çıkar: 12 + 5 − 1 = 16. En iyiye eşit ama geçmiyor; dizi bitti ve cevap **16**.",
+        "en": "5 comes in, 1 goes out: 12 + 5 − 1 = 16. It ties the best but does not beat it; the array is done and the answer is **16**."
+      },
+      "durationMs": 3000,
+      "highlight": {
+        "nodes": [
+          "c3",
+          "c6",
+          "sum",
+          "best"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "c0": {
+          "status": "muted"
+        },
+        "c1": {
+          "status": "muted"
+        },
+        "c2": {
+          "status": "muted"
+        },
+        "c3": {
+          "status": "muted"
+        },
+        "c4": {
+          "status": "active"
+        },
+        "c5": {
+          "status": "active"
+        },
+        "c6": {
+          "status": "active"
+        },
+        "sum": {
+          "badge": "16"
+        },
+        "best": {
+          "status": "success"
+        }
+      },
+      "edgeStates": {
+        "e0": {
+          "visible": false
+        },
+        "e1": {
+          "visible": false
+        },
+        "e2": {
+          "visible": false
+        },
+        "e3": {
+          "visible": true,
+          "status": "active"
+        },
+        "e4": {
+          "visible": false
+        },
+        "e5": {
+          "visible": false
+        },
+        "e6": {
+          "visible": true,
+          "status": "active"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e6",
+          "label": "+5",
+          "durationMs": 900
+        },
+        {
+          "edge": "e3",
+          "label": "−1",
+          "shape": "square",
+          "durationMs": 900
+        }
+      ]
+    },
+    {
+      "id": "ozet",
+      "title": {
+        "tr": "O(n·k) yerine O(n)",
+        "en": "O(n) instead of O(n·k)"
+      },
+      "narration": {
+        "tr": "Kaba kuvvet her pencerede k toplama yapar: O(n·k). Kayan pencere ilk pencereden sonra her kaymada sabit iki işlem yapar: toplam O(n). Pencere 3 değil 1.000 eleman genişliğinde olsaydı fark bin kat olurdu.",
+        "en": "Brute force does k additions per window: O(n·k). The sliding window does a constant two operations per slide after the first window: O(n) in total. With a window 1,000 elements wide instead of 3 the gap would be a thousandfold."
+      },
+      "durationMs": 3500,
+      "highlight": {
+        "nodes": [
+          "best"
+        ],
+        "edges": []
+      },
+      "edgeStates": {
+        "e0": {
+          "visible": false
+        },
+        "e1": {
+          "visible": false
+        },
+        "e2": {
+          "visible": false
+        },
+        "e3": {
+          "visible": false
+        },
+        "e4": {
+          "visible": false
+        },
+        "e5": {
+          "visible": false
+        },
+        "e6": {
+          "visible": false
+        }
+      },
+      "annotations": [
+        {
+          "id": "a-o",
+          "x": 500,
+          "y": 470,
+          "text": {
+            "tr": "her kayma: 1 ekleme + 1 çıkarma",
+            "en": "each slide: 1 add + 1 subtract"
+          },
+          "tone": "success"
+        }
+      ]
+    }
+  ],
+  "tags": [
+    "kayan-pencere",
+    "dizi"
+  ]
+}

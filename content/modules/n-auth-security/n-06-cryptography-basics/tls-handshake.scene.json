@@ -1,0 +1,530 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "n-06-tls-handshake",
+  "title": {
+    "tr": "TLS 1.3 El Sıkışması",
+    "en": "The TLS 1.3 Handshake"
+  },
+  "summary": {
+    "tr": "İstemci ve sunucu ECDHE paylarını değiş tokuş edip dinleyenin hesaplayamayacağı ortak sırrı türetir. Sertifika ve imza sunucunun kimliğini kanıtlar, Finished mesajları el sıkışmayı korur ve uygulama verisi simetrik AEAD anahtarıyla şifrelenir.",
+    "en": "Client and server exchange ECDHE shares and derive a shared secret an eavesdropper cannot compute. The certificate and signature prove the server's identity, Finished messages protect the handshake and application data is encrypted with a symmetric AEAD key."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda istemci ve üstünde güvenilen kök sertifikalar, sağda sunucu, ortanın üstünde ortak sır ve altta yoldaki dinleyici bulunur. İstemci desteklediği şifre takımlarıyla birlikte geçici ECDHE açık payını gönderir; sunucu kendi payıyla cevap verir. İki taraf yalnızca açık payları gönderdiği hâlde aynı ortak sırrı hesaplar; dinleyici bunu yapamaz. Sunucu şifreli olarak sertifikasını ve el sıkışma dökümü üzerindeki imzasını gönderir; istemci zinciri güvendiği köklere kadar doğrular. İki taraf Finished mesajlarını değiştirir. Ardından uygulama verisi oturum anahtarlarıyla AES-GCM kayıtları olarak akar. Son adımda geçici anahtarlar silinir; sunucunun uzun ömürlü anahtarı sonradan sızsa bile kaydedilmiş trafik çözülemez.",
+      "en": "On the left the client with its trusted root certificates above it, the server on the right, the shared secret above the middle and an eavesdropper on the path below. The client sends its cipher suites with an ephemeral ECDHE public share; the server answers with its own share. Although only public shares were sent, both sides compute the same shared secret; the eavesdropper cannot. The server sends, encrypted, its certificate and a signature over the handshake transcript; the client validates the chain up to its trusted roots. Both sides exchange Finished messages. Then application data flows as AES-GCM records under the session keys. In the last step the ephemeral keys are deleted; even if the server's long-term key leaks later, recorded traffic cannot be decrypted."
+    }
+  },
+  "canvas": {
+    "width": 1000,
+    "height": 600
+  },
+  "nodes": [
+    {
+      "id": "client",
+      "kind": "browser",
+      "label": {
+        "tr": "İstemci",
+        "en": "Client"
+      },
+      "x": 140,
+      "y": 320,
+      "w": 150,
+      "h": 84
+    },
+    {
+      "id": "roots",
+      "kind": "storage",
+      "label": {
+        "tr": "Güvenilen kökler",
+        "en": "Trusted roots"
+      },
+      "x": 140,
+      "y": 110,
+      "w": 150,
+      "h": 64
+    },
+    {
+      "id": "server",
+      "kind": "server",
+      "label": "sunucu.example",
+      "x": 840,
+      "y": 320,
+      "w": 170,
+      "h": 84
+    },
+    {
+      "id": "secret",
+      "kind": "generic",
+      "label": {
+        "tr": "Ortak sır",
+        "en": "Shared secret"
+      },
+      "sublabel": "ECDHE → HKDF",
+      "x": 490,
+      "y": 110,
+      "w": 170,
+      "h": 70
+    },
+    {
+      "id": "eve",
+      "kind": "user",
+      "label": {
+        "tr": "Dinleyici",
+        "en": "Eavesdropper"
+      },
+      "sublabel": {
+        "tr": "yolu kaydeder",
+        "en": "records the path"
+      },
+      "x": 490,
+      "y": 520,
+      "w": 140,
+      "h": 70
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-cs",
+      "from": "client",
+      "to": "server",
+      "kind": "request",
+      "bidirectional": true
+    },
+    {
+      "id": "e-roots-client",
+      "from": "roots",
+      "to": "client",
+      "kind": "control",
+      "style": "dotted"
+    },
+    {
+      "id": "e-client-secret",
+      "from": "client",
+      "to": "secret",
+      "kind": "control",
+      "style": "dashed"
+    },
+    {
+      "id": "e-server-secret",
+      "from": "server",
+      "to": "secret",
+      "kind": "control",
+      "style": "dashed"
+    },
+    {
+      "id": "e-eve-path",
+      "from": "eve",
+      "to": "client",
+      "kind": "generic",
+      "style": "dotted",
+      "curvature": 0.2
+    }
+  ],
+  "steps": [
+    {
+      "id": "client-hello",
+      "title": "ClientHello",
+      "narration": {
+        "tr": "İstemci desteklediği şifre takımlarını ve bu bağlantı için o an ürettiği geçici bir ECDHE anahtar çiftinin açık payını gönderir. Dinleyici bu mesajı görür; içinde gizli bir şey yoktur.",
+        "en": "The client sends the cipher suites it supports and the public share of an ephemeral ECDHE key pair generated just for this connection. The eavesdropper sees the message; nothing in it is secret."
+      },
+      "durationMs": 3000,
+      "inherit": false,
+      "highlight": {
+        "nodes": [
+          "client",
+          "server"
+        ],
+        "edges": [
+          "e-cs"
+        ]
+      },
+      "nodeStates": {
+        "client": {
+          "status": "active"
+        },
+        "eve": {
+          "status": "active",
+          "badge": "görüyor"
+        }
+      },
+      "edgeStates": {
+        "e-client-secret": {
+          "status": "muted"
+        },
+        "e-server-secret": {
+          "status": "muted"
+        },
+        "e-roots-client": {
+          "status": "muted"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-cs",
+          "shape": "envelope",
+          "label": "ClientHello + key_share",
+          "durationMs": 1400
+        }
+      ]
+    },
+    {
+      "id": "server-hello",
+      "title": "ServerHello",
+      "narration": {
+        "tr": "Sunucu bir şifre takımı seçer ve kendi geçici ECDHE payını gönderir. Bu noktadan sonra iki taraf ortak sırrı hesaplayabilir; el sıkışmanın geri kalanı zaten şifrelidir.",
+        "en": "The server picks a cipher suite and sends its own ephemeral ECDHE share. From here both sides can compute the shared secret; the rest of the handshake is already encrypted."
+      },
+      "durationMs": 3000,
+      "highlight": {
+        "nodes": [
+          "server",
+          "client"
+        ],
+        "edges": [
+          "e-cs"
+        ]
+      },
+      "nodeStates": {
+        "server": {
+          "status": "active"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-cs",
+          "direction": "backward",
+          "shape": "envelope",
+          "label": "ServerHello + key_share",
+          "durationMs": 1400
+        }
+      ]
+    },
+    {
+      "id": "shared-secret",
+      "title": {
+        "tr": "Aynı sır, açık kanalda",
+        "en": "The same secret over an open channel"
+      },
+      "narration": {
+        "tr": "Her taraf kendi özel payını karşı tarafın açık payıyla birleştirir ve aynı ortak sırra ulaşır. Dinleyici yalnızca iki açık payı gördüğü için bu sırrı hesaplayamaz. Sırdan HKDF ile oturum anahtarları türetilir.",
+        "en": "Each side combines its own private share with the other side's public share and arrives at the same secret. The eavesdropper saw only the two public shares and cannot compute it. Session keys are derived from the secret with HKDF."
+      },
+      "durationMs": 3600,
+      "highlight": {
+        "nodes": [
+          "client",
+          "server",
+          "secret"
+        ],
+        "edges": [
+          "e-client-secret",
+          "e-server-secret"
+        ]
+      },
+      "nodeStates": {
+        "secret": {
+          "status": "success",
+          "badge": "aynı sır"
+        },
+        "eve": {
+          "status": "warning",
+          "badge": "hesaplayamaz"
+        }
+      },
+      "edgeStates": {
+        "e-client-secret": {
+          "status": "active"
+        },
+        "e-server-secret": {
+          "status": "active"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-client-secret",
+          "shape": "diamond",
+          "label": "a·B",
+          "durationMs": 1200
+        },
+        {
+          "edge": "e-server-secret",
+          "shape": "diamond",
+          "label": "b·A",
+          "durationMs": 1200
+        }
+      ]
+    },
+    {
+      "id": "certificate",
+      "title": {
+        "tr": "Sertifika ve CertificateVerify",
+        "en": "Certificate and CertificateVerify"
+      },
+      "narration": {
+        "tr": "Ortak sır tek başına karşıdakinin kim olduğunu söylemez; araya giren biri de anahtar değişimi yapabilir. Sunucu bu yüzden sertifikasını ve el sıkışma dökümü üzerinde uzun ömürlü özel anahtarıyla attığı imzayı gönderir.",
+        "en": "The shared secret alone does not say who is on the other side; a man in the middle could run a key exchange too. So the server sends its certificate and a signature over the handshake transcript made with its long-term private key."
+      },
+      "durationMs": 3400,
+      "highlight": {
+        "nodes": [
+          "server",
+          "client"
+        ],
+        "edges": [
+          "e-cs"
+        ]
+      },
+      "nodeStates": {
+        "secret": {
+          "status": "idle"
+        },
+        "server": {
+          "status": "active",
+          "badge": "imzalar"
+        }
+      },
+      "edgeStates": {
+        "e-client-secret": {
+          "status": "idle"
+        },
+        "e-server-secret": {
+          "status": "idle"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-cs",
+          "direction": "backward",
+          "shape": "square",
+          "label": "{Certificate}",
+          "durationMs": 1100
+        },
+        {
+          "edge": "e-cs",
+          "direction": "backward",
+          "shape": "diamond",
+          "label": "{CertificateVerify}",
+          "startAt": 1300,
+          "durationMs": 1100
+        }
+      ]
+    },
+    {
+      "id": "validate",
+      "title": {
+        "tr": "Zincir köklere kadar doğrulanır",
+        "en": "The chain is validated up to the roots"
+      },
+      "narration": {
+        "tr": "İstemci sertifika zincirini güvendiği kök otoritelere kadar doğrular, alan adının eşleştiğini kontrol eder ve imzayı sertifikadaki açık anahtarla doğrular. Artık konuştuğu tarafın gerçekten sunucu.example olduğundan emindir.",
+        "en": "The client validates the certificate chain up to its trusted root authorities, checks that the domain name matches and verifies the signature with the public key in the certificate. It is now sure it is talking to the real server.example."
+      },
+      "durationMs": 3200,
+      "highlight": {
+        "nodes": [
+          "roots",
+          "client"
+        ],
+        "edges": [
+          "e-roots-client"
+        ]
+      },
+      "nodeStates": {
+        "roots": {
+          "status": "active",
+          "badge": "CA"
+        },
+        "client": {
+          "status": "success",
+          "badge": "alan adı ✓ imza ✓"
+        }
+      },
+      "edgeStates": {
+        "e-roots-client": {
+          "status": "active"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-roots-client",
+          "shape": "square",
+          "label": {
+            "tr": "zincir",
+            "en": "chain"
+          },
+          "durationMs": 1200
+        }
+      ]
+    },
+    {
+      "id": "finished",
+      "title": "Finished",
+      "narration": {
+        "tr": "İki taraf da el sıkışmanın tamamı üzerinde bir HMAC gönderir. Araya giren biri herhangi bir mesajı, örneğin şifre takımı listesini değiştirdiyse değerler tutmaz ve bağlantı kesilir.",
+        "en": "Both sides send an HMAC over the entire handshake. If someone in the middle altered any message, for example the cipher suite list, the values do not match and the connection is dropped."
+      },
+      "durationMs": 3200,
+      "highlight": {
+        "nodes": [
+          "client",
+          "server"
+        ],
+        "edges": [
+          "e-cs"
+        ]
+      },
+      "nodeStates": {
+        "roots": {
+          "status": "idle"
+        },
+        "server": {
+          "status": "success"
+        }
+      },
+      "edgeStates": {
+        "e-roots-client": {
+          "status": "idle"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-cs",
+          "direction": "backward",
+          "shape": "diamond",
+          "label": "{Finished}",
+          "durationMs": 1100
+        },
+        {
+          "edge": "e-cs",
+          "shape": "diamond",
+          "label": "{Finished}",
+          "startAt": 1300,
+          "durationMs": 1100
+        }
+      ]
+    },
+    {
+      "id": "app-data",
+      "title": {
+        "tr": "Simetrik oturum anahtarıyla veri",
+        "en": "Data under the symmetric session key"
+      },
+      "narration": {
+        "tr": "Asimetrik kriptografi işini bitirdi. Uygulama verisi artık hızlı simetrik AEAD ile, AES-GCM ya da ChaCha20-Poly1305 kayıtları olarak akar; her kayıt hem şifreli hem de bütünlük etiketlidir.",
+        "en": "Asymmetric cryptography has done its job. Application data now flows with fast symmetric AEAD, as AES-GCM or ChaCha20-Poly1305 records; every record is both encrypted and integrity-tagged."
+      },
+      "durationMs": 3600,
+      "highlight": {
+        "nodes": [
+          "client",
+          "server",
+          "secret"
+        ],
+        "edges": [
+          "e-cs"
+        ]
+      },
+      "nodeStates": {
+        "client": {
+          "status": "success",
+          "badge": "AES-GCM"
+        },
+        "server": {
+          "status": "success",
+          "badge": "AES-GCM"
+        },
+        "secret": {
+          "status": "active",
+          "badge": "oturum anahtarı"
+        },
+        "eve": {
+          "status": "warning",
+          "badge": "yalnızca şifreli kayıt"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-cs",
+          "shape": "envelope",
+          "label": "GET /hesap",
+          "durationMs": 800,
+          "repeat": 2,
+          "repeatGapMs": 300
+        },
+        {
+          "edge": "e-cs",
+          "direction": "backward",
+          "shape": "envelope",
+          "label": "200 {…}",
+          "color": "success",
+          "startAt": 1000,
+          "durationMs": 800,
+          "repeat": 2,
+          "repeatGapMs": 300
+        }
+      ]
+    },
+    {
+      "id": "forward-secrecy",
+      "title": {
+        "tr": "İleri gizlilik",
+        "en": "Forward secrecy"
+      },
+      "narration": {
+        "tr": "Bağlantı bitince geçici anahtarlar silinir. Dinleyici trafiği yıllarca saklasa ve sunucunun uzun ömürlü özel anahtarı sonradan sızsa bile, o anahtar yalnızca imza için kullanıldığından kaydedilmiş oturumlar çözülemez.",
+        "en": "When the connection ends the ephemeral keys are deleted. Even if the eavesdropper stores the traffic for years and the server's long-term private key later leaks, that key was only used for signing, so the recorded sessions cannot be decrypted."
+      },
+      "durationMs": 3400,
+      "highlight": {
+        "nodes": [
+          "secret",
+          "eve"
+        ],
+        "edges": [
+          "e-eve-path"
+        ]
+      },
+      "nodeStates": {
+        "secret": {
+          "status": "muted",
+          "badge": "silindi"
+        },
+        "eve": {
+          "status": "error",
+          "badge": "çözemez"
+        },
+        "client": {
+          "status": "idle"
+        },
+        "server": {
+          "status": "idle"
+        }
+      },
+      "annotations": [
+        {
+          "id": "a-fs",
+          "x": 490,
+          "y": 30,
+          "text": {
+            "tr": "geçici anahtar → ileri gizlilik",
+            "en": "ephemeral key → forward secrecy"
+          },
+          "tone": "success",
+          "target": "secret"
+        }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": [
+    "cryptography",
+    "tls",
+    "ecdhe",
+    "forward-secrecy",
+    "aead"
+  ]
+}

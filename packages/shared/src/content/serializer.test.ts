@@ -39,9 +39,6 @@ function roundTrip(markdown: string, englishMarkdown?: string) {
  * ayrıştırıcıda metin bloğu olarak okunuyor (ders dosyasındaki hata; gidiş-dönüş yine birebir).
  */
 const KNOWN_WARNINGS: Record<string, string[]> = {
-  'k-python/k-06-fonksiyonlar-ve-cagri-yigini/lesson.md': [
-    "blok 16 (text): gövdede ':::' satırı var; dosya yeniden okunurken blok bölünür",
-  ],
 };
 
 describe('serializeLesson — gerçek derslerle gidiş-dönüş', () => {
@@ -132,6 +129,24 @@ describe('serializeLesson — zor durumlar', () => {
     expect(doc.blocks).toEqual(blocks);
     // text-2'nin İngilizcesi yok ama sonrasında İngilizce metin bloğu da yok: uyarı gerekmez
     expect(out.warnings).toEqual([]);
+  });
+
+  it('kod gövdesindeki $ dizileri ($$, $&, $1) birebir korunur', () => {
+    const blocks: LessonBlock[] = [
+      {
+        id: 'code-1',
+        order: 0,
+        type: 'code',
+        language: 'bash',
+        code: 'echo "pid=$$ match=$& grup=$1 fiyat=$\'x\'"\nls /proc/$$/ns\n',
+        alternatives: [],
+        highlightLines: [],
+      },
+    ];
+    const out = serializeLesson({ meta: META, blocks });
+    expect(out.markdown).toContain('/proc/$$/ns');
+    const doc = parseLessonMarkdown(out.markdown);
+    expect(doc.blocks).toEqual(blocks);
   });
 
   it('alıştırma: src ve yönerge gövdesi yazılır, seed alanları (exercise/solution) yazılmaz', () => {

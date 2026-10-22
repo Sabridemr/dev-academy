@@ -260,6 +260,10 @@ Bir döngünün içinde başka bir döngü olabilir. Dış döngünün **her tur
 yüzden toplam tur sayısı çarpılır (3 satır × 3 sütun = 9 iç tur). 1000 × 1000'lik iç içe bir döngü bir milyon
 tur demektir; büyük verilerde bu hızla yavaşlar.
 
+:::interactive{type="predict-run" src="carpim-tablosu.trace.json" title="Önce tahmin et: iç içe döngü|Predict first: nested loops"}
+Aşağıdaki simülasyonu açmadan önce kodu oku ve her soruda bir seçenek işaretle: programın çıktısını (döngüden sonra `satir` ve `sutun`un hangi değerde kaldığı dahil) ve belirli bir satır çalıştıktan sonra bir değişkenin değerini tahmin et. Sorulardaki satır numaraları soldaki kod listesine göredir. "Çalıştır ve karşılaştır" ile cevapların işaretlenir, doğru ve yanlış sayısı görünür ve iz oynamaya başlar; her sorunun altındaki adım numarasına izin kaydırıcısıyla gidip değeri kendin doğrula. Puan sunucuya gönderilmez; "Yeniden dene" ile tekrar cevaplayabilirsin.
+:::
+
 :::trace{src="carpim-tablosu.trace.json" title="İç içe döngüyle çarpım tablosu|Multiplication table with nested loops"}
 `sutun` değişkeninin dış döngünün her turunda 1'den yeniden başladığını, her satırda yeni bir liste oluştuğunu izle.
 :::

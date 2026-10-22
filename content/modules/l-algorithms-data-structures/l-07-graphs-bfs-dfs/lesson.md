@@ -49,6 +49,13 @@ Algoritmanın iskeleti kısadır: başlangıcı kuyruğa koy ve ziyaret edildi o
 
 BFS'nin en değerli özelliği şudur: **ağırlıksız bir grafta**, bir düğümü ilk keşfettiğiniz an ona giden en kısa yolu (en az kenarlı yolu) bulmuşsunuzdur. Çünkü k uzaklıktaki bütün düğümler, k+1 uzaklıktakilerden önce kuyruktan çıkar. Her düğüm en fazla bir kez kuyruğa girer ve her kenar en fazla iki kez (yönsüz grafta iki uçtan) incelenir; toplam zaman karmaşıklığı **O(V + E)**, bellek de en kötü durumda O(V) olur.
 
+Önce BFS'nin kuyruğu nasıl kullandığını diyagramdaki grafla bir sahnede izleyelim, ardından aynı algoritmanın kodunu
+satır satır görelim.
+
+:::animation{scene="bfs-katmanlar.scene.json"}
+Rozetler her düğümün A'ya uzaklığını gösterir; kuyruk kutusu sıradaki düğümleri listeler.
+:::
+
 :::trace{src="bfs-en-kisa-yol.trace.json" title="BFS ile ağırlıksız en kısa mesafe|Shortest unweighted distance with BFS"}
 `kuyruk` değişkenini izleyin: düğümler sondan girip baştan çıkıyor. `mesafe` sözlüğü her yeni katmanda bir fazlasıyla büyüyor.
 :::
@@ -68,6 +75,13 @@ DFS de her düğümü ve kenarı bir kez işler; karmaşıklığı yine **O(V + 
 - **Bağlantı ve bileşenler**: Ziyaret edilmemiş her düğümden bir DFS başlatırsanız, her başlatma bir bağlı bileşeni bütünüyle boyar. "Haritada kaç ada var?" sorusunun standart çözümü budur.
 - **Döngü tespiti**: Yönlü grafta DFS sırasında hâlâ "yolda" olan (yığında duran) bir düğüme geri kenar bulursanız döngü vardır.
 - **Yol üretme ve geri izleme**: Sudoku, permütasyon üretme ve labirent çözme gibi problemler aslında örtük bir grafta DFS'dir.
+
+Aşağıdaki sahne BFS sahnesindeki grafın aynısını DFS ile geziyor. İki ziyaret sırasını ve C düğümüne hangi yoldan
+ulaşıldığını karşılaştır.
+
+:::animation{scene="dfs-derinlik.scene.json"}
+Rozetler ziyaret sırasını, yığın kutusu geri dönülecek düğümleri gösterir.
+:::
 
 Python'da özyinelemeli DFS'nin bir tuzağı vardır: varsayılan özyineleme sınırı yaklaşık bin çerçevedir. On binlerce düğümlük uzun bir zincirde `RecursionError` alırsınız. Üretim kodunda büyük graflar için açık bir yığın kullanan yinelemeli sürüm daha güvenlidir.
 

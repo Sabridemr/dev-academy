@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import type { LessonBlock } from '@devacademy/shared';
+import { interactiveTraceSrc, type LessonBlock } from '@devacademy/shared';
 import type { LoadedLesson } from '@devacademy/shared/node';
 
 /**
@@ -81,6 +81,11 @@ export function resolveLessonBlocks(
         if (!ex) return b;
         const { solution, ...exercise } = ex;
         return { ...b, exercise, solution };
+      }
+      case 'interactive': {
+        // İz kullanan simülatör (predict-run): :::trace ile aynı iz bloğa gömülür
+        const src = interactiveTraceSrc(b);
+        return src ? { ...b, trace: lesson.traces[src] } : b;
       }
       default:
         return b;

@@ -1,0 +1,232 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "i-05-test-layers",
+  "title": { "tr": "Test Katmanları ve Mock Sunucu", "en": "Test Layers and the Mock Server" },
+  "summary": {
+    "tr": "Aynı sipariş servisinin birim, API/entegrasyon, sözleşme ve uçtan uca testlerle sınanması; mock sunucunun gerçek ödeme servisinin yerine geçmesi ve sözleşmenin mock'u gerçeğe bağlaması.",
+    "en": "The same order service tested with unit, API/integration, contract and end-to-end tests; a mock server standing in for the real payment service and the contract tying the mock to reality."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda test koşucusu, üstte uçtan uca test tarayıcısı, ortada sipariş servisi, altında test veritabanı konteyneri, sağ üstte başka bir ekibin ödeme servisi, sağda mock ödeme sunucusu ve altta sözleşme deposu bulunur. Önce birim testleri yalnızca servisin içindeki fonksiyonları ağsız sınar. Sonra API testi gerçek bir HTTP isteğiyle servise ve test veritabanına gider. Gerçek ödeme servisi testte kullanılamadığı için yerine mock sunucu geçer; mock önceden hazırlanmış yanıt döner ve çağrıları kaydeder, bir senaryoda önce 503 sonra 200 dönerek yeniden denemeyi sınar. Tüketici testleri bir sözleşme dosyası üretip depoya yükler; ödeme servisi kendi CI'ında bu sözleşmeyi doğrular. Son olarak az sayıda uçtan uca test tarayıcıdan tüm sistemi çalıştırır.",
+      "en": "A test runner is on the left, an end-to-end test browser at the top, the order service in the middle, a test database container below it, another team's payment service at the top right, a mock payment server on the right and a contract broker at the bottom. First unit tests check only the functions inside the service, without a network. Then an API test goes to the service and the test database with a real HTTP request. Because the real payment service cannot be used in tests, a mock server takes its place; the mock returns prepared responses and records calls, and in one scenario returns 503 then 200 to test retrying. Consumer tests produce a contract file and upload it to the broker; the payment service verifies this contract in its own CI. Finally a few end-to-end tests drive the whole system from a browser."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "runner", "kind": "worker", "label": { "tr": "Test koşucusu", "en": "Test runner" }, "sublabel": "pytest · CI", "x": 110, "y": 300, "w": 150, "h": 80 },
+    { "id": "browser", "kind": "browser", "label": { "tr": "E2E tarayıcı", "en": "E2E browser" }, "sublabel": "Playwright", "x": 320, "y": 100, "w": 150, "h": 70 },
+    { "id": "svc", "kind": "service", "label": { "tr": "Sipariş servisi", "en": "Order service" }, "sublabel": { "tr": "test edilen", "en": "under test" }, "x": 450, "y": 300, "w": 170, "h": 80 },
+    { "id": "db", "kind": "db", "label": "Test DB", "sublabel": { "tr": "konteyner", "en": "container" }, "x": 450, "y": 500, "w": 150, "h": 70 },
+    { "id": "real", "kind": "service", "label": { "tr": "Ödeme servisi", "en": "Payment service" }, "sublabel": { "tr": "başka ekip", "en": "another team" }, "x": 840, "y": 140, "w": 170, "h": 70 },
+    { "id": "mock", "kind": "proxy", "label": { "tr": "Mock ödeme", "en": "Payment mock" }, "sublabel": { "tr": "WireMock benzeri", "en": "WireMock-style" }, "x": 840, "y": 360, "w": 170, "h": 70 },
+    { "id": "broker", "kind": "storage", "label": { "tr": "Sözleşme deposu", "en": "Contract broker" }, "sublabel": "pact.json", "x": 760, "y": 530, "w": 170, "h": 60 }
+  ],
+  "edges": [
+    { "id": "runner-svc", "from": "runner", "to": "svc", "kind": "request", "label": "HTTP" },
+    { "id": "svc-db", "from": "svc", "to": "db", "kind": "data", "label": "SQL" },
+    { "id": "svc-real", "from": "svc", "to": "real", "kind": "request", "curvature": -0.1 },
+    { "id": "svc-mock", "from": "svc", "to": "mock", "kind": "request" },
+    { "id": "runner-broker", "from": "runner", "to": "broker", "kind": "data", "label": { "tr": "sözleşme yükle", "en": "publish contract" }, "curvature": 0.3 },
+    { "id": "broker-real", "from": "broker", "to": "real", "kind": "control", "style": "dashed", "label": { "tr": "sağlayıcı doğrulaması", "en": "provider verification" }, "curvature": 0.25 },
+    { "id": "browser-svc", "from": "browser", "to": "svc", "kind": "request", "label": "UI → API" }
+  ],
+  "steps": [
+    {
+      "id": "unit",
+      "title": { "tr": "Birim testleri", "en": "Unit tests" },
+      "narration": {
+        "tr": "Piramidin tabanı: birim testleri servisin içindeki fonksiyonları tek tek çağırır. KDV hesaplayıcı, minimum miktar kuralı, durum geçişleri. Ağ, veritabanı ve ödeme yoktur; yüzlercesi saniyeler içinde biter.",
+        "en": "The base of the pyramid: unit tests call the functions inside the service one by one. The VAT calculator, the minimum quantity rule, state transitions. There is no network, database or payment; hundreds finish within seconds."
+      },
+      "durationMs": 4000,
+      "inherit": false,
+      "highlight": { "nodes": ["runner", "svc"], "edges": ["runner-svc"] },
+      "nodeStates": {
+        "runner": { "status": "active", "badge": "unit" },
+        "svc": { "status": "busy", "badge": "fn()" },
+        "browser": { "status": "muted" },
+        "db": { "status": "muted" },
+        "real": { "status": "muted" },
+        "mock": { "status": "muted" },
+        "broker": { "status": "muted" }
+      },
+      "edgeStates": {
+        "runner-svc": { "status": "active", "label": { "tr": "süreç içi çağrı", "en": "in-process call" } },
+        "svc-db": { "status": "muted" },
+        "svc-real": { "status": "muted" },
+        "svc-mock": { "visible": false },
+        "runner-broker": { "visible": false },
+        "broker-real": { "visible": false },
+        "browser-svc": { "visible": false }
+      },
+      "packets": [
+        { "edge": "runner-svc", "shape": "dot", "durationMs": 300, "repeat": 10, "repeatGapMs": 60, "color": "success" }
+      ],
+      "annotations": [
+        { "id": "fast", "x": 110, "y": 410, "text": { "tr": "çok sayıda · ağsız · hızlı", "en": "many · no network · fast" }, "tone": "success", "target": "runner" }
+      ]
+    },
+    {
+      "id": "api",
+      "title": { "tr": "API / entegrasyon testi", "en": "API / integration test" },
+      "narration": {
+        "tr": "Orta katman: test gerçek bir HTTP isteği gönderir (POST /orders), servis gerçek bir veritabanı konteynerine yazar. Test durum kodunu, gövde şemasını, başlıkları ve veritabanındaki satırı doğrular. Birim testinin göremediği serileştirme ve yetki hataları burada yakalanır.",
+        "en": "The middle layer: the test sends a real HTTP request (POST /orders) and the service writes to a real database container. The test checks the status code, the body schema, the headers and the row in the database. Serialisation and authorisation bugs that unit tests miss are caught here."
+      },
+      "durationMs": 5000,
+      "highlight": { "nodes": ["runner", "svc", "db"], "edges": ["runner-svc", "svc-db"] },
+      "nodeStates": { "runner": { "badge": "API" }, "svc": { "status": "active", "badge": "" }, "db": { "status": "active" } },
+      "edgeStates": { "runner-svc": { "label": "HTTP" }, "svc-db": { "status": "active" } },
+      "packets": [
+        { "edge": "runner-svc", "shape": "envelope", "label": "POST /orders", "durationMs": 900 },
+        { "edge": "svc-db", "shape": "square", "label": "INSERT", "startAt": 1000, "durationMs": 800 },
+        { "edge": "svc-db", "shape": "square", "direction": "backward", "label": "OK", "color": "success", "startAt": 1900, "durationMs": 700 },
+        { "edge": "runner-svc", "shape": "envelope", "direction": "backward", "label": { "tr": "201 · şema ✓", "en": "201 · schema ✓" }, "color": "success", "startAt": 2800, "durationMs": 900 }
+      ]
+    },
+    {
+      "id": "dependency",
+      "title": { "tr": "Gerçek bağımlılık sorunu", "en": "The real dependency problem" },
+      "narration": {
+        "tr": "Sipariş servisi ödeme için başka bir ekibin servisini çağırıyor. Testte bu servisi kullanmak sorunludur: gerçek para hareketi yaratabilir, kotası vardır, ortamı bazen kapalıdır ve yanıtları belirlenimci değildir. Böyle bir testin kırılması, kodumuz hakkında bir şey söylemez.",
+        "en": "The order service calls another team's service for payments. Using it in tests is a problem: it may move real money, it has quotas, its environment is sometimes down and its answers are not deterministic. Such a test breaking says nothing about our code."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["svc", "real"], "edges": ["svc-real"] },
+      "nodeStates": { "db": { "status": "idle" }, "real": { "status": "warning", "badge": "?" }, "svc": { "status": "busy" } },
+      "edgeStates": { "svc-db": { "status": "idle" }, "svc-real": { "status": "error" } },
+      "packets": [
+        { "edge": "svc-real", "shape": "envelope", "label": { "tr": "ödeme al", "en": "charge" }, "color": "danger", "durationMs": 1600 }
+      ],
+      "annotations": [
+        { "id": "flaky", "x": 840, "y": 240, "text": { "tr": "yavaş · kotalı · kararsız", "en": "slow · rate-limited · flaky" }, "tone": "danger", "target": "real" }
+      ]
+    },
+    {
+      "id": "mock",
+      "title": { "tr": "Mock gerçeğin yerine geçer", "en": "The mock stands in" },
+      "narration": {
+        "tr": "Testte servisin ödeme adresi mock sunucuya çevrilir. Mock önceden tanımlanmış yanıtı (200 · approved) anında döner ve gelen her çağrıyı kaydeder. Test sonunda 'ödeme servisi tam bir kez, doğru tutarla çağrıldı mı?' sorusu bu kayıttan doğrulanır.",
+        "en": "In tests the service's payment URL is pointed at the mock server. The mock instantly returns a predefined response (200 · approved) and records every incoming call. At the end the test checks from this record whether the payment service was called exactly once with the right amount."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["svc", "mock"], "edges": ["svc-mock"] },
+      "nodeStates": { "real": { "status": "muted", "badge": "" }, "mock": { "status": "active", "counter": 1 } },
+      "edgeStates": { "svc-real": { "status": "muted" }, "svc-mock": { "visible": true, "status": "active" } },
+      "packets": [
+        { "edge": "svc-mock", "shape": "envelope", "label": "POST /charges · 420", "durationMs": 900 },
+        { "edge": "svc-mock", "shape": "envelope", "direction": "backward", "label": "200 · approved", "color": "success", "startAt": 1100, "durationMs": 900 }
+      ],
+      "annotations": [
+        { "id": "verify", "x": 840, "y": 450, "text": { "tr": "çağrı sayısı: 1 ✓", "en": "call count: 1 ✓" }, "tone": "success", "target": "mock" }
+      ]
+    },
+    {
+      "id": "retry",
+      "title": { "tr": "Mock ile hata senaryosu", "en": "A failure scenario with the mock" },
+      "narration": {
+        "tr": "Mock'un asıl gücü, gerçek serviste tetiklemesi zor durumları istenince üretmesidir. Bu testte mock önce 503, sonra 200 döner. Test, servisin bir kez bekleyip yeniden denediğini ve sonunda siparişi başarıyla tamamladığını doğrular; 400 gibi kalıcı bir hatada ise yeniden denememesini bekler.",
+        "en": "The mock's real power is producing, on demand, situations that are hard to trigger in the real service. In this test the mock returns 503 first, then 200. The test checks that the service waits once, retries and finally completes the order; for a permanent error like 400 it expects no retry."
+      },
+      "durationMs": 5000,
+      "highlight": { "nodes": ["svc", "mock"], "edges": ["svc-mock"] },
+      "nodeStates": { "mock": { "status": "warning", "counter": 2 }, "svc": { "status": "busy", "badge": "retry 1" } },
+      "packets": [
+        { "edge": "svc-mock", "shape": "envelope", "label": "POST /charges", "durationMs": 800 },
+        { "edge": "svc-mock", "shape": "envelope", "direction": "backward", "label": "503", "color": "danger", "startAt": 900, "durationMs": 800 },
+        { "edge": "svc-mock", "shape": "envelope", "label": "POST /charges", "startAt": 2200, "durationMs": 800 },
+        { "edge": "svc-mock", "shape": "envelope", "direction": "backward", "label": "200", "color": "success", "startAt": 3100, "durationMs": 800 }
+      ]
+    },
+    {
+      "id": "contract",
+      "title": { "tr": "Sözleşme: mock'u gerçeğe bağlamak", "en": "Contract: tying the mock to reality" },
+      "narration": {
+        "tr": "Mock'un yanıtları ödeme servisi değişince eskiyebilir. Bu yüzden tüketici testleri, mock'a ne gönderip ne beklediklerini bir sözleşme dosyasına yazar ve depoya yükler. Ödeme ekibinin CI'ı bu dosyayı alıp gerçek servise karşı oynatır; beklenen alanlar hâlâ dönüyorsa sözleşme yeşildir.",
+        "en": "The mock's answers can go stale when the payment service changes. So the consumer tests write what they send to and expect from the mock into a contract file and upload it to the broker. The payment team's CI fetches this file and replays it against the real service; if the expected fields still come back the contract is green."
+      },
+      "durationMs": 5500,
+      "highlight": { "nodes": ["runner", "broker", "real"], "edges": ["runner-broker", "broker-real"] },
+      "nodeStates": {
+        "svc": { "status": "idle", "badge": "" },
+        "mock": { "status": "idle" },
+        "runner": { "badge": "pact" },
+        "broker": { "status": "active" },
+        "real": { "status": "success", "badge": "✓" }
+      },
+      "edgeStates": {
+        "svc-mock": { "status": "idle" },
+        "runner-svc": { "status": "idle" },
+        "runner-broker": { "visible": true, "status": "active" },
+        "broker-real": { "visible": true, "status": "active" }
+      },
+      "packets": [
+        { "edge": "runner-broker", "shape": "square", "label": "pact.json", "durationMs": 1300 },
+        { "edge": "broker-real", "shape": "square", "label": { "tr": "beklentileri oynat", "en": "replay expectations" }, "startAt": 1700, "durationMs": 1300 },
+        { "edge": "broker-real", "shape": "dot", "direction": "backward", "label": { "tr": "sözleşme yeşil", "en": "contract green" }, "color": "success", "startAt": 3300, "durationMs": 1100 }
+      ]
+    },
+    {
+      "id": "e2e",
+      "title": { "tr": "Uçtan uca: az ve kritik", "en": "End to end: few and critical" },
+      "narration": {
+        "tr": "Piramidin tepesi: gerçek bir tarayıcı giriş yapar, sepete ekler ve sipariş verir; istek tüm sistemden, ödeme servisinin test ortamı dahil geçer. En gerçekçi ama en yavaş ve en kırılgan testtir; yalnızca 'para kazandıran' birkaç akış için yazılır.",
+        "en": "The top of the pyramid: a real browser logs in, adds to the cart and places an order; the request goes through the whole system, including the payment service's test environment. It is the most realistic but slowest and most brittle test; it is written only for a few 'money-making' flows."
+      },
+      "durationMs": 5000,
+      "highlight": { "nodes": ["browser", "svc", "db", "real"], "edges": ["browser-svc", "svc-db", "svc-real"] },
+      "nodeStates": {
+        "runner": { "status": "idle", "badge": "E2E" },
+        "browser": { "status": "active" },
+        "svc": { "status": "active" },
+        "db": { "status": "active" },
+        "broker": { "status": "idle" },
+        "real": { "status": "active", "badge": "sandbox" },
+        "mock": { "status": "muted", "counter": 0 }
+      },
+      "edgeStates": {
+        "runner-broker": { "status": "idle" },
+        "broker-real": { "status": "idle" },
+        "browser-svc": { "visible": true, "status": "active" },
+        "svc-db": { "status": "active" },
+        "svc-real": { "status": "active" },
+        "svc-mock": { "status": "muted" }
+      },
+      "packets": [
+        { "edge": "browser-svc", "shape": "envelope", "label": { "tr": "tıkla: Sipariş ver", "en": "click: Place order" }, "durationMs": 1200 },
+        { "edge": "svc-db", "shape": "square", "startAt": 1300, "durationMs": 900 },
+        { "edge": "svc-real", "shape": "envelope", "label": "sandbox", "startAt": 2300, "durationMs": 1200 },
+        { "edge": "svc-real", "shape": "envelope", "direction": "backward", "label": "200", "color": "success", "startAt": 3600, "durationMs": 1100 }
+      ],
+      "annotations": [
+        { "id": "slow", "x": 320, "y": 200, "text": { "tr": "az sayıda · yavaş · kırılgan", "en": "few · slow · brittle" }, "tone": "warning", "target": "browser" }
+      ]
+    },
+    {
+      "id": "summary",
+      "title": { "tr": "Piramidin dengesi", "en": "The pyramid's balance" },
+      "narration": {
+        "tr": "Her katman farklı bir soruyu cevaplar: birim testi 'mantık doğru mu', API testi 'sözleşmeyi uyguluyor muyum', sözleşme testi 'bağımlılık hâlâ beklediğim gibi mi', E2E 'kullanıcı işini bitirebiliyor mu'. Mock, orta katmanları hızlı ve kararlı tutar; sözleşme ise mock'un yalan söylemediğini garanti eder.",
+        "en": "Each layer answers a different question: unit tests 'is the logic right', API tests 'do I implement the contract', contract tests 'is the dependency still what I expect', E2E 'can the user finish the job'. The mock keeps the middle layers fast and stable; the contract guarantees the mock is not lying."
+      },
+      "durationMs": 5000,
+      "inherit": false,
+      "highlight": { "nodes": ["runner", "mock", "broker"], "edges": [] },
+      "nodeStates": {
+        "runner": { "status": "success", "badge": "unit ▸ API ▸ E2E" },
+        "browser": { "status": "idle" },
+        "svc": { "status": "idle" },
+        "db": { "status": "idle" },
+        "real": { "status": "idle" },
+        "mock": { "status": "success" },
+        "broker": { "status": "success" }
+      },
+      "annotations": [
+        { "id": "s-mock", "x": 840, "y": 450, "text": { "tr": "hız ve belirlenimcilik", "en": "speed and determinism" }, "tone": "success", "target": "mock" },
+        { "id": "s-broker", "x": 640, "y": 455, "text": { "tr": "mock'un doğruluğu", "en": "the mock's correctness" }, "tone": "info", "target": "broker" }
+      ]
+    }
+  ]
+}

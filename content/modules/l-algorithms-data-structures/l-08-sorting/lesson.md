@@ -47,6 +47,12 @@ Solda merge sort: dizi tek elemanlı parçalara bölünür, sonra sıralı biçi
 
 Özyineleme ağacının derinliği log₂ n'dir, çünkü her seviyede dizi ikiye bölünür. Her seviyede toplam n eleman birleştirilir. Sonuç, girdi ne olursa olsun **O(n log n)** zamandır; en iyi, ortalama ve en kötü durum aynıdır. Bu öngörülebilirlik merge sort'un en büyük artısıdır. Bedeli ise birleştirme için O(n) ek bellektir. Merge sort ayrıca bağlı listeler için idealdir (rastgele erişim gerektirmez) ve belleğe sığmayan büyük dosyaları parçalar hâlinde sıralayıp birleştiren **harici sıralamanın** (external sort) temelidir.
 
+Böl ve birleştir aşamalarını sekiz elemanlı bir dizide adım adım izleyelim.
+
+:::animation{scene="merge-sort-agaci.scene.json"}
+Aşağı inerken yalnızca bölünür; sıralama işinin tamamı yukarı çıkarken, birleştirmede yapılır.
+:::
+
 :::code{lang="python" title="Merge sort ve quick sort"}
 ```python
 def merge_sort(a):

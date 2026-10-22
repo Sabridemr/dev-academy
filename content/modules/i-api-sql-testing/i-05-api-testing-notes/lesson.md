@@ -36,6 +36,21 @@ Piramidin ortası API testlerinin yaşadığı yerdir: birim testinden gerçekç
 
 Piramidin biçimi bir uyarıdır: üstteki test sayısı alttakinden fazlaysa (ters piramit ya da "dondurma külahı") test süiti yavaşlar, rastgele kırılır ve ekip ona güvenmeyi bırakır. API testleri, "yeterince gerçekçi ama hâlâ hızlı" dengesini sağladığı için orta katmanın omurgasıdır.
 
+Katmanların farkı en iyi aynı servisi her birinin nasıl sınadığına bakınca görünür. Aşağıdaki animasyon bir sipariş servisini birim, API, sözleşme ve uçtan uca testlerle sınar ve gerçek ödeme servisinin yerine bir mock sunucunun nasıl geçtiğini gösterir; mock ve sözleşme konularını ilerleyen bölümlerde ayrıntılı işleyeceğiz.
+
+:::predict{id="mock-eskirse"}
+Ödeme servisi ekibi yanıttaki `status` alanının adını `state` olarak değiştirdi. Sipariş servisinin API testleri bu servisi hep bir mock ile çalıştırıyor ve mock eski yanıtı dönmeye devam ediyor. Hata nerede yakalanır? | The payment team renamed the `status` field in its response to `state`. The order service's API tests always run against a mock, and the mock keeps returning the old response. Where is the bug caught?
+- [ ] Sipariş servisinin API testlerinde; mock kullanılsa da testler kırılır | In the order service's API tests; they break even with the mock
+- [x] Sözleşme testi varsa ödeme ekibinin CI'ında; yoksa ancak üretimde | In the payment team's CI if there is a contract test; otherwise only in production
+- [ ] Birim testlerinde, çünkü alan adları orada kontrol edilir | In the unit tests, because field names are checked there
+- [ ] Hiçbir yerde; JSON alan adı değişikliği istemcileri etkilemez | Nowhere; renaming a JSON field does not affect clients
+Açıklama: Mock eski yanıtı vermeye devam ettiği için tüketicinin testleri yeşil kalır. Bu değişikliği yakalayan, tüketicinin beklentilerini (`status` alanı) sağlayıcının CI'ında gerçek servise karşı oynatan sözleşme testidir. O yoksa hata ancak üretimde, gerçek servisle konuşulunca ortaya çıkar. | Because the mock keeps returning the old response the consumer's tests stay green. What catches the change is a contract test that replays the consumer's expectations (the `status` field) against the real service in the provider's CI. Without it the bug only surfaces in production, when the real service is called.
+:::
+
+:::animation{scene="test-layers.scene.json"}
+Birim → API/entegrasyon → sözleşme → E2E; mock gerçek bağımlılığın yerine geçer, sözleşme mock'u gerçeğe bağlar.
+:::
+
 ## Bir API testinde ne doğrulanır?
 
 Tek bir `GET /v1/users/42` isteği için bile beş ayrı doğrulama vardır:
@@ -278,6 +293,12 @@ jobs:
       - run: k6 run tests/load/load.js
         env: { API_BASE: https://staging.example.com, API_TOKEN: ${{ secrets.STAGING_API_TOKEN }} }
 ```
+:::
+
+Aşağıdaki pipeline'da test aşamalarını piramidin sırasıyla dizdik: ucuz ve hızlı testler önde, pahalı olanlar sonda.
+
+:::interactive{type="pipeline" stages="lint,unit-test,api-test,contract-verify,build-image,deploy-staging,e2e-test,production" failureStage="contract-verify" retries=0}
+"Pipeline'ı çalıştır" düğmesiyle aşamaların sırayla yeşile döndüğünü izle. Sonra "Hata enjekte et" kutusunu işaretle; "Hata aşaması" listesinde `contract-verify` seçiliyken tekrar çalıştır: sözleşme kırıldığında imaj hiç üretilmez ve staging'e dağıtım yapılmaz. Hata aşamasını `e2e-test` yapıp karşılaştır: aynı hata ne kadar geç yakalanırsa o kadar çok aşama boşuna çalışır. Son olarak "Yeniden deneme" değerini 1'e çıkar: logda aşamanın bir kez daha denendiğini ama gerçek bir hatanın yeniden denemeyle düzelmediğini gör. Yeniden deneme yalnızca geçici sorunlar içindir; kararsız (flaky) testleri onunla gizlemek, gerçek hataları da gizler.
 :::
 
 ## Test verisi yönetimi

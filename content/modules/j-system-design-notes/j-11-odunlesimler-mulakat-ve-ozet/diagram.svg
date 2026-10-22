@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 500" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Yemek siparişi platformunda ödünleşim haritası</title>
+  <desc id="desc">Altı ödünleşim ekseni yatay çubuklar olarak çizilmiştir: SQL ve NoSQL, senkron ve asenkron, tutarlılık (CP) ve erişilebilirlik (AP), WebSocket ve polling, taze okuma ve önbellek, monolit ve mikroservis. Her eksende platformun hangi parçasının hangi uca yakın durduğu işaretlenmiştir: sipariş, ödeme ve stok tutarlılık ve SQL tarafında; menü, restoran listesi, kurye konumu ve bildirimler esneklik, önbellek ve asenkron tarafında. Ana fikir: seçim sistem için değil, her veri ve akış için ayrı yapılır.</desc>
+
+  <!-- Başlık -->
+  <text x="30" y="38" font-size="18" font-weight="600" fill="var(--da-fg, #0f172a)">Ödünleşim haritası: seçim her akış için ayrı yapılır</text>
+  <g font-size="12" fill="var(--da-muted, #64748b)">
+    <circle cx="36" cy="62" r="6" fill="var(--da-primary, #6366f1)"/>
+    <text x="48" y="66">tutarlılık / basitlik tarafında duran parçalar</text>
+    <circle cx="346" cy="62" r="6" fill="var(--da-accent, #f59e0b)"/>
+    <text x="358" y="66">ölçek / hız / esneklik tarafında duran parçalar</text>
+  </g>
+
+  <!-- Eksen çubukları -->
+  <g stroke="var(--da-border, #cbd5e1)" stroke-width="6" stroke-linecap="round">
+    <line x1="230" y1="120" x2="730" y2="120"/>
+    <line x1="230" y1="185" x2="730" y2="185"/>
+    <line x1="230" y1="250" x2="730" y2="250"/>
+    <line x1="230" y1="315" x2="730" y2="315"/>
+    <line x1="230" y1="380" x2="730" y2="380"/>
+    <line x1="230" y1="445" x2="730" y2="445"/>
+  </g>
+
+  <!-- Sol uç etiketleri -->
+  <g font-size="14" font-weight="600" fill="var(--da-fg, #0f172a)" text-anchor="end">
+    <text x="215" y="125">SQL (ACID)</text>
+    <text x="215" y="190">Senkron</text>
+    <text x="215" y="255">Tutarlılık (CP)</text>
+    <text x="215" y="320">WebSocket</text>
+    <text x="215" y="385">Taze okuma (DB)</text>
+    <text x="215" y="450">Modüler monolit</text>
+  </g>
+
+  <!-- Sağ uç etiketleri -->
+  <g font-size="14" font-weight="600" fill="var(--da-fg, #0f172a)">
+    <text x="745" y="125">NoSQL</text>
+    <text x="745" y="190">Asenkron (Kafka)</text>
+    <text x="745" y="255">Erişilebilirlik (AP)</text>
+    <text x="745" y="320">Polling</text>
+    <text x="745" y="385">Önbellek (Redis)</text>
+    <text x="745" y="450">Mikroservis</text>
+  </g>
+
+  <!-- Sol işaretler -->
+  <g fill="var(--da-primary, #6366f1)" stroke="var(--da-surface, #ffffff)" stroke-width="2">
+    <circle cx="270" cy="120" r="9"/>
+    <circle cx="270" cy="185" r="9"/>
+    <circle cx="270" cy="250" r="9"/>
+    <circle cx="270" cy="315" r="9"/>
+    <circle cx="270" cy="380" r="9"/>
+    <circle cx="290" cy="445" r="9"/>
+  </g>
+  <g font-size="12" fill="var(--da-fg, #0f172a)">
+    <text x="284" y="106">sipariş, ödeme, stok</text>
+    <text x="284" y="171">ödeme onayı</text>
+    <text x="284" y="236">ödeme, stok düşümü</text>
+    <text x="284" y="301">canlı kurye takibi</text>
+    <text x="284" y="366">stok, puan bakiyesi</text>
+    <text x="304" y="431">başlangıç: tek uygulama</text>
+  </g>
+
+  <!-- Sağ işaretler -->
+  <g fill="var(--da-accent, #f59e0b)" stroke="var(--da-surface, #ffffff)" stroke-width="2">
+    <circle cx="690" cy="120" r="9"/>
+    <circle cx="690" cy="185" r="9"/>
+    <circle cx="690" cy="250" r="9"/>
+    <circle cx="690" cy="315" r="9"/>
+    <circle cx="690" cy="380" r="9"/>
+    <circle cx="660" cy="445" r="9"/>
+  </g>
+  <g font-size="12" fill="var(--da-fg, #0f172a)" text-anchor="end">
+    <text x="676" y="106">menü, oturum, konum</text>
+    <text x="676" y="171">bildirim, analitik, kurye</text>
+    <text x="676" y="236">restoran listesi, konum</text>
+    <text x="676" y="301">sipariş geçmişi, kargo durumu</text>
+    <text x="676" y="366">menü, arama sonuçları</text>
+    <text x="646" y="431">ölçekte ayrılan servisler</text>
+  </g>
+
+  <!-- Alt not -->
+  <text x="30" y="485" font-size="12" fill="var(--da-muted, #64748b)">Her işaretin bir bedeli var: sağa kaydıkça bayat veri ve işletim karmaşıklığı, sola kaydıkça ölçek sınırı ve gecikme.</text>
+</svg>

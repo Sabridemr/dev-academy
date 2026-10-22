@@ -1,0 +1,558 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "l-02-iki-isaretci-yaklasma",
+  "title": {
+    "tr": "İki işaretçi içeri doğru yaklaşıyor",
+    "en": "Two pointers closing in"
+  },
+  "summary": {
+    "tr": "Sıralı [2, 3, 5, 8, 11, 14, 18] dizisinde toplamı 19 olan çifti iki işaretçiyle dört karşılaştırmada bulmak.",
+    "en": "Finding the pair that sums to 19 in the sorted array [2, 3, 5, 8, 11, 14, 18] with two pointers in four comparisons."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Yedi hücreli sıralı bir dizi ve üstünde bir toplam kutusu vardır. L işaretçisi 2'de, R işaretçisi 18'de başlar. Her adımda iki hücrenin değeri toplam kutusuna gider: 2 + 18 = 20 büyük olduğu için 18 grileşir ve R sola kayar; 2 + 14 = 16 küçük olduğu için 2 grileşir ve L sağa kayar; 3 + 14 = 17 küçük, 3 grileşir; 5 + 14 = 19 hedefe eşittir ve iki hücre yeşile döner. Son adım, her karşılaştırmada bir eleman elendiği için algoritmanın O(n) zaman ve O(1) bellek kullandığını özetler.",
+      "en": "A seven-cell sorted array with a sum box above it. Pointer L starts at 2 and pointer R at 18. Each step sends two cell values to the sum box: 2 + 18 = 20 is too big, so 18 greys out and R moves left; 2 + 14 = 16 is too small, so 2 greys out and L moves right; 3 + 14 = 17 is too small, 3 greys out; 5 + 14 = 19 matches the target and both cells turn green. The last step explains that one element is eliminated per comparison, giving O(n) time and O(1) space."
+    }
+  },
+  "canvas": {
+    "width": 1000,
+    "height": 600
+  },
+  "nodes": [
+    {
+      "id": "sum",
+      "kind": "function",
+      "label": {
+        "tr": "toplam",
+        "en": "sum"
+      },
+      "x": 500,
+      "y": 110,
+      "w": 260,
+      "h": 74,
+      "sublabel": {
+        "tr": "hedef = 19",
+        "en": "target = 19"
+      }
+    },
+    {
+      "id": "c0",
+      "kind": "generic",
+      "label": "2",
+      "x": 140,
+      "y": 330,
+      "w": 100,
+      "h": 56,
+      "sublabel": "[0]"
+    },
+    {
+      "id": "c1",
+      "kind": "generic",
+      "label": "3",
+      "x": 260,
+      "y": 330,
+      "w": 100,
+      "h": 56,
+      "sublabel": "[1]"
+    },
+    {
+      "id": "c2",
+      "kind": "generic",
+      "label": "5",
+      "x": 380,
+      "y": 330,
+      "w": 100,
+      "h": 56,
+      "sublabel": "[2]"
+    },
+    {
+      "id": "c3",
+      "kind": "generic",
+      "label": "8",
+      "x": 500,
+      "y": 330,
+      "w": 100,
+      "h": 56,
+      "sublabel": "[3]"
+    },
+    {
+      "id": "c4",
+      "kind": "generic",
+      "label": "11",
+      "x": 620,
+      "y": 330,
+      "w": 100,
+      "h": 56,
+      "sublabel": "[4]"
+    },
+    {
+      "id": "c5",
+      "kind": "generic",
+      "label": "14",
+      "x": 740,
+      "y": 330,
+      "w": 100,
+      "h": 56,
+      "sublabel": "[5]"
+    },
+    {
+      "id": "c6",
+      "kind": "generic",
+      "label": "18",
+      "x": 860,
+      "y": 330,
+      "w": 100,
+      "h": 56,
+      "sublabel": "[6]"
+    }
+  ],
+  "edges": [
+    {
+      "id": "e0",
+      "from": "c0",
+      "to": "sum",
+      "kind": "data"
+    },
+    {
+      "id": "e1",
+      "from": "c1",
+      "to": "sum",
+      "kind": "data"
+    },
+    {
+      "id": "e2",
+      "from": "c2",
+      "to": "sum",
+      "kind": "data"
+    },
+    {
+      "id": "e3",
+      "from": "c3",
+      "to": "sum",
+      "kind": "data"
+    },
+    {
+      "id": "e4",
+      "from": "c4",
+      "to": "sum",
+      "kind": "data"
+    },
+    {
+      "id": "e5",
+      "from": "c5",
+      "to": "sum",
+      "kind": "data"
+    },
+    {
+      "id": "e6",
+      "from": "c6",
+      "to": "sum",
+      "kind": "data"
+    }
+  ],
+  "steps": [
+    {
+      "id": "intro",
+      "title": {
+        "tr": "Sıralı dizi, iki uç",
+        "en": "Sorted array, two ends"
+      },
+      "narration": {
+        "tr": "Sıralı dizide toplamı **19** olan iki eleman arıyoruz. Kaba kuvvet 7 elemanda 21 çifti dener. İki işaretçide `L` en küçük elemandan, `R` en büyük elemandan başlar.",
+        "en": "We look for two elements of the sorted array that add up to **19**. Brute force would try all 21 pairs of 7 elements. With two pointers `L` starts at the smallest element and `R` at the largest."
+      },
+      "durationMs": 3500,
+      "inherit": false,
+      "highlight": {
+        "nodes": [
+          "c0",
+          "c6"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "c0": {
+          "badge": "L",
+          "status": "active"
+        },
+        "c6": {
+          "badge": "R",
+          "status": "active"
+        }
+      },
+      "edgeStates": {
+        "e0": {
+          "visible": false
+        },
+        "e1": {
+          "visible": false
+        },
+        "e2": {
+          "visible": false
+        },
+        "e3": {
+          "visible": false
+        },
+        "e4": {
+          "visible": false
+        },
+        "e5": {
+          "visible": false
+        },
+        "e6": {
+          "visible": false
+        }
+      },
+      "annotations": [
+        {
+          "id": "a-kaba",
+          "x": 500,
+          "y": 470,
+          "text": {
+            "tr": "kaba kuvvet: 21 çift",
+            "en": "brute force: 21 pairs"
+          },
+          "tone": "warning"
+        }
+      ]
+    },
+    {
+      "id": "t1",
+      "title": {
+        "tr": "2 + 18 = 20: fazla",
+        "en": "2 + 18 = 20: too big"
+      },
+      "narration": {
+        "tr": "Toplam 20, hedeften büyük. En küçük eleman 2 ile bile fazla geliyorsa 18 **hiçbir** elemanla 19 edemez. 18'i eleriz ve `R` bir sola kayar.",
+        "en": "The sum is 20, larger than the target. If 18 is too big even with the smallest element 2, it cannot reach 19 with **any** element. We drop 18 and move `R` one step left."
+      },
+      "durationMs": 3200,
+      "highlight": {
+        "nodes": [
+          "c0",
+          "c6",
+          "sum"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "sum": {
+          "badge": "20 > 19",
+          "status": "warning"
+        }
+      },
+      "edgeStates": {
+        "e0": {
+          "visible": true,
+          "status": "active"
+        },
+        "e1": {
+          "visible": false
+        },
+        "e2": {
+          "visible": false
+        },
+        "e3": {
+          "visible": false
+        },
+        "e4": {
+          "visible": false
+        },
+        "e5": {
+          "visible": false
+        },
+        "e6": {
+          "visible": true,
+          "status": "active"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e0",
+          "label": "2",
+          "durationMs": 900
+        },
+        {
+          "edge": "e6",
+          "label": "18",
+          "durationMs": 900
+        }
+      ]
+    },
+    {
+      "id": "t2",
+      "title": {
+        "tr": "R sola: 2 + 14 = 16",
+        "en": "R moves left: 2 + 14 = 16"
+      },
+      "narration": {
+        "tr": "18 elendi (gri). Yeni toplam 16, hedeften küçük. Bu kez en büyük aday 14 bile 2'yi 19'a taşıyamıyor: **2 elenir**, `L` sağa kayar.",
+        "en": "18 is eliminated (grey). The new sum is 16, below the target. Now even the largest candidate 14 cannot lift 2 to 19: **2 is eliminated** and `L` moves right."
+      },
+      "durationMs": 3200,
+      "highlight": {
+        "nodes": [
+          "c0",
+          "c5",
+          "sum"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "c6": {
+          "status": "muted",
+          "badge": ""
+        },
+        "c5": {
+          "badge": "R",
+          "status": "active"
+        },
+        "sum": {
+          "badge": "16 < 19",
+          "status": "warning"
+        }
+      },
+      "edgeStates": {
+        "e0": {
+          "visible": true,
+          "status": "active"
+        },
+        "e1": {
+          "visible": false
+        },
+        "e2": {
+          "visible": false
+        },
+        "e3": {
+          "visible": false
+        },
+        "e4": {
+          "visible": false
+        },
+        "e5": {
+          "visible": true,
+          "status": "active"
+        },
+        "e6": {
+          "visible": false
+        }
+      },
+      "packets": [
+        {
+          "edge": "e0",
+          "label": "2",
+          "durationMs": 900
+        },
+        {
+          "edge": "e5",
+          "label": "14",
+          "durationMs": 900
+        }
+      ]
+    },
+    {
+      "id": "t3",
+      "title": {
+        "tr": "L sağa: 3 + 14 = 17",
+        "en": "L moves right: 3 + 14 = 17"
+      },
+      "narration": {
+        "tr": "Toplam 17, hâlâ küçük. Aynı mantıkla 3 elenir ve `L` bir adım daha sağa kayar. Her karşılaştırma tam olarak bir elemanı kalıcı olarak eliyor.",
+        "en": "The sum is 17, still too small. By the same logic 3 is eliminated and `L` moves one more step right. Every comparison permanently eliminates exactly one element."
+      },
+      "durationMs": 3200,
+      "highlight": {
+        "nodes": [
+          "c1",
+          "c5",
+          "sum"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "c0": {
+          "status": "muted",
+          "badge": ""
+        },
+        "c1": {
+          "badge": "L",
+          "status": "active"
+        },
+        "sum": {
+          "badge": "17 < 19"
+        }
+      },
+      "edgeStates": {
+        "e0": {
+          "visible": false
+        },
+        "e1": {
+          "visible": true,
+          "status": "active"
+        },
+        "e2": {
+          "visible": false
+        },
+        "e3": {
+          "visible": false
+        },
+        "e4": {
+          "visible": false
+        },
+        "e5": {
+          "visible": true,
+          "status": "active"
+        },
+        "e6": {
+          "visible": false
+        }
+      },
+      "packets": [
+        {
+          "edge": "e1",
+          "label": "3",
+          "durationMs": 900
+        },
+        {
+          "edge": "e5",
+          "label": "14",
+          "durationMs": 900
+        }
+      ]
+    },
+    {
+      "id": "t4",
+      "title": {
+        "tr": "5 + 14 = 19: bulundu",
+        "en": "5 + 14 = 19: found"
+      },
+      "narration": {
+        "tr": "`L` 5'e geldi: 5 + 14 = 19. Çift bulundu: indeks 2 ve 5. Toplam yalnızca **4 karşılaştırma** yaptık.",
+        "en": "`L` reached 5: 5 + 14 = 19. The pair is found: indices 2 and 5. We made only **4 comparisons** in total."
+      },
+      "durationMs": 3200,
+      "highlight": {
+        "nodes": [
+          "c2",
+          "c5",
+          "sum"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "c1": {
+          "status": "muted",
+          "badge": ""
+        },
+        "c2": {
+          "badge": "L",
+          "status": "success"
+        },
+        "c5": {
+          "status": "success"
+        },
+        "sum": {
+          "badge": "19 = 19",
+          "status": "success"
+        }
+      },
+      "edgeStates": {
+        "e0": {
+          "visible": false
+        },
+        "e1": {
+          "visible": false
+        },
+        "e2": {
+          "visible": true,
+          "status": "active"
+        },
+        "e3": {
+          "visible": false
+        },
+        "e4": {
+          "visible": false
+        },
+        "e5": {
+          "visible": true,
+          "status": "active"
+        },
+        "e6": {
+          "visible": false
+        }
+      },
+      "packets": [
+        {
+          "edge": "e2",
+          "label": "5",
+          "durationMs": 900
+        },
+        {
+          "edge": "e5",
+          "label": "14",
+          "durationMs": 900
+        }
+      ]
+    },
+    {
+      "id": "ozet",
+      "title": {
+        "tr": "Neden O(n)?",
+        "en": "Why O(n)?"
+      },
+      "narration": {
+        "tr": "İşaretçiler yalnızca içeri doğru hareket eder ve her adımda bir eleman elenir; bu yüzden en fazla n − 1 karşılaştırma yapılır. Ek bellek yalnızca iki indekstir: O(n) zaman, O(1) bellek. Bu güvence dizinin **sıralı** olmasından gelir.",
+        "en": "The pointers only move inwards and each step eliminates one element, so at most n − 1 comparisons are made. The extra memory is just two indices: O(n) time, O(1) space. The guarantee comes from the array being **sorted**."
+      },
+      "durationMs": 3500,
+      "highlight": {
+        "nodes": [
+          "c2",
+          "c5"
+        ],
+        "edges": []
+      },
+      "edgeStates": {
+        "e0": {
+          "visible": false
+        },
+        "e1": {
+          "visible": false
+        },
+        "e2": {
+          "visible": false
+        },
+        "e3": {
+          "visible": false
+        },
+        "e4": {
+          "visible": false
+        },
+        "e5": {
+          "visible": false
+        },
+        "e6": {
+          "visible": false
+        }
+      },
+      "annotations": [
+        {
+          "id": "a-o",
+          "x": 500,
+          "y": 470,
+          "text": {
+            "tr": "en fazla n − 1 adım, O(1) bellek",
+            "en": "at most n − 1 steps, O(1) space"
+          },
+          "tone": "success"
+        }
+      ]
+    }
+  ],
+  "tags": [
+    "iki-isaretci",
+    "dizi"
+  ]
+}

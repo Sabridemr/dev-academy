@@ -235,6 +235,10 @@ daha okunur yazılabilir.
 İkisi de `key` ve `reverse` parametrelerini alır. `key`, her elemandan karşılaştırılacak değeri çıkaran bir
 fonksiyondur. `min` ve `max` da aynı `key` parametresini kabul eder.
 
+:::interactive{type="predict-run" src="sorted-key.trace.json" title="Önce tahmin et: sorted ve key|Predict first: sorted and key"}
+Simülasyonu izlemeden önce kodu oku: aynı puana sahip öğrenciler sıralamada nereye düşer, `max` hangisini seçer? Her soruda bir seçenek işaretle. Sorulardaki satır numaraları soldaki kod listesine göredir. "Çalıştır ve karşılaştır" ile cevapların işaretlenir, doğru ve yanlış sayısı görünür ve iz oynamaya başlar; her sorunun altındaki adım numarasına izin kaydırıcısıyla gidip değeri kendin doğrula. Puan sunucuya gönderilmez; "Yeniden dene" ile tekrar cevaplayabilirsin.
+:::
+
 :::trace{src="sorted-key.trace.json" title="sorted ve key fonksiyonu|sorted and the key function"}
 Her sorted ve max çağrısında lambda çerçevesinin üç kez, her öğrenci için bir kez açılıp anahtarı döndürdüğünü izle.
 :::

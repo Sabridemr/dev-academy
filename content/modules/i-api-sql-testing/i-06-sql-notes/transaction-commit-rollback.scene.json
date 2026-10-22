@@ -1,0 +1,176 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "i-06-transaction-commit-rollback",
+  "title": { "tr": "Transaction: COMMIT ya da ROLLBACK", "en": "Transaction: COMMIT or ROLLBACK" },
+  "summary": {
+    "tr": "Sipariş ekleme ve stok düşmenin tek transaction'da yapılması; COMMIT'e kadar değişikliklerin başka bağlantıya görünmemesi, stok bitince ROLLBACK ve son ürün için yarışan iki bağlantıda satır kilidinin rolü.",
+    "en": "Inserting an order and decrementing stock in one transaction; changes staying invisible to other connections until COMMIT, ROLLBACK when stock runs out, and the role of the row lock when two connections race for the last item."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda iki uygulama bağlantısı A ve B, sağda orders ve products tabloları vardır; products üzerindeki sayaç 10 numaralı ürünün stoğunu gösterir ve 1 ile başlar. A transaction açar, 105 numaralı siparişi ekler; B aynı anda orders'ı okur ama 105'i görmez. A stoğu koşullu UPDATE ile 0'a düşürür ve COMMIT eder; artık B hem siparişi hem yeni stoğu görür. Ardından B kendi transaction'ında 106'yı ekler, ama stok 0 olduğu için UPDATE hiçbir satırı etkilemez ve B ROLLBACK ile 106'yı geri alır. Son bölümde stok 1 iken iki bağlantı aynı anda UPDATE çalıştırır; A satır kilidini alır, B bekler, A COMMIT edince B'nin koşulu artık sağlanmaz ve B geri alınır.",
+      "en": "Two application connections A and B are on the left, the orders and products tables on the right; a counter on products shows the stock of product 10 and starts at 1. A opens a transaction and inserts order 105; B reads orders at the same time but does not see 105. A drops the stock to 0 with a conditional UPDATE and commits; now B sees both the order and the new stock. Then B inserts 106 in its own transaction, but since stock is 0 the UPDATE affects no rows and B rolls back 106. In the last part, with stock at 1, both connections run the UPDATE together; A takes the row lock, B waits, and once A commits B's condition no longer holds and B is rolled back."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "a", "kind": "service", "label": { "tr": "Bağlantı A", "en": "Connection A" }, "sublabel": { "tr": "Zeynep'in siparişi", "en": "Zeynep's order" }, "x": 170, "y": 170, "w": 190, "h": 80 },
+    { "id": "b", "kind": "service", "label": { "tr": "Bağlantı B", "en": "Connection B" }, "sublabel": { "tr": "başka müşteri", "en": "another customer" }, "x": 170, "y": 430, "w": 190, "h": 80 },
+    { "id": "orders", "kind": "db", "label": "orders", "sublabel": "101 … 104", "x": 720, "y": 170, "w": 190, "h": 80 },
+    { "id": "products", "kind": "db", "label": "products", "sublabel": { "tr": "id 10 · stok", "en": "id 10 · stock" }, "x": 720, "y": 430, "w": 190, "h": 80 }
+  ],
+  "edges": [
+    { "id": "a-orders", "from": "a", "to": "orders", "kind": "data" },
+    { "id": "a-products", "from": "a", "to": "products", "kind": "data", "curvature": 0.1 },
+    { "id": "b-orders", "from": "b", "to": "orders", "kind": "data", "curvature": 0.1 },
+    { "id": "b-products", "from": "b", "to": "products", "kind": "data" }
+  ],
+  "steps": [
+    {
+      "id": "begin",
+      "title": "BEGIN",
+      "narration": {
+        "tr": "Bağlantı A bir sipariş için transaction açar: BEGIN. 10 numaralı üründen stokta 1 adet kaldı. Bundan sonra A'nın yaptığı her yazma, COMMIT ya da ROLLBACK gelene kadar 'taslak' durumundadır.",
+        "en": "Connection A opens a transaction for an order: BEGIN. One unit of product 10 is left in stock. From now on every write A makes is a 'draft' until COMMIT or ROLLBACK arrives."
+      },
+      "durationMs": 3500,
+      "inherit": false,
+      "highlight": { "nodes": ["a"], "edges": [] },
+      "nodeStates": {
+        "a": { "status": "active", "badge": "BEGIN" },
+        "b": { "status": "idle" },
+        "orders": { "status": "idle", "badge": "" },
+        "products": { "status": "idle", "counter": 1, "badge": "" }
+      }
+    },
+    {
+      "id": "insert",
+      "title": { "tr": "INSERT, ama görünmez", "en": "INSERT, but invisible" },
+      "narration": {
+        "tr": "A, 105 numaralı siparişi ekler. Aynı anda B orders tablosunu okur ve 105'i görmez: başka bir bağlantı, kesinleşmemiş (uncommitted) veriyi okuyamaz. ACID'in I'sı (isolation) budur.",
+        "en": "A inserts order 105. At the same moment B reads the orders table and does not see 105: another connection cannot read uncommitted data. This is the I (isolation) in ACID."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["a", "orders", "b"], "edges": ["a-orders", "b-orders"] },
+      "nodeStates": { "orders": { "status": "busy", "badge": "+105 ?" }, "b": { "status": "active", "badge": "SELECT" } },
+      "edgeStates": { "a-orders": { "status": "active" }, "b-orders": { "status": "active" } },
+      "packets": [
+        { "edge": "a-orders", "shape": "square", "label": "INSERT 105", "durationMs": 1000 },
+        { "edge": "b-orders", "shape": "square", "label": "SELECT *", "startAt": 1300, "durationMs": 900 },
+        { "edge": "b-orders", "shape": "square", "direction": "backward", "label": "101 … 104", "startAt": 2300, "durationMs": 900 }
+      ],
+      "annotations": [
+        { "id": "invisible", "x": 450, "y": 300, "text": { "tr": "B, 105'i görmüyor", "en": "B does not see 105" }, "tone": "info" }
+      ]
+    },
+    {
+      "id": "update",
+      "title": { "tr": "Koşullu UPDATE", "en": "Conditional UPDATE" },
+      "narration": {
+        "tr": "A stoğu düşer: UPDATE products SET stock = stock - 1 WHERE id = 10 AND stock > 0. Koşul sağlanır, 1 satır etkilenir, stok 0 olur. A bu satır üzerinde transaction bitene kadar sürecek bir yazma kilidi tutar.",
+        "en": "A decrements the stock: UPDATE products SET stock = stock - 1 WHERE id = 10 AND stock > 0. The condition holds, 1 row is affected and stock becomes 0. A holds a write lock on this row until the transaction ends."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["a", "products"], "edges": ["a-products"] },
+      "nodeStates": { "b": { "status": "idle", "badge": "" }, "products": { "status": "busy", "counter": 0, "badge": "🔒 A" }, "a": { "badge": "1 row" } },
+      "edgeStates": { "a-orders": { "status": "idle" }, "b-orders": { "status": "idle" }, "a-products": { "status": "active" } },
+      "packets": [
+        { "edge": "a-products", "shape": "square", "label": "UPDATE … stock > 0", "durationMs": 1100 },
+        { "edge": "a-products", "shape": "square", "direction": "backward", "label": { "tr": "1 satır", "en": "1 row" }, "color": "success", "startAt": 1400, "durationMs": 1000 }
+      ]
+    },
+    {
+      "id": "commit",
+      "title": "COMMIT",
+      "narration": {
+        "tr": "A, COMMIT çalıştırır. Sipariş ve stok değişikliği birlikte ve aynı anda kalıcı olur; kilit bırakılır. B şimdi okursa hem 105'i hem de 0 stoğu görür. Ya ikisi birden ya hiçbiri: atomicity.",
+        "en": "A runs COMMIT. The order and the stock change become durable together, at the same moment; the lock is released. If B reads now it sees both 105 and the stock of 0. Both or neither: atomicity."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["a", "orders", "products", "b"], "edges": ["b-orders"] },
+      "nodeStates": {
+        "a": { "status": "success", "badge": "COMMIT" },
+        "orders": { "status": "success", "badge": "+105" },
+        "products": { "status": "success", "badge": "" },
+        "b": { "status": "active", "badge": "SELECT" }
+      },
+      "edgeStates": { "a-products": { "status": "idle" }, "b-orders": { "status": "active" } },
+      "packets": [
+        { "edge": "b-orders", "shape": "square", "label": "SELECT *", "durationMs": 900 },
+        { "edge": "b-orders", "shape": "square", "direction": "backward", "label": "101 … 105", "color": "success", "startAt": 1100, "durationMs": 900 }
+      ]
+    },
+    {
+      "id": "b-insert",
+      "title": { "tr": "B de sipariş vermek istiyor", "en": "B wants to order too" },
+      "narration": {
+        "tr": "Başka bir müşteri aynı ürünü istiyor. B transaction açar ve 106 numaralı siparişi ekler. Bu satır şimdilik yalnızca B'nin transaction'ı içinde vardır.",
+        "en": "Another customer wants the same product. B opens a transaction and inserts order 106. For now this row exists only inside B's transaction."
+      },
+      "durationMs": 3500,
+      "highlight": { "nodes": ["b", "orders"], "edges": ["b-orders"] },
+      "nodeStates": { "a": { "status": "idle", "badge": "" }, "b": { "status": "active", "badge": "BEGIN" }, "orders": { "status": "busy", "badge": "+106 ?" }, "products": { "status": "idle" } },
+      "packets": [
+        { "edge": "b-orders", "shape": "square", "label": "INSERT 106", "durationMs": 1000 }
+      ]
+    },
+    {
+      "id": "b-zero",
+      "title": { "tr": "0 satır etkilendi", "en": "0 rows affected" },
+      "narration": {
+        "tr": "B stoğu düşmeye çalışır, ama stock > 0 koşulu artık sağlanmaz: UPDATE 0 satır etkiler. Hata fırlatılmaz; uygulama etkilenen satır sayısına bakmalı ve bunun 'stok yok' demek olduğunu anlamalıdır.",
+        "en": "B tries to decrement the stock, but the stock > 0 condition no longer holds: the UPDATE affects 0 rows. No error is raised; the application must check the affected row count and understand that it means 'out of stock'."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["b", "products"], "edges": ["b-products"] },
+      "nodeStates": { "b": { "status": "warning", "badge": "0 rows" }, "orders": { "status": "busy" }, "products": { "status": "warning" } },
+      "edgeStates": { "b-orders": { "status": "idle" }, "b-products": { "status": "active" } },
+      "packets": [
+        { "edge": "b-products", "shape": "square", "label": "UPDATE … stock > 0", "durationMs": 1000 },
+        { "edge": "b-products", "shape": "square", "direction": "backward", "label": { "tr": "0 satır", "en": "0 rows" }, "color": "danger", "startAt": 1300, "durationMs": 1000 }
+      ]
+    },
+    {
+      "id": "rollback",
+      "title": "ROLLBACK",
+      "narration": {
+        "tr": "B, ROLLBACK çağırır. 106 numaralı sipariş hiç yazılmamış gibi geri alınır; tabloda stoksuz bir sipariş kalmaz. Müşteriye 'stok tükendi' mesajı gösterilir.",
+        "en": "B calls ROLLBACK. Order 106 is undone as if it had never been written; no order without stock is left in the table. The customer is shown an 'out of stock' message."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["b", "orders"], "edges": ["b-orders"] },
+      "nodeStates": { "b": { "status": "error", "badge": "ROLLBACK" }, "orders": { "status": "success", "badge": "+105" }, "products": { "status": "idle" } },
+      "edgeStates": { "b-products": { "status": "idle" }, "b-orders": { "status": "error" } },
+      "packets": [
+        { "edge": "b-orders", "shape": "diamond", "label": { "tr": "106'yı geri al", "en": "undo 106" }, "color": "danger", "durationMs": 1100 }
+      ]
+    },
+    {
+      "id": "race",
+      "title": { "tr": "Son ürün için yarış", "en": "Race for the last item" },
+      "narration": {
+        "tr": "Yeni bir gün, stok yine 1. A ve B koşullu UPDATE'i aynı anda gönderir. A satır kilidini önce alır; B'nin UPDATE'i aynı satırı yazmak istediği için bekler. A COMMIT edince B devam eder, satırın güncel hâlini görür: stok 0, koşul sağlanmaz, 0 satır. B geri alınır; son ürün iki kez satılmaz.",
+        "en": "A new day, stock is 1 again. A and B send the conditional UPDATE at the same moment. A takes the row lock first; B's UPDATE waits because it wants to write the same row. When A commits, B continues and sees the current row: stock 0, the condition fails, 0 rows. B is rolled back; the last item is not sold twice."
+      },
+      "durationMs": 6000,
+      "highlight": { "nodes": ["a", "b", "products"], "edges": ["a-products", "b-products"] },
+      "nodeStates": {
+        "a": { "status": "success", "badge": "1 row" },
+        "b": { "status": "warning", "badge": "0 rows" },
+        "orders": { "status": "idle", "badge": "" },
+        "products": { "status": "busy", "counter": 0, "badge": "🔒 A" }
+      },
+      "edgeStates": { "b-orders": { "status": "idle" }, "a-products": { "status": "active" }, "b-products": { "status": "active" } },
+      "packets": [
+        { "edge": "a-products", "shape": "square", "label": "UPDATE", "durationMs": 900 },
+        { "edge": "b-products", "shape": "square", "label": { "tr": "UPDATE (bekler)", "en": "UPDATE (waits)" }, "color": "warning", "startAt": 100, "durationMs": 2200 },
+        { "edge": "a-products", "shape": "diamond", "label": "COMMIT", "color": "success", "startAt": 2400, "durationMs": 900 },
+        { "edge": "b-products", "shape": "square", "direction": "backward", "label": { "tr": "0 satır", "en": "0 rows" }, "color": "danger", "startAt": 3600, "durationMs": 1000 }
+      ],
+      "annotations": [
+        { "id": "lock", "x": 720, "y": 540, "text": { "tr": "satır kilidi: yazanlar sıraya girer", "en": "row lock: writers queue up" }, "tone": "info", "target": "products" }
+      ]
+    }
+  ]
+}

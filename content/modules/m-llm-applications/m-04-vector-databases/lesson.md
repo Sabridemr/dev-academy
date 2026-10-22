@@ -58,6 +58,20 @@ HNSW'nin iki önemli ayarı vardır. Kurulumda her düğümün bağlantı sayıs
 HNSW grafta atlayarak, IVF uzayı kümelere bölerek aranacak vektör sayısını küçültür.
 :::
 
+Diyagramdaki arama yolunu hareket hâlinde görelim: yeni bir parça grafa eklenir, ardından bir sorgu en üst katmandaki giriş noktasından başlayıp katman katman iner.
+
+:::predict{id="hnsw-ilk-adim"}
+HNSW'de sorgu vektörü hazır. Arama ilk olarak ne yapar? | In HNSW the query vector is ready. What does the search do first?
+- [ ] Dizindeki bütün vektörlerle karşılaştırır | Compares it with every vector in the index
+- [x] En üst katmandaki giriş noktasından sorguya daha yakın komşuya açgözlü adım atar | Takes a greedy step from the entry point in the top layer to a neighbour closer to the query
+- [ ] Rastgele bir kümeyi seçip içindeki vektörleri tarar | Picks a random cluster and scans the vectors inside it
+Açıklama: Üst katmanlar seyrektir ve uzun atlamalar içerir; arama oradan başlayıp daha yakın komşu kalmayınca bir alt katmana iner. Kümeleri taramak IVF'in yaklaşımıdır, hepsini karşılaştırmak ise düz aramadır. | Upper layers are sparse with long jumps; search starts there and descends a layer when no closer neighbour remains. Scanning clusters is IVF's approach, and comparing against everything is flat search.
+:::
+
+:::animation{scene="hnsw-search.scene.json"}
+Yeni parça en alt katmanda komşularına bağlanır; sorgu L2'den L0'a inerek en yakın k komşuyu bulur, ziyaret edilmeyen düğümler soluk kalır.
+:::
+
 ## IVF ve nicemleme
 
 **IVF (Inverted File Index)** farklı bir strateji izler: vektör uzayını k-means ile örneğin birkaç bin kümeye böler ve her vektörü en yakın küme merkezine atar. Sorgu geldiğinde önce en yakın birkaç küme (`nprobe`) seçilir, arama yalnızca o kümelerdeki vektörlerde yapılır. `nprobe` büyüdükçe recall artar, hız düşer. IVF'nin kurulumu bir eğitim adımı gerektirir ve veri dağılımı zamanla değişirse kümeler yeniden eğitilmelidir.
