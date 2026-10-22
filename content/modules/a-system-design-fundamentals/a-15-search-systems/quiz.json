@@ -1,0 +1,110 @@
+{
+  "id": "a-15-search-systems-quiz",
+  "title": { "tr": "Arama Sistemleri Quiz", "en": "Search Systems Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Ters indeksin (inverted index) temel eşlemesi hangisidir?",
+        "en": "What is the core mapping of an inverted index?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Belge kimliği → belgenin tam metni", "en": "Document id → the document's full text" } },
+        { "id": "b", "text": { "tr": "Terim → bu terimi içeren belgelerin listesi (posting listesi)", "en": "Term → list of documents containing the term (posting list)" } },
+        { "id": "c", "text": { "tr": "Belge kimliği → belgenin skoru", "en": "Document id → the document's score" } },
+        { "id": "d", "text": { "tr": "Sorgu metni → önceden hesaplanmış sonuç sayfası", "en": "Query text → a precomputed results page" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Ters indeks, yazma anında her terimin geçtiği belgeleri kaydeder; sorgu anında belgeler okunmaz, yalnızca aranan terimlerin listeleri okunur. (a) ileri (forward) indeks ya da belge deposudur. Skor sorguya bağlıdır, önceden belge başına saklanamaz (c). (d) bir sonuç cache'idir, indeks değil.",
+        "en": "An inverted index records, at write time, which documents each term appears in; at query time the documents are not read, only the lists for the searched terms. (a) is a forward index or document store. A score depends on the query and cannot be stored per document in advance (c). (d) is a results cache, not an index."
+      },
+      "difficulty": "easy",
+      "concepts": ["inverted-index"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "Belgeler Türkçe kök bulma (stemming) yapan bir analyzer ile indekslendi; sorgular ise hiçbir işlemden geçmeden doğrudan terim olarak aranıyor. 'stratejileri' araması ne döndürür?",
+        "en": "Documents were indexed with an analyzer that stems Turkish words, but queries are looked up as raw terms without any processing. What does a search for 'stratejileri' return?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Kök eşleştiği için doğru belgeleri", "en": "The right documents, since the stem matches" } },
+        { "id": "b", "text": { "tr": "Muhtemelen hiçbir şey: indekste yalnızca 'strateji' terimi var", "en": "Probably nothing: the index only contains the term 'strateji'" } },
+        { "id": "c", "text": { "tr": "Tüm belgeleri, çünkü stemming eşleşmeyi genişletir", "en": "All documents, because stemming broadens matches" } },
+        { "id": "d", "text": { "tr": "Yalnızca 'stratejileri' kelimesini birebir içeren belgeleri", "en": "Only documents containing the exact word 'stratejileri'" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "İndekste kelimenin kendisi değil kökü ('strateji') saklanır. Sorgu aynı analyzer'dan geçmezse ham 'stratejileri' terimi indekste bulunmaz. Kural: indeksleme ve sorgu tarafında aynı analyzer kullanılmalıdır. (d) olmaz çünkü ham kelime hiç indekslenmedi.",
+        "en": "The index stores the stem ('strateji'), not the word itself. If the query does not go through the same analyzer, the raw term 'stratejileri' is not in the index. Rule: use the same analyzer at index and query time. (d) cannot happen because the raw word was never indexed."
+      },
+      "difficulty": "medium",
+      "concepts": ["tokenization", "stemming"]
+    },
+    {
+      "id": "q3",
+      "type": "multiple",
+      "prompt": {
+        "tr": "BM25'in klasik TF-IDF'e göre getirdiği iyileştirmeler hangileridir? (Birden fazla seçin)",
+        "en": "Which improvements does BM25 bring over classic TF-IDF? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Terim frekansı doygunluğu: aynı terimin 20. tekrarı 2. tekrarı kadar puan getirmez (k1)", "en": "Term frequency saturation: the 20th repetition of a term is not worth as much as the 2nd (k1)" } },
+        { "id": "b", "text": { "tr": "Belge uzunluğu normalizasyonu: kısa belgedeki eşleşme daha değerli sayılır (b)", "en": "Document length normalisation: a match in a short document counts for more (b)" } },
+        { "id": "c", "text": { "tr": "Kelimelerin anlamını yapay sinir ağıyla anlaması", "en": "Understanding word meaning with a neural network" } },
+        { "id": "d", "text": { "tr": "Nadir terimlere daha fazla ağırlık vermeyi tamamen bırakması", "en": "Dropping extra weight for rare terms entirely" } }
+      ],
+      "correct": ["a", "b"],
+      "explanation": {
+        "tr": "BM25, TF katkısını k1 ile doyurur ve belge uzunluğunu b ile normalize eder; IDF fikrini (nadir terim daha değerli) korur, bu yüzden (d) yanlıştır. BM25 sözcüksel (lexical) bir modeldir, anlam çıkarmaz (c); anlamsal arama için embedding tabanlı yöntemler kullanılır.",
+        "en": "BM25 saturates the TF contribution with k1 and normalises by document length with b; it keeps the IDF idea (rare terms are worth more), so (d) is false. BM25 is a lexical model and does not extract meaning (c); semantic search uses embedding-based methods."
+      },
+      "difficulty": "medium",
+      "concepts": ["tf-idf", "bm25"]
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": {
+        "tr": "Bir Elasticsearch indeksi 6 primary shard'a bölünmüş. Bir sorguda 5 shard 15 ms'de, 1 shard 400 ms'de cevap veriyor. Sorgunun yaklaşık gecikmesi nedir ve neden?",
+        "en": "An Elasticsearch index has 6 primary shards. For a query, 5 shards answer in 15 ms and 1 shard in 400 ms. Roughly what is the query latency and why?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "≈15 ms, çünkü koordinatör ilk gelen cevapları döner", "en": "≈15 ms, because the coordinator returns the first answers" } },
+        { "id": "b", "text": { "tr": "≈75 ms, ortalama alınır", "en": "≈75 ms, the average is taken" } },
+        { "id": "c", "text": { "tr": "≈400 ms ve üzeri, çünkü scatter-gather'da koordinatör tüm shard'ların cevabını bekler", "en": "≈400 ms or more, because in scatter-gather the coordinator waits for every shard" } },
+        { "id": "d", "text": { "tr": "≈90 ms, shard süreleri toplanır", "en": "≈90 ms, shard times are summed" } }
+      ],
+      "correct": ["c"],
+      "explanation": {
+        "tr": "Sorgu her shard'a paralel gider ve gerçek ilk-k sonucu ancak tüm shard'ların yerel sonuçları birleşince bilinir. Bu yüzden toplam gecikmeyi en yavaş shard belirler; shard sayısı arttıkça birinin yavaş olma olasılığı da artar. Replika ekleyip yükü dağıtmak ve sıcak shard'ları dengelemek p99'u iyileştirir.",
+        "en": "The query fans out to every shard in parallel and the true top-k is known only once all local results are merged. So the slowest shard sets total latency; the more shards, the likelier one is slow. Adding replicas to spread load and rebalancing hot shards improves p99."
+      },
+      "difficulty": "medium",
+      "concepts": ["search-shards"]
+    },
+    {
+      "id": "q5",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Elasticsearch'e yazılan bir belge, yazma isteği başarıyla döndüğü anda aramalarda kesinlikle görünür.",
+        "en": "A document written to Elasticsearch is guaranteed to appear in searches the moment the write request returns successfully."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "Yanlış. Yeni belgeler önce bellekte toplanır ve refresh ile (varsayılan olarak yaklaşık saniyede bir) yeni bir segment olarak aranabilir hâle gelir; arama neredeyse gerçek zamanlıdır. Belge kimliğiyle doğrudan okuma (GET) ise hemen görür. Bu yüzden fiyat, stok gibi kritik değerler her zaman doğruluğun kaynağı olan veritabanından okunur.",
+        "en": "False. New documents are buffered in memory and become searchable as a new segment on refresh (by default roughly once per second); search is near real time. A direct GET by document id does see it immediately. That is why critical values such as price and stock are always read from the database, the source of truth."
+      },
+      "difficulty": "medium",
+      "concepts": ["near-real-time-search", "postgres-full-text"]
+    }
+  ]
+}

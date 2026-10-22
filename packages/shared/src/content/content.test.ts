@@ -309,7 +309,9 @@ describe('Müfredat', () => {
   });
   it('ders arama ve sonraki ders', () => {
     expect(findLesson('a-05-load-balancing')?.module.code).toBe('A');
-    expect(nextLessonOf('a-13-observability-12-factor')?.id).toBe('b-01-monolith-to-microservices');
+    expect(nextLessonOf('a-13-observability-12-factor')?.id).toBe('a-14-websocket-realtime');
+    // Modül sınırını aşar: A'nın son dersinden B'nin ilk dersine
+    expect(nextLessonOf('a-17-grpc-graphql-rest')?.id).toBe('b-01-monolith-to-microservices');
     // Modül sınırını aşar: G'nin son dersinden H'nin ilk dersine
     expect(nextLessonOf('g-08-nn-playground')?.id).toBe('h-01-linux-notes');
     expect(nextLessonOf('j-11-odunlesimler-mulakat-ve-ozet')?.id).toBe('k-01-python-nasil-calisir');

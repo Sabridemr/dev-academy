@@ -1,0 +1,110 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 500" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Ters indeks ve arama kümesi mimarisi</title>
+  <desc id="desc">Üstte üç belge analyzer'dan geçerek terimlere ayrılır ve ters indeks tablosuna yazılır: her terimin yanında onu içeren belgelerin listesi vardır. Sağda 'redis önbellek' sorgusu aynı analyzer'dan geçer, iki terimin listeleri okunur ve belge 1 en yüksek skoru alır. Altta indeks üç primary shard'a bölünmüştür; her shard'ın farklı bir düğümde replikası vardır ve koordinatör düğüm sorguyu tüm shard'lara dağıtıp sonuçları birleştirir.</desc>
+  <defs>
+    <marker id="si-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+  </defs>
+
+  <text x="480" y="26" text-anchor="middle" font-size="14" font-weight="600" fill="var(--da-fg, #0f172a)">Yazarken indeksle, ararken yalnızca listeleri oku</text>
+
+  <!-- Belgeler -->
+  <g font-size="11" fill="var(--da-fg, #0f172a)">
+    <rect x="20" y="50" width="200" height="34" rx="8" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+    <text x="30" y="72">1 · Redis önbellek stratejileri</text>
+    <rect x="20" y="92" width="200" height="34" rx="8" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+    <text x="30" y="114">2 · PostgreSQL indeks, sorgu planı…</text>
+    <rect x="20" y="134" width="200" height="34" rx="8" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+    <text x="30" y="156">3 · Redis kuyruk ile arka plan işleri</text>
+  </g>
+
+  <line x1="224" y1="109" x2="262" y2="109" stroke="var(--da-muted, #64748b)" stroke-width="1.5" marker-end="url(#si-arrow)"/>
+
+  <!-- Analyzer -->
+  <rect x="266" y="56" width="150" height="106" rx="12" fill="var(--da-primary, #6366f1)" opacity="0.10" stroke="var(--da-primary, #6366f1)"/>
+  <text x="341" y="78" text-anchor="middle" font-size="13" font-weight="600" fill="var(--da-primary, #6366f1)">Analyzer</text>
+  <g font-size="10" fill="var(--da-muted, #64748b)" text-anchor="middle">
+    <text x="341" y="98">1. tokenizasyon</text>
+    <text x="341" y="114">2. küçük harf + stopword</text>
+    <text x="341" y="130">3. kök: stratejileri → strateji</text>
+    <text x="341" y="150" fill="var(--da-danger, #ef4444)">sorguda da aynısı!</text>
+  </g>
+
+  <line x1="420" y1="109" x2="458" y2="109" stroke="var(--da-muted, #64748b)" stroke-width="1.5" marker-end="url(#si-arrow)"/>
+
+  <!-- Ters indeks tablosu -->
+  <rect x="462" y="46" width="220" height="190" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+  <text x="572" y="66" text-anchor="middle" font-size="12" font-weight="600" fill="var(--da-fg, #0f172a)">Ters indeks</text>
+  <g font-size="11" fill="var(--da-fg, #0f172a)">
+    <text x="476" y="90" font-weight="600">terim</text><text x="590" y="90" font-weight="600">posting listesi</text>
+    <rect x="470" y="98" width="204" height="18" rx="4" fill="var(--da-accent, #f59e0b)" opacity="0.18"/>
+    <text x="476" y="111">redis</text><text x="590" y="111">[1, 3]</text>
+    <rect x="470" y="120" width="204" height="18" rx="4" fill="var(--da-accent, #f59e0b)" opacity="0.18"/>
+    <text x="476" y="133">önbellek</text><text x="590" y="133">[1, 2]</text>
+    <text x="476" y="155">strateji</text><text x="590" y="155">[1]</text>
+    <text x="476" y="175">postgresql</text><text x="590" y="175">[2]</text>
+    <text x="476" y="195">kuyruk</text><text x="590" y="195">[3]</text>
+    <text x="476" y="215" fill="var(--da-muted, #64748b)">…</text>
+  </g>
+
+  <!-- Sorgu ve skor -->
+  <rect x="720" y="46" width="220" height="190" rx="10" fill="var(--da-success, #10b981)" opacity="0.08" stroke="var(--da-success, #10b981)"/>
+  <text x="830" y="66" text-anchor="middle" font-size="12" font-weight="600" fill="var(--da-fg, #0f172a)">Sorgu: "redis önbellek"</text>
+  <g font-size="11" fill="var(--da-fg, #0f172a)">
+    <text x="734" y="92">[1,3] ∪ [1,2] → aday: 1, 2, 3</text>
+    <text x="734" y="118" font-weight="600" fill="var(--da-success, #10b981)">#1 belge 1 — iki terim</text>
+    <text x="734" y="138">#2 belge 3 — kısa belge</text>
+    <text x="734" y="158">#3 belge 2 — uzun belge</text>
+  </g>
+  <g font-size="10" fill="var(--da-muted, #64748b)">
+    <text x="734" y="184">BM25 = IDF × doygun TF</text>
+    <text x="734" y="200">÷ uzunluk normalizasyonu</text>
+    <text x="734" y="222">facet: cache (2) · queue (1)</text>
+  </g>
+  <line x1="686" y1="120" x2="716" y2="120" stroke="var(--da-muted, #64748b)" stroke-width="1.5" marker-end="url(#si-arrow)"/>
+
+  <!-- Alt yarı: küme -->
+  <text x="480" y="276" text-anchor="middle" font-size="13" font-weight="600" fill="var(--da-fg, #0f172a)">Arama kümesi: 3 primary shard × 1 replica</text>
+
+  <rect x="400" y="296" width="160" height="44" rx="10" fill="var(--da-primary, #6366f1)" opacity="0.12" stroke="var(--da-primary, #6366f1)"/>
+  <text x="480" y="315" text-anchor="middle" font-size="12" font-weight="600" fill="var(--da-primary, #6366f1)">Koordinatör</text>
+  <text x="480" y="331" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">scatter → gather → fetch</text>
+
+  <g stroke="var(--da-muted, #64748b)" stroke-width="1.3">
+    <line x1="430" y1="342" x2="200" y2="382" marker-end="url(#si-arrow)"/>
+    <line x1="480" y1="342" x2="480" y2="382" marker-end="url(#si-arrow)"/>
+    <line x1="530" y1="342" x2="760" y2="382" marker-end="url(#si-arrow)"/>
+  </g>
+
+  <!-- Düğümler -->
+  <g fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)" stroke-width="1.5">
+    <rect x="80" y="386" width="240" height="96" rx="12"/>
+    <rect x="360" y="386" width="240" height="96" rx="12"/>
+    <rect x="640" y="386" width="240" height="96" rx="12"/>
+  </g>
+  <g font-size="12" font-weight="600" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="200" y="406">Düğüm A</text>
+    <text x="480" y="406">Düğüm B</text>
+    <text x="760" y="406">Düğüm C</text>
+  </g>
+  <g font-size="11" text-anchor="middle">
+    <rect x="96" y="418" width="96" height="26" rx="6" fill="var(--da-primary, #6366f1)" opacity="0.18"/>
+    <text x="144" y="435" fill="var(--da-fg, #0f172a)">P0</text>
+    <rect x="208" y="418" width="96" height="26" rx="6" fill="var(--da-border, #cbd5e1)" opacity="0.6"/>
+    <text x="256" y="435" fill="var(--da-fg, #0f172a)">R2</text>
+    <rect x="376" y="418" width="96" height="26" rx="6" fill="var(--da-primary, #6366f1)" opacity="0.18"/>
+    <text x="424" y="435" fill="var(--da-fg, #0f172a)">P1</text>
+    <rect x="488" y="418" width="96" height="26" rx="6" fill="var(--da-border, #cbd5e1)" opacity="0.6"/>
+    <text x="536" y="435" fill="var(--da-fg, #0f172a)">R0</text>
+    <rect x="656" y="418" width="96" height="26" rx="6" fill="var(--da-primary, #6366f1)" opacity="0.18"/>
+    <text x="704" y="435" fill="var(--da-fg, #0f172a)">P2</text>
+    <rect x="768" y="418" width="96" height="26" rx="6" fill="var(--da-border, #cbd5e1)" opacity="0.6"/>
+    <text x="816" y="435" fill="var(--da-fg, #0f172a)">R1</text>
+  </g>
+  <g font-size="10" fill="var(--da-muted, #64748b)" text-anchor="middle">
+    <text x="200" y="466">belge → hash(id) mod 3</text>
+    <text x="480" y="466">replika farklı düğümde</text>
+    <text x="760" y="466">en yavaş shard = sorgu süresi</text>
+  </g>
+</svg>

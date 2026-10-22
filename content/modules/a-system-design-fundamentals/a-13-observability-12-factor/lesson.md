@@ -212,6 +212,6 @@ Dağıtık izlemenin modern biçimi Google'ın 2010 tarihli **Dapper** makalesiy
 :::quiz{src="quiz.json"}
 :::
 
-:::next{lesson="b-01-monolith-to-microservices"}
-Modül A tamamlandı. Sırada Modül B: bu yapı taşlarını bir araya getiren mimariler — monolitten modüler monolite, oradan mikroservislere geçişin adımları ve kriterleri.
+:::next{lesson="a-14-websocket-realtime"}
+Sırada: gerçek zamanlı sistemler. Sunucunun konuşmayı başlattığı WebSocket ve SSE dünyası; çok replikalı ortamda olayların Redis pub/sub ile dağıtılması ve kopan bağlantıların telafisi.
 :::
