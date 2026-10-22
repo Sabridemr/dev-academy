@@ -274,6 +274,12 @@ Yaygın pagination yaklaşımları:
 - **Offset + limit:** Basit SQL sorgularında kolaydır, büyük tablolarda performans problemi yaşayabilir.
 - **Cursor pagination:** Büyük ve sürekli değişen listelerde daha güvenilir ve performanslıdır.
 
+Offset ile cursor arasındaki fark, veritabanının her sayfa için ne kadar satır okuduğunda ortaya çıkar:
+
+:::diagram{src="diagram.svg" alt="Offset sayfalamada veritabanı 3. sayfa için ilk 40 satırı okuyup atar ve sonraki 20 satırı döndürür; cursor sayfalamada indeksle son görülen id'nin sonrasına atlar ve 20 satırla birlikte nextCursor döndürür|With offset pagination the database reads and discards the first 40 rows for page 3 and returns the next 20; with cursor pagination it jumps via the index past the last seen id and returns 20 rows with a nextCursor"}
+Offset derin sayfalarda pahalanır ve araya giren kayıtlarla kayar; cursor sabit maliyetlidir ama rastgele sayfaya atlayamaz.
+:::
+
 E-ticaret ürün listelemelerinde başlangıç için `page` ve `limit` çoğu zaman yeterlidir.
 
 ## Hata yönetimi
@@ -574,6 +580,21 @@ Idempotency-Key: 81a65a2f-ec8d-4f06-a2aa-123456789abc
 
 Sunucu aynı anahtarla gelen tekrar isteği yeni sipariş yaratmak yerine ilk işlemin sonucuyla cevaplayabilir.
 
+Bunun için sunucu anahtarı ve ilk yanıtı bir süre saklar. Aşağıdaki animasyonda yanıtı yolda kaybolan bir ödeme isteğini izleyeceksin; önce tahmin et.
+
+:::predict{id="kaybolan-odeme-yaniti"}
+Ödeme API'si 420 TL'yi çekti ama 201 yanıtı mobil ağ koptuğu için istemciye ulaşmadı. İstemci aynı `Idempotency-Key` ile isteği tekrar gönderiyor. Ne olur? | The payment API charged 420 TL but the 201 response never reached the client because the mobile network dropped. The client resends the request with the same `Idempotency-Key`. What happens?
+- [ ] Ödeme sağlayıcı ikinci kez çağrılır, sonra fazla çekim iade edilir | The provider is called a second time and the extra charge is refunded later
+- [ ] Sunucu 409 Conflict döner, çünkü anahtar daha önce kullanıldı | The server returns 409 Conflict because the key was already used
+- [x] Sunucu kayıtlı yanıtı bulur ve sağlayıcıyı çağırmadan aynı 201 yanıtını döner | The server finds the stored response and returns the same 201 without calling the provider
+- [ ] İstemci yeni bir anahtar üretmediği için istek 400 ile reddedilir | The request is rejected with 400 because the client did not generate a new key
+Açıklama: Anahtar ilk istek tamamlandığında yanıtıyla birlikte saklanmıştır; tekrar, aynı işlemin sonucunu öğrenme isteğidir ve sunucu kaydı aynen döndürür. 409 yalnızca ilk istek hâlâ işlenirken aynı anahtarla ikinci istek gelirse anlamlıdır; anahtarı değiştirmek ise ikinci bir ödeme demektir. | The key was stored together with its response when the first request finished; the retry is a request to learn the outcome of the same operation and the server returns the stored record as is. 409 only makes sense if a second request with the same key arrives while the first is still in progress; changing the key would mean a second payment.
+:::
+
+:::animation{scene="idempotency-key.scene.json"}
+Aynı anahtarla tekrarlanan ödeme ikinci kez çekilmez; eşzamanlı tekrar 409, farklı gövde 422 alır.
+:::
+
 :::callout{tone="tip" title="Mülakatta böyle söyle:"}
 GET, PUT ve DELETE idempotenttir; POST değildir. Ödeme ve sipariş gibi işlemlerde Idempotency-Key ile tekrarları güvenli hale getiririm.
 :::
@@ -582,6 +603,10 @@ GET, PUT ve DELETE idempotenttir; POST değildir. Ödeme ve sipariş gibi işlem
 
 :::interactive{type="rate-limiter" algorithm="token-bucket" capacity=10 refillPerSec=2}
 Token bucket ve sliding window algoritmalarını karşılaştır; ani istek patlamasında hangi isteklerin 429 ile reddedildiğini izle.
+:::
+
+:::realworld{company="Stripe"}
+Stripe, idempotency anahtarlarını herkese açık API'sinin temel parçası yapan ilk ödeme şirketlerinden biridir ve mühendislik blogundaki "Designing robust and predictable APIs with idempotency" yazısında nedenini anlatır: istemci ile sunucu arasındaki her çağrı üç biçimde bozulabilir. Bağlantı istek sunucuya varmadan kopabilir, sunucu işlemi yarıda bırakabilir ya da işlem tamamlanır ama yanıt yolda kaybolur. İstemci bu üçünü birbirinden ayıramaz; tek güvenli yol, isteği aynı anahtarla tekrar göndermektir. Stripe'ın belgelerine göre anahtar `Idempotency-Key` başlığıyla gönderilir, sunucu ilk isteğin sonucunu (hata da olsa) kaydeder ve aynı anahtarla gelen tekrarlara aynı sonucu döndürür. Tekrarın parametreleri ilk istekle uyuşmazsa istek hata ile reddedilir. Anahtarlar en az 24 saat geçtikten sonra silinebilir. Yazı ayrıca istemci tarafının disiplinini vurgular: tekrarlar üstel geri çekilme (exponential backoff) ve rastgele gecikme (jitter) ile aralıklandırılmalıdır ki kesinti sonrası binlerce istemci sunucuya aynı anda yüklenmesin. Stripe'ın resmî istemci kütüphaneleri bu anahtarları otomatik üretip ağ hatalarında güvenle yeniden dener. Animasyondaki akış, bu tasarımın sadeleştirilmiş bir hâlidir.
 :::
 
 :::quiz{src="quiz.json"}

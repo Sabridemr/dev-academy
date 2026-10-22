@@ -94,6 +94,21 @@ FULL OUTER JOIN orders o ON o.customer_id = u.id;
 ```
 :::
 
+Sonuçlara bakmadan önce motorun satırları nasıl eşleştirdiğini izle; önce tahmin et.
+
+:::predict{id="left-join-satir-sayisi"}
+Örnek verideki dört müşteri ve dört siparişle `users u LEFT JOIN orders o ON o.customer_id = u.id` kaç satır döndürür? | With the four customers and four orders in the sample data, how many rows does `users u LEFT JOIN orders o ON o.customer_id = u.id` return?
+- [ ] 4: her müşteri bir kez | 4: each customer once
+- [x] 5: Ayşe iki kez, Mehmet bir kez, Zeynep ve Can NULL siparişle birer kez | 5: Ayşe twice, Mehmet once, Zeynep and Can once each with a NULL order
+- [ ] 6: misafir siparişi 104 de eklenir | 6: guest order 104 is added too
+- [ ] 3: yalnızca eşleşen satırlar | 3: only the matching rows
+Açıklama: LEFT JOIN soldaki her satırı en az bir kez korur. Ayşe'nin iki siparişi olduğu için iki satır üretir; eşleşmesi olmayan Zeynep ve Can sağ tarafı NULL olan birer satırla gelir. 104 sağ taraftadır ve müşterisi NULL olduğu için hiçbir kullanıcıyla eşleşmez; onu ancak RIGHT ya da FULL OUTER JOIN getirir. | LEFT JOIN keeps every left row at least once. Ayşe has two orders, so she yields two rows; Zeynep and Can, who have no match, come with one row each whose right side is NULL. 104 is on the right side and, with a NULL customer, matches no user; only RIGHT or FULL OUTER JOIN brings it in.
+:::
+
+:::animation{scene="join-matching.scene.json"}
+ON koşulunun satır satır eşleşmesi: INNER 3, LEFT 5, RIGHT 4; WHERE ile bozulan LEFT JOIN ve anti-join.
+:::
+
 **INNER JOIN** sonucu — yalnızca müşterisi bilinen siparişler, 3 satır:
 
 | name | order_id | total_amount |
@@ -156,11 +171,13 @@ Editördeki hazır sorgu customers → orders → order_items zincirini birleşt
 
 ## Alt sorgular ve CTE
 
+Bir sorgunun sonucunu başka bir sorguda kullanmanın iki yolu vardır: alt sorgu ve CTE. Uzun raporlama sorguları yazacaksan aşağıdaki kutuya göz at.
+
+:::callout{tone="info" title="Derinleşme"}
 Bir sorgunun sonucunu başka bir sorgunun içinde kullanabilirsin. **Alt sorgu (subquery)** `WHERE` içinde tek değer ya da liste üretebilir, `FROM` içinde türetilmiş tablo olarak durabilir. **Korelasyonlu alt sorgu** dış sorgunun her satırı için yeniden çalışır; küçük tablolarda zararsız, büyük tablolarda yavaştır.
 
 **CTE** (Common Table Expression, `WITH` cümlesi) aynı işi okunabilir biçimde yapar: ara sonuca bir ad verir, ana sorgu onu tablo gibi kullanır. Uzun raporlama sorgularında iç içe parantezler yerine adım adım CTE zinciri yazmak hem anlaşılırlık hem de hata ayıklama açısından çok daha iyidir.
 
-:::code{lang="sql" title="Aynı soru: ortalamanın üzerinde harcayan müşteriler"}
 ```sql
 -- Alt sorgu ile
 SELECT customer_id, SUM(total_amount) AS revenue
@@ -186,9 +203,9 @@ JOIN users u ON u.id = pc.customer_id
 WHERE pc.revenue > (SELECT AVG(total_amount) FROM paid)
 ORDER BY pc.revenue DESC;
 ```
-:::
 
 CTE'nin bir de **özyinelemeli** (recursive) biçimi vardır; kategori ağacı ya da organizasyon şeması gibi hiyerarşik veriyi tek sorguda dolaşmak için kullanılır. Performans tarafında dikkat: bazı motorlar CTE'yi bir kez hesaplayıp belleğe alır, bazıları ana sorgunun içine açar. Davranışı tahmin etme, `EXPLAIN` ile bak.
+:::
 
 ## INSERT, UPDATE, DELETE ve transaction
 
@@ -217,6 +234,12 @@ DELETE FROM orders WHERE status = 'cancelled' AND created_at < NOW() - INTERVAL 
 :::
 
 `UPDATE ... WHERE stock > 0` kalıbı önemlidir: iki kullanıcı son ürünü aynı anda almaya çalışırsa, koşul sayesinde yalnızca biri satırı güncelleyebilir; diğeri "0 satır etkilendi" görür ve işlem geri alınır. Uygulama katmanında önce okuyup sonra yazmak yerine koşulu veritabanına bırakmak, yarış koşullarına karşı en ucuz savunmadır.
+
+Aşağıdaki animasyon aynı sipariş akışını iki bağlantı üzerinden izler: COMMIT'e kadar görünmeyen satırlar, stok bitince ROLLBACK ve son ürün için yarışta satır kilidi.
+
+:::animation{scene="transaction-commit-rollback.scene.json"}
+BEGIN → INSERT → koşullu UPDATE → COMMIT; stok yoksa 0 satır ve ROLLBACK.
+:::
 
 ## İndeksler ve EXPLAIN
 
@@ -252,6 +275,9 @@ WHERE customer_id = 42 AND status = 'paid';
 
 ## Yaygın hatalar
 
+Performans hatalarının çoğu birkaç tanıdık kalıptan çıkar. Aşağıdaki kutu, "sorgu yavaş" şikâyetinde ilk bakılacak dört kalıbı özetler.
+
+:::callout{tone="info" title="Derinleşme"}
 **N+1 sorgu problemi.** Uygulama önce 100 siparişi çeker, sonra her sipariş için ayrı bir sorguyla müşteri adını okur: 1 + 100 sorgu. Her biri hızlı olsa da ağ gidiş dönüşü toplanır ve liste sayfası saniyeler sürer. Çözüm tek bir `JOIN` ya da `WHERE customer_id IN (...)` ile toplu okuma; ORM kullanıyorsan "eager loading" seçeneğinin tam olarak bunu yaptığını bil.
 
 **SELECT \*.** Tüm sütunları çekmek ağdan gereksiz veri taşır, uygulama belleğini şişirir ve en önemlisi **kapsayan indeks** (covering index) fırsatını kaçırır: yalnızca indeksli sütunları istediğinde motor tabloya hiç gitmeden yaprak sayfalardan yanıt verebilir. Ayrıca tabloya sütun eklendiğinde `SELECT *` kullanan kodun davranışı sessizce değişir.
@@ -259,6 +285,7 @@ WHERE customer_id = 42 AND status = 'paid';
 **WHERE'de fonksiyonlu sütun.** `WHERE YEAR(created_at) = 2025` ya da `WHERE LOWER(email) = 'a@b.com'` yazdığında indeks kullanılamaz, çünkü indeks ham değere göre sıralıdır; motor her satır için fonksiyonu hesaplamak zorunda kalır. Koşulu sütunu çıplak bırakacak şekilde yaz: `created_at >= '2025-01-01' AND created_at < '2026-01-01'`. Küçük harf araması gerçekten gerekiyorsa ifade indeksi (`CREATE INDEX ... ON users (LOWER(email))`) oluştur.
 
 **Sayfalamada büyük OFFSET.** `LIMIT 20 OFFSET 100000` motorun 100.020 satırı okuyup 100.000'ini atmasıdır. Sonsuz kaydırma gibi derin sayfalama senaryolarında imleç tabanlı sayfalama (`WHERE id > :son_gorulen_id ORDER BY id LIMIT 20`) sabit maliyetlidir.
+:::
 
 :::callout{tone="tip" title="Mülakat özeti"}
 - JOIN sorusunda kâğıda küçük iki tablo çiz, eşleşmeyen satırın akıbetini türe göre söyle; LEFT + `IS NULL` anti-join kalıbını mutlaka bil.

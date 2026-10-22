@@ -1,0 +1,228 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "i-02-auth-and-rate-limit",
+  "title": { "tr": "Kapıdaki Kontroller: 401, 403 ve 429", "en": "Checks at the Door: 401, 403 and 429" },
+  "summary": {
+    "tr": "Token'sız isteğin 401 ile dönmesi, giriş yapıp alınan token'la isteğin geçmesi, yetkisiz rolün 403 alması ve kotayı aşan istemcinin 429 ile durdurulması.",
+    "en": "A request without a token returning 401, a request passing with a token obtained at login, an unauthorised role getting 403 and a client exceeding its quota being stopped with 429."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda tarayıcı, ortada API gateway, gateway'in üstünde kimlik servisi, sağda ürün API'si ve en sağda veritabanı bulunur. Önce Authorization başlığı olmayan bir istek gateway'de 401 ile reddedilir. Kullanıcı kimlik servisine giriş yapıp bir JWT alır; token'lı istek gateway'den geçer ve 200 döner. Müşteri rolündeki kullanıcı yönetici uç noktasını çağırınca API 403 döner. Ardından gateway'deki kota sayacı her istekte azalır, sıfıra inince istek 429 ve Retry-After ile durdurulur; pencere yenilenince istekler yeniden geçer.",
+      "en": "A browser is on the left, the API gateway in the middle, an identity service above the gateway, the product API on the right and the database at the far right. First a request without an Authorization header is rejected at the gateway with 401. The user logs in to the identity service and receives a JWT; the request with the token passes the gateway and returns 200. When a user with the customer role calls an admin endpoint, the API returns 403. Then the quota counter at the gateway decreases with every request; when it reaches zero the request is stopped with 429 and Retry-After, and once the window resets requests pass again."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "browser", "kind": "browser", "label": { "tr": "Tarayıcı", "en": "Browser" }, "sublabel": "magaza.com", "x": 110, "y": 340, "w": 150, "h": 80 },
+    { "id": "gateway", "kind": "gateway", "label": "API Gateway", "sublabel": { "tr": "kimlik · kota", "en": "identity · quota" }, "x": 400, "y": 340, "w": 170, "h": 90 },
+    { "id": "auth", "kind": "service", "label": { "tr": "Kimlik servisi", "en": "Identity service" }, "sublabel": "POST /auth/login", "x": 400, "y": 110, "w": 180, "h": 70 },
+    { "id": "api", "kind": "server", "label": { "tr": "Ürün API'si", "en": "Product API" }, "sublabel": { "tr": "rol kontrolü", "en": "role check" }, "x": 680, "y": 340, "w": 160, "h": 80 },
+    { "id": "db", "kind": "db", "label": { "tr": "Veritabanı", "en": "Database" }, "sublabel": "products", "x": 890, "y": 340, "w": 140, "h": 80 }
+  ],
+  "edges": [
+    { "id": "b-gw", "from": "browser", "to": "gateway", "kind": "request", "label": "HTTPS" },
+    { "id": "b-auth", "from": "browser", "to": "auth", "kind": "request", "label": { "tr": "giriş", "en": "login" }, "curvature": -0.2 },
+    { "id": "gw-auth", "from": "gateway", "to": "auth", "kind": "control", "style": "dashed", "label": { "tr": "imza anahtarı", "en": "signing key" } },
+    { "id": "gw-api", "from": "gateway", "to": "api", "kind": "request" },
+    { "id": "api-db", "from": "api", "to": "db", "kind": "data", "label": "SQL" }
+  ],
+  "steps": [
+    {
+      "id": "no-token",
+      "title": { "tr": "Başlıksız istek: 401", "en": "No header: 401" },
+      "narration": {
+        "tr": "Tarayıcı giriş yapmadan GET /api/products/12?tier=dealer gönderiyor; Authorization başlığı yok. Gateway kimliği kanıtlanmamış isteği arkaya iletmez ve 401 Unauthorized ile WWW-Authenticate: Bearer başlığını döner. Ürün API'si ve veritabanı bu isteği hiç görmez.",
+        "en": "The browser sends GET /api/products/12?tier=dealer without logging in; there is no Authorization header. The gateway does not forward a request whose identity is unproven and returns 401 Unauthorized with a WWW-Authenticate: Bearer header. The product API and the database never see this request."
+      },
+      "durationMs": 4500,
+      "inherit": false,
+      "highlight": { "nodes": ["browser", "gateway"], "edges": ["b-gw"] },
+      "nodeStates": {
+        "browser": { "status": "error", "badge": "401" },
+        "gateway": { "status": "error", "badge": "token ?" },
+        "auth": { "status": "idle" },
+        "api": { "status": "muted" },
+        "db": { "status": "muted" }
+      },
+      "edgeStates": { "b-gw": { "status": "active" }, "gw-api": { "status": "muted" }, "api-db": { "status": "muted" }, "gw-auth": { "visible": false }, "b-auth": { "visible": false } },
+      "packets": [
+        { "edge": "b-gw", "shape": "envelope", "label": { "tr": "GET · başlık yok", "en": "GET · no header" }, "durationMs": 1100 },
+        { "edge": "b-gw", "shape": "envelope", "direction": "backward", "label": "401 · WWW-Authenticate", "color": "danger", "startAt": 1600, "durationMs": 1100 }
+      ]
+    },
+    {
+      "id": "login",
+      "title": { "tr": "Giriş: token alınır", "en": "Login: a token is issued" },
+      "narration": {
+        "tr": "Kullanıcı e-posta ve parolasıyla giriş yapar. Kimlik servisi parolayı doğrular (authentication) ve içinde kullanıcı kimliği, rolü ve son kullanma zamanı olan imzalı bir JWT döner. Parola bir daha gönderilmez; bundan sonra her istekte yalnızca token taşınır.",
+        "en": "The user logs in with email and password. The identity service verifies the password (authentication) and returns a signed JWT containing the user id, role and expiry time. The password is never sent again; from now on only the token travels with each request."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["browser", "auth"], "edges": ["b-auth"] },
+      "nodeStates": { "browser": { "status": "active", "badge": "" }, "gateway": { "status": "idle", "badge": "" }, "auth": { "status": "active" } },
+      "edgeStates": { "b-gw": { "status": "idle" }, "b-auth": { "visible": true, "status": "active" } },
+      "packets": [
+        { "edge": "b-auth", "shape": "envelope", "label": { "tr": "e-posta + parola", "en": "email + password" }, "durationMs": 1100 },
+        { "edge": "b-auth", "shape": "envelope", "direction": "backward", "label": "JWT · role=customer · exp 15 dk", "color": "success", "startAt": 1600, "durationMs": 1100 }
+      ],
+      "annotations": [
+        { "id": "jwt-note", "x": 160, "y": 200, "text": { "tr": "JWT imzalıdır, şifreli değil", "en": "a JWT is signed, not encrypted" }, "tone": "info" }
+      ]
+    },
+    {
+      "id": "with-token",
+      "title": { "tr": "Token'lı istek geçer", "en": "The request with a token passes" },
+      "narration": {
+        "tr": "Aynı istek bu kez Authorization: Bearer <JWT> ile gider. Gateway imzayı kimlik servisinin yayınladığı anahtarla doğrular, süreyi kontrol eder ve isteği ürün API'sine iletir. API ürünü okur ve 200 OK döner.",
+        "en": "The same request now goes with Authorization: Bearer <JWT>. The gateway verifies the signature with the key published by the identity service, checks the expiry and forwards the request to the product API. The API reads the product and returns 200 OK."
+      },
+      "durationMs": 5000,
+      "highlight": { "nodes": ["browser", "gateway", "api", "db"], "edges": ["b-gw", "gw-auth", "gw-api", "api-db"] },
+      "nodeStates": {
+        "browser": { "status": "success", "badge": "200" },
+        "gateway": { "status": "active", "badge": "token ✓" },
+        "auth": { "status": "idle" },
+        "api": { "status": "active" },
+        "db": { "status": "active" }
+      },
+      "edgeStates": {
+        "b-auth": { "status": "idle" },
+        "gw-auth": { "visible": true, "status": "active" },
+        "b-gw": { "status": "active" },
+        "gw-api": { "status": "active" },
+        "api-db": { "status": "active" }
+      },
+      "packets": [
+        { "edge": "b-gw", "shape": "envelope", "label": "GET · Bearer JWT", "durationMs": 800 },
+        { "edge": "gw-api", "shape": "envelope", "label": "GET /products/12", "startAt": 900, "durationMs": 700 },
+        { "edge": "api-db", "shape": "square", "label": "SELECT", "startAt": 1700, "durationMs": 600 },
+        { "edge": "api-db", "shape": "square", "direction": "backward", "label": { "tr": "1 satır", "en": "1 row" }, "color": "success", "startAt": 2400, "durationMs": 600 },
+        { "edge": "gw-api", "shape": "envelope", "direction": "backward", "label": "200", "color": "success", "startAt": 3100, "durationMs": 700 },
+        { "edge": "b-gw", "shape": "envelope", "direction": "backward", "label": "200 · JSON", "color": "success", "startAt": 3900, "durationMs": 800 }
+      ]
+    },
+    {
+      "id": "forbidden",
+      "title": { "tr": "Kimlik tamam, yetki yok: 403", "en": "Identity fine, no permission: 403" },
+      "narration": {
+        "tr": "Aynı kullanıcı PATCH /api/admin/products/12 ile fiyatı değiştirmeye çalışıyor. Token geçerli olduğu için gateway isteği geçirir; ama ürün API'si token'daki rolün customer olduğunu görür ve 403 Forbidden döner. 401 'kim olduğunu bilmiyorum', 403 'kim olduğunu biliyorum ama buna iznin yok' demektir.",
+        "en": "The same user tries to change the price with PATCH /api/admin/products/12. Since the token is valid the gateway lets the request through; but the product API sees that the role in the token is customer and returns 403 Forbidden. 401 means 'I don't know who you are', 403 means 'I know who you are but you are not allowed'."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["gateway", "api", "browser"], "edges": ["b-gw", "gw-api"] },
+      "nodeStates": {
+        "browser": { "status": "warning", "badge": "403" },
+        "gateway": { "status": "active", "badge": "token ✓" },
+        "api": { "status": "warning", "badge": "role ✗" },
+        "db": { "status": "muted" }
+      },
+      "edgeStates": { "gw-auth": { "status": "idle" }, "api-db": { "status": "muted" } },
+      "packets": [
+        { "edge": "b-gw", "shape": "envelope", "label": "PATCH /admin/products/12", "durationMs": 900 },
+        { "edge": "gw-api", "shape": "envelope", "label": "PATCH", "startAt": 1000, "durationMs": 800 },
+        { "edge": "gw-api", "shape": "envelope", "direction": "backward", "label": "403", "color": "warning", "startAt": 2100, "durationMs": 800 },
+        { "edge": "b-gw", "shape": "envelope", "direction": "backward", "label": "403", "color": "warning", "startAt": 3000, "durationMs": 900 }
+      ],
+      "annotations": [
+        { "id": "authz", "x": 680, "y": 230, "text": { "tr": "authorization: ne yapabilirsin?", "en": "authorization: what may you do?" }, "tone": "warning", "target": "api" }
+      ]
+    },
+    {
+      "id": "quota",
+      "title": { "tr": "Kota sayacı azalıyor", "en": "The quota counter drops" },
+      "narration": {
+        "tr": "Gateway her kullanıcı için dakikalık bir kota tutar; bu örnekte 100 istek. Bir betik ürün aramasını art arda çağırıyor: her geçen istekte sayaç azalır ve yanıtlarda X-RateLimit-Remaining başlığı kalan hakkı bildirir.",
+        "en": "The gateway keeps a per-minute quota for each user; 100 requests in this example. A script calls product search back to back: the counter drops with every request that passes and the X-RateLimit-Remaining header in responses reports the remaining allowance."
+      },
+      "durationMs": 5000,
+      "highlight": { "nodes": ["browser", "gateway", "api"], "edges": ["b-gw", "gw-api"] },
+      "nodeStates": {
+        "browser": { "status": "active", "badge": "" },
+        "gateway": { "status": "busy", "badge": "", "counter": 3 },
+        "api": { "status": "busy", "badge": "" },
+        "db": { "status": "active" }
+      },
+      "edgeStates": { "api-db": { "status": "active" } },
+      "packets": [
+        { "edge": "b-gw", "shape": "dot", "label": "GET /search", "durationMs": 500, "repeat": 6, "repeatGapMs": 150 },
+        { "edge": "gw-api", "shape": "dot", "startAt": 500, "durationMs": 500, "repeat": 6, "repeatGapMs": 150 }
+      ],
+      "annotations": [
+        { "id": "remaining", "x": 400, "y": 460, "text": { "tr": "X-RateLimit-Remaining: 3", "en": "X-RateLimit-Remaining: 3" }, "tone": "warning", "target": "gateway" }
+      ]
+    },
+    {
+      "id": "limited",
+      "title": { "tr": "Kota bitti: 429", "en": "Quota exhausted: 429" },
+      "narration": {
+        "tr": "Sayaç sıfıra indi. Yeni istekler arka uca hiç iletilmez; gateway 429 Too Many Requests ve Retry-After: 60 döner. API ve veritabanı korunmuş olur. İyi bir istemci bu başlığa uyar ve beklemeden tekrar denemez.",
+        "en": "The counter has reached zero. New requests are never forwarded to the backend; the gateway returns 429 Too Many Requests with Retry-After: 60. The API and the database are protected. A good client honours this header and does not retry immediately."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["gateway", "browser"], "edges": ["b-gw"] },
+      "nodeStates": {
+        "browser": { "status": "error", "badge": "429" },
+        "gateway": { "status": "error", "counter": 0 },
+        "api": { "status": "idle" },
+        "db": { "status": "idle" }
+      },
+      "edgeStates": { "gw-api": { "status": "muted" }, "api-db": { "status": "idle" }, "b-gw": { "status": "error" } },
+      "packets": [
+        { "edge": "b-gw", "shape": "dot", "label": "GET /search", "durationMs": 700, "repeat": 3, "repeatGapMs": 200 },
+        { "edge": "b-gw", "shape": "envelope", "direction": "backward", "label": "429 · Retry-After: 60", "color": "danger", "startAt": 2000, "durationMs": 1000 }
+      ],
+      "annotations": [
+        { "id": "remaining0", "x": 400, "y": 460, "text": { "tr": "X-RateLimit-Remaining: 0", "en": "X-RateLimit-Remaining: 0" }, "tone": "danger", "target": "gateway" }
+      ]
+    },
+    {
+      "id": "reset",
+      "title": { "tr": "Pencere yenilendi", "en": "The window resets" },
+      "narration": {
+        "tr": "Bir dakika dolunca kota yeniden 100 olur ve istemcinin bir sonraki isteği normal biçimde geçer. Giriş ve şifre sıfırlama gibi uç noktalarda bu limit çok daha sıkı tutulur; böylece kaba kuvvet denemeleri yavaşlar.",
+        "en": "When the minute is up the quota is back to 100 and the client's next request passes normally. Endpoints such as login and password reset get much stricter limits, which slows down brute-force attempts."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["gateway", "api"], "edges": ["b-gw", "gw-api"] },
+      "nodeStates": {
+        "browser": { "status": "success", "badge": "200" },
+        "gateway": { "status": "active", "counter": 99 },
+        "api": { "status": "active" }
+      },
+      "edgeStates": { "b-gw": { "status": "active" }, "gw-api": { "status": "active" } },
+      "packets": [
+        { "edge": "b-gw", "shape": "dot", "label": "GET /search", "durationMs": 800 },
+        { "edge": "gw-api", "shape": "dot", "startAt": 900, "durationMs": 700 },
+        { "edge": "b-gw", "shape": "envelope", "direction": "backward", "label": "200", "color": "success", "startAt": 2000, "durationMs": 800 }
+      ],
+      "annotations": [
+        { "id": "remaining99", "x": 400, "y": 460, "text": { "tr": "X-RateLimit-Remaining: 99", "en": "X-RateLimit-Remaining: 99" }, "tone": "success", "target": "gateway" }
+      ]
+    },
+    {
+      "id": "summary",
+      "title": { "tr": "Kontrollerin sırası", "en": "The order of checks" },
+      "narration": {
+        "tr": "Bir isteğin karşılaştığı kontroller: kimlik kanıtlanmadıysa 401, kota aşıldıysa 429 (ikisi de gateway'de, arka uç yorulmadan), kimlik tamam ama rol yetmiyorsa 403 (kaynağı bilen API'de). Anonim trafik için IP bazlı limit kimlik kontrolünden önce de konabilir.",
+        "en": "The checks a request meets: 401 if identity is not proven, 429 if the quota is exceeded (both at the gateway, before the backend does any work), and 403 if identity is fine but the role is not enough (in the API, which knows the resource). For anonymous traffic an IP-based limit can also sit before the identity check."
+      },
+      "durationMs": 5000,
+      "inherit": false,
+      "highlight": { "nodes": ["gateway", "api"], "edges": [] },
+      "nodeStates": {
+        "browser": { "status": "idle" },
+        "auth": { "status": "muted" },
+        "gateway": { "status": "active", "badge": "401 · 429" },
+        "api": { "status": "warning", "badge": "403" },
+        "db": { "status": "idle" }
+      },
+      "edgeStates": { "b-auth": { "visible": false }, "gw-auth": { "visible": false } },
+      "annotations": [
+        { "id": "sum-gw", "x": 400, "y": 470, "text": { "tr": "authentication + kota", "en": "authentication + quota" }, "target": "gateway" },
+        { "id": "sum-api", "x": 680, "y": 230, "text": { "tr": "authorization", "en": "authorization" }, "tone": "warning", "target": "api" }
+      ]
+    }
+  ]
+}
