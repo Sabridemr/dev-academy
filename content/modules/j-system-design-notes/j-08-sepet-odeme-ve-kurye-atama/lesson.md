@@ -79,6 +79,12 @@ Sepet Redis'te tutulur çünkü çok sık okunup yazılır ve geçicidir. Redis 
 8. Sepet temizlenir (veya "ödendi" olarak işaretlenir).
 9. Kullanıcı sipariş takip ekranına yönlendirilir.
 
+Bu akışın iki kritik anı var: ödeme isteğinin tekrarlandığında ikinci kez para çekmemesi ve restoran hazır olunca doğru kuryenin bulunması. Aşağıdaki animasyon ikisini uçtan uca gösteriyor; ayrıntılar 9. ve 10. bölümlerde.
+
+:::animation{scene="checkout-dispatch.scene.json"}
+Sunucuda fiyat hesabı, zaman aşımı sonrası aynı idempotency anahtarıyla tekrar, webhook ile doğrulama, Redis Geo ile yakındaki kuryeler ve ilk kabul edenin kazanması.
+:::
+
 ### Fiyat hesaplama örneği
 
 | Kalem | Tutar |
@@ -166,7 +172,8 @@ Toptan satışta sepet daha uzun yaşamalı; bayi sepeti bugün hazırlayıp yar
 
 Önemli nokta: Kart bilgisi hiçbir zaman senin sunucuna gelmez. Kullanıcı kart bilgisini doğrudan ödeme altyapısının sayfasına girer. Bu sayede **PCI DSS** (kart verisi güvenlik standardı) yükünün büyük kısmı ödeme sağlayıcısında kalır.
 
-### Ödeme yöntemleri
+:::callout{tone="info" title="Derinleşme"}
+**Ödeme yöntemleri ve Türkiye karşılıkları**
 
 | Yöntem | Açıklama | Türkiye karşılığı |
 |---|---|---|
@@ -175,6 +182,7 @@ Toptan satışta sepet daha uzun yaşamalı; bayi sepeti bugün hazırlayıp yar
 | Net Banking | İnternet bankacılığı | Havale / EFT |
 | Wallet | Uygulama içi cüzdan (Zomato Money) | Uygulama içi bakiye |
 | COD | Kapıda ödeme | Kapıda nakit / kart |
+:::
 
 ### Ödeme durumları
 
@@ -402,6 +410,12 @@ Kendi kuryen yoksa bu bölümün karşılığı kargo firması seçimidir. Aynı
 
 :::interactive{type="message-queue" partitions=2 consumers=2 producers=1 failureRate=0.2 idempotent=false maxRetries=3}
 Idempotent tüketimi kapalıyken hata oranını artır ve aynı ödemenin iki kez işlenebildiğini gör; sonra idempotent'i açıp farkı karşılaştır.
+:::
+
+:::realworld{company="Stripe"}
+Ödeme API'lerinde idempotency anahtarını yaygınlaştıran şirketlerden biri Stripe'tır. Stripe'ın API'si, para hareketi yaratan isteklerde `Idempotency-Key` başlığını kabul eder. Belgelerine göre sunucu, bir anahtarla gelen ilk isteğin sonucunu (başarılı ya da hatalı) saklar ve aynı anahtarla gelen sonraki istekler için bu kaydedilmiş yanıtı döndürür; anahtarlar en az 24 saat tutulduktan sonra temizlenebilir. Anahtarı istemci üretir, Stripe rastgele UUID gibi çakışması pratikte imkânsız değerler önerir.
+
+Stripe mühendisi Brandur Leach'in 2017'de şirket blogunda yayımladığı "Designing robust and predictable APIs with idempotency" yazısı, bu dersteki zaman aşımı senaryosunu tam olarak anlatır: istemci, isteğin sunucuya ulaşıp ulaşmadığını ya da yanıtın yolda mı kaybolduğunu bilemez. Yazının önerisi, aynı anahtarla ve üstel geri çekilmeyle (rastgele sapma eklenerek) yeniden denemektir; böylece istemciler hem güvenle tekrar dener hem de zaten zorlanan bir sunucuyu aynı anda gelen tekrarlarla boğmaz. Animasyondaki "aynı anahtar, aynı sonuç" adımı bu tasarımın küçük ölçekli bir kopyasıdır.
 :::
 
 :::quiz{src="quiz.json"}
