@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 440" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Dört render stratejisi</title>
+  <desc id="desc">CSR, SSR, SSG ve ISR için dört satır. Her satırda HTML'in nerede ve ne zaman üretildiği ile niteliksel bir zaman çizelgesi gösterilir: ilk bayt (TTFB), ilk içerik (FCP) ve etkileşim (TTI). CSR'da TTFB erken ama FCP ve TTI geç; SSR'da TTFB sunucu süresi kadar geç, FCP erken, TTI hydration sonrası; SSG'de üçü de erken, HTML build anında üretilir; ISR'da SSG gibi hızlı, bayat sayfa arka planda yenilenir.</desc>
+
+  <text x="480" y="30" text-anchor="middle" font-size="15" font-weight="600" fill="var(--da-fg, #0f172a)">HTML kim, ne zaman üretiyor?</text>
+
+  <!-- Başlık satırı -->
+  <g font-size="12" font-weight="600" fill="var(--da-muted, #64748b)">
+    <text x="30" y="68">Strateji</text>
+    <text x="150" y="68">HTML nerede / ne zaman?</text>
+    <text x="440" y="68">Zaman çizelgesi (niteliksel) →</text>
+  </g>
+  <line x1="30" y1="78" x2="930" y2="78" stroke="var(--da-border, #cbd5e1)"/>
+
+  <!-- Lejant -->
+  <g font-size="11" fill="var(--da-fg, #0f172a)">
+    <circle cx="460" cy="410" r="6" fill="var(--da-muted, #64748b)"/><text x="472" y="414">TTFB</text>
+    <circle cx="540" cy="410" r="6" fill="var(--da-primary, #2563eb)"/><text x="552" y="414">FCP</text>
+    <circle cx="610" cy="410" r="6" fill="var(--da-success, #059669)"/><text x="622" y="414">TTI</text>
+    <rect x="680" y="403" width="22" height="14" rx="3" fill="var(--da-warning, #d97706)" fill-opacity="0.35"/><text x="710" y="414">boş / tepkisiz ekran</text>
+  </g>
+
+  <!-- Satırlar -->
+  <g font-size="14" font-weight="700" fill="var(--da-fg, #0f172a)">
+    <text x="30" y="122">CSR</text>
+    <text x="30" y="202">SSR</text>
+    <text x="30" y="282">SSG</text>
+    <text x="30" y="362">ISR</text>
+  </g>
+  <g font-size="12" fill="var(--da-fg, #0f172a)">
+    <text x="150" y="116">Tarayıcıda, JS çalışınca</text>
+    <text x="150" y="196">Sunucuda, her istekte</text>
+    <text x="150" y="276">Build anında, bir kez</text>
+    <text x="150" y="356">Build + arka planda yenileme</text>
+  </g>
+  <g font-size="11" fill="var(--da-muted, #64748b)">
+    <text x="150" y="132">boş kabuk + bundle + API çağrısı</text>
+    <text x="150" y="212">dolu HTML, sonra hydration</text>
+    <text x="150" y="292">CDN'den hazır dosya</text>
+    <text x="150" y="372">bayat sun, revalidate süresi sonra tazele</text>
+  </g>
+
+  <!-- Zaman eksenleri -->
+  <g stroke="var(--da-border, #cbd5e1)" stroke-width="2">
+    <line x1="440" y1="120" x2="920" y2="120"/>
+    <line x1="440" y1="200" x2="920" y2="200"/>
+    <line x1="440" y1="280" x2="920" y2="280"/>
+    <line x1="440" y1="360" x2="920" y2="360"/>
+  </g>
+
+  <!-- CSR -->
+  <rect x="470" y="110" width="330" height="20" rx="4" fill="var(--da-warning, #d97706)" fill-opacity="0.35"/>
+  <circle cx="470" cy="120" r="7" fill="var(--da-muted, #64748b)"/>
+  <circle cx="800" cy="120" r="7" fill="var(--da-primary, #2563eb)"/>
+  <circle cx="830" cy="120" r="7" fill="var(--da-success, #059669)"/>
+
+  <!-- SSR -->
+  <rect x="640" y="190" width="160" height="20" rx="4" fill="var(--da-warning, #d97706)" fill-opacity="0.35"/>
+  <circle cx="600" cy="200" r="7" fill="var(--da-muted, #64748b)"/>
+  <circle cx="640" cy="200" r="7" fill="var(--da-primary, #2563eb)"/>
+  <circle cx="800" cy="200" r="7" fill="var(--da-success, #059669)"/>
+  <text x="720" y="186" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">hydration</text>
+
+  <!-- SSG -->
+  <rect x="500" y="270" width="150" height="20" rx="4" fill="var(--da-warning, #d97706)" fill-opacity="0.35"/>
+  <circle cx="460" cy="280" r="7" fill="var(--da-muted, #64748b)"/>
+  <circle cx="500" cy="280" r="7" fill="var(--da-primary, #2563eb)"/>
+  <circle cx="650" cy="280" r="7" fill="var(--da-success, #059669)"/>
+
+  <!-- ISR -->
+  <rect x="500" y="350" width="150" height="20" rx="4" fill="var(--da-warning, #d97706)" fill-opacity="0.35"/>
+  <circle cx="460" cy="360" r="7" fill="var(--da-muted, #64748b)"/>
+  <circle cx="500" cy="360" r="7" fill="var(--da-primary, #2563eb)"/>
+  <circle cx="650" cy="360" r="7" fill="var(--da-success, #059669)"/>
+  <path d="M 700 352 C 740 330 800 330 840 352" fill="none" stroke="var(--da-accent, #0891b2)" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <text x="770" y="328" text-anchor="middle" font-size="10" fill="var(--da-accent, #0891b2)">arka planda yeniden üret</text>
+</svg>
