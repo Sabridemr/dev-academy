@@ -1,0 +1,110 @@
+{
+  "id": "q-05-crdts-offline-collaboration-quiz",
+  "title": { "tr": "CRDT ve Çevrimdışı İş Birliği Quiz", "en": "CRDTs and Offline Collaboration Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Üç replikalı bir G-Counter'da R1 = {A:4, B:1, C:0}, R2 = {A:2, B:3, C:1}. Birleştirmeden sonra sayacın değeri nedir?",
+        "en": "In a three-replica G-Counter, R1 = {A:4, B:1, C:0} and R2 = {A:2, B:3, C:1}. What is the counter's value after merging?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "5", "en": "5" } },
+        { "id": "b", "text": { "tr": "6", "en": "6" } },
+        { "id": "c", "text": { "tr": "8", "en": "8" } },
+        { "id": "d", "text": { "tr": "11", "en": "11" } }
+      ],
+      "correct": ["c"],
+      "explanation": {
+        "tr": "Bileşen bileşen max: A = max(4, 2) = 4, B = max(1, 3) = 3, C = max(0, 1) = 1. Değer 4 + 3 + 1 = 8. Toplamları eklemek (5 + 6 = 11) ortak geçmişi iki kez sayar.",
+        "en": "Component-wise max: A = max(4, 2) = 4, B = max(1, 3) = 3, C = max(0, 1) = 1. The value is 4 + 3 + 1 = 8. Adding the totals (5 + 6 = 11) counts the shared history twice."
+      },
+      "difficulty": "easy",
+      "concepts": ["g-counter", "merge-function"]
+    },
+    {
+      "id": "q2",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Bir durum tabanlı CRDT'nin birleştirme fonksiyonu hangi özellikleri taşımalıdır? (Birden fazla seçin)",
+        "en": "Which properties must the merge function of a state-based CRDT have? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Değişme (commutative)", "en": "Commutative" } },
+        { "id": "b", "text": { "tr": "Birleşme (associative)", "en": "Associative" } },
+        { "id": "c", "text": { "tr": "Eşgüçlülük (idempotent)", "en": "Idempotent" } },
+        { "id": "d", "text": { "tr": "Merkezi bir sunucunun onayı", "en": "Approval from a central server" } }
+      ],
+      "correct": ["a", "b", "c"],
+      "explanation": {
+        "tr": "Bu üç özellik sayesinde güncellemeler hangi sırayla, hangi gruplamayla ve kaç kez gelirse gelsin replikalar aynı duruma yakınsar. CRDT'nin amacı tam da merkezi onaya ihtiyaç duymamaktır.",
+        "en": "These three properties let replicas converge to the same state regardless of the order, grouping or number of times updates arrive. The very point of a CRDT is not needing central approval."
+      },
+      "difficulty": "medium",
+      "concepts": ["crdt", "strong-eventual-consistency"]
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": {
+        "tr": "OR-Set kullanan bir alışveriş listesinde Alice 'süt' ekler, Bob aynı anda (Alice'in eklemesini görmeden) 'süt'ü siler. Birleştirmeden sonra ne olur?",
+        "en": "In a shopping list using an OR-Set, Alice adds 'milk' while Bob concurrently removes 'milk' (without having seen Alice's add). What happens after merging?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Süt listede kalır; eşzamanlı eklemede ekleme kazanır", "en": "Milk stays in the list; with a concurrent add, add wins" } },
+        { "id": "b", "text": { "tr": "Süt silinir; silme her zaman kazanır", "en": "Milk is removed; remove always wins" } },
+        { "id": "c", "text": { "tr": "Zaman damgası büyük olan işlem kazanır", "en": "The operation with the larger timestamp wins" } },
+        { "id": "d", "text": { "tr": "Birleştirme hata verir ve kullanıcıya sorulur", "en": "The merge fails and the user is asked" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "OR-Set'te silme yalnızca silen replikanın gördüğü ekleme etiketlerini kaldırır. Bob, Alice'in yeni eklemesinin etiketini görmediği için onu silemez; süt listede kalır.",
+        "en": "In an OR-Set a remove only deletes the add tags the removing replica has observed. Bob has not seen the tag of Alice's new add, so he cannot remove it; milk stays in the list."
+      },
+      "difficulty": "medium",
+      "concepts": ["or-set"]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "LWW-Register bir CRDT'dir, ama eşzamanlı iki yazmadan birini bilerek atar.",
+        "en": "An LWW-Register is a CRDT, but it deliberately discards one of two concurrent writes."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["t"],
+      "explanation": {
+        "tr": "Doğru. Birleştirme deterministik olduğu için tüm replikalar aynı değere yakınsar (CRDT şartı), ama küçük damgalı eşzamanlı yazma kaybolur. Figma'nın özellik başına kullandığı kural da bu türdendir; kayıp kabul edilemiyorsa multi-value register tercih edilir.",
+        "en": "True. Since the merge is deterministic, all replicas converge to the same value (the CRDT requirement), but the concurrent write with the smaller timestamp is lost. Figma's per-property rule is of this kind; when loss is unacceptable a multi-value register is used instead."
+      },
+      "difficulty": "medium",
+      "concepts": ["lww-register"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "Hangi gereksinim CRDT'lerle tek başına sağlanamaz?",
+        "en": "Which requirement cannot be met by CRDTs alone?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Çevrimdışı yapılan beğenilerin kaybolmaması", "en": "Likes made offline must not be lost" } },
+        { "id": "b", "text": { "tr": "Son koltuğun yalnızca bir kişiye satılması", "en": "The last seat must be sold to only one person" } },
+        { "id": "c", "text": { "tr": "Aynı mesajın iki kez gelmesinin sonucu değiştirmemesi", "en": "A message arriving twice must not change the result" } },
+        { "id": "d", "text": { "tr": "Replikaların bağlandıklarında aynı duruma yakınsaması", "en": "Replicas must converge once they connect" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "'Yalnızca bir kişi' bir değişmezdir ve iki çevrimdışı replika birbirinden habersiz aynı koltuğu satabilir. Bu tür kurallar koordinasyon (linearizable işlem) ya da telafi (saga) gerektirir. Diğer üçü CRDT'lerin tam olarak sağladığı özelliklerdir.",
+        "en": "'Only one person' is an invariant, and two offline replicas can each sell the same seat unaware of the other. Such rules need coordination (a linearizable operation) or compensation (a saga). The other three are exactly what CRDTs provide."
+      },
+      "difficulty": "hard",
+      "concepts": ["crdt", "strong-eventual-consistency"]
+    }
+  ]
+}
