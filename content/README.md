@@ -85,7 +85,7 @@ Her ders şu sırayı izler: **kavram → diyagram → animasyon → interaktif 
 
 ### Interaktif türleri
 
-`load-balancer`, `cache`, `rate-limiter`, `consistent-hashing`, `gradient-descent`, `attention`, `neural-network-playground`, `capacity-estimator`, `er-diagram`, `cap-theorem`, `scaling`, `message-queue`, `replication-quorum`, `index-query-plan`, `isolation-levels`, `k-means`, `decision-tree`, `convolution`, `tokenizer`, `embedding-space`, `pipeline`, `kubernetes-hpa`, `request-journey`, `traffic-wave`, `fan-out`, `geo-index`, `sorting-visualizer`, `graph-traversal`, `hash-table`, `big-o-plotter`, `rag-pipeline`, `prompt-playground`, `token-cost`, `oauth-flow`, `jwt-inspector`, `bruteforce-login`, `git-graph`
+`load-balancer`, `cache`, `rate-limiter`, `consistent-hashing`, `gradient-descent`, `attention`, `neural-network-playground`, `capacity-estimator`, `er-diagram`, `cap-theorem`, `scaling`, `message-queue`, `replication-quorum`, `index-query-plan`, `isolation-levels`, `k-means`, `decision-tree`, `convolution`, `tokenizer`, `embedding-space`, `pipeline`, `kubernetes-hpa`, `request-journey`, `traffic-wave`, `fan-out`, `geo-index`, `sorting-visualizer`, `graph-traversal`, `hash-table`, `big-o-plotter`, `rag-pipeline`, `prompt-playground`, `token-cost`, `oauth-flow`, `jwt-inspector`, `bruteforce-login`, `git-graph`, `rbac-abac`, `threat-model`, `hash-salt`, `regex-playground`
 
 Her türün web ve mobilde bir bileşeni vardır; ek öznitelikler `params` olarak bileşene geçirilir.
 
