@@ -1,0 +1,227 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "q-05-g-counter-offline-merge",
+  "title": { "tr": "Çevrimdışı İki İstemci ve G-Counter Birleştirmesi", "en": "Two Offline Clients and a G-Counter Merge" },
+  "summary": {
+    "tr": "İki telefon çevrimdışıyken aynı beğeni sayacını artırır; düz sayıyla son yazan kazanınca artışlar kaybolur; G-Counter'da her telefon kendi bileşenini artırır, sunucu bileşen bileşen max ile birleştirir ve sıra ya da tekrar fark etmeksizin doğru toplam 10'u bulur.",
+    "en": "Two phones increment the same like counter while offline; with a plain number and last-write-wins, increments are lost; with a G-Counter each phone increments its own entry, the server merges with a component-wise max and finds the correct total of 10 regardless of order or duplicates."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Sol üstte Telefon A, sol altta Telefon B, sağda senkronizasyon sunucusu. Başlangıçta herkeste sayaç 5'tir: G-Counter olarak {A:3, B:2}. İki telefon da çevrimdışı olur. A sayacı üç kez artırır: {A:6, B:2} = 8. B iki kez artırır: {A:3, B:4} = 7. Önce yanlış yöntem gösterilir: telefonlar yalnızca toplamı gönderir ve sunucu son geleni tutar; sonuç 7 ya da 8 olur, doğru değer 10'dur. Sonra G-Counter: A bağlanıp {A:6, B:2} gönderir, sunucu birleştirir. B bağlanıp {A:3, B:4} gönderir, sunucu bileşen bileşen max alarak {A:6, B:4} = 10 bulur. A'nın mesajı tekrar gelir ama max değişmez. Sunucu birleşik durumu iki telefona da gönderir ve ikisi de 10 gösterir. Son adımda B beğeniyi geri çeker; PN-Counter ile değer 9 olur.",
+      "en": "Phone A top left, phone B bottom left, a sync server on the right. Initially everyone's counter is 5: as a G-Counter {A:3, B:2}. Both phones go offline. A increments three times: {A:6, B:2} = 8. B increments twice: {A:3, B:4} = 7. First the wrong approach: the phones send only the total and the server keeps the last one; the result is 7 or 8 while the correct value is 10. Then the G-Counter: A reconnects and sends {A:6, B:2}, the server merges. B reconnects and sends {A:3, B:4}; the server takes the component-wise max and gets {A:6, B:4} = 10. A's message arrives again but the max does not change. The server sends the merged state to both phones and both show 10. In the last step B takes back a like; with a PN-Counter the value becomes 9."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "pa", "kind": "mobile", "label": { "tr": "Telefon A", "en": "Phone A" }, "x": 170, "y": 160, "w": 160, "h": 84 },
+    { "id": "pb", "kind": "mobile", "label": { "tr": "Telefon B", "en": "Phone B" }, "x": 170, "y": 450, "w": 160, "h": 84 },
+    { "id": "srv", "kind": "server", "label": { "tr": "Senkronizasyon sunucusu", "en": "Sync server" }, "x": 760, "y": 300, "w": 210, "h": 90 }
+  ],
+  "edges": [
+    { "id": "pa-srv", "from": "pa", "to": "srv", "kind": "data", "label": "sync" },
+    { "id": "pb-srv", "from": "pb", "to": "srv", "kind": "data", "label": "sync" }
+  ],
+  "steps": [
+    {
+      "id": "start",
+      "title": { "tr": "Başlangıç: herkes 5'te", "en": "Start: everyone at 5" },
+      "narration": {
+        "tr": "Bir gönderinin beğeni sayacı 5. G-Counter olarak bu {A:3, B:2} demektir: A telefonundan 3, B'den 2 beğeni. Telefonlar çevrimiçi ve senkron.",
+        "en": "A post's like counter is 5. As a G-Counter that means {A:3, B:2}: 3 likes from phone A, 2 from phone B. The phones are online and in sync."
+      },
+      "durationMs": 2600,
+      "inherit": false,
+      "highlight": { "nodes": ["pa", "pb", "srv"], "edges": ["pa-srv", "pb-srv"] },
+      "nodeStates": {
+        "pa": { "status": "idle", "counter": 5, "badge": "{A:3,B:2}" },
+        "pb": { "status": "idle", "counter": 5, "badge": "{A:3,B:2}" },
+        "srv": { "status": "idle", "counter": 5, "badge": "{A:3,B:2}" }
+      },
+      "edgeStates": { "pa-srv": { "status": "idle" }, "pb-srv": { "status": "idle" } }
+    },
+    {
+      "id": "offline",
+      "title": { "tr": "İki telefon da çevrimdışı", "en": "Both phones go offline" },
+      "narration": {
+        "tr": "A uçak moduna geçer, B metroya iner. İkisi de sunucuya ulaşamaz ama uygulama çalışmaya devam etmeli: kullanıcılar beğeni butonuna basabilmeli. Yazmalar yerel olarak, kimseye sormadan yapılacak.",
+        "en": "A switches to airplane mode, B goes into the subway. Neither can reach the server, but the app must keep working: users must be able to press the like button. Writes will happen locally, without asking anyone."
+      },
+      "durationMs": 2600,
+      "highlight": { "nodes": ["pa", "pb"], "edges": [] },
+      "nodeStates": {
+        "pa": { "status": "muted", "sublabel": { "tr": "çevrimdışı", "en": "offline" } },
+        "pb": { "status": "muted", "sublabel": { "tr": "çevrimdışı", "en": "offline" } }
+      },
+      "edgeStates": {
+        "pa-srv": { "status": "error", "label": { "tr": "bağlantı yok", "en": "no connection" } },
+        "pb-srv": { "status": "error", "label": { "tr": "bağlantı yok", "en": "no connection" } }
+      }
+    },
+    {
+      "id": "local-writes",
+      "title": { "tr": "Yerel artışlar", "en": "Local increments" },
+      "narration": {
+        "tr": "A'da üç beğeni: A yalnızca kendi bileşenini artırır, {A:6, B:2} = 8. B'de iki beğeni: {A:3, B:4} = 7. İki telefon farklı değerler gösteriyor, ama hiçbir bilgi kaybolmadı: kimin kaç kez artırdığı ayrı ayrı tutuluyor.",
+        "en": "Three likes on A: A only increments its own entry, {A:6, B:2} = 8. Two likes on B: {A:3, B:4} = 7. The phones show different values, but no information is lost: who incremented how many times is kept separately."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["pa", "pb"], "edges": [] },
+      "nodeStates": {
+        "pa": { "status": "active", "counter": 8, "badge": "{A:6,B:2}" },
+        "pb": { "status": "active", "counter": 7, "badge": "{A:3,B:4}" }
+      },
+      "annotations": [
+        { "id": "inc-a", "x": 170, "y": 260, "text": "+3", "tone": "info", "target": "pa" },
+        { "id": "inc-b", "x": 170, "y": 550, "text": "+2", "tone": "info", "target": "pb" }
+      ]
+    },
+    {
+      "id": "naive-lww",
+      "title": { "tr": "Yanlış yol: düz sayı + son yazan kazanır", "en": "Wrong way: a plain number + last write wins" },
+      "narration": {
+        "tr": "Telefonlar yalnızca toplamı gönderseydi: A '8', B '7' der. Sunucu son geleni tutarsa 7, büyüğü tutarsa 8 olur. Doğru cevap 10'dur; iki ya da üç beğeni sessizce kaybolur. Toplamları eklemek de çözüm değildir: 8 + 7 = 15, eski 5 iki kez sayılır.",
+        "en": "Had the phones sent only the total: A says '8', B says '7'. If the server keeps the last one it is 7, if it keeps the larger one 8. The right answer is 10; two or three likes silently vanish. Adding the totals does not work either: 8 + 7 = 15 counts the old 5 twice."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["srv"], "edges": ["pa-srv", "pb-srv"] },
+      "nodeStates": {
+        "pa": { "status": "idle", "sublabel": "" },
+        "pb": { "status": "idle", "sublabel": "" },
+        "srv": { "status": "error", "counter": 7, "badge": "LWW: 7 ✗" }
+      },
+      "edgeStates": {
+        "pa-srv": { "status": "active", "label": "8" },
+        "pb-srv": { "status": "active", "label": "7" }
+      },
+      "packets": [
+        { "edge": "pa-srv", "shape": "envelope", "label": "8", "durationMs": 1000 },
+        { "edge": "pb-srv", "shape": "envelope", "label": "7", "startAt": 600, "durationMs": 1000 }
+      ],
+      "annotations": [
+        { "id": "lost", "x": 760, "y": 410, "text": { "tr": "beklenen 10, kayıp 3", "en": "expected 10, lost 3" }, "tone": "danger", "target": "srv" }
+      ]
+    },
+    {
+      "id": "merge-a",
+      "title": { "tr": "G-Counter: A bağlanır", "en": "G-Counter: A reconnects" },
+      "narration": {
+        "tr": "Sahneyi baştan, doğru yöntemle oynatalım. A bağlanır ve tüm vektörünü gönderir: {A:6, B:2}. Sunucu kendi durumuyla {A:3, B:2} bileşen bileşen max alır: {A:6, B:2} = 8.",
+        "en": "Let's replay with the right method. A reconnects and sends its whole vector: {A:6, B:2}. The server takes the component-wise max with its own {A:3, B:2}: {A:6, B:2} = 8."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["pa", "srv"], "edges": ["pa-srv"] },
+      "nodeStates": {
+        "srv": { "status": "active", "counter": 8, "badge": "{A:6,B:2}" }
+      },
+      "edgeStates": {
+        "pa-srv": { "status": "active", "label": "{A:6,B:2}" },
+        "pb-srv": { "status": "error", "label": { "tr": "bağlantı yok", "en": "no connection" } }
+      },
+      "packets": [{ "edge": "pa-srv", "shape": "square", "label": "{A:6,B:2}", "durationMs": 1200 }],
+      "annotations": [
+        { "id": "max-a", "x": 760, "y": 410, "text": "max({A:3,B:2}, {A:6,B:2})", "tone": "info", "target": "srv" }
+      ]
+    },
+    {
+      "id": "merge-b",
+      "title": { "tr": "B bağlanır: max ile 10", "en": "B reconnects: 10 by max" },
+      "narration": {
+        "tr": "B de bağlanıp {A:3, B:4} gönderir. Sunucu yine bileşen bileşen max alır: A için max(6, 3) = 6, B için max(2, 4) = 4. Sonuç {A:6, B:4} = 10. Hiçbir beğeni kaybolmadı ve hiçbiri iki kez sayılmadı.",
+        "en": "B reconnects too and sends {A:3, B:4}. The server again takes the component-wise max: for A max(6, 3) = 6, for B max(2, 4) = 4. The result is {A:6, B:4} = 10. No like was lost and none was counted twice."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["pb", "srv"], "edges": ["pb-srv"] },
+      "nodeStates": {
+        "srv": { "status": "success", "counter": 10, "badge": "{A:6,B:4}" }
+      },
+      "edgeStates": {
+        "pa-srv": { "status": "idle", "label": "sync" },
+        "pb-srv": { "status": "active", "label": "{A:3,B:4}" }
+      },
+      "packets": [{ "edge": "pb-srv", "shape": "square", "label": "{A:3,B:4}", "durationMs": 1200 }],
+      "annotations": [
+        { "id": "ten", "x": 760, "y": 410, "text": { "tr": "6 + 4 = 10 ✓", "en": "6 + 4 = 10 ✓" }, "tone": "success", "target": "srv" }
+      ]
+    },
+    {
+      "id": "duplicate",
+      "title": { "tr": "Tekrar eden mesaj zararsız", "en": "A duplicate message is harmless" },
+      "narration": {
+        "tr": "A'nın istemcisi onay alamadığı için aynı durumu yeniden gönderir. Sunucu yine max alır: max(6, 6) = 6. Değer 10'da kalır. Birleştirme eşgüçlü olduğu için 'en az bir kez' teslimat yeterlidir; mesajların hangi sırayla geldiği de önemsizdir.",
+        "en": "A's client did not get an ack, so it resends the same state. The server takes the max again: max(6, 6) = 6. The value stays at 10. Because the merge is idempotent, at-least-once delivery is enough; the order messages arrive in does not matter either."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["pa", "srv"], "edges": ["pa-srv"] },
+      "nodeStates": { "srv": { "status": "success", "counter": 10 } },
+      "edgeStates": {
+        "pb-srv": { "status": "idle", "label": "sync" },
+        "pa-srv": { "status": "active", "label": { "tr": "tekrar", "en": "retry" } }
+      },
+      "packets": [{ "edge": "pa-srv", "shape": "square", "label": "{A:6,B:2}", "durationMs": 1200 }],
+      "annotations": [
+        { "id": "idem", "x": 470, "y": 300, "text": { "tr": "merge(x, x) = x", "en": "merge(x, x) = x" }, "tone": "success" }
+      ]
+    },
+    {
+      "id": "broadcast",
+      "title": { "tr": "Birleşik durum telefonlara döner", "en": "The merged state flows back to the phones" },
+      "narration": {
+        "tr": "Sunucu birleşik durumu iki telefona da gönderir; telefonlar da kendi durumlarıyla aynı max birleştirmesini yapar. Artık üçü de {A:6, B:4} = 10 gösterir. Aynı güncellemeleri almış her replika, ek bir koordinasyon turu olmadan aynı durumdadır: strong eventual consistency.",
+        "en": "The server sends the merged state to both phones; the phones run the same max merge with their own state. All three now show {A:6, B:4} = 10. Every replica that has received the same updates is in the same state, with no extra coordination round: strong eventual consistency."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["pa", "pb", "srv"], "edges": ["pa-srv", "pb-srv"] },
+      "nodeStates": {
+        "pa": { "status": "success", "counter": 10, "badge": "{A:6,B:4}" },
+        "pb": { "status": "success", "counter": 10, "badge": "{A:6,B:4}" }
+      },
+      "edgeStates": {
+        "pa-srv": { "status": "active", "label": "{A:6,B:4}" },
+        "pb-srv": { "status": "active", "label": "{A:6,B:4}" }
+      },
+      "packets": [
+        { "edge": "pa-srv", "direction": "backward", "shape": "square", "label": "10", "durationMs": 1100 },
+        { "edge": "pb-srv", "direction": "backward", "shape": "square", "label": "10", "durationMs": 1100 }
+      ]
+    },
+    {
+      "id": "pn-counter",
+      "title": { "tr": "Azaltma: PN-Counter", "en": "Decrement: PN-Counter" },
+      "narration": {
+        "tr": "B'deki kullanıcı beğenisini geri çeker. G-Counter azalamaz (max ile birleştirme düşüşü geri alır), bu yüzden ikinci bir G-Counter azalışları tutar: N = {B:1}. Değer = toplam(P) − toplam(N) = 10 − 1 = 9. Birleştirme yine iki sayacın her birinde max'tır.",
+        "en": "The user on B takes back their like. A G-Counter cannot decrease (a max merge would undo the decrease), so a second G-Counter holds decrements: N = {B:1}. Value = sum(P) − sum(N) = 10 − 1 = 9. The merge is still a max on each of the two counters."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["pb", "srv"], "edges": ["pb-srv"] },
+      "nodeStates": {
+        "pb": { "status": "active", "counter": 9, "badge": "P{A:6,B:4} N{B:1}" },
+        "srv": { "status": "success", "counter": 9, "badge": "P{A:6,B:4} N{B:1}" },
+        "pa": { "status": "idle" }
+      },
+      "edgeStates": {
+        "pa-srv": { "status": "idle", "label": "sync" },
+        "pb-srv": { "status": "active", "label": "N{B:1}" }
+      },
+      "packets": [{ "edge": "pb-srv", "shape": "square", "label": "N{B:1}", "durationMs": 1100 }]
+    },
+    {
+      "id": "summary",
+      "title": { "tr": "Özet", "en": "Summary" },
+      "narration": {
+        "tr": "Çakışmayı sonradan çözmek yerine veri tipi çakışmayı imkânsız kılacak şekilde tasarlandı: her replika kendi payını yazar, birleştirme değişmeli, birleşmeli ve eşgüçlüdür. Telefonlar ne kadar uzun çevrimdışı kalırsa kalsın, bağlandıklarında doğru sonuca yakınsarlar.",
+        "en": "Instead of resolving conflicts afterwards, the data type was designed to make conflicts impossible: each replica writes its own share and the merge is commutative, associative and idempotent. However long the phones stay offline, they converge on the right answer once they connect."
+      },
+      "durationMs": 2800,
+      "highlight": { "nodes": ["pa", "pb", "srv"], "edges": [] },
+      "nodeStates": {
+        "pa": { "status": "success", "counter": 9, "badge": "P{A:6,B:4} N{B:1}" },
+        "pb": { "status": "success" },
+        "srv": { "status": "success" }
+      },
+      "edgeStates": { "pb-srv": { "status": "idle", "label": "sync" } }
+    }
+  ],
+  "tags": ["crdt", "g-counter", "pn-counter", "offline-first"]
+}

@@ -1,0 +1,14 @@
+{
+  "id": "q-distributed-advanced",
+  "slug": "distributed-advanced",
+  "code": "Q",
+  "order": 17,
+  "title": { "tr": "İleri Dağıtık Sistemler", "en": "Advanced Distributed Systems" },
+  "description": {
+    "tr": "Zaman ve sıralama, Raft ile konsensüs, dağıtık kilitler, tutarlılık modelleri, CRDT'ler ve dağıtık transaction'lar: temellerden vakalara köprü.",
+    "en": "Time and ordering, consensus with Raft, distributed locks, consistency models, CRDTs and distributed transactions: the bridge from fundamentals to case studies."
+  },
+  "icon": "network",
+  "color": "#ca8a04",
+  "group": "system-design"
+}

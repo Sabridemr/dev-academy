@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 420" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">2PC ve saga karşılaştırması</title>
+  <desc id="desc">Sol yarıda 2PC: koordinatör üç katılımcıya PREPARE gönderir, YES oylarını toplar, ardından COMMIT gönderir; prepare ile commit arasında katılımcılar kilit tutar. Sağ yarıda saga: T1 sipariş oluştur, T2 stok ayır, T3 ödeme al adımları sırayla yerel commit edilir; T3 başarısız olunca C2 stoğu bırak ve C1 siparişi iptal et telafileri ters sırada çalışır.</desc>
+  <defs>
+    <marker id="q06-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-fg, #0f172a)"/>
+    </marker>
+    <marker id="q06-comp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-danger, #ef4444)"/>
+    </marker>
+  </defs>
+
+  <!-- 2PC -->
+  <text x="30" y="32" font-size="15" font-weight="600" fill="var(--da-primary, #6366f1)">2PC (iki aşamalı commit)</text>
+  <rect x="30" y="160" width="120" height="60" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-primary, #6366f1)" stroke-width="2"/>
+  <text x="90" y="195" font-size="13" text-anchor="middle" font-weight="600" fill="var(--da-fg, #0f172a)">Koordinatör</text>
+  <g fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.6">
+    <rect x="290" y="60" width="130" height="50" rx="10"/>
+    <rect x="290" y="165" width="130" height="50" rx="10"/>
+    <rect x="290" y="270" width="130" height="50" rx="10"/>
+  </g>
+  <g font-size="13" text-anchor="middle" fill="var(--da-fg, #0f172a)">
+    <text x="355" y="90">Sipariş DB</text>
+    <text x="355" y="195">Stok DB</text>
+    <text x="355" y="300">Ödeme DB</text>
+  </g>
+  <g stroke="var(--da-fg, #0f172a)" stroke-width="1.5" fill="none" marker-end="url(#q06-arrow)">
+    <path d="M 150 175 C 210 140, 230 90, 288 84"/>
+    <path d="M 150 190 L 288 190"/>
+    <path d="M 150 205 C 210 240, 230 290, 288 296"/>
+  </g>
+  <g font-size="11" fill="var(--da-muted, #64748b)">
+    <text x="170" y="112">1) PREPARE</text>
+    <text x="176" y="182">2) YES oyu</text>
+    <text x="170" y="272">3) COMMIT</text>
+  </g>
+  <g font-size="12" fill="var(--da-accent, #f59e0b)">
+    <text x="428" y="90">🔒</text>
+    <text x="428" y="195">🔒</text>
+    <text x="428" y="300">🔒</text>
+  </g>
+  <rect x="30" y="345" width="400" height="56" rx="10" fill="var(--da-accent, #f59e0b)" opacity="0.12" stroke="var(--da-accent, #f59e0b)"/>
+  <text x="230" y="368" font-size="12" text-anchor="middle" fill="var(--da-fg, #0f172a)">PREPARE ile COMMIT arasında kilitler tutulur.</text>
+  <text x="230" y="388" font-size="12" text-anchor="middle" fill="var(--da-fg, #0f172a)">Koordinatör çökerse katılımcılar bekler (blocking).</text>
+
+  <!-- Ayraç -->
+  <line x1="460" y1="20" x2="460" y2="405" stroke="var(--da-border, #cbd5e1)" stroke-dasharray="6 6"/>
+
+  <!-- Saga -->
+  <text x="490" y="32" font-size="15" font-weight="600" fill="var(--da-success, #10b981)">Saga (yerel commit + telafi)</text>
+  <g stroke-width="1.6">
+    <rect x="490" y="70" width="110" height="56" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-success, #10b981)"/>
+    <rect x="630" y="70" width="110" height="56" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-success, #10b981)"/>
+    <rect x="770" y="70" width="110" height="56" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-danger, #ef4444)"/>
+  </g>
+  <g font-size="12" text-anchor="middle" fill="var(--da-fg, #0f172a)">
+    <text x="545" y="94" font-weight="600">T1</text><text x="545" y="112">sipariş oluştur</text>
+    <text x="685" y="94" font-weight="600">T2</text><text x="685" y="112">stok ayır</text>
+    <text x="825" y="94" font-weight="600">T3</text><text x="825" y="112">ödeme al ✗</text>
+  </g>
+  <g stroke="var(--da-fg, #0f172a)" stroke-width="1.5" marker-end="url(#q06-arrow)">
+    <line x1="600" y1="98" x2="628" y2="98"/>
+    <line x1="740" y1="98" x2="768" y2="98"/>
+  </g>
+  <g font-size="11" fill="var(--da-success, #10b981)" text-anchor="middle">
+    <text x="545" y="144">commit ✓</text>
+    <text x="685" y="144">commit ✓</text>
+  </g>
+
+  <g stroke-width="1.6">
+    <rect x="490" y="210" width="110" height="56" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-danger, #ef4444)" stroke-dasharray="5 4"/>
+    <rect x="630" y="210" width="110" height="56" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-danger, #ef4444)" stroke-dasharray="5 4"/>
+  </g>
+  <g font-size="12" text-anchor="middle" fill="var(--da-fg, #0f172a)">
+    <text x="545" y="234" font-weight="600">C1</text><text x="545" y="252">siparişi iptal et</text>
+    <text x="685" y="234" font-weight="600">C2</text><text x="685" y="252">stoğu bırak</text>
+  </g>
+  <g stroke="var(--da-danger, #ef4444)" stroke-width="1.6" fill="none" marker-end="url(#q06-comp)">
+    <path d="M 825 128 C 825 238, 790 238, 742 238"/>
+    <line x1="630" y1="238" x2="602" y2="238"/>
+  </g>
+  <text x="790" y="196" font-size="11" fill="var(--da-danger, #ef4444)">hata → ters sırada telafi</text>
+
+  <rect x="490" y="300" width="390" height="100" rx="10" fill="var(--da-success, #10b981)" opacity="0.1" stroke="var(--da-success, #10b981)"/>
+  <g font-size="12" fill="var(--da-fg, #0f172a)">
+    <text x="505" y="324">• Kilit yok; her adım hemen commit edilir.</text>
+    <text x="505" y="346">• Ara durumlar görünür: izolasyon yok.</text>
+    <text x="505" y="368">• Olaylar outbox ile yayınlanır, adımlar idempotent.</text>
+    <text x="505" y="390">• Telafiler de yeniden denenebilir olmalı.</text>
+  </g>
+</svg>

@@ -1,0 +1,214 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "q-03-lease-fencing-token",
+  "title": { "tr": "GC Duraklaması, Süresi Dolan Lease ve Fencing Token", "en": "GC Pause, Expired Lease and Fencing Token" },
+  "summary": {
+    "tr": "İstemci 1 kilidi token 33 ile alır ve GC duraklamasına girer; lease biter, istemci 2 token 34 ile kilidi alıp depoya yazar; uyanan istemci 1 eski token'la yazmaya çalışır ve depo onu reddeder.",
+    "en": "Client 1 takes the lock with token 33 and enters a GC pause; the lease expires, client 2 takes the lock with token 34 and writes to storage; client 1 wakes up, tries to write with its old token and storage rejects it."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Sol üstte İstemci 1, sol altta İstemci 2, üstte ortada kilit servisi (etcd), sağda depolama. İstemci 1 kilidi ister ve 10 saniyelik lease ile token 33 alır. Ardından GC duraklamasına girer ve lease'i yenileyemez. Kilit servisinde lease süresi dolar ve kilit serbest kalır. İstemci 2 kilidi ister ve token 34 alır, depoya token 34 ile yazar; depo en büyük token'ı 34 olarak kaydeder. İstemci 1 uyanır, hâlâ kilidi tuttuğunu sanır ve token 33 ile yazar; depo 33'ün 34'ten küçük olduğunu görüp yazmayı reddeder. Son adımda fencing olmasaydı istemci 2'nin verisinin ezileceği belirtilir.",
+      "en": "Client 1 top left, client 2 bottom left, the lock service (etcd) top centre, storage on the right. Client 1 requests the lock and gets token 33 with a 10-second lease. It then enters a GC pause and cannot renew the lease. The lease expires in the lock service and the lock is released. Client 2 requests the lock, gets token 34 and writes to storage with token 34; storage records 34 as the highest token. Client 1 wakes up, believes it still holds the lock and writes with token 33; storage sees 33 is less than 34 and rejects the write. The last step notes that without fencing client 2's data would have been overwritten."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "c1", "kind": "worker", "label": { "tr": "İstemci 1", "en": "Client 1" }, "x": 170, "y": 200, "w": 150, "h": 76 },
+    { "id": "c2", "kind": "worker", "label": { "tr": "İstemci 2", "en": "Client 2" }, "x": 170, "y": 470, "w": 150, "h": 76 },
+    { "id": "lock", "kind": "service", "label": { "tr": "Kilit servisi", "en": "Lock service" }, "sublabel": "etcd · Raft", "x": 520, "y": 100, "w": 190, "h": 80 },
+    { "id": "store", "kind": "storage", "label": { "tr": "Depolama", "en": "Storage" }, "sublabel": { "tr": "en büyük token: 32", "en": "max token: 32" }, "x": 830, "y": 340, "w": 190, "h": 90 }
+  ],
+  "edges": [
+    { "id": "c1-lock", "from": "c1", "to": "lock", "kind": "control", "label": "lock()" },
+    { "id": "c2-lock", "from": "c2", "to": "lock", "kind": "control", "curvature": -0.25, "label": "lock()" },
+    { "id": "c1-store", "from": "c1", "to": "store", "kind": "request", "curvature": 0.1, "label": "WRITE" },
+    { "id": "c2-store", "from": "c2", "to": "store", "kind": "request", "curvature": -0.1, "label": "WRITE" }
+  ],
+  "steps": [
+    {
+      "id": "setup",
+      "title": { "tr": "Kurulum: kilit servisi ve depo", "en": "Setup: lock service and storage" },
+      "narration": {
+        "tr": "İki istemci aynı dosyayı güncellemek istiyor. Kilit servisi (etcd) Raft üzerinde çalışıyor ve her kilit verişinde artan bir token üretiyor. Depo, şimdiye kadar gördüğü en büyük token'ı (32) saklıyor.",
+        "en": "Two clients want to update the same file. The lock service (etcd) runs on Raft and issues an increasing token with every grant. Storage remembers the largest token it has seen so far (32)."
+      },
+      "durationMs": 2800,
+      "inherit": false,
+      "highlight": { "nodes": ["lock", "store"], "edges": [] },
+      "nodeStates": {
+        "c1": { "status": "idle" },
+        "c2": { "status": "idle" },
+        "lock": { "status": "idle", "badge": "∅" },
+        "store": { "status": "idle", "counter": 32 }
+      },
+      "edgeStates": {
+        "c1-lock": { "status": "idle" },
+        "c2-lock": { "status": "muted" },
+        "c1-store": { "status": "muted" },
+        "c2-store": { "status": "muted" }
+      }
+    },
+    {
+      "id": "acquire-1",
+      "title": { "tr": "İstemci 1 kilidi alır: token 33", "en": "Client 1 takes the lock: token 33" },
+      "narration": {
+        "tr": "İstemci 1 kilidi ister. Kilit servisi 10 saniyelik bir lease ve fencing token 33 döner. İstemci 1 dosyayı okuyup yeni içeriği hazırlamaya başlar; lease'i KeepAlive ile yenilemesi gerekiyor.",
+        "en": "Client 1 asks for the lock. The lock service returns a 10-second lease and fencing token 33. Client 1 reads the file and starts preparing new content; it must renew the lease with KeepAlive."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["c1", "lock"], "edges": ["c1-lock"] },
+      "nodeStates": {
+        "c1": { "status": "active", "badge": "token 33" },
+        "lock": { "status": "active", "badge": "C1 · 33", "progress": 1 }
+      },
+      "edgeStates": { "c1-lock": { "status": "active" } },
+      "packets": [
+        { "edge": "c1-lock", "shape": "diamond", "label": "lock()", "durationMs": 900 },
+        { "edge": "c1-lock", "direction": "backward", "shape": "envelope", "label": "lease 10s · 33", "startAt": 1100, "durationMs": 1000 }
+      ]
+    },
+    {
+      "id": "gc-pause",
+      "title": { "tr": "GC duraklaması", "en": "GC pause" },
+      "narration": {
+        "tr": "Tam yazmaya hazırlanırken istemci 1'in çalışma zamanı 15 saniyelik bir stop-the-world çöp toplama başlatır. Süreç donar: ne KeepAlive gönderebilir ne de saatine bakabilir. Kendi bakış açısından hiç zaman geçmemiştir.",
+        "en": "Just as it prepares to write, client 1's runtime starts a 15-second stop-the-world garbage collection. The process freezes: it can neither send KeepAlive nor look at its clock. From its own point of view no time passes."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["c1"], "edges": [] },
+      "nodeStates": {
+        "c1": { "status": "busy", "sublabel": { "tr": "GC duraklaması ⏸", "en": "GC pause ⏸" } },
+        "lock": { "progress": 0.4 }
+      },
+      "edgeStates": { "c1-lock": { "status": "muted", "label": { "tr": "KeepAlive yok", "en": "no KeepAlive" } } },
+      "annotations": [
+        { "id": "pause", "x": 170, "y": 300, "text": { "tr": "15 s donuk, lease 10 s", "en": "frozen 15 s, lease 10 s" }, "tone": "warning", "target": "c1" }
+      ]
+    },
+    {
+      "id": "expire",
+      "title": { "tr": "Lease biter, kilit serbest kalır", "en": "The lease expires, the lock is freed" },
+      "narration": {
+        "tr": "Kilit servisi 10 saniye boyunca yenileme almaz ve lease'i sona erdirir. Lease'e bağlı kilit anahtarı silinir. Servis açısından bu doğru davranıştır: istemci 1 çökmüş de olabilirdi.",
+        "en": "The lock service gets no renewal for 10 seconds and expires the lease. The lock key attached to the lease is deleted. From the service's point of view this is correct: client 1 might as well have crashed."
+      },
+      "durationMs": 2800,
+      "highlight": { "nodes": ["lock"], "edges": [] },
+      "nodeStates": {
+        "lock": { "status": "warning", "badge": "∅", "progress": 0 }
+      },
+      "annotations": [
+        { "id": "expired", "x": 520, "y": 190, "text": { "tr": "lease süresi doldu", "en": "lease expired" }, "tone": "warning", "target": "lock" }
+      ]
+    },
+    {
+      "id": "acquire-2",
+      "title": { "tr": "İstemci 2 kilidi alır: token 34", "en": "Client 2 takes the lock: token 34" },
+      "narration": {
+        "tr": "İstemci 2 kilidi ister ve alır. Kilit servisi yeni bir lease ile birlikte token 34 verir. Artık sistemde kilidi tuttuğuna inanan iki istemci vardır: biri haklı, diğeri donuk.",
+        "en": "Client 2 asks for the lock and gets it. The lock service hands out a new lease together with token 34. Now two clients believe they hold the lock: one rightly, the other frozen."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["c2", "lock"], "edges": ["c2-lock"] },
+      "nodeStates": {
+        "c2": { "status": "active", "badge": "token 34" },
+        "lock": { "status": "active", "badge": "C2 · 34", "progress": 1 }
+      },
+      "edgeStates": { "c2-lock": { "status": "active" } },
+      "packets": [
+        { "edge": "c2-lock", "shape": "diamond", "label": "lock()", "durationMs": 900 },
+        { "edge": "c2-lock", "direction": "backward", "shape": "envelope", "label": "lease 10s · 34", "startAt": 1100, "durationMs": 1000 }
+      ]
+    },
+    {
+      "id": "write-2",
+      "title": { "tr": "İstemci 2 token 34 ile yazar", "en": "Client 2 writes with token 34" },
+      "narration": {
+        "tr": "İstemci 2 yazmasını token 34 ile gönderir. Depo 34 > 32 olduğunu görür, yazmayı kabul eder ve en büyük token'ı 34 olarak günceller. Bu kontrol, koşullu bir UPDATE ile atomik yapılır.",
+        "en": "Client 2 sends its write with token 34. Storage sees 34 > 32, accepts the write and updates its largest token to 34. The check is atomic, done with a conditional UPDATE."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["c2", "store"], "edges": ["c2-store"] },
+      "nodeStates": {
+        "store": { "status": "success", "counter": 34, "sublabel": { "tr": "en büyük token: 34", "en": "max token: 34" } }
+      },
+      "edgeStates": { "c2-lock": { "status": "muted" }, "c2-store": { "status": "active", "label": "WRITE · 34" } },
+      "packets": [
+        { "edge": "c2-store", "shape": "envelope", "label": "v2 · 34", "durationMs": 1100 },
+        { "edge": "c2-store", "direction": "backward", "shape": "dot", "label": "OK", "startAt": 1400, "durationMs": 800 }
+      ]
+    },
+    {
+      "id": "wake",
+      "title": { "tr": "İstemci 1 uyanır", "en": "Client 1 wakes up" },
+      "narration": {
+        "tr": "GC biter. İstemci 1 kaldığı satırdan devam eder; onun için 'kilidi az önce aldım' durumu sürmektedir. Lease süresini şimdi kontrol etse bile, kontrol ile yazma arasında yeni bir duraklama olabileceği için bu güvenli değildir. Eski verilere dayalı yazmasını token 33 ile gönderir.",
+        "en": "The GC ends. Client 1 resumes from the same line; for it, 'I just took the lock' still holds. Even checking the lease now would not be safe, since another pause could happen between the check and the write. It sends its write, based on stale data, with token 33."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["c1", "store"], "edges": ["c1-store"] },
+      "nodeStates": {
+        "c1": { "status": "warning", "sublabel": { "tr": "kilidim var sanıyor", "en": "thinks it holds the lock" } },
+        "store": { "status": "idle" }
+      },
+      "edgeStates": { "c2-store": { "status": "muted" }, "c1-store": { "status": "active", "label": "WRITE · 33" } },
+      "packets": [{ "edge": "c1-store", "shape": "envelope", "label": "v1' · 33", "durationMs": 1300 }]
+    },
+    {
+      "id": "reject",
+      "title": { "tr": "Depo eski token'ı reddeder", "en": "Storage rejects the stale token" },
+      "narration": {
+        "tr": "Depo 33 < 34 olduğunu görür ve yazmayı reddeder. İstemci 1 hatayı alınca kilidi kaybettiğini öğrenir ve işi baştan başlatmalıdır. Doğruluğu istemcinin tahmini değil, kaynağın kendi kontrolü sağladı.",
+        "en": "Storage sees 33 < 34 and rejects the write. On receiving the error client 1 learns that it lost the lock and must start over. Correctness came from the resource's own check, not from the client's guess."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["store", "c1"], "edges": ["c1-store"] },
+      "nodeStates": {
+        "store": { "status": "success", "badge": "33 < 34 ✗" },
+        "c1": { "status": "error", "badge": "✗ 33" }
+      },
+      "edgeStates": { "c1-store": { "status": "error" } },
+      "packets": [{ "edge": "c1-store", "direction": "backward", "shape": "diamond", "label": "409", "color": "danger", "durationMs": 1100 }],
+      "annotations": [
+        { "id": "fence", "x": 830, "y": 450, "text": { "tr": "fencing: eski token geçemez", "en": "fencing: stale token cannot pass" }, "tone": "success", "target": "store" }
+      ]
+    },
+    {
+      "id": "without-fencing",
+      "title": { "tr": "Fencing olmasaydı", "en": "Without fencing" },
+      "narration": {
+        "tr": "Depo token'a bakmasaydı, istemci 1'in gecikmiş yazması kabul edilir ve istemci 2'nin v2 içeriği sessizce ezilirdi. Kilit servisi bunu engelleyemezdi, çünkü yazma yolunda değildir. Redlock eleştirisinin özü budur: monoton bir token olmadan zamanlama varsayımlarına güvenmek zorunda kalırsınız.",
+        "en": "Had storage ignored the token, client 1's delayed write would have been accepted and client 2's v2 silently overwritten. The lock service could not have prevented it, since it is not on the write path. This is the heart of the Redlock critique: without a monotonic token you must rely on timing assumptions."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["c1", "c2", "store"], "edges": ["c1-store", "c2-store"] },
+      "nodeStates": {
+        "store": { "status": "warning", "badge": "?" },
+        "c2": { "status": "warning", "badge": "v2 ✗?" }
+      },
+      "edgeStates": { "c2-store": { "status": "active" } },
+      "annotations": [
+        { "id": "lost", "x": 520, "y": 560, "text": { "tr": "token kontrolü yoksa: sessiz veri kaybı", "en": "no token check: silent data loss" }, "tone": "danger" }
+      ]
+    },
+    {
+      "id": "summary",
+      "title": { "tr": "Özet", "en": "Summary" },
+      "narration": {
+        "tr": "Lease, çöken istemcinin kilidi sonsuza kadar tutmasını önler; fencing token ise duraklayan istemcinin süresi dolmuş kilitle zarar vermesini önler. İkisi birlikte kullanılır: lease kullanılabilirlik, token doğruluk içindir.",
+        "en": "A lease stops a crashed client from holding the lock forever; a fencing token stops a paused client from doing damage with an expired lock. They work together: the lease is for availability, the token for correctness."
+      },
+      "durationMs": 2800,
+      "highlight": { "nodes": ["lock", "store"], "edges": [] },
+      "nodeStates": {
+        "store": { "status": "success", "badge": "max 34" },
+        "c2": { "status": "success", "badge": "token 34" },
+        "c1": { "status": "idle", "badge": "↻", "sublabel": "" }
+      },
+      "edgeStates": { "c1-store": { "status": "muted" }, "c2-store": { "status": "muted" } }
+    }
+  ],
+  "tags": ["locks", "lease", "fencing-token", "gc-pause"]
+}

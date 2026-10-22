@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 440" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Raft rol geçişleri ve log yapısı</title>
+  <desc id="desc">Üstte üç rol: Follower, Candidate ve Leader. Zaman aşımı follower'ı adaya çevirir, çoğunluk oyu adayı lider yapar, daha yüksek terim gören aday ya da lider follower'a döner. Altta liderin ve iki takipçinin log'u, her hücrede terim numarası ve commit indeksi çizgisi.</desc>
+  <defs>
+    <marker id="q02-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-fg, #0f172a)"/>
+    </marker>
+  </defs>
+
+  <!-- Roller -->
+  <g stroke-width="2">
+    <rect x="70" y="50" width="160" height="60" rx="30" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)"/>
+    <rect x="370" y="50" width="160" height="60" rx="30" fill="var(--da-surface, #ffffff)" stroke="var(--da-accent, #f59e0b)"/>
+    <rect x="670" y="50" width="160" height="60" rx="30" fill="var(--da-surface, #ffffff)" stroke="var(--da-success, #10b981)"/>
+  </g>
+  <g font-size="16" font-weight="600" text-anchor="middle">
+    <text x="150" y="86" fill="var(--da-fg, #0f172a)">Follower</text>
+    <text x="450" y="86" fill="var(--da-accent, #f59e0b)">Candidate</text>
+    <text x="750" y="86" fill="var(--da-success, #10b981)">Leader</text>
+  </g>
+
+  <!-- Geçişler -->
+  <g stroke="var(--da-fg, #0f172a)" stroke-width="1.6" fill="none" marker-end="url(#q02-arrow)">
+    <path d="M 230 70 L 368 70"/>
+    <path d="M 530 70 L 668 70"/>
+    <path d="M 370 98 L 232 98"/>
+    <path d="M 750 112 C 750 170, 150 170, 150 114"/>
+    <path d="M 430 50 C 410 10, 490 10, 470 48"/>
+  </g>
+  <g font-size="11" fill="var(--da-muted, #64748b)" text-anchor="middle">
+    <text x="299" y="62">timeout · term+1</text>
+    <text x="599" y="62">çoğunluk oyu</text>
+    <text x="301" y="118">lider ya da yüksek terim</text>
+    <text x="450" y="16">oylar bölündü → yeni seçim</text>
+    <text x="450" y="166">daha yüksek terim görürse follower'a döner</text>
+  </g>
+
+  <!-- Log yapısı -->
+  <text x="70" y="214" font-size="13" font-weight="600" fill="var(--da-fg, #0f172a)">Log (her hücrede terim · komut)</text>
+  <g font-size="12" fill="var(--da-muted, #64748b)" text-anchor="middle">
+    <text x="215" y="240">1</text><text x="295" y="240">2</text><text x="375" y="240">3</text><text x="455" y="240">4</text><text x="535" y="240">5</text><text x="615" y="240">6</text>
+  </g>
+  <g font-size="13" fill="var(--da-fg, #0f172a)">
+    <text x="70" y="277">Leader</text>
+    <text x="70" y="327">Follower A</text>
+    <text x="70" y="377">Follower B</text>
+  </g>
+  <!-- Leader satırı -->
+  <g stroke="var(--da-border, #cbd5e1)" stroke-width="1.5" fill="var(--da-surface, #ffffff)">
+    <rect x="180" y="255" width="70" height="34" rx="6"/><rect x="260" y="255" width="70" height="34" rx="6"/><rect x="340" y="255" width="70" height="34" rx="6"/><rect x="420" y="255" width="70" height="34" rx="6"/><rect x="500" y="255" width="70" height="34" rx="6"/><rect x="580" y="255" width="70" height="34" rx="6"/>
+    <rect x="180" y="305" width="70" height="34" rx="6"/><rect x="260" y="305" width="70" height="34" rx="6"/><rect x="340" y="305" width="70" height="34" rx="6"/><rect x="420" y="305" width="70" height="34" rx="6"/><rect x="500" y="305" width="70" height="34" rx="6"/>
+    <rect x="180" y="355" width="70" height="34" rx="6"/><rect x="260" y="355" width="70" height="34" rx="6"/><rect x="340" y="355" width="70" height="34" rx="6"/>
+  </g>
+  <g font-size="12" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="215" y="277">1 · x←3</text><text x="295" y="277">1 · y←1</text><text x="375" y="277">2 · x←5</text><text x="455" y="277">3 · y←2</text><text x="535" y="277">3 · x←7</text><text x="615" y="277">3 · z←4</text>
+    <text x="215" y="327">1 · x←3</text><text x="295" y="327">1 · y←1</text><text x="375" y="327">2 · x←5</text><text x="455" y="327">3 · y←2</text><text x="535" y="327">3 · x←7</text>
+    <text x="215" y="377">1 · x←3</text><text x="295" y="377">1 · y←1</text><text x="375" y="377">2 · x←5</text>
+  </g>
+
+  <!-- Commit indeksi -->
+  <line x1="575" y1="246" x2="575" y2="400" stroke="var(--da-success, #10b981)" stroke-width="2.5" stroke-dasharray="6 4"/>
+  <text x="575" y="420" font-size="12" text-anchor="middle" fill="var(--da-success, #10b981)" font-weight="600">commit indeksi = 5 (3 düğümün 2'sinde)</text>
+  <text x="700" y="277" font-size="11" fill="var(--da-muted, #64748b)">henüz commit değil</text>
+  <text x="700" y="377" font-size="11" fill="var(--da-muted, #64748b)">geride: yakalayacak</text>
+</svg>

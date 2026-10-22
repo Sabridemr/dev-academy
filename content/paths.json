@@ -41,7 +41,8 @@
       "b-architectures",
       "e-case-studies",
       "f-code-and-infrastructure",
-      "j-system-design-notes"
+      "j-system-design-notes",
+      "q-distributed-advanced"
     ]
   },
   {
@@ -110,6 +111,10 @@
       "c-design-patterns/c-04-distributed-patterns",
       "b-architectures/b-07-event-sourcing-cqrs",
       "b-architectures/b-08-saga-distributed-workflows",
+      "q-distributed-advanced/q-02-consensus-raft",
+      "q-distributed-advanced/q-03-distributed-locks-leases",
+      "q-distributed-advanced/q-04-consistency-models",
+      "q-distributed-advanced/q-06-distributed-transactions",
       "j-system-design-notes/j-01-must-know-system-design-patterns",
       "j-system-design-notes/j-02-system-design-notes-part-1",
       "h-devops-tools/h-10-mulakat-soru-cevap-ve-ozet",

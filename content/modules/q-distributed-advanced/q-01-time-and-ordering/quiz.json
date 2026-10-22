@@ -1,0 +1,110 @@
+{
+  "id": "q-01-time-and-ordering-quiz",
+  "title": { "tr": "Zaman ve Sıralama Quiz", "en": "Time and Ordering Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Node B'nin Lamport sayacı 4'tür. B, Lamport değeri 9 olan bir mesaj alır. Alma olayından sonra B'nin sayacı kaç olur?",
+        "en": "Node B's Lamport counter is 4. B receives a message carrying Lamport value 9. What is B's counter after the receive event?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "5", "en": "5" } },
+        { "id": "b", "text": { "tr": "9", "en": "9" } },
+        { "id": "c", "text": { "tr": "10", "en": "10" } },
+        { "id": "d", "text": { "tr": "14", "en": "14" } }
+      ],
+      "correct": ["c"],
+      "explanation": {
+        "tr": "Alma kuralı max(yerel, gelen) + 1'dir: max(4, 9) + 1 = 10. Böylece alma olayı, gönderme olayından kesinlikle büyük bir değer alır ve a → b ⇒ L(a) < L(b) korunur.",
+        "en": "The receive rule is max(local, incoming) + 1: max(4, 9) + 1 = 10. This way the receive always gets a strictly larger value than the send, preserving a → b ⇒ L(a) < L(b)."
+      },
+      "difficulty": "easy",
+      "concepts": ["lamport-clock"]
+    },
+    {
+      "id": "q2",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "L(a) < L(b) ise a olayı b olayından önce gerçekleşmiştir (a → b).",
+        "en": "If L(a) < L(b), then event a happened before event b (a → b)."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "Yanlış. Lamport saati yalnızca tek yönde garanti verir: a → b ise L(a) < L(b). Birbirinden habersiz iki olay da farklı değerler alabilir; küçük değer nedensellik kanıtı değildir. Eşzamanlılığı ayırt etmek için vektör saat gerekir.",
+        "en": "False. A Lamport clock only guarantees one direction: if a → b then L(a) < L(b). Two independent events can also get different values; a smaller value is no proof of causality. Distinguishing concurrency requires vector clocks."
+      },
+      "difficulty": "medium",
+      "concepts": ["lamport-clock", "happens-before"]
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": {
+        "tr": "Üç düğümlü bir sistemde iki sürümün vektör saatleri V1 = [2,1,0] ve V2 = [1,1,3]'tür. İlişkileri nedir?",
+        "en": "In a three-node system two versions have vector clocks V1 = [2,1,0] and V2 = [1,1,3]. What is their relationship?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "V1, V2'den önce", "en": "V1 happened before V2" } },
+        { "id": "b", "text": { "tr": "V2, V1'den önce", "en": "V2 happened before V1" } },
+        { "id": "c", "text": { "tr": "Eşzamanlı; iki sürüm de saklanıp birleştirilmeli", "en": "Concurrent; both versions must be kept and merged" } },
+        { "id": "d", "text": { "tr": "Eşit", "en": "Equal" } }
+      ],
+      "correct": ["c"],
+      "explanation": {
+        "tr": "V1'in ilk bileşeni büyük (2 > 1), V2'nin üçüncü bileşeni büyük (3 > 0). Hiçbiri diğerinden bileşen bileşen küçük-eşit değil, dolayısıyla eşzamanlıdırlar. Dynamo tarzı sistemler bu durumda iki sürümü de (sibling) saklar.",
+        "en": "V1 is larger in the first entry (2 > 1), V2 is larger in the third (3 > 0). Neither is component-wise less-or-equal to the other, so they are concurrent. Dynamo-style systems keep both versions (siblings) in this case."
+      },
+      "difficulty": "medium",
+      "concepts": ["vector-clock", "concurrent-events"]
+    },
+    {
+      "id": "q4",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Farklı makinelerin duvar saatleriyle olay sıralamak neden tehlikelidir? (Birden fazla seçin)",
+        "en": "Why is ordering events by the wall clocks of different machines dangerous? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Saatler farklı hızlarda kayar (clock drift)", "en": "Clocks drift at different rates" } },
+        { "id": "b", "text": { "tr": "NTP düzeltmesi saati geri alabilir", "en": "An NTP correction can move a clock backwards" } },
+        { "id": "c", "text": { "tr": "Last-write-wins, saat farkı penceresinde sonraki yazmayı kaybedebilir", "en": "Last-write-wins can lose the later write within the skew window" } },
+        { "id": "d", "text": { "tr": "Duvar saatleri yalnızca saniye çözünürlüğündedir", "en": "Wall clocks only have one-second resolution" } }
+      ],
+      "correct": ["a", "b", "c"],
+      "explanation": {
+        "tr": "Kayma, geri atlama ve makineler arası fark gerçek sorunlardır; LWW bu yüzden sessiz veri kaybına yol açabilir. Çözünürlük ise sorun değildir: işletim sistemleri mikro ya da nanosaniye çözünürlük sunar, ama doğruluk (accuracy) çözünürlükten çok daha kötüdür.",
+        "en": "Drift, backward jumps and cross-machine skew are real problems; this is why LWW can silently lose data. Resolution is not the issue: operating systems offer micro- or nanosecond resolution, but accuracy is far worse than resolution."
+      },
+      "difficulty": "medium",
+      "concepts": ["clock-skew", "ntp"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "Spanner'da commit wait adımının amacı nedir?",
+        "en": "What is the purpose of the commit wait step in Spanner?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Replikaların log'u diske yazmasını beklemek", "en": "To wait for replicas to flush the log to disk" } },
+        { "id": "b", "text": { "tr": "Zaman damgası kesinlikle geçmişte kalana kadar beklemek; böylece sonra başlayan her transaction daha büyük damga alır", "en": "To wait until the timestamp is definitely in the past, so every later transaction gets a larger timestamp" } },
+        { "id": "c", "text": { "tr": "GPS alıcısının yeni sinyal almasını beklemek", "en": "To wait for the GPS receiver to get a new signal" } },
+        { "id": "d", "text": { "tr": "Lamport sayacını tüm düğümlerde eşitlemek", "en": "To equalise the Lamport counter across all nodes" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "TrueTime gerçek zamanı bir aralık olarak verir. Spanner commit damgasını aralığın üst ucundan seçer ve TT.now().earliest bu damgayı geçene kadar sonucu görünür kılmaz. Böylece gerçek zamanda sonra başlayan transaction'lar kesinlikle daha büyük damga alır (dış tutarlılık). Bekleme süresi belirsizlik kadardır.",
+        "en": "TrueTime returns real time as an interval. Spanner picks the commit timestamp from the upper end and does not make the result visible until TT.now().earliest has passed it. Transactions that start later in real time therefore get strictly larger timestamps (external consistency). The wait is as long as the uncertainty."
+      },
+      "difficulty": "hard",
+      "concepts": ["truetime", "commit-wait"]
+    }
+  ]
+}
