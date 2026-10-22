@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 400" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">CPython nesne başlığı ve iki temizlik mekanizması</title>
+  <desc id="desc">Solda bir liste nesnesinin bellekteki düzeni: GC başlığı, ob_refcnt, ob_type ve asıl veri. Sağda iki mekanizma: referans sayımı sayaç sıfıra inince nesneyi anında siler; döngüsel çöp toplayıcı konteyner nesneleri genç ve yaşlı nesillerde tarar, hayatta kalanları yaşlı nesle taşır.</desc>
+  <defs>
+    <marker id="k17-ok" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+  </defs>
+
+  <!-- Nesne düzeni -->
+  <text x="160" y="34" text-anchor="middle" font-size="15" font-weight="600" fill="var(--da-fg, #0f172a)">Bir list nesnesi bellekte</text>
+  <rect x="60" y="56" width="200" height="50" fill="var(--da-surface, #f8fafc)" stroke="var(--da-border, #cbd5e1)" stroke-dasharray="5 4"/>
+  <text x="160" y="80" text-anchor="middle" font-size="13" fill="var(--da-muted, #64748b)">GC bağlantıları</text>
+  <text x="160" y="97" text-anchor="middle" font-size="11" fill="var(--da-muted, #64748b)">(yalnızca konteynerlerde)</text>
+  <rect x="60" y="106" width="200" height="50" fill="var(--da-primary, #6366f1)" fill-opacity="0.12" stroke="var(--da-primary, #6366f1)" stroke-width="1.5"/>
+  <text x="160" y="129" text-anchor="middle" font-size="14" font-weight="600" fill="var(--da-primary, #6366f1)">ob_refcnt</text>
+  <text x="160" y="146" text-anchor="middle" font-size="11" fill="var(--da-fg, #0f172a)">kaç referans gösteriyor?</text>
+  <rect x="60" y="156" width="200" height="50" fill="var(--da-accent, #f59e0b)" fill-opacity="0.12" stroke="var(--da-accent, #f59e0b)" stroke-width="1.5"/>
+  <text x="160" y="179" text-anchor="middle" font-size="14" font-weight="600" fill="var(--da-fg, #0f172a)">ob_type</text>
+  <text x="160" y="196" text-anchor="middle" font-size="11" fill="var(--da-fg, #0f172a)">→ list tipi</text>
+  <rect x="60" y="206" width="200" height="80" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5"/>
+  <text x="160" y="240" text-anchor="middle" font-size="14" fill="var(--da-fg, #0f172a)">asıl veri</text>
+  <text x="160" y="260" text-anchor="middle" font-size="11" fill="var(--da-muted, #64748b)">uzunluk, eleman işaretçileri</text>
+  <text x="275" y="160" font-size="11" fill="var(--da-muted, #64748b)">başlık</text>
+  <path d="M 268 108 L 272 108 L 272 204 L 268 204" stroke="var(--da-muted, #64748b)" fill="none"/>
+  <text x="160" y="320" text-anchor="middle" font-size="12" fill="var(--da-muted, #64748b)">64 bit normal yapıda ob_refcnt + ob_type = 16 bayt</text>
+
+  <!-- Referans sayımı -->
+  <text x="610" y="34" text-anchor="middle" font-size="15" font-weight="600" fill="var(--da-fg, #0f172a)">Belleği geri veren iki mekanizma</text>
+  <rect x="350" y="56" width="520" height="96" rx="12" fill="var(--da-surface, #ffffff)" stroke="var(--da-success, #10b981)" stroke-width="1.5"/>
+  <text x="366" y="80" font-size="14" font-weight="600" fill="var(--da-success, #10b981)">1. Referans sayımı (her zaman açık)</text>
+  <g font-size="13" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <rect x="380" y="96" width="70" height="36" rx="8" fill="var(--da-surface, #f8fafc)" stroke="var(--da-border, #cbd5e1)"/>
+    <text x="415" y="119">rc=2</text>
+    <rect x="510" y="96" width="70" height="36" rx="8" fill="var(--da-surface, #f8fafc)" stroke="var(--da-border, #cbd5e1)"/>
+    <text x="545" y="119">rc=1</text>
+    <rect x="640" y="96" width="70" height="36" rx="8" fill="var(--da-danger, #ef4444)" fill-opacity="0.12" stroke="var(--da-danger, #ef4444)"/>
+    <text x="675" y="119">rc=0</text>
+  </g>
+  <g stroke="var(--da-muted, #64748b)" stroke-width="1.6" fill="none" marker-end="url(#k17-ok)">
+    <path d="M 452 114 L 506 114"/>
+    <path d="M 582 114 L 636 114"/>
+  </g>
+  <text x="479" y="146" text-anchor="middle" font-size="11" fill="var(--da-muted, #64748b)">del</text>
+  <text x="609" y="146" text-anchor="middle" font-size="11" fill="var(--da-muted, #64748b)">del</text>
+  <text x="790" y="112" text-anchor="middle" font-size="12" fill="var(--da-fg, #0f172a)">anında silinir</text>
+  <text x="790" y="128" text-anchor="middle" font-size="11" fill="var(--da-muted, #64748b)">döngüleri göremez</text>
+
+  <!-- Döngüsel GC -->
+  <rect x="350" y="176" width="520" height="170" rx="12" fill="var(--da-surface, #ffffff)" stroke="var(--da-primary, #6366f1)" stroke-width="1.5"/>
+  <text x="366" y="200" font-size="14" font-weight="600" fill="var(--da-primary, #6366f1)">2. Döngüsel çöp toplayıcı (gc, eşik aşılınca)</text>
+  <rect x="380" y="220" width="180" height="80" rx="10" fill="var(--da-primary, #6366f1)" fill-opacity="0.14" stroke="var(--da-primary, #6366f1)"/>
+  <text x="470" y="250" text-anchor="middle" font-size="14" fill="var(--da-fg, #0f172a)">Genç nesil</text>
+  <text x="470" y="270" text-anchor="middle" font-size="11" fill="var(--da-muted, #64748b)">yeni nesneler</text>
+  <text x="470" y="286" text-anchor="middle" font-size="11" fill="var(--da-muted, #64748b)">sık taranır</text>
+  <rect x="660" y="220" width="180" height="80" rx="10" fill="var(--da-primary, #6366f1)" fill-opacity="0.05" stroke="var(--da-primary, #6366f1)"/>
+  <text x="750" y="250" text-anchor="middle" font-size="14" fill="var(--da-fg, #0f172a)">Yaşlı nesil</text>
+  <text x="750" y="270" text-anchor="middle" font-size="11" fill="var(--da-muted, #64748b)">uzun yaşayanlar</text>
+  <text x="750" y="286" text-anchor="middle" font-size="11" fill="var(--da-muted, #64748b)">seyrek taranır</text>
+  <path d="M 562 260 L 656 260" stroke="var(--da-muted, #64748b)" stroke-width="1.6" fill="none" marker-end="url(#k17-ok)"/>
+  <text x="609" y="250" text-anchor="middle" font-size="11" fill="var(--da-muted, #64748b)">hayatta</text>
+  <text x="609" y="278" text-anchor="middle" font-size="11" fill="var(--da-muted, #64748b)">kalan</text>
+  <text x="610" y="330" text-anchor="middle" font-size="11" fill="var(--da-muted, #64748b)">3.12: üç nesil (0, 1, 2) · 3.14: artımlı, genç ve yaşlı nesil</text>
+</svg>

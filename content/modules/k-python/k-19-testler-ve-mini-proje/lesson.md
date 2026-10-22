@@ -42,6 +42,10 @@ Her test aynı değildir. Yaygın bir model **test piramidi**dir (test pyramid):
 
 Piramidin tabanı geniştir: çoğu test hızlı birim testleridir. Bu derste ağırlıklı olarak birim testi yazacağız.
 
+:::diagram{src="test-piramidi.svg" alt="Üç katmanlı test piramidi: tabanda çok sayıda hızlı birim testi, ortada entegrasyon testleri, tepede az sayıda yavaş uçtan uca test|Three-layer test pyramid: many fast unit tests at the base, integration tests in the middle, a few slow end-to-end tests at the top"}
+Yukarı çıktıkça testler yavaşlar ve kırılganlaşır; aşağı indikçe sayıları artar.
+:::
+
 ## pytest ile başlamak
 
 Python'un standart kütüphanesinde `unittest` vardır, ama topluluğun büyük kısmı daha sade olan **pytest**'i kullanır.
@@ -143,6 +147,13 @@ def test_palindrom(metin, beklenen):
 :::
 
 Üç veri satırı üç ayrı test olarak raporlanır; biri kalırsa hangisi olduğunu hemen görürsün.
+
+Şimdiye kadar gördüğün parçaları (toplama, `assert`, fixture, özet) tek bir koşuda birleştiren animasyon:
+
+:::animation{scene="pytest-calismasi.scene.json"}
+Toplayıcının `fiyat.py`'yi neden atladığına, kalan testin koşuyu durdurmadığına ve fixture'ın test öncesi kurulup
+sonrasında yıkıldığına dikkat et. Son adımdaki çıkış kodu, CI hattının testleri nasıl "okuduğunu" açıklar.
+:::
 
 ## Test dublörleri: fake, mock ve patch
 
@@ -502,6 +513,21 @@ bellek yönetimini, eşzamanlılığı ve test yazmayı. Bu temel üzerine şu y
 
 Önerimiz: Kütüphane uygulamasını FastAPI ile bir REST API'ye dönüştür, `BellekDeposu` yerine SQLite kullanan bir
 depo yaz ve mevcut testlerin hâlâ geçtiğini gör. Bu tek alıştırma, modüldeki neredeyse her konuyu bir arada kullanır.
+
+:::realworld{company="Dropbox"}
+Dropbox, masaüstü istemcisi ve sunucu tarafı uzun yıllar büyük ölçüde Python ile yazılmış şirketlerden biridir ve
+bu kod tabanını nasıl güvende tuttuğunu mühendislik blogunda ayrıntılı anlatmıştır. 2019 tarihli **"Our journey to
+type checking 4 million lines of Python"** yazısı, milyonlarca satırlık bir Python kodunda yalnızca testlere
+güvenmenin yetmediğini, `mypy` ile statik tip denetiminin adım adım nasıl yaygınlaştırıldığını anlatır: önce yeni
+kod, sonra en çok değişen modüller, en sonunda CI'da zorunlu denetim. Testler davranışı, tip denetimi ise arayüzlerin
+tutarlılığını korur; ikisi birbirinin yerine geçmez, birbirini tamamlar.
+
+Aynı blogda Dropbox, büyük bir test paketinde **kararsız (flaky) testlerin** yarattığı sorunu ve bunları otomatik
+tespit edip ana hattı bloklamayacak şekilde ayıran araçlarını da anlatmıştır. Kararsız testlerin en yaygın nedeni bu
+dersin "testlerin birbirine bağımlı olması" uyarısında gördüğün şeydir: paylaşılan durum, sıraya bağlılık ve gerçek
+saat ya da ağ gibi kontrol edilmeyen bağımlılıklar. Fixture ile taze veri, DI ile sahte bağımlılık ve izole birim
+testleri, ölçek büyüdüğünde de geçerliliğini koruyan en ucuz önlemlerdir.
+:::
 
 ## Özet
 
