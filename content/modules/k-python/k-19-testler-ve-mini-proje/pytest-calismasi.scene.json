@@ -1,0 +1,198 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "k19-pytest-calismasi",
+  "title": { "tr": "pytest Bir Koşuda Ne Yapar?", "en": "What pytest Does in One Run" },
+  "summary": {
+    "tr": "pytest'in test_*.py dosyalarını toplaması, test fonksiyonlarını bulması, her testi sırayla çalıştırması, fixture'ı test öncesi kurup sonra yıkması ve geçti/kaldı özetini çıkış koduyla birlikte raporlaması.",
+    "en": "pytest collecting test_*.py files, finding test functions, running each test in turn, setting a fixture up before a test and tearing it down after, and reporting the pass/fail summary along with an exit code."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda python -m pytest komutu, üstte üç dosya (test_fiyat.py, fiyat.py, test_servis.py), ortada toplayıcı ve çalıştırıcı, sağda üç test fonksiyonu, altta depo fixture'ı ve özet rapor bulunur. Toplayıcı yalnızca test_ ile başlayan dosyaları okur, fiyat.py atlanır ve üç test bulunur. Çalıştırıcı ilk testi çalıştırır ve geçer; ikinci testte assert başarısız olur ve F işaretlenir. Üçüncü test depo fixture'ını ister; fixture test öncesi taze bir depo kurar, test geçer ve fixture yıkılır. Son adımda rapor 1 kalan, 2 geçen test gösterir ve komut 1 çıkış koduyla biter.",
+      "en": "On the left is the python -m pytest command, at the top three files (test_fiyat.py, fiyat.py, test_servis.py), in the middle the collector and runner, on the right three test functions, at the bottom the depo fixture and the summary report. The collector only reads files starting with test_, fiyat.py is skipped and three tests are found. The runner runs the first test and it passes; in the second the assert fails and it is marked F. The third test asks for the depo fixture; the fixture builds a fresh repository before the test, the test passes and the fixture is torn down. In the last step the report shows 1 failed and 2 passed and the command exits with code 1."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "cli", "kind": "user", "label": "python -m pytest", "sublabel": { "tr": "terminal", "en": "terminal" }, "x": 110, "y": 300, "w": 170, "h": 70 },
+    { "id": "fa", "kind": "storage", "label": "test_fiyat.py", "x": 230, "y": 80, "w": 150, "h": 56 },
+    { "id": "fb", "kind": "storage", "label": "fiyat.py", "x": 410, "y": 80, "w": 130, "h": 56 },
+    { "id": "fc", "kind": "storage", "label": "tests/test_servis.py", "x": 610, "y": 80, "w": 190, "h": 56 },
+    { "id": "col", "kind": "service", "label": { "tr": "Toplayıcı", "en": "Collector" }, "sublabel": "collection", "x": 380, "y": 300, "w": 160, "h": 70 },
+    { "id": "run", "kind": "worker", "label": { "tr": "Çalıştırıcı", "en": "Runner" }, "sublabel": "runtest", "x": 620, "y": 300, "w": 160, "h": 70 },
+    { "id": "t1", "kind": "function", "label": "test_yuzde_on_indirim", "x": 870, "y": 190, "w": 200, "h": 56 },
+    { "id": "t2", "kind": "function", "label": "test_ceyrek_indirim", "x": 870, "y": 300, "w": 200, "h": 56 },
+    { "id": "t3", "kind": "function", "label": "test_odunc_al(depo)", "x": 870, "y": 410, "w": 200, "h": 56 },
+    { "id": "fx", "kind": "function", "label": "fixture: depo", "sublabel": "@pytest.fixture", "x": 620, "y": 520, "w": 170, "h": 64 },
+    { "id": "rep", "kind": "generic", "label": { "tr": "Özet rapor", "en": "Summary report" }, "x": 300, "y": 520, "w": 200, "h": 70 }
+  ],
+  "edges": [
+    { "id": "cli-col", "from": "cli", "to": "col", "kind": "control" },
+    { "id": "fa-col", "from": "fa", "to": "col", "kind": "data" },
+    { "id": "fb-col", "from": "fb", "to": "col", "kind": "data", "style": "dotted" },
+    { "id": "fc-col", "from": "fc", "to": "col", "kind": "data" },
+    { "id": "col-run", "from": "col", "to": "run", "kind": "control", "label": { "tr": "test öğeleri", "en": "test items" } },
+    { "id": "run-t1", "from": "run", "to": "t1", "kind": "request", "bidirectional": true },
+    { "id": "run-t2", "from": "run", "to": "t2", "kind": "request", "bidirectional": true },
+    { "id": "run-t3", "from": "run", "to": "t3", "kind": "request", "bidirectional": true },
+    { "id": "run-fx", "from": "run", "to": "fx", "kind": "control", "label": "setup / teardown" },
+    { "id": "fx-t3", "from": "fx", "to": "t3", "kind": "data", "curvature": 0.2, "label": { "tr": "taze depo", "en": "fresh depo" } },
+    { "id": "run-rep", "from": "run", "to": "rep", "kind": "response", "curvature": 0.2 },
+    { "id": "rep-cli", "from": "rep", "to": "cli", "kind": "response", "label": { "tr": "çıkış kodu", "en": "exit code" } }
+  ],
+  "steps": [
+    {
+      "id": "start",
+      "title": { "tr": "Komut başlar", "en": "The command starts" },
+      "narration": {
+        "tr": "`python -m pytest` önce kök klasörü ve ayarları (`pytest.ini`, `pyproject.toml`) belirler, sonra toplama aşamasını başlatır. Henüz hiçbir test çalışmadı.",
+        "en": "`python -m pytest` first determines the root directory and settings (`pytest.ini`, `pyproject.toml`), then starts the collection phase. No test has run yet."
+      },
+      "durationMs": 2800,
+      "inherit": false,
+      "highlight": { "nodes": ["cli", "col"], "edges": ["cli-col"] },
+      "nodeStates": {
+        "cli": { "status": "active" },
+        "col": { "status": "active" },
+        "t1": { "visible": false },
+        "t2": { "visible": false },
+        "t3": { "visible": false }
+      },
+      "packets": [{ "edge": "cli-col", "shape": "square", "label": "rootdir", "durationMs": 1100 }]
+    },
+    {
+      "id": "discover",
+      "title": { "tr": "Dosyalar taranır", "en": "Files are scanned" },
+      "narration": {
+        "tr": "Toplayıcı klasörleri gezer ve yalnızca adı `test_*.py` (ya da `*_test.py`) olan dosyaları içe aktarır. `fiyat.py` uygulama kodudur; doğrudan toplanmaz, testler onu import eder.",
+        "en": "The collector walks the folders and imports only files named `test_*.py` (or `*_test.py`). `fiyat.py` is application code; it isn't collected directly, the tests import it."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["fa", "fc", "col"], "edges": ["fa-col", "fc-col"] },
+      "nodeStates": {
+        "fa": { "status": "success", "badge": "✓" },
+        "fb": { "status": "muted", "badge": "atlandı" },
+        "fc": { "status": "success", "badge": "✓" },
+        "cli": { "status": "idle" }
+      },
+      "edgeStates": { "fb-col": { "status": "muted" } },
+      "packets": [
+        { "edge": "fa-col", "shape": "envelope", "label": "import", "durationMs": 1000 },
+        { "edge": "fc-col", "shape": "envelope", "label": "import", "startAt": 900, "durationMs": 1000 }
+      ]
+    },
+    {
+      "id": "collected",
+      "title": { "tr": "3 test toplandı", "en": "3 items collected" },
+      "narration": {
+        "tr": "İçe aktarılan modüllerde adı `test_` ile başlayan fonksiyonlar test öğesi olur. pytest `collected 3 items` yazar ve listeyi çalıştırıcıya verir. Toplama hatası (ör. sözdizimi hatası) olsaydı hiçbir test çalışmazdı.",
+        "en": "In the imported modules, functions whose names start with `test_` become test items. pytest prints `collected 3 items` and hands the list to the runner. Had collection failed (e.g. a syntax error), no test would run."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["col", "run"], "edges": ["col-run"] },
+      "nodeStates": {
+        "col": { "status": "success", "badge": "3 items", "counter": 3 },
+        "t1": { "visible": true },
+        "t2": { "visible": true },
+        "t3": { "visible": true },
+        "run": { "status": "active" }
+      },
+      "packets": [{ "edge": "col-run", "shape": "square", "label": "×3", "durationMs": 1100 }]
+    },
+    {
+      "id": "run-t1",
+      "title": { "tr": "İlk test geçer", "en": "The first test passes" },
+      "narration": {
+        "tr": "Çalıştırıcı testi bir fonksiyon gibi çağırır. `assert indirimli_fiyat(200, 10) == 180` doğrudur, istisna fırlamaz ve test **geçer**. Terminalde bir `.` belirir.",
+        "en": "The runner calls the test like a function. `assert indirimli_fiyat(200, 10) == 180` holds, no exception is raised and the test **passes**. A `.` appears in the terminal."
+      },
+      "durationMs": 2800,
+      "highlight": { "nodes": ["run", "t1"], "edges": ["run-t1"] },
+      "nodeStates": {
+        "col": { "status": "idle" },
+        "t1": { "status": "success", "badge": "." }
+      },
+      "packets": [
+        { "edge": "run-t1", "label": { "tr": "çağır", "en": "call" }, "durationMs": 800 },
+        { "edge": "run-t1", "direction": "backward", "label": "PASSED", "color": "success", "startAt": 1000, "durationMs": 900 }
+      ]
+    },
+    {
+      "id": "run-t2",
+      "title": { "tr": "İkinci test kalır", "en": "The second test fails" },
+      "narration": {
+        "tr": "`assert indirimli_fiyat(100, 25) == 70` yanlıştır ve `AssertionError` fırlar. pytest assert ifadesini önceden yeniden yazdığı için iki tarafın değerini de kaydeder: `75.0 == 70`. Test **kalır** (`F`), ama koşu durmaz.",
+        "en": "`assert indirimli_fiyat(100, 25) == 70` is false and raises `AssertionError`. Because pytest rewrote the assert beforehand, it records both sides: `75.0 == 70`. The test **fails** (`F`), but the run doesn't stop."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["run", "t2"], "edges": ["run-t2"] },
+      "nodeStates": { "t2": { "status": "error", "badge": "F" } },
+      "edgeStates": { "run-t2": { "status": "error" } },
+      "packets": [
+        { "edge": "run-t2", "label": { "tr": "çağır", "en": "call" }, "durationMs": 800 },
+        { "edge": "run-t2", "direction": "backward", "label": "AssertionError", "color": "danger", "shape": "square", "startAt": 1000, "durationMs": 1000 }
+      ],
+      "annotations": [
+        { "id": "assert-note", "x": 870, "y": 360, "text": "assert 75.0 == 70", "target": "t2", "tone": "danger" }
+      ]
+    },
+    {
+      "id": "fixture-setup",
+      "title": { "tr": "Fixture kurulur", "en": "The fixture is set up" },
+      "narration": {
+        "tr": "Üçüncü testin parametresi `depo`. pytest bu adda bir fixture bulur, test **başlamadan önce** onu çalıştırır ve dönen taze depoyu argüman olarak verir. Bu küçük bir dependency injection'dır.",
+        "en": "The third test has a `depo` parameter. pytest finds a fixture with that name, runs it **before the test starts** and passes the fresh repository it returns as the argument. This is a small dependency injection."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["fx", "t3"], "edges": ["run-fx", "fx-t3"] },
+      "nodeStates": { "fx": { "status": "active", "badge": "setup" } },
+      "edgeStates": { "run-t2": { "status": "idle" }, "run-fx": { "status": "active" }, "fx-t3": { "status": "active" } },
+      "packets": [
+        { "edge": "run-fx", "label": "setup", "durationMs": 900 },
+        { "edge": "fx-t3", "shape": "envelope", "label": { "tr": "depo", "en": "depo" }, "startAt": 1000, "durationMs": 1100 }
+      ]
+    },
+    {
+      "id": "fixture-teardown",
+      "title": { "tr": "Test geçer, fixture yıkılır", "en": "Test passes, fixture is torn down" },
+      "narration": {
+        "tr": "Test geçer. Fixture `yield` ile yazıldıysa `yield` sonrasındaki temizlik kodu şimdi çalışır. Sonraki test aynı fixture'ı isterse **yeni** bir depo alır; testler birbirinin verisini görmez.",
+        "en": "The test passes. If the fixture was written with `yield`, the cleanup code after `yield` runs now. If the next test asks for the same fixture it gets a **new** repository; tests never see each other's data."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["t3", "fx"], "edges": ["run-t3", "run-fx"] },
+      "nodeStates": {
+        "t3": { "status": "success", "badge": "." },
+        "fx": { "status": "muted", "badge": "teardown" }
+      },
+      "edgeStates": { "fx-t3": { "status": "idle" }, "run-fx": { "status": "idle" } },
+      "packets": [
+        { "edge": "run-t3", "direction": "backward", "label": "PASSED", "color": "success", "durationMs": 900 },
+        { "edge": "run-fx", "label": "teardown", "startAt": 1100, "durationMs": 900 }
+      ]
+    },
+    {
+      "id": "report",
+      "title": { "tr": "Özet ve çıkış kodu", "en": "Summary and exit code" },
+      "narration": {
+        "tr": "pytest sonuçları toplar: kalan testin ayrıntısı `FAILURES` bölümünde, özet en altta: `1 failed, 2 passed`. Bir test bile kalınca komut **1** çıkış koduyla biter; CI hattı bu kodu görüp aşamayı kırmızıya çevirir.",
+        "en": "pytest gathers the results: the failing test's details go in the `FAILURES` section, the summary at the bottom: `1 failed, 2 passed`. If even one test fails the command exits with code **1**; a CI pipeline sees this code and turns the stage red."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["rep", "cli"], "edges": ["run-rep", "rep-cli"] },
+      "nodeStates": {
+        "run": { "status": "idle" },
+        "rep": { "status": "error", "badge": "1 F · 2 ✓", "sublabel": "1 failed, 2 passed" },
+        "cli": { "status": "error", "badge": "exit 1" }
+      },
+      "packets": [
+        { "edge": "run-rep", "shape": "square", "label": ". F .", "durationMs": 1100 },
+        { "edge": "rep-cli", "shape": "envelope", "label": "exit 1", "color": "danger", "startAt": 1300, "durationMs": 1100 }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["python", "pytest", "testing", "fixture"]
+}

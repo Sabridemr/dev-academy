@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 360" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Sözlükte anahtar araması: hash ile doğrudan konuma gitmek</title>
+  <desc id="desc">Solda bir listede arama: Python "ada" değerini bulmak için elemanlara baştan sona tek tek bakar, maliyet eleman sayısıyla büyür. Sağda sözlükte arama: "ada" anahtarı hash fonksiyonundan geçer, bir tam sayı üretilir, bu sayıdan tablodaki konum hesaplanır ve doğrudan o yuvaya bakılır; maliyet ortalamada sabittir. Altta not: anahtarın hash değeri değişmemelidir, bu yüzden list, dict ve set anahtar olamaz.</desc>
+  <defs>
+    <marker id="k05-ok" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+  </defs>
+
+  <text x="170" y="30" text-anchor="middle" font-size="15" font-weight="600" fill="var(--da-fg, #0f172a)">list: "ada" in kullanicilar</text>
+  <text x="640" y="30" text-anchor="middle" font-size="15" font-weight="600" fill="var(--da-fg, #0f172a)">dict: kullanicilar["ada"]</text>
+  <line x1="350" y1="45" x2="350" y2="290" stroke="var(--da-border, #cbd5e1)" stroke-dasharray="6 6"/>
+
+  <!-- Liste taraması -->
+  <g stroke="var(--da-border, #cbd5e1)" stroke-width="1.5" fill="var(--da-surface, #f8fafc)">
+    <rect x="70" y="55" width="200" height="36" rx="6"/>
+    <rect x="70" y="97" width="200" height="36" rx="6"/>
+    <rect x="70" y="139" width="200" height="36" rx="6"/>
+    <rect x="70" y="181" width="200" height="36" rx="6"/>
+  </g>
+  <rect x="70" y="223" width="200" height="36" rx="6" fill="var(--da-surface, #f8fafc)" stroke="var(--da-success, #10b981)" stroke-width="2"/>
+  <g font-size="13" text-anchor="middle" fill="var(--da-fg, #0f172a)">
+    <text x="170" y="78">"can"</text>
+    <text x="170" y="120">"ece"</text>
+    <text x="170" y="162">"bora"</text>
+    <text x="170" y="204">"deniz"</text>
+    <text x="170" y="246" font-weight="600">"ada"</text>
+  </g>
+  <g font-size="12" fill="var(--da-danger, #ef4444)">
+    <text x="280" y="78">✕ 1</text>
+    <text x="280" y="120">✕ 2</text>
+    <text x="280" y="162">✕ 3</text>
+    <text x="280" y="204">✕ 4</text>
+  </g>
+  <text x="280" y="246" font-size="12" fill="var(--da-success, #10b981)">✓ 5</text>
+  <text x="170" y="282" text-anchor="middle" font-size="12" fill="var(--da-muted, #64748b)">tek tek bakar: O(n)</text>
+
+  <!-- Sözlük -->
+  <rect x="380" y="120" width="90" height="44" rx="10" fill="var(--da-surface, #f8fafc)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5"/>
+  <text x="425" y="147" text-anchor="middle" font-size="13" fill="var(--da-fg, #0f172a)">"ada"</text>
+  <rect x="505" y="120" width="110" height="44" rx="10" fill="var(--da-primary, #6366f1)" opacity="0.12" stroke="var(--da-primary, #6366f1)" stroke-width="2"/>
+  <text x="560" y="147" text-anchor="middle" font-size="13" fill="var(--da-primary, #6366f1)">hash("ada")</text>
+  <text x="560" y="190" text-anchor="middle" font-size="12" fill="var(--da-muted, #64748b)">→ tam sayı → yuva 2</text>
+  <g stroke="var(--da-muted, #64748b)" stroke-width="1.8" fill="none" marker-end="url(#k05-ok)">
+    <path d="M 470 142 L 501 142"/>
+    <path d="M 615 142 C 650 142, 650 177, 676 177"/>
+  </g>
+  <g stroke="var(--da-border, #cbd5e1)" stroke-width="1.5" fill="var(--da-surface, #f8fafc)">
+    <rect x="680" y="55" width="190" height="36" rx="6"/>
+    <rect x="680" y="97" width="190" height="36" rx="6"/>
+    <rect x="680" y="181" width="190" height="36" rx="6"/>
+    <rect x="680" y="223" width="190" height="36" rx="6"/>
+  </g>
+  <rect x="680" y="139" width="190" height="36" rx="6" fill="var(--da-surface, #f8fafc)" stroke="var(--da-success, #10b981)" stroke-width="2"/>
+  <g font-size="12" fill="var(--da-muted, #64748b)">
+    <text x="666" y="78" text-anchor="end">0</text>
+    <text x="666" y="120" text-anchor="end">1</text>
+    <text x="666" y="162" text-anchor="end">2</text>
+    <text x="666" y="204" text-anchor="end">3</text>
+    <text x="666" y="246" text-anchor="end">4</text>
+  </g>
+  <g font-size="13" text-anchor="middle" fill="var(--da-fg, #0f172a)">
+    <text x="775" y="78">"can" → {...}</text>
+    <text x="775" y="120">boş</text>
+    <text x="775" y="162" font-weight="600">"ada" → {...}</text>
+    <text x="775" y="204">"ece" → {...}</text>
+    <text x="775" y="246">boş</text>
+  </g>
+  <text x="640" y="282" text-anchor="middle" font-size="12" fill="var(--da-muted, #64748b)">doğrudan yuvaya gider: ortalama O(1)</text>
+
+  <rect x="40" y="305" width="820" height="40" rx="10" fill="var(--da-surface, #f8fafc)" stroke="var(--da-accent, #f59e0b)" stroke-width="1.5"/>
+  <text x="450" y="330" text-anchor="middle" font-size="13" fill="var(--da-fg, #0f172a)">Anahtarın hash değeri değişmemeli: int, str, tuple anahtar olur; list, dict, set olamaz (unhashable)</text>
+</svg>

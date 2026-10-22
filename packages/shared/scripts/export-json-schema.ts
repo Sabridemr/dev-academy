@@ -14,7 +14,9 @@ import {
   ModuleManifestSchema,
   QuizSchema,
   LearningPathManifestSchema,
+  ExerciseSchema,
 } from '../src/content/schema';
+import { GlossarySchema } from '../src/content/glossary';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const outDir = join(here, '..', 'schema');
@@ -27,6 +29,8 @@ const targets: [string, Parameters<typeof zodToJsonSchema>[0]][] = [
   ['lesson-block.schema.json', LessonBlockSchema],
   ['module.schema.json', ModuleManifestSchema],
   ['learning-path.schema.json', LearningPathManifestSchema],
+  ['exercise.schema.json', ExerciseSchema],
+  ['concepts.schema.json', GlossarySchema],
 ];
 
 for (const [file, schema] of targets) {

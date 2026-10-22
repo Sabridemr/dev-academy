@@ -1,0 +1,217 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "k16-constructor-injection",
+  "title": { "tr": "Constructor Injection: Aynı Servis, Takılabilir Depo", "en": "Constructor Injection: Same Service, Pluggable Repository" },
+  "summary": {
+    "tr": "Bağımlılığını kendi oluşturan servisten, yalnızca Protocol'ü bilen servise geçiş; composition root'ta gerçek deponun kurulup servise verilmesi ve testte aynı servise sahte deponun takılması.",
+    "en": "Moving from a service that builds its own dependency to one that only knows a Protocol; the composition root building the real repository and handing it to the service, and a test plugging a fake repository into the same service."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Ortada SiparisServisi, üstünde SiparisDeposu protokolü, sağda PostgresDepo ve SahteDepo, solda composition root (main.py) ve test dosyası bulunur. İlk adımda servis PostgresDepo'yu kendisi oluşturur ve bu sıkı bağ kırmızıyla gösterilir. Sonra servis yalnızca protokole bağlanır; iki depo da protokole uyar. Composition root PostgresDepo'yu oluşturup servisin kurucusuna verir ve çalışma anında kaydet çağrısı gerçek depoya gider. Testte ise aynı servis sınıfına SahteDepo verilir; kaydet çağrısı bellekteki listeye gider ve test bu listeyi kontrol edip geçer.",
+      "en": "SiparisServisi is in the middle, the SiparisDeposu protocol above it, PostgresDepo and SahteDepo on the right, and the composition root (main.py) and a test file on the left. In the first step the service builds PostgresDepo itself and this tight coupling is shown in red. Then the service depends only on the protocol; both repositories conform to it. The composition root builds PostgresDepo and passes it to the service's constructor, and at runtime the save call goes to the real repository. In the test the same service class receives SahteDepo; the save call goes to an in-memory list and the test checks that list and passes."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "root", "kind": "service", "label": "Composition root", "sublabel": "main.py", "x": 150, "y": 190, "w": 190, "h": 70 },
+    { "id": "test", "kind": "client", "label": "test_siparis.py", "sublabel": "pytest", "x": 150, "y": 470, "w": 190, "h": 70 },
+    { "id": "proto", "kind": "generic", "label": "SiparisDeposu", "sublabel": "Protocol: kaydet(urun)", "x": 500, "y": 80, "w": 210, "h": 64 },
+    { "id": "servis", "kind": "service", "label": "SiparisServisi", "sublabel": "__init__(self, depo)", "x": 500, "y": 330, "w": 200, "h": 80 },
+    { "id": "pg", "kind": "db", "label": "PostgresDepo", "sublabel": { "tr": "gerçek veritabanı", "en": "real database" }, "x": 840, "y": 200, "w": 170, "h": 70 },
+    { "id": "sahte", "kind": "storage", "label": "SahteDepo", "sublabel": "kayitlar = [ ]", "x": 840, "y": 470, "w": 170, "h": 70 }
+  ],
+  "edges": [
+    { "id": "servis-proto", "from": "servis", "to": "proto", "kind": "control", "style": "dashed", "label": { "tr": "yalnızca bunu bilir", "en": "knows only this" } },
+    { "id": "pg-proto", "from": "pg", "to": "proto", "kind": "generic", "style": "dotted", "label": { "tr": "uyar", "en": "conforms" } },
+    { "id": "sahte-proto", "from": "sahte", "to": "proto", "kind": "generic", "style": "dotted", "curvature": 0.35, "label": { "tr": "uyar", "en": "conforms" } },
+    { "id": "root-pg", "from": "root", "to": "pg", "kind": "control", "curvature": -0.25, "label": { "tr": "oluştur", "en": "build" } },
+    { "id": "root-servis", "from": "root", "to": "servis", "kind": "control", "label": { "tr": "depo'yu ver", "en": "pass depo" } },
+    { "id": "servis-pg", "from": "servis", "to": "pg", "kind": "request", "label": "kaydet()" },
+    { "id": "test-sahte", "from": "test", "to": "sahte", "kind": "control", "curvature": 0.15, "label": { "tr": "oluştur / kontrol et", "en": "build / check" } },
+    { "id": "test-servis", "from": "test", "to": "servis", "kind": "control", "label": { "tr": "depo'yu ver", "en": "pass depo" } },
+    { "id": "servis-sahte", "from": "servis", "to": "sahte", "kind": "request", "label": "kaydet()" }
+  ],
+  "steps": [
+    {
+      "id": "tight",
+      "title": { "tr": "Sorun: servis bağımlılığını kendisi kuruyor", "en": "Problem: the service builds its own dependency" },
+      "narration": {
+        "tr": "İlk tasarımda `SiparisServisi.__init__` içinde `PostgresDepo(\"postgres://uretim...\")` çağrılır. Servisi oluşturan herkes, testler dahil, gerçek veritabanına bağlanır. Bağımlılık imzada görünmez.",
+        "en": "In the first design `SiparisServisi.__init__` calls `PostgresDepo(\"postgres://production...\")`. Everyone who creates the service, tests included, connects to the real database. The dependency is invisible in the signature."
+      },
+      "durationMs": 3600,
+      "inherit": false,
+      "highlight": { "nodes": ["servis", "pg"], "edges": ["servis-pg"] },
+      "nodeStates": {
+        "servis": { "status": "warning", "sublabel": "__init__(self)" },
+        "pg": { "status": "active" },
+        "root": { "status": "muted" },
+        "test": { "visible": false },
+        "proto": { "visible": false },
+        "sahte": { "visible": false }
+      },
+      "edgeStates": {
+        "servis-pg": { "status": "error", "label": { "tr": "new PostgresDepo(...)", "en": "new PostgresDepo(...)" } },
+        "servis-proto": { "visible": false },
+        "pg-proto": { "visible": false },
+        "sahte-proto": { "visible": false },
+        "root-pg": { "visible": false },
+        "root-servis": { "visible": false },
+        "test-sahte": { "visible": false },
+        "test-servis": { "visible": false },
+        "servis-sahte": { "visible": false }
+      },
+      "packets": [{ "edge": "servis-pg", "shape": "square", "color": "danger", "label": "PostgresDepo()", "durationMs": 1400 }],
+      "annotations": [
+        { "id": "tight-note", "x": 640, "y": 440, "text": { "tr": "sıkı bağ: test edilemez", "en": "tight coupling: untestable" }, "target": "servis", "tone": "danger" }
+      ]
+    },
+    {
+      "id": "protocol",
+      "title": { "tr": "Soyutlamaya bağlan", "en": "Depend on an abstraction" },
+      "narration": {
+        "tr": "İş katmanı bir `SiparisDeposu` **Protocol**'ü tanımlar: `kaydet(urun)` metodu olan her nesne uyar. Servis artık depoyu oluşturmaz, kurucuda **parametre** olarak ister ve yalnızca protokolü bilir. Ok yönü tersine döndü: ayrıntılar soyutlamaya bağımlı.",
+        "en": "The business layer defines a `SiparisDeposu` **Protocol**: any object with a `kaydet(urun)` method conforms. The service no longer builds the repository; it asks for it as a constructor **parameter** and knows only the protocol. The arrow is inverted: details depend on the abstraction."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["proto", "servis"], "edges": ["servis-proto", "pg-proto", "sahte-proto"] },
+      "nodeStates": {
+        "servis": { "status": "idle", "sublabel": "__init__(self, depo)" },
+        "pg": { "status": "idle" },
+        "proto": { "visible": true, "status": "active" },
+        "sahte": { "visible": true }
+      },
+      "edgeStates": {
+        "servis-pg": { "visible": false },
+        "servis-proto": { "visible": true, "status": "active" },
+        "pg-proto": { "visible": true, "status": "active" },
+        "sahte-proto": { "visible": true, "status": "active" }
+      },
+      "packets": [
+        { "edge": "servis-proto", "shape": "diamond", "durationMs": 900 },
+        { "edge": "pg-proto", "shape": "diamond", "startAt": 1000, "durationMs": 900 },
+        { "edge": "sahte-proto", "shape": "diamond", "startAt": 1600, "durationMs": 900 }
+      ]
+    },
+    {
+      "id": "root-build",
+      "title": { "tr": "Composition root gerçek depoyu kurar", "en": "The composition root builds the real repository" },
+      "narration": {
+        "tr": "Bütün somut nesneler tek bir yerde, uygulamanın giriş noktasında (`main.py`) oluşturulur. Bağlantı adresini bilen tek yer burasıdır.",
+        "en": "All concrete objects are created in one place, the application's entry point (`main.py`). This is the only place that knows the connection URL."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["root", "pg"], "edges": ["root-pg"] },
+      "nodeStates": {
+        "root": { "status": "active" },
+        "pg": { "status": "active", "badge": "depo" },
+        "proto": { "status": "idle" }
+      },
+      "edgeStates": {
+        "root-pg": { "visible": true, "status": "active" },
+        "servis-proto": { "status": "idle" },
+        "pg-proto": { "status": "idle" },
+        "sahte-proto": { "status": "idle" }
+      },
+      "packets": [{ "edge": "root-pg", "shape": "square", "label": "PostgresDepo(url)", "durationMs": 1300 }]
+    },
+    {
+      "id": "root-inject",
+      "title": { "tr": "Bağımlılık kurucudan enjekte edilir", "en": "The dependency is injected via the constructor" },
+      "narration": {
+        "tr": "`servis = SiparisServisi(depo=depo)`: root hazırladığı nesneyi servise verir. Servisin `self.depo` niteliği artık bu nesneye bir **referans** tutar; servis onun hangi sınıf olduğunu bilmez, sormaz.",
+        "en": "`servis = SiparisServisi(depo=depo)`: the root hands the object it built to the service. The service's `self.depo` attribute now holds a **reference** to it; the service neither knows nor asks which class it is."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["root", "servis"], "edges": ["root-servis"] },
+      "nodeStates": {
+        "servis": { "status": "active", "sublabel": "self.depo → PostgresDepo" }
+      },
+      "edgeStates": { "root-servis": { "visible": true, "status": "active" }, "root-pg": { "status": "idle" } },
+      "packets": [{ "edge": "root-servis", "shape": "envelope", "label": "depo", "durationMs": 1200 }]
+    },
+    {
+      "id": "run-prod",
+      "title": { "tr": "Çalışma anında gerçek depo", "en": "Real repository at runtime" },
+      "narration": {
+        "tr": "`servis.olustur(\"kitap\")` çağrısı `self.depo.kaydet(...)` der. Çağrı protokolün sözleşmesine göre yazılmıştır, ama gerçekte PostgresDepo'ya gider ve satır veritabanına yazılır.",
+        "en": "Calling `servis.olustur(\"kitap\")` executes `self.depo.kaydet(...)`. The call is written against the protocol's contract, but at runtime it reaches PostgresDepo and the row is written to the database."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["servis", "pg"], "edges": ["servis-pg"] },
+      "nodeStates": { "pg": { "status": "success", "counter": 1, "badge": "INSERT" } },
+      "edgeStates": {
+        "servis-pg": { "visible": true, "status": "active", "label": "kaydet()" },
+        "root-servis": { "status": "idle" }
+      },
+      "packets": [{ "edge": "servis-pg", "shape": "envelope", "label": "kaydet(\"kitap\")", "durationMs": 1300 }]
+    },
+    {
+      "id": "test-build",
+      "title": { "tr": "Testte sahte depo kurulur", "en": "The test builds a fake repository" },
+      "narration": {
+        "tr": "Test kendi küçük composition root'udur. Veritabanına dokunmadan, protokole uyan ve kayıtları bir listede tutan `SahteDepo()` oluşturur. Üretim nesneleri bu dünyada hiç yoktur.",
+        "en": "A test is its own small composition root. Without touching the database it creates `SahteDepo()`, which conforms to the protocol and keeps records in a list. Production objects don't exist in this world at all."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["test", "sahte"], "edges": ["test-sahte"] },
+      "nodeStates": {
+        "root": { "status": "muted" },
+        "pg": { "status": "muted", "badge": "", "counter": 0 },
+        "servis": { "status": "idle", "sublabel": "__init__(self, depo)" },
+        "test": { "visible": true, "status": "active" },
+        "sahte": { "status": "active", "badge": "depo" }
+      },
+      "edgeStates": {
+        "servis-pg": { "visible": false },
+        "root-pg": { "status": "muted" },
+        "root-servis": { "status": "muted" },
+        "test-sahte": { "visible": true, "status": "active" }
+      },
+      "packets": [{ "edge": "test-sahte", "shape": "square", "label": "SahteDepo()", "durationMs": 1200 }]
+    },
+    {
+      "id": "test-inject",
+      "title": { "tr": "Aynı servise sahte depo takılır", "en": "The fake is plugged into the same service" },
+      "narration": {
+        "tr": "`SiparisServisi(depo=sahte)`: servis sınıfında **tek satır değişmedi**. Değişen yalnızca dışarıdan verilen nesne. Bu, Liskov ilkesinin ve DIP'in birlikte kazandırdığı esnekliktir.",
+        "en": "`SiparisServisi(depo=sahte)`: **not a single line** of the service class changed. Only the object handed in from outside changed. This is the flexibility that Liskov and DIP give together."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["test", "servis"], "edges": ["test-servis"] },
+      "nodeStates": { "servis": { "status": "active", "sublabel": "self.depo → SahteDepo" } },
+      "edgeStates": { "test-servis": { "visible": true, "status": "active" }, "test-sahte": { "status": "idle" } },
+      "packets": [{ "edge": "test-servis", "shape": "envelope", "label": "depo", "durationMs": 1200 }],
+      "annotations": [
+        { "id": "same-class", "x": 500, "y": 220, "text": { "tr": "servis kodu aynı", "en": "service code unchanged" }, "target": "servis", "tone": "success" }
+      ]
+    },
+    {
+      "id": "test-assert",
+      "title": { "tr": "Test hızlı ve izole geçer", "en": "The test passes fast and isolated" },
+      "narration": {
+        "tr": "`olustur(\"kitap\")` bu kez sahte depoya gider; kayıt bellekteki listeye eklenir. Test `sahte.kayitlar == [\"kitap\"]` diye kontrol eder ve milisaniyeler içinde geçer: ağ yok, veritabanı yok, temizlik yok.",
+        "en": "`olustur(\"kitap\")` now reaches the fake repository; the record is appended to the in-memory list. The test checks `sahte.kayitlar == [\"kitap\"]` and passes in milliseconds: no network, no database, no cleanup."
+      },
+      "durationMs": 3800,
+      "highlight": { "nodes": ["servis", "sahte", "test"], "edges": ["servis-sahte", "test-sahte"] },
+      "nodeStates": {
+        "sahte": { "status": "success", "sublabel": "kayitlar = [\"kitap\"]", "counter": 1 },
+        "test": { "status": "success", "badge": "PASSED" }
+      },
+      "edgeStates": {
+        "servis-sahte": { "visible": true, "status": "active" },
+        "test-servis": { "status": "idle" }
+      },
+      "packets": [
+        { "edge": "servis-sahte", "shape": "envelope", "label": "kaydet(\"kitap\")", "durationMs": 1200 },
+        { "edge": "test-sahte", "direction": "backward", "shape": "diamond", "label": "assert", "startAt": 1600, "durationMs": 1200 }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["python", "solid", "dependency-injection", "testing"]
+}

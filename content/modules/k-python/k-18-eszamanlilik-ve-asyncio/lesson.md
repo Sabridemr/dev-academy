@@ -48,6 +48,12 @@ Doğru aracı seçmek için önce işinin **nerede beklediğini** bilmelisin:
 | **I/O-bound** (giriş/çıkışa bağlı) | Ağ, disk, veritabanı cevabını **beklemeye** | HTTP istekleri, dosya indirme, SQL sorguları | Eşzamanlılık: thread ya da asyncio |
 | **CPU-bound** (işlemciye bağlı) | İşlemcinin **hesap yapmasına** | Resim işleme, şifreleme, büyük sayısal hesaplar | Paralellik: birden fazla süreç (process) |
 
+Üç aracın iç yapısını yan yana görmek, aralarındaki farkı ezberlemekten daha kalıcıdır:
+
+:::diagram{src="eszamanlilik-modelleri.svg" alt="Üç sütun: threading'de tek süreçte tek GIL'i paylaşan thread'ler, multiprocessing'de kendi GIL'i olan ayrı süreçler, asyncio'da tek thread'de görevleri ilerleten olay döngüsü|Three columns: threads sharing one GIL in one process, separate processes each with its own GIL, and an event loop driving tasks on a single thread"}
+Sütunları ders ilerledikçe tek tek açacağız; sonunda "Hangi durumda hangisi?" tablosu bu şemanın özetidir.
+:::
+
 ## threading: aynı süreçte birden fazla iş
 
 **Thread** (iş parçacığı), aynı süreç (process) içinde çalışan bağımsız bir yürütme akışıdır. Thread'ler aynı belleği
@@ -294,6 +300,13 @@ Gerçek asyncio'da `yield` yerine `await`, kuyruk yerine olay döngüsünün haz
 Ağ işlemlerinde de işletim sistemine "bu soket okunabilir olunca haber ver" denir. Python'da coroutine'ler zaten
 generator mekanizmasının üzerine kuruludur.
 
+Aşağıdaki animasyon bu döngüyü `asyncio.gather` ile başlatılan üç görev üzerinde gösteriyor.
+
+:::animation{scene="olay-dongusu.scene.json"}
+Hazır kuyruğunun içeriğini ve görevlerin rozetlerini (`await`, `✓`) izle: bir görev yalnızca `await`'te kontrolü
+bırakır ve bekleme süresi bitince yeniden kuyruğa girer. Son adım, bloklayan bir çağrının döngüyü nasıl dondurduğunu gösterir.
+:::
+
 ### async/await, gather ve create_task
 
 :::code{lang="python" title="Üç isteği asyncio.gather ile aynı anda beklemek"}
@@ -418,6 +431,20 @@ Bir rapor servisi 40 farklı API'den veri topluyor ve her istek ortalama 300 ms 
 İş I/O-bound olduğu için `ThreadPoolExecutor(max_workers=10)` ile toplama süresi yaklaşık 1,2 saniyeye iner. Servis
 zaten FastAPI gibi asenkron bir çatıdaysa aynı iş `httpx.AsyncClient` ve `asyncio.gather` ile yapılır. Raporun sonundaki
 ağır PDF üretimi ise CPU-bound'dur ve süreç havuzuna gönderilir.
+:::
+
+:::realworld{company="Instagram (Meta)"}
+Instagram'ın Python sunucusu, Meta'nın açık kaynak olarak yayımladığı **Cinder** adlı CPython çatalı üzerinde çalışır.
+Cinder deposunun belgeleri, bu çatalda yapılan iyileştirmelerden birinin **asenkron kodun maliyetini düşürmek**
+olduğunu anlatır: Instagram'ın kodunda çok sayıda `async` fonksiyon vardır ve bunların önemli bir kısmı aslında hiç
+beklemeden, ilk `await`'e gelmeden sonuç üretir. Böyle bir çağrı için önce bir coroutine nesnesi ve görev oluşturup
+olay döngüsünün kuyruğuna koymak gereksiz iştir. Cinder'daki "eager" (hevesli) değerlendirme, hemen `await` edilen
+bir coroutine'i ilk askıya alınma noktasına kadar doğrudan çalıştırır.
+
+Bu fikir standart Python'a da taşındı: Python 3.12 ile gelen `asyncio.eager_task_factory`, görevi oluşturulduğu anda
+ilk `await`'e kadar eşzamanlı çalıştırır; hiç beklemeyen görev olay döngüsüne hiç uğramadan biter. Animasyondaki
+"hazır kuyruğuna gir, sıranı bekle" adımlarının her birinin küçük bir maliyeti vardır ve çok büyük ölçekte bu maliyet
+ölçülebilir hâle gelir. Kendi kodunda böyle bir optimizasyona geçmeden önce yine aynı kural geçerli: önce ölç.
 :::
 
 ## Özet

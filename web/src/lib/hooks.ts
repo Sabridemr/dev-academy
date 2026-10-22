@@ -32,6 +32,8 @@ import type {
   ExamResult,
   SubmitExamDto,
   AdminLessonAnalytics,
+  ConceptDetail,
+  ConceptSummary,
 } from '@devacademy/shared';
 import { api } from './api';
 import { useAuthStore, useIsAuthenticated } from './auth-store';
@@ -116,6 +118,28 @@ export function useSearch(q: string) {
     queryFn: () => api<SearchResponse>(`/search?q=${encodeURIComponent(q)}`, { anonymous: true }),
     enabled: q.trim().length >= 2,
     placeholderData: (prev) => prev,
+  });
+}
+
+/* -------------------------- Kavram sözlüğü -------------------------- */
+
+/** Tüm sözlük (≈1000 kavram) tek istekte gelir; arama ve harf süzgeci istemcide yapılır */
+export function useConcepts(initial?: ConceptSummary[]) {
+  return useQuery({
+    queryKey: ['concepts'],
+    queryFn: () => api<ConceptSummary[]>('/concepts', { anonymous: true }),
+    initialData: initial,
+    staleTime: 10 * 60_000,
+  });
+}
+
+export function useConcept(id: string, initial?: ConceptDetail) {
+  return useQuery({
+    queryKey: ['concept', id],
+    queryFn: () => api<ConceptDetail>(`/concepts/${encodeURIComponent(id)}`, { anonymous: true }),
+    initialData: initial,
+    enabled: Boolean(id),
+    staleTime: 10 * 60_000,
   });
 }
 

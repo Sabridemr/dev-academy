@@ -1,0 +1,752 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "m-04-hnsw-search",
+  "title": {
+    "tr": "HNSW: Ekleme ve Katmanlı Arama",
+    "en": "HNSW: Insertion and Layered Search"
+  },
+  "summary": {
+    "tr": "Yeni bir parça gömülür ve en alt katmanda komşularına bağlanır. Sorgu en üst katmandaki giriş noktasından başlar, açgözlü adımlarla yaklaşır, katman katman iner ve en alt katmanda aday listesini genişleterek en yakın k komşuyu döndürür.",
+    "en": "A new chunk is embedded and linked to its neighbours in the bottom layer. A query starts at the entry point in the top layer, moves greedily closer, descends layer by layer and widens the candidate list in the bottom layer to return the k nearest neighbours."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda yeni parça, gömme modeli ve sorgu alt alta durur. Sağda üç katmanlı bir HNSW grafı vardır: üstte iki düğümlü L2, ortada üç düğümlü L1, altta dört düğümlü L0 ve en sağda top-k sonuç kutusu. Önce yeni parça vektöre çevrilir ve L0'da iki komşusuna bağlanır. Ardından sorgu gömülür, L2'deki giriş noktasından sorguya daha yakın düğüme geçer, L1'e iner ve orada da yaklaşır, L0'a iner ve aday listesini komşulara genişletir. Sonuç kutusuna en yakın komşular gider; ziyaret edilmeyen düğümler soluk kalır.",
+      "en": "On the left the new chunk, the embedding model and the query are stacked. On the right is a three-layer HNSW graph: L2 with two nodes at the top, L1 with three in the middle, L0 with four at the bottom and a top-k result box at the far right. First the new chunk is turned into a vector and linked to two neighbours in L0. Then the query is embedded, moves from the entry point in L2 to a node closer to the query, descends to L1 and gets closer there, descends to L0 and widens the candidate list to neighbours. The nearest neighbours go to the result box; unvisited nodes stay faded."
+    }
+  },
+  "canvas": {
+    "width": 1000,
+    "height": 600
+  },
+  "nodes": [
+    {
+      "id": "doc",
+      "kind": "client",
+      "label": {
+        "tr": "Yeni parça",
+        "en": "New chunk"
+      },
+      "x": 100,
+      "y": 110,
+      "w": 140,
+      "h": 70
+    },
+    {
+      "id": "emb",
+      "kind": "model",
+      "label": {
+        "tr": "Gömme modeli",
+        "en": "Embedding model"
+      },
+      "x": 100,
+      "y": 300,
+      "w": 150,
+      "h": 80
+    },
+    {
+      "id": "query",
+      "kind": "user",
+      "label": {
+        "tr": "Sorgu",
+        "en": "Query"
+      },
+      "sublabel": "\"Kargom nerede?\"",
+      "x": 100,
+      "y": 490,
+      "w": 140,
+      "h": 70
+    },
+    {
+      "id": "a2",
+      "kind": "generic",
+      "label": {
+        "tr": "L2 giriş",
+        "en": "L2 entry"
+      },
+      "x": 400,
+      "y": 100,
+      "w": 110,
+      "h": 56
+    },
+    {
+      "id": "b2",
+      "kind": "generic",
+      "label": "L2·b",
+      "x": 680,
+      "y": 100,
+      "w": 110,
+      "h": 56
+    },
+    {
+      "id": "a1",
+      "kind": "generic",
+      "label": "L1·a",
+      "x": 360,
+      "y": 290,
+      "w": 100,
+      "h": 56
+    },
+    {
+      "id": "b1",
+      "kind": "generic",
+      "label": "L1·b",
+      "x": 540,
+      "y": 290,
+      "w": 100,
+      "h": 56
+    },
+    {
+      "id": "c1",
+      "kind": "generic",
+      "label": "L1·c",
+      "x": 720,
+      "y": 290,
+      "w": 100,
+      "h": 56
+    },
+    {
+      "id": "a0",
+      "kind": "generic",
+      "label": "L0·a",
+      "x": 330,
+      "y": 490,
+      "w": 96,
+      "h": 56
+    },
+    {
+      "id": "b0",
+      "kind": "generic",
+      "label": "L0·b",
+      "x": 470,
+      "y": 490,
+      "w": 96,
+      "h": 56
+    },
+    {
+      "id": "c0",
+      "kind": "generic",
+      "label": "L0·c",
+      "x": 610,
+      "y": 490,
+      "w": 96,
+      "h": 56
+    },
+    {
+      "id": "d0",
+      "kind": "generic",
+      "label": "L0·d",
+      "x": 750,
+      "y": 490,
+      "w": 96,
+      "h": 56
+    },
+    {
+      "id": "res",
+      "kind": "generic",
+      "label": "Top-k",
+      "x": 910,
+      "y": 390,
+      "w": 110,
+      "h": 64
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-doc-emb",
+      "from": "doc",
+      "to": "emb",
+      "kind": "data"
+    },
+    {
+      "id": "e-q-emb",
+      "from": "query",
+      "to": "emb",
+      "kind": "request"
+    },
+    {
+      "id": "e-emb-c0",
+      "from": "emb",
+      "to": "c0",
+      "kind": "data",
+      "label": {
+        "tr": "ekle",
+        "en": "insert"
+      },
+      "style": "dashed",
+      "curvature": 0.25
+    },
+    {
+      "id": "e-emb-a2",
+      "from": "emb",
+      "to": "a2",
+      "kind": "request",
+      "label": {
+        "tr": "giriş noktası",
+        "en": "entry point"
+      }
+    },
+    {
+      "id": "e-a2-b2",
+      "from": "a2",
+      "to": "b2",
+      "kind": "generic"
+    },
+    {
+      "id": "e-a2-a1",
+      "from": "a2",
+      "to": "a1",
+      "kind": "control",
+      "style": "dotted"
+    },
+    {
+      "id": "e-b2-c1",
+      "from": "b2",
+      "to": "c1",
+      "kind": "control",
+      "style": "dotted"
+    },
+    {
+      "id": "e-a1-b1",
+      "from": "a1",
+      "to": "b1",
+      "kind": "generic"
+    },
+    {
+      "id": "e-b1-c1",
+      "from": "b1",
+      "to": "c1",
+      "kind": "generic"
+    },
+    {
+      "id": "e-b1-b0",
+      "from": "b1",
+      "to": "b0",
+      "kind": "control",
+      "style": "dotted"
+    },
+    {
+      "id": "e-a0-b0",
+      "from": "a0",
+      "to": "b0",
+      "kind": "generic"
+    },
+    {
+      "id": "e-b0-c0",
+      "from": "b0",
+      "to": "c0",
+      "kind": "generic"
+    },
+    {
+      "id": "e-c0-d0",
+      "from": "c0",
+      "to": "d0",
+      "kind": "generic"
+    },
+    {
+      "id": "e-b0-res",
+      "from": "b0",
+      "to": "res",
+      "kind": "response",
+      "curvature": -0.35
+    }
+  ],
+  "steps": [
+    {
+      "id": "embed-doc",
+      "title": {
+        "tr": "Parça gömülür",
+        "en": "The chunk is embedded"
+      },
+      "narration": {
+        "tr": "Dizine eklenecek yeni metin parçası gömme modelinden geçer ve yüzlerce boyutlu, normalize edilmiş bir vektöre dönüşür. Belgeler ve sorgular aynı modelle, aynı sürümle gömülmelidir.",
+        "en": "The new text chunk to be indexed passes through the embedding model and becomes a normalised vector with hundreds of dimensions. Documents and queries must be embedded with the same model and version."
+      },
+      "durationMs": 3000,
+      "inherit": false,
+      "highlight": {
+        "nodes": [
+          "doc",
+          "emb"
+        ],
+        "edges": [
+          "e-doc-emb"
+        ]
+      },
+      "nodeStates": {
+        "doc": {
+          "status": "active"
+        },
+        "emb": {
+          "status": "busy",
+          "badge": "[0.12, -0.4, …]"
+        }
+      },
+      "edgeStates": {
+        "e-emb-a2": {
+          "status": "muted"
+        },
+        "e-b0-res": {
+          "status": "muted"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-doc-emb",
+          "shape": "envelope",
+          "label": {
+            "tr": "iade politikası §3",
+            "en": "return policy §3"
+          },
+          "durationMs": 1200
+        }
+      ]
+    },
+    {
+      "id": "insert",
+      "title": {
+        "tr": "Grafa ekleme: M komşuya bağlan",
+        "en": "Insert into the graph: link M neighbours"
+      },
+      "narration": {
+        "tr": "Vektöre rastgele bir en üst katman seçilir; bu örnekte yalnızca en alt katmana girer. Orada kendisine en yakın M düğüm bulunur ve kenarlarla bağlanır. HNSW yeni eklemeyi yeniden kurulum gerekmeden destekler.",
+        "en": "A random top layer is drawn for the vector; here it only enters the bottom layer. There its M closest nodes are found and linked with edges. HNSW supports inserts without rebuilding the index."
+      },
+      "durationMs": 3400,
+      "highlight": {
+        "nodes": [
+          "c0",
+          "b0",
+          "d0"
+        ],
+        "edges": [
+          "e-emb-c0",
+          "e-b0-c0",
+          "e-c0-d0"
+        ]
+      },
+      "nodeStates": {
+        "emb": {
+          "status": "idle"
+        },
+        "c0": {
+          "status": "success",
+          "badge": "yeni"
+        },
+        "doc": {
+          "status": "idle"
+        }
+      },
+      "edgeStates": {
+        "e-emb-c0": {
+          "status": "active"
+        },
+        "e-b0-c0": {
+          "status": "active"
+        },
+        "e-c0-d0": {
+          "status": "active"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-emb-c0",
+          "shape": "square",
+          "label": "vektör",
+          "durationMs": 1200
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a-m",
+          "x": 610,
+          "y": 570,
+          "text": {
+            "tr": "M en yakın komşuya kenar",
+            "en": "edges to the M closest"
+          },
+          "tone": "info",
+          "target": "c0"
+        }
+      ]
+    },
+    {
+      "id": "embed-query",
+      "title": {
+        "tr": "Sorgu da gömülür",
+        "en": "The query is embedded too"
+      },
+      "narration": {
+        "tr": "Kullanıcı sorusu aynı gömme modelinden geçer. Artık soru \"bu vektöre en yakın k vektör hangileri?\" sorusuna dönüşmüştür.",
+        "en": "The user question goes through the same embedding model. The question has become \"which k vectors are closest to this one?\""
+      },
+      "durationMs": 2800,
+      "highlight": {
+        "nodes": [
+          "query",
+          "emb"
+        ],
+        "edges": [
+          "e-q-emb"
+        ]
+      },
+      "nodeStates": {
+        "query": {
+          "status": "active"
+        },
+        "emb": {
+          "status": "busy",
+          "badge": "q"
+        },
+        "c0": {
+          "status": "idle"
+        }
+      },
+      "edgeStates": {
+        "e-emb-c0": {
+          "status": "muted"
+        },
+        "e-b0-c0": {
+          "status": "idle"
+        },
+        "e-c0-d0": {
+          "status": "idle"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-q-emb",
+          "shape": "envelope",
+          "label": "\"Kargom nerede?\"",
+          "durationMs": 1100
+        }
+      ]
+    },
+    {
+      "id": "top-layer",
+      "title": {
+        "tr": "Üst katman: uzun atlamalar",
+        "en": "Top layer: long jumps"
+      },
+      "narration": {
+        "tr": "Arama en üst katmandaki sabit giriş noktasından başlar. Seyrek katmanda kenarlar uzundur; açgözlü adım, sorguya daha yakın olan komşuya geçer. Daha yakın komşu kalmayınca bir alt katmana inilir.",
+        "en": "Search starts from the fixed entry point in the top layer. In the sparse layer edges are long; a greedy step moves to the neighbour closer to the query. When no closer neighbour remains it descends one layer."
+      },
+      "durationMs": 3200,
+      "highlight": {
+        "nodes": [
+          "a2",
+          "b2"
+        ],
+        "edges": [
+          "e-emb-a2",
+          "e-a2-b2"
+        ]
+      },
+      "nodeStates": {
+        "emb": {
+          "status": "idle"
+        },
+        "a2": {
+          "status": "active",
+          "badge": "giriş"
+        },
+        "b2": {
+          "status": "active",
+          "badge": "daha yakın"
+        }
+      },
+      "edgeStates": {
+        "e-emb-a2": {
+          "status": "active"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-emb-a2",
+          "shape": "dot",
+          "label": "q",
+          "durationMs": 900
+        },
+        {
+          "edge": "e-a2-b2",
+          "shape": "dot",
+          "label": "q",
+          "startAt": 1100,
+          "durationMs": 1000
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a-highway",
+          "x": 540,
+          "y": 30,
+          "text": {
+            "tr": "otoyol: doğru semte",
+            "en": "highway: to the right district"
+          },
+          "tone": "info",
+          "target": "b2"
+        }
+      ]
+    },
+    {
+      "id": "mid-layer",
+      "title": {
+        "tr": "Orta katman: yaklaş",
+        "en": "Middle layer: get closer"
+      },
+      "narration": {
+        "tr": "L1'e inilir ve aynı açgözlü kural daha kısa kenarlarla tekrarlanır: c'den sorguya daha yakın olan b'ye geçilir. Her katman aramayı daha dar bir bölgeye taşır.",
+        "en": "The search drops to L1 and the same greedy rule repeats with shorter edges: from c it moves to b, which is closer to the query. Each layer narrows the search to a smaller region."
+      },
+      "durationMs": 3200,
+      "highlight": {
+        "nodes": [
+          "c1",
+          "b1"
+        ],
+        "edges": [
+          "e-b2-c1",
+          "e-b1-c1"
+        ]
+      },
+      "nodeStates": {
+        "a2": {
+          "status": "idle"
+        },
+        "b2": {
+          "status": "idle"
+        },
+        "c1": {
+          "status": "active"
+        },
+        "b1": {
+          "status": "active",
+          "badge": "daha yakın"
+        }
+      },
+      "edgeStates": {
+        "e-b2-c1": {
+          "status": "active"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-b2-c1",
+          "shape": "dot",
+          "label": "iner",
+          "durationMs": 900
+        },
+        {
+          "edge": "e-b1-c1",
+          "direction": "backward",
+          "shape": "dot",
+          "label": "q",
+          "startAt": 1100,
+          "durationMs": 1000
+        }
+      ]
+    },
+    {
+      "id": "bottom-layer",
+      "title": {
+        "tr": "Alt katman: aday listesini genişlet",
+        "en": "Bottom layer: widen the candidates"
+      },
+      "narration": {
+        "tr": "L0 tüm vektörleri içerir. Burada tek bir komşu yerine ef_search kadar adaylık bir liste tutulur ve komşuların komşuları da denetlenir. ef_search büyüdükçe recall artar, gecikme de artar.",
+        "en": "L0 contains every vector. Here instead of a single neighbour a candidate list of size ef_search is kept and neighbours of neighbours are checked too. A larger ef_search raises recall and latency together."
+      },
+      "durationMs": 3800,
+      "highlight": {
+        "nodes": [
+          "b0",
+          "a0",
+          "c0"
+        ],
+        "edges": [
+          "e-b1-b0",
+          "e-a0-b0",
+          "e-b0-c0"
+        ]
+      },
+      "nodeStates": {
+        "c1": {
+          "status": "idle"
+        },
+        "b1": {
+          "status": "idle"
+        },
+        "b0": {
+          "status": "active",
+          "badge": "aday"
+        },
+        "a0": {
+          "status": "active",
+          "badge": "aday"
+        },
+        "c0": {
+          "status": "active",
+          "badge": "aday"
+        }
+      },
+      "edgeStates": {
+        "e-b1-b0": {
+          "status": "active"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-b1-b0",
+          "shape": "dot",
+          "label": "iner",
+          "durationMs": 900
+        },
+        {
+          "edge": "e-a0-b0",
+          "direction": "backward",
+          "shape": "dot",
+          "label": "q",
+          "startAt": 1100,
+          "durationMs": 900
+        },
+        {
+          "edge": "e-b0-c0",
+          "shape": "dot",
+          "label": "q",
+          "startAt": 1100,
+          "durationMs": 900
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a-ef",
+          "x": 470,
+          "y": 580,
+          "text": "ef_search",
+          "tone": "info",
+          "target": "b0"
+        }
+      ]
+    },
+    {
+      "id": "results",
+      "title": {
+        "tr": "En yakın k komşu",
+        "en": "The k nearest neighbours"
+      },
+      "narration": {
+        "tr": "Aday listesindeki en yüksek skorlu k vektör sonuç olarak döner; az önce eklenen parça da aralarındadır. Sonuç yaklaşıktır: gerçek en yakın komşulardan biri kaçırılabilir; bu kayıp recall@k ile ölçülür.",
+        "en": "The k highest-scoring vectors from the candidate list are returned; the chunk inserted a moment ago is among them. The result is approximate: one of the true nearest neighbours may be missed, a loss measured by recall@k."
+      },
+      "durationMs": 3200,
+      "highlight": {
+        "nodes": [
+          "res",
+          "b0",
+          "c0"
+        ],
+        "edges": [
+          "e-b0-res"
+        ]
+      },
+      "nodeStates": {
+        "res": {
+          "status": "success",
+          "badge": "k=3"
+        },
+        "c0": {
+          "status": "success",
+          "badge": "0,91"
+        },
+        "b0": {
+          "status": "success",
+          "badge": "0,88"
+        },
+        "a0": {
+          "status": "success",
+          "badge": "0,84"
+        }
+      },
+      "edgeStates": {
+        "e-b0-res": {
+          "status": "active"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-b0-res",
+          "shape": "square",
+          "label": "top-k",
+          "color": "success",
+          "durationMs": 1200
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a-recall",
+          "x": 900,
+          "y": 480,
+          "text": {
+            "tr": "yaklaşık: recall@k < 1 olabilir",
+            "en": "approximate: recall@k may be < 1"
+          },
+          "tone": "warning",
+          "target": "res"
+        }
+      ]
+    },
+    {
+      "id": "vs-flat",
+      "title": {
+        "tr": "Kaba kuvvete göre fark",
+        "en": "Compared to brute force"
+      },
+      "narration": {
+        "tr": "Düz arama sorguyu dizindeki her vektörle karşılaştırırdı. HNSW yalnızca birkaç düğüm ziyaret etti; soluk düğümlere hiç bakılmadı. Milyonlarca vektörde bu fark, milisaniye ile saniye arasındaki farktır.",
+        "en": "A flat search would compare the query with every vector in the index. HNSW visited only a handful of nodes; the faded ones were never touched. With millions of vectors this is the difference between milliseconds and seconds."
+      },
+      "durationMs": 3000,
+      "highlight": {
+        "nodes": [
+          "res"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "a1": {
+          "status": "muted"
+        },
+        "d0": {
+          "status": "muted"
+        },
+        "a2": {
+          "status": "muted"
+        }
+      },
+      "annotations": [
+        {
+          "id": "a-visited",
+          "x": 560,
+          "y": 200,
+          "text": {
+            "tr": "ziyaret edilmeyen düğümler soluk",
+            "en": "unvisited nodes faded"
+          },
+          "tone": "info"
+        }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": [
+    "vector-database",
+    "hnsw",
+    "ann",
+    "embedding",
+    "recall"
+  ]
+}

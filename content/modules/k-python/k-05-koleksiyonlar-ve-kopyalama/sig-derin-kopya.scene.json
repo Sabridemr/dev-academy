@@ -1,0 +1,273 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "python-sig-derin-kopya",
+  "title": { "tr": "Takma Ad, Sığ Kopya ve Derin Kopya", "en": "Alias, Shallow Copy and Deep Copy" },
+  "summary": {
+    "tr": "İç içe bir listede takma adın, copy.copy ile sığ kopyanın ve copy.deepcopy ile derin kopyanın heap'te hangi nesneleri oluşturduğu ve bir değişikliğin hangi isimlerden göründüğü.",
+    "en": "Which heap objects an alias, a shallow copy with copy.copy and a deep copy with copy.deepcopy create for a nested list, and through which names a change becomes visible."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda dört isim (takim, takma, sig, derin), ortada dış listeler, sağda iç listeler bulunur. takim = [[\"Ada\"], [\"Can\"]] bir dış liste ve iki iç liste oluşturur. takma = takim yeni nesne oluşturmaz, aynı dış listeye bağlanır. sig = copy.copy(takim) yeni bir dış liste oluşturur ama yuvaları aynı iç listeleri gösterir. derin = copy.deepcopy(takim) yeni bir dış liste ve iç listelerin kopyalarını oluşturur. sig[0].append(\"Deniz\") paylaşılan iç listeyi değiştirir; değişiklik takim, takma ve sig üzerinden görünür. sig.append([\"Bora\"]) yalnızca sig'in dış listesini büyütür. derin[1].append(\"Ece\") yalnızca derin'in kendi iç listesini değiştirir.",
+      "en": "On the left are four names (takim, takma, sig, derin), in the middle the outer lists, on the right the inner lists. takim = [[\"Ada\"], [\"Can\"]] creates one outer list and two inner lists. takma = takim creates no object and is bound to the same outer list. sig = copy.copy(takim) creates a new outer list whose slots point to the same inner lists. derin = copy.deepcopy(takim) creates a new outer list and copies of the inner lists. sig[0].append(\"Deniz\") changes the shared inner list; the change is visible through takim, takma and sig. sig.append([\"Bora\"]) only grows sig's outer list. derin[1].append(\"Ece\") only changes derin's own inner list."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "n-takim", "kind": "generic", "label": "takim", "x": 90, "y": 110, "w": 110, "h": 48 },
+    { "id": "n-takma", "kind": "generic", "label": "takma", "x": 90, "y": 210, "w": 110, "h": 48 },
+    { "id": "n-sig", "kind": "generic", "label": "sig", "x": 90, "y": 340, "w": 110, "h": 48 },
+    { "id": "n-derin", "kind": "generic", "label": "derin", "x": 90, "y": 480, "w": 110, "h": 48 },
+    { "id": "o1", "kind": "storage", "label": { "tr": "dış liste A", "en": "outer list A" }, "sublabel": "[•, •]", "x": 380, "y": 160, "w": 150, "h": 60 },
+    { "id": "o2", "kind": "storage", "label": { "tr": "dış liste B", "en": "outer list B" }, "sublabel": "[•, •]", "x": 380, "y": 340, "w": 150, "h": 60 },
+    { "id": "o3", "kind": "storage", "label": { "tr": "dış liste C", "en": "outer list C" }, "sublabel": "[•, •]", "x": 380, "y": 480, "w": 150, "h": 60 },
+    { "id": "i1", "kind": "storage", "label": "[\"Ada\"]", "x": 720, "y": 110, "w": 170, "h": 52 },
+    { "id": "i2", "kind": "storage", "label": "[\"Can\"]", "x": 720, "y": 215, "w": 170, "h": 52 },
+    { "id": "i3", "kind": "storage", "label": "[\"Bora\"]", "x": 720, "y": 320, "w": 170, "h": 52 },
+    { "id": "d1", "kind": "storage", "label": "[\"Ada\"]", "x": 720, "y": 440, "w": 170, "h": 52 },
+    { "id": "d2", "kind": "storage", "label": "[\"Can\"]", "x": 720, "y": 540, "w": 170, "h": 52 }
+  ],
+  "edges": [
+    { "id": "takim-o1", "from": "n-takim", "to": "o1", "kind": "data" },
+    { "id": "takma-o1", "from": "n-takma", "to": "o1", "kind": "data" },
+    { "id": "sig-o2", "from": "n-sig", "to": "o2", "kind": "data" },
+    { "id": "derin-o3", "from": "n-derin", "to": "o3", "kind": "data" },
+    { "id": "o1-i1", "from": "o1", "to": "i1", "kind": "data" },
+    { "id": "o1-i2", "from": "o1", "to": "i2", "kind": "data" },
+    { "id": "o2-i1", "from": "o2", "to": "i1", "kind": "data", "curvature": 0.1 },
+    { "id": "o2-i2", "from": "o2", "to": "i2", "kind": "data", "curvature": 0.1 },
+    { "id": "o2-i3", "from": "o2", "to": "i3", "kind": "data" },
+    { "id": "o3-d1", "from": "o3", "to": "d1", "kind": "data" },
+    { "id": "o3-d2", "from": "o3", "to": "d2", "kind": "data" }
+  ],
+  "steps": [
+    {
+      "id": "olustur",
+      "title": { "tr": "İç içe liste", "en": "A nested list" },
+      "narration": {
+        "tr": "`takim = [[\"Ada\"], [\"Can\"]]` üç nesne oluşturur: bir dış liste ve iki iç liste. Dış liste iç listeleri **içermez**; onlara giden referansları tutar.",
+        "en": "`takim = [[\"Ada\"], [\"Can\"]]` creates three objects: one outer list and two inner lists. The outer list does not **contain** the inner lists; it holds references to them."
+      },
+      "durationMs": 3400,
+      "inherit": false,
+      "highlight": { "nodes": ["n-takim", "o1", "i1", "i2"], "edges": ["takim-o1", "o1-i1", "o1-i2"] },
+      "nodeStates": {
+        "n-takma": { "visible": false },
+        "n-sig": { "visible": false },
+        "n-derin": { "visible": false },
+        "o2": { "visible": false },
+        "o3": { "visible": false },
+        "i3": { "visible": false },
+        "d1": { "visible": false },
+        "d2": { "visible": false },
+        "o1": { "status": "active" }
+      },
+      "edgeStates": {
+        "takma-o1": { "visible": false },
+        "sig-o2": { "visible": false },
+        "derin-o3": { "visible": false },
+        "o2-i1": { "visible": false },
+        "o2-i2": { "visible": false },
+        "o2-i3": { "visible": false },
+        "o3-d1": { "visible": false },
+        "o3-d2": { "visible": false }
+      },
+      "packets": [
+        { "edge": "o1-i1", "durationMs": 900 },
+        { "edge": "o1-i2", "durationMs": 900, "startAt": 300 }
+      ]
+    },
+    {
+      "id": "takma-ad",
+      "title": { "tr": "takma = takim: kopya değil", "en": "takma = takim: not a copy" },
+      "narration": {
+        "tr": "`takma = takim` hiçbir nesne oluşturmaz; aynı dış listeye ikinci bir isim bağlar. Bu bir kopya değil, **takma addır**.",
+        "en": "`takma = takim` creates no object; it binds a second name to the same outer list. This is not a copy, it is an **alias**."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["n-takma", "o1"], "edges": ["takma-o1"] },
+      "nodeStates": { "n-takma": { "visible": true, "status": "active" }, "o1": { "badge": "ref 2" } },
+      "edgeStates": { "takma-o1": { "visible": true, "status": "active" } },
+      "packets": [{ "edge": "takma-o1", "label": { "tr": "aynı nesne", "en": "same object" }, "durationMs": 1000 }]
+    },
+    {
+      "id": "sig-kopya",
+      "title": { "tr": "copy.copy: yeni dış liste, aynı iç listeler", "en": "copy.copy: new outer list, same inner lists" },
+      "narration": {
+        "tr": "`sig = copy.copy(takim)` **yeni bir dış liste** oluşturur, ama yuvalarına eskisindeki **aynı referansları** kopyalar. İç listeler yeniden oluşturulmaz; şimdi iki dış liste aynı iki iç listeyi gösteriyor.",
+        "en": "`sig = copy.copy(takim)` creates a **new outer list** but copies the **same references** into its slots. The inner lists are not recreated; now two outer lists point to the same two inner lists."
+      },
+      "durationMs": 3800,
+      "highlight": { "nodes": ["n-sig", "o2", "i1", "i2"], "edges": ["sig-o2", "o2-i1", "o2-i2"] },
+      "nodeStates": {
+        "n-takma": { "status": "idle" },
+        "o1": { "status": "idle" },
+        "n-sig": { "visible": true, "status": "active" },
+        "o2": { "visible": true, "status": "active", "badge": "yeni" },
+        "i1": { "badge": "ref 2" },
+        "i2": { "badge": "ref 2" }
+      },
+      "edgeStates": {
+        "takma-o1": { "status": "idle" },
+        "sig-o2": { "visible": true, "status": "active" },
+        "o2-i1": { "visible": true, "status": "active" },
+        "o2-i2": { "visible": true, "status": "active" }
+      },
+      "packets": [
+        { "edge": "sig-o2", "durationMs": 800 },
+        { "edge": "o2-i1", "label": { "tr": "aynı ref", "en": "same ref" }, "startAt": 900, "durationMs": 900 },
+        { "edge": "o2-i2", "label": { "tr": "aynı ref", "en": "same ref" }, "startAt": 1200, "durationMs": 900 }
+      ]
+    },
+    {
+      "id": "derin-kopya",
+      "title": { "tr": "copy.deepcopy: her şey yeniden", "en": "copy.deepcopy: everything anew" },
+      "narration": {
+        "tr": "`derin = copy.deepcopy(takim)` yapıyı baştan sona dolaşır: yeni bir dış liste ve iç listelerin **kopyalarını** oluşturur. `derin`, `takim` ile hiçbir değiştirilebilir nesneyi paylaşmaz.",
+        "en": "`derin = copy.deepcopy(takim)` walks the whole structure: it creates a new outer list and **copies** of the inner lists. `derin` shares no mutable object with `takim`."
+      },
+      "durationMs": 3800,
+      "highlight": { "nodes": ["n-derin", "o3", "d1", "d2"], "edges": ["derin-o3", "o3-d1", "o3-d2"] },
+      "nodeStates": {
+        "n-sig": { "status": "idle" },
+        "o2": { "status": "idle", "badge": "" },
+        "n-derin": { "visible": true, "status": "active" },
+        "o3": { "visible": true, "status": "active", "badge": "yeni" },
+        "d1": { "visible": true, "status": "active", "badge": "yeni" },
+        "d2": { "visible": true, "status": "active", "badge": "yeni" }
+      },
+      "edgeStates": {
+        "sig-o2": { "status": "idle" },
+        "o2-i1": { "status": "idle" },
+        "o2-i2": { "status": "idle" },
+        "derin-o3": { "visible": true, "status": "active" },
+        "o3-d1": { "visible": true, "status": "active" },
+        "o3-d2": { "visible": true, "status": "active" }
+      },
+      "packets": [
+        { "edge": "derin-o3", "durationMs": 800 },
+        { "edge": "o3-d1", "label": { "tr": "kopya", "en": "copy" }, "startAt": 900, "durationMs": 900 },
+        { "edge": "o3-d2", "label": { "tr": "kopya", "en": "copy" }, "startAt": 1200, "durationMs": 900 }
+      ]
+    },
+    {
+      "id": "sig-degistir",
+      "title": { "tr": "sig[0].append(\"Deniz\")", "en": "sig[0].append(\"Deniz\")" },
+      "narration": {
+        "tr": "`sig[0]` paylaşılan iç listeyi gösterir. `append` onu **yerinde** değiştirir: liste artık `[\"Ada\", \"Deniz\"]`. Yeni nesne oluşmadı.",
+        "en": "`sig[0]` points to the shared inner list. `append` changes it **in place**: the list is now `[\"Ada\", \"Deniz\"]`. No new object was created."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["n-sig", "o2", "i1"], "edges": ["sig-o2", "o2-i1"] },
+      "nodeStates": {
+        "n-derin": { "status": "idle" },
+        "o3": { "status": "idle", "badge": "" },
+        "d1": { "status": "idle", "badge": "" },
+        "d2": { "status": "idle", "badge": "" },
+        "n-sig": { "status": "active" },
+        "i1": { "status": "warning", "label": "[\"Ada\", \"Deniz\"]" }
+      },
+      "edgeStates": {
+        "derin-o3": { "status": "idle" },
+        "o3-d1": { "status": "idle" },
+        "o3-d2": { "status": "idle" },
+        "sig-o2": { "status": "active" },
+        "o2-i1": { "status": "active" }
+      },
+      "packets": [
+        { "edge": "sig-o2", "label": "[0]", "shape": "square", "durationMs": 900 },
+        { "edge": "o2-i1", "label": "append", "shape": "square", "startAt": 1000, "durationMs": 1000 }
+      ]
+    },
+    {
+      "id": "kim-goruyor",
+      "title": { "tr": "Değişikliği kimler görür?", "en": "Who sees the change?" },
+      "narration": {
+        "tr": "Aynı iç listeye `takim` ve `takma` üzerinden de ulaşılır; `print(takim)` artık `[[\"Ada\", \"Deniz\"], [\"Can\"]]` yazar. Sığ kopya dış listeyi ayırdı, iç listeleri ayırmadı. `derin` ise etkilenmedi.",
+        "en": "The same inner list is also reachable through `takim` and `takma`; `print(takim)` now shows `[[\"Ada\", \"Deniz\"], [\"Can\"]]`. The shallow copy separated the outer list, not the inner ones. `derin` was not affected."
+      },
+      "durationMs": 3800,
+      "highlight": { "nodes": ["n-takim", "n-takma", "o1", "i1", "d1"], "edges": ["takim-o1", "takma-o1", "o1-i1"] },
+      "nodeStates": {
+        "n-sig": { "status": "idle" },
+        "n-takim": { "status": "warning" },
+        "n-takma": { "status": "warning" },
+        "d1": { "status": "success", "sublabel": { "tr": "etkilenmedi", "en": "unaffected" } }
+      },
+      "edgeStates": { "sig-o2": { "status": "idle" }, "o2-i1": { "status": "idle" }, "o1-i1": { "status": "active" } },
+      "packets": [
+        { "edge": "takim-o1", "label": "takim[0]", "durationMs": 900 },
+        { "edge": "o1-i1", "label": "Deniz?", "shape": "envelope", "startAt": 1000, "durationMs": 900 }
+      ],
+      "annotations": [{ "id": "paylasim", "x": 560, "y": 40, "text": { "tr": "paylaşılan iç liste: ref 2", "en": "shared inner list: ref 2" }, "tone": "warning", "target": "i1" }]
+    },
+    {
+      "id": "sig-dis",
+      "title": { "tr": "sig.append([\"Bora\"]): yalnızca sig", "en": "sig.append([\"Bora\"]): only sig" },
+      "narration": {
+        "tr": "Dış listeler ise ayrı nesnelerdir. `sig.append([\"Bora\"])` yalnızca `sig`'in dış listesine yeni bir yuva ekler; `takim` hâlâ iki elemanlıdır.",
+        "en": "The outer lists, however, are separate objects. `sig.append([\"Bora\"])` only adds a new slot to `sig`'s outer list; `takim` still has two elements."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["n-sig", "o2", "i3", "o1"], "edges": ["sig-o2", "o2-i3"] },
+      "nodeStates": {
+        "n-takim": { "status": "idle" },
+        "n-takma": { "status": "idle" },
+        "i1": { "status": "idle" },
+        "d1": { "status": "idle", "sublabel": "" },
+        "n-sig": { "status": "active" },
+        "o2": { "status": "active", "sublabel": "[•, •, •]", "badge": "3" },
+        "o1": { "status": "success", "badge": "2" },
+        "i3": { "visible": true, "status": "active", "badge": "yeni" }
+      },
+      "edgeStates": { "o1-i1": { "status": "idle" }, "o2-i3": { "visible": true, "status": "active" } },
+      "packets": [{ "edge": "o2-i3", "label": "append", "shape": "square", "durationMs": 1000 }]
+    },
+    {
+      "id": "derin-degistir",
+      "title": { "tr": "derin[1].append(\"Ece\"): yalnızca derin", "en": "derin[1].append(\"Ece\"): only derin" },
+      "narration": {
+        "tr": "`derin[1]` derin kopyanın **kendi** iç listesidir. `append(\"Ece\")` yalnızca onu değiştirir; `takim[1]` hâlâ `[\"Can\"]`. Derin kopya bu yüzden gerçekten bağımsızdır, ama bütün yapıyı dolaştığı için daha pahalıdır.",
+        "en": "`derin[1]` is the deep copy's **own** inner list. `append(\"Ece\")` changes only that; `takim[1]` is still `[\"Can\"]`. That is why a deep copy is truly independent, but it is more expensive because it walks the whole structure."
+      },
+      "durationMs": 3800,
+      "highlight": { "nodes": ["n-derin", "o3", "d2", "i2"], "edges": ["derin-o3", "o3-d2"] },
+      "nodeStates": {
+        "n-sig": { "status": "idle" },
+        "o2": { "status": "idle" },
+        "o1": { "status": "idle", "badge": "ref 2" },
+        "i3": { "status": "idle", "badge": "" },
+        "n-derin": { "status": "active" },
+        "d2": { "status": "warning", "label": "[\"Can\", \"Ece\"]" },
+        "i2": { "status": "success", "sublabel": { "tr": "değişmedi", "en": "unchanged" } }
+      },
+      "edgeStates": { "o2-i3": { "status": "idle" }, "derin-o3": { "status": "active" }, "o3-d2": { "status": "active" } },
+      "packets": [
+        { "edge": "derin-o3", "label": "[1]", "shape": "square", "durationMs": 900 },
+        { "edge": "o3-d2", "label": "append", "shape": "square", "startAt": 1000, "durationMs": 1000 }
+      ]
+    },
+    {
+      "id": "ozet",
+      "title": { "tr": "Üç yol, üç sonuç", "en": "Three ways, three results" },
+      "narration": {
+        "tr": "Takma ad hiçbir şey kopyalamaz. Sığ kopya (`copy.copy`, `liste[:]`, `list(liste)`) yalnızca **bir seviye** kopyalar, iç nesneler paylaşılır. Derin kopya (`copy.deepcopy`) iç içe bütün değiştirilebilir nesneleri kopyalar.",
+        "en": "An alias copies nothing. A shallow copy (`copy.copy`, `lst[:]`, `list(lst)`) copies only **one level**; inner objects are shared. A deep copy (`copy.deepcopy`) copies every nested mutable object."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["o1", "o2", "o3", "i1", "i2"], "edges": ["o1-i1", "o1-i2", "o2-i1", "o2-i2"] },
+      "nodeStates": {
+        "n-derin": { "status": "idle" },
+        "d2": { "status": "idle" },
+        "i2": { "status": "idle", "sublabel": "" },
+        "i1": { "status": "warning", "badge": "ref 2" }
+      },
+      "edgeStates": { "derin-o3": { "status": "idle" }, "o3-d2": { "status": "idle" } },
+      "annotations": [{ "id": "kural", "x": 380, "y": 570, "text": { "tr": "sığ = bir seviye · derin = her seviye", "en": "shallow = one level · deep = every level" }, "tone": "info" }]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["python", "copy", "shallow-copy", "deep-copy", "aliasing"]
+}

@@ -35,6 +35,20 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9 . eyJzdWIiOiJ1XzQyIiwicm9sZSI6InVzZXIiLCJle
 İmza girdisi başlık ve gövdenin birleşimidir; ikisinden birinde tek bit değişse imza geçersizleşir.
 :::
 
+Bir token'ın üretildiği andan süresinin dolup yenilendiği ana kadar başına gelenleri izleyelim: imzalanması, yerel doğrulanması, kurcalandığında ve süresi dolduğunda reddedilmesi ve refresh ile yenilenmesi.
+
+:::predict{id="jwt-govde-degisirse"}
+Bir kullanıcı token'ın gövdesindeki `role` değerini `user`'dan `admin`'e çevirip base64url ile yeniden kodluyor ve imzaya dokunmuyor. API ne yapar? | A user changes `role` in the token payload from `user` to `admin`, re-encodes it with base64url and leaves the signature untouched. What does the API do?
+- [ ] Gövde geçerli JSON olduğu için admin yetkisi verir | Grants admin because the payload is valid JSON
+- [x] İmza artık gövdeyle eşleşmediği için isteği 401 ile reddeder | Rejects the request with 401 because the signature no longer matches the payload
+- [ ] Token'ı çözemediği için 500 döndürür | Returns 500 because it cannot decode the token
+Açıklama: Gövde herkes tarafından okunabilir ve değiştirilebilir, ama imza eski gövdeye aittir ve yeni imzayı yalnızca anahtarı bilen taraf üretebilir. `verify` çağıran bir API bu token'ı reddeder; `decode` ile yetinen bir API ise tam olarak ilk seçenekteki hatayı yapar. | Anyone can read and modify the payload, but the signature belongs to the old payload and only the key holder can produce a new one. An API that calls `verify` rejects the token; one that settles for `decode` makes exactly the mistake in the first option.
+:::
+
+:::animation{scene="jwt-lifecycle.scene.json"}
+Kimlik servisi başlık ve gövdeyi özel anahtarla imzalar; API JWKS ile doğrular, kurcalanmış ve süresi dolmuş token'ları reddeder; refresh adımı yeni bir çift üretir.
+:::
+
 ## Kayıtlı talepler: gövdenin ortak dili
 
 Standart, birlikte çalışabilirlik için kısa adlı bazı talepler tanımlar. Bunları doğru kullanmak, token'ın nerede ve ne kadar süre geçerli olduğunu makinece kontrol edilebilir kılar:

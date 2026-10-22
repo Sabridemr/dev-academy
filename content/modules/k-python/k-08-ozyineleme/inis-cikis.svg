@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 420" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Özyinelemenin iki evresi: iniş ve çıkış</title>
+  <desc id="desc">faktoriyel(4) çağrısı solda aşağı doğru faktoriyel(3), faktoriyel(2) ve faktoriyel(1)'e iner; her adımda problem küçülür ve çarpma bekletilir. En altta temel durum 1 döndürür. Sağda değerler yukarı çıkar: 1, 2, 6 ve son olarak 24.</desc>
+  <defs>
+    <marker id="k08-ok" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-primary, #6366f1)"/>
+    </marker>
+    <marker id="k08-ok-donus" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-success, #10b981)"/>
+    </marker>
+  </defs>
+
+  <text x="200" y="34" text-anchor="middle" font-size="15" font-weight="700" fill="var(--da-primary, #6366f1)">1. İniş: problem küçülür</text>
+  <text x="700" y="34" text-anchor="middle" font-size="15" font-weight="700" fill="var(--da-success, #10b981)">2. Çıkış: cevap kurulur</text>
+
+  <g font-size="14" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" fill="var(--da-fg, #0f172a)">
+    <rect x="60" y="56" width="280" height="50" rx="10" fill="var(--da-surface, #f8fafc)" stroke="var(--da-primary, #6366f1)" stroke-width="1.5"/>
+    <text x="80" y="86">faktoriyel(4) → 4 * ?</text>
+    <rect x="110" y="136" width="280" height="50" rx="10" fill="var(--da-surface, #f8fafc)" stroke="var(--da-primary, #6366f1)" stroke-width="1.5"/>
+    <text x="130" y="166">faktoriyel(3) → 3 * ?</text>
+    <rect x="160" y="216" width="280" height="50" rx="10" fill="var(--da-surface, #f8fafc)" stroke="var(--da-primary, #6366f1)" stroke-width="1.5"/>
+    <text x="180" y="246">faktoriyel(2) → 2 * ?</text>
+
+    <rect x="560" y="56" width="280" height="50" rx="10" fill="var(--da-success, #10b981)" fill-opacity="0.1" stroke="var(--da-success, #10b981)" stroke-width="1.5"/>
+    <text x="580" y="86">4 * 6  = 24  (sonuç)</text>
+    <rect x="510" y="136" width="280" height="50" rx="10" fill="var(--da-success, #10b981)" fill-opacity="0.1" stroke="var(--da-success, #10b981)" stroke-width="1.5"/>
+    <text x="530" y="166">3 * 2  = 6</text>
+    <rect x="460" y="216" width="280" height="50" rx="10" fill="var(--da-success, #10b981)" fill-opacity="0.1" stroke="var(--da-success, #10b981)" stroke-width="1.5"/>
+    <text x="480" y="246">2 * 1  = 2</text>
+  </g>
+
+  <!-- Temel durum -->
+  <rect x="330" y="306" width="240" height="56" rx="12" fill="var(--da-accent, #f59e0b)" fill-opacity="0.15" stroke="var(--da-accent, #f59e0b)" stroke-width="2"/>
+  <text x="450" y="331" text-anchor="middle" font-size="14" font-weight="700" fill="var(--da-fg, #0f172a)">faktoriyel(1): temel durum</text>
+  <text x="450" y="351" text-anchor="middle" font-size="13" fill="var(--da-muted, #64748b)">kendini çağırmaz, 1 döndürür</text>
+
+  <g stroke="var(--da-primary, #6366f1)" stroke-width="1.8" fill="none" marker-end="url(#k08-ok)">
+    <path d="M 200 106 L 240 134"/>
+    <path d="M 250 186 L 290 214"/>
+    <path d="M 300 266 L 360 304"/>
+  </g>
+  <g stroke="var(--da-success, #10b981)" stroke-width="1.8" fill="none" marker-end="url(#k08-ok-donus)">
+    <path d="M 540 304 L 600 268"/>
+    <path d="M 650 214 L 690 188"/>
+    <path d="M 700 134 L 740 108"/>
+  </g>
+  <g font-size="12" fill="var(--da-muted, #64748b)">
+    <text x="595" y="296">1</text>
+    <text x="690" y="210">2</text>
+    <text x="740" y="128">6</text>
+  </g>
+
+  <text x="60" y="400" font-size="13" fill="var(--da-fg, #0f172a)">İnişte her çerçeve çarpmayı bekletir ve yığında durur; çıkışta çerçeveler ters sırayla kapanır.</text>
+</svg>

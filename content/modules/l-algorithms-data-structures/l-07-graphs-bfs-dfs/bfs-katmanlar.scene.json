@@ -1,0 +1,456 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "l-07-bfs-katmanlar",
+  "title": {
+    "tr": "BFS katman katman ilerliyor",
+    "en": "BFS advances layer by layer"
+  },
+  "summary": {
+    "tr": "Altı düğümlü grafta A'dan başlayan BFS'in kuyrukla düğümleri uzaklık sırasına göre açması.",
+    "en": "BFS from A on a six-node graph, using a queue to open nodes in order of distance."
+  },
+  "a11y": {
+    "description": {
+      "tr": "A, B, C, D, E ve F adlı altı düğümlü bir graf ve sağda kuyruk kutusu vardır. Kenarlar: A-B, A-C, B-D, C-D, C-E, D-F, E-F. BFS A'dan başlar; A işlenince B ve C uzaklık 1 ile kuyruğa girer. B işlenince D uzaklık 2 alır. C işlenirken D zaten işaretli olduğu için atlanır, E uzaklık 2 alır. D işlenince F uzaklık 3 alır. E ve F yeni düğüm eklemez ve kuyruk boşalır. Son adımda her düğüme ilk ulaşılan kenarlar vurgulanır; bunlar en kısa yolları oluşturur.",
+      "en": "A graph with six nodes named A to F and a queue box on the right. Edges: A-B, A-C, B-D, C-D, C-E, D-F, E-F. BFS starts at A; processing A enqueues B and C at distance 1. Processing B gives D distance 2. While processing C, D is already marked and skipped, and E gets distance 2. Processing D gives F distance 3. E and F add nothing new and the queue empties. The last step highlights the edges that first reached each node; they form the shortest paths."
+    }
+  },
+  "canvas": {
+    "width": 1000,
+    "height": 600
+  },
+  "nodes": [
+    {
+      "id": "A",
+      "kind": "generic",
+      "label": "A",
+      "x": 130,
+      "y": 300,
+      "w": 80,
+      "h": 56
+    },
+    {
+      "id": "B",
+      "kind": "generic",
+      "label": "B",
+      "x": 310,
+      "y": 160,
+      "w": 80,
+      "h": 56
+    },
+    {
+      "id": "C",
+      "kind": "generic",
+      "label": "C",
+      "x": 310,
+      "y": 440,
+      "w": 80,
+      "h": 56
+    },
+    {
+      "id": "D",
+      "kind": "generic",
+      "label": "D",
+      "x": 510,
+      "y": 160,
+      "w": 80,
+      "h": 56
+    },
+    {
+      "id": "E",
+      "kind": "generic",
+      "label": "E",
+      "x": 510,
+      "y": 440,
+      "w": 80,
+      "h": 56
+    },
+    {
+      "id": "F",
+      "kind": "generic",
+      "label": "F",
+      "x": 690,
+      "y": 300,
+      "w": 80,
+      "h": 56
+    },
+    {
+      "id": "kuyruk",
+      "kind": "queue",
+      "label": {
+        "tr": "Kuyruk (FIFO)",
+        "en": "Queue (FIFO)"
+      },
+      "x": 880,
+      "y": 300,
+      "w": 200,
+      "h": 84,
+      "sublabel": "[A]"
+    }
+  ],
+  "edges": [
+    {
+      "id": "eAB",
+      "from": "A",
+      "to": "B",
+      "kind": "generic"
+    },
+    {
+      "id": "eAC",
+      "from": "A",
+      "to": "C",
+      "kind": "generic"
+    },
+    {
+      "id": "eBD",
+      "from": "B",
+      "to": "D",
+      "kind": "generic"
+    },
+    {
+      "id": "eCD",
+      "from": "C",
+      "to": "D",
+      "kind": "generic"
+    },
+    {
+      "id": "eCE",
+      "from": "C",
+      "to": "E",
+      "kind": "generic"
+    },
+    {
+      "id": "eDF",
+      "from": "D",
+      "to": "F",
+      "kind": "generic"
+    },
+    {
+      "id": "eEF",
+      "from": "E",
+      "to": "F",
+      "kind": "generic"
+    }
+  ],
+  "steps": [
+    {
+      "id": "intro",
+      "title": {
+        "tr": "A'dan başla",
+        "en": "Start at A"
+      },
+      "narration": {
+        "tr": "Altı düğümlü yönsüz bir graf. BFS, başlangıç düğümü A'yı kuyruğa koyar ve **görüldü** olarak işaretler. Düğüm üzerindeki rozet, A'ya kenar sayısı cinsinden uzaklığı (d) gösterecek.",
+        "en": "An undirected graph with six nodes. BFS puts the start node A into the queue and marks it as **seen**. The badge on each node will show its distance from A in edges (d)."
+      },
+      "durationMs": 3000,
+      "inherit": false,
+      "highlight": {
+        "nodes": [
+          "A",
+          "kuyruk"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "A": {
+          "status": "active",
+          "badge": "d=0"
+        }
+      }
+    },
+    {
+      "id": "pA",
+      "title": {
+        "tr": "A'yı işle: B ve C",
+        "en": "Process A: B and C"
+      },
+      "narration": {
+        "tr": "A kuyruktan çıkar. Komşuları B ve C ilk kez görülüyor: d = 1 alırlar ve kuyruğun sonuna eklenirler. **Kuyruğa eklerken işaretleriz**, böylece hiçbir düğüm iki kez eklenmez.",
+        "en": "A leaves the queue. Its neighbours B and C are seen for the first time: they get d = 1 and join the back of the queue. **We mark them when enqueueing**, so no node is ever added twice."
+      },
+      "durationMs": 3000,
+      "highlight": {
+        "nodes": [
+          "A",
+          "B",
+          "C"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "A": {
+          "status": "success"
+        },
+        "B": {
+          "status": "active",
+          "badge": "d=1"
+        },
+        "C": {
+          "status": "active",
+          "badge": "d=1"
+        },
+        "kuyruk": {
+          "sublabel": "[B, C]"
+        }
+      },
+      "packets": [
+        {
+          "edge": "eAB",
+          "label": "d=1",
+          "durationMs": 900
+        },
+        {
+          "edge": "eAC",
+          "label": "d=1",
+          "durationMs": 900
+        }
+      ]
+    },
+    {
+      "id": "pB",
+      "title": {
+        "tr": "B'yi işle: D",
+        "en": "Process B: D"
+      },
+      "narration": {
+        "tr": "Sıradaki B. Komşusu A zaten görüldü; D yeni, d = 2 alır. Kuyruk artık [C, D]: birinci katmanın kalanı, ikinci katmanın önünde bekliyor.",
+        "en": "Next is B. Its neighbour A is already seen; D is new and gets d = 2. The queue is now [C, D]: the rest of layer one waits in front of layer two."
+      },
+      "durationMs": 3000,
+      "highlight": {
+        "nodes": [
+          "B",
+          "D"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "B": {
+          "status": "success"
+        },
+        "D": {
+          "status": "active",
+          "badge": "d=2"
+        },
+        "kuyruk": {
+          "sublabel": "[C, D]"
+        }
+      },
+      "packets": [
+        {
+          "edge": "eBD",
+          "label": "d=2",
+          "durationMs": 900
+        }
+      ]
+    },
+    {
+      "id": "pC",
+      "title": {
+        "tr": "C'yi işle: E (D zaten görüldü)",
+        "en": "Process C: E (D already seen)"
+      },
+      "narration": {
+        "tr": "C'nin komşuları A, D ve E. D işaretli olduğu için tekrar eklenmez; yalnızca E yeni, d = 2. Birinci katman bitti, kuyrukta yalnızca ikinci katman var.",
+        "en": "C's neighbours are A, D and E. D is already marked so it is not added again; only E is new, d = 2. Layer one is done and the queue holds only layer two."
+      },
+      "durationMs": 3200,
+      "highlight": {
+        "nodes": [
+          "C",
+          "D",
+          "E"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "C": {
+          "status": "success"
+        },
+        "E": {
+          "status": "active",
+          "badge": "d=2"
+        },
+        "kuyruk": {
+          "sublabel": "[D, E]"
+        }
+      },
+      "edgeStates": {
+        "eCD": {
+          "status": "muted"
+        }
+      },
+      "packets": [
+        {
+          "edge": "eCD",
+          "label": {
+            "tr": "görüldü",
+            "en": "seen"
+          },
+          "durationMs": 900
+        },
+        {
+          "edge": "eCE",
+          "label": "d=2",
+          "startAt": 300,
+          "durationMs": 900
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a-gor",
+          "x": 410,
+          "y": 300,
+          "text": {
+            "tr": "D işaretli: eklenmez",
+            "en": "D is marked: skipped"
+          },
+          "target": "D",
+          "tone": "warning"
+        }
+      ]
+    },
+    {
+      "id": "pD",
+      "title": {
+        "tr": "D'yi işle: F",
+        "en": "Process D: F"
+      },
+      "narration": {
+        "tr": "D'nin komşularından yalnızca F yeni: d = 3. F, A'dan en az 3 kenar uzakta; BFS bunu F'yi **ilk gördüğü anda** kesin olarak bilir.",
+        "en": "Among D's neighbours only F is new: d = 3. F is at least 3 edges from A; BFS knows this for certain **the first time it sees F**."
+      },
+      "durationMs": 3000,
+      "highlight": {
+        "nodes": [
+          "D",
+          "F"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "D": {
+          "status": "success"
+        },
+        "F": {
+          "status": "active",
+          "badge": "d=3"
+        },
+        "kuyruk": {
+          "sublabel": "[E, F]"
+        }
+      },
+      "packets": [
+        {
+          "edge": "eDF",
+          "label": "d=3",
+          "durationMs": 900
+        }
+      ]
+    },
+    {
+      "id": "pE",
+      "title": {
+        "tr": "E ve F: yeni komşu yok",
+        "en": "E and F: no new neighbours"
+      },
+      "narration": {
+        "tr": "E'nin komşusu F zaten görüldü; F'nin tüm komşuları da işaretli. Kuyruk boşalır ve arama biter. Her düğüm bir kez kuyruğa girdi, her kenara sabit sayıda bakıldı: **O(V + E)**.",
+        "en": "E's neighbour F is already seen, and all of F's neighbours are marked. The queue empties and the search ends. Every node entered the queue once and every edge was examined a constant number of times: **O(V + E)**."
+      },
+      "durationMs": 3200,
+      "highlight": {
+        "nodes": [
+          "E",
+          "F",
+          "kuyruk"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "E": {
+          "status": "success"
+        },
+        "F": {
+          "status": "success"
+        },
+        "kuyruk": {
+          "sublabel": "[ ]",
+          "status": "muted"
+        }
+      },
+      "edgeStates": {
+        "eEF": {
+          "status": "muted"
+        }
+      },
+      "packets": [
+        {
+          "edge": "eEF",
+          "label": {
+            "tr": "görüldü",
+            "en": "seen"
+          },
+          "durationMs": 900
+        }
+      ]
+    },
+    {
+      "id": "ozet",
+      "title": {
+        "tr": "Katmanlar = en kısa mesafeler",
+        "en": "Layers = shortest distances"
+      },
+      "narration": {
+        "tr": "BFS düğümleri uzaklık sırasıyla açtı: d=0 A, d=1 B ve C, d=2 D ve E, d=3 F. Vurgulu kenarlar her düğüme ilk ulaşılan yolu, yani **ağırlıksız graftaki en kısa yolları** gösterir. Bu güvenceyi FIFO kuyruğu sağlar.",
+        "en": "BFS opened the nodes in order of distance: d=0 A, d=1 B and C, d=2 D and E, d=3 F. The highlighted edges are the first path to each node, i.e. **the shortest paths in an unweighted graph**. The FIFO queue is what guarantees this."
+      },
+      "durationMs": 3500,
+      "highlight": {
+        "nodes": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F"
+        ],
+        "edges": [
+          "eAB",
+          "eAC",
+          "eBD",
+          "eCE",
+          "eDF"
+        ]
+      },
+      "nodeStates": {
+        "kuyruk": {
+          "status": "idle"
+        }
+      },
+      "edgeStates": {
+        "eAB": {
+          "status": "active"
+        },
+        "eAC": {
+          "status": "active"
+        },
+        "eBD": {
+          "status": "active"
+        },
+        "eCE": {
+          "status": "active"
+        },
+        "eDF": {
+          "status": "active"
+        }
+      }
+    }
+  ],
+  "tags": [
+    "bfs",
+    "graf"
+  ]
+}

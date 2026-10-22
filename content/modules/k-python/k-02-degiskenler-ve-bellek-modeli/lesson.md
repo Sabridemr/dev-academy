@@ -53,6 +53,21 @@ heap belleğinde durur. "Stack" burada **fonksiyon çağrılarının yığını*
 modeldir ve kodun nasıl davrandığını doğru tahmin etmeni sağlar.
 :::
 
+Bu modelin en önemli sonucu şudur: atama bir nesneyi kopyalamaz, yalnızca bir etiketi taşır. Animasyonda bir
+listeye iki isim bağlandığında, liste yerinde değiştirildiğinde ve bir isim yeni nesneye taşındığında okların
+nasıl hareket ettiğini izle.
+
+:::animation{scene="isim-nesne-baglama.scene.json"}
+`b.append(3)` adımında listenin kimliğinin aynı kaldığına, `a = a + [4]` ve `x = x + 1` adımlarında ise yeni nesne oluşup yalnızca bir okun taşındığına dikkat et.
+:::
+
+Hangi türlerin yerinde değişebildiğini, hangilerinin her işlemde yeni nesne ürettiğini aşağıdaki şema özetliyor;
+ayrıntısını bu dersin ilerleyen bölümlerinde göreceksin:
+
+:::diagram{src="degisebilir-degismez.svg" alt="Değiştirilemez türler int, float, bool, str, tuple, frozenset ile değiştirilebilir türler list, dict, set ve kendi sınıfların; artı eşittir işleminin iki gruptaki farklı etkisi|Immutable types int, float, bool, str, tuple, frozenset versus mutable types list, dict, set and your own classes; the different effect of plus-equals in each group"}
+Aynı `+=` yazımı solda yeni nesne üretir, sağda var olan nesneyi değiştirir.
+:::
+
 ## İlk simülasyon: etiketler ve değiştirilemez nesneler
 
 Aşağıdaki programda sayılar ve metinler de heap'te ayrı nesneler olarak gösteriliyor (normalde simülasyonlar
@@ -115,6 +130,10 @@ değiştirir. Aynı nesneyi gösteren tüm isimler değişikliği görür. Buna 
 
 :::trace{src="liste-paylasimi.trace.json" title="Takma ad: iki isim, tek liste|Aliasing: two names, one list"}
 `yedek.append(...)` sonrasında iki ismin de aynı listeyi gösterdiğini, `sepet[:]` ile ise yeni bir liste oluştuğunu izle.
+:::
+
+:::interactive{type="python-memory" scenario="aliasing" title="Kendin dene: iki isim, tek nesne|Try it: two names, one object"}
+"Adım ileri" ile satırları tek tek çalıştır. Soldaki isim tablosunda `a` ile `b`nin aynı renkli #id rozetini gösterdiğine, sağdaki liste kartında `ref=2` yazdığına bak; `b.append(4)` sonrasında kart yerinde değişir ve kimliği aynı kalır. `c = [1, 2, 3, 4]` yeni bir liste oluşturur: çıktıda `a == c` True, `a is c` False olur. Son satırlardaki `a = a + [5]` ise yeni bir liste üretip yalnızca `a`yı ona bağlar; `b` eski listede kalır. Ardından "Kodu düzenle" ile `b = a` satırını `b = a[:]` yapıp "Çalıştır"a bas ve farkı karşılaştır.
 :::
 
 :::callout{tone="tip" title="Ne zaman kopya almalı?"}
@@ -182,6 +201,23 @@ print(type(deger))   # <class 'str'>
 Bu esneklik hızlı yazmayı sağlar ama hatalara da kapı açar. Büyük projelerde **tip ipuçları** (`deger: int = 42`)
 ve `mypy` gibi araçlarla bu risk azaltılır (K-15 dersi). Python yine de **güçlü tipli** bir dildir: `"3" + 4`
 otomatik dönüştürülmez, `TypeError` verir.
+
+:::realworld{company="Dropbox"}
+Dropbox'ın masaüstü istemcisi ve sunucu tarafı uzun yıllar büyük ölçüde Python ile yazıldı. Şirketin mühendislik
+blogunda anlattığı "Our journey to type checking 4 million lines of Python" yazısı, bu dersteki "tip isimde değil,
+nesnede" fikrinin büyük bir kod tabanındaki bedelini gösterir: bir isim herhangi bir nesneye bağlanabildiği için,
+bir fonksiyonun hangi türde argüman beklediğini ya da ne döndürdüğünü anlamak için çoğu zaman kodu satır satır
+izlemek gerekir.
+
+Dropbox bu sorunu dili değiştirmeden çözmeye çalıştı: Python'a isteğe bağlı **tip ipuçları** ekleyen ve onları
+çalıştırmadan denetleyen **mypy** projesine yatırım yaptı (Python'un yaratıcısı Guido van Rossum da o yıllarda
+Dropbox'ta bu çalışmanın içindeydi). Ekip, ipuçlarını kod tabanına bir anda değil, en çok kullanılan modüllerden
+başlayarak kademeli olarak ekledi.
+
+Burada önemli olan nokta: tip ipuçları çalışma zamanındaki davranışı değiştirmez. `deger: int = 42` yazdıktan sonra
+da `deger = "kırk iki"` satırı çalışır; isim yine bir etiket, tip yine nesnenin özelliğidir. mypy yalnızca bu
+uyumsuzluğu kod çalışmadan önce raporlar.
+:::
 
 ## Özet
 

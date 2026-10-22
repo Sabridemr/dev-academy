@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 400" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Iterator protokolü</title>
+  <desc id="desc">Iterable bir liste iter() ile bir iterator verir; iterator konumu tutar ve next() her çağrıda sıradaki elemanı döndürür, eleman bitince StopIteration fırlatır. Alt satırda generator fonksiyonu çağrılınca bir generator nesnesi döner ve bu nesne de aynı protokolü uygulayan bir iterator'dır.</desc>
+  <defs>
+    <marker id="ok" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+    <marker id="ok-danger" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-danger, #ef4444)"/>
+    </marker>
+  </defs>
+
+  <!-- Üst satır: liste ile protokol -->
+  <text x="30" y="34" font-size="13" fill="var(--da-muted, #64748b)">Iterable → iterator → değerler</text>
+
+  <rect x="30" y="60" width="200" height="110" rx="12" fill="var(--da-surface, #f8fafc)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5"/>
+  <text x="130" y="86" text-anchor="middle" font-size="15" font-weight="600" fill="var(--da-fg, #0f172a)">Iterable</text>
+  <text x="130" y="108" text-anchor="middle" font-size="13" fill="var(--da-muted, #64748b)">liste = [10, 20, 30]</text>
+  <text x="130" y="130" text-anchor="middle" font-size="12" fill="var(--da-muted, #64748b)">__iter__()</text>
+  <text x="130" y="152" text-anchor="middle" font-size="12" fill="var(--da-muted, #64748b)">tekrar dolaşılabilir</text>
+
+  <path d="M 230 115 L 330 115" stroke="var(--da-muted, #64748b)" stroke-width="1.8" fill="none" marker-end="url(#ok)"/>
+  <text x="280" y="105" text-anchor="middle" font-size="13" fill="var(--da-fg, #0f172a)">iter()</text>
+
+  <rect x="332" y="60" width="220" height="110" rx="12" fill="var(--da-primary, #6366f1)" fill-opacity="0.12" stroke="var(--da-primary, #6366f1)" stroke-width="2"/>
+  <text x="442" y="86" text-anchor="middle" font-size="15" font-weight="600" fill="var(--da-primary, #6366f1)">Iterator</text>
+  <text x="442" y="108" text-anchor="middle" font-size="13" fill="var(--da-fg, #0f172a)">konum: sıradaki indeks</text>
+  <text x="442" y="130" text-anchor="middle" font-size="12" fill="var(--da-muted, #64748b)">__next__() ve __iter__()</text>
+  <text x="442" y="152" text-anchor="middle" font-size="12" fill="var(--da-muted, #64748b)">tek kullanımlık</text>
+
+  <path d="M 552 95 L 660 75" stroke="var(--da-muted, #64748b)" stroke-width="1.8" fill="none" marker-end="url(#ok)"/>
+  <text x="600" y="72" text-anchor="middle" font-size="13" fill="var(--da-fg, #0f172a)">next()</text>
+  <g font-size="13" fill="var(--da-fg, #0f172a)">
+    <rect x="662" y="52" width="56" height="34" rx="8" fill="var(--da-success, #10b981)" fill-opacity="0.15" stroke="var(--da-success, #10b981)"/>
+    <text x="690" y="74" text-anchor="middle">10</text>
+    <rect x="726" y="52" width="56" height="34" rx="8" fill="var(--da-success, #10b981)" fill-opacity="0.15" stroke="var(--da-success, #10b981)"/>
+    <text x="754" y="74" text-anchor="middle">20</text>
+    <rect x="790" y="52" width="56" height="34" rx="8" fill="var(--da-success, #10b981)" fill-opacity="0.15" stroke="var(--da-success, #10b981)"/>
+    <text x="818" y="74" text-anchor="middle">30</text>
+  </g>
+
+  <path d="M 552 140 L 660 150" stroke="var(--da-danger, #ef4444)" stroke-width="1.8" fill="none" stroke-dasharray="5 4" marker-end="url(#ok-danger)"/>
+  <rect x="662" y="128" width="184" height="40" rx="8" fill="var(--da-danger, #ef4444)" fill-opacity="0.1" stroke="var(--da-danger, #ef4444)"/>
+  <text x="754" y="153" text-anchor="middle" font-size="13" fill="var(--da-danger, #ef4444)">StopIteration (bitti)</text>
+  <text x="754" y="190" text-anchor="middle" font-size="12" fill="var(--da-muted, #64748b)">for döngüsü bunu yakalayıp durur</text>
+
+  <!-- Ayırıcı -->
+  <line x1="30" y1="225" x2="870" y2="225" stroke="var(--da-border, #cbd5e1)" stroke-dasharray="6 6"/>
+
+  <!-- Alt satır: generator -->
+  <text x="30" y="258" font-size="13" fill="var(--da-muted, #64748b)">Generator: aynı protokolü bir fonksiyonla yazmak</text>
+
+  <rect x="30" y="280" width="200" height="90" rx="12" fill="var(--da-surface, #f8fafc)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5"/>
+  <text x="130" y="306" text-anchor="middle" font-size="15" font-weight="600" fill="var(--da-fg, #0f172a)">def sayac(limit):</text>
+  <text x="130" y="330" text-anchor="middle" font-size="13" fill="var(--da-muted, #64748b)">... yield n ...</text>
+  <text x="130" y="352" text-anchor="middle" font-size="12" fill="var(--da-muted, #64748b)">generator fonksiyonu</text>
+
+  <path d="M 230 325 L 330 325" stroke="var(--da-muted, #64748b)" stroke-width="1.8" fill="none" marker-end="url(#ok)"/>
+  <text x="280" y="315" text-anchor="middle" font-size="13" fill="var(--da-fg, #0f172a)">sayac(3)</text>
+
+  <rect x="332" y="280" width="220" height="90" rx="12" fill="var(--da-accent, #f59e0b)" fill-opacity="0.12" stroke="var(--da-accent, #f59e0b)" stroke-width="2"/>
+  <text x="442" y="306" text-anchor="middle" font-size="15" font-weight="600" fill="var(--da-fg, #0f172a)">Generator nesnesi</text>
+  <text x="442" y="330" text-anchor="middle" font-size="13" fill="var(--da-fg, #0f172a)">askıdaki çerçeve + yereller</text>
+  <text x="442" y="352" text-anchor="middle" font-size="12" fill="var(--da-muted, #64748b)">kendisi bir iterator'dır</text>
+
+  <path d="M 552 325 L 660 325" stroke="var(--da-muted, #64748b)" stroke-width="1.8" fill="none" marker-end="url(#ok)"/>
+  <text x="606" y="315" text-anchor="middle" font-size="13" fill="var(--da-fg, #0f172a)">next()</text>
+  <rect x="662" y="300" width="184" height="50" rx="8" fill="var(--da-surface, #f8fafc)" stroke="var(--da-border, #cbd5e1)"/>
+  <text x="754" y="322" text-anchor="middle" font-size="13" fill="var(--da-fg, #0f172a)">bir sonraki yield'e kadar</text>
+  <text x="754" y="340" text-anchor="middle" font-size="12" fill="var(--da-muted, #64748b)">değer üretilir, sonra durur</text>
+</svg>

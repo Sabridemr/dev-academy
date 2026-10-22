@@ -1,0 +1,229 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "k-07-closure-ve-dekorator",
+  "title": { "tr": "Closure Hücresi ve Dekoratörün Sarması", "en": "The Closure Cell and How a Decorator Wraps" },
+  "summary": {
+    "tr": "sayac_olustur çerçevesi kapandıktan sonra sayi değişkeninin hücrede yaşaması; ardından @logla'nın topla ismini sarmalayıcıya bağlaması ve çağrının sarmalayıcıdan asıl fonksiyona geçmesi.",
+    "en": "After the sayac_olustur frame closes, the sayi variable lives on in a cell; then @logla rebinds the name topla to the wrapper and each call goes through the wrapper to the original function."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Üst yarıda closure anlatılır: Global çerçeve sayac_olustur(0) çağırır, bu çerçeve sayi değişkenini bir hücreye koyar ve hücreyi kullanan artir fonksiyonunu döndürür. Çerçeve kaybolur ama hücre artir'e bağlı kalır; a() her çağrıldığında hücredeki değer 1, sonra 2 olur. Alt yarıda dekoratör anlatılır: @logla, def topla satırı çalışırken asıl topla fonksiyonunu alır ve sarmalayici döndürür; topla ismi artık sarmalayıcıyı gösterir. topla(2, 3) çağrısı önce sarmalayıcıya gider, sarmalayıcı closure'daki asıl fonksiyonu çağırır ve 5 sonucu geri döner.",
+      "en": "The top half shows the closure: the Global frame calls sayac_olustur(0), that frame puts the sayi variable in a cell and returns the artir function that uses the cell. The frame disappears but the cell stays attached to artir; each call to a() changes the value in the cell to 1, then 2. The bottom half shows the decorator: while the def topla line runs, @logla takes the original topla and returns sarmalayici; the name topla now points to the wrapper. The call topla(2, 3) first goes to the wrapper, which calls the original function from its closure, and the result 5 comes back."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "global", "kind": "service", "label": { "tr": "Global kapsam", "en": "Global scope" }, "sublabel": { "tr": "modül isimleri", "en": "module names" }, "x": 120, "y": 300, "w": 170, "h": 90 },
+    { "id": "sayac", "kind": "function", "label": { "tr": "sayac_olustur() çerçevesi", "en": "sayac_olustur() frame" }, "sublabel": "baslangic=0", "x": 420, "y": 110, "w": 230, "h": 70 },
+    { "id": "cell", "kind": "storage", "label": { "tr": "hücre (cell): sayi", "en": "cell: sayi" }, "x": 800, "y": 110, "w": 190, "h": 70 },
+    { "id": "artir", "kind": "function", "label": { "tr": "artir (closure)", "en": "artir (closure)" }, "sublabel": { "tr": "fonksiyon nesnesi", "en": "function object" }, "x": 800, "y": 250, "w": 190, "h": 70 },
+    { "id": "logla", "kind": "service", "label": { "tr": "logla(fonk) dekoratörü", "en": "logla(fonk) decorator" }, "x": 420, "y": 440, "w": 230, "h": 70 },
+    { "id": "sar", "kind": "function", "label": "sarmalayici", "sublabel": { "tr": "fonk → asıl topla", "en": "fonk → original topla" }, "x": 640, "y": 540, "w": 190, "h": 70 },
+    { "id": "topla", "kind": "function", "label": { "tr": "asıl topla(a, b)", "en": "original topla(a, b)" }, "sublabel": "return a + b", "x": 880, "y": 440, "w": 190, "h": 70 }
+  ],
+  "edges": [
+    { "id": "g-sayac", "from": "global", "to": "sayac", "kind": "request", "curvature": -0.2, "label": "sayac_olustur(0)" },
+    { "id": "sayac-cell", "from": "sayac", "to": "cell", "kind": "data", "label": "sayi" },
+    { "id": "sayac-artir", "from": "sayac", "to": "artir", "kind": "response", "label": "return artir" },
+    { "id": "artir-cell", "from": "artir", "to": "cell", "kind": "data", "style": "dashed", "label": "__closure__" },
+    { "id": "g-artir", "from": "global", "to": "artir", "kind": "request", "curvature": 0.15, "label": "a()" },
+    { "id": "g-logla", "from": "global", "to": "logla", "kind": "request", "curvature": 0.2, "label": "@logla" },
+    { "id": "logla-sar", "from": "logla", "to": "sar", "kind": "response", "label": "return sarmalayici" },
+    { "id": "sar-topla", "from": "sar", "to": "topla", "kind": "request", "label": { "tr": "fonk(*args)", "en": "fonk(*args)" } },
+    { "id": "g-sar", "from": "global", "to": "sar", "kind": "request", "curvature": 0.35, "label": "topla(2, 3)" }
+  ],
+  "steps": [
+    {
+      "id": "cagri",
+      "title": { "tr": "Fabrika fonksiyonu çağrılır", "en": "The factory function is called" },
+      "narration": {
+        "tr": "`a = sayac_olustur(0)` satırı yeni bir çerçeve açar. Derleyici, içteki `artir` fonksiyonunun `sayi`'yı kullandığını önceden gördüğü için `sayi`'yı sıradan bir yerel değişken olarak değil, bir **hücrede** tutmaya karar vermiştir.",
+        "en": "The line `a = sayac_olustur(0)` opens a new frame. Because the compiler saw in advance that the inner `artir` uses `sayi`, it decided to keep `sayi` in a **cell** instead of an ordinary local variable."
+      },
+      "durationMs": 3400,
+      "inherit": false,
+      "highlight": { "nodes": ["global", "sayac"], "edges": ["g-sayac"] },
+      "nodeStates": {
+        "global": { "status": "busy", "sublabel": { "tr": "bekliyor: a = ?", "en": "waiting: a = ?" } },
+        "sayac": { "status": "active" },
+        "cell": { "visible": false },
+        "artir": { "visible": false },
+        "logla": { "visible": false },
+        "sar": { "visible": false },
+        "topla": { "visible": false }
+      },
+      "edgeStates": {
+        "g-sayac": { "status": "active" },
+        "sayac-artir": { "visible": false },
+        "artir-cell": { "visible": false },
+        "g-artir": { "visible": false },
+        "g-logla": { "visible": false },
+        "logla-sar": { "visible": false },
+        "sar-topla": { "visible": false },
+        "g-sar": { "visible": false }
+      },
+      "packets": [{ "edge": "g-sayac", "shape": "envelope", "label": "0", "durationMs": 1100 }]
+    },
+    {
+      "id": "hucre",
+      "title": { "tr": "sayi bir hücreye konur", "en": "sayi goes into a cell" },
+      "narration": {
+        "tr": "`sayi = baslangic` çalışınca 0 değeri çerçevenin içine değil, çerçeveden bağımsız bir hücreye yazılır. Çerçeve hücreyi yalnızca gösterir; hücrenin ömrü ona bağlı değildir.",
+        "en": "When `sayi = baslangic` runs, the value 0 is written not into the frame itself but into a cell that is independent of the frame. The frame only points to the cell; the cell's lifetime does not depend on it."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["sayac", "cell"], "edges": ["sayac-cell"] },
+      "nodeStates": {
+        "cell": { "visible": true, "status": "active", "badge": "0", "sublabel": "sayi = 0" }
+      },
+      "edgeStates": { "g-sayac": { "status": "idle" }, "sayac-cell": { "status": "active" } },
+      "packets": [{ "edge": "sayac-cell", "shape": "square", "label": "0", "durationMs": 1000 }]
+    },
+    {
+      "id": "artir-dogar",
+      "title": { "tr": "artir hücreyi yakalar", "en": "artir captures the cell" },
+      "narration": {
+        "tr": "`def artir():` satırı yeni bir fonksiyon nesnesi oluşturur. Bu nesne hücreye bir referansı `__closure__` içinde saklar. Yani artir, değeri değil **değişkenin kendisini** (hücreyi) yakalar.",
+        "en": "The `def artir():` line creates a new function object. That object stores a reference to the cell in `__closure__`. So artir captures not the value but **the variable itself** (the cell)."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["artir", "cell"], "edges": ["artir-cell"] },
+      "nodeStates": {
+        "artir": { "visible": true, "status": "active" },
+        "cell": { "status": "idle" }
+      },
+      "edgeStates": { "sayac-cell": { "status": "idle" }, "artir-cell": { "visible": true, "status": "active" } },
+      "packets": [{ "edge": "artir-cell", "shape": "diamond", "label": "ref", "durationMs": 1000 }]
+    },
+    {
+      "id": "cerceve-kapanir",
+      "title": { "tr": "Çerçeve gider, hücre kalır", "en": "The frame goes, the cell stays" },
+      "narration": {
+        "tr": "`return artir` ile fonksiyon nesnesi dışarı verilir ve `a` ismine bağlanır. `sayac_olustur` çerçevesi yığından kalkar; ama hücreyi hâlâ `artir` tuttuğu için `sayi` yaşamaya devam eder.",
+        "en": "With `return artir` the function object is handed out and bound to the name `a`. The `sayac_olustur` frame is popped; but because `artir` still holds the cell, `sayi` stays alive."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["sayac", "cell", "artir"], "edges": ["sayac-artir"] },
+      "nodeStates": {
+        "sayac": { "status": "muted", "badge": "pop", "sublabel": { "tr": "çerçeve kapandı", "en": "frame closed" } },
+        "global": { "status": "idle", "sublabel": "a → artir" },
+        "cell": { "status": "success" },
+        "artir": { "status": "idle" }
+      },
+      "edgeStates": { "sayac-artir": { "visible": true, "status": "active" }, "sayac-cell": { "status": "muted" }, "artir-cell": { "status": "idle" } },
+      "packets": [{ "edge": "sayac-artir", "shape": "envelope", "label": "artir", "durationMs": 1100 }],
+      "annotations": [
+        { "id": "yasiyor", "x": 800, "y": 30, "text": { "tr": "artir tuttuğu sürece hücre yaşar", "en": "the cell lives as long as artir holds it" }, "target": "cell", "tone": "success" }
+      ]
+    },
+    {
+      "id": "a-cagrisi",
+      "title": { "tr": "a(): nonlocal ile hücreyi güncelle", "en": "a(): update the cell with nonlocal" },
+      "narration": {
+        "tr": "`a()` çağrısı artir'in gövdesini çalıştırır. `nonlocal sayi` sayesinde `sayi += 1` yeni bir yerel oluşturmaz, hücredeki değeri 1 yapar. İkinci `a()` çağrısında hücre 2 olur ve `print` 2 yazar.",
+        "en": "Calling `a()` runs artir's body. Thanks to `nonlocal sayi`, `sayi += 1` does not create a new local; it sets the value in the cell to 1. On the second `a()` call the cell becomes 2 and `print` shows 2."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["artir", "cell"], "edges": ["g-artir", "artir-cell"] },
+      "nodeStates": {
+        "sayac": { "visible": false },
+        "artir": { "status": "active", "counter": 2 },
+        "cell": { "status": "active", "badge": "2", "sublabel": "sayi = 2" }
+      },
+      "edgeStates": { "g-sayac": { "visible": false }, "sayac-cell": { "visible": false }, "sayac-artir": { "visible": false }, "g-artir": { "visible": true, "status": "active" }, "artir-cell": { "status": "active" } },
+      "packets": [
+        { "edge": "g-artir", "shape": "envelope", "label": "a()", "durationMs": 900 },
+        { "edge": "artir-cell", "shape": "square", "label": "+1", "startAt": 900, "durationMs": 700 },
+        { "edge": "g-artir", "shape": "envelope", "label": "a()", "startAt": 1800, "durationMs": 900 },
+        { "edge": "artir-cell", "shape": "square", "label": "+1", "startAt": 2700, "durationMs": 700 }
+      ],
+      "annotations": [
+        { "id": "b-ayri", "x": 470, "y": 210, "text": { "tr": "b = sayac_olustur(100) ayrı bir hücre üretir", "en": "b = sayac_olustur(100) makes a separate cell" }, "tone": "info" }
+      ]
+    },
+    {
+      "id": "dekorator-uygulanir",
+      "title": { "tr": "@logla: def anında bir kez", "en": "@logla: once, at def time" },
+      "narration": {
+        "tr": "Şimdi dekoratör. `@logla` ile işaretli `def topla` satırı çalışırken önce asıl `topla` fonksiyonu oluşturulur, sonra hemen `logla(topla)` çağrılır. Bu, `topla = logla(topla)` yazmanın kısaltmasıdır ve yalnızca bir kez olur.",
+        "en": "Now the decorator. While the `def topla` line marked with `@logla` runs, the original `topla` function is created first, then `logla(topla)` is called right away. This is shorthand for `topla = logla(topla)` and happens only once."
+      },
+      "durationMs": 3800,
+      "highlight": { "nodes": ["logla", "topla"], "edges": ["g-logla"] },
+      "nodeStates": {
+        "artir": { "status": "muted" },
+        "cell": { "status": "muted" },
+        "logla": { "visible": true, "status": "active", "sublabel": { "tr": "fonk = asıl topla", "en": "fonk = original topla" } },
+        "topla": { "visible": true, "status": "idle" },
+        "global": { "status": "busy", "sublabel": { "tr": "topla = logla(topla)", "en": "topla = logla(topla)" } }
+      },
+      "edgeStates": { "g-artir": { "status": "muted" }, "artir-cell": { "status": "muted" }, "g-logla": { "visible": true, "status": "active" } },
+      "packets": [{ "edge": "g-logla", "shape": "envelope", "label": { "tr": "asıl topla", "en": "original topla" }, "durationMs": 1200 }]
+    },
+    {
+      "id": "isim-degisir",
+      "title": { "tr": "topla ismi artık sarmalayıcıyı gösterir", "en": "The name topla now points to the wrapper" },
+      "narration": {
+        "tr": "`logla` içeride `sarmalayici`'yı tanımlar ve onu döndürür. Sarmalayıcı, asıl fonksiyona `fonk` closure değişkeni üzerinden erişir. Global'deki `topla` ismi artık sarmalayıcıya bağlıdır; asıl fonksiyona doğrudan ulaşan bir isim kalmamıştır.",
+        "en": "`logla` defines `sarmalayici` inside and returns it. The wrapper reaches the original function through the closure variable `fonk`. The global name `topla` is now bound to the wrapper; no name reaches the original function directly anymore."
+      },
+      "durationMs": 3800,
+      "highlight": { "nodes": ["sar", "topla", "global"], "edges": ["logla-sar", "sar-topla"] },
+      "nodeStates": {
+        "logla": { "status": "muted", "badge": "pop" },
+        "sar": { "visible": true, "status": "active" },
+        "global": { "status": "idle", "sublabel": "topla → sarmalayici" }
+      },
+      "edgeStates": { "g-logla": { "status": "muted" }, "logla-sar": { "visible": true, "status": "active" }, "sar-topla": { "visible": true, "status": "idle" } },
+      "packets": [{ "edge": "logla-sar", "shape": "envelope", "label": "sarmalayici", "durationMs": 1100 }],
+      "annotations": [
+        { "id": "wraps", "x": 640, "y": 360, "text": { "tr": "functools.wraps: __name__ yine 'topla'", "en": "functools.wraps: __name__ is still 'topla'" }, "target": "sar", "tone": "info" }
+      ]
+    },
+    {
+      "id": "cagri-sarmalayiciya",
+      "title": { "tr": "topla(2, 3) önce sarmalayıcıya gider", "en": "topla(2, 3) goes to the wrapper first" },
+      "narration": {
+        "tr": "`x = topla(2, 3)` aslında sarmalayıcıyı çağırır. Sarmalayıcı önce kendi işini yapar (`-> topla (2, 3)` yazar), sonra `fonk(*args, **kwargs)` ile asıl fonksiyonu çağırır. Yığında iki çerçeve vardır: altta sarmalayici, üstte asıl topla.",
+        "en": "`x = topla(2, 3)` actually calls the wrapper. The wrapper does its own work first (prints `-> topla (2, 3)`), then calls the original function with `fonk(*args, **kwargs)`. There are two frames on the stack: sarmalayici below, the original topla on top."
+      },
+      "durationMs": 3800,
+      "highlight": { "nodes": ["sar", "topla"], "edges": ["g-sar", "sar-topla"] },
+      "nodeStates": {
+        "logla": { "visible": false },
+        "sar": { "status": "busy", "badge": "-> log" },
+        "topla": { "status": "active", "sublabel": "a=2 b=3" },
+        "global": { "status": "busy", "sublabel": { "tr": "bekliyor: x = ?", "en": "waiting: x = ?" } }
+      },
+      "edgeStates": { "g-logla": { "visible": false }, "logla-sar": { "visible": false }, "g-sar": { "visible": true, "status": "active" }, "sar-topla": { "status": "active" } },
+      "packets": [
+        { "edge": "g-sar", "shape": "envelope", "label": "(2, 3)", "durationMs": 1200 },
+        { "edge": "sar-topla", "shape": "envelope", "label": "(2, 3)", "startAt": 1500, "durationMs": 1100 }
+      ]
+    },
+    {
+      "id": "sonuc-doner",
+      "title": { "tr": "Sonuç sarmalayıcıdan geçerek döner", "en": "The result returns through the wrapper" },
+      "narration": {
+        "tr": "Asıl fonksiyon 5 döndürür; sarmalayıcı `<- 5` yazar ve aynı değeri çağırana iletir. Çağıran tarafta hiçbir şey değişmedi: `topla(2, 3)` hâlâ 5 verir, ama her çağrı artık loglanır. Asıl fonksiyonun koduna tek satır eklenmedi.",
+        "en": "The original function returns 5; the wrapper prints `<- 5` and passes the same value to the caller. Nothing changed for the caller: `topla(2, 3)` still gives 5, but every call is now logged. Not a single line was added to the original function's code."
+      },
+      "durationMs": 3800,
+      "highlight": { "nodes": ["sar", "global"], "edges": ["sar-topla", "g-sar"] },
+      "nodeStates": {
+        "topla": { "status": "success", "badge": "5" },
+        "sar": { "status": "success", "badge": "<- 5" },
+        "global": { "status": "success", "sublabel": "x = 5" }
+      },
+      "packets": [
+        { "edge": "sar-topla", "direction": "backward", "shape": "square", "color": "success", "label": "5", "durationMs": 1100 },
+        { "edge": "g-sar", "direction": "backward", "shape": "square", "color": "success", "label": "5", "startAt": 1400, "durationMs": 1200 }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["python", "closure", "cell", "decorator"]
+}

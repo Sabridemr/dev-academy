@@ -155,6 +155,20 @@ Terminalden başlattığınız bir komutu `Ctrl+Z` ile durdurup `bg` ile arka pl
 
 Modern dağıtımlarda servisleri **systemd** yönetir. Bir servis, `/etc/systemd/system/` altındaki küçük bir "unit" dosyasıyla tanımlanır; systemd onu açılışta başlatır, çökerse yeniden ayağa kaldırır ve loglarını **journald** ile toplar.
 
+Sinyallerin, süreç ağacının ve systemd'nin birlikte nasıl çalıştığını görmek için önce bir tahminde bulunun, sonra animasyonu izleyin.
+
+:::predict{id="linux-sigterm-takilan-surec"}
+`sudo systemctl stop myapp` çalıştırdınız; servisin bir worker süreci takılı ve SIGTERM'e yanıt vermiyor. Ne olur? | You ran `sudo systemctl stop myapp`; one worker is stuck and ignores SIGTERM. What happens?
+- [ ] Servis sonsuza kadar "stopping" durumunda kalır, elle müdahale gerekir | The service stays in "stopping" forever and needs manual action
+- [x] systemd bir süre bekler, ardından kalan süreçlere SIGKILL gönderir | systemd waits for a while, then sends SIGKILL to the remaining processes
+- [ ] systemd takılan süreci hemen yeniden başlatır | systemd restarts the stuck process right away
+Açıklama: systemd önce cgroup'taki tüm süreçlere SIGTERM gönderir ve `TimeoutStopSec` (varsayılan 90 saniye) kadar bekler. Süre dolduğunda kalanlara yakalanamayan SIGKILL gider. `stop` bilinçli bir durdurma olduğu için yeniden başlatma yapılmaz. | systemd first sends SIGTERM to every process in the cgroup and waits `TimeoutStopSec` (90 seconds by default). When the time is up, the uncatchable SIGKILL goes to whatever is left. Since `stop` is a deliberate stop, there is no restart.
+:::
+
+:::animation{scene="process-signals.scene.json"}
+systemd'nin başlattığı servis, çatallanan worker'lar, SIGTERM ile nazik durdurma, zaman aşımında SIGKILL ve `kill -9` sonrası `Restart=on-failure` ile yeniden doğuş.
+:::
+
 :::code{lang="bash" title="Süreçler ve servisler"}
 ```bash
 ps aux | grep -v grep | grep node     # node süreçlerini bul

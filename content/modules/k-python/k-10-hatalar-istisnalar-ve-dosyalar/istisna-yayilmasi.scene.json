@@ -1,0 +1,229 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "k-10-istisna-yayilmasi",
+  "title": { "tr": "İstisna Yığında Yukarı Yayılır", "en": "An Exception Propagates Up the Stack" },
+  "summary": {
+    "tr": "kaydet → kayit_olustur → yas_coz zincirinde başarılı kayıtta try → else → finally yolunun, hatalı kayıtta ise ValueError'ın çerçeve çerçeve yukarı çıkıp kaydet'teki except tarafından yakalanmasının ve finally'nin yine çalışmasının gösterimi.",
+    "en": "In the kaydet → kayit_olustur → yas_coz chain, the try → else → finally path for a valid record, and for a bad record a ValueError climbing frame by frame until the except in kaydet catches it, with finally still running."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda alttan üste bir çağrı yığını vardır: Global, kaydet, kayit_olustur ve yas_coz çerçeveleri. Sağda kaydet fonksiyonunun try bloğuna bağlı else, except ValueError ve finally kutuları bulunur. İlk kayıtta '36' sayıya çevrilir, değer aşağı iner ve sırasıyla else ile finally çalışır. İkinci kayıtta int('otuz') ValueError fırlatır; yas_coz'da ve kayit_olustur'da try olmadığı için iki çerçeve de yarıda kapanır ve hata kaydet'e ulaşır. Oradaki except hatayı yakalayıp 'atlandı' yazar, else atlanır, finally yine çalışır. Son adımda hiç kimsenin yakalamadığı durumda hatanın Global'e ulaşıp programı traceback ile durdurduğu gösterilir.",
+      "en": "On the left there is a call stack from bottom to top: Global, kaydet, kayit_olustur and yas_coz frames. On the right are the else, except ValueError and finally boxes attached to kaydet's try block. For the first record '36' is converted to a number, the value goes back down, and else then finally run. For the second record int('otuz') raises ValueError; there is no try in yas_coz or kayit_olustur, so both frames close half-way and the error reaches kaydet. The except there catches it and prints 'atlandı', else is skipped and finally still runs. The last step shows that if nobody catches it, the error reaches Global and stops the program with a traceback."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "stack", "kind": "group", "label": { "tr": "Çağrı yığını", "en": "Call stack" }, "x": 270, "y": 320, "w": 340, "h": 520 },
+    { "id": "global", "kind": "service", "parent": "stack", "label": { "tr": "Global çerçeve", "en": "Global frame" }, "sublabel": "sonuc = kaydet(...)", "x": 270, "y": 515, "w": 280, "h": 66 },
+    { "id": "kaydet", "kind": "function", "parent": "stack", "label": { "tr": "kaydet() · try", "en": "kaydet() · try" }, "x": 270, "y": 400, "w": 280, "h": 66 },
+    { "id": "kayit", "kind": "function", "parent": "stack", "label": { "tr": "kayit_olustur() · try yok", "en": "kayit_olustur() · no try" }, "x": 270, "y": 285, "w": 280, "h": 66 },
+    { "id": "yas", "kind": "function", "parent": "stack", "label": { "tr": "yas_coz() · try yok", "en": "yas_coz() · no try" }, "x": 270, "y": 170, "w": 280, "h": 66 },
+    { "id": "else", "kind": "service", "label": "else", "sublabel": { "tr": "yalnızca hata yoksa", "en": "only if no error" }, "x": 690, "y": 170, "w": 200, "h": 66 },
+    { "id": "except", "kind": "service", "label": "except ValueError", "sublabel": { "tr": "uyan tür gelirse", "en": "if a matching type arrives" }, "x": 690, "y": 300, "w": 200, "h": 66 },
+    { "id": "finally", "kind": "service", "label": "finally", "sublabel": { "tr": "her durumda", "en": "always" }, "x": 690, "y": 430, "w": 200, "h": 66 },
+    { "id": "stdout", "kind": "client", "label": { "tr": "Ekran", "en": "Screen" }, "x": 905, "y": 300, "w": 150, "h": 66 }
+  ],
+  "edges": [
+    { "id": "g-k", "from": "global", "to": "kaydet", "kind": "request", "curvature": -0.5 },
+    { "id": "k-ko", "from": "kaydet", "to": "kayit", "kind": "request", "curvature": -0.5 },
+    { "id": "ko-y", "from": "kayit", "to": "yas", "kind": "request", "curvature": -0.5, "label": { "tr": "çağrı / dönüş / hata", "en": "call / return / error" } },
+    { "id": "k-else", "from": "kaydet", "to": "else", "kind": "control", "style": "dashed" },
+    { "id": "k-exc", "from": "kaydet", "to": "except", "kind": "control", "style": "dashed" },
+    { "id": "k-fin", "from": "kaydet", "to": "finally", "kind": "control", "style": "dashed" },
+    { "id": "exc-out", "from": "except", "to": "stdout", "kind": "data", "label": "print" }
+  ],
+  "steps": [
+    {
+      "id": "ilk-kayit",
+      "title": { "tr": "İlk kayıt: ('Ada', '36')", "en": "First record: ('Ada', '36')" },
+      "narration": {
+        "tr": "`kaydet` döngüsünde ilk kayıt için `try` bloğuna girilir ve çağrı zinciri başlar: `kayit_olustur` → `yas_coz`. Bu animasyonda `kaydet`'teki try'a bir `else` ve bir `finally` eklendiğini varsayıyoruz.",
+        "en": "In the `kaydet` loop the `try` block is entered for the first record and the call chain starts: `kayit_olustur` → `yas_coz`. In this animation we assume the try in `kaydet` also has an `else` and a `finally`."
+      },
+      "durationMs": 3800,
+      "inherit": false,
+      "highlight": { "nodes": ["kaydet", "kayit", "yas"], "edges": ["k-ko", "ko-y"] },
+      "nodeStates": {
+        "global": { "status": "busy" },
+        "kaydet": { "status": "busy", "badge": "try", "sublabel": { "tr": "kayıt 1/2", "en": "record 1/2" } },
+        "kayit": { "status": "busy", "sublabel": "ad='Ada'" },
+        "yas": { "status": "active", "sublabel": "int('36')" },
+        "else": { "status": "muted" },
+        "except": { "status": "muted" },
+        "finally": { "status": "muted" },
+        "stdout": { "status": "idle" }
+      },
+      "edgeStates": { "k-ko": { "status": "active" }, "ko-y": { "status": "active" } },
+      "packets": [
+        { "edge": "k-ko", "shape": "envelope", "label": "('Ada', '36')", "durationMs": 1100 },
+        { "edge": "ko-y", "shape": "envelope", "label": "'36'", "startAt": 1300, "durationMs": 1100 }
+      ]
+    },
+    {
+      "id": "basari-donus",
+      "title": { "tr": "Başarılı dönüş", "en": "Successful return" },
+      "narration": {
+        "tr": "`int('36')` sorunsuz çalışır: 36 aşağı iner, `kayit_olustur` sözlüğü kurup döndürür. Hata olmadığı için `try` bloğunun tamamı bitti.",
+        "en": "`int('36')` works fine: 36 goes back down and `kayit_olustur` builds and returns the dict. With no error, the whole `try` block finished."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["kayit", "kaydet"], "edges": ["ko-y", "k-ko"] },
+      "nodeStates": {
+        "yas": { "status": "muted", "badge": "36" },
+        "kayit": { "status": "muted", "badge": "{...}" },
+        "kaydet": { "status": "active" }
+      },
+      "edgeStates": { "ko-y": { "status": "idle" }, "k-ko": { "status": "idle" } },
+      "packets": [
+        { "edge": "ko-y", "direction": "backward", "shape": "square", "color": "success", "label": "36", "durationMs": 1100 },
+        { "edge": "k-ko", "direction": "backward", "shape": "square", "color": "success", "label": "{'ad': 'Ada', 'yas': 36}", "startAt": 1300, "durationMs": 1200 }
+      ]
+    },
+    {
+      "id": "else-finally",
+      "title": { "tr": "Başarı yolu: else, sonra finally", "en": "Success path: else, then finally" },
+      "narration": {
+        "tr": "Hata çıkmadığı için `except` atlanır, `else` çalışır (kayıt listeye eklenir). Ardından `finally` çalışır. Başarı yolunun sırası: try → else → finally.",
+        "en": "Since no error occurred, `except` is skipped and `else` runs (the record is appended). Then `finally` runs. The order on the success path: try → else → finally."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["else", "finally"], "edges": ["k-else", "k-fin"] },
+      "nodeStates": {
+        "else": { "status": "success", "badge": "✓" },
+        "finally": { "status": "success", "badge": "✓" },
+        "except": { "status": "muted", "badge": "–" },
+        "kaydet": { "sublabel": { "tr": "kayitlar: 1", "en": "kayitlar: 1" } }
+      },
+      "edgeStates": { "k-else": { "status": "active" }, "k-fin": { "status": "active" } },
+      "packets": [
+        { "edge": "k-else", "shape": "diamond", "label": "1", "durationMs": 1000 },
+        { "edge": "k-fin", "shape": "diamond", "label": "2", "startAt": 1300, "durationMs": 1000 }
+      ]
+    },
+    {
+      "id": "ikinci-kayit",
+      "title": { "tr": "İkinci kayıt: ('Linus', 'otuz')", "en": "Second record: ('Linus', 'otuz')" },
+      "narration": {
+        "tr": "Döngü ikinci kayda geçer; else ve finally kutuları sıfırlanır. Zincir yeniden kurulur ve yığın yine dört çerçeveye çıkar. Bu sefer `yas_coz`'a `'otuz'` metni gelir.",
+        "en": "The loop moves to the second record; the else and finally boxes reset. The chain is built again and the stack once more grows to four frames. This time `yas_coz` receives the text `'otuz'`."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["kayit", "yas"], "edges": ["k-ko", "ko-y"] },
+      "nodeStates": {
+        "else": { "status": "muted", "badge": "" },
+        "finally": { "status": "muted", "badge": "" },
+        "except": { "badge": "" },
+        "kaydet": { "status": "busy", "sublabel": { "tr": "kayıt 2/2", "en": "record 2/2" } },
+        "kayit": { "status": "busy", "badge": "", "sublabel": "ad='Linus'" },
+        "yas": { "status": "active", "badge": "", "sublabel": "int('otuz')" }
+      },
+      "edgeStates": { "k-else": { "status": "idle" }, "k-fin": { "status": "idle" }, "k-ko": { "status": "active" }, "ko-y": { "status": "active" } },
+      "packets": [
+        { "edge": "k-ko", "shape": "envelope", "label": "('Linus', 'otuz')", "durationMs": 1100 },
+        { "edge": "ko-y", "shape": "envelope", "label": "'otuz'", "startAt": 1300, "durationMs": 1100 }
+      ]
+    },
+    {
+      "id": "raise",
+      "title": { "tr": "int('otuz'): ValueError doğar", "en": "int('otuz'): a ValueError is born" },
+      "narration": {
+        "tr": "`int('otuz')` bir `ValueError` nesnesi oluşturup fırlatır. Python önce **bu çerçevede** bir `try` arar. `yas_coz`'da yoktur; fonksiyon kalan satırlarını çalıştırmadan, değer döndürmeden yarıda kalır.",
+        "en": "`int('otuz')` creates and raises a `ValueError` object. Python first looks for a `try` **in this frame**. There is none in `yas_coz`; the function stops half-way without running its remaining lines or returning a value."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["yas"], "edges": [] },
+      "nodeStates": {
+        "yas": { "status": "error", "badge": "ValueError" }
+      },
+      "edgeStates": { "k-ko": { "status": "idle" }, "ko-y": { "status": "idle" } },
+      "annotations": [
+        { "id": "try-yok", "x": 270, "y": 60, "text": { "tr": "bu çerçevede try yok: yukarı geç", "en": "no try in this frame: move up" }, "target": "yas", "tone": "danger" }
+      ]
+    },
+    {
+      "id": "yayilma",
+      "title": { "tr": "Çerçeve çerçeve yukarı", "en": "Frame by frame upward" },
+      "narration": {
+        "tr": "`yas_coz` çerçevesi kapanır ve hata çağırana, `kayit_olustur`'a geçer. Orada da `try` yoktur: `return {...}` satırı hiç çalışmaz ve bu çerçeve de kapanır. Buna yığının çözülmesi (stack unwinding) denir.",
+        "en": "The `yas_coz` frame closes and the error passes to its caller, `kayit_olustur`. There is no `try` there either: the `return {...}` line never runs and this frame closes too. This is called stack unwinding."
+      },
+      "durationMs": 3800,
+      "highlight": { "nodes": ["yas", "kayit"], "edges": ["ko-y", "k-ko"] },
+      "nodeStates": {
+        "yas": { "status": "muted", "badge": "✕" },
+        "kayit": { "status": "error", "badge": "ValueError" }
+      },
+      "edgeStates": { "ko-y": { "status": "error" }, "k-ko": { "status": "error" } },
+      "packets": [
+        { "edge": "ko-y", "direction": "backward", "shape": "diamond", "color": "danger", "label": "ValueError", "durationMs": 1100 },
+        { "edge": "k-ko", "direction": "backward", "shape": "diamond", "color": "danger", "label": "ValueError", "startAt": 1500, "durationMs": 1100 }
+      ]
+    },
+    {
+      "id": "except-yakalar",
+      "title": { "tr": "kaydet'teki except yakalar", "en": "The except in kaydet catches it" },
+      "narration": {
+        "tr": "Hata `kaydet`'e ulaşır; bu çerçevede bir `try` vardır ve `except ValueError` türü uyar. Akış doğrudan except bloğuna atlar, hata nesnesi `hata` ismine bağlanır ve ekrana `atlandı: Linus` yazılır. Ara çerçeveler artık yoktur.",
+        "en": "The error reaches `kaydet`; this frame has a `try` and `except ValueError` matches the type. Control jumps straight into the except block, the exception object is bound to `hata` and `atlandı: Linus` is printed. The intermediate frames are gone."
+      },
+      "durationMs": 3800,
+      "highlight": { "nodes": ["kaydet", "except", "stdout"], "edges": ["k-exc", "exc-out"] },
+      "nodeStates": {
+        "kayit": { "status": "muted", "badge": "✕" },
+        "kaydet": { "status": "active", "badge": "yakalandı" },
+        "except": { "status": "success", "badge": "✓" },
+        "stdout": { "status": "active", "sublabel": "atlandı: Linus" }
+      },
+      "edgeStates": { "ko-y": { "status": "muted" }, "k-ko": { "status": "muted" }, "k-exc": { "status": "active" }, "exc-out": { "status": "active" } },
+      "packets": [
+        { "edge": "k-exc", "shape": "diamond", "color": "danger", "label": "ValueError", "durationMs": 1100 },
+        { "edge": "exc-out", "shape": "envelope", "label": "atlandı: Linus", "startAt": 1400, "durationMs": 1000 }
+      ]
+    },
+    {
+      "id": "finally-yine",
+      "title": { "tr": "else atlanır, finally yine çalışır", "en": "else is skipped, finally still runs" },
+      "narration": {
+        "tr": "Hata olduğu için `else` bu sefer **çalışmaz**. `finally` ise iki yolda da çalıştı; dosya kapatmak, kilidi bırakmak gibi temizlik işleri bu yüzden oraya konur. Döngü sürer ve `kaydet` yalnızca geçerli kaydı içeren listeyi döndürür.",
+        "en": "Because there was an error, `else` does **not** run this time. `finally` ran on both paths; that is why cleanup such as closing files or releasing locks goes there. The loop goes on and `kaydet` returns the list with only the valid record."
+      },
+      "durationMs": 3800,
+      "highlight": { "nodes": ["finally", "else"], "edges": ["k-fin"] },
+      "nodeStates": {
+        "else": { "status": "muted", "badge": "atlandı" },
+        "finally": { "status": "success", "badge": "✓" },
+        "stdout": { "status": "idle" },
+        "kaydet": { "status": "success", "badge": "", "sublabel": { "tr": "return [Ada kaydı]", "en": "return [Ada's record]" } }
+      },
+      "edgeStates": { "k-exc": { "status": "idle" }, "exc-out": { "status": "idle" }, "k-fin": { "status": "active" } },
+      "packets": [{ "edge": "k-fin", "shape": "diamond", "label": "finally", "durationMs": 1100 }]
+    },
+    {
+      "id": "yakalanmasaydi",
+      "title": { "tr": "Kimse yakalamasaydı?", "en": "What if nobody caught it?" },
+      "narration": {
+        "tr": "`kaydet`'te de `try` olmasaydı hata Global çerçeveye kadar çıkardı. En üstte de yakalanmayan istisna programı durdurur ve Python, geçtiği bütün çerçeveleri listeleyen bir **traceback** yazdırır. Bu yüzden traceback aşağıdan yukarı okunur: en alttaki satır hatanın doğduğu yerdir.",
+        "en": "If `kaydet` had no `try` either, the error would climb all the way to the Global frame. An exception that is not caught there stops the program, and Python prints a **traceback** listing every frame it passed through. That is why you read a traceback bottom-up: the last line is where the error was born."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["global"], "edges": ["g-k"] },
+      "nodeStates": {
+        "kaydet": { "status": "muted", "label": { "tr": "kaydet() · try yok (varsayım)", "en": "kaydet() · no try (what if)" }, "sublabel": "" },
+        "except": { "status": "muted", "badge": "" },
+        "finally": { "status": "muted", "badge": "" },
+        "else": { "badge": "" },
+        "global": { "status": "error", "badge": "Traceback" }
+      },
+      "edgeStates": { "k-fin": { "status": "idle" }, "g-k": { "status": "error" } },
+      "packets": [{ "edge": "g-k", "direction": "backward", "shape": "diamond", "color": "danger", "label": "ValueError", "durationMs": 1200 }],
+      "annotations": [
+        { "id": "program-durur", "x": 690, "y": 560, "text": { "tr": "yakalanmayan istisna: program durur", "en": "uncaught exception: the program stops" }, "target": "global", "tone": "danger" }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["python", "exception", "stack-unwinding", "try-except-finally"]
+}

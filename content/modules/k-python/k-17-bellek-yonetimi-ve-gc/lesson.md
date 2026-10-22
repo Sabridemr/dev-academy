@@ -60,6 +60,13 @@ Python 3.13 ile gelen deneysel GIL'siz (free-threaded) yapıda referans sayacı,
 için farklı bir yapıyla tutulur ve başlık daha büyüktür. Normal (varsayılan) yapıda yukarıdaki iki alanlı model geçerlidir.
 :::
 
+Aşağıdaki şema nesne başlığını ve belleği geri veren iki mekanizmayı bir arada gösteriyor; dersin geri kalanında
+ikisini sırayla açacağız.
+
+:::diagram{src="nesne-basligi-ve-nesiller.svg" alt="Bir list nesnesinin bellek düzeni: GC bağlantıları, ob_refcnt, ob_type ve veri; yanında referans sayımı ve genç ile yaşlı nesilli döngüsel çöp toplayıcı|Memory layout of a list object: GC links, ob_refcnt, ob_type and data; beside it reference counting and the cyclic garbage collector with young and old generations"}
+Referans sayımı her zaman çalışır; döngüsel toplayıcı yalnızca konteyner nesnelerini izler.
+:::
+
 ## Referans sayımı: temel mekanizma
 
 CPython'un ana stratejisi basittir: her nesne, kendisini gösteren referansları sayar.
@@ -96,6 +103,14 @@ Bu sayılar yorumlayıcının iç ayrıntılarına bağlıdır ve sürümden sü
 bazı yerel değişken referanslarını saymadan "ödünç" kullanır; bir fonksiyon içindeki yerel listede
 `sys.getrefcount` 3.12'de 2, 3.14'te 1 döndürür. Değeri yalnızca öğrenmek ve hata ayıklamak için kullan; asla
 program mantığını bu sayıya göre kurma.
+:::
+
+Mekanizmanın tamamını, döngülerin neden ayrı bir toplayıcı gerektirdiğiyle birlikte aşağıdaki animasyonda
+izleyebilirsin.
+
+:::animation{scene="referans-sayimi-ve-gc.scene.json"}
+Her adımda listenin `rc` rozetini takip et; ikinci yarıda iki düğümün sayacının neden 1'de takılı kaldığına ve
+toplayıcının onları nasıl bulduğuna bak.
 :::
 
 ## del ismi siler, nesneyi değil
@@ -163,6 +178,10 @@ Son adımlarda X ve Y heap görünümünden kayboldu, çünkü hiçbir isimden o
 fark var: ilk simülasyondaki listenin sayacı 0'a inmişti ve hemen silinmişti. X ve Y'nin sayaçları ise **1'de**
 kaldı (birbirlerini tutuyorlar). Referans sayımı onları asla silemez. Bunlar **erişilemeyen ama canlı**
 nesnelerdir: çöp.
+
+:::interactive{type="python-memory" scenario="refcount-gc" title="Kendin dene: sayaç sıfıra inince|Try it: when the count hits zero"}
+"Adım ileri" ile ilerle ve sağdaki kartlarda `ref=` sayacını izle: `b = a` sayacı 2'ye çıkarır, `del a` yalnızca ismi siler (sayaç 1), `b = None` ile sayaç 0'a iner ve liste hemen "silindi" olarak görünür. `del dis` dış listeyle birlikte içteki iki listeyi de zincirleme siler. `dugum.append(dugum)` kendini gösteren bir döngü kurar: `del dugum` sonrasında liste `ref=1` ile kalır ve "erişilemez (döngü)" uyarısı çıkar; son satırdaki `gc.collect()` (aşağıda anlatılan döngüsel toplayıcı) onu toplar. "Silinen nesne" sayacı o ana kadar silinenlerin toplamıdır; "Kodu düzenle" ile kendi senaryonu da deneyebilirsin.
+:::
 
 ### Döngüsel çöp toplayıcı ve nesiller
 
@@ -251,7 +270,7 @@ sonunda, hata olsa bile, belirli bir anda kapanır. Bir nesne silinince mutlaka 
 `weakref.finalize` daha güvenli bir alternatiftir.
 :::
 
-## Küçük int önbelleği ve string interning
+:::callout{tone="info" title="Derinleşme: küçük int önbelleği ve string interning"}
 
 K-02'de `is` ile sayı karşılaştırmanın tehlikeli olduğunu görmüştük. Şimdi nedenini bellek açısından görelim.
 CPython, çok kullanılan bazı nesneleri **bir kez** oluşturup tekrar tekrar kullanır:
@@ -261,7 +280,6 @@ CPython, çok kullanılan bazı nesneleri **bir kez** oluşturup tekrar tekrar k
 - **String interning:** Tanımlayıcıya benzeyen (harf, rakam, alt çizgi) kısa metin sabitleri ve değişken/nitelik
   adları tek bir kopya olarak saklanır. `sys.intern(s)` ile bir metni elle de intern edebilirsin.
 
-:::code{lang="python" title="is bu yüzden şaşırtıcı sonuç verir"}
 ```python
 a = 256
 b = 256
@@ -278,11 +296,11 @@ print(s1 is s2)            # True  → derleyici bu sabiti intern etti
 t1 = "".join(["mer", "haba"])
 print(t1 == s1, t1 is s1)  # True False → çalışma anında üretildi
 ```
-:::
 
 Sonuçlar bu kadar kırılgandır: aynı değer, oluşturulma biçimine göre aynı ya da farklı nesne olabilir. Bir
 fonksiyonun içinde `1000` sabitini iki kez yazarsan derleyici tek nesne kullanabilir ve `is` bu sefer `True`
 dönebilir. Kural değişmez: **değer için `==`, tekil nesneler (`None`, `True`, `False`) için `is`.**
+:::
 
 ## Nesneler ne kadar yer kaplar?
 
@@ -417,6 +435,22 @@ Bir arka plan işçisi her görevde bir raporun özetini "sonra lazım olur" diy
 Bellek grafiği her gün testere dişi yerine düz bir rampa çiziyor. `tracemalloc` karşılaştırması büyümenin o sözlüğe
 ekleme yapan satırda olduğunu gösteriyor. Çözüm: sözlüğü `lru_cache(maxsize=1000)` ile değiştirmek ya da özetleri
 veritabanına yazmak.
+:::
+
+:::realworld{company="Instagram"}
+Instagram Engineering'in 2017 tarihli **"Dismissing Python Garbage Collection at Instagram"** yazısı, bu dersteki
+iki mekanizmanın üretimde nasıl beklenmedik bir maliyet doğurabileceğini anlatır. Instagram'ın Django sunucuları
+uWSGI ile çalışır: bir ana süreç uygulamayı yükler ve işçi süreçleri `fork` ile çoğaltır. İşletim sistemi bellek
+sayfalarını **yazma anında kopyalama** (copy-on-write) ile paylaştırdığı için işçiler başlangıçta ana sürecin
+belleğini ortak kullanır. Ekip, bu paylaşılan belleğin zamanla eridiğini fark etti. Sebep, nesneleri yalnızca
+**okumanın** bile başlıklarına yazmasıydı: referans sayacı güncellemeleri ve döngüsel toplayıcının tarama sırasında
+nesne başlıklarına dokunması, sayfaların her işçide ayrı ayrı kopyalanmasına yol açıyordu.
+
+Ekip döngüsel toplayıcıyı kapatmayı denedi ve paylaşılan belleğin arttığını, CPU verimliliğinin iyileştiğini
+gözlemledi. Bu çalışmanın ardından CPython'a Python 3.7 ile `gc.freeze()` eklendi: `fork` öncesinde çağrıldığında
+o ana kadarki tüm izlenen nesneleri kalıcı bir nesle taşır ve toplayıcı onları bir daha taramaz. Ders şudur:
+bellek yönetimi ayrıntıları çoğu programda görünmezdir, ama yüzlerce işçi süreçli bir serviste ölçülebilir fark yaratır.
+Böyle bir ayar yapmadan önce mutlaka ölç.
 :::
 
 ## Özet

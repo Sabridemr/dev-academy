@@ -1,0 +1,713 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "l-04-yigin-kuyruk",
+  "title": {
+    "tr": "Çağrı yığını ve yazıcı kuyruğu",
+    "en": "Call stack and print queue"
+  },
+  "summary": {
+    "tr": "Fonksiyon çağrılarının yığına itilip ters sırayla çekilmesi; yazdırma işlerinin kuyruğa sondan girip baştan çıkması.",
+    "en": "Function calls pushed onto a stack and popped in reverse order; print jobs entering a queue at the back and leaving from the front."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Sol tarafta Program kutusu ve üstüne doğru dört bölmeli bir yığın vardır. main, hesapla ve kare çağrıları sırayla yığına itilir; her yeni çerçeve tepeye konur ve alttakiler bekleme durumuna geçer. Sonra kare 9, hesapla 10 döndürür ve çerçeveler giriş sırasının tersine çıkarılır. Sağ tarafta üstte kullanıcılar, ortada dört bölmeli bir kuyruk ve altta bir yazıcı vardır. rapor, foto ve tez işleri sırayla kuyruğun sonuna eklenir; yazıcı baştaki rapor işini alır ve baş işaretçisi bir ileri kayar; yeni fatura işi sona eklenir. Son adım, her iki yapıda ekleme ve çıkarmanın O(1) olduğunu, farkın çıkan elemanda olduğunu özetler.",
+      "en": "On the left a Program box and a four-slot stack growing upwards. Calls to main, hesapla and kare are pushed in turn; each new frame goes on top and the ones below wait. Then kare returns 9 and hesapla returns 10, and the frames are popped in reverse order. On the right, users at the top, a four-slot queue in the middle and a printer at the bottom. The jobs rapor, foto and tez are added to the back in turn; the printer takes rapor from the front and the head pointer advances; a new fatura job joins at the back. The last step notes that insert and remove are O(1) in both structures and that the difference is which element comes out."
+    }
+  },
+  "canvas": {
+    "width": 1000,
+    "height": 600
+  },
+  "nodes": [
+    {
+      "id": "prog",
+      "kind": "function",
+      "label": {
+        "tr": "Program",
+        "en": "Program"
+      },
+      "x": 110,
+      "y": 370,
+      "w": 150,
+      "h": 74,
+      "sublabel": {
+        "tr": "çalışan kod",
+        "en": "running code"
+      }
+    },
+    {
+      "id": "st0",
+      "kind": "generic",
+      "label": "—",
+      "x": 340,
+      "y": 520,
+      "w": 200,
+      "h": 64,
+      "sublabel": {
+        "tr": "boş",
+        "en": "empty"
+      },
+      "status": "muted"
+    },
+    {
+      "id": "st1",
+      "kind": "generic",
+      "label": "—",
+      "x": 340,
+      "y": 420,
+      "w": 200,
+      "h": 64,
+      "sublabel": {
+        "tr": "boş",
+        "en": "empty"
+      },
+      "status": "muted"
+    },
+    {
+      "id": "st2",
+      "kind": "generic",
+      "label": "—",
+      "x": 340,
+      "y": 320,
+      "w": 200,
+      "h": 64,
+      "sublabel": {
+        "tr": "boş",
+        "en": "empty"
+      },
+      "status": "muted"
+    },
+    {
+      "id": "st3",
+      "kind": "generic",
+      "label": "—",
+      "x": 340,
+      "y": 220,
+      "w": 200,
+      "h": 64,
+      "sublabel": {
+        "tr": "boş",
+        "en": "empty"
+      },
+      "status": "muted"
+    },
+    {
+      "id": "users",
+      "kind": "user",
+      "label": {
+        "tr": "Kullanıcılar",
+        "en": "Users"
+      },
+      "x": 710,
+      "y": 90
+    },
+    {
+      "id": "printer",
+      "kind": "server",
+      "label": {
+        "tr": "Yazıcı",
+        "en": "Printer"
+      },
+      "x": 710,
+      "y": 530,
+      "w": 170,
+      "h": 70,
+      "sublabel": {
+        "tr": "boşta",
+        "en": "idle"
+      }
+    },
+    {
+      "id": "q0",
+      "kind": "generic",
+      "label": "—",
+      "x": 560,
+      "y": 320,
+      "w": 90,
+      "h": 56,
+      "sublabel": {
+        "tr": "boş",
+        "en": "empty"
+      },
+      "status": "muted"
+    },
+    {
+      "id": "q1",
+      "kind": "generic",
+      "label": "—",
+      "x": 660,
+      "y": 320,
+      "w": 90,
+      "h": 56,
+      "sublabel": {
+        "tr": "boş",
+        "en": "empty"
+      },
+      "status": "muted"
+    },
+    {
+      "id": "q2",
+      "kind": "generic",
+      "label": "—",
+      "x": 760,
+      "y": 320,
+      "w": 90,
+      "h": 56,
+      "sublabel": {
+        "tr": "boş",
+        "en": "empty"
+      },
+      "status": "muted"
+    },
+    {
+      "id": "q3",
+      "kind": "generic",
+      "label": "—",
+      "x": 860,
+      "y": 320,
+      "w": 90,
+      "h": 56,
+      "sublabel": {
+        "tr": "boş",
+        "en": "empty"
+      },
+      "status": "muted"
+    }
+  ],
+  "edges": [
+    {
+      "id": "call0",
+      "from": "prog",
+      "to": "st0",
+      "kind": "request"
+    },
+    {
+      "id": "call1",
+      "from": "st0",
+      "to": "st1",
+      "kind": "request"
+    },
+    {
+      "id": "call2",
+      "from": "st1",
+      "to": "st2",
+      "kind": "request"
+    },
+    {
+      "id": "call3",
+      "from": "st2",
+      "to": "st3",
+      "kind": "request"
+    },
+    {
+      "id": "in0",
+      "from": "users",
+      "to": "q0",
+      "kind": "request"
+    },
+    {
+      "id": "in1",
+      "from": "users",
+      "to": "q1",
+      "kind": "request"
+    },
+    {
+      "id": "in2",
+      "from": "users",
+      "to": "q2",
+      "kind": "request"
+    },
+    {
+      "id": "in3",
+      "from": "users",
+      "to": "q3",
+      "kind": "request"
+    },
+    {
+      "id": "out0",
+      "from": "q0",
+      "to": "printer",
+      "kind": "data"
+    },
+    {
+      "id": "out1",
+      "from": "q1",
+      "to": "printer",
+      "kind": "data"
+    },
+    {
+      "id": "out2",
+      "from": "q2",
+      "to": "printer",
+      "kind": "data"
+    },
+    {
+      "id": "out3",
+      "from": "q3",
+      "to": "printer",
+      "kind": "data"
+    }
+  ],
+  "steps": [
+    {
+      "id": "intro",
+      "title": {
+        "tr": "İki kısıtlı yapı",
+        "en": "Two restricted structures"
+      },
+      "narration": {
+        "tr": "Solda bir **yığın**: eleman yalnızca tepeden girer ve tepeden çıkar (LIFO). Sağda bir **kuyruk**: eleman arkadan girer, önden çıkar (FIFO). Yığınla fonksiyon çağrılarını, kuyrukla yazıcı işlerini izleyeceğiz.",
+        "en": "On the left a **stack**: elements enter and leave only at the top (LIFO). On the right a **queue**: elements join at the back and leave from the front (FIFO). We will follow function calls with the stack and print jobs with the queue."
+      },
+      "durationMs": 3200,
+      "inherit": false,
+      "highlight": {
+        "nodes": [
+          "st0",
+          "st1",
+          "st2",
+          "st3",
+          "q0",
+          "q1",
+          "q2",
+          "q3"
+        ],
+        "edges": []
+      },
+      "annotations": [
+        {
+          "id": "a-yigin",
+          "x": 340,
+          "y": 160,
+          "text": {
+            "tr": "yığın: tek uç (tepe)",
+            "en": "stack: one end (top)"
+          }
+        },
+        {
+          "id": "a-kuyruk",
+          "x": 710,
+          "y": 400,
+          "text": {
+            "tr": "kuyruk: arkadan gir, önden çık",
+            "en": "queue: in at the back, out at the front"
+          }
+        }
+      ]
+    },
+    {
+      "id": "main",
+      "title": {
+        "tr": "push: main()",
+        "en": "push: main()"
+      },
+      "narration": {
+        "tr": "Program `main()` fonksiyonunu çağırır; çağrı için bir **çerçeve** (yerel değişkenler, dönüş adresi) yığının en altına konur.",
+        "en": "The program calls `main()`; a **frame** for the call (local variables, return address) is pushed at the bottom of the stack."
+      },
+      "durationMs": 2800,
+      "highlight": {
+        "nodes": [
+          "prog",
+          "st0"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "st0": {
+          "label": "main()",
+          "sublabel": {
+            "tr": "çerçeve",
+            "en": "frame"
+          },
+          "status": "active",
+          "badge": "tepe/top"
+        }
+      },
+      "packets": [
+        {
+          "edge": "call0",
+          "label": "main()",
+          "shape": "square",
+          "durationMs": 900
+        }
+      ]
+    },
+    {
+      "id": "hesapla",
+      "title": {
+        "tr": "push: hesapla(3)",
+        "en": "push: hesapla(3)"
+      },
+      "narration": {
+        "tr": "`main()` içinden `hesapla(3)` çağrılır. `main` yarıda kalır ve bekler; yeni çerçeve onun **üstüne** konur.",
+        "en": "`main()` calls `hesapla(3)`. `main` is paused and waits; the new frame is pushed **on top** of it."
+      },
+      "durationMs": 2800,
+      "highlight": {
+        "nodes": [
+          "st1"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "st0": {
+          "status": "busy",
+          "badge": ""
+        },
+        "st1": {
+          "label": "hesapla(3)",
+          "sublabel": {
+            "tr": "çerçeve",
+            "en": "frame"
+          },
+          "status": "active",
+          "badge": "tepe/top"
+        }
+      },
+      "packets": [
+        {
+          "edge": "call1",
+          "label": "hesapla(3)",
+          "shape": "square",
+          "durationMs": 900
+        }
+      ]
+    },
+    {
+      "id": "kare",
+      "title": {
+        "tr": "push: kare(3)",
+        "en": "push: kare(3)"
+      },
+      "narration": {
+        "tr": "`hesapla` da `kare(3)`'ü çağırır. Yığında üç çerçeve var ve yalnızca en üstteki çalışıyor; alttakiler sırasını bekliyor.",
+        "en": "`hesapla` in turn calls `kare(3)`. Three frames are on the stack and only the top one runs; the ones below wait their turn."
+      },
+      "durationMs": 2800,
+      "highlight": {
+        "nodes": [
+          "st2"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "st1": {
+          "status": "busy",
+          "badge": ""
+        },
+        "st2": {
+          "label": "kare(3)",
+          "sublabel": {
+            "tr": "çerçeve",
+            "en": "frame"
+          },
+          "status": "active",
+          "badge": "tepe/top"
+        }
+      },
+      "packets": [
+        {
+          "edge": "call2",
+          "label": "kare(3)",
+          "shape": "square",
+          "durationMs": 900
+        }
+      ]
+    },
+    {
+      "id": "pop1",
+      "title": {
+        "tr": "pop: kare 9 döndürür",
+        "en": "pop: kare returns 9"
+      },
+      "narration": {
+        "tr": "`kare(3)` biter ve 9 döndürür. **En son giren çerçeve ilk çıkar**: tepe silinir ve kontrol hemen altındaki `hesapla`'ya geri döner.",
+        "en": "`kare(3)` finishes and returns 9. **The last frame in is the first out**: the top is popped and control returns to `hesapla` right below it."
+      },
+      "durationMs": 3000,
+      "highlight": {
+        "nodes": [
+          "st1",
+          "st2"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "st2": {
+          "label": "—",
+          "sublabel": {
+            "tr": "boş",
+            "en": "empty"
+          },
+          "status": "muted",
+          "badge": ""
+        },
+        "st1": {
+          "status": "active",
+          "badge": "tepe/top"
+        }
+      },
+      "packets": [
+        {
+          "edge": "call2",
+          "direction": "backward",
+          "label": "return 9",
+          "durationMs": 900
+        }
+      ]
+    },
+    {
+      "id": "pop2",
+      "title": {
+        "tr": "pop: hesapla 10 döndürür",
+        "en": "pop: hesapla returns 10"
+      },
+      "narration": {
+        "tr": "`hesapla` kaldığı yerden devam eder, 9 + 1 = 10 döndürür ve onun çerçevesi de çıkarılır. Çağrılar geldikleri sıranın **tersine** biter: LIFO.",
+        "en": "`hesapla` resumes where it left off, returns 9 + 1 = 10 and its frame is popped too. Calls finish in the **reverse** order of arrival: LIFO."
+      },
+      "durationMs": 3000,
+      "highlight": {
+        "nodes": [
+          "st0",
+          "st1"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "st1": {
+          "label": "—",
+          "sublabel": {
+            "tr": "boş",
+            "en": "empty"
+          },
+          "status": "muted",
+          "badge": ""
+        },
+        "st0": {
+          "status": "active",
+          "badge": "tepe/top"
+        }
+      },
+      "packets": [
+        {
+          "edge": "call1",
+          "direction": "backward",
+          "label": "return 10",
+          "durationMs": 900
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a-lifo",
+          "x": 340,
+          "y": 120,
+          "text": {
+            "tr": "LIFO: son giren ilk çıkar",
+            "en": "LIFO: last in, first out"
+          },
+          "tone": "success"
+        }
+      ]
+    },
+    {
+      "id": "enq",
+      "title": {
+        "tr": "enqueue: üç yazdırma işi",
+        "en": "enqueue: three print jobs"
+      },
+      "narration": {
+        "tr": "Şimdi kuyruk. Üç kullanıcı sırayla belge gönderir; her iş kuyruğun **sonuna** eklenir. `baş` en eski işi, `son` en yeni işi gösterir.",
+        "en": "Now the queue. Three users send documents in turn; each job is added to the **back** of the queue. `baş` (head) marks the oldest job and `son` (tail) the newest."
+      },
+      "durationMs": 3500,
+      "highlight": {
+        "nodes": [
+          "users",
+          "q0",
+          "q1",
+          "q2"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "st0": {
+          "status": "idle",
+          "badge": ""
+        },
+        "q0": {
+          "label": "rapor",
+          "sublabel": ".pdf",
+          "status": "active",
+          "badge": "baş/head"
+        },
+        "q1": {
+          "label": "foto",
+          "sublabel": ".png",
+          "status": "active"
+        },
+        "q2": {
+          "label": "tez",
+          "sublabel": ".docx",
+          "status": "active",
+          "badge": "son/tail"
+        }
+      },
+      "packets": [
+        {
+          "edge": "in0",
+          "label": "rapor",
+          "shape": "envelope",
+          "durationMs": 900
+        },
+        {
+          "edge": "in1",
+          "label": "foto",
+          "shape": "envelope",
+          "startAt": 600,
+          "durationMs": 900
+        },
+        {
+          "edge": "in2",
+          "label": "tez",
+          "shape": "envelope",
+          "startAt": 1200,
+          "durationMs": 900
+        }
+      ]
+    },
+    {
+      "id": "deq",
+      "title": {
+        "tr": "dequeue: önce gelen önce yazdırılır",
+        "en": "dequeue: first come, first printed"
+      },
+      "narration": {
+        "tr": "Yazıcı boşalınca kuyruğun **başındaki** işi alır: ilk gönderilen rapor. Elemanlar kaydırılmaz; yalnızca `baş` işaretçisi bir ileri gider, bu yüzden işlem O(1)'dir.",
+        "en": "When the printer is free it takes the job at the **front**: the report sent first. Nothing is shifted; only the head pointer moves forward, so the operation is O(1)."
+      },
+      "durationMs": 3200,
+      "highlight": {
+        "nodes": [
+          "q0",
+          "printer"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "q0": {
+          "label": "—",
+          "sublabel": {
+            "tr": "boş",
+            "en": "empty"
+          },
+          "status": "muted",
+          "badge": ""
+        },
+        "q1": {
+          "badge": "baş/head"
+        },
+        "printer": {
+          "status": "busy",
+          "sublabel": {
+            "tr": "yazdırıyor: rapor",
+            "en": "printing: rapor"
+          }
+        }
+      },
+      "packets": [
+        {
+          "edge": "out0",
+          "label": "rapor",
+          "shape": "envelope",
+          "durationMs": 900
+        }
+      ]
+    },
+    {
+      "id": "enq2",
+      "title": {
+        "tr": "enqueue: yeni iş sona",
+        "en": "enqueue: new job at the back"
+      },
+      "narration": {
+        "tr": "Bu sırada yeni bir fatura gelir. Önde bekleyenler varken araya giremez; kuyruğun **sonuna** eklenir. Sıradaki yazdırılacak iş foto olacaktır.",
+        "en": "Meanwhile a new invoice arrives. It cannot cut in front of waiting jobs; it is added to the **back**. The next job to print will be the photo."
+      },
+      "durationMs": 3000,
+      "highlight": {
+        "nodes": [
+          "users",
+          "q3"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "q2": {
+          "badge": ""
+        },
+        "q3": {
+          "label": "fatura",
+          "sublabel": ".pdf",
+          "status": "active",
+          "badge": "son/tail"
+        }
+      },
+      "packets": [
+        {
+          "edge": "in3",
+          "label": "fatura",
+          "shape": "envelope",
+          "durationMs": 900
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a-fifo",
+          "x": 710,
+          "y": 400,
+          "text": {
+            "tr": "FIFO: ilk giren ilk çıkar",
+            "en": "FIFO: first in, first out"
+          },
+          "tone": "success"
+        }
+      ]
+    },
+    {
+      "id": "ozet",
+      "title": {
+        "tr": "Aynı maliyet, farklı sıra",
+        "en": "Same cost, different order"
+      },
+      "narration": {
+        "tr": "İki yapıda da ekleme ve çıkarma O(1)'dir; fark, **hangi elemanın** çıktığıdır. Yığın en yeniyi (geri dönme, geri alma, DFS), kuyruk en eskiyi (adil sıra, BFS) verir. Python'da yığın için `list.append/pop`, kuyruk için `collections.deque` kullanılır.",
+        "en": "In both structures insert and remove are O(1); the difference is **which element** comes out. The stack yields the newest (backtracking, undo, DFS), the queue the oldest (fair ordering, BFS). In Python use `list.append/pop` for a stack and `collections.deque` for a queue."
+      },
+      "durationMs": 3500,
+      "highlight": {
+        "nodes": [
+          "st0",
+          "q1"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "printer": {
+          "status": "success",
+          "sublabel": {
+            "tr": "rapor bitti",
+            "en": "rapor done"
+          }
+        }
+      }
+    }
+  ],
+  "tags": [
+    "yigin",
+    "kuyruk"
+  ]
+}

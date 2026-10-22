@@ -1,0 +1,503 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "l-07-dfs-derinlik",
+  "title": {
+    "tr": "DFS derine inip geri dönüyor",
+    "en": "DFS dives deep and backtracks"
+  },
+  "summary": {
+    "tr": "Aynı altı düğümlü grafta DFS'in bir dalı sonuna kadar izleyip çağrı yığınıyla geri dönmesi.",
+    "en": "DFS on the same six-node graph, following one branch to its end and backtracking via the call stack."
+  },
+  "a11y": {
+    "description": {
+      "tr": "BFS sahnesindeki altı düğümlü graf ve sağda bir çağrı yığını kutusu vardır. DFS A'dan başlar ve sırasıyla B, D, C, E ve F'ye iner; her yeni düğümde önceki düğüm bekleme durumuna geçer ve yığın uzar. C'ye, A'nın doğrudan komşusu olduğu hâlde üç kenarlık yoldan ulaşıldığı not edilir. F'de gidilecek yeni komşu kalmaz; çağrılar F, E, C, D, B, A sırasıyla geri döner ve tüm düğümler yeşile döner. Son adımda DFS ağacını oluşturan kenarlar vurgulanır, A-C ve D-F kenarları soluklaşır ve DFS'in en kısa yolu garanti etmediği belirtilir.",
+      "en": "The six-node graph from the BFS scene with a call stack box on the right. DFS starts at A and descends to B, D, C, E and F in turn; at each new node the previous one waits and the stack grows. It is noted that C, a direct neighbour of A, was reached via a three-edge path. At F there is no new neighbour; the calls return in the order F, E, C, D, B, A and all nodes turn green. The last step highlights the DFS tree edges, dims the A-C and D-F edges and states that DFS does not guarantee shortest paths."
+    }
+  },
+  "canvas": {
+    "width": 1000,
+    "height": 600
+  },
+  "nodes": [
+    {
+      "id": "A",
+      "kind": "generic",
+      "label": "A",
+      "x": 130,
+      "y": 300,
+      "w": 80,
+      "h": 56
+    },
+    {
+      "id": "B",
+      "kind": "generic",
+      "label": "B",
+      "x": 310,
+      "y": 160,
+      "w": 80,
+      "h": 56
+    },
+    {
+      "id": "C",
+      "kind": "generic",
+      "label": "C",
+      "x": 310,
+      "y": 440,
+      "w": 80,
+      "h": 56
+    },
+    {
+      "id": "D",
+      "kind": "generic",
+      "label": "D",
+      "x": 510,
+      "y": 160,
+      "w": 80,
+      "h": 56
+    },
+    {
+      "id": "E",
+      "kind": "generic",
+      "label": "E",
+      "x": 510,
+      "y": 440,
+      "w": 80,
+      "h": 56
+    },
+    {
+      "id": "F",
+      "kind": "generic",
+      "label": "F",
+      "x": 690,
+      "y": 300,
+      "w": 80,
+      "h": 56
+    },
+    {
+      "id": "yigin",
+      "kind": "generic",
+      "label": {
+        "tr": "Çağrı yığını",
+        "en": "Call stack"
+      },
+      "x": 880,
+      "y": 300,
+      "w": 220,
+      "h": 84,
+      "sublabel": "dfs(A)"
+    }
+  ],
+  "edges": [
+    {
+      "id": "eAB",
+      "from": "A",
+      "to": "B",
+      "kind": "generic"
+    },
+    {
+      "id": "eAC",
+      "from": "A",
+      "to": "C",
+      "kind": "generic"
+    },
+    {
+      "id": "eBD",
+      "from": "B",
+      "to": "D",
+      "kind": "generic"
+    },
+    {
+      "id": "eCD",
+      "from": "C",
+      "to": "D",
+      "kind": "generic"
+    },
+    {
+      "id": "eCE",
+      "from": "C",
+      "to": "E",
+      "kind": "generic"
+    },
+    {
+      "id": "eDF",
+      "from": "D",
+      "to": "F",
+      "kind": "generic"
+    },
+    {
+      "id": "eEF",
+      "from": "E",
+      "to": "F",
+      "kind": "generic"
+    }
+  ],
+  "steps": [
+    {
+      "id": "intro",
+      "title": {
+        "tr": "Aynı graf, bu kez DFS",
+        "en": "Same graph, now DFS"
+      },
+      "narration": {
+        "tr": "Aynı grafı derinlik öncelikli arama (DFS) ile gezelim. DFS bir komşuya gider gitmez **onun** komşularına dalar; geri dönmesi gereken yerleri çağrı yığınında tutar. Rozetler ziyaret sırasını gösterecek.",
+        "en": "Let us traverse the same graph with depth-first search (DFS). DFS dives into a neighbour's **own** neighbours as soon as it reaches it, keeping the places to return to on the call stack. Badges will show the visit order."
+      },
+      "durationMs": 3000,
+      "inherit": false,
+      "highlight": {
+        "nodes": [
+          "A",
+          "yigin"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "A": {
+          "status": "active",
+          "badge": "1"
+        }
+      }
+    },
+    {
+      "id": "B",
+      "title": {
+        "tr": "A → B",
+        "en": "A → B"
+      },
+      "narration": {
+        "tr": "A'nın ilk komşusu B. DFS, C'ye bakmadan önce B'ye iner; A yarıda kalır ve yığında bekler.",
+        "en": "A's first neighbour is B. DFS goes down to B before even looking at C; A is paused and waits on the stack."
+      },
+      "durationMs": 2800,
+      "highlight": {
+        "nodes": [
+          "A",
+          "B"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "A": {
+          "status": "busy"
+        },
+        "B": {
+          "status": "active",
+          "badge": "2"
+        },
+        "yigin": {
+          "sublabel": "A → B"
+        }
+      },
+      "packets": [
+        {
+          "edge": "eAB",
+          "durationMs": 900
+        }
+      ]
+    },
+    {
+      "id": "D",
+      "title": {
+        "tr": "B → D",
+        "en": "B → D"
+      },
+      "narration": {
+        "tr": "B'nin komşusu A ziyaret edildi; sıradaki D. DFS bir seviye daha derine iner.",
+        "en": "B's neighbour A is visited; next is D. DFS goes one level deeper."
+      },
+      "durationMs": 2800,
+      "highlight": {
+        "nodes": [
+          "B",
+          "D"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "B": {
+          "status": "busy"
+        },
+        "D": {
+          "status": "active",
+          "badge": "3"
+        },
+        "yigin": {
+          "sublabel": "A → B → D"
+        }
+      },
+      "packets": [
+        {
+          "edge": "eBD",
+          "durationMs": 900
+        }
+      ]
+    },
+    {
+      "id": "C",
+      "title": {
+        "tr": "D → C",
+        "en": "D → C"
+      },
+      "narration": {
+        "tr": "D'nin komşuları B (ziyaret edildi) ve C. DFS C'ye geçer. Dikkat: C, A'nın doğrudan komşusu olduğu hâlde ona **üç kenarlık** bir yoldan ulaştık.",
+        "en": "D's neighbours are B (visited) and C. DFS moves to C. Note: although C is a direct neighbour of A, we reached it along a **three-edge** path."
+      },
+      "durationMs": 3000,
+      "highlight": {
+        "nodes": [
+          "D",
+          "C"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "D": {
+          "status": "busy"
+        },
+        "C": {
+          "status": "active",
+          "badge": "4"
+        },
+        "yigin": {
+          "sublabel": "A → B → D → C"
+        }
+      },
+      "packets": [
+        {
+          "edge": "eCD",
+          "direction": "backward",
+          "durationMs": 900
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a-uzun",
+          "x": 200,
+          "y": 520,
+          "text": {
+            "tr": "C'ye 3 kenarla ulaşıldı",
+            "en": "C reached via 3 edges"
+          },
+          "target": "C",
+          "tone": "warning"
+        }
+      ]
+    },
+    {
+      "id": "E",
+      "title": {
+        "tr": "C → E",
+        "en": "C → E"
+      },
+      "narration": {
+        "tr": "C'nin komşuları A ve D ziyaret edilmiş; geriye E kalıyor. Yığın derinleşmeye devam ediyor.",
+        "en": "C's neighbours A and D are visited; E remains. The stack keeps growing deeper."
+      },
+      "durationMs": 2800,
+      "highlight": {
+        "nodes": [
+          "C",
+          "E"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "C": {
+          "status": "busy"
+        },
+        "E": {
+          "status": "active",
+          "badge": "5"
+        },
+        "yigin": {
+          "sublabel": "… → C → E"
+        }
+      },
+      "packets": [
+        {
+          "edge": "eCE",
+          "durationMs": 900
+        }
+      ]
+    },
+    {
+      "id": "F",
+      "title": {
+        "tr": "E → F: çıkmaz",
+        "en": "E → F: dead end"
+      },
+      "narration": {
+        "tr": "E'den F'ye ineriz. F'nin komşuları D ve E zaten ziyaret edildi: gidecek yeni yer yok. Yığın en derin noktasında, 6 çerçeve.",
+        "en": "From E we go down to F. F's neighbours D and E are already visited: nowhere new to go. The stack is at its deepest, 6 frames."
+      },
+      "durationMs": 2800,
+      "highlight": {
+        "nodes": [
+          "E",
+          "F"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "E": {
+          "status": "busy"
+        },
+        "F": {
+          "status": "active",
+          "badge": "6"
+        },
+        "yigin": {
+          "sublabel": "… → E → F",
+          "badge": "6"
+        }
+      },
+      "packets": [
+        {
+          "edge": "eEF",
+          "durationMs": 900
+        }
+      ]
+    },
+    {
+      "id": "geri",
+      "title": {
+        "tr": "Geri izleme",
+        "en": "Backtracking"
+      },
+      "narration": {
+        "tr": "F biter; çağrılar ters sırayla döner: F → E → C → D → B → A. Her düğümde başka ziyaret edilmemiş komşu kalmadığı için yeni dal açılmaz ve arama tamamlanır.",
+        "en": "F finishes and the calls return in reverse order: F → E → C → D → B → A. No node has an unvisited neighbour left, so no new branch opens and the search completes."
+      },
+      "durationMs": 3600,
+      "highlight": {
+        "nodes": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "A": {
+          "status": "success"
+        },
+        "B": {
+          "status": "success"
+        },
+        "C": {
+          "status": "success"
+        },
+        "D": {
+          "status": "success"
+        },
+        "E": {
+          "status": "success"
+        },
+        "F": {
+          "status": "success"
+        },
+        "yigin": {
+          "sublabel": "[ ]",
+          "badge": "",
+          "status": "muted"
+        }
+      },
+      "packets": [
+        {
+          "edge": "eEF",
+          "direction": "backward",
+          "durationMs": 600
+        },
+        {
+          "edge": "eCE",
+          "direction": "backward",
+          "startAt": 650,
+          "durationMs": 600
+        },
+        {
+          "edge": "eCD",
+          "startAt": 1300,
+          "durationMs": 600
+        },
+        {
+          "edge": "eBD",
+          "direction": "backward",
+          "startAt": 1950,
+          "durationMs": 600
+        },
+        {
+          "edge": "eAB",
+          "direction": "backward",
+          "startAt": 2600,
+          "durationMs": 600
+        }
+      ]
+    },
+    {
+      "id": "ozet",
+      "title": {
+        "tr": "DFS ağacı ve BFS ile fark",
+        "en": "DFS tree and the difference from BFS"
+      },
+      "narration": {
+        "tr": "Ziyaret sırası A, B, D, C, E, F oldu (BFS'te A, B, C, D, E, F). Vurgulu kenarlar DFS ağacıdır; A–C ve D–F kullanılmadı. DFS döngü bulma, topolojik sıralama ve bağlı bileşenler için idealdir ama **en kısa yolu garanti etmez**. Zaman yine O(V + E).",
+        "en": "The visit order was A, B, D, C, E, F (BFS gave A, B, C, D, E, F). The highlighted edges form the DFS tree; A–C and D–F were not used. DFS is ideal for cycle detection, topological sorting and connected components, but it **does not guarantee shortest paths**. Time is still O(V + E)."
+      },
+      "durationMs": 3800,
+      "highlight": {
+        "nodes": [
+          "A",
+          "B",
+          "D",
+          "C",
+          "E",
+          "F"
+        ],
+        "edges": [
+          "eAB",
+          "eBD",
+          "eCD",
+          "eCE",
+          "eEF"
+        ]
+      },
+      "nodeStates": {
+        "yigin": {
+          "status": "idle"
+        }
+      },
+      "edgeStates": {
+        "eAC": {
+          "status": "muted"
+        },
+        "eDF": {
+          "status": "muted"
+        },
+        "eAB": {
+          "status": "active"
+        },
+        "eBD": {
+          "status": "active"
+        },
+        "eCD": {
+          "status": "active"
+        },
+        "eCE": {
+          "status": "active"
+        },
+        "eEF": {
+          "status": "active"
+        }
+      }
+    }
+  ],
+  "tags": [
+    "dfs",
+    "graf"
+  ]
+}

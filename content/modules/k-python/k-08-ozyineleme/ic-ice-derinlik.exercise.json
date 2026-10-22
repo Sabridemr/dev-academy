@@ -1,0 +1,26 @@
+{
+  "id": "k-08-ic-ice-derinlik",
+  "title": {
+    "tr": "İç içe listenin derinliği",
+    "en": "Depth of a nested list"
+  },
+  "language": "python",
+  "prompt": {
+    "tr": "`derinlik(x)` iç içe bir listenin en fazla kaç kat derine indiğini **özyinelemeyle** hesaplasın:\n\n- Liste olmayan bir değerin derinliği `0`'dır.\n- Bir listenin derinliği, elemanlarının en büyük derinliğinin bir fazlasıdır; boş liste `1`'dir.\n\nÖrnekler: `derinlik(7) == 0`, `derinlik([1, 2]) == 1`, `derinlik([1, [2, [3]]]) == 3`.",
+    "en": "`derinlik(x)` should compute, **recursively**, how many levels deep a nested list goes:\n\n- A value that is not a list has depth `0`.\n- A list's depth is one more than the largest depth among its elements; an empty list is `1`.\n\nExamples: `derinlik(7) == 0`, `derinlik([1, 2]) == 1`, `derinlik([1, [2, [3]]]) == 3`."
+  },
+  "starter": "def derinlik(x):\n    # Temel durum: x liste değilse?\n    # Özyinelemeli durum: elemanların derinliklerinin en büyüğü + 1\n    pass\n",
+  "solution": "def derinlik(x):\n    if not isinstance(x, list):\n        return 0\n    return 1 + max((derinlik(e) for e in x), default=0)\n",
+  "tests": "assert derinlik(7) == 0\nassert derinlik([]) == 1\nassert derinlik([1, 2, 3]) == 1\nassert derinlik([1, [2, [3]]]) == 3\nassert derinlik([[], [[[]]], 4]) == 4\n",
+  "hints": [
+    {
+      "tr": "Temel durum `isinstance(x, list)` yanlışsa `0` döndürmek. Boş listede elemanlar üzerinde `max` hata verir: `max(..., default=0)` kullan.",
+      "en": "The base case returns `0` when `isinstance(x, list)` is false. `max` fails on an empty list: use `max(..., default=0)`."
+    },
+    {
+      "tr": "Özyinelemeli durum tek satır olabilir: `1 + max((derinlik(e) for e in x), default=0)`.",
+      "en": "The recursive case can be one line: `1 + max((derinlik(e) for e in x), default=0)`."
+    }
+  ],
+  "timeoutMs": 5000
+}

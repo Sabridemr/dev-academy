@@ -39,5 +39,7 @@ export const queryKeys = {
   bookmarks: ['bookmarks'] as const,
   notes: (lessonId?: string) => ['notes', lessonId ?? 'all'] as const,
   search: (q: string) => ['search', q] as const,
+  concepts: ['concepts'] as const,
+  concept: (id: string) => ['concept', id] as const,
   downloads: ['offline', 'downloads'] as const,
 };

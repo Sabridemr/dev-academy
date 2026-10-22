@@ -3,6 +3,8 @@ import type {
   AuthResponse,
   BadgeDto,
   BookmarkDto,
+  ConceptDetail,
+  ConceptSummary,
   CreateBookmarkDto,
   LearningPathDetail,
   LearningPathSummary,
@@ -97,6 +99,10 @@ export const endpoints = {
   /* ------------------------------ Arama ------------------------------ */
   search: (q: string, signal?: AbortSignal) =>
     api.get<SearchResponse>(`/search?q=${enc(q)}&limit=30`, { signal }),
+
+  /* ---------------------------- Kavram sözlüğü ---------------------------- */
+  concepts: () => api.get<ConceptSummary[]>('/concepts', { auth: false }),
+  concept: (id: string) => api.get<ConceptDetail>(`/concepts/${enc(id)}`, { auth: false }),
 
   /* ------------------------------ Çevrimdışı ------------------------------ */
   offlineModule: (moduleId: string, etag?: string | null): Promise<RawResponse<OfflineBundle>> =>

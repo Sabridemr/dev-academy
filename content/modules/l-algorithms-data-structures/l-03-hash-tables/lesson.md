@@ -32,6 +32,14 @@ Süreç üç adımdan oluşur:
 "elma" ve "kiraz" aynı kovaya düşüyor: zincirleme yönteminde kova küçük bir liste tutar.
 :::
 
+Diyagram tablonun anlık bir fotoğrafı. Aşağıdaki sahne ise tablonun zaman içinde nasıl dolduğunu gösteriyor:
+anahtarların kovalara yerleşmesi, bir çakışma ve yük faktörü eşiği aşılınca tablonun büyümesi. Çakışmayı ve
+yeniden boyutlamayı ilerleyen bölümlerde ayrıntılı ele alacağız.
+
+:::animation{scene="hash-kova.scene.json"}
+Yeniden boyutlamada her anahtar yeni kova sayısıyla yeniden hash'lenir; çakışmalar bu sırada dağılabilir.
+:::
+
 ## İyi bir hash fonksiyonu nasıl olmalı?
 
 Hash fonksiyonu tablonun kalbidir ve üç özelliği taşımalıdır. Birincisi **deterministik** olmalıdır: aynı anahtar her çağrıda aynı sayıyı üretmelidir, aksi hâlde yazdığın değeri bir daha bulamazsın. İkincisi **hızlı** olmalıdır; her işlemde çalıştığı için yavaş bir hash fonksiyonu O(1) vaadini anlamsız kılar. Üçüncüsü anahtarları kovalara **düzgün dağıtmalıdır**: birbirine çok benzeyen anahtarlar bile ("kullanici1", "kullanici2") farklı kovalara savrulmalıdır. Kötü bir fonksiyon, örneğin yalnızca stringin ilk harfine bakan bir fonksiyon, "a" ile başlayan tüm kelimeleri aynı kovaya yığar ve tablo fiilen bir bağlı listeye dönüşür.
@@ -125,10 +133,26 @@ Dağıtık sistemlere geçtiğinde aynı fikir bir kez daha karşına çıkacak:
 Trendyol gibi milyonlarca ürün ve satıcıyı barındıran bir e-ticaret platformunda, ürün detay sayfası her açıldığında fiyat, stok ve kampanya bilgisinin veritabanına gitmeden getirilmesi gerekir. Bu tür platformlar, genel olarak Redis ve Couchbase gibi anahtar-değer depolarını önbellek katmanı olarak kullanır; bu sistemlerin kalbinde de ürün kimliğini doğrudan bir bellek konumuna çeviren hash tabloları vardır. Aynı fikir sepet servisinde (kullanıcı kimliği → sepet), oturum yönetiminde (token → kullanıcı) ve kampanya dönemlerinde tekrarlanan isteklerin ayıklanmasında (istek kimliği → sonuç) karşımıza çıkar. Büyük indirim günlerinde trafik katlanırken bu sorguların O(1) kalması, sayfaların hızlı açılmasının temel nedenlerinden biridir.
 :::
 
+:::realworld{company="Redis"}
+Redis'te tüm anahtar uzayı, kaynak kodunda `dict` olarak geçen bir hash tablosunda tutulur ve çakışmalar zincirleme
+ile çözülür. Bu dersteki yeniden boyutlama adımı Redis için özel bir sorun doğurur: milyonlarca anahtarı tek seferde
+yeni tabloya taşımak, komutları tek bir ana iş parçacığında işleyen sunucuyu o süre boyunca bekletir. Redis bu yüzden
+**artımlı yeniden hash'leme** (incremental rehashing) kullanır: büyüme sırasında eski ve yeni tablo birlikte tutulur,
+her okuma ve yazma işlemi eski tablodan birkaç kovayı yeni tabloya taşır ve sunucu boştayken de arka planda küçük
+parçalar taşınır. Geçiş sürerken arama iki tabloya da bakar; taşıma bitince eski tablo serbest bırakılır. Böylece
+O(n)'lik maliyet tek bir uzun duraklama yerine çok sayıda küçük adıma yayılır. Redis'in sıralı küme (sorted set)
+türü ise hash tablosunu tek başına kullanmaz: belgelerine göre büyük kümelerde üyeden skora hızlı erişim için bir
+hash tablosunu, skora göre sıralı gezinme için bir skip list'i birlikte tutar. Bu, "hash tablosu sıra tutmaz"
+sınırlamasının pratikte iki yapıyı birleştirerek nasıl aşıldığının güzel bir örneğidir.
+:::
+
 :::callout{tone="tip" title="Mülakat ipucu"}
 - İç içe iki döngüyle çözdüğün bir problemde ilk soracağın soru şu olsun: "Daha önce gördüğüm değerleri bir `set` ya da `dict` içinde hatırlarsam ikinci döngüden kurtulur muyum?" Two-sum, ilk tekrar eden karakter, anagram gruplama gibi soruların hepsi bu kalıptır.
 - Karmaşıklığı söylerken "ortalama O(1), en kötü O(n)" ayrımını yap ve ekstra O(n) belleği belirt.
 - Anahtar olarak liste kullanman gerekiyorsa `tuple`'a çevir; anagram gruplamada `tuple(sorted(kelime))` klasik bir anahtardır.
+:::
+
+:::exercise{src="anagram-gruplari.exercise.json"}
 :::
 
 :::quiz{src="quiz.json"}

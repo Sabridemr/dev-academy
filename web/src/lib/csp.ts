@@ -3,7 +3,9 @@
  * (API ve WebSocket aynı origin'de). script-src'de 'unsafe-inline' YOK: Next.js'in satır içi betikleri
  * ve tema betiği istek başına üretilen nonce ile çalışır (middleware.ts). Böylece enjekte edilmiş bir
  * satır içi betik çalışamaz.
- * 'wasm-unsafe-eval': Shiki'nin Oniguruma WASM motoru için. style-src'deki 'unsafe-inline' framer-motion
+ * 'wasm-unsafe-eval': Shiki'nin Oniguruma WASM motoru ve kodlama alıştırmalarının Pyodide'ı (Python →
+ * WebAssembly) için. Pyodide aynı origin'den (/pyodide/, build sırasında node_modules'tan kopyalanır) bir
+ * Web Worker'da yüklenir; bu yüzden CDN için ek kaynak gerekmez (worker-src 'self'). style-src'deki 'unsafe-inline' framer-motion
  * ve next/font satır içi stilleri içindir (stil enjeksiyonu betik çalıştıramaz).
  */
 const apiOrigin = new URL(process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api/v1').origin;
