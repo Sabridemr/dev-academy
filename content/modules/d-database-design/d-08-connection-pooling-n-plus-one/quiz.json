@@ -1,0 +1,110 @@
+{
+  "id": "d-08-connection-pooling-n-plus-one-quiz",
+  "title": { "tr": "Bağlantı Havuzu ve N+1 Quiz", "en": "Connection Pools and N+1 Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Bir uç nokta 50 siparişi listeliyor ve döngü içinde her siparişin müşterisini `await prisma.customer.findFirst(...)` ile çekiyor. Bu istek kaç sorgu atar?",
+        "en": "An endpoint lists 50 orders and, inside a loop, fetches each order's customer with `await prisma.customer.findFirst(...)`. How many queries does the request send?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "1", "en": "1" } },
+        { "id": "b", "text": { "tr": "2", "en": "2" } },
+        { "id": "c", "text": { "tr": "51", "en": "51" } },
+        { "id": "d", "text": { "tr": "2.500", "en": "2,500" } }
+      ],
+      "correct": ["c"],
+      "explanation": {
+        "tr": "Bir liste sorgusu ve her sipariş için bir müşteri sorgusu: 1 + 50 = 51. Sorgu sayısı listeyle doğrusal büyür; `include` ile iki sorguya ya da JOIN ile bire iner.",
+        "en": "One list query plus one customer query per order: 1 + 50 = 51. The number of queries grows linearly with the list; `include` brings it down to two, a JOIN to one."
+      },
+      "difficulty": "easy",
+      "concepts": ["n-plus-one"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "Üretimde ara sıra Prisma `P2024` (havuzdan bağlantı alırken zaman aşımı) hatası görülüyor; veritabanı CPU'su ise düşük. En iyi ilk adım hangisidir?",
+        "en": "Production occasionally shows Prisma `P2024` (timed out fetching a connection from the pool) while database CPU is low. What is the best first step?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "connection_limit değerini 10 katına çıkarmak", "en": "Multiply connection_limit by 10" } },
+        { "id": "b", "text": { "tr": "Bağlantıyı uzun tutan istekleri bulmak: N+1 döngüleri, içinde dış çağrı yapan transaction'lar, yavaş sorgular", "en": "Find requests holding connections for long: N+1 loops, transactions making external calls, slow queries" } },
+        { "id": "c", "text": { "tr": "pool_timeout değerini sıfıra çekmek", "en": "Set pool_timeout to zero" } },
+        { "id": "d", "text": { "tr": "Tüm sorguları ham SQL'e çevirmek", "en": "Rewrite every query as raw SQL" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "CPU düşükken havuzun dolması, bağlantıların iş yapmadan tutulduğunu gösterir. Havuzu büyütmek veritabanına daha çok eşzamanlı bağlantı yükler ve kök nedeni gizler; zaman aşımını kısaltmak yalnızca hatayı hızlandırır.",
+        "en": "A full pool with low CPU means connections are being held without doing work. Enlarging the pool loads the database with more concurrent connections and hides the root cause; shortening the timeout just makes the error come sooner."
+      },
+      "difficulty": "medium",
+      "concepts": ["connection-pooling", "pool-timeout"]
+    },
+    {
+      "id": "q3",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Hangileri N+1'i çözer ya da tespit etmeye yardım eder? (Birden fazla seçin)",
+        "en": "Which of these fix N+1 or help detect it? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Prisma'da `include` ile ilişkiyi eager yüklemek", "en": "Eager-loading the relation with `include` in Prisma" } },
+        { "id": "b", "text": { "tr": "GraphQL çözümleyicilerinde DataLoader ile anahtarları toplamak", "en": "Batching keys with DataLoader in GraphQL resolvers" } },
+        { "id": "c", "text": { "tr": "Testte istek başına sorgu sayısına üst sınır koymak", "en": "Putting an upper bound on queries per request in tests" } },
+        { "id": "d", "text": { "tr": "Havuz boyutunu artırmak", "en": "Increasing the pool size" } }
+      ],
+      "correct": ["a", "b", "c"],
+      "explanation": {
+        "tr": "Eager loading ve DataLoader sorgu sayısını sabitler; sorgu sayısı testi gerilemeyi yakalar. Havuz boyutu N+1'i çözmez, yalnızca etkisini daha çok bağlantıya yayar.",
+        "en": "Eager loading and DataLoader make the number of queries constant; a query-count test catches regressions. Pool size does not fix N+1, it only spreads its impact across more connections."
+      },
+      "difficulty": "easy",
+      "concepts": ["eager-loading", "dataloader", "n-plus-one"]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "PgBouncer transaction kipinde, bir istekte `SET` ile değiştirilen oturum ayarının aynı istemcinin sonraki transaction'ında da geçerli olacağı garanti edilir.",
+        "en": "In PgBouncer transaction mode, a session setting changed with `SET` in one request is guaranteed to still apply in the same client's next transaction."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "Transaction kipinde sunucu bağlantısı transaction bitince havuza döner; sonraki transaction başka bir sunucu bağlantısına düşebilir. Oturum ayarları, LISTEN ve oturum düzeyi kilitler bu yüzden taşınmaz; gerekiyorsa `SET LOCAL` ile transaction içinde ayarlayın.",
+        "en": "In transaction mode the server connection returns to the pool when the transaction ends; the next transaction may land on a different server connection. Session settings, LISTEN and session-level locks therefore do not carry over; use `SET LOCAL` inside the transaction if needed."
+      },
+      "difficulty": "medium",
+      "concepts": ["pgbouncer", "connection-pooling"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "Hangi durumda Prisma yerine ham SQL (`$queryRaw`) kullanmak en makul tercihtir?",
+        "en": "In which case is raw SQL (`$queryRaw`) the most reasonable choice over the Prisma query API?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Tek bir kullanıcıyı id ile getirmek", "en": "Fetching a single user by id" } },
+        { "id": "b", "text": { "tr": "`ts_rank` ve `ts_headline` ile full-text arama sonuçlarını sıralamak", "en": "Ranking full-text search results with `ts_rank` and `ts_headline`" } },
+        { "id": "c", "text": { "tr": "Bir yer imi eklemek", "en": "Inserting a bookmark" } },
+        { "id": "d", "text": { "tr": "Kullanıcı girdisini `$queryRawUnsafe` ile dizeye ekleyerek arama yapmak", "en": "Searching by concatenating user input into `$queryRawUnsafe`" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Full-text arama fonksiyonları veritabanına özgüdür ve ORM'in sorgu API'sinde karşılığı yoktur; bu projenin arama servisi de bu yüzden `$queryRaw` kullanır. Basit CRUD için ORM yeterlidir. `$queryRawUnsafe` ile girdiyi dizeye eklemek SQL enjeksiyonu açar.",
+        "en": "Full-text search functions are database-specific and have no equivalent in the ORM's query API; this project's search service uses `$queryRaw` for exactly that reason. The ORM is fine for simple CRUD. Concatenating input into `$queryRawUnsafe` opens SQL injection."
+      },
+      "difficulty": "easy",
+      "concepts": ["raw-sql"]
+    }
+  ]
+}

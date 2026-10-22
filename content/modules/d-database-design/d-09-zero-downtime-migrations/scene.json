@@ -1,0 +1,197 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "expand-contract-rollout",
+  "title": { "tr": "Expand/Contract: İki Sürüm, Tek Şema", "en": "Expand/Contract: Two Releases, One Schema" },
+  "summary": {
+    "tr": "users.name sütunu display_name olarak yeniden adlandırılırken eski ve yeni uygulama sürümleri aynı anda çalışır; her adımda şema iki sürümle de uyumludur.",
+    "en": "While users.name is renamed to display_name, old and new app releases run at the same time; at every step the schema is compatible with both."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda yük dengeleyici, ortada iki uygulama pod grubu (eski sürüm ve yeni sürüm), sağda users tablosu içinde eski name sütunu ve yeni display_name sütunu, altta backfill işçisi bulunur. Başta yalnızca name sütunu vardır. Expand migration'ı display_name'i ekler. Ardından v2 her iki sütuna da yazar ve v1 ile aynı anda çalışır. Backfill işçisi eski satırları partiler hâlinde kopyalar. v3 okumayı yeni sütuna taşır, v4 eski sütuna yazmayı bırakır ve en sonda contract migration'ı name sütununu siler. Son adım contract'tan önceki her noktada uygulama sürümünü geri almanın güvenli olduğunu vurgular.",
+      "en": "On the left a load balancer, in the middle two groups of app pods (old release and new release), on the right the users table containing the old name column and the new display_name column, and a backfill worker below. At first only the name column exists. The expand migration adds display_name. Then v2 writes to both columns and runs alongside v1. The backfill worker copies old rows in batches. v3 moves reads to the new column, v4 stops writing the old column and finally the contract migration drops name. The last step stresses that rolling back the app release is safe at every point before contract."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "lb", "kind": "lb", "label": "Load Balancer", "x": 100, "y": 270, "w": 140, "h": 70 },
+    { "id": "appOld", "kind": "pod", "label": { "tr": "v1 (eski)", "en": "v1 (old)" }, "sublabel": { "tr": "name okur/yazar", "en": "reads/writes name" }, "x": 360, "y": 150, "w": 170, "h": 70 },
+    { "id": "appNew", "kind": "pod", "label": { "tr": "v2 (yeni)", "en": "v2 (new)" }, "sublabel": { "tr": "henüz dağıtılmadı", "en": "not deployed yet" }, "x": 360, "y": 390, "w": 170, "h": 70, "status": "muted" },
+    { "id": "table", "kind": "group", "label": { "tr": "users tablosu", "en": "users table" }, "x": 780, "y": 270, "w": 260, "h": 330 },
+    { "id": "oldCol", "kind": "db", "label": "name", "sublabel": { "tr": "eski sütun", "en": "old column" }, "x": 780, "y": 170, "w": 190, "h": 64, "parent": "table" },
+    { "id": "newCol", "kind": "db", "label": "display_name", "sublabel": { "tr": "yeni sütun", "en": "new column" }, "x": 780, "y": 370, "w": 190, "h": 64, "parent": "table", "status": "muted" },
+    { "id": "backfill", "kind": "worker", "label": { "tr": "Backfill işçisi", "en": "Backfill worker" }, "sublabel": { "tr": "1000 satırlık partiler", "en": "batches of 1000" }, "x": 560, "y": 540, "w": 180, "h": 60, "status": "muted" }
+  ],
+  "edges": [
+    { "id": "lb-old", "from": "lb", "to": "appOld", "kind": "request" },
+    { "id": "lb-new", "from": "lb", "to": "appNew", "kind": "request" },
+    { "id": "old-oldcol", "from": "appOld", "to": "oldCol", "kind": "data", "bidirectional": true },
+    { "id": "old-newcol", "from": "appOld", "to": "newCol", "kind": "data", "style": "dashed" },
+    { "id": "new-oldcol", "from": "appNew", "to": "oldCol", "kind": "data", "style": "dashed" },
+    { "id": "new-newcol", "from": "appNew", "to": "newCol", "kind": "data", "bidirectional": true },
+    { "id": "bf-old", "from": "backfill", "to": "oldCol", "kind": "data", "style": "dotted", "curvature": -0.3 },
+    { "id": "bf-new", "from": "backfill", "to": "newCol", "kind": "data", "style": "dotted" }
+  ],
+  "steps": [
+    {
+      "id": "start",
+      "title": { "tr": "Başlangıç: yalnızca name", "en": "Start: only name" },
+      "narration": {
+        "tr": "Tüm trafik v1'e gider; v1 `name` sütununu okur ve yazar. Hedef, sütunu hiçbir an kesinti olmadan `display_name` yapmaktır.",
+        "en": "All traffic goes to v1; v1 reads and writes the `name` column. The goal is to turn the column into `display_name` with no moment of downtime."
+      },
+      "durationMs": 2800,
+      "inherit": false,
+      "highlight": { "nodes": ["lb", "appOld", "oldCol"], "edges": ["lb-old", "old-oldcol"] },
+      "nodeStates": {
+        "appOld": { "status": "active" },
+        "appNew": { "status": "muted", "visible": false },
+        "newCol": { "status": "muted", "visible": false },
+        "backfill": { "status": "muted", "visible": false },
+        "oldCol": { "status": "active" }
+      },
+      "edgeStates": {
+        "lb-new": { "visible": false },
+        "old-newcol": { "visible": false },
+        "new-oldcol": { "visible": false },
+        "new-newcol": { "visible": false },
+        "bf-old": { "visible": false },
+        "bf-new": { "visible": false }
+      },
+      "packets": [
+        { "edge": "lb-old", "shape": "envelope", "durationMs": 800, "repeat": 2, "repeatGapMs": 300 },
+        { "edge": "old-oldcol", "shape": "dot", "startAt": 800, "durationMs": 800, "repeat": 2, "repeatGapMs": 300 }
+      ]
+    },
+    {
+      "id": "expand",
+      "title": { "tr": "Expand: yeni sütun eklenir", "en": "Expand: the new column is added" },
+      "narration": {
+        "tr": "Migration `ADD COLUMN display_name text` çalıştırır; NULL olabilen sütun yalnızca katalogu değiştirir. `lock_timeout = '5s'` sayesinde kilit alınamazsa trafiği bekletmeden düşer. v1 yeni sütunu bilmez ve etkilenmez.",
+        "en": "The migration runs `ADD COLUMN display_name text`; a nullable column only changes the catalog. With `lock_timeout = '5s'` it fails fast instead of queueing traffic if it cannot get the lock. v1 does not know about the new column and is unaffected."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["newCol", "table"], "edges": [] },
+      "nodeStates": { "newCol": { "status": "warning", "visible": true, "badge": "NULL" } },
+      "annotations": [
+        { "id": "expand-note", "x": 780, "y": 470, "text": { "tr": "ADD COLUMN — anlık, tablo yeniden yazılmaz", "en": "ADD COLUMN — instant, no table rewrite" }, "tone": "info", "target": "newCol" }
+      ]
+    },
+    {
+      "id": "dual-write",
+      "title": { "tr": "v2 dağıtılıyor: çift yazma", "en": "v2 rolls out: dual writes" },
+      "narration": {
+        "tr": "Kademeli dağıtım başlar: v1 ve v2 aynı anda trafik alır. v2 her yazmada iki sütunu da doldurur ama okumayı hâlâ `name`'den yapar. Böylece v1'in yazdığı satırlar da v2'nin okuduğu satırlar da tutarlıdır.",
+        "en": "The rolling deploy starts: v1 and v2 receive traffic at the same time. v2 fills both columns on every write but still reads from `name`. Rows written by v1 and rows read by v2 are therefore consistent."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["appOld", "appNew"], "edges": ["lb-old", "lb-new", "new-oldcol", "new-newcol"] },
+      "nodeStates": {
+        "appNew": { "status": "active", "visible": true, "sublabel": { "tr": "iki sütuna yazar, name okur", "en": "writes both, reads name" } }
+      },
+      "edgeStates": { "lb-new": { "visible": true }, "new-oldcol": { "visible": true, "status": "active" }, "new-newcol": { "visible": true, "status": "active" } },
+      "packets": [
+        { "edge": "lb-old", "shape": "envelope", "durationMs": 700 },
+        { "edge": "lb-new", "shape": "envelope", "durationMs": 700, "startAt": 200 },
+        { "edge": "new-oldcol", "shape": "dot", "startAt": 900, "durationMs": 800 },
+        { "edge": "new-newcol", "shape": "dot", "startAt": 900, "durationMs": 800 }
+      ]
+    },
+    {
+      "id": "backfill-start",
+      "title": { "tr": "Backfill: partiler hâlinde", "en": "Backfill: in batches" },
+      "narration": {
+        "tr": "Eski satırların `display_name`'i hâlâ boş. İşçi kimlik sırasıyla 1000'er satırlık partiler kopyalar; her parti kendi kısa transaction'ında commit edilir. Uzun kilit, dev WAL patlaması ve replika gecikmesi yaşanmaz.",
+        "en": "Old rows still have an empty `display_name`. The worker copies batches of 1000 rows in id order; each batch commits in its own short transaction. No long locks, no huge WAL burst and no replica lag."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["backfill", "oldCol", "newCol"], "edges": ["bf-old", "bf-new"] },
+      "nodeStates": { "backfill": { "status": "busy", "visible": true, "progress": 0.35 }, "newCol": { "status": "warning", "badge": "35%" } },
+      "edgeStates": { "bf-old": { "visible": true, "status": "active" }, "bf-new": { "visible": true, "status": "active" } },
+      "packets": [
+        { "edge": "bf-old", "direction": "backward", "shape": "square", "durationMs": 700, "repeat": 3, "repeatGapMs": 250 },
+        { "edge": "bf-new", "shape": "square", "startAt": 400, "durationMs": 700, "repeat": 3, "repeatGapMs": 250 }
+      ]
+    },
+    {
+      "id": "backfill-done",
+      "title": { "tr": "Backfill bitti, kısıt doğrulandı", "en": "Backfill done, constraint validated" },
+      "narration": {
+        "tr": "Son parti 0 satır güncelleyince iş durur. `CHECK (display_name IS NOT NULL) NOT VALID` eklenir, ardından `VALIDATE CONSTRAINT` okuma ve yazmaları bloklamadan tabloyu tarar; artık `SET NOT NULL` tarama yapmadan uygulanabilir.",
+        "en": "The job stops when the last batch updates 0 rows. `CHECK (display_name IS NOT NULL) NOT VALID` is added, then `VALIDATE CONSTRAINT` scans the table without blocking reads and writes; `SET NOT NULL` can now be applied without a scan."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["newCol", "backfill"], "edges": [] },
+      "nodeStates": { "backfill": { "status": "success", "progress": 1 }, "newCol": { "status": "success", "badge": "NOT NULL" } },
+      "edgeStates": { "bf-old": { "status": "idle" }, "bf-new": { "status": "idle" } }
+    },
+    {
+      "id": "switch-reads",
+      "title": { "tr": "v3: okuma yeni sütundan", "en": "v3: reads from the new column" },
+      "narration": {
+        "tr": "Yeni dağıtım: v3 `display_name`'den okur, iki sütuna da yazmaya devam eder. Geçiş sırasında v2 ve v3 yan yana çalışır; ikisi de iki sütunu güncel tuttuğu için hangisinin okuduğu fark etmez. Sorun çıkarsa v2'ye dönmek güvenlidir.",
+        "en": "Next deploy: v3 reads from `display_name` and keeps writing both columns. During the rollout v2 and v3 run side by side; since both keep both columns current, it does not matter which one reads. Rolling back to v2 is safe if something goes wrong."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["appOld", "appNew", "newCol"], "edges": ["new-newcol", "old-newcol"] },
+      "nodeStates": {
+        "appOld": { "label": { "tr": "v2 (eski)", "en": "v2 (old)" }, "sublabel": { "tr": "iki sütuna yazar, name okur", "en": "writes both, reads name" } },
+        "appNew": { "label": { "tr": "v3 (yeni)", "en": "v3 (new)" }, "sublabel": { "tr": "iki sütuna yazar, display_name okur", "en": "writes both, reads display_name" } },
+        "backfill": { "visible": false }
+      },
+      "edgeStates": { "old-newcol": { "visible": true, "status": "active" }, "bf-old": { "visible": false }, "bf-new": { "visible": false } },
+      "packets": [
+        { "edge": "new-newcol", "direction": "backward", "shape": "dot", "label": { "tr": "oku", "en": "read" }, "durationMs": 900 },
+        { "edge": "old-newcol", "shape": "dot", "durationMs": 900, "startAt": 300 }
+      ]
+    },
+    {
+      "id": "stop-old-writes",
+      "title": { "tr": "v4: eski sütun unutulur", "en": "v4: the old column is forgotten" },
+      "narration": {
+        "tr": "v4 artık `name`'e hiç dokunmaz. v3 ile v4 yan yana çalışırken `name` sütunu hâlâ yerindedir; v3 ona yazmaya devam eder ama okuyan kalmamıştır. Bu andan sonra v3'e geri dönmek veri farkı yaratabilir: geri alma penceresi kapanmaya başlar.",
+        "en": "v4 no longer touches `name`. While v3 and v4 run side by side the `name` column is still there; v3 keeps writing it but no one reads it any more. From now on rolling back to v3 may create data gaps: the rollback window starts to close."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["appNew", "newCol"], "edges": ["new-newcol"] },
+      "nodeStates": {
+        "appOld": { "label": { "tr": "v3 (eski)", "en": "v3 (old)" }, "sublabel": { "tr": "iki sütuna yazar", "en": "writes both" } },
+        "appNew": { "label": { "tr": "v4 (yeni)", "en": "v4 (new)" }, "sublabel": { "tr": "yalnızca display_name", "en": "display_name only" } },
+        "oldCol": { "status": "muted", "badge": "∅" }
+      },
+      "edgeStates": { "new-oldcol": { "visible": false }, "old-oldcol": { "status": "muted" } },
+      "packets": [{ "edge": "new-newcol", "shape": "dot", "durationMs": 900, "repeat": 2, "repeatGapMs": 300 }]
+    },
+    {
+      "id": "contract",
+      "title": { "tr": "Contract: eski sütun silinir", "en": "Contract: the old column is dropped" },
+      "narration": {
+        "tr": "Tüm pod'lar v4'e geçtikten sonra, ayrı bir dağıtımda (GitLab'ın deyişiyle post-deployment migration) `DROP COLUMN name` çalışır. Bu adım geri alınamaz; bu yüzden en son ve kendi başına yapılır.",
+        "en": "After every pod runs v4, a separate deploy (a post-deployment migration in GitLab's terms) runs `DROP COLUMN name`. This step cannot be undone, which is why it comes last and on its own."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["oldCol", "table"], "edges": [] },
+      "nodeStates": {
+        "appOld": { "label": { "tr": "v4", "en": "v4" }, "sublabel": { "tr": "yalnızca display_name", "en": "display_name only" }, "status": "active" },
+        "oldCol": { "status": "error", "badge": "DROP" }
+      },
+      "edgeStates": { "old-oldcol": { "visible": false }, "old-newcol": { "visible": true, "status": "active", "label": "" } }
+    },
+    {
+      "id": "done",
+      "title": { "tr": "Bitti: hiçbir an kesinti yok", "en": "Done: no moment of downtime" },
+      "narration": {
+        "tr": "Tablo artık yalnızca `display_name` içerir ve tüm sürümler onu kullanır. Altı adımın her birinde çalışan iki sürüm de şemayla uyumluydu; contract'tan önceki her noktada uygulamayı geri almak yeterliydi.",
+        "en": "The table now holds only `display_name` and every release uses it. At each of the six steps both running releases were compatible with the schema; before contract, rolling back the app was all it took."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["newCol", "appOld", "appNew"], "edges": ["old-newcol", "new-newcol"] },
+      "nodeStates": { "oldCol": { "visible": false }, "newCol": { "status": "success", "badge": "" }, "appNew": { "status": "success" }, "appOld": { "status": "success" } },
+      "packets": [
+        { "edge": "old-newcol", "shape": "dot", "durationMs": 800 },
+        { "edge": "new-newcol", "shape": "dot", "durationMs": 800, "startAt": 200 }
+      ]
+    }
+  ]
+}

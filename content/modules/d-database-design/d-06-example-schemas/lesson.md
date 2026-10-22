@@ -333,6 +333,6 @@ Amazon'un sipariş akışı bu dersteki e-ticaret şemasının dağıtık sürü
 :::quiz{src="quiz.json"}
 :::
 
-:::next{lesson="e-01-amazon-scale-ecommerce"}
-Sırada: bu şemaları Amazon ölçeğinde çalıştırmak — kapasite hesabı, servis ayrımı ve Black Friday simülasyonu.
+:::next{lesson="d-07-query-planner-explain"}
+Sırada: şemalar hazır; şimdi sorguların nasıl yürütüldüğüne bakalım — sorgu planlayıcı, join yöntemleri ve EXPLAIN okuma.
 :::

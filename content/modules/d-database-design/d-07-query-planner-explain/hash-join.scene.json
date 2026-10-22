@@ -1,0 +1,125 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "hash-join-build-probe",
+  "title": { "tr": "Hash Join: Build ve Probe Evreleri", "en": "Hash Join: Build and Probe Phases" },
+  "summary": {
+    "tr": "Küçük tablodan bellekte hash tablosu kurulur, büyük tablo taranıp her satır tabloda aranır; bellek yetmezse batch'ler diske taşar.",
+    "en": "A hash table is built in memory from the small table, the large table is scanned and each row looked up; if memory runs out, batches spill to disk."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda üstte küçük Lesson tablosu, altta büyük Progress tablosu; ortada work_mem içindeki hash tablosu; sağda Hash Join düğümü ve onun üstünde gruplama (Aggregate) düğümü; altta geçici disk dosyaları bulunur. Build evresinde Lesson satırları id değerine göre hash tablosundaki kovalara yerleşir. Probe evresinde Progress satırları tek tek okunur, lessonId hash'lenir ve ilgili kovada eşleşme aranır; eşleşenler Aggregate'e gider. Son adımlarda hash tablosu belleğe sığmazsa verinin batch'lere bölünüp diske yazıldığı ve iç içe döngü ile merge join'in hangi durumlarda tercih edildiği gösterilir.",
+      "en": "Top left is the small Lesson table, bottom left the large Progress table; in the middle the hash table inside work_mem; on the right the Hash Join node with an Aggregate node above it; temporary disk files at the bottom. In the build phase Lesson rows are placed in hash buckets by id. In the probe phase Progress rows are read one by one, lessonId is hashed and the matching bucket is searched; matches flow to the Aggregate. The final steps show the data being split into batches and written to disk when the hash table does not fit in memory, and when a nested loop or merge join would be preferred instead."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "lesson", "kind": "storage", "label": { "tr": "Seq Scan \"Lesson\"", "en": "Seq Scan \"Lesson\"" }, "sublabel": { "tr": "küçük → build", "en": "small → build" }, "x": 140, "y": 140, "w": 190, "h": 70 },
+    { "id": "progress", "kind": "storage", "label": { "tr": "Seq Scan \"Progress\"", "en": "Seq Scan \"Progress\"" }, "sublabel": { "tr": "büyük → probe", "en": "large → probe" }, "x": 140, "y": 430, "w": 190, "h": 70 },
+    { "id": "hash", "kind": "cache", "label": { "tr": "Hash tablosu", "en": "Hash table" }, "sublabel": "work_mem", "x": 470, "y": 140, "w": 170, "h": 80 },
+    { "id": "join", "kind": "worker", "label": "Hash Join", "sublabel": "l.id = p.\"lessonId\"", "x": 720, "y": 300, "w": 170, "h": 70 },
+    { "id": "agg", "kind": "service", "label": "HashAggregate", "sublabel": { "tr": "modül başına sayım", "en": "count per module" }, "x": 880, "y": 110, "w": 170, "h": 64 },
+    { "id": "disk", "kind": "storage", "label": { "tr": "Geçici dosyalar", "en": "Temp files" }, "sublabel": "batch 2..N", "x": 470, "y": 520, "w": 170, "h": 64, "status": "muted" }
+  ],
+  "edges": [
+    { "id": "lesson-hash", "from": "lesson", "to": "hash", "kind": "data", "label": "build" },
+    { "id": "progress-join", "from": "progress", "to": "join", "kind": "data", "label": "probe", "curvature": 0.1 },
+    { "id": "join-hash", "from": "join", "to": "hash", "kind": "request", "style": "dashed", "curvature": 0.2 },
+    { "id": "join-agg", "from": "join", "to": "agg", "kind": "data" },
+    { "id": "hash-disk", "from": "hash", "to": "disk", "kind": "data", "style": "dotted", "curvature": 0.3 }
+  ],
+  "steps": [
+    {
+      "id": "plan",
+      "title": { "tr": "Plan ağacı", "en": "The plan tree" },
+      "narration": {
+        "tr": "Sorgu: tamamlanan derslerin modül başına sayısı (`Progress JOIN Lesson`). Planlayıcı küçük girdiyi (Lesson) `Hash` düğümünün altına, büyük girdiyi (Progress) `Hash Join`'in diğer koluna yerleştirdi. Koşul eşitlik (`=`) olduğu için hash join mümkündür.",
+        "en": "Query: completed lessons counted per module (`Progress JOIN Lesson`). The planner placed the small input (Lesson) under the `Hash` node and the large input (Progress) on the other side of the `Hash Join`. The condition is equality (`=`), so a hash join is possible."
+      },
+      "durationMs": 3200,
+      "inherit": false,
+      "highlight": { "nodes": ["lesson", "progress", "join"], "edges": [] },
+      "nodeStates": { "lesson": { "status": "active" }, "progress": { "status": "idle" }, "join": { "status": "idle" } }
+    },
+    {
+      "id": "build",
+      "title": { "tr": "Build: küçük tablo belleğe", "en": "Build: small table into memory" },
+      "narration": {
+        "tr": "Build evresi: Lesson satırları tek tek okunur, `id` hash'lenir ve satır ilgili kovaya yazılır. Join, build tamamlanmadan tek satır üretemez; bu yüzden hash join'in başlangıç maliyeti yüksektir.",
+        "en": "Build phase: Lesson rows are read one by one, `id` is hashed and the row is written into its bucket. The join cannot emit a single row until the build finishes, which is why a hash join has a high startup cost."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["lesson", "hash"], "edges": ["lesson-hash"] },
+      "nodeStates": { "lesson": { "status": "busy" }, "hash": { "status": "busy", "progress": 0.4 } },
+      "packets": [{ "edge": "lesson-hash", "shape": "square", "durationMs": 600, "repeat": 5, "repeatGapMs": 150 }]
+    },
+    {
+      "id": "built",
+      "title": { "tr": "Tablo hazır", "en": "Table ready" },
+      "narration": {
+        "tr": "Hash tablosu belleğe sığdı. `EXPLAIN ANALYZE` bunu `Batches: 1` ve `Memory Usage` ile bildirir. Artık her arama ortalama sabit zamanlıdır.",
+        "en": "The hash table fits in memory. `EXPLAIN ANALYZE` reports this as `Batches: 1` along with `Memory Usage`. Each lookup is now constant time on average."
+      },
+      "durationMs": 2800,
+      "highlight": { "nodes": ["hash"], "edges": [] },
+      "nodeStates": { "lesson": { "status": "success" }, "hash": { "status": "success", "progress": 0.55, "badge": "Batches: 1" } }
+    },
+    {
+      "id": "probe",
+      "title": { "tr": "Probe: büyük tablo akıyor", "en": "Probe: the large table streams" },
+      "narration": {
+        "tr": "Probe evresi: Progress satırları sırayla okunur. Her satırın `lessonId` değeri aynı fonksiyonla hash'lenir ve yalnızca o kovaya bakılır; büyük tablo bir kez taranır, iç içe döngü yoktur.",
+        "en": "Probe phase: Progress rows are read in order. Each row's `lessonId` is hashed with the same function and only that bucket is checked; the large table is scanned once, with no nested loop."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["progress", "join", "hash"], "edges": ["progress-join", "join-hash"] },
+      "nodeStates": { "progress": { "status": "busy" }, "join": { "status": "busy" } },
+      "packets": [
+        { "edge": "progress-join", "shape": "dot", "durationMs": 600, "repeat": 5, "repeatGapMs": 120 },
+        { "edge": "join-hash", "shape": "dot", "startAt": 600, "durationMs": 500, "repeat": 5, "repeatGapMs": 220 }
+      ]
+    },
+    {
+      "id": "match",
+      "title": { "tr": "Eşleşenler yukarı akar", "en": "Matches flow upward" },
+      "narration": {
+        "tr": "Kovada eşleşme bulunan satırlar birleştirilip HashAggregate'e iletilir; eşleşmeyenler atılır. Satırlar probe ilerledikçe akar, sonucun tamamının beklenmesi gerekmez.",
+        "en": "Rows with a match in the bucket are combined and passed to the HashAggregate; non-matches are dropped. Rows flow as the probe advances; there is no need to wait for the whole result."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["join", "agg"], "edges": ["join-agg"] },
+      "nodeStates": { "agg": { "status": "active", "counter": 3 } },
+      "packets": [{ "edge": "join-agg", "shape": "envelope", "durationMs": 700, "repeat": 3, "repeatGapMs": 200 }]
+    },
+    {
+      "id": "spill",
+      "title": { "tr": "Bellek yetmezse: batch'ler", "en": "If memory runs short: batches" },
+      "narration": {
+        "tr": "Build tarafı `work_mem`'den büyükse PostgreSQL her iki girdiyi hash değerine göre parçalara (batch) böler; ilki bellekte işlenir, diğerleri geçici dosyalara yazılıp sırayla geri okunur. Planda `Batches: 4` gibi bir değer ek disk I/O'su demektir.",
+        "en": "If the build side exceeds `work_mem`, PostgreSQL splits both inputs into batches by hash value; the first is processed in memory, the rest are written to temp files and read back in turn. A value such as `Batches: 4` in the plan means extra disk I/O."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["hash", "disk"], "edges": ["hash-disk"] },
+      "nodeStates": { "hash": { "status": "warning", "progress": 1, "badge": "Batches: 4" }, "disk": { "status": "busy", "visible": true } },
+      "edgeStates": { "hash-disk": { "status": "active" } },
+      "packets": [{ "edge": "hash-disk", "shape": "square", "durationMs": 700, "repeat": 3, "repeatGapMs": 200 }]
+    },
+    {
+      "id": "alternatives",
+      "title": { "tr": "Planlayıcı ne zaman başka yöntem seçer?", "en": "When does the planner pick another method?" },
+      "narration": {
+        "tr": "Tek bir kullanıcının ilerlemesi istenseydi (`WHERE \"userId\" = $1`) dış taraf birkaç satır olurdu ve Lesson'ın birincil anahtar indeksiyle Nested Loop daha ucuz olurdu. İki girdi de join anahtarına göre zaten sıralıysa Merge Join hash tablosu kurmadan fermuar gibi birleştirir.",
+        "en": "Had we asked for one user's progress (`WHERE \"userId\" = $1`), the outer side would be a few rows and a Nested Loop over Lesson's primary key index would be cheaper. If both inputs are already sorted on the join key, a Merge Join zips them together without building a hash table."
+      },
+      "durationMs": 3600,
+      "inherit": false,
+      "highlight": { "nodes": ["join"], "edges": [] },
+      "nodeStates": { "join": { "status": "active" }, "disk": { "status": "muted" }, "hash": { "status": "idle" } },
+      "annotations": [
+        { "id": "nl", "x": 720, "y": 420, "text": { "tr": "az satır + indeks → Nested Loop", "en": "few rows + index → Nested Loop" }, "tone": "info", "target": "join" },
+        { "id": "mj", "x": 720, "y": 470, "text": { "tr": "iki girdi sıralı → Merge Join", "en": "both inputs sorted → Merge Join" }, "tone": "info" }
+      ]
+    }
+  ]
+}
