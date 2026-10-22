@@ -28,6 +28,12 @@ concepts: [circuit-breaker, slo, canary-deploy, capacity-estimation, kafka-parti
 
 **SLO hedefleri:** %99,99 erişilebilirlik yılda yaklaşık 52 dakika kesinti demektir. Ödeme ve sepet için en yüksek hedef konur, öneri servisi için daha düşük bir hedef yeterlidir.
 
+Bu desenlerin en zorlu sınavı bir bölgenin tamamen kaybedilmesidir. Aşağıdaki animasyon iki mekanizmayı arka arkaya gösteriyor: GeoDNS sağlık kontrolüyle trafiğin yedek bölgeye aktarılması ve asenkron bir işin üstel geri çekilmeyle yeniden denenip sonunda dead letter queue'ya (16. bölüm) düşmesi.
+
+:::animation{scene="failover-dlq.scene.json"}
+eu-central çökünce trafik us-east'e geçer; e-posta işi üç denemeden sonra DLQ'ya ayrılır, düzeltmenin ardından yeniden sürülür.
+:::
+
 ## 12. Güvenlik
 
 - OAuth2 / OpenID Connect; kısa ömürlü JWT erişim token'ı ve yenileme (refresh) token'ı.
@@ -174,6 +180,12 @@ Amazon'u Amazon yapan tek bir teknoloji değil; bağımsız ekipler, bağımsız
 
 :::interactive{type="message-queue" partitions=3 consumers=3 producers=2 failureRate=0.1 idempotent=true maxRetries=2}
 Consumer sayısını ve hata oranını değiştir; yeniden denemelerin ve idempotent tüketimin çift işlemeyi nasıl önlediğini gözle.
+:::
+
+:::realworld{company="Netflix"}
+Netflix, "hata olacak" varsayımını mühendislik pratiğine dönüştüren şirketlerin başında gelir. 2011'de teknoloji blogunda tanıttığı Chaos Monkey, canlı ortamdaki sunucuları rastgele kapatır; amaç, tek bir sunucunun kaybının kullanıcıya yansımadığını sürekli kanıtlamaktır. Aynı "Simian Army" ailesindeki araçlar daha büyük arızaları da canlandırır; Chaos Kong ise bütün bir AWS bölgesinin kaybını simüle eder.
+
+Netflix, bir AWS bölgesinde yaşanan kesintinin ardından 2013'te yayımladığı "Active-Active for Multi-Regional Resiliency" yazısında birden fazla bölgede aynı anda hizmet verme yaklaşımını anlatır: her bölge tam kapasiteyle çalışabilecek şekilde tasarlanır, veri bölgeler arasında kopyalanır ve bir bölge sorun yaşadığında kullanıcı trafiği DNS ve yönlendirme katmanı üzerinden sağlıklı bölgeye aktarılır. Bu dersteki failover animasyonunun özü budur. Yazıdan çıkan ders de aynı: failover ancak düzenli olarak denenirse gerçek bir kesintide işe yarar; tatbikatı yapılmamış bir yedek bölge, yalnızca kâğıt üzerinde vardır.
 :::
 
 :::callout{tone="info" title="İlgili dersler"}

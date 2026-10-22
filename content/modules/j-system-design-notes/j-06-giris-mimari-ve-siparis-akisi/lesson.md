@@ -18,7 +18,7 @@ concepts: [functional-requirements, non-functional-requirements, api-gateway, cd
 
 ## 1. Bu rehber hakkında
 
-Bu rehber, gönderdiğin 14 sayfalık "Food Delivery App System Design" (Zomato / Swiggy benzeri yemek siparişi uygulaması) notlarının Türkçe ve ayrıntılı anlatımıdır. Notlardaki 2–15. sayfaların hepsi, aynı sırayla işlendi:
+Bu ders ve onu izleyen beş ders, Zomato / Swiggy benzeri bir yemek siparişi uygulamasının sistem tasarımını uçtan uca işler. Konular şu sırayla ele alınır:
 
 1. Yüksek seviye mimari
 2. Kullanıcı yolculuğu ve sipariş akışı
@@ -35,9 +35,9 @@ Bu rehber, gönderdiğin 14 sayfalık "Food Delivery App System Design" (Zomato 
 13. Takip sistemini ölçekleme
 14. En iyi uygulamalar, ödünleşimler ve mülakat soruları
 
-Her bölümün sonunda **"Senin projen için"** kutusu var. Bu kutular, anlatılan fikrin toptan gıda e-ticaret sitene (çam fıstığı, incir, baharat, zeytin, zeytinyağı) nasıl uyarlanacağını gösterir. Notlarda fiyatlar Hint rupisi (₹) ile verilmiş; örnekleri anlaşılır olsun diye Türk lirasına (TL) çevirdim.
+Her bölümün sonunda **"Senin projen için"** kutusu var. Bu kutular, anlatılan fikrin toptan gıda e-ticaret sitene (çam fıstığı, incir, baharat, zeytin, zeytinyağı) nasıl uyarlanacağını gösterir. Fiyat örnekleri Türk lirası (TL) ile verilir.
 
-Notlarda 1. sayfa (giriş ve gereksinimler) yoktu. Bu yüzden ilk bölümde, sistem tasarımı mülakatlarında her zaman ilk yapılan adım olan gereksinim belirlemeyi kısaca ekledim.
+İlk bölümde, sistem tasarımı mülakatlarında her zaman ilk yapılan adım olan gereksinim belirlemeyi kısaca ele alıyoruz.
 
 ## 2. Sistem tasarımına giriş
 
@@ -91,6 +91,12 @@ Sistem **mikroservis mimarisi** ile kurulur. Kullanıcılar, restoranlar, sipari
 ### Mimari şeması
 
 :::diagram{src="sekil-01.png" alt="Mimari şeması: İstemciler, CDN, Load Balancer, API Gateway ve Mikroservisler arasındaki akış|Architecture diagram: flow between clients, CDN, load balancer, API Gateway and microservices"}
+:::
+
+Şemadaki kutuların her biri bir isteğin yolculuğunda belirli bir iş üstlenir. Aşağıdaki animasyonda bir siparişin uygulamadan çıkıp CDN, yük dengeleyici, API gateway ve servislerden geçtiğini; ödemenin neden senkron, restoran, kurye ve bildirimin neden Kafka üzerinden asenkron olduğunu ve bir servis çökünce sipariş akışının neden durmadığını izleyebilirsin. Ardından bileşenleri tek tek ele alacağız.
+
+:::animation{scene="order-journey.scene.json"}
+CDN'den menü görselleri, gateway'de kimlik ve hız sınırı, senkron ödeme, hızlı yanıt ve Kafka ile üç servise dağılan order-created olayı.
 :::
 
 **İstemciler (Clients):** Sistemi kullanan beş farklı uygulama vardır:
@@ -185,7 +191,7 @@ Toptan satış sitesi için başlangıçta mikroservis gereksizdir. Tek bir Node
 
 ### Sipariş akışı sıralı diyagramı (sequence diagram)
 
-Notlardaki diyagram, yedi aktör arasındaki mesajları gösteriyor: Müşteri, API Gateway, Order Service, Payment Service, Restaurant Service, Delivery Service, Notification Service.
+Aşağıdaki diyagram yedi aktör arasındaki mesajları gösteriyor: Müşteri, API Gateway, Order Service, Payment Service, Restaurant Service, Delivery Service, Notification Service.
 
 | Adım | Ne olur? |
 |---|---|
@@ -238,6 +244,12 @@ Toptan satışta yolculuk şöyle olur: bayi girişi → kategori ve ürün aram
 
 :::interactive{type="request-journey" layers=5 rttMs=30 cacheHitRate=0.4}
 İsteğin istemciden gateway, servis ve veritabanına kadar geçtiği katmanları izle; önbellek isabet oranını artırınca toplam gecikmenin nasıl düştüğüne bak.
+:::
+
+:::realworld{company="Uber"}
+Bu dersteki mikroservis mimarisinin hem faydasını hem bedelini en açık anlatan kaynaklardan biri Uber'in 2020'de mühendislik blogunda yayımladığı "Introducing Domain-Oriented Microservice Architecture" yazısıdır. Uber, Uber Eats dahil ürünlerini yıllar içinde binlerce mikroservise bölmüştü. Yazı, bu ölçekte servislerin bağımsız ölçeklenmesi ve ekiplerin paralel çalışması gibi kazanımların yanında yeni sorunları da sayar: bir özelliği değiştirmek için birçok ekibin servisine dokunmak gerekir, hatanın kaynağını bulmak için çok sayıda servis boyunca iz sürmek zorlaşır.
+
+Uber'in çözümü servisleri ortadan kaldırmak değil, onları alan (domain) adı verilen gruplara toplamak oldu. Her alanın dışarıya tek bir giriş noktası (gateway) vardır; diğer alanlar o alanın iç servislerini değil bu girişi çağırır. Alanlar katmanlara ayrılır ve bir katman yalnızca altındaki katmanlara bağımlı olabilir. Bu, dersteki API gateway fikrinin servisler arasına da taşınmış hâlidir. Çıkarılacak ders: mikroservise geçiş bir varış noktası değil, sınırlarını sürekli yeniden düzenlemen gereken bir yapıdır; küçük bir ekip için modüler monolit hâlâ en mantıklı başlangıçtır.
 :::
 
 :::quiz{src="quiz.json"}
