@@ -103,6 +103,20 @@ Hızlı ve ucuz kontroller önce çalışır. Lint 10 saniyede biter, E2E testle
 
 Paket (örneğin Docker image) bir kez üretilir. Aynı paket önce staging'e, sonra canlıya çıkar. Her ortam için yeniden build almak, "staging'de çalışıyordu ama canlıda çalışmıyor" sorununa yol açar.
 
+Bu iki ilkenin bir pipeline çalışmasında nasıl göründüğünü izlemeden önce tahmininizi yapın.
+
+:::predict{id="ci-test-duserse"}
+Pipeline sırası lint → test → build → staging → production. Test aşaması kırmızıya dönerse ne olur? | The pipeline order is lint → test → build → staging → production. What happens if the test stage turns red?
+- [ ] build çalışır ama staging ve production atlanır | build runs but staging and production are skipped
+- [x] build, staging ve production hiç çalışmaz; PR birleştirilemez | build, staging and production never run; the PR cannot be merged
+- [ ] Pipeline uyarı verir ama canlıya çıkışı sürdürür | The pipeline warns but continues to production
+Açıklama: Bir aşama başarısız olunca zincir orada durur ve sonraki aşamalar "atlandı" olarak işaretlenir. Hatalı kod paketlenmez bile. Test, branch protection kuralında zorunlu kontrol olarak tanımlıysa PR'ın Merge düğmesi de kilitlenir. | When a stage fails the chain stops there and the later stages are marked as skipped. The broken code is never even packaged. If test is a required check in branch protection, the PR's Merge button is locked too.
+:::
+
+:::animation{scene="ci-pipeline.scene.json"}
+İlk çalıştırmada test düşer ve sonraki aşamalar atlanır. Düzeltme commit'inden sonra aynı paket önce staging'e, onaydan sonra production'a gider.
+:::
+
 ## Ortamlar
 
 Kodun canlıya çıkmadan önce geçtiği ortamlar:
@@ -311,8 +325,12 @@ CI'da npm install yerine npm ci kullanırım; lock dosyasına birebir uyar, daha
 
 ## Dene: pipeline aşamaları
 
-:::interactive{type="pipeline" stages=5 failureStage=0 retries=0}
-Aşamaları ekleyip çıkar, bir aşamayı başarısız yap ve "fail fast" davranışını izle: hata hangi aşamada olursa olsun sonraki aşamalar çalışmaz.
+:::interactive{type="pipeline" stages="lint,test,build,staging,production" failureStage="test" retries=0}
+"Pipeline'ı çalıştır" ile beş aşamanın sırayla yeşile döndüğünü izle. Ardından "Hata enjekte et" kutusunu işaretle ("Hata aşaması" test seçili gelir) ve yeniden çalıştır: test kırmızıya döner, build, staging ve production "atlandı" kalır. "Hata aşaması"nı lint ve staging olarak değiştirip "Süre" göstergesini karşılaştır. Hata ne kadar erken yakalanırsa pipeline o kadar kısa sürer; fail fast ilkesinin anlamı budur.
+:::
+
+:::realworld{company="Etsy"}
+Etsy, sık ve küçük dağıtımın erken savunucularından biridir. Şirketin "Code as Craft" mühendislik blogu, 2010'ların başında günde onlarca kez canlıya çıkabilen bir dağıtım kültürünü nasıl kurduklarını anlatan yazılarla tanınır. Bu kültürün merkezinde Deployinator adlı iç araç vardı (daha sonra açık kaynak yapıldı). Mühendis tek bir düğmeyle önce ön ortama, testler geçerse canlıya dağıtım başlatır; her adımın sonucu ekip sohbet kanalında görünür. Bu derste anlatılan ilkelerin hepsi bu yaklaşımda yer alır. Değişiklikler küçük tutulur, böylece bir şey bozulduğunda hangi değişikliğin sorumlu olduğu hemen anlaşılır. Otomatik testler her dağıtımın önünde durur. Dağıtım sonrasında grafikler izlenir, sorun görülürse hızla geri dönülür. Etsy'nin deneyiminden çıkan önemli bir ders şudur: dağıtımı sıradan ve sıkıcı bir işe dönüştürmek riski azaltır. Ayda bir yapılan büyük ve korkulan yayın yerine günde birçok küçük ve geri alınabilir yayın yapılır.
 :::
 
 :::callout{tone="info" title="İlgili dersler"}
