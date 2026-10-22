@@ -28,4 +28,9 @@ COPY --from=build --chown=app:app /repo/web/.next/static ./web/.next/static
 COPY --from=build --chown=app:app /repo/web/public ./web/public
 USER app
 EXPOSE 3000
+# Sağlık kontrolü statik PWA manifest'ine yapılır: ana sayfa (/) SSR ile API'den veri çeker ve middleware'den
+# (CSP nonce) geçer, yani hem daha ağırdır hem de API'nin durumuna bağlıdır. manifest.webmanifest public/
+# altından doğrudan sunulur ve middleware matcher'ı dışındadır; yalnızca Next sunucusunun ayakta olduğunu ölçer.
+# (alpine imajında wget hazır gelir; backend/Dockerfile ile aynı aralıklar)
+HEALTHCHECK --interval=15s --timeout=3s --retries=5 CMD wget -qO- http://127.0.0.1:3000/manifest.webmanifest > /dev/null || exit 1
 CMD ["node", "web/server.js"]

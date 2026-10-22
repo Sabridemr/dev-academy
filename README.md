@@ -84,6 +84,23 @@ Telefon ve sunucu aynı ağda olmalı; 3000, 4000 ve 8081 portları sunucu güve
 modemden sabit IP (DHCP rezervasyonu) verin: IP değişirse `PUBLIC_HOST` güncellenip web imajı `--build` ile
 yeniden derlenmeli ve seed tekrar çalıştırılmalıdır (`docker compose run --rm --build seed`).
 
+### Bakım
+
+- **Yeniden başlatma:** postgres, redis, minio, api ve web `restart: unless-stopped` ile çalışır; sunucu ya da
+  Docker yeniden başlayınca yığın kendiliğinden ayağa kalkar (elle `docker compose stop` edilenler durdurulmuş
+  kalır). Tek seferlik servisler (migrate, seed, minio-init) yeniden başlatılmaz. Web ve API konteynerlerinin
+  sağlık durumu `docker compose ps` ile görülür.
+- **Log sınırı:** kalıcı servislerin logları servis başına 3 × 20 MB ile sınırlıdır (`json-file`); diski doldurmaz.
+  Loglar: `docker compose logs -f --tail=200 api`.
+- **Veritabanı yedeği:** `scripts/backup-db.sh` çalışan postgres konteynerinden `pg_dump -Fc` alır,
+  `~/backups/devacademy/devacademy-YYYYMMDD-HHMMSS.dump` olarak yazar ve 14 günden eski yedekleri siler
+  (`BACKUP_DIR`, `KEEP_DAYS`, `PG_CONTAINER`, `PG_USER` ile ezilebilir). Geri yükleme komutu betiğin başındaki
+  yorumdadır. Her gece 03:00'te yedek için önce `mkdir -p ~/backups`, sonra `crontab -e`:
+
+```cron
+0 3 * * * /home/<kullanıcı>/projects/dev-academy/scripts/backup-db.sh >> /home/<kullanıcı>/backups/devacademy.log 2>&1
+```
+
 ## Sık kullanılan komutlar
 
 | Komut                                        | Açıklama                                                                 |
