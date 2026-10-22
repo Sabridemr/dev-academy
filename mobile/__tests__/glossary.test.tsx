@@ -62,7 +62,8 @@ it('sözlüğü listeler, aramada eş ad ve İngilizce terimle süzer', async ()
     pathname: '/glossary/[id]',
     params: { id: 'round-robin' },
   });
-});
+  // CI'da iki debounce beklemesi ve ilk render 5 sn'lik varsayılanı aşabiliyor
+}, 20000);
 
 it('ders kavram çipleri terimi gösterir, bilinmeyen kavramda id’ye düşer, dokununca detayı açar', async () => {
   renderWithClient(<ConceptChips concepts={['sharding', 'sozlukte-yok']} />);

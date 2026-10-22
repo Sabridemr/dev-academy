@@ -59,4 +59,3 @@ describe('Header gezinme', () => {
     for (const l of links) expect(l).toHaveAttribute('href', '/glossary');
   });
 });
-
