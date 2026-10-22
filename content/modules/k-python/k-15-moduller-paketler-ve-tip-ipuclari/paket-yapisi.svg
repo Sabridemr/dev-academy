@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 420" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Paket klasörleri ve import yolları</title>
+  <desc id="desc">Solda magaza paketinin klasör ağacı: magaza, onun içinde __init__.py, siparis.py, odeme alt paketi (kart.py, havale.py) ve ortak alt paketi (para.py); her paketin kendi __init__.py dosyası var. Sağda dosya yollarının noktalı modül adlarına karşılığı: magaza/odeme/kart.py, magaza.odeme.kart modülüdür. Altta kart.py içinden para modülüne iki yol: mutlak import from magaza.ortak.para import Para ve göreli import from ..ortak.para import Para. magaza.odeme.kart içe aktarıldığında önce magaza/__init__.py, sonra magaza/odeme/__init__.py, en son kart.py çalışır.</desc>
+  <defs>
+    <marker id="ok" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+    <marker id="ok-p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-primary, #6366f1)"/>
+    </marker>
+  </defs>
+
+  <!-- Klasör ağacı -->
+  <rect x="20" y="20" width="330" height="290" rx="12" fill="var(--da-surface, #f8fafc)" stroke="var(--da-border, #cbd5e1)"/>
+  <text x="36" y="46" font-size="12" fill="var(--da-muted, #64748b)">Dosya sistemi (src/ altında)</text>
+  <g font-size="14" fill="var(--da-fg, #0f172a)">
+    <text x="40" y="76" font-weight="600">magaza/</text>
+    <text x="64" y="100" fill="var(--da-accent, #f59e0b)">__init__.py</text>
+    <text x="64" y="124">siparis.py</text>
+    <text x="64" y="150" font-weight="600">odeme/</text>
+    <text x="88" y="174" fill="var(--da-accent, #f59e0b)">__init__.py</text>
+    <text x="88" y="198" fill="var(--da-primary, #6366f1)" font-weight="600">kart.py</text>
+    <text x="88" y="222">havale.py</text>
+    <text x="64" y="248" font-weight="600">ortak/</text>
+    <text x="88" y="272" fill="var(--da-accent, #f59e0b)">__init__.py</text>
+    <text x="88" y="296" fill="var(--da-success, #10b981)" font-weight="600">para.py</text>
+  </g>
+  <g stroke="var(--da-border, #cbd5e1)" stroke-width="1.2">
+    <line x1="52" y1="82" x2="52" y2="244"/>
+    <line x1="76" y1="156" x2="76" y2="218"/>
+    <line x1="76" y1="254" x2="76" y2="292"/>
+  </g>
+
+  <!-- Yol → modül adı -->
+  <text x="400" y="46" font-size="12" fill="var(--da-muted, #64748b)">Dosya yolu → modül adı</text>
+  <g font-size="13">
+    <rect x="400" y="60" width="480" height="36" rx="8" fill="var(--da-surface, #f8fafc)" stroke="var(--da-border, #cbd5e1)"/>
+    <text x="414" y="83" fill="var(--da-fg, #0f172a)">magaza/__init__.py</text>
+    <text x="866" y="83" text-anchor="end" fill="var(--da-fg, #0f172a)" font-weight="600">magaza</text>
+    <rect x="400" y="104" width="480" height="36" rx="8" fill="var(--da-surface, #f8fafc)" stroke="var(--da-border, #cbd5e1)"/>
+    <text x="414" y="127" fill="var(--da-fg, #0f172a)">magaza/odeme/__init__.py</text>
+    <text x="866" y="127" text-anchor="end" fill="var(--da-fg, #0f172a)" font-weight="600">magaza.odeme</text>
+    <rect x="400" y="148" width="480" height="36" rx="8" fill="var(--da-primary, #6366f1)" fill-opacity="0.12" stroke="var(--da-primary, #6366f1)"/>
+    <text x="414" y="171" fill="var(--da-fg, #0f172a)">magaza/odeme/kart.py</text>
+    <text x="866" y="171" text-anchor="end" fill="var(--da-primary, #6366f1)" font-weight="600">magaza.odeme.kart</text>
+  </g>
+  <text x="400" y="212" font-size="12" fill="var(--da-muted, #64748b)">import magaza.odeme.kart çalıştırma sırası:</text>
+  <g font-size="12">
+    <rect x="400" y="222" width="140" height="30" rx="8" fill="var(--da-accent, #f59e0b)" fill-opacity="0.12" stroke="var(--da-accent, #f59e0b)"/>
+    <text x="470" y="242" text-anchor="middle" fill="var(--da-fg, #0f172a)">1. magaza/__init__</text>
+    <rect x="570" y="222" width="150" height="30" rx="8" fill="var(--da-accent, #f59e0b)" fill-opacity="0.12" stroke="var(--da-accent, #f59e0b)"/>
+    <text x="645" y="242" text-anchor="middle" fill="var(--da-fg, #0f172a)">2. odeme/__init__</text>
+    <rect x="750" y="222" width="130" height="30" rx="8" fill="var(--da-primary, #6366f1)" fill-opacity="0.12" stroke="var(--da-primary, #6366f1)"/>
+    <text x="815" y="242" text-anchor="middle" fill="var(--da-fg, #0f172a)">3. kart.py</text>
+  </g>
+  <g stroke="var(--da-muted, #64748b)" stroke-width="1.4" fill="none" marker-end="url(#ok)">
+    <path d="M 540 237 L 568 237"/>
+    <path d="M 720 237 L 748 237"/>
+  </g>
+
+  <!-- kart.py → para.py -->
+  <line x1="20" y1="330" x2="880" y2="330" stroke="var(--da-border, #cbd5e1)" stroke-dasharray="6 6"/>
+  <text x="20" y="356" font-size="13" fill="var(--da-muted, #64748b)">kart.py içinden para.py'ye iki yol:</text>
+  <g font-size="13">
+    <rect x="20" y="368" width="420" height="40" rx="8" fill="var(--da-success, #10b981)" fill-opacity="0.12" stroke="var(--da-success, #10b981)"/>
+    <text x="34" y="393" fill="var(--da-fg, #0f172a)">mutlak: from magaza.ortak.para import Para</text>
+    <rect x="460" y="368" width="420" height="40" rx="8" fill="var(--da-surface, #f8fafc)" stroke="var(--da-border, #cbd5e1)"/>
+    <text x="474" y="393" fill="var(--da-fg, #0f172a)">göreli: from ..ortak.para import Para</text>
+  </g>
+</svg>

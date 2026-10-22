@@ -7,6 +7,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import {
   Award,
   BookOpen,
+  BookText,
   BriefcaseBusiness,
   ChevronDown,
   Flame,
@@ -81,6 +82,7 @@ export function Header() {
 
   const links = [
     { href: '/modules', label: t('nav.modules'), icon: BookOpen, match: ['/modules', '/lessons'] },
+    { href: '/glossary', label: t('nav.glossary'), icon: BookText, match: ['/glossary'] },
     ...(authed
       ? [
           {

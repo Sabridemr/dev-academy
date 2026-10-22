@@ -13,7 +13,7 @@ import type { Prisma } from '@prisma/client';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { RedisService } from '../../common/redis/redis.service';
 import { MetricsService } from '../../common/metrics/metrics.service';
-import { toLessonDetail, toLessonSummary, toModuleSummary, toPathSummary, toSceneResponse, type LessonWithVersion } from './content.mapper';
+import { blocksOf, toLessonDetail, toLessonSummary, toModuleSummary, toPathSummary, toSceneResponse, type LessonWithVersion } from './content.mapper';
 
 /** Yayınlanmış içerik için cache TTL (saniye). Yayınlama anında anahtarlar temizlenir. */
 const CONTENT_TTL = 60 * 60 * 6;
@@ -180,6 +180,22 @@ export class ContentService {
       detail = { ...detail, progress: p ? { status: p.status as ProgressStatus, percent: p.percent } : { status: 'not_started', percent: 0 } };
     }
     return detail;
+  }
+
+  /**
+   * Yayındaki dersin bir kodlama alıştırmasının örnek çözümü. Ders detayı çözümü içermez; istemci
+   * "Çözümü göster" düğmesini birkaç başarısız denemeden sonra açar ve bu uç noktayı (oturumla) çağırır.
+   */
+  async getExerciseSolution(lessonId: string, exerciseId: string): Promise<{ solution: string }> {
+    const lesson = await this.prisma.lesson.findFirst({
+      where: { id: lessonId, publishedVersionId: { not: null } },
+      include: { publishedVersion: true },
+    });
+    const block = blocksOf(lesson?.publishedVersion ?? null).find(
+      (b) => b.type === 'exercise' && b.exercise?.id === exerciseId,
+    );
+    if (!block || block.type !== 'exercise' || !block.solution) throw new NotFoundException('Alıştırma bulunamadı');
+    return { solution: block.solution };
   }
 
   /** Müfredat sırasına göre önceki/sonraki yayınlanmış ders (modül sınırını aşar) */

@@ -115,6 +115,17 @@ export const InteractiveTypeSchema = z.enum([
   'jwt-inspector',
   'bruteforce-login',
   'git-graph',
+  'dp-table',
+  'heap',
+  'stack-queue',
+  'python-memory',
+  'predict-run',
+  'sql-playground',
+  'docker-layers',
+  'rbac-abac',
+  'threat-model',
+  'hash-salt',
+  'regex-playground',
 ]);
 export type InteractiveType = z.infer<typeof InteractiveTypeSchema>;
 
@@ -162,7 +173,34 @@ export const INTERACTIVE_PARAMS = {
   'jwt-inspector': ['secret', 'token'],
   'bruteforce-login': ['attemptsPerSecond', 'lockoutAfter', 'lockoutSeconds', 'passwordSpace'],
   'git-graph': ['scenario'],
+  'dp-table': ['problem', 'size'],
+  heap: ['initial', 'kind'],
+  'stack-queue': ['expression', 'mode'],
+  'python-memory': ['scenario'],
+  'predict-run': ['src'],
+  'sql-playground': ['dataset', 'query'],
+  'docker-layers': ['contextMb', 'example'],
+  'rbac-abac': ['mode', 'scenario'],
+  'threat-model': ['scenario'],
+  'hash-salt': ['algorithm', 'showAttack'],
+  'regex-playground': ['preset'],
 } as const satisfies Record<InteractiveType, readonly string[]>;
+
+/** Kod izini (`*.trace.json`) girdi olarak alan interaktif türler: iz, `src` parametresinden çözülür */
+export const TRACE_INTERACTIVES: readonly InteractiveType[] = ['predict-run'];
+
+/**
+ * İz kullanan interaktif bloğun ders klasörüne göre iz dosya adı (`src` parametresi); iz kullanmayan
+ * türlerde ya da parametre eksikse null. İçerik doğrulayıcısı ve seed aynı çözümlemeyi kullanır.
+ */
+export function interactiveTraceSrc(block: {
+  interactive: InteractiveType;
+  params?: Record<string, unknown>;
+}): string | null {
+  if (!TRACE_INTERACTIVES.includes(block.interactive)) return null;
+  const src = block.params?.src;
+  return typeof src === 'string' && src.length > 0 ? src : null;
+}
 
 /** Quiz soru sayısı kuralı (içerik yazım kılavuzu): en az 3, en fazla 6 */
 export const QUIZ_QUESTION_RANGE = { min: 3, max: 6 } as const;
@@ -174,6 +212,8 @@ export const InteractiveBlockSchema = BaseBlock.extend({
   params: z.record(z.unknown()).default({}),
   title: LocalizedStringSchema.optional(),
   instructions: LocalizedStringSchema.optional(),
+  /** predict-run: `params.src` ile verilen ders klasöründeki kod izi (seed sırasında doldurulur) */
+  trace: CodeTraceSchema.optional(),
 });
 
 export const CodeBlockSchema = BaseBlock.extend({
@@ -219,6 +259,58 @@ export const TraceBlockSchema = BaseBlock.extend({
   caption: LocalizedStringSchema.optional(),
   /** İz içeriği (seed sırasında doldurulur) */
   trace: CodeTraceSchema.optional(),
+});
+
+/* ------------------------- Kodlama alıştırması ------------------------- */
+
+/** Alıştırma dilleri (şimdilik yalnızca tarayıcıda Pyodide ile çalışan Python) */
+export const ExerciseLanguageSchema = z.enum(['python']);
+export type ExerciseLanguage = z.infer<typeof ExerciseLanguageSchema>;
+
+/** Çözümü göster düğmesi bu kadar başarısız test çalıştırmasından sonra açılır */
+export const EXERCISE_SOLUTION_AFTER_FAILURES = 3;
+/** Başarılı alıştırma `/progress/interactive` uç noktasına bu adla kaydedilir */
+export const EXERCISE_SESSION_KIND = 'code-exercise';
+
+/**
+ * `<ad>.exercise.json`: "şu fonksiyonu tamamla, testler geçsin" türü alıştırma. Kod istemcide (web: Pyodide,
+ * WebAssembly CPython, Web Worker) çalışır; sunucuya kod gönderilmez. `solution` yalnızca içerik deposunda ve
+ * veritabanında durur: ders API'si bloklardan çıkarır, çözüm ayrı (oturum gerektiren) uç noktadan istenir.
+ */
+export const ExerciseSchema = z
+  .object({
+    id: z.string().regex(SLUG_REGEX, 'id kebab-case olmalı'),
+    title: LocalizedStringSchema,
+    language: ExerciseLanguageSchema.default('python'),
+    /** Görev açıklaması (Markdown) */
+    prompt: LocalizedStringSchema,
+    /** Düzenleyicide başlangıç kodu */
+    starter: z.string(),
+    /** Örnek çözüm (pnpm content:exercises testlerle gerçekten çalıştırır) */
+    solution: z.string().refine((s) => s.trim().length > 0, 'solution boş olamaz'),
+    /** Kullanıcı kodundan sonra aynı ad alanında çalışan testler (assert); hata yoksa geçti */
+    tests: z.string().refine((s) => s.trim().length > 0, 'tests boş olamaz'),
+    hints: z.array(LocalizedStringSchema).max(5).default([]),
+    /** Çalıştırma süre sınırı; aşılınca çalıştırıcı (worker) sonlandırılır */
+    timeoutMs: z.number().int().min(500).max(30_000).default(5000),
+  })
+  .strict();
+export type Exercise = z.infer<typeof ExerciseSchema>;
+
+/** İstemciye giden alıştırma (çözümsüz) */
+export const PublicExerciseSchema = ExerciseSchema.omit({ solution: true });
+export type PublicExercise = z.infer<typeof PublicExerciseSchema>;
+
+export const ExerciseBlockSchema = BaseBlock.extend({
+  type: z.literal('exercise'),
+  /** Ders klasörüne göre alıştırma JSON yolu (`<ad>.exercise.json`) */
+  src: z.string().min(1),
+  /** Yönerge gövdesi (opsiyonel, görev metninin üstünde gösterilir) */
+  instructions: LocalizedStringSchema.optional(),
+  /** Alıştırma (seed sırasında doldurulur, çözümsüz) */
+  exercise: PublicExerciseSchema.optional(),
+  /** Örnek çözüm: seed veritabanına yazar, ders API'si istemciye göndermez (stripExerciseSolutions) */
+  solution: z.string().optional(),
 });
 
 export const NextBlockSchema = BaseBlock.extend({
@@ -294,6 +386,7 @@ export const LessonBlockSchema = z.discriminatedUnion('type', [
   CalloutBlockSchema,
   QuizBlockSchema,
   TraceBlockSchema,
+  ExerciseBlockSchema,
   NextBlockSchema,
   PredictBlockSchema,
   ResourcesBlockSchema,
@@ -321,10 +414,20 @@ export const LESSON_BLOCK_TYPES = [
   'callout',
   'quiz',
   'trace',
+  'exercise',
   'next',
   'predict',
   'resources',
 ] as const satisfies readonly LessonBlockType[];
+
+/** İstemciye giden bloklardan alıştırma çözümlerini çıkarır (ders API'si, offline paket) */
+export function stripExerciseSolutions(blocks: LessonBlock[]): LessonBlock[] {
+  return blocks.map((b) => {
+    if (b.type !== 'exercise' || b.solution === undefined) return b;
+    const { solution: _solution, ...rest } = b;
+    return rest;
+  });
+}
 
 /* ------------------------------ Quiz ------------------------------- */
 

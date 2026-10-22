@@ -1,0 +1,187 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "nesnenin-dogusu",
+  "title": { "tr": "Hesap('Ada', 100): bir nesnenin doğuşu", "en": "Hesap('Ada', 100): how an object is born" },
+  "summary": {
+    "tr": "Sınıf çağrısının __new__ ile boş bir nesne oluşturması, __init__'in bu nesneye nitelik yazması, ismin nesneye bağlanması ve nitelik aramasının önce örnekte sonra sınıfta yapılması.",
+    "en": "A class call creating an empty object with __new__, __init__ writing attributes onto it, the name being bound to the object, and attribute lookup checking the instance first and then the class."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda ada = Hesap('Ada', 100) satırını çalıştıran kod, üstte Hesap sınıf nesnesi, sağda __new__ ve __init__ fonksiyonları, altta yeni örnek nesnesi ve onun __dict__ sözlüğü bulunur. Sınıf çağrılınca önce __new__ boş bir örnek üretir. Ardından __init__ self olarak bu örneği alır ve self.sahip ile self.bakiye atamalarıyla örneğin sözlüğünü doldurur. __init__ None döndürür, ifadenin değeri örneğin kendisidir ve ada ismi ona bağlanır. ada.bakiye okunurken değer örneğin sözlüğünde bulunur; ada.yatir okunurken örnekte bulunamaz, arama sınıfa geçer ve sınıftaki fonksiyon örneğe bağlanmış bir bound method olarak döner.",
+      "en": "On the left the code running ada = Hesap('Ada', 100), at the top the Hesap class object, on the right the __new__ and __init__ functions, at the bottom the new instance and its __dict__. When the class is called, __new__ first produces an empty instance. Then __init__ receives this instance as self and fills its dictionary with the self.sahip and self.bakiye assignments. __init__ returns None, the value of the expression is the instance itself and the name ada is bound to it. Reading ada.bakiye finds the value in the instance dictionary; reading ada.yatir does not find it on the instance, the lookup moves to the class and the function there is returned as a bound method tied to the instance."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "code", "kind": "client", "label": { "tr": "Çağıran kod", "en": "Calling code" }, "sublabel": "ada = Hesap('Ada', 100)", "x": 140, "y": 300, "w": 200, "h": 80 },
+    { "id": "cls", "kind": "service", "label": { "tr": "Hesap sınıf nesnesi", "en": "Hesap class object" }, "sublabel": "__init__, yatir", "x": 470, "y": 120, "w": 200, "h": 80 },
+    { "id": "new", "kind": "function", "label": "__new__(cls)", "sublabel": { "tr": "boş örnek üretir", "en": "makes an empty instance" }, "x": 820, "y": 120, "w": 180, "h": 70 },
+    { "id": "init", "kind": "function", "label": "__init__(self, ...)", "sublabel": { "tr": "nitelikleri kurar", "en": "sets attributes" }, "x": 820, "y": 330, "w": 180, "h": 70 },
+    { "id": "obj", "kind": "storage", "label": { "tr": "Hesap örneği", "en": "Hesap instance" }, "sublabel": "__dict__ = {}", "x": 470, "y": 470, "w": 230, "h": 80 }
+  ],
+  "edges": [
+    { "id": "e-call", "from": "code", "to": "cls", "kind": "request", "curvature": -0.15, "label": "Hesap(...)" },
+    { "id": "e-new", "from": "cls", "to": "new", "kind": "control" },
+    { "id": "e-make", "from": "new", "to": "obj", "kind": "data", "curvature": 0.25, "label": { "tr": "boş nesne", "en": "empty object" } },
+    { "id": "e-init", "from": "cls", "to": "init", "kind": "control", "curvature": 0.15 },
+    { "id": "e-write", "from": "init", "to": "obj", "kind": "data", "label": "self.x = ..." },
+    { "id": "e-bind", "from": "code", "to": "obj", "kind": "generic", "style": "dashed", "curvature": 0.15, "label": "ada" },
+    { "id": "e-lookup", "from": "obj", "to": "cls", "kind": "control", "style": "dotted", "curvature": -0.35, "label": { "tr": "bulunamazsa sınıfa", "en": "if missing, the class" } }
+  ],
+  "steps": [
+    {
+      "id": "class-object",
+      "title": { "tr": "Sınıf da bir nesnedir", "en": "A class is an object too" },
+      "narration": {
+        "tr": "`class Hesap:` satırı çalıştığında heap'te bir **sınıf nesnesi** oluşur ve `Hesap` ismi ona bağlanır. Metotlar (`__init__`, `yatir`) bu sınıf nesnesinin üzerinde durur; henüz hiç örnek yok.",
+        "en": "When the `class Hesap:` line runs, a **class object** appears on the heap and the name `Hesap` is bound to it. The methods (`__init__`, `yatir`) live on this class object; there is no instance yet."
+      },
+      "durationMs": 3000,
+      "inherit": false,
+      "highlight": { "nodes": ["cls"] },
+      "nodeStates": {
+        "cls": { "status": "active", "badge": "class" },
+        "obj": { "visible": false },
+        "new": { "status": "muted" },
+        "init": { "status": "muted" }
+      },
+      "edgeStates": { "e-make": { "visible": false }, "e-write": { "visible": false }, "e-bind": { "visible": false }, "e-lookup": { "visible": false } }
+    },
+    {
+      "id": "call",
+      "title": { "tr": "Sınıfı çağırmak", "en": "Calling the class" },
+      "narration": {
+        "tr": "`Hesap(\"Ada\", 100)` bir fonksiyon çağrısı gibi görünür ama çağrılan şey sınıf nesnesidir. Python bu çağrıyı iki adıma böler: önce oluştur, sonra başlat.",
+        "en": "`Hesap(\"Ada\", 100)` looks like a function call, but what is called is the class object. Python splits the call into two steps: create first, then initialize."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["code", "cls"], "edges": ["e-call"] },
+      "nodeStates": { "code": { "status": "active" } },
+      "packets": [{ "edge": "e-call", "shape": "envelope", "label": "('Ada', 100)", "durationMs": 1300 }]
+    },
+    {
+      "id": "new",
+      "title": { "tr": "__new__: boş nesne", "en": "__new__: an empty object" },
+      "narration": {
+        "tr": "Önce `Hesap.__new__` çağrılır ve **boş** bir örnek üretir. Bu nesnenin kimliği (`id`) artık sabittir ama nitelik sözlüğü `__dict__` henüz boştur. Çoğu sınıfta `__new__`'i sen yazmazsın; `object`'ten gelen hazır hâli kullanılır.",
+        "en": "First `Hesap.__new__` is called and produces an **empty** instance. Its identity (`id`) is now fixed, but its attribute dictionary `__dict__` is still empty. In most classes you never write `__new__`; the ready-made one from `object` is used."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["cls", "new", "obj"], "edges": ["e-new", "e-make"] },
+      "nodeStates": {
+        "new": { "status": "active" },
+        "obj": { "visible": true, "status": "warning", "badge": "NEW", "sublabel": "__dict__ = {}" }
+      },
+      "edgeStates": { "e-make": { "visible": true, "status": "active" } },
+      "packets": [
+        { "edge": "e-new", "label": "cls", "durationMs": 900 },
+        { "edge": "e-make", "shape": "square", "label": { "tr": "örnek", "en": "instance" }, "startAt": 1000, "durationMs": 1200 }
+      ]
+    },
+    {
+      "id": "init-call",
+      "title": { "tr": "__init__ self'i alır", "en": "__init__ receives self" },
+      "narration": {
+        "tr": "Sonra `Hesap.__init__(örnek, \"Ada\", 100)` çağrılır. İlk parametre `self`, az önce doğan boş örneği gösterir; `sahip` ve `bakiye` ise çağrıdaki argümanlardır.",
+        "en": "Then `Hesap.__init__(instance, \"Ada\", 100)` is called. The first parameter `self` points to the empty instance just born; `sahip` and `bakiye` are the arguments of the call."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["cls", "init", "obj"], "edges": ["e-init"] },
+      "nodeStates": {
+        "new": { "status": "muted" },
+        "init": { "status": "active", "sublabel": "self, 'Ada', 100" }
+      },
+      "edgeStates": { "e-make": { "status": "muted" }, "e-write": { "visible": true } },
+      "packets": [{ "edge": "e-init", "label": "self + args", "durationMs": 1200 }]
+    },
+    {
+      "id": "set-sahip",
+      "title": { "tr": "self.sahip = sahip", "en": "self.sahip = sahip" },
+      "narration": {
+        "tr": "`self.sahip = sahip` atamasıyla değer yerel çerçeveye değil **nesnenin sözlüğüne** yazılır. `__init__` çerçevesi kapandığında yerel `sahip` yok olur, ama nesnedeki `sahip` kalır.",
+        "en": "With `self.sahip = sahip` the value is written not to the local frame but to the **object's dictionary**. When the `__init__` frame closes the local `sahip` disappears, but `sahip` on the object stays."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["init", "obj"], "edges": ["e-write"] },
+      "nodeStates": { "obj": { "status": "active", "sublabel": "{'sahip': 'Ada'}" } },
+      "edgeStates": { "e-write": { "status": "active" } },
+      "packets": [{ "edge": "e-write", "shape": "diamond", "label": "sahip='Ada'", "durationMs": 1200 }]
+    },
+    {
+      "id": "set-bakiye",
+      "title": { "tr": "self.bakiye = bakiye", "en": "self.bakiye = bakiye" },
+      "narration": {
+        "tr": "İkinci atamayla sözlük tamamlanır. `__init__` hiçbir şey döndürmez (`None`); işi yalnızca nesneyi geçerli bir başlangıç durumuna getirmektir.",
+        "en": "The second assignment completes the dictionary. `__init__` returns nothing (`None`); its only job is to bring the object into a valid starting state."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["init", "obj"], "edges": ["e-write"] },
+      "nodeStates": {
+        "obj": { "status": "active", "badge": "", "sublabel": "{'sahip': 'Ada', 'bakiye': 100}" },
+        "init": { "status": "success", "badge": "None" }
+      },
+      "packets": [{ "edge": "e-write", "shape": "diamond", "label": "bakiye=100", "durationMs": 1200 }]
+    },
+    {
+      "id": "bind",
+      "title": { "tr": "ada ismi nesneye bağlanır", "en": "The name ada is bound to the object" },
+      "narration": {
+        "tr": "Çağrı ifadesinin değeri `__init__`'in dönüşü değil, oluşturulan **örneğin kendisidir**. `ada` ismi ona bağlanır; `__init__` çerçevesi ve onunla birlikte `self` ismi artık yoktur, nesne ise `ada` sayesinde yaşar.",
+        "en": "The value of the call expression is not what `__init__` returned but **the instance itself**. The name `ada` is bound to it; the `__init__` frame and the name `self` are gone, while the object lives on thanks to `ada`."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["code", "obj"], "edges": ["e-bind"] },
+      "nodeStates": {
+        "init": { "status": "muted", "badge": "" },
+        "obj": { "status": "success" },
+        "code": { "status": "success", "sublabel": { "tr": "ada → örnek", "en": "ada → instance" } }
+      },
+      "edgeStates": { "e-write": { "status": "muted" }, "e-bind": { "visible": true, "status": "active" } },
+      "packets": [{ "edge": "e-bind", "direction": "backward", "shape": "square", "label": "ada", "durationMs": 1200 }]
+    },
+    {
+      "id": "lookup-instance",
+      "title": { "tr": "ada.bakiye: örnekte bulundu", "en": "ada.bakiye: found on the instance" },
+      "narration": {
+        "tr": "Nitelik okunurken Python **önce nesnenin kendi sözlüğüne** bakar. `bakiye` orada olduğu için arama hemen biter ve 100 döner; sınıfa hiç gidilmez.",
+        "en": "When reading an attribute Python looks **first at the object's own dictionary**. Since `bakiye` is there, the lookup ends immediately and returns 100; the class is never consulted."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["code", "obj"], "edges": ["e-bind"] },
+      "nodeStates": { "obj": { "status": "success", "badge": "HIT" }, "code": { "status": "active", "sublabel": "ada.bakiye" } },
+      "packets": [
+        { "edge": "e-bind", "label": "bakiye?", "durationMs": 900 },
+        { "edge": "e-bind", "direction": "backward", "shape": "diamond", "label": "100", "startAt": 1000, "durationMs": 900 }
+      ]
+    },
+    {
+      "id": "lookup-class",
+      "title": { "tr": "ada.yatir: sınıfta bulundu", "en": "ada.yatir: found on the class" },
+      "narration": {
+        "tr": "`yatir` örneğin sözlüğünde yoktur, arama **sınıfa** geçer. Fonksiyon sınıfta bulunur ve `ada`'ya bağlanmış bir **bound method** olarak döner; çağrıldığında `self` yerine `ada`'yı kendisi verir.",
+        "en": "`yatir` is not in the instance dictionary, so the lookup moves to the **class**. The function is found there and returned as a **bound method** tied to `ada`; when called it passes `ada` as `self` by itself."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["obj", "cls", "code"], "edges": ["e-lookup", "e-call"] },
+      "nodeStates": {
+        "obj": { "status": "warning", "badge": "MISS" },
+        "cls": { "status": "success", "badge": "HIT" },
+        "code": { "status": "success", "sublabel": "ada.yatir(25)" }
+      },
+      "edgeStates": { "e-lookup": { "visible": true, "status": "active" }, "e-bind": { "status": "idle" } },
+      "packets": [
+        { "edge": "e-bind", "label": "yatir?", "durationMs": 800 },
+        { "edge": "e-lookup", "label": "yatir?", "startAt": 900, "durationMs": 1000 },
+        { "edge": "e-call", "direction": "backward", "shape": "diamond", "label": "bound method", "startAt": 2000, "durationMs": 1200 }
+      ],
+      "annotations": [
+        { "id": "a-order", "x": 760, "y": 520, "text": { "tr": "arama sırası: örnek → sınıf → üst sınıflar", "en": "lookup order: instance → class → base classes" }, "target": "obj" }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["python", "class", "init", "attribute-lookup"]
+}

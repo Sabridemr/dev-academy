@@ -39,6 +39,26 @@ Kullanıcı → alanadi.com (DNS) → VPS:443
 ```
 :::
 
+Aynı mimarinin görsel hâli aşağıda. Alt şerit, canlıya almanın çoğu zaman unutulan yarısını gösteriyor: veritabanı her gece yedeklenir, yedek sunucu dışına taşınır ve gerektiğinde oradan geri yüklenir.
+
+:::diagram{src="diagram.svg" alt="Canlı ortam mimarisi: kullanıcı DNS üzerinden VPS'in 443 portuna gelir, Caddy veya Nginx HTTPS'i sonlandırıp /api isteklerini localhost:3000'deki uygulamaya iletir, uygulama yalnızca localhost'tan erişilen PostgreSQL'e bağlanır; alt şeritte cron pg_dump ile yedek alır, /yedek klasörüne yazar ve rclone ile uzak depoya kopyalar, geri yükleme uzak kopyadan yapılır|Production architecture: the user reaches the VPS on port 443 through DNS, Caddy or Nginx terminates HTTPS and forwards /api requests to the app on localhost:3000, which talks to a PostgreSQL reachable only from localhost; in the bottom lane cron takes a pg_dump backup, writes it to /yedek and copies it off-site with rclone, and restores come from the off-site copy"}
+Kullanıcı trafiği üst şeritte, yedek ve geri yükleme alt şeritte akar.
+:::
+
+Yedekleme ayrıntıları Bölüm 21'de. Komutlara geçmeden önce bir yedeğin tam yaşam döngüsünü izleyin.
+
+:::predict{id="yedek-ayni-disk"}
+Yedek betiği her gece çalışıyor ve dosyaları aynı VPS'teki `/yedek` klasörüne yazıyor. Sunucunun diski bozulursa ne olur? | The backup script runs every night and writes files to the `/yedek` folder on the same VPS. What happens if the server's disk fails?
+- [ ] Son gecenin yedeğinden geri dönülür, en fazla bir günlük veri kaybolur | You restore from last night's backup and lose at most a day of data
+- [x] Yedekler de veritabanıyla birlikte kaybolur | The backups are lost together with the database
+- [ ] Veritabanı otomatik olarak /yedek klasöründen kendini onarır | The database repairs itself from the /yedek folder automatically
+Açıklama: Aynı diskteki yedek, yanlışlıkla silinen bir tabloya karşı korur ama disk ya da sunucu kaybına karşı korumaz. Bu yüzden `rclone` ile başka bir sağlayıcıya kopya alınır (3-2-1 kuralı). Kopyanın gerçekten açılabildiği de düzenli bir geri yükleme provasıyla doğrulanır. | A backup on the same disk protects against an accidentally dropped table, but not against losing the disk or the server. That is why a copy goes to another provider with `rclone` (the 3-2-1 rule). Regular restore drills then verify that the copy can really be opened.
+:::
+
+:::animation{scene="backup-restore.scene.json"}
+cron'un tetiklediği `pg_dump`, sıkıştırma ve saklama süresi, sunucu dışına kopya, geri yükleme provası, disk arızası ve uzak kopyadan geri dönüş. Sonda RPO ve RTO kavramları da gösteriliyor.
+:::
+
 ## 16. Yöntem A — Statik Siteyi Nginx ile Yayınlamak
 
 :::code{lang="bash"}
@@ -421,6 +441,12 @@ jobs:
 
 GitHub deposunda **Settings → Secrets → Actions** altına `VPS_HOST` ve `VPS_SSH_KEY` (özel anahtar) ekleyin. Artık `main` dalına her gönderimde site otomatik güncellenir.
 
+Bu workflow'un sunucuda yaptığı işi aşama aşama düşünürsek: SSH bağlantısı, kodu çekmek, imajı derlemek, konteynerleri yenilemek ve sağlık kontrolü. Bir aşama düşerse ne olacağını aşağıdaki simülatörde deneyin.
+
+:::interactive{type="pipeline" stages="ssh-connect,git-pull,compose-build,compose-up,healthcheck" failureStage="compose-build" retries=1}
+"Pipeline'ı çalıştır" ile beş aşamanın sırayla yeşile döndüğünü izleyin. Sonra "Hata enjekte et" kutusunu işaretleyin; "Hata aşaması" compose-build seçili gelir. Tekrar çalıştırdığınızda derleme bir kez yeniden denenir, yine düşerse compose-up ve healthcheck "atlandı" kalır. Eski konteynerler değiştirilmediği için site yayında kalmaya devam eder. "Yeniden deneme" değerini 0'a çekip logdaki farkı görün. Son olarak hata aşamasını healthcheck yapın ve neden en riskli an olduğunu düşünün: o noktada yeni konteynerler çoktan ayağa kalkmıştır.
+:::
+
 ## 21. Yedekleme
 
 ### Veritabanı Yedeği Betiği
@@ -540,6 +566,10 @@ sudo ufw status
 sudo certbot renew --dry-run
 rsync -avz ./site/ magaza:/var/www/magaza/
 ```
+:::
+
+:::realworld{company="GitLab"}
+31 Ocak 2017'de GitLab.com'da yaşanan veritabanı olayı, yedeklemenin neden "alınan" değil "geri yüklenebilen" kopya demek olduğunu gösteren en bilinen örneklerden biridir. Şirket olayı kamuya açık bir postmortem ile ayrıntılı biçimde paylaştı. Replikasyon sorunuyla uğraşan bir mühendis, silme komutunu yanlışlıkla ikincil yerine birincil veritabanı sunucusunda çalıştırdı ve üretim verisinin büyük kısmı silindi. Asıl şaşırtıcı olan sonrasıydı. Ekip kâğıt üzerinde birden fazla yedekleme ve replikasyon yöntemine sahipti, ancak geri dönmeye çalıştığında bunların hiçbirinin güvenilir biçimde çalışmadığını gördü. Düzenli `pg_dump` yedekleri, araç ile sunucu sürümleri uyuşmadığı için sessizce başarısız oluyordu. Bu hataları bildirmesi gereken e-postalar da yerine ulaşmıyordu. Sonunda veri, birkaç saat önce başka bir amaçla alınmış bir disk görüntüsünden geri yüklendi ve aradaki yaklaşık altı saatlik veri kalıcı olarak kayboldu. GitLab'ın çıkardığı dersler bu dersteki maddelerle örtüşür: yedeğin başarıyla oluştuğunu izleyin, geri yüklemeyi düzenli olarak prova edin ve yedeği sunucudan bağımsız bir yerde tutun.
 :::
 
 :::quiz{src="quiz.json"}

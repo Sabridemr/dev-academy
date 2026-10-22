@@ -65,6 +65,12 @@ on:
 
 `schedule` saatleri **UTC** cinsindendir. İstanbul UTC+3 olduğu için `0 3 * * *` İstanbul saatiyle 06:00'dır.
 
+Tetikleyiciler ne kadar farklı olsa da hepsi aynı workflow dosyasını çalıştırır; değişen yalnızca bağlamdır (`github.event_name`, dal, secret erişimi). Aşağıdaki animasyon bu dersin ilerleyen bölümlerindeki üç fikri tek akışta birleştiriyor: tetikleyiciler, `needs` ile job sırası ve cache.
+
+:::animation{scene="triggers-cache.scene.json"}
+push, pull_request ve schedule aynı ci.yml'yi çalıştırır. Animasyonda sırasıyla cache ıskası ve kaydı, PR'da cache isabeti, fork PR'da secret'ların verilmemesi, restore-keys ile kısmi isabet ve `needs` nedeniyle atlanan build görülüyor.
+:::
+
 ## Job'lar arası bağımlılık
 
 Job'lar varsayılan olarak paralel çalışır. Sıra gerekiyorsa `needs` kullanılır:
@@ -447,8 +453,12 @@ E2E testi için Playwright örneği:
 
 ## Dene: başarısız test ve yeniden deneme
 
-:::interactive{type="pipeline" stages=6 failureStage=4 retries=1}
-Test aşamasını başarısız yap, yeniden deneme sayısını artır ve pipeline'ın toplam süresinin nasıl değiştiğini gözle.
+:::interactive{type="pipeline" stages="install,lint,unit-test,integration-test,e2e-test,build" failureStage="integration-test" retries=1}
+"Hata enjekte et" kutusunu işaretle; "Hata aşaması" integration-test seçili gelir. Pipeline'ı çalıştır ve logda testin bir kez yeniden denendiğini, yine düşünce e2e-test ile build'in "atlandı" kaldığını izle. Ardından "Yeniden deneme" değerini 3'e çıkar ve "Süre" göstergesinin nasıl uzadığına bak. Yeniden deneme flaky bir testi geçici olarak gizleyebilir ama gerçek bir hatayı düzeltmez, yalnızca kırmızı sonucu geciktirir.
+:::
+
+:::realworld{company="Google"}
+Google Testing Blog'da 2016'da yayımlanan "Flaky Tests at Google and How We Mitigate Them" yazısı, kararsız (flaky) testlerin büyük ölçekte nasıl bir sorun hâline geldiğini anlatır. Yazıya göre Google'ın sürekli entegrasyon sisteminde test çalıştırmalarının yaklaşık yüzde 1,5'i kararsız sonuç veriyordu. Testlerin yaklaşık yüzde 16'sında da bir düzeyde kararsızlık görülüyordu. Oran küçük görünse de binlerce testin çalıştığı bir sistemde bu, her gün çok sayıda yanlış alarm demektir. Geliştiriciler kırmızı sonuca güvenmemeye başlar ve gerçek hatalar gözden kaçar. Google'ın uyguladığı önlemler bu derste anlatılanlarla örtüşür. Başarısız testler otomatik olarak yeniden çalıştırılır ve sonuç kod değişmeden değişiyorsa test kararsız olarak işaretlenir. Kararsızlığı yüksek testler karantinaya alınıp kritik yoldan çıkarılır ve geliştiricilere hata kaydı açılır. Yazının vurguladığı ders şudur: yeniden deneme bir teşhis aracıdır, çözüm değildir. Asıl iş testi deterministik hâle getirmektir: sabit zaman, izole veri ve sırası belirli adımlar.
 :::
 
 :::callout{tone="info" title="İlgili dersler"}

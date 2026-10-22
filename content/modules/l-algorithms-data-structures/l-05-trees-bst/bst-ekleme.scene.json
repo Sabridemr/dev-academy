@@ -1,0 +1,683 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "l-05-bst-ekleme",
+  "title": {
+    "tr": "BST'de ekleme, arama ve dengesizlik",
+    "en": "BST insert, search and imbalance"
+  },
+  "summary": {
+    "tr": "Bir BST'ye 7'nin eklenmesi ve 13'ün aranmasıyla sağa/sola dallanma; sıralı eklemeyle ağacın listeye dönüşmesi.",
+    "en": "Branching left and right while inserting 7 and searching for 13 in a BST; the tree turning into a list under sorted inserts."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda kökü 8 olan bir ikili arama ağacı vardır: 8'in solunda 3, sağında 10; 3'ün çocukları 1 ve 6; 10'un sağ çocuğu 14. 7 eklenirken 8'de sola, 3'te sağa, 6'da sağa gidilir ve 7, 6'nın sağ çocuğu olarak belirir. 13 aranırken 8'den sağa, 10'dan sağa gidilir; 14'ün sol çocuğu olmadığı için 13 bulunamaz. Sağda boş bir ağaca 1, 2, 3, 4, 5 sırayla eklenir; her değer sağa gittiği için çapraz bir zincir oluşur ve yükseklik 4'e (n − 1) çıkar. Son adım, dengeli ağaçta yüksekliğin log n, dengesiz ağaçta n − 1 olduğunu karşılaştırır.",
+      "en": "On the left is a binary search tree rooted at 8: 3 on its left and 10 on its right; 3 has children 1 and 6; 10 has right child 14. Inserting 7 goes left at 8, right at 3, right at 6, and 7 appears as the right child of 6. Searching for 13 goes right at 8 and right at 10; 14 has no left child, so 13 is not found. On the right, 1, 2, 3, 4, 5 are inserted in order into an empty tree; each goes right, forming a diagonal chain of height 4 (n − 1). The last step contrasts a height of log n in a balanced tree with n − 1 in an unbalanced one."
+    }
+  },
+  "canvas": {
+    "width": 1000,
+    "height": 600
+  },
+  "nodes": [
+    {
+      "id": "n8",
+      "kind": "generic",
+      "label": "8",
+      "x": 300,
+      "y": 80,
+      "w": 84,
+      "h": 48
+    },
+    {
+      "id": "n3",
+      "kind": "generic",
+      "label": "3",
+      "x": 160,
+      "y": 200,
+      "w": 84,
+      "h": 48
+    },
+    {
+      "id": "n10",
+      "kind": "generic",
+      "label": "10",
+      "x": 440,
+      "y": 200,
+      "w": 84,
+      "h": 48
+    },
+    {
+      "id": "n1",
+      "kind": "generic",
+      "label": "1",
+      "x": 90,
+      "y": 330,
+      "w": 84,
+      "h": 48
+    },
+    {
+      "id": "n6",
+      "kind": "generic",
+      "label": "6",
+      "x": 230,
+      "y": 330,
+      "w": 84,
+      "h": 48
+    },
+    {
+      "id": "n14",
+      "kind": "generic",
+      "label": "14",
+      "x": 540,
+      "y": 330,
+      "w": 84,
+      "h": 48
+    },
+    {
+      "id": "n7",
+      "kind": "generic",
+      "label": "7",
+      "x": 300,
+      "y": 460,
+      "w": 84,
+      "h": 48
+    },
+    {
+      "id": "c1",
+      "kind": "generic",
+      "label": "1",
+      "x": 680,
+      "y": 80,
+      "w": 80,
+      "h": 46
+    },
+    {
+      "id": "c2",
+      "kind": "generic",
+      "label": "2",
+      "x": 745,
+      "y": 180,
+      "w": 80,
+      "h": 46
+    },
+    {
+      "id": "c3",
+      "kind": "generic",
+      "label": "3",
+      "x": 810,
+      "y": 280,
+      "w": 80,
+      "h": 46
+    },
+    {
+      "id": "c4",
+      "kind": "generic",
+      "label": "4",
+      "x": 875,
+      "y": 380,
+      "w": 80,
+      "h": 46
+    },
+    {
+      "id": "c5",
+      "kind": "generic",
+      "label": "5",
+      "x": 935,
+      "y": 480,
+      "w": 80,
+      "h": 46
+    }
+  ],
+  "edges": [
+    {
+      "id": "e_n8_n3",
+      "from": "n8",
+      "to": "n3",
+      "kind": "generic"
+    },
+    {
+      "id": "e_n8_n10",
+      "from": "n8",
+      "to": "n10",
+      "kind": "generic"
+    },
+    {
+      "id": "e_n3_n1",
+      "from": "n3",
+      "to": "n1",
+      "kind": "generic"
+    },
+    {
+      "id": "e_n3_n6",
+      "from": "n3",
+      "to": "n6",
+      "kind": "generic"
+    },
+    {
+      "id": "e_n10_n14",
+      "from": "n10",
+      "to": "n14",
+      "kind": "generic"
+    },
+    {
+      "id": "e_n6_n7",
+      "from": "n6",
+      "to": "n7",
+      "kind": "generic"
+    },
+    {
+      "id": "ce1",
+      "from": "c1",
+      "to": "c2",
+      "kind": "generic"
+    },
+    {
+      "id": "ce2",
+      "from": "c2",
+      "to": "c3",
+      "kind": "generic"
+    },
+    {
+      "id": "ce3",
+      "from": "c3",
+      "to": "c4",
+      "kind": "generic"
+    },
+    {
+      "id": "ce4",
+      "from": "c4",
+      "to": "c5",
+      "kind": "generic"
+    }
+  ],
+  "steps": [
+    {
+      "id": "intro",
+      "title": {
+        "tr": "Kural: solda küçük, sağda büyük",
+        "en": "Rule: smaller left, larger right"
+      },
+      "narration": {
+        "tr": "Solda altı düğümlü bir ikili arama ağacı (BST) var. Her düğüm için **sol alt ağaçtaki tüm değerler küçük, sağdakilerin hepsi büyüktür**. Bu kural, aramada her düğümde tek bir yön seçmemizi sağlar.",
+        "en": "On the left is a six-node binary search tree (BST). For every node **all values in the left subtree are smaller and all values in the right subtree are larger**. This rule lets a search pick a single direction at every node."
+      },
+      "durationMs": 3200,
+      "inherit": false,
+      "highlight": {
+        "nodes": [
+          "n8",
+          "n3",
+          "n10",
+          "n1",
+          "n6",
+          "n14"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "n7": {
+          "visible": false
+        },
+        "c1": {
+          "visible": false
+        },
+        "c2": {
+          "visible": false
+        },
+        "c3": {
+          "visible": false
+        },
+        "c4": {
+          "visible": false
+        },
+        "c5": {
+          "visible": false
+        }
+      },
+      "edgeStates": {
+        "e_n6_n7": {
+          "visible": false
+        },
+        "ce1": {
+          "visible": false
+        },
+        "ce2": {
+          "visible": false
+        },
+        "ce3": {
+          "visible": false
+        },
+        "ce4": {
+          "visible": false
+        }
+      },
+      "annotations": [
+        {
+          "id": "a-kural",
+          "x": 300,
+          "y": 560,
+          "text": {
+            "tr": "sol < düğüm < sağ",
+            "en": "left < node < right"
+          }
+        }
+      ]
+    },
+    {
+      "id": "ins1",
+      "title": {
+        "tr": "7 ekle: 8'de sola",
+        "en": "Insert 7: left at 8"
+      },
+      "narration": {
+        "tr": "7'yi eklemek için kökten başlarız. 7 < 8 olduğu için 7 kesinlikle sol alt ağaçtadır; sağdaki 10 ve 14'e bir daha bakmayız.",
+        "en": "To insert 7 we start at the root. Since 7 < 8 it must go into the left subtree; we never look at 10 and 14 again."
+      },
+      "durationMs": 2800,
+      "highlight": {
+        "nodes": [
+          "n8",
+          "n3"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "n8": {
+          "status": "active",
+          "badge": "7 < 8"
+        },
+        "n10": {
+          "status": "muted"
+        },
+        "n14": {
+          "status": "muted"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e_n8_n3",
+          "label": "7",
+          "shape": "diamond",
+          "durationMs": 900
+        }
+      ]
+    },
+    {
+      "id": "ins2",
+      "title": {
+        "tr": "3'te sağa",
+        "en": "Right at 3"
+      },
+      "narration": {
+        "tr": "7 > 3: sağa, 6'ya ineriz. 1 içeren sol alt ağaç da elenir. Her adımda ağacın bir dalını tamamen bırakıyoruz.",
+        "en": "7 > 3: go right, down to 6. The left subtree holding 1 is ruled out too. At each step we drop a whole branch of the tree."
+      },
+      "durationMs": 2800,
+      "highlight": {
+        "nodes": [
+          "n3",
+          "n6"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "n8": {
+          "status": "success",
+          "badge": ""
+        },
+        "n3": {
+          "status": "active",
+          "badge": "7 > 3"
+        },
+        "n1": {
+          "status": "muted"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e_n3_n6",
+          "label": "7",
+          "shape": "diamond",
+          "durationMs": 900
+        }
+      ]
+    },
+    {
+      "id": "ins3",
+      "title": {
+        "tr": "6'nın sağı boş: 7 buraya",
+        "en": "6 has no right child: 7 goes here"
+      },
+      "narration": {
+        "tr": "7 > 6 ve 6'nın sağ çocuğu yok. Boş yere ulaştık: 7 yeni yaprak olarak eklenir. Toplam 3 karşılaştırma, yani ağacın yüksekliği kadar: **O(h)**.",
+        "en": "7 > 6 and 6 has no right child. We reached an empty spot: 7 is added as a new leaf. Three comparisons in total, the height of the tree: **O(h)**."
+      },
+      "durationMs": 3000,
+      "highlight": {
+        "nodes": [
+          "n6",
+          "n7"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "n3": {
+          "status": "success",
+          "badge": ""
+        },
+        "n6": {
+          "status": "success",
+          "badge": "7 > 6"
+        },
+        "n7": {
+          "visible": true,
+          "status": "success"
+        }
+      },
+      "edgeStates": {
+        "e_n6_n7": {
+          "visible": true,
+          "status": "active"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e_n6_n7",
+          "label": "7",
+          "shape": "diamond",
+          "durationMs": 900
+        }
+      ]
+    },
+    {
+      "id": "ara",
+      "title": {
+        "tr": "13'ü ara: 8 → 10 → 14 → boş",
+        "en": "Search 13: 8 → 10 → 14 → empty"
+      },
+      "narration": {
+        "tr": "Arama aynı yolu izler. 13 > 8 sağa, 13 > 10 sağa, 13 < 14 sola... ama 14'ün sol çocuğu yok. Boş alt ağaca düştüğümüz için 13 ağaçta **yok**; bunu 3 karşılaştırmada, tüm düğümlere bakmadan kesin olarak söyleyebiliyoruz.",
+        "en": "Search follows the same path. 13 > 8 go right, 13 > 10 go right, 13 < 14 go left... but 14 has no left child. Having reached an empty subtree, 13 is **not** in the tree; we know this for certain after 3 comparisons, without visiting every node."
+      },
+      "durationMs": 3800,
+      "highlight": {
+        "nodes": [
+          "n8",
+          "n10",
+          "n14"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "n8": {
+          "status": "active",
+          "badge": "13 > 8"
+        },
+        "n3": {
+          "status": "muted"
+        },
+        "n1": {
+          "status": "muted"
+        },
+        "n6": {
+          "status": "muted",
+          "badge": ""
+        },
+        "n7": {
+          "status": "muted"
+        },
+        "n10": {
+          "status": "active",
+          "badge": "13 > 10"
+        },
+        "n14": {
+          "status": "warning",
+          "badge": "∅"
+        }
+      },
+      "edgeStates": {
+        "e_n6_n7": {
+          "status": "idle"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e_n8_n10",
+          "label": "13",
+          "shape": "diamond",
+          "durationMs": 900
+        },
+        {
+          "edge": "e_n10_n14",
+          "label": "13",
+          "shape": "diamond",
+          "startAt": 1000,
+          "durationMs": 900
+        }
+      ]
+    },
+    {
+      "id": "sirali",
+      "title": {
+        "tr": "Sıralı ekleme: 1, 2, 3",
+        "en": "Sorted inserts: 1, 2, 3"
+      },
+      "narration": {
+        "tr": "Şimdi sağda boş bir ağaca 1, 2, 3 değerlerini **sıralı** ekleyelim. Her yeni değer bir öncekinden büyük olduğu için hep sağa gider; ağaç sola hiç dallanmaz.",
+        "en": "Now insert 1, 2, 3 **in sorted order** into an empty tree on the right. Every new value is larger than the previous one, so it always goes right; the tree never branches left."
+      },
+      "durationMs": 3200,
+      "highlight": {
+        "nodes": [
+          "c1",
+          "c2",
+          "c3"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "n8": {
+          "status": "idle",
+          "badge": ""
+        },
+        "n10": {
+          "status": "idle",
+          "badge": ""
+        },
+        "n14": {
+          "status": "idle",
+          "badge": ""
+        },
+        "n3": {
+          "status": "idle"
+        },
+        "n1": {
+          "status": "idle"
+        },
+        "n6": {
+          "status": "idle"
+        },
+        "n7": {
+          "status": "idle"
+        },
+        "c1": {
+          "visible": true,
+          "status": "active"
+        },
+        "c2": {
+          "visible": true,
+          "status": "active"
+        },
+        "c3": {
+          "visible": true,
+          "status": "active"
+        }
+      },
+      "edgeStates": {
+        "ce1": {
+          "visible": true
+        },
+        "ce2": {
+          "visible": true
+        }
+      },
+      "packets": [
+        {
+          "edge": "ce1",
+          "label": "2",
+          "shape": "diamond",
+          "durationMs": 900
+        },
+        {
+          "edge": "ce2",
+          "label": "3",
+          "shape": "diamond",
+          "startAt": 900,
+          "durationMs": 900
+        }
+      ]
+    },
+    {
+      "id": "liste",
+      "title": {
+        "tr": "Ağaç listeye dönüştü",
+        "en": "The tree became a list"
+      },
+      "narration": {
+        "tr": "4 ve 5 de eklenince ağaç tek bir zincire dönüşür: 5 seviye, yükseklik n − 1 = 4. 5'i aramak artık 5 karşılaştırma sürer; bu bir bağlı listede doğrusal aramadan farksızdır: **O(n)**.",
+        "en": "After adding 4 and 5 the tree turns into a single chain: 5 levels, height n − 1 = 4. Searching for 5 now takes 5 comparisons, no better than a linear scan of a linked list: **O(n)**."
+      },
+      "durationMs": 3500,
+      "highlight": {
+        "nodes": [
+          "c1",
+          "c2",
+          "c3",
+          "c4",
+          "c5"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "c4": {
+          "visible": true,
+          "status": "warning"
+        },
+        "c5": {
+          "visible": true,
+          "status": "error",
+          "badge": "h = 4"
+        },
+        "c1": {
+          "status": "warning"
+        },
+        "c2": {
+          "status": "warning"
+        },
+        "c3": {
+          "status": "warning"
+        }
+      },
+      "edgeStates": {
+        "ce3": {
+          "visible": true
+        },
+        "ce4": {
+          "visible": true
+        }
+      },
+      "packets": [
+        {
+          "edge": "ce3",
+          "label": "4",
+          "shape": "diamond",
+          "durationMs": 900
+        },
+        {
+          "edge": "ce4",
+          "label": "5",
+          "shape": "diamond",
+          "startAt": 900,
+          "durationMs": 900
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a-liste",
+          "x": 800,
+          "y": 560,
+          "text": {
+            "tr": "dengesiz: arama O(n)",
+            "en": "unbalanced: search O(n)"
+          },
+          "tone": "danger"
+        }
+      ]
+    },
+    {
+      "id": "ozet",
+      "title": {
+        "tr": "Neden dengeli ağaçlar?",
+        "en": "Why balanced trees?"
+      },
+      "narration": {
+        "tr": "BST'de her işlem O(h) sürer. Dengeli bir ağaçta h ≈ log₂ n olduğu için bir milyon düğümde bile yaklaşık 20 adım yeter; dengesiz bir ağaçta h = n − 1 olabilir. AVL ve kırmızı-siyah ağaçlar her eklemeden sonra döndürmelerle yüksekliği O(log n) tutar.",
+        "en": "Every BST operation costs O(h). In a balanced tree h ≈ log₂ n, so even a million nodes need about 20 steps; in an unbalanced tree h can reach n − 1. AVL and red-black trees keep the height at O(log n) with rotations after each insert."
+      },
+      "durationMs": 3500,
+      "highlight": {
+        "nodes": [
+          "n8",
+          "n3",
+          "n10",
+          "n1",
+          "n6",
+          "n14",
+          "n7"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "n8": {
+          "status": "success"
+        },
+        "n3": {
+          "status": "success"
+        },
+        "n10": {
+          "status": "success"
+        },
+        "n1": {
+          "status": "success"
+        },
+        "n6": {
+          "status": "success"
+        },
+        "n14": {
+          "status": "success"
+        },
+        "n7": {
+          "status": "success"
+        }
+      },
+      "annotations": [
+        {
+          "id": "a-dengeli",
+          "x": 300,
+          "y": 560,
+          "text": {
+            "tr": "dengeli: h ≈ log₂ n",
+            "en": "balanced: h ≈ log₂ n"
+          },
+          "tone": "success"
+        }
+      ]
+    }
+  ],
+  "tags": [
+    "bst",
+    "agac"
+  ]
+}

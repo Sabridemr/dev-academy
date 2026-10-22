@@ -7,6 +7,7 @@
  * Beklenen yapı:
  *   content/
  *     paths.json                        → LearningPathManifest[]
+ *     concepts.json                     → Glossary (kavram sözlüğü)
  *     modules/<module-id>/module.json   → ModuleManifest
  *     modules/<module-id>/<lesson-id>/lesson.md
  *     modules/<module-id>/<lesson-id>/lesson.en.md   (opsiyonel)
@@ -14,18 +15,23 @@
  *     modules/<module-id>/<lesson-id>/quiz.json
  *     modules/<module-id>/<lesson-id>/*.svg
  *     modules/<module-id>/<lesson-id>/*.trace.py → *.trace.json   (pnpm content:traces)
+ *     modules/<module-id>/<lesson-id>/*.exercise.json             (pnpm content:exercises çözümü sınar)
  */
 import { createHash } from 'node:crypto';
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 import {
   INTERACTIVE_PARAMS,
+  TRACE_INTERACTIVES,
+  interactiveTraceSrc,
   LessonBlockSchema,
   LearningPathManifestSchema,
   RESOURCES_SOFT_MAX,
   QUIZ_QUESTION_RANGE,
   ModuleManifestSchema,
   QuizSchema,
+  ExerciseSchema,
+  type Exercise,
   type LearningPathManifest,
   type LessonDocument,
   type ModuleManifest,
@@ -39,6 +45,8 @@ import { readImageSize } from './image-size';
 import { validateScene } from '../scene/validate';
 import type { AnimationScene } from '../scene/schema';
 import { CURRICULUM } from '../content/curriculum';
+import type { LocalizedString } from '../i18n';
+import { GlossarySchema, buildConceptIndex, type Glossary } from '../content/glossary';
 
 export interface LoadedScene {
   /** Ders klasörüne göre dosya adı (ör. "scene.json") */
@@ -58,6 +66,8 @@ export interface LoadedLesson {
   images: Record<string, LoadedImage>;
   /** iz dosya adı (`x.trace.json`) → doğrulanmış kod izi */
   traces: Record<string, CodeTrace>;
+  /** alıştırma dosya adı (`x.exercise.json`) → doğrulanmış alıştırma (çözüm dahil) */
+  exercises: Record<string, Exercise>;
 }
 
 export interface LoadedImage {
@@ -90,7 +100,72 @@ export interface LoadedContent {
   root: string;
   paths: LearningPathManifest[];
   modules: LoadedModule[];
+  /** content/concepts.json; dosya yoksa ya da geçersizse null */
+  glossary: Glossary | null;
   issues: ContentIssue[];
+}
+
+export const GLOSSARY_FILE = 'concepts.json';
+
+/** content/concepts.json'u okuyup doğrular (seed ve doğrulayıcı kullanır) */
+export function loadGlossary(root = findContentRoot()): {
+  glossary: Glossary | null;
+  issues: ContentIssue[];
+} {
+  const file = join(root, GLOSSARY_FILE);
+  if (!existsSync(file)) {
+    return {
+      glossary: null,
+      issues: [
+        {
+          severity: 'warning',
+          file: GLOSSARY_FILE,
+          message: 'Kavram sözlüğü yok; kavramlar doğrulanmadı',
+        },
+      ],
+    };
+  }
+  let raw: unknown;
+  try {
+    raw = readJson(file);
+  } catch (err) {
+    return {
+      glossary: null,
+      issues: [
+        { severity: 'error', file: GLOSSARY_FILE, message: `JSON parse hatası: ${String(err)}` },
+      ],
+    };
+  }
+  const parsed = GlossarySchema.safeParse(raw);
+  if (!parsed.success) {
+    return {
+      glossary: null,
+      issues: [
+        {
+          severity: 'error',
+          file: GLOSSARY_FILE,
+          message: parsed.error.issues
+            .slice(0, 10)
+            .map((i) => `${i.path.join('.')}: ${i.message}`)
+            .join('; '),
+        },
+      ],
+    };
+  }
+  const glossary = parsed.data;
+  const issues: ContentIssue[] = [];
+  for (const [id, entry] of Object.entries(glossary)) {
+    for (const r of entry.related) {
+      if (r === id || !glossary[r]) {
+        issues.push({
+          severity: 'error',
+          file: GLOSSARY_FILE,
+          message: `'${id}'.related ${r === id ? 'kendisine' : `bilinmeyen kavrama`} işaret ediyor: ${r}`,
+        });
+      }
+    }
+  }
+  return { glossary, issues };
 }
 
 function readJson(file: string): unknown {
@@ -181,9 +256,21 @@ export function loadContent(root = findContentRoot()): LoadedContent {
         continue;
       }
       let doc: LessonDocument;
+      const mdSource = readFileSync(mdFile, 'utf8');
+      // `:::ad{...}` görünümlü ama ayrıştırıcının tanımadığı satırlar (ör. öznitelikte `}`): directive
+      // sessizce düz metne dönüşür; burada hata olarak raporlanır
+      for (const [i, line] of mdSource.split('\n').entries()) {
+        if (!/^:::[a-z][a-z0-9-]*\{/.test(line)) continue;
+        if (/^:::[a-z][a-z0-9-]*\{[^}]*\}\s*$/.test(line)) continue;
+        issues.push({
+          severity: 'error',
+          file: rel(mdFile),
+          message: `satır ${i + 1}: directive açılış satırı ayrıştırılamadı (öznitelik değerinde "}" olamaz): ${line.slice(0, 60)}`,
+        });
+      }
       try {
         const enFile = join(lessonDir, 'lesson.en.md');
-        doc = parseLessonMarkdown(readFileSync(mdFile, 'utf8'), {
+        doc = parseLessonMarkdown(mdSource, {
           sourcePath: rel(mdFile),
           englishMarkdown: existsSync(enFile) ? readFileSync(enFile, 'utf8') : undefined,
         });
@@ -379,6 +466,73 @@ export function loadContent(root = findContentRoot()): LoadedContent {
         traces[f] = parsed.data;
       }
 
+      // Kodlama alıştırmaları: yalnızca yapı doğrulanır; çözümün testleri geçtiğini
+      // `pnpm content:exercises` (python3) sınar
+      const exercises: Record<string, Exercise> = {};
+      for (const f of files.filter((x) => x.endsWith('.exercise.json'))) {
+        const file = join(lessonDir, f);
+        let raw: unknown;
+        try {
+          raw = readJson(file);
+        } catch (err) {
+          issues.push({
+            severity: 'error',
+            file: rel(file),
+            message: `JSON parse hatası: ${String(err)}`,
+          });
+          continue;
+        }
+        const parsed = ExerciseSchema.safeParse(raw);
+        if (!parsed.success) {
+          issues.push({
+            severity: 'error',
+            file: rel(file),
+            message: parsed.error.issues
+              .slice(0, 5)
+              .map((i) => `${i.path.join('.')}: ${i.message}`)
+              .join('; '),
+          });
+          continue;
+        }
+        const ex = parsed.data;
+        if (ex.starter.trim() === ex.solution.trim()) {
+          issues.push({
+            severity: 'error',
+            file: rel(file),
+            message: 'starter çözümle aynı: alıştırmada tamamlanacak bir şey kalmıyor',
+          });
+        }
+        if (!/^\s*assert\b/m.test(ex.tests)) {
+          issues.push({
+            severity: 'warning',
+            file: rel(file),
+            message: 'tests içinde assert yok; testler başarısızlıkta hata fırlatmalı',
+          });
+        }
+        const hasEn = (v: LocalizedString) => typeof v !== 'string' && Boolean(v.en);
+        const untranslated: string[] = [];
+        if (!hasEn(ex.title)) untranslated.push('title');
+        if (!hasEn(ex.prompt)) untranslated.push('prompt');
+        if (!ex.hints.every(hasEn)) untranslated.push('hints');
+        if (untranslated.length) {
+          issues.push({
+            severity: 'warning',
+            file: rel(file),
+            message: `İngilizce metin eksik: ${untranslated.join(', ')}`,
+          });
+        }
+        exercises[f] = ex;
+      }
+      for (const f of Object.keys(exercises)) {
+        if (!doc.blocks.some((b) => b.type === 'exercise' && b.src === f)) {
+          issues.push({
+            severity: 'warning',
+            file: rel(join(lessonDir, f)),
+            message: 'Alıştırma derste kullanılmıyor (:::exercise{src=...} yok)',
+          });
+        }
+      }
+
       // İçerik kalitesi kontrolleri (uyarı; --strict ile hata)
       const rawMd = readFileSync(mdFile, 'utf8');
       if (
@@ -450,6 +604,13 @@ export function loadContent(root = findContentRoot()): LoadedContent {
             message: `':::resources' ${b.items.length} öğe içeriyor (en fazla ${RESOURCES_SOFT_MAX} önerilir); en değerli kaynakları seçin`,
           });
         }
+        if (b.type === 'exercise' && !exercises[b.src]) {
+          issues.push({
+            severity: 'error',
+            file: rel(mdFile),
+            message: `Alıştırma dosyası bulunamadı ya da geçersiz: ${b.src}`,
+          });
+        }
         if (b.type === 'trace' && !traces[b.src]) {
           issues.push({
             severity: 'error',
@@ -499,6 +660,19 @@ export function loadContent(root = findContentRoot()): LoadedContent {
               message: `':::interactive{type=${b.interactive}}' bilinmeyen parametre: ${unknown.join(', ')} (geçerli: ${allowed.join(', ')})`,
             });
           }
+          // İz kullanan simülatör (predict-run): iz :::trace ile aynı yoldan çözülür, seed bloğa gömer
+          if (TRACE_INTERACTIVES.includes(b.interactive)) {
+            const src = interactiveTraceSrc(b);
+            if (!src || !traces[src]) {
+              issues.push({
+                severity: 'error',
+                file: rel(mdFile),
+                message: src
+                  ? `':::interactive{type=${b.interactive}}' iz dosyası bulunamadı ya da geçersiz: ${src}`
+                  : `':::interactive{type=${b.interactive}}' src parametresi (ör. src="ornek.trace.json") zorunlu`,
+              });
+            }
+          }
         }
       }
       if (
@@ -513,7 +687,17 @@ export function loadContent(root = findContentRoot()): LoadedContent {
         });
       }
 
-      lessons.push({ dir: lessonDir, doc, scenes, quiz, quizFile, svgs, images, traces });
+      lessons.push({
+        dir: lessonDir,
+        doc,
+        scenes,
+        quiz,
+        quizFile,
+        svgs,
+        images,
+        traces,
+        exercises,
+      });
     }
 
     lessons.sort((a, b) => a.doc.meta.order - b.doc.meta.order);
@@ -548,6 +732,24 @@ export function loadContent(root = findContentRoot()): LoadedContent {
     }
   }
 
+  // Alıştırma id'leri tüm içerikte benzersiz olmalı (çözüm uç noktası ve ilerleme kaydı id ile çalışır)
+  const exerciseOwners = new Map<string, string>();
+  for (const m of modules) {
+    for (const l of m.lessons) {
+      for (const [f, ex] of Object.entries(l.exercises)) {
+        const file = rel(join(l.dir, f));
+        const owner = exerciseOwners.get(ex.id);
+        if (owner) {
+          issues.push({
+            severity: 'error',
+            file,
+            message: `Alıştırma id'si tekrar ediyor: ${ex.id} (ilk: ${owner})`,
+          });
+        } else exerciseOwners.set(ex.id, file);
+      }
+    }
+  }
+
   // Öğrenme yolu öğeleri ("modül" ya da "modül/ders") var olan içeriğe işaret etmeli
   const moduleLessons = new Map(
     modules.map((m) => [m.manifest.id, new Set(m.lessons.map((l) => l.doc.meta.id))]),
@@ -571,7 +773,41 @@ export function loadContent(root = findContentRoot()): LoadedContent {
     }
   }
 
-  return { root, paths, modules, issues };
+  // Kavram sözlüğü: derslerde/quizlerde geçen her kavram tanımlı olmalı
+  const { glossary, issues: glossaryIssues } = loadGlossary(root);
+  issues.push(...glossaryIssues);
+  if (glossary) {
+    const lessons = modules.flatMap((m) => m.lessons);
+    const index = buildConceptIndex(
+      lessons.map((l) => ({ id: l.doc.meta.id, concepts: l.doc.meta.concepts })),
+      lessons.flatMap((l) =>
+        l.quiz ? [{ lessonId: l.doc.meta.id, questions: l.quiz.questions }] : [],
+      ),
+    );
+    const lessonDir = new Map(lessons.map((l) => [l.doc.meta.id, l.dir]));
+    for (const [concept, usage] of index) {
+      if (!glossary[concept]) {
+        // Dosya olarak sözlük gösterilir: seed, hatalı ders klasörlerini atlar; eksik tanım dersi düşürmemeli
+        const dir = lessonDir.get(usage.lessons[0]);
+        issues.push({
+          severity: 'error',
+          file: GLOSSARY_FILE,
+          message: `Kavram sözlükte yok: ${concept}${dir ? ` (${rel(join(dir, 'lesson.md'))})` : ''}`,
+        });
+      }
+    }
+    for (const id of Object.keys(glossary)) {
+      if (!index.has(id)) {
+        issues.push({
+          severity: 'warning',
+          file: GLOSSARY_FILE,
+          message: `Kavram hiçbir derste ya da quizde geçmiyor: ${id}`,
+        });
+      }
+    }
+  }
+
+  return { root, paths, modules, glossary, issues };
 }
 
 /** Müfredat kapsama raporu: hangi dersler henüz yazılmamış */

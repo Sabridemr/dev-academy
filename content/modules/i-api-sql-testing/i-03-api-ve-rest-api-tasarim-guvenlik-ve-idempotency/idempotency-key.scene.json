@@ -1,0 +1,205 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "i-03-idempotency-key",
+  "title": { "tr": "Idempotency-Key: Aynı Ödeme İki Kez Çekilmez", "en": "Idempotency-Key: The Same Payment Is Not Charged Twice" },
+  "summary": {
+    "tr": "Yanıtı yolda kaybolan bir ödeme isteğinin aynı anahtarla tekrar gönderilmesi; sunucunun kaydedilmiş yanıtı döndürüp ödeme sağlayıcısını ikinci kez çağırmaması, eşzamanlı tekrar ve farklı gövdeli tekrarın reddedilmesi.",
+    "en": "A payment request whose response is lost being resent with the same key; the server returning the stored response without calling the payment provider again, and rejecting a concurrent retry and a retry with a different body."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda mobil istemci, ortada ödeme API'si, API'nin üstünde idempotency anahtar deposu, altında ödemeler tablosu, sağda ödeme sağlayıcı bulunur. İstemci Idempotency-Key başlığıyla POST /payments gönderir. API anahtarı depoda 'işleniyor' olarak ayırır, sağlayıcıdan 420 TL çeker, ödemeyi tabloya yazar ve yanıtı anahtarla birlikte saklar. Yanıt istemciye giderken kaybolur. İstemci aynı anahtarla yeniden dener; API depodan kayıtlı yanıtı bulur ve sağlayıcıyı çağırmadan aynı 201 yanıtını döner, çekim sayacı 1'de kalır. Sonraki adımlarda eşzamanlı ikinci istek 409, aynı anahtarla farklı tutar 422 alır ve anahtarın süresi dolunca depodan silindiği gösterilir.",
+      "en": "A mobile client is on the left, the payment API in the middle, an idempotency key store above the API, a payments table below it and the payment provider on the right. The client sends POST /payments with an Idempotency-Key header. The API reserves the key in the store as 'in progress', charges 420 TL at the provider, writes the payment to the table and stores the response with the key. The response is lost on its way to the client. The client retries with the same key; the API finds the stored response and returns the same 201 without calling the provider, and the charge counter stays at 1. Later steps show a concurrent second request getting 409, the same key with a different amount getting 422, and the key being removed from the store when it expires."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "client", "kind": "mobile", "label": { "tr": "Mobil uygulama", "en": "Mobile app" }, "sublabel": { "tr": "Öde düğmesi", "en": "Pay button" }, "x": 110, "y": 310, "w": 150, "h": 80 },
+    { "id": "api", "kind": "server", "label": { "tr": "Ödeme API'si", "en": "Payment API" }, "sublabel": "POST /payments", "x": 450, "y": 310, "w": 170, "h": 80 },
+    { "id": "store", "kind": "cache", "label": { "tr": "Anahtar deposu", "en": "Key store" }, "sublabel": { "tr": "anahtar → yanıt · TTL 24 sa", "en": "key → response · TTL 24 h" }, "x": 450, "y": 110, "w": 200, "h": 70 },
+    { "id": "db", "kind": "db", "label": { "tr": "Ödemeler", "en": "Payments" }, "sublabel": "payments", "x": 450, "y": 510, "w": 160, "h": 70 },
+    { "id": "psp", "kind": "service", "label": { "tr": "Ödeme sağlayıcı", "en": "Payment provider" }, "sublabel": { "tr": "kartı çeker", "en": "charges the card" }, "x": 840, "y": 310, "w": 170, "h": 80 }
+  ],
+  "edges": [
+    { "id": "c-api", "from": "client", "to": "api", "kind": "request", "label": "HTTPS" },
+    { "id": "api-store", "from": "api", "to": "store", "kind": "control", "label": { "tr": "anahtar", "en": "key" } },
+    { "id": "api-db", "from": "api", "to": "db", "kind": "data", "label": "INSERT" },
+    { "id": "api-psp", "from": "api", "to": "psp", "kind": "request", "label": { "tr": "çekim", "en": "charge" } }
+  ],
+  "steps": [
+    {
+      "id": "send",
+      "title": { "tr": "Anahtarla istek", "en": "Request with a key" },
+      "narration": {
+        "tr": "Kullanıcı 'Öde'ye bastı. Uygulama bu ödeme girişimi için bir kez rastgele bir anahtar (UUID) üretir ve POST /payments isteğine Idempotency-Key: 81a6… başlığıyla ekler. Ödeme sağlayıcının çekim sayacı şu an 0.",
+        "en": "The user tapped 'Pay'. The app generates a random key (UUID) once for this payment attempt and adds it to POST /payments as Idempotency-Key: 81a6…. The provider's charge counter is at 0."
+      },
+      "durationMs": 3500,
+      "inherit": false,
+      "highlight": { "nodes": ["client", "api"], "edges": ["c-api"] },
+      "nodeStates": {
+        "client": { "status": "active", "badge": "81a6…" },
+        "api": { "status": "active" },
+        "store": { "status": "idle" },
+        "db": { "status": "idle" },
+        "psp": { "status": "idle", "counter": 0 }
+      },
+      "edgeStates": { "c-api": { "status": "active" } },
+      "packets": [
+        { "edge": "c-api", "shape": "envelope", "label": "POST · 420 TL · key 81a6…", "durationMs": 1200 }
+      ]
+    },
+    {
+      "id": "reserve",
+      "title": { "tr": "Anahtar ayrılır", "en": "The key is reserved" },
+      "narration": {
+        "tr": "API önce depoya sorar: bu anahtarı daha önce gördüm mü? Görmemiş. Anahtarı atomik bir 'yoksa yaz' işlemiyle 'işleniyor' durumunda kaydeder; aynı anda gelen bir kopya artık bu kaydı görecektir.",
+        "en": "The API first asks the store: have I seen this key before? It has not. It records the key in the 'in progress' state with an atomic 'write if absent' operation; a copy arriving at the same moment will now see this record."
+      },
+      "durationMs": 3500,
+      "highlight": { "nodes": ["api", "store"], "edges": ["api-store"] },
+      "nodeStates": { "client": { "status": "busy" }, "api": { "status": "busy" }, "store": { "status": "active", "badge": "81a6… ⏳" } },
+      "edgeStates": { "c-api": { "status": "idle" }, "api-store": { "status": "active" } },
+      "packets": [
+        { "edge": "api-store", "shape": "square", "label": "SET 81a6… NX", "durationMs": 900 },
+        { "edge": "api-store", "shape": "square", "direction": "backward", "label": { "tr": "yeni anahtar", "en": "new key" }, "color": "success", "startAt": 1100, "durationMs": 900 }
+      ]
+    },
+    {
+      "id": "charge",
+      "title": { "tr": "Çekim ve kayıt", "en": "Charge and record" },
+      "narration": {
+        "tr": "API ödeme sağlayıcısından 420 TL çeker; sağlayıcıya da aynı anahtarı iletir, böylece o katmanda da tekrar korunur. Çekim başarılı olunca ödeme pay_123 kimliğiyle tabloya yazılır. Sayaç 1.",
+        "en": "The API charges 420 TL at the payment provider, passing the same key along so that layer is protected against repeats too. Once the charge succeeds the payment is written to the table as pay_123. The counter is 1."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["api", "psp", "db"], "edges": ["api-psp", "api-db"] },
+      "nodeStates": { "psp": { "status": "success", "counter": 1 }, "db": { "status": "active", "badge": "pay_123" } },
+      "edgeStates": { "api-store": { "status": "idle" }, "api-psp": { "status": "active" }, "api-db": { "status": "active" } },
+      "packets": [
+        { "edge": "api-psp", "shape": "envelope", "label": { "tr": "420 TL çek", "en": "charge 420 TL" }, "durationMs": 1000 },
+        { "edge": "api-psp", "shape": "envelope", "direction": "backward", "label": { "tr": "onaylandı", "en": "approved" }, "color": "success", "startAt": 1200, "durationMs": 1000 },
+        { "edge": "api-db", "shape": "square", "label": "INSERT pay_123", "startAt": 2500, "durationMs": 900 }
+      ]
+    },
+    {
+      "id": "lost",
+      "title": { "tr": "Yanıt yolda kaybolur", "en": "The response is lost" },
+      "narration": {
+        "tr": "API yanıtı (201 · pay_123) anahtarın karşısına kaydeder ve istemciye gönderir. Ama mobil ağ tam bu anda kopar: para çekildi, istemci ise yalnızca bir zaman aşımı görür ve ödemenin olup olmadığını bilemez.",
+        "en": "The API saves the response (201 · pay_123) against the key and sends it to the client. But the mobile network drops at exactly that moment: the money has been charged, while the client only sees a timeout and cannot know whether the payment happened."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["api", "store", "client"], "edges": ["api-store", "c-api"] },
+      "nodeStates": {
+        "client": { "status": "warning", "badge": "timeout" },
+        "api": { "status": "active" },
+        "store": { "status": "success", "badge": "201 · pay_123" },
+        "db": { "status": "idle" },
+        "psp": { "status": "idle" }
+      },
+      "edgeStates": { "api-psp": { "status": "idle" }, "api-db": { "status": "idle" }, "api-store": { "status": "active" }, "c-api": { "status": "error" } },
+      "packets": [
+        { "edge": "api-store", "shape": "square", "label": { "tr": "yanıtı sakla", "en": "store response" }, "durationMs": 900 },
+        { "edge": "c-api", "shape": "envelope", "direction": "backward", "label": "201 · pay_123", "color": "danger", "startAt": 1200, "durationMs": 1600 }
+      ],
+      "annotations": [
+        { "id": "lost-note", "x": 280, "y": 230, "text": { "tr": "bağlantı koptu: yanıt ulaşmadı", "en": "connection dropped: response never arrived" }, "tone": "danger" }
+      ]
+    },
+    {
+      "id": "retry",
+      "title": { "tr": "Aynı anahtarla tekrar", "en": "Retry with the same key" },
+      "narration": {
+        "tr": "İstemci bir süre bekleyip isteği aynı Idempotency-Key ile yeniden gönderir. API depoda anahtarı ve kayıtlı yanıtı bulur; sağlayıcıyı çağırmadan, tabloya yazmadan aynı 201 · pay_123 yanıtını döner. Çekim sayacı 1'de kalır: kullanıcıdan iki kez para alınmadı.",
+        "en": "The client waits a while and resends the request with the same Idempotency-Key. The API finds the key and the stored response; without calling the provider or writing to the table it returns the same 201 · pay_123. The charge counter stays at 1: the user was not charged twice."
+      },
+      "durationMs": 5000,
+      "highlight": { "nodes": ["client", "api", "store"], "edges": ["c-api", "api-store"] },
+      "nodeStates": {
+        "client": { "status": "success", "badge": "201" },
+        "store": { "status": "active", "badge": "HIT" },
+        "psp": { "status": "muted", "counter": 1 },
+        "db": { "status": "muted" }
+      },
+      "edgeStates": { "c-api": { "status": "active" }, "api-psp": { "status": "muted" }, "api-db": { "status": "muted" } },
+      "packets": [
+        { "edge": "c-api", "shape": "envelope", "label": { "tr": "POST · aynı key 81a6…", "en": "POST · same key 81a6…" }, "durationMs": 1000 },
+        { "edge": "api-store", "shape": "square", "label": "GET 81a6…", "startAt": 1100, "durationMs": 800 },
+        { "edge": "api-store", "shape": "square", "direction": "backward", "label": "201 · pay_123", "color": "success", "startAt": 2000, "durationMs": 800 },
+        { "edge": "c-api", "shape": "envelope", "direction": "backward", "label": "201 · pay_123", "color": "success", "startAt": 3000, "durationMs": 1000 }
+      ],
+      "annotations": [
+        { "id": "no-charge", "x": 840, "y": 210, "text": { "tr": "çağrılmadı: hâlâ 1 çekim", "en": "not called: still 1 charge" }, "tone": "success", "target": "psp" }
+      ]
+    },
+    {
+      "id": "concurrent",
+      "title": { "tr": "Çift tıklama: 409", "en": "Double tap: 409" },
+      "narration": {
+        "tr": "Başka bir ödemede kullanıcı düğmeye iki kez hızlıca bastı ve iki istek aynı yeni anahtarla neredeyse aynı anda geldi. İlki anahtarı 'işleniyor' olarak ayırdı; ikincisi bu kaydı görür ve 409 Conflict alır. Böylece iki istek aynı anda sağlayıcıya gidemez.",
+        "en": "In another payment the user tapped the button twice quickly and two requests with the same new key arrived almost together. The first reserved the key as 'in progress'; the second sees that record and gets 409 Conflict. So two requests cannot reach the provider at the same time."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["client", "api", "store"], "edges": ["c-api", "api-store"] },
+      "nodeStates": {
+        "client": { "status": "warning", "badge": "409" },
+        "api": { "status": "busy" },
+        "store": { "status": "busy", "badge": "c3f0… ⏳" },
+        "psp": { "status": "active" }
+      },
+      "edgeStates": { "api-psp": { "status": "active" } },
+      "packets": [
+        { "edge": "c-api", "shape": "envelope", "label": "key c3f0… (1)", "durationMs": 900 },
+        { "edge": "c-api", "shape": "envelope", "label": "key c3f0… (2)", "startAt": 250, "durationMs": 900 },
+        { "edge": "api-store", "shape": "square", "label": "SET NX", "startAt": 1200, "durationMs": 700 },
+        { "edge": "api-psp", "shape": "envelope", "label": { "tr": "yalnızca (1)", "en": "only (1)" }, "startAt": 2000, "durationMs": 900 },
+        { "edge": "c-api", "shape": "envelope", "direction": "backward", "label": "409 (2)", "color": "warning", "startAt": 2200, "durationMs": 900 }
+      ]
+    },
+    {
+      "id": "mismatch",
+      "title": { "tr": "Aynı anahtar, farklı gövde: 422", "en": "Same key, different body: 422" },
+      "narration": {
+        "tr": "Hatalı bir istemci 81a6… anahtarını bu kez 500 TL'lik bir istekte yeniden kullanıyor. API kayıtlı isteğin gövdesiyle karşılaştırır, uyuşmadığını görür ve 422 döner. Anahtar bir işlemi temsil eder; farklı bir işlem yeni bir anahtar ister.",
+        "en": "A buggy client reuses key 81a6… this time on a 500 TL request. The API compares it with the stored request body, sees that they differ and returns 422. A key stands for one operation; a different operation needs a new key."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["client", "api", "store"], "edges": ["c-api", "api-store"] },
+      "nodeStates": {
+        "client": { "status": "error", "badge": "422" },
+        "api": { "status": "warning" },
+        "store": { "status": "active", "badge": "420 ≠ 500" },
+        "psp": { "status": "muted" }
+      },
+      "edgeStates": { "api-psp": { "status": "muted" } },
+      "packets": [
+        { "edge": "c-api", "shape": "envelope", "label": "POST · 500 TL · key 81a6…", "durationMs": 1000 },
+        { "edge": "api-store", "shape": "square", "label": { "tr": "gövde karşılaştır", "en": "compare body" }, "startAt": 1100, "durationMs": 800 },
+        { "edge": "c-api", "shape": "envelope", "direction": "backward", "label": "422", "color": "danger", "startAt": 2200, "durationMs": 1000 }
+      ]
+    },
+    {
+      "id": "expire",
+      "title": { "tr": "Anahtarın ömrü", "en": "The key's lifetime" },
+      "narration": {
+        "tr": "Kayıtlar sonsuza kadar tutulmaz; bu örnekte 24 saat sonra depodan silinir. Yeniden denemeler genellikle saniyeler ya da dakikalar içinde olduğu için bu süre yeterlidir. Idempotency anahtarı bu yüzden 'bu girişim' içindir; yeni bir ödeme her zaman yeni bir anahtarla başlar.",
+        "en": "Records are not kept forever; in this example they are removed from the store after 24 hours. Since retries usually happen within seconds or minutes this is enough. That is why an idempotency key belongs to 'this attempt'; a new payment always starts with a new key."
+      },
+      "durationMs": 4000,
+      "inherit": false,
+      "highlight": { "nodes": ["store"], "edges": [] },
+      "nodeStates": {
+        "client": { "status": "idle" },
+        "api": { "status": "idle" },
+        "store": { "status": "muted", "badge": "TTL 24h ✗" },
+        "db": { "status": "success", "badge": "pay_123" },
+        "psp": { "status": "idle", "counter": 1 }
+      },
+      "annotations": [
+        { "id": "summary", "x": 760, "y": 470, "text": { "tr": "sonuç: 1 ödeme, 1 çekim, 2 istek", "en": "result: 1 payment, 1 charge, 2 requests" }, "tone": "success" }
+      ]
+    }
+  ]
+}

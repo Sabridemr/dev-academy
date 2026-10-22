@@ -1,0 +1,185 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "quality-gates-to-metrics",
+  "title": { "tr": "Kalite Kapıları ve Canlı İzleme", "en": "Quality Gates and Live Monitoring" },
+  "summary": {
+    "tr": "PR lint, test kapsamı ve güvenlik taramasından geçmeden kalite kapısı açılmaz; birleştirilen sürüm canlıya çıkınca Prometheus metrikleri kazır, Grafana gösterir, eşik aşılınca alarm ekibe ulaşır.",
+    "en": "The quality gate stays shut until the PR passes lint, test coverage and a security scan; once the merged version is live, Prometheus scrapes its metrics, Grafana displays them and an alert reaches the team when a threshold is crossed."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Üst sırada soldan sağa PR, lint, test ve kapsam, güvenlik taraması ve kalite kapısı dizilidir; kapı sağ alttaki canlı API'ye bağlanır. Alt sırada Prometheus canlı API'den metrik çeker, Grafana Prometheus'u sorgular, Alertmanager Slack'e bildirim gönderir. Adımlarda kapsam eşiğin altında kalınca kapı kapanır, ardından güvenlik taraması yüksek önemde açık bulur, iki sorun da düzeltilince kapı açılır ve sürüm canlıya çıkar; ardından metrikler kazınır, panelde görünür, hata oranı yükselince alarm tetiklenir ve geri alma yapılır.",
+      "en": "The top row runs left to right through the PR, lint, test and coverage, the security scan and the quality gate; the gate connects to the live API at the bottom right. In the bottom row Prometheus pulls metrics from the live API, Grafana queries Prometheus and Alertmanager notifies Slack. Over the steps the gate closes when coverage is below the threshold, then the security scan finds a high-severity vulnerability, the gate opens once both are fixed and the release goes live; then metrics are scraped, shown on a panel, an alert fires as the error rate rises and a rollback follows."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "pr", "kind": "user", "label": "PR #42", "x": 90, "y": 150, "w": 130, "h": 64 },
+    { "id": "lint", "kind": "worker", "label": "lint", "sublabel": "ESLint", "x": 250, "y": 150, "w": 120, "h": 64 },
+    { "id": "test", "kind": "worker", "label": "test", "sublabel": { "tr": "kapsam ≥ %80", "en": "coverage ≥ 80%" }, "x": 410, "y": 150, "w": 140, "h": 64 },
+    { "id": "sec", "kind": "worker", "label": { "tr": "güvenlik", "en": "security" }, "sublabel": "npm audit · CodeQL", "x": 580, "y": 150, "w": 160, "h": 64 },
+    { "id": "gate", "kind": "gateway", "label": { "tr": "Kalite kapısı", "en": "Quality gate" }, "sublabel": "required checks", "x": 790, "y": 150, "w": 170, "h": 70, "color": "primary" },
+    { "id": "prod", "kind": "server", "label": { "tr": "Canlı API", "en": "Live API" }, "sublabel": "/metrics", "x": 870, "y": 430, "w": 170, "h": 70 },
+    { "id": "prom", "kind": "service", "label": "Prometheus", "sublabel": { "tr": "15 sn'de bir kazır", "en": "scrapes every 15 s" }, "x": 600, "y": 430, "w": 180, "h": 70 },
+    { "id": "grafana", "kind": "service", "label": "Grafana", "sublabel": { "tr": "panel", "en": "dashboard" }, "x": 340, "y": 430, "w": 160, "h": 64 },
+    { "id": "alert", "kind": "queue", "label": "Alertmanager", "sublabel": "→ Slack #alerts", "x": 340, "y": 550, "w": 190, "h": 56 }
+  ],
+  "edges": [
+    { "id": "pr-lint", "from": "pr", "to": "lint", "kind": "control" },
+    { "id": "lint-test", "from": "lint", "to": "test", "kind": "control" },
+    { "id": "test-sec", "from": "test", "to": "sec", "kind": "control" },
+    { "id": "sec-gate", "from": "sec", "to": "gate", "kind": "control" },
+    { "id": "gate-prod", "from": "gate", "to": "prod", "kind": "control", "label": "merge + deploy" },
+    { "id": "prom-prod", "from": "prom", "to": "prod", "kind": "request", "label": "scrape" },
+    { "id": "grafana-prom", "from": "grafana", "to": "prom", "kind": "request", "label": "PromQL" },
+    { "id": "prom-alert", "from": "prom", "to": "alert", "kind": "event", "curvature": 0.3 }
+  ],
+  "steps": [
+    {
+      "id": "lint-pass",
+      "title": { "tr": "PR açıldı: lint geçer", "en": "PR opened: lint passes" },
+      "narration": {
+        "tr": "Her PR aynı kontrol zincirinden geçer. İlk halka lint'tir: stil ve yaygın hata kalıpları saniyeler içinde denetlenir ve geçer. Branch protection'da zorunlu olarak işaretlenen kontrollerin tamamı yeşil olmadıkça kalite kapısı kapalı kalır.",
+        "en": "Every PR goes through the same chain of checks. The first link is lint: style and common bug patterns are checked within seconds and it passes. The quality gate stays shut until every check marked as required in branch protection is green."
+      },
+      "durationMs": 3600,
+      "inherit": false,
+      "highlight": { "nodes": ["pr", "lint", "gate"], "edges": ["pr-lint"] },
+      "nodeStates": {
+        "pr": { "status": "active" },
+        "lint": { "status": "success", "badge": "✓" },
+        "test": { "status": "idle" },
+        "sec": { "status": "idle" },
+        "gate": { "status": "warning", "badge": "kapalı" },
+        "prod": { "status": "muted" },
+        "prom": { "status": "muted" },
+        "grafana": { "status": "muted" },
+        "alert": { "status": "muted" }
+      },
+      "edgeStates": { "pr-lint": { "status": "active" }, "gate-prod": { "status": "muted" }, "prom-prod": { "status": "muted" }, "grafana-prom": { "status": "muted" }, "prom-alert": { "status": "muted" } },
+      "packets": [{ "edge": "pr-lint", "shape": "dot", "durationMs": 900 }]
+    },
+    {
+      "id": "coverage-fail",
+      "title": { "tr": "Kapsam eşiğin altında", "en": "Coverage below the threshold" },
+      "narration": {
+        "tr": "Testlerin hepsi geçer ama yeni eklenen kodun önemli kısmı hiç test edilmemiştir. Kapsam %74'te kalır. Test aracında tanımlı %80 eşiği, job'u başarısız sayar. Sayı tek başına kalite ölçüsü değildir, ama düşüşü bir uyarı işaretidir.",
+        "en": "All tests pass, but much of the newly added code is never exercised. Coverage stays at 74%. The 80% threshold configured in the test tool marks the job as failed. The number alone is not a measure of quality, but a drop is a warning sign."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["test", "gate"], "edges": ["lint-test"] },
+      "nodeStates": { "pr": { "status": "idle" }, "test": { "status": "error", "badge": "%74 < %80" }, "gate": { "status": "error", "badge": "kapalı" } },
+      "edgeStates": { "pr-lint": { "status": "idle" }, "lint-test": { "status": "active" } },
+      "packets": [{ "edge": "lint-test", "shape": "dot", "durationMs": 900 }],
+      "annotations": [{ "id": "threshold", "x": 410, "y": 60, "text": "coverageThreshold: { lines: 80 }", "target": "test", "tone": "danger" }]
+    },
+    {
+      "id": "sec-fail",
+      "title": { "tr": "Testler eklendi, tarama açık buldu", "en": "Tests added, the scan found a vulnerability" },
+      "narration": {
+        "tr": "Geliştirici eksik testleri yazar ve kapsam %83'e çıkar. Bu kez güvenlik aşaması durdurur: bağımlılıklardan birinde yüksek önem dereceli bilinen bir açık vardır. npm audit --audit-level=high kapıyı yine kapalı tutar.",
+        "en": "The developer writes the missing tests and coverage rises to 83%. This time the security stage stops things: one of the dependencies has a known high-severity vulnerability. npm audit --audit-level=high keeps the gate shut."
+      },
+      "durationMs": 4200,
+      "highlight": { "nodes": ["test", "sec"], "edges": ["test-sec"] },
+      "nodeStates": { "test": { "status": "success", "badge": "%83 ✓" }, "sec": { "status": "error", "badge": "1 high" } },
+      "edgeStates": { "lint-test": { "status": "idle" }, "test-sec": { "status": "active" } },
+      "packets": [{ "edge": "test-sec", "shape": "dot", "durationMs": 900 }]
+    },
+    {
+      "id": "gate-open",
+      "title": { "tr": "Kapı açılır, sürüm canlıda", "en": "The gate opens, the release is live" },
+      "narration": {
+        "tr": "Dependabot'un açtığı güncelleme PR'ı açığı kapatır, tarama yeşile döner. Tüm zorunlu kontroller geçtiği için kapı açılır: PR birleştirilir, aynı pipeline imajı üretip canlıya çıkarır. Kapı insanların dikkatine değil, kurallara dayanır.",
+        "en": "The update PR opened by Dependabot closes the vulnerability and the scan turns green. With every required check passing, the gate opens: the PR is merged and the same pipeline builds the image and ships it. The gate relies on rules, not on people remembering."
+      },
+      "durationMs": 4200,
+      "highlight": { "nodes": ["sec", "gate", "prod"], "edges": ["sec-gate", "gate-prod"] },
+      "nodeStates": { "sec": { "status": "success", "badge": "0 high" }, "gate": { "status": "success", "badge": "açık" }, "prod": { "status": "success", "badge": "v2.3.0" } },
+      "edgeStates": { "test-sec": { "status": "idle" }, "sec-gate": { "status": "active" }, "gate-prod": { "status": "active" } },
+      "packets": [
+        { "edge": "sec-gate", "shape": "dot", "durationMs": 800 },
+        { "edge": "gate-prod", "shape": "square", "label": "v2.3.0", "color": "success", "startAt": 800, "durationMs": 1300 }
+      ]
+    },
+    {
+      "id": "scrape",
+      "title": { "tr": "Prometheus metrikleri kazır", "en": "Prometheus scrapes the metrics" },
+      "narration": {
+        "tr": "Deploy bittiğinde iş bitmez. Uygulama /metrics uç noktasında istek sayısı, hata sayısı ve yanıt süresi gibi sayaçlar yayınlar. Prometheus bu uç noktayı düzenli aralıklarla çeker (pull) ve değerleri zaman serisi olarak saklar.",
+        "en": "The work is not over when the deploy finishes. The application publishes counters such as request count, error count and response time on its /metrics endpoint. Prometheus pulls this endpoint at regular intervals and stores the values as time series."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["prom", "prod"], "edges": ["prom-prod"] },
+      "nodeStates": {
+        "pr": { "status": "muted" },
+        "lint": { "status": "muted" },
+        "test": { "status": "muted" },
+        "sec": { "status": "muted" },
+        "gate": { "status": "muted" },
+        "prom": { "status": "active", "counter": 1 },
+        "prod": { "status": "success" }
+      },
+      "edgeStates": { "sec-gate": { "status": "muted" }, "gate-prod": { "status": "muted" }, "prom-prod": { "status": "active" } },
+      "packets": [
+        { "edge": "prom-prod", "shape": "dot", "label": "GET /metrics", "durationMs": 800, "repeat": 2, "repeatGapMs": 600 },
+        { "edge": "prom-prod", "shape": "square", "direction": "backward", "startAt": 800, "durationMs": 800, "repeat": 2, "repeatGapMs": 600 }
+      ]
+    },
+    {
+      "id": "dashboard",
+      "title": { "tr": "Grafana paneli", "en": "The Grafana dashboard" },
+      "narration": {
+        "tr": "Grafana, Prometheus'a PromQL sorguları gönderir: saniyedeki istek, 5xx oranı, p95 yanıt süresi. Panellere sürüm etiketi de eklenir. Böylece bir eğri değiştiğinde hangi deploy'dan sonra değiştiği tek bakışta görülür.",
+        "en": "Grafana sends PromQL queries to Prometheus: requests per second, 5xx ratio, p95 latency. Release markers are added to the panels too. When a curve changes, you can see at a glance which deploy it followed."
+      },
+      "durationMs": 3800,
+      "highlight": { "nodes": ["grafana", "prom"], "edges": ["grafana-prom"] },
+      "nodeStates": { "grafana": { "status": "active", "badge": "5xx %0,2" }, "prom": { "status": "active" } },
+      "edgeStates": { "prom-prod": { "status": "idle" }, "grafana-prom": { "status": "active" } },
+      "packets": [
+        { "edge": "grafana-prom", "shape": "dot", "label": "rate(…[5m])", "durationMs": 800 },
+        { "edge": "grafana-prom", "shape": "square", "direction": "backward", "startAt": 800, "durationMs": 800 }
+      ]
+    },
+    {
+      "id": "spike",
+      "title": { "tr": "Hata oranı yükselir", "en": "The error rate rises" },
+      "narration": {
+        "tr": "Yeni sürümdeki bir hata, belirli bir uç noktada 5xx yanıtlarını artırır. Testler bu yolu kapsamıyordu: kalite kapıları riski azaltır ama sıfırlamaz. Alarm kuralının koşulu (5 dakika boyunca %2 üzeri) sağlanmaya başlar.",
+        "en": "A bug in the new release increases 5xx responses on one endpoint. The tests did not cover that path: quality gates reduce risk but do not remove it. The alert rule's condition (above 2% for 5 minutes) starts to hold."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["prod", "grafana"], "edges": ["prom-prod", "grafana-prom"] },
+      "nodeStates": { "prod": { "status": "warning", "badge": "5xx ↑" }, "grafana": { "status": "warning", "badge": "5xx %3,8" }, "prom": { "status": "warning", "badge": "pending" } },
+      "edgeStates": { "prom-prod": { "status": "active" }, "grafana-prom": { "status": "active" } },
+      "packets": [
+        { "edge": "prom-prod", "shape": "dot", "durationMs": 700 },
+        { "edge": "prom-prod", "shape": "square", "color": "danger", "direction": "backward", "startAt": 700, "durationMs": 800 }
+      ]
+    },
+    {
+      "id": "alert",
+      "title": { "tr": "Alarm ekibe ulaşır, geri alınır", "en": "The alert reaches the team, a rollback follows" },
+      "narration": {
+        "tr": "Koşul süre boyunca devam ettiği için alarm tetiklenir ve Alertmanager Slack kanalına bildirim gönderir. Ekip paneldeki sürüm işaretinden sorunun v2.3.0 ile başladığını görür ve önceki SHA'ya geri döner. Hata oranı normale iner, eksik test sonraki PR'ın kalite kapısına eklenir.",
+        "en": "The condition holds for the whole period, so the alert fires and Alertmanager notifies the Slack channel. From the release marker on the panel the team sees that the problem started with v2.3.0 and rolls back to the previous SHA. The error rate returns to normal and the missing test is added to the next PR's quality gate."
+      },
+      "durationMs": 4600,
+      "highlight": { "nodes": ["alert", "prom", "prod"], "edges": ["prom-alert"] },
+      "nodeStates": {
+        "alert": { "status": "error", "badge": "FIRING" },
+        "prom": { "status": "error", "badge": "firing" },
+        "prod": { "status": "success", "badge": "v2.2.4 (rollback)" },
+        "grafana": { "status": "success", "badge": "5xx %0,2" }
+      },
+      "edgeStates": { "prom-alert": { "status": "active" }, "prom-prod": { "status": "idle" } },
+      "packets": [{ "edge": "prom-alert", "shape": "envelope", "label": "HighErrorRate", "color": "danger", "durationMs": 1300 }],
+      "annotations": [{ "id": "loop", "x": 600, "y": 560, "text": { "tr": "geri bildirim → yeni kalite kuralı", "en": "feedback → new quality rule" }, "tone": "success" }]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["quality-gate", "coverage", "security-scan", "prometheus", "grafana"]
+}

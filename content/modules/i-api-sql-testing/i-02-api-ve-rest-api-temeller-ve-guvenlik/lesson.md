@@ -292,6 +292,25 @@ HTTP durum kodları, API isteğinin sonucunu standardize eder.
 401 kimliğini kanıtlamamışsın demek, 403 kim olduğunu biliyorum ama yetkin yok demek.
 :::
 
+Bu 4xx kodlarının çoğu, isteğin handler'a varmadan önce geçtiği kontrol zincirinde doğar. Her kontrol bir soruyu sorar; cevap "hayır" ise istek orada kendi koduyla geri döner ve sonraki katmanlar hiç çalışmaz.
+
+:::diagram{src="diagram.svg" alt="Bir isteğin sırayla geçtiği kontroller: tarayıcıda CORS, gateway'de kimlik ve kota, serviste yetki, doğrulama ve handler; başarısız olunca sırasıyla tarayıcı engeli, 401, 429, 403, 400 ya da 422, 404 ya da 409 döner, başarılı yolun sonunda 2xx vardır|The checks a request passes in order: CORS in the browser, identity and quota at the gateway, permission, validation and the handler in the service; on failure they return a browser block, 401, 429, 403, 400 or 422, and 404 or 409 respectively, and the successful path ends in 2xx"}
+Ucuz kontroller önde: kimliği kanıtlanmamış ya da kotasını aşmış istek arka uca hiç ulaşmaz.
+:::
+
+:::predict{id="musteri-admin-istegi"}
+Geçerli bir token'la giriş yapmış, rolü `customer` olan bir kullanıcı `PATCH /api/admin/products/12` çağırıyor. Hangi yanıtı alır? | A logged-in user with a valid token and the `customer` role calls `PATCH /api/admin/products/12`. Which response does the user get?
+- [ ] 401 Unauthorized, çünkü yönetici değil | 401 Unauthorized, because the user is not an admin
+- [x] 403 Forbidden: kimlik doğrulandı ama rol yetmiyor | 403 Forbidden: identity is verified but the role is not enough
+- [ ] 429 Too Many Requests | 429 Too Many Requests
+- [ ] 404 Not Found, çünkü yönetici uç noktaları gizlidir | 404 Not Found, because admin endpoints are hidden
+Açıklama: Token geçerli olduğu için kimlik doğrulama (authentication) başarılıdır; 401 burada yanlıştır. Sorun yetkidedir (authorization) ve doğru kod 403'tür. Bazı API'ler kaynağın varlığını sızdırmamak için 404 de döndürür, ama bu tasarım tercihidir; varsayılan cevap 403'tür. | Authentication succeeds because the token is valid, so 401 is wrong here. The problem is permission (authorization) and the right code is 403. Some APIs return 404 to avoid revealing that a resource exists, but that is a design choice; the default answer is 403.
+:::
+
+:::animation{scene="auth-and-rate-limit.scene.json"}
+Token'sız istek 401, token'lı istek 200, yetkisiz rol 403, kotayı aşan istemci 429.
+:::
+
 ## Request, response ve payload
 
 Bir API iletişimi iki bölümden oluşur:
@@ -422,6 +441,12 @@ header.payload.signature
 :::
 
 JWT şifrelenmiş olmak zorunda değildir; çoğu JWT sadece imzalanır. Bu nedenle gizli veri JWT payload’ına konmamalıdır.
+
+Bunu kendin görmek için aşağıdaki inceleyicide bir token'ı çöz ve gövdesini değiştir.
+
+:::interactive{type="jwt-inspector" secret="devacademy-demo-secret" token=""}
+İnceleyicinin ürettiği örnek token'ın başlık ve gövdesinin base64url çözümüyle düz JSON olarak okunabildiğine dikkat et: içerik gizli değildir. Gövdedeki `role` değerini `user`'dan `admin`'e çevir ve imza durumunun **geçersiz** olduğunu izle; gateway'in sahte bir rolü bu sayede reddettiğini düşün. Sonra sırrı değiştirmeden "Yeniden imzala" düğmesine bas: geçerli imzayı ancak sırrı bilen taraf üretebilir. Son olarak "Süresini doldur" ile imza geçerli olsa bile token'ın reddedildiğini, yani API'nin 401 döneceği durumu gör.
+:::
 
 ### OAuth 2.0
 
@@ -565,7 +590,10 @@ Gateway şu sorumlulukları üstlenebilir:
 
 AWS API Gateway, Kong ve Apigee bu amaçla kullanılan yaygın çözümlerdendir.
 
-## API test nedir?
+API testi, Postman ve mock API'ler modülün API testi dersinde ayrıntılı işleniyor. Aşağıdaki kutu, ilk kez bir API'yi elle test edecekler için kısa bir başlangıç rehberidir.
+
+:::callout{tone="info" title="Derinleşme"}
+**API test nedir?**
 
 API testinde kullanıcı arayüzünden bağımsız şekilde endpoint’lerin doğru çalışıp çalışmadığını kontrol edersin.
 
@@ -581,11 +609,9 @@ Bir API testinde şunları doğrularsın:
 
 Örnek test senaryosu:
 
-:::code{lang="http"}
 ```http
 POST /api/orders
 ```
-:::
 
 - Geçerli token + yeterli stok → `201 Created`
 - Token yok → `401 Unauthorized`
@@ -596,7 +622,7 @@ POST /api/orders
 
 API testi, özellikle ödeme, sipariş, stok ve kullanıcı yetkileri gibi kritik alanlarda arayüz testinden daha güvenilir temel sağlar.
 
-## Postman nedir?
+**Postman nedir?**
 
 **Postman**, API istekleri göndermek, cevapları incelemek, test yazmak, dokümantasyon hazırlamak ve koleksiyonlar oluşturmak için kullanılan popüler bir API istemcisidir.
 
@@ -609,22 +635,19 @@ Postman ile:
 - Farklı ortamlar arasında geçiş yapabilirsin.
 - İstek koleksiyonlarını ekip ile paylaşabilirsin.
 
-### Postman örneği
+**Postman örneği**
 
 Bir ürün endpoint’ini test etmek:
 
-:::code{lang="http"}
 ```http
 GET {{baseUrl}}/api/products/12
 Authorization: Bearer {{accessToken}}
 ```
-:::
 
 Burada `{{baseUrl}}` ve `{{accessToken}}` Postman environment variable olabilir.
 
 Test sekmesinde örnek kontrol:
 
-:::code{lang="javascript"}
 ```javascript
 pm.test("Status code 200 olmalı", function () {
   pm.response.to.have.status(200);
@@ -635,17 +658,15 @@ pm.test("Ürün adı dönmeli", function () {
   pm.expect(response.name).to.exist;
 });
 ```
-:::
 
 Bu sayede her istek attığında Postman otomatik doğrulama yapar.
 
-## Postman collection ve environment
+**Postman collection ve environment**
 
 **Collection**, ilgili API isteklerinin birlikte gruplanmış hâlidir.
 
 Örnek koleksiyon yapısı:
 
-:::code{lang="text"}
 ```text
 Wholesale E-commerce API
 ├── Authentication
@@ -664,38 +685,32 @@ Wholesale E-commerce API
     ├── Manage Stock
     └── Manage Prices
 ```
-:::
 
 **Environment variables** ise ortama göre değişen değerleri saklar:
 
-:::code{lang="text"}
 ```text
 baseUrl
 accessToken
 adminToken
 apiKey
 ```
-:::
 
 Örneğin:
 
-:::code{lang="text"}
 ```text
 Development: http://localhost:3000
 Staging: https://staging-api.magaza.com
 Production: https://api.magaza.com
 ```
-:::
 
 Böylece aynı isteği değiştirmeden farklı sunucularda test edebilirsin.
 
-## Mock API nedir?
+**Mock API nedir?**
 
 **Mock API**, gerçek backend henüz hazır değilken onun davranışını taklit eden sahte API’dir.
 
 Örneğin frontend geliştirirken gerçek ürün servisi bitmediyse mock API şu cevabı dönebilir:
 
-:::code{lang="json"}
 ```json
 [
   {
@@ -712,9 +727,13 @@ Böylece aynı isteği değiştirmeden farklı sunucularda test edebilirsin.
   }
 ]
 ```
-:::
 
 Böylece tasarım, ürün listeleme, sepet ve kullanıcı akışları backend beklenmeden geliştirilebilir. Ancak canlıya çıkmadan önce mock yerine gerçek API ile entegrasyon mutlaka test edilmelidir.
+:::
+
+:::realworld{company="GitHub"}
+GitHub'ın herkese açık REST API'si, bu dersteki kimlik ve kota kavramlarını belgelerinde açıkça gösterir. İstemci kimliğini `Authorization: Bearer <token>` başlığıyla taşır; kişisel erişim token'ları ve GitHub App token'ları kapsam (scope) ya da izinlerle sınırlandırılır, böylece token'ın neye erişebileceği kimlikten ayrı olarak belirlenir. Kota, kimliğe göre değişir: kimliği doğrulanmamış istekler IP başına saatte 60 ile sınırlıyken, kimliği doğrulanmış kullanıcılar saatte 5.000 isteğe kadar çıkabilir. Her yanıt `x-ratelimit-limit`, `x-ratelimit-remaining` ve `x-ratelimit-reset` başlıklarını taşır; istemci kalan hakkını bunlardan okur. Limit aşıldığında API 403 ya da 429 döner ve belgeler, `retry-after` başlığı varsa o süre kadar beklemeyi, yoksa sıfırlanma zamanına kadar istek atmamayı önerir. GitHub ayrıca bazı durumlarda, gizli bir deponun varlığını sızdırmamak için yetkisiz isteğe 403 yerine 404 döndüğünü belgelerinde belirtir. Bu da yetki hatasının bazen bilerek "bulunamadı" gibi gösterildiğinin gerçek bir örneğidir.
+:::
 
 :::quiz{src="quiz.json"}
 :::

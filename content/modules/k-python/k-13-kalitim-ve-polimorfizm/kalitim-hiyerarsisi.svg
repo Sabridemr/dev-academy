@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 430" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Kalıtım hiyerarşisi ve nitelik arama zinciri</title>
+  <desc id="desc">En üstte object, altında Hayvan sınıfı (__init__, tanit, ses), en altta Hayvan'dan türeyen Kopek ve Kedi sınıfları; ikisi de ses metodunu ezer. Sağda Kopek('Karabaş').tanit() çağrısının arama yolu: nesnenin __dict__'inde yok, Kopek'te yok, Hayvan'da bulunur; tanit içindeki self.ses() ise yeniden nesnenin sınıfından başlar ve Kopek.ses bulunur.</desc>
+  <defs>
+    <marker id="ok-up" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-fg, #0f172a)"/>
+    </marker>
+    <marker id="ok-s" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+  </defs>
+
+  <!-- Hiyerarşi -->
+  <rect x="190" y="20" width="160" height="44" rx="10" fill="var(--da-surface, #f8fafc)" stroke="var(--da-border, #cbd5e1)" stroke-width="1.5"/>
+  <text x="270" y="47" text-anchor="middle" font-size="14" fill="var(--da-muted, #64748b)">object</text>
+
+  <rect x="150" y="120" width="240" height="110" rx="12" fill="var(--da-primary, #6366f1)" fill-opacity="0.12" stroke="var(--da-primary, #6366f1)" stroke-width="2"/>
+  <text x="270" y="146" text-anchor="middle" font-size="16" font-weight="600" fill="var(--da-primary, #6366f1)">Hayvan</text>
+  <g font-size="13" fill="var(--da-fg, #0f172a)">
+    <text x="166" y="172">__init__(self, ad)</text>
+    <text x="166" y="194">tanit(self) → self.ses()</text>
+    <text x="166" y="216">ses(self) → "..."</text>
+  </g>
+
+  <rect x="30" y="300" width="200" height="80" rx="12" fill="var(--da-surface, #f8fafc)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5"/>
+  <text x="130" y="328" text-anchor="middle" font-size="15" font-weight="600" fill="var(--da-fg, #0f172a)">Kopek(Hayvan)</text>
+  <text x="130" y="354" text-anchor="middle" font-size="13" fill="var(--da-fg, #0f172a)">ses(self) → "Hav"</text>
+  <text x="130" y="372" text-anchor="middle" font-size="11" fill="var(--da-accent, #f59e0b)">ezer (override)</text>
+
+  <rect x="310" y="300" width="200" height="80" rx="12" fill="var(--da-surface, #f8fafc)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5"/>
+  <text x="410" y="328" text-anchor="middle" font-size="15" font-weight="600" fill="var(--da-fg, #0f172a)">Kedi(Hayvan)</text>
+  <text x="410" y="354" text-anchor="middle" font-size="13" fill="var(--da-fg, #0f172a)">ses(self) → "Miyav"</text>
+  <text x="410" y="372" text-anchor="middle" font-size="11" fill="var(--da-accent, #f59e0b)">ezer (override)</text>
+
+  <g stroke="var(--da-fg, #0f172a)" stroke-width="1.6" fill="none" marker-end="url(#ok-up)">
+    <path d="M 130 300 L 220 232"/>
+    <path d="M 410 300 L 320 232"/>
+    <path d="M 270 120 L 270 66"/>
+  </g>
+  <text x="120" y="270" font-size="12" fill="var(--da-muted, #64748b)">türer</text>
+  <text x="380" y="270" font-size="12" fill="var(--da-muted, #64748b)">türer</text>
+
+  <!-- Arama yolu -->
+  <line x1="560" y1="20" x2="560" y2="410" stroke="var(--da-border, #cbd5e1)" stroke-dasharray="6 6"/>
+  <text x="590" y="44" font-size="14" font-weight="600" fill="var(--da-fg, #0f172a)">Kopek("Karabaş").tanit()</text>
+
+  <g font-size="13">
+    <rect x="590" y="64" width="270" height="36" rx="8" fill="var(--da-surface, #f8fafc)" stroke="var(--da-border, #cbd5e1)"/>
+    <text x="604" y="87" fill="var(--da-fg, #0f172a)">1. nesnenin __dict__</text>
+    <text x="846" y="87" text-anchor="end" fill="var(--da-danger, #ef4444)">yok</text>
+
+    <rect x="590" y="112" width="270" height="36" rx="8" fill="var(--da-surface, #f8fafc)" stroke="var(--da-border, #cbd5e1)"/>
+    <text x="604" y="135" fill="var(--da-fg, #0f172a)">2. Kopek</text>
+    <text x="846" y="135" text-anchor="end" fill="var(--da-danger, #ef4444)">yok</text>
+
+    <rect x="590" y="160" width="270" height="36" rx="8" fill="var(--da-success, #10b981)" fill-opacity="0.15" stroke="var(--da-success, #10b981)"/>
+    <text x="604" y="183" fill="var(--da-fg, #0f172a)">3. Hayvan → tanit</text>
+    <text x="846" y="183" text-anchor="end" fill="var(--da-success, #10b981)">bulundu</text>
+  </g>
+  <g stroke="var(--da-muted, #64748b)" stroke-width="1.4" fill="none" marker-end="url(#ok-s)">
+    <path d="M 725 100 L 725 110"/>
+    <path d="M 725 148 L 725 158"/>
+  </g>
+
+  <text x="590" y="236" font-size="13" fill="var(--da-muted, #64748b)">tanit içinde self.ses() → arama yeniden</text>
+  <text x="590" y="254" font-size="13" fill="var(--da-muted, #64748b)">nesnenin sınıfından başlar:</text>
+  <g font-size="13">
+    <rect x="590" y="270" width="270" height="36" rx="8" fill="var(--da-success, #10b981)" fill-opacity="0.15" stroke="var(--da-success, #10b981)"/>
+    <text x="604" y="293" fill="var(--da-fg, #0f172a)">Kopek → ses</text>
+    <text x="846" y="293" text-anchor="end" fill="var(--da-success, #10b981)">"Hav"</text>
+  </g>
+  <text x="590" y="340" font-size="13" fill="var(--da-fg, #0f172a)">Sonuç: "Ben Karabaş, Hav diyorum"</text>
+  <text x="590" y="372" font-size="12" fill="var(--da-muted, #64748b)">Bulunamazsa zincir object'e kadar</text>
+  <text x="590" y="390" font-size="12" fill="var(--da-muted, #64748b)">gider, sonra AttributeError.</text>
+</svg>

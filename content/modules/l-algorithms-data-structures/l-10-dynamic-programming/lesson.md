@@ -37,6 +37,21 @@ Solda saf özyinelemenin çağrı ağacı: aynı renkli düğümler aynı alt pr
 
 Çözüm, her `fib(k)` sonucunu ilk hesaplandığında bir sözlüğe yazmaktır. Bu tekniğe **memoization** (not alma) denir ve yukarıdan aşağıya (top-down) DP olarak da bilinir: özyinelemeli yapıyı aynen korursun, yalnızca fonksiyonun başına "bunu daha önce çözdüm mü?" kontrolünü, sonuna da "sonucu kaydet" adımını eklersin. Artık her `k` değeri için gövde en fazla bir kez çalışır; toplam süre O(n), ek bellek de memo tablosu ve çağrı yığını için O(n) olur.
 
+Aşağıdaki sahne, saf özyinelemenin çağrı ağacıyla memoization'lı hesabı aynı tuval üzerinde karşılaştırıyor. Önce
+bir tahminde bulun.
+
+:::predict{id="fib-memo-cagri-sayisi"}
+Saf özyinelemede `fib(5)` için fonksiyon 15 kez çağrılır. Memoization ile toplam kaç çağrı yapılır? | Plain recursion calls the function 15 times for `fib(5)`. How many calls are made with memoization?
+- [ ] 15, çünkü memo yalnızca bellek kullanımını değiştirir | 15, because the memo only changes memory use
+- [x] 9 | 9
+- [ ] 6, her alt problem için bir çağrı | 6, one call per subproblem
+Açıklama: fib(5), fib(4), fib(3), fib(2), fib(1) ve fib(0) birer kez hesaplanır; fib(3) ikinci çocuğu için bir kez daha fib(1)'i çağırır. Ayrıca fib(2) ve fib(3) ikinci kez istendiğinde fonksiyon yine çağrılır ama memo'dan hemen döner. Toplam 9 çağrı, ama yalnızca 6 alt problem hesaplanır. | fib(5), fib(4), fib(3), fib(2), fib(1) and fib(0) are each computed once; fib(3) calls fib(1) once more for its second child. When fib(2) and fib(3) are requested a second time the function is still called but returns from the memo at once. That makes 9 calls, while only 6 subproblems are computed.
+:::
+
+:::animation{scene="fib-memo-agaci.scene.json"}
+Soluk düğümler, memo sayesinde hiç yapılmayan çağrılardır.
+:::
+
 Aşağıdaki izde `fib(5)` çağrısını satır satır izle. Çağrı yığınının önce `fib(1)`e kadar derinleştiğine, sonra geri dönerken `not_defteri` sözlüğünün dolduğuna ve `fib(3)` ile `fib(2)` ikinci kez istendiğinde fonksiyonun ilk `if` satırında hemen döndüğüne dikkat et.
 
 :::trace{src="fib-memo.trace.json" title="Memoization ile Fibonacci|Fibonacci with memoization"}
@@ -115,6 +130,10 @@ print(lcs_memo("ABCBDAB", "BDCABA"))   # 4
 :::
 
 Aynı kalıbın küçük bir çeşitlemesi, bir metni diğerine dönüştürmek için gereken en az ekleme, silme ve değiştirme sayısını veren **düzenleme mesafesi**dir (Levenshtein mesafesi). Yazım denetleyicileri "bunu mu demek istediniz?" önerisini, biyoinformatik araçları DNA dizilerini hizalamayı bu tablolarla yapar. Yapay zekâ alanında da benzer DP tabloları karşına çıkar: konuşma tanımada kullanılan bazı hizalama algoritmaları ve dil modellerinin çıktısını puanlayan bazı metrikler aynı satır satır doldurma mantığına dayanır.
+
+:::interactive{type="dp-table" problem="knapsack" size=4}
+Dersteki sırt çantası örneği tabloda hazır: eşyalar ağırlık:değer olarak 1:15, 3:20 ve 4:30, kapasite 4. "Adım" ile tabloyu hücre hücre doldur (tablo odaktayken → ve ← tuşları da çalışır). Her adımda yazılan hücre, okunan hücreler ve max'ı kazanan kaynak ayrı renklerle vurgulanır; okunan hücrelerdeki küçük oklar değerin hangi yönden geldiğini gösterir ve "Bu adım" satırı formülü gerçek sayılarla yazar. "Sona git" ile tabloyu tamamladığında çözüm yolu vurgulanır ve "Geri izleme (çözüm)" kutusu seçilen eşyaları listeler: açgözlü seçimin 30'una karşı 35. Ardından "Problem" menüsünden Fibonacci'yi, en uzun ortak alt diziyi (ABCBDAB / BDCABA) ve madeni para bozdurmayı dene; LCS'de iki dizgiyi, madeni parada para listesini ve tutarı değiştir. 1, 3, 4 paralarıyla 6 tutarında DP'nin neden açgözlü 4 + 1 + 1 yerine 3 + 3'ü bulduğunu tabloda izle.
+:::
 
 :::realworld{company="Git"}
 `git diff` ve klasik Unix `diff` aracı, iki dosya arasındaki farkı satırlar üzerinde bir ortak alt dizi problemi olarak çözer: ortak alt dizide kalan satırlar "değişmedi", dışında kalanlar "eklendi" ya da "silindi" olarak gösterilir. Git'in varsayılan algoritması Myers'ın fark algoritmasıdır; düz O(m · n) tablo yerine, farkın küçük olduğu yaygın durumda çok daha hızlı çalışan ve en kısa düzenleme betiğini bulan bir yaklaşımdır. `git diff --patience` ve `--histogram` seçenekleri aynı probleme farklı sezgisel yollarla yaklaşır. Kod incelemesinde her gün gördüğün yeşil ve kırmızı satırların arkasında, bu derste öğrendiğin tablo mantığının optimize edilmiş bir hâli çalışır.

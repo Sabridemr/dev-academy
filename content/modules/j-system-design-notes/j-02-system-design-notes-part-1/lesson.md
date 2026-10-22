@@ -78,6 +78,12 @@ Sayılar olmadan "ölçeklenebilir" kelimesi boş bir sıfattır. Arka-zarf hesa
 Kapasite tahminini kendiniz yapın: yukarıdaki örnek değerler yüklü. Önce sonuç kartlarındaki okuma/yazma QPS'in elle hesapladığımız 2.300 ve 230 ile örtüştüğünü doğrulayın. Sonra "Kullanıcı başına günlük okuma" alanını 100'e çıkarıp sunucu sayısının nasıl sıçradığını, "Tepe trafik çarpanı"nı 3'ten 10'a alıp tepe QPS'i ve "Sıcak veri oranı"nı değiştirip önbellek boyutunu izleyin. Her değişiklikte kendinize sorun: bu sayı hangi mimari kararı değiştirir?
 :::
 
+Sayıların asıl değeri, bir sonraki adımda hangi bileşeni ekleyeceğinizi söylemeleridir. Aşağıdaki animasyon aynı örneği sürdürür: tepe yük tek veritabanına yığılınca darboğaz görünür ve okuma/yazma oranı sizi sharding yerine önce önbelleğe, sonra okuma replikalarına götürür.
+
+:::animation{scene="capacity-bottleneck.scene.json"}
+Kapasite tahmini → darboğazın yeri → ölçekleme kararı; her adımın bedeli ve bir sonraki eşik.
+:::
+
 :::code{lang="python" title="Arka-zarf hesabı: elle yapılan hesabı koda dökmek"}
 ```python
 SECONDS_PER_DAY = 86_400

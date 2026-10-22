@@ -62,6 +62,17 @@ export class ContentController {
     return this.content.getLesson(idOrSlug, user?.id);
   }
 
+  @Get('lessons/:lessonId/exercises/:exerciseId/solution')
+  @Header('Cache-Control', 'private, no-store')
+  @ApiOperation({
+    summary: 'Kodlama alıştırmasının örnek çözümü (oturum gerekir)',
+    description:
+      'Ders detayındaki alıştırma bloklarında çözüm yoktur. Web istemcisi düğmeyi 3 başarısız test denemesinden sonra açar.',
+  })
+  getExerciseSolution(@Param('lessonId') lessonId: string, @Param('exerciseId') exerciseId: string): Promise<{ solution: string }> {
+    return this.content.getExerciseSolution(lessonId, exerciseId);
+  }
+
   @Public()
   @Get('lessons/:lessonId/scenes')
   @Header('Cache-Control', 'public, max-age=300, stale-while-revalidate=3600')

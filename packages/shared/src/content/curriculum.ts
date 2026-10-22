@@ -1,5 +1,5 @@
 import type { LocalizedString } from '../i18n';
-import type { LearningPathManifest, ModuleManifest } from './schema';
+import type { ModuleManifest } from './schema';
 
 /**
  * MÜFREDAT
@@ -1196,7 +1196,7 @@ export const CURRICULUM: CurriculumModule[] = [
       lesson('k', 7, "kapsam-closure-ve-dekoratorler", { tr: "Kapsam (LEGB), Closure ve Dekoratörler", en: "Scope (LEGB), Closures and Decorators" }, { tr: "İsimlerin nerede arandığını, closure'ın değişkeni nasıl yakaladığını ve dekoratörleri öğren.", en: "Learn where names are looked up, how closures capture variables and how decorators work." }),
       lesson('k', 8, "ozyineleme", { tr: "Özyineleme (Recursion) ve Yığın Derinliği", en: "Recursion and Stack Depth" }, { tr: "Kendini çağıran fonksiyonların yığını nasıl büyütüp küçülttüğünü ve sınırlarını gör.", en: "See how self-calling functions grow and shrink the stack, and where their limits are." }),
       lesson('k', 9, "comprehension-ve-fonksiyonel-araclar", { tr: "Comprehension, lambda ve Fonksiyonel Araçlar", en: "Comprehensions, lambda and Functional Tools" }, { tr: "Comprehension, lambda, map, filter, sorted ve zip ile kısa ve okunur kod yaz.", en: "Write short, readable code with comprehensions, lambda, map, filter, sorted and zip." }),
-      lesson('k', 10, "hatalar-istisnalar-ve-dosyalar", { tr: "Hatalar, İstisnalar, Dosyalar ve Context Manager", en: "Errors, Exceptions, Files and Context Managers" }, { tr: "try/except/finally, kendi istisnaların, with bloğu ve dosya okuma/yazmayı öğren.", en: "Learn try/except/finally, custom exceptions, the with statement and file I/O." }),
+      lesson('k', 10, "hatalar-istisnalar-ve-dosyalar", { tr: "Hatalar, İstisnalar, Dosyalar ve Context Manager", en: "Errors, Exceptions, Files and Context Managers" }, { tr: "try/except/finally, kendi istisnaların, with bloğu ve dosya okuma/yazmayı öğren.", en: "Learn try/except/finally, custom exceptions, the with statement and file I/O." }, ["regex-playground"]),
       lesson('k', 11, "iterator-ve-generator", { tr: "Iterator ve Generator: Tembel Hesaplama", en: "Iterators and Generators: Lazy Evaluation" }, { tr: "for döngüsünün arkasındaki iterator protokolünü ve yield ile duraklayan fonksiyonları gör.", en: "See the iterator protocol behind for loops and functions that pause with yield." }),
       lesson('k', 12, "siniflar-ve-nesneler", { tr: "OOP 1: Sınıflar, Nesneler ve self", en: "OOP 1: Classes, Objects and self" }, { tr: "Sınıf ile nesne farkını, __init__ ve self'i, örnek ve sınıf niteliklerini bellekte izle.", en: "Track classes vs objects, __init__ and self, instance and class attributes in memory." }),
       lesson('k', 13, "kalitim-ve-polimorfizm", { tr: "OOP 2: Kalıtım, Polimorfizm, super() ve MRO", en: "OOP 2: Inheritance, Polymorphism, super() and MRO" }, { tr: "Kalıtımla kodu yeniden kullan, polimorfizmi uygula; super() ve metot arama sırasını kavra.", en: "Reuse code with inheritance, apply polymorphism and understand super() and method lookup." }),
@@ -1225,13 +1225,13 @@ export const CURRICULUM: CurriculumModule[] = [
       lesson('l', 1, 'big-o-complexity', { tr: 'Big-O: Algoritma Karmaşıklığı', en: 'Big-O: Algorithmic Complexity' }, { tr: 'Zaman ve bellek karmaşıklığını sezgisel ve grafikle öğren; O(1), O(log n), O(n), O(n log n), O(n²) ve O(2ⁿ) karşılaştırması.', en: 'Learn time and space complexity intuitively and with graphs; compare O(1), O(log n), O(n), O(n log n), O(n²) and O(2ⁿ).' }, ['big-o-plotter']),
       lesson('l', 2, 'arrays-strings-two-pointers', { tr: 'Diziler, Stringler ve İki İşaretçi', en: 'Arrays, Strings and Two Pointers' }, { tr: 'Bellekte ardışık dizi, dinamik diziler, kayan pencere ve iki işaretçi teknikleri; satır satır Python izleriyle.', en: 'Contiguous arrays in memory, dynamic arrays, sliding window and two-pointer techniques with line-by-line Python traces.' }),
       lesson('l', 3, 'hash-tables', { tr: 'Hash Tabloları', en: 'Hash Tables' }, { tr: 'Hash fonksiyonu, kova, çakışma çözümü (zincirleme, açık adresleme), yük faktörü ve yeniden boyutlama; interaktif hash tablosu.', en: 'Hash functions, buckets, collision resolution (chaining, open addressing), load factor and resizing; interactive hash table.' }, ['hash-table']),
-      lesson('l', 4, 'stacks-queues', { tr: 'Yığın ve Kuyruk', en: 'Stacks and Queues' }, { tr: 'LIFO ve FIFO yapıları, parantez eşleme, çağrı yığını, deque ve monotonik yığın; Python izleriyle.', en: 'LIFO and FIFO structures, bracket matching, the call stack, deque and monotonic stack; with Python traces.' }),
+      lesson('l', 4, 'stacks-queues', { tr: 'Yığın ve Kuyruk', en: 'Stacks and Queues' }, { tr: 'LIFO ve FIFO yapıları, parantez eşleme, çağrı yığını, deque ve monotonik yığın; Python izleriyle.', en: 'LIFO and FIFO structures, bracket matching, the call stack, deque and monotonic stack; with Python traces.' }, ['stack-queue']),
       lesson('l', 5, 'trees-bst', { tr: 'Ağaçlar ve İkili Arama Ağacı', en: 'Trees and Binary Search Trees' }, { tr: 'Ağaç terminolojisi, dolaşma sıraları, BST ekleme/arama/silme ve dengeli ağaçlara giriş.', en: 'Tree terminology, traversal orders, BST insert/search/delete and an introduction to balanced trees.' }, ['graph-traversal']),
-      lesson('l', 6, 'heaps-priority-queues', { tr: 'Heap ve Öncelik Kuyruğu', en: 'Heaps and Priority Queues' }, { tr: 'İkili heap, sift-up/sift-down, heapq ve en büyük k eleman, Dijkstra ile ilişkisi.', en: 'Binary heap, sift-up/sift-down, heapq and top-k, relation to Dijkstra.' }),
+      lesson('l', 6, 'heaps-priority-queues', { tr: 'Heap ve Öncelik Kuyruğu', en: 'Heaps and Priority Queues' }, { tr: 'İkili heap, sift-up/sift-down, heapq ve en büyük k eleman, Dijkstra ile ilişkisi.', en: 'Binary heap, sift-up/sift-down, heapq and top-k, relation to Dijkstra.' }, ['heap']),
       lesson('l', 7, 'graphs-bfs-dfs', { tr: 'Graflar: BFS, DFS ve En Kısa Yol', en: 'Graphs: BFS, DFS and Shortest Paths' }, { tr: 'Komşuluk listesi, BFS/DFS, topolojik sıralama ve Dijkstra; interaktif graf gezintisi.', en: 'Adjacency lists, BFS/DFS, topological sort and Dijkstra; interactive graph traversal.' }, ['graph-traversal']),
       lesson('l', 8, 'sorting', { tr: 'Sıralama Algoritmaları', en: 'Sorting Algorithms' }, { tr: 'Bubble, insertion, selection, merge ve quick sort; kararlılık, yerinde sıralama ve karşılaştırma; görsel sıralayıcı.', en: 'Bubble, insertion, selection, merge and quick sort; stability, in-place sorting and comparison; visual sorter.' }, ['sorting-visualizer']),
       lesson('l', 9, 'binary-search', { tr: 'İkili Arama ve Varyantları', en: 'Binary Search and Its Variants' }, { tr: 'Sıralı veride O(log n) arama, alt/üst sınır, cevap üzerinde ikili arama ve sık hatalar.', en: 'O(log n) search on sorted data, lower/upper bound, binary search on the answer and common bugs.' }, ['big-o-plotter']),
-      lesson('l', 10, 'dynamic-programming', { tr: 'Dinamik Programlama', en: 'Dynamic Programming' }, { tr: 'Örtüşen alt problemler, memoization ve tabulation; Fibonacci, sırt çantası ve en uzun ortak alt dizi; Python izleriyle.', en: 'Overlapping subproblems, memoization and tabulation; Fibonacci, knapsack and longest common subsequence; with Python traces.' }),
+      lesson('l', 10, 'dynamic-programming', { tr: 'Dinamik Programlama', en: 'Dynamic Programming' }, { tr: 'Örtüşen alt problemler, memoization ve tabulation; Fibonacci, sırt çantası ve en uzun ortak alt dizi; Python izleriyle.', en: 'Overlapping subproblems, memoization and tabulation; Fibonacci, knapsack and longest common subsequence; with Python traces.' }, ['dp-table']),
     ],
   },
   {
@@ -1275,10 +1275,10 @@ export const CURRICULUM: CurriculumModule[] = [
       lesson('n', 1, 'sessions-vs-tokens', { tr: 'Oturum mu, Token mı?', en: 'Sessions or Tokens?' }, { tr: 'Sunucu taraflı oturum, çerez özellikleri (HttpOnly, SameSite), taşıyıcı token ve yenileme; hangi durumda hangisi.', en: 'Server-side sessions, cookie attributes (HttpOnly, SameSite), bearer tokens and refresh; which one when.' }, ['request-journey']),
       lesson('n', 2, 'jwt', { tr: 'JWT: Yapısı, İmzası ve Tuzakları', en: 'JWT: Structure, Signature and Pitfalls' }, { tr: 'Başlık/gövde/imza, HS256 ve RS256, süre dolumu, iptal problemi ve alg=none gibi klasik hatalar; interaktif JWT inceleyici.', en: 'Header/payload/signature, HS256 vs RS256, expiry, the revocation problem and classic mistakes like alg=none; interactive JWT inspector.' }, ['jwt-inspector']),
       lesson('n', 3, 'oauth2-oidc', { tr: 'OAuth 2.0 ve OpenID Connect', en: 'OAuth 2.0 and OpenID Connect' }, { tr: 'Authorization code + PKCE, client credentials, scope ve consent, ID token ve yaygın hatalar; adım adım akış simülatörü.', en: 'Authorization code + PKCE, client credentials, scopes and consent, ID tokens and common mistakes; step-by-step flow simulator.' }, ['oauth-flow']),
-      lesson('n', 4, 'authorization-rbac-abac', { tr: 'Yetkilendirme: RBAC ve ABAC', en: 'Authorisation: RBAC and ABAC' }, { tr: 'Rol ve öznitelik tabanlı erişim, politika motorları, en az ayrıcalık, çok kiracılı sistemlerde veri izolasyonu.', en: 'Role- and attribute-based access, policy engines, least privilege, data isolation in multi-tenant systems.' }),
+      lesson('n', 4, 'authorization-rbac-abac', { tr: 'Yetkilendirme: RBAC ve ABAC', en: 'Authorisation: RBAC and ABAC' }, { tr: 'Rol ve öznitelik tabanlı erişim, politika motorları, en az ayrıcalık, çok kiracılı sistemlerde veri izolasyonu.', en: 'Role- and attribute-based access, policy engines, least privilege, data isolation in multi-tenant systems.' }, ['rbac-abac']),
       lesson('n', 5, 'owasp-top-10', { tr: 'OWASP Top 10 ile Web Güvenliği', en: 'Web Security with OWASP Top 10' }, { tr: 'Enjeksiyon, XSS, CSRF, kırık erişim kontrolü, güvensiz tasarım ve kaba kuvvet; savunmalar ve kod örnekleri; kaba kuvvet simülatörü.', en: 'Injection, XSS, CSRF, broken access control, insecure design and brute force; defences and code examples; brute-force simulator.' }, ['bruteforce-login']),
-      lesson('n', 6, 'cryptography-basics', { tr: 'Kriptografi Temelleri', en: 'Cryptography Basics' }, { tr: 'Hash ve şifre saklama (bcrypt/argon2), simetrik ve asimetrik şifreleme, TLS el sıkışması, imza ve anahtar yönetimi.', en: 'Hashing and password storage (bcrypt/argon2), symmetric and asymmetric encryption, the TLS handshake, signatures and key management.' }, ['jwt-inspector']),
-      lesson('n', 7, 'threat-modeling', { tr: 'Tehdit Modelleme ve Güvenli Tasarım', en: 'Threat Modelling and Secure Design' }, { tr: 'STRIDE, saldırı yüzeyi, güven sınırları, gizli bilgi yönetimi ve tedarik zinciri güvenliği.', en: 'STRIDE, attack surface, trust boundaries, secrets management and supply-chain security.' }),
+      lesson('n', 6, 'cryptography-basics', { tr: 'Kriptografi Temelleri', en: 'Cryptography Basics' }, { tr: 'Hash ve şifre saklama (bcrypt/argon2), simetrik ve asimetrik şifreleme, TLS el sıkışması, imza ve anahtar yönetimi.', en: 'Hashing and password storage (bcrypt/argon2), symmetric and asymmetric encryption, the TLS handshake, signatures and key management.' }, ['jwt-inspector', 'hash-salt']),
+      lesson('n', 7, 'threat-modeling', { tr: 'Tehdit Modelleme ve Güvenli Tasarım', en: 'Threat Modelling and Secure Design' }, { tr: 'STRIDE, saldırı yüzeyi, güven sınırları, gizli bilgi yönetimi ve tedarik zinciri güvenliği.', en: 'STRIDE, attack surface, trust boundaries, secrets management and supply-chain security.' }, ['threat-model']),
     ],
   },
   {
@@ -1305,76 +1305,6 @@ export const CURRICULUM: CurriculumModule[] = [
   },
 ];
 
-export const LEARNING_PATHS: LearningPathManifest[] = [
-  {
-    id: 'backend',
-    slug: 'backend',
-    title: { tr: 'Backend Geliştirici', en: 'Backend Developer' },
-    description: {
-      tr: 'API’ler, veritabanları, kuyruklar ve altyapı.',
-      en: 'APIs, databases, queues and infrastructure.',
-    },
-    icon: 'terminal',
-    items: [
-      'a-system-design-fundamentals',
-      'd-database-design',
-      'c-design-patterns',
-      'f-code-and-infrastructure',
-    ],
-  },
-  {
-    id: 'system-design',
-    slug: 'system-design',
-    title: { tr: 'Sistem Tasarımı', en: 'System Design' },
-    description: {
-      tr: 'Ölçeklenebilir sistemlerin tasarımı ve vaka çalışmaları.',
-      en: 'Designing scalable systems with case studies.',
-    },
-    icon: 'network',
-    items: [
-      'a-system-design-fundamentals',
-      'b-architectures',
-      'e-case-studies',
-      'f-code-and-infrastructure',
-    ],
-  },
-  {
-    id: 'ai',
-    slug: 'ai',
-    title: { tr: 'Yapay Zekâ', en: 'Artificial Intelligence' },
-    description: {
-      tr: 'ML temellerinden LLM ve MLOps’a.',
-      en: 'From ML foundations to LLMs and MLOps.',
-    },
-    icon: 'brain',
-    items: [
-      'g-artificial-intelligence',
-      'a-system-design-fundamentals/a-07-caching',
-      'a-system-design-fundamentals/a-09-message-queues-event-driven',
-    ],
-  },
-  {
-    id: 'interview-prep',
-    slug: 'interview-prep',
-    title: { tr: 'Mülakat Hazırlığı', en: 'Interview Preparation' },
-    description: {
-      tr: 'Sistem tasarımı mülakatları için hızlandırılmış rota.',
-      en: 'An accelerated route for system design interviews.',
-    },
-    icon: 'briefcase',
-    items: [
-      'a-system-design-fundamentals/a-02-latency-throughput-cap',
-      'a-system-design-fundamentals/a-05-load-balancing',
-      'a-system-design-fundamentals/a-07-caching',
-      'a-system-design-fundamentals/a-10-rate-limiting',
-      'a-system-design-fundamentals/a-11-consistent-hashing-sharding',
-      'a-system-design-fundamentals/a-12-replication',
-      'd-database-design/d-04-sql-vs-nosql',
-      'e-case-studies',
-      'c-design-patterns/c-04-distributed-patterns',
-    ],
-  },
-];
 
 export function findModule(moduleId: string): CurriculumModule | undefined {
   return CURRICULUM.find((m) => m.id === moduleId || m.slug === moduleId);

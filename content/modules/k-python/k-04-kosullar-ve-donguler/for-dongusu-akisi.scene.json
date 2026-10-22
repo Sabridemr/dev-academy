@@ -1,0 +1,177 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "python-for-dongusu-akisi",
+  "title": { "tr": "for Döngüsünün Akışı: next, continue, break ve else", "en": "How a for Loop Flows: next, continue, break and else" },
+  "summary": {
+    "tr": "for döngüsünün iterable'dan bir iterator alması, her turda next() ile eleman çekmesi, continue ile gövdeyi kısaltması, StopIteration ile doğal olarak bitip else bloğunu çalıştırması ve break olduğunda else'i atlaması.",
+    "en": "A for loop getting an iterator from an iterable, pulling an element with next() on each pass, cutting the body short with continue, ending naturally with StopIteration and running the else block, and skipping else when break happens."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Kod: for n in [1, 2, 3]: if n == 2: continue; print(n); else: print(\"bitti\"). Solda liste, yanında iterator, ortada for başlığı, sağ üstte döngü gövdesi ve çıktı, sağ altta else bloğu ve döngüden sonraki kod bulunur. for önce iter() ile listeden bir iterator alır. Her turda next() bir eleman verir ve n ona bağlanır. n = 1 için gövde 1 yazdırır. n = 2 için continue gövdenin kalanını atlar ve doğrudan bir sonraki next() çağrısına dönülür. n = 3 için 3 yazdırılır. Dördüncü next() StopIteration fırlatır; döngü doğal olarak biter ve else bloğu bitti yazdırır. Son adımda koşul break olsaydı, n = 2'de döngüden hemen çıkılır ve else bloğu atlanırdı.",
+      "en": "Code: for n in [1, 2, 3]: if n == 2: continue; print(n); else: print(\"bitti\"). On the left is the list and next to it the iterator, in the middle the for header, at the top right the loop body and output, at the bottom right the else block and the code after the loop. for first gets an iterator from the list with iter(). On each pass next() hands over an element and n is bound to it. For n = 1 the body prints 1. For n = 2, continue skips the rest of the body and control returns straight to the next next() call. For n = 3, 3 is printed. The fourth next() raises StopIteration; the loop ends naturally and the else block prints bitti. In the last step, if the condition were break, the loop would exit immediately at n = 2 and the else block would be skipped."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "liste", "kind": "storage", "label": "[1, 2, 3]", "sublabel": "iterable", "x": 90, "y": 300, "w": 130, "h": 64 },
+    { "id": "iterator", "kind": "queue", "label": "iterator", "sublabel": { "tr": "sıradaki: 1", "en": "next up: 1" }, "x": 270, "y": 300, "w": 140, "h": 64 },
+    { "id": "basl", "kind": "service", "label": { "tr": "for başlığı", "en": "for header" }, "sublabel": "n = next(it)", "x": 480, "y": 300, "w": 160, "h": 76 },
+    { "id": "govde", "kind": "function", "label": { "tr": "Döngü gövdesi", "en": "Loop body" }, "sublabel": "if n == 2: continue · print(n)", "x": 710, "y": 150, "w": 220, "h": 70 },
+    { "id": "cikti", "kind": "client", "label": { "tr": "Çıktı", "en": "Output" }, "x": 920, "y": 300, "w": 120, "h": 60 },
+    { "id": "elsebl", "kind": "function", "label": { "tr": "else bloğu", "en": "else block" }, "sublabel": "print(\"bitti\")", "x": 710, "y": 460, "w": 170, "h": 64 },
+    { "id": "sonra", "kind": "generic", "label": { "tr": "Döngüden sonra", "en": "After the loop" }, "x": 920, "y": 540, "w": 140, "h": 50 }
+  ],
+  "edges": [
+    { "id": "liste-it", "from": "liste", "to": "iterator", "kind": "control", "label": "iter()" },
+    { "id": "it-basl", "from": "iterator", "to": "basl", "kind": "data", "label": "next()" },
+    { "id": "basl-govde", "from": "basl", "to": "govde", "kind": "control", "curvature": -0.15 },
+    { "id": "govde-basl", "from": "govde", "to": "basl", "kind": "control", "style": "dashed", "curvature": -0.25, "label": { "tr": "sonraki tur", "en": "next pass" } },
+    { "id": "govde-cikti", "from": "govde", "to": "cikti", "kind": "response", "label": "print" },
+    { "id": "basl-else", "from": "basl", "to": "elsebl", "kind": "control", "curvature": 0.15, "label": "StopIteration" },
+    { "id": "else-sonra", "from": "elsebl", "to": "sonra", "kind": "control" },
+    { "id": "govde-sonra", "from": "govde", "to": "sonra", "kind": "control", "style": "dashed", "curvature": 0.35, "label": "break" },
+    { "id": "else-cikti", "from": "elsebl", "to": "cikti", "kind": "response" }
+  ],
+  "steps": [
+    {
+      "id": "iter",
+      "title": { "tr": "iter(): iterator al", "en": "iter(): get an iterator" },
+      "narration": {
+        "tr": "`for n in [1, 2, 3]:` satırı çalışınca Python önce listeden `iter()` ile bir **iterator** ister. Iterator, \"sırada hangi eleman var\" bilgisini tutan küçük bir nesnedir; listenin kendisi değişmez.",
+        "en": "When the line `for n in [1, 2, 3]:` runs, Python first asks the list for an **iterator** with `iter()`. The iterator is a small object that remembers which element is next; the list itself does not change."
+      },
+      "durationMs": 3200,
+      "inherit": false,
+      "highlight": { "nodes": ["liste", "iterator"], "edges": ["liste-it"] },
+      "nodeStates": { "liste": { "status": "active" }, "iterator": { "status": "active" } },
+      "edgeStates": { "govde-sonra": { "visible": false } },
+      "packets": [{ "edge": "liste-it", "label": "iter()", "shape": "diamond", "durationMs": 1000 }]
+    },
+    {
+      "id": "tur1",
+      "title": { "tr": "1. tur: n = 1", "en": "Pass 1: n = 1" },
+      "narration": {
+        "tr": "Başlık `next()` çağırır, iterator 1'i verir ve `n` ona bağlanır. Gövdede `n == 2` yanlış, `print(n)` çalışır ve çıktıya 1 yazılır. Gövde bitince akış başlığa döner.",
+        "en": "The header calls `next()`, the iterator hands over 1 and `n` is bound to it. In the body `n == 2` is false, `print(n)` runs and 1 is written to the output. When the body ends, control goes back to the header."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["basl", "govde", "cikti"], "edges": ["it-basl", "basl-govde", "govde-cikti"] },
+      "nodeStates": {
+        "liste": { "status": "idle" },
+        "iterator": { "status": "idle", "sublabel": { "tr": "sıradaki: 2", "en": "next up: 2" }, "progress": 0.33 },
+        "basl": { "status": "active", "badge": "n = 1" },
+        "govde": { "status": "active" },
+        "cikti": { "status": "success", "badge": "1" }
+      },
+      "packets": [
+        { "edge": "it-basl", "label": "1", "durationMs": 800 },
+        { "edge": "basl-govde", "label": "n = 1", "startAt": 900, "durationMs": 800 },
+        { "edge": "govde-cikti", "label": "1", "shape": "envelope", "startAt": 1800, "durationMs": 800 },
+        { "edge": "govde-basl", "startAt": 2700, "durationMs": 800 }
+      ]
+    },
+    {
+      "id": "tur2",
+      "title": { "tr": "2. tur: continue", "en": "Pass 2: continue" },
+      "narration": {
+        "tr": "`next()` 2'yi verir. Bu kez `n == 2` doğru ve `continue` çalışır: gövdenin **kalanı atlanır**, `print(n)` hiç çalışmaz. Akış doğrudan başlığa, bir sonraki `next()` çağrısına döner.",
+        "en": "`next()` hands over 2. This time `n == 2` is true and `continue` runs: the **rest of the body is skipped**, `print(n)` never runs. Control returns straight to the header and the next `next()` call."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["basl", "govde"], "edges": ["it-basl", "basl-govde", "govde-basl"] },
+      "nodeStates": {
+        "iterator": { "sublabel": { "tr": "sıradaki: 3", "en": "next up: 3" }, "progress": 0.66 },
+        "basl": { "badge": "n = 2" },
+        "govde": { "status": "warning", "badge": "continue" },
+        "cikti": { "status": "idle" }
+      },
+      "edgeStates": { "govde-basl": { "status": "active" } },
+      "packets": [
+        { "edge": "it-basl", "label": "2", "durationMs": 800 },
+        { "edge": "basl-govde", "label": "n = 2", "startAt": 900, "durationMs": 800 },
+        { "edge": "govde-basl", "label": "continue", "color": "warning", "startAt": 1900, "durationMs": 900 }
+      ],
+      "annotations": [{ "id": "atla", "x": 710, "y": 60, "text": { "tr": "print(n) atlandı", "en": "print(n) skipped" }, "tone": "warning", "target": "govde" }]
+    },
+    {
+      "id": "tur3",
+      "title": { "tr": "3. tur: n = 3", "en": "Pass 3: n = 3" },
+      "narration": {
+        "tr": "`next()` 3'ü verir, koşul yanlış, 3 yazdırılır. Çıktıda şimdi 1 ve 3 var; 2 hiç görünmedi.",
+        "en": "`next()` hands over 3, the condition is false and 3 is printed. The output now has 1 and 3; 2 never appeared."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["basl", "govde", "cikti"], "edges": ["it-basl", "basl-govde", "govde-cikti"] },
+      "nodeStates": {
+        "iterator": { "sublabel": { "tr": "eleman kalmadı", "en": "no elements left" }, "progress": 1 },
+        "basl": { "badge": "n = 3" },
+        "govde": { "status": "active", "badge": "" },
+        "cikti": { "status": "success", "badge": "1 3" }
+      },
+      "edgeStates": { "govde-basl": { "status": "idle" } },
+      "packets": [
+        { "edge": "it-basl", "label": "3", "durationMs": 800 },
+        { "edge": "basl-govde", "label": "n = 3", "startAt": 900, "durationMs": 800 },
+        { "edge": "govde-cikti", "label": "3", "shape": "envelope", "startAt": 1800, "durationMs": 800 },
+        { "edge": "govde-basl", "startAt": 2700, "durationMs": 800 }
+      ]
+    },
+    {
+      "id": "stop",
+      "title": { "tr": "StopIteration: döngü doğal olarak biter", "en": "StopIteration: the loop ends naturally" },
+      "narration": {
+        "tr": "Başlık bir kez daha `next()` çağırır ama iterator'da eleman kalmamıştır; `StopIteration` fırlatılır. `for` bu istisnayı sessizce yakalar ve döngüyü bitirir. Sen bu istisnayı hiç görmezsin.",
+        "en": "The header calls `next()` once more, but the iterator has no elements left; `StopIteration` is raised. `for` silently catches this exception and ends the loop. You never see it."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["iterator", "basl"], "edges": ["it-basl"] },
+      "nodeStates": { "iterator": { "status": "muted" }, "basl": { "status": "warning", "badge": "StopIteration" }, "govde": { "status": "idle" }, "cikti": { "status": "idle" } },
+      "edgeStates": { "it-basl": { "status": "error" } },
+      "packets": [{ "edge": "it-basl", "label": "StopIteration", "shape": "square", "color": "danger", "durationMs": 1000 }]
+    },
+    {
+      "id": "else",
+      "title": { "tr": "break olmadı: else çalışır", "en": "No break: else runs" },
+      "narration": {
+        "tr": "Döngü `break` ile değil, elemanlar bittiği için sona erdi. Bu durumda döngüye bağlı `else` bloğu çalışır ve \"bitti\" yazdırır; ardından akış döngüden sonraki koda geçer.",
+        "en": "The loop ended because the elements ran out, not because of `break`. In this case the loop's `else` block runs and prints \"bitti\"; then control moves on to the code after the loop."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["elsebl", "cikti", "sonra"], "edges": ["basl-else", "else-cikti", "else-sonra"] },
+      "nodeStates": { "basl": { "status": "idle" }, "elsebl": { "status": "success" }, "cikti": { "status": "success", "badge": "1 3 bitti" }, "sonra": { "status": "active" } },
+      "edgeStates": { "it-basl": { "status": "idle" } },
+      "packets": [
+        { "edge": "basl-else", "label": { "tr": "doğal bitiş", "en": "natural end" }, "durationMs": 900 },
+        { "edge": "else-cikti", "label": "bitti", "shape": "envelope", "startAt": 1000, "durationMs": 800 },
+        { "edge": "else-sonra", "startAt": 2000, "durationMs": 800 }
+      ]
+    },
+    {
+      "id": "break",
+      "title": { "tr": "Ya continue yerine break olsaydı?", "en": "What if it were break instead of continue?" },
+      "narration": {
+        "tr": "Aynı kodda `continue` yerine `break` yazsaydık: `n = 2` turunda döngü **hemen** biter, iterator'daki 3 hiç istenmez ve akış `else` bloğunu **atlayarak** döngüden sonraki koda geçerdi. Çıktı yalnızca 1 olurdu.",
+        "en": "If the same code used `break` instead of `continue`: on the `n = 2` pass the loop ends **immediately**, 3 is never requested from the iterator, and control **skips** the `else` block and goes to the code after the loop. The output would be just 1."
+      },
+      "durationMs": 4000,
+      "inherit": true,
+      "highlight": { "nodes": ["govde", "sonra"], "edges": ["govde-sonra"] },
+      "nodeStates": {
+        "iterator": { "status": "idle", "sublabel": { "tr": "sıradaki: 3 (istenmedi)", "en": "next up: 3 (never asked)" }, "progress": 0.66 },
+        "basl": { "badge": "n = 2" },
+        "govde": { "status": "error", "badge": "break" },
+        "elsebl": { "status": "muted", "sublabel": { "tr": "atlandı", "en": "skipped" } },
+        "cikti": { "status": "active", "badge": "1" },
+        "sonra": { "status": "active" }
+      },
+      "edgeStates": { "govde-sonra": { "visible": true, "status": "active" }, "basl-else": { "status": "muted" }, "else-sonra": { "status": "muted" } },
+      "packets": [{ "edge": "govde-sonra", "label": "break", "color": "danger", "durationMs": 1300 }],
+      "annotations": [{ "id": "else-yok", "x": 560, "y": 540, "text": { "tr": "else = break olmadıysa", "en": "else = if no break" }, "tone": "info", "target": "elsebl" }]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["python", "for", "iterator", "continue", "break", "loop-else"]
+}

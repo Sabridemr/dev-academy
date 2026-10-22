@@ -1,3 +1,5 @@
+import type { CodeTrace } from '@devacademy/shared';
+
 /**
  * Tüm interaktif simülatörlerin ortak sözleşmesi.
  * Bir simülatör yalnızca bu prop'ları alır; parametreler ders Markdown'ındaki
@@ -9,6 +11,8 @@ export interface SimulatorProps {
   lessonId?: string;
   /** Kullanıcı simülatörle ilk kez etkileşime girdiğinde çağrılır (rozet takibi) */
   onInteract: () => void;
+  /** İz kullanan simülatörler (predict-run) için kod izi: seed `params.src`'den çözüp bloğa gömer */
+  trace?: CodeTrace;
 }
 
 /** params içinden güvenli okuma yardımcıları */

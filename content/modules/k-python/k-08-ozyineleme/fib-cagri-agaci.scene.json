@@ -1,0 +1,256 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "k-08-fib-cagri-agaci",
+  "title": { "tr": "fib(4): Çağrı Ağacının Açılıp Kapanması", "en": "fib(4): The Call Tree Opening and Closing" },
+  "summary": {
+    "tr": "Naif fib(4)'ün çağrı ağacını derinlik öncelikli açması, temel durumlarda dönüp değerleri yukarı taşıması, fib(2)'yi iki kez hesaplaması ve memo sözlüğüyle ikinci hesaplamanın önbellekten gelmesi.",
+    "en": "Naive fib(4) opening its call tree depth-first, returning at the base cases and carrying values upward, computing fib(2) twice, and with a memo dict the second computation coming from the cache."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Tepede fib(4) düğümü vardır; altında fib(3) ve fib(2), onların altında daha küçük çağrılar ağaç biçiminde dizilir. Çağrılar önce en sol dal boyunca fib(1)'e kadar iner; temel durum 1 döndürür, değerler toplanarak yukarı taşınır ve biten çağrılar sönükleşir. Sağdaki fib(2) aynı alt ağacı ikinci kez hesaplar; toplam 9 çağrı yapılır ve sonuç 3'tür. Ardından sağ altta bir memo sözlüğü belirir: hesaplanan fib(2) ve fib(3) sözlüğe yazılır, sağdaki fib(2) çağrısı dallanmadan sözlükten okunur ve çağrı sayısı 7'ye düşer.",
+      "en": "At the top is the fib(4) node; below it fib(3) and fib(2), and smaller calls below them form a tree. Calls first descend along the leftmost branch to fib(1); the base case returns 1, values are summed and carried upward, and finished calls fade. The fib(2) on the right computes the same subtree a second time; 9 calls are made in total and the result is 3. Then a memo dict appears at the bottom right: the computed fib(2) and fib(3) are written to it, the right-hand fib(2) call is read from the dict without branching and the call count drops to 7."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "f4", "kind": "function", "label": "fib(4)", "x": 500, "y": 70, "w": 120, "h": 56 },
+    { "id": "f3", "kind": "function", "label": "fib(3)", "x": 300, "y": 190, "w": 120, "h": 56 },
+    { "id": "f2r", "kind": "function", "label": "fib(2)", "x": 700, "y": 190, "w": 120, "h": 56 },
+    { "id": "f2l", "kind": "function", "label": "fib(2)", "x": 180, "y": 320, "w": 120, "h": 56 },
+    { "id": "f1a", "kind": "function", "label": "fib(1)", "x": 410, "y": 320, "w": 120, "h": 56 },
+    { "id": "f1b", "kind": "function", "label": "fib(1)", "x": 610, "y": 320, "w": 120, "h": 56 },
+    { "id": "f0b", "kind": "function", "label": "fib(0)", "x": 790, "y": 320, "w": 120, "h": 56 },
+    { "id": "f1c", "kind": "function", "label": "fib(1)", "x": 90, "y": 450, "w": 120, "h": 56 },
+    { "id": "f0a", "kind": "function", "label": "fib(0)", "x": 260, "y": 450, "w": 120, "h": 56 },
+    { "id": "memo", "kind": "cache", "label": { "tr": "bellek (memo dict)", "en": "bellek (memo dict)" }, "sublabel": "{}", "x": 760, "y": 500, "w": 230, "h": 70 }
+  ],
+  "edges": [
+    { "id": "e43", "from": "f4", "to": "f3", "kind": "request" },
+    { "id": "e42", "from": "f4", "to": "f2r", "kind": "request" },
+    { "id": "e32", "from": "f3", "to": "f2l", "kind": "request" },
+    { "id": "e31", "from": "f3", "to": "f1a", "kind": "request" },
+    { "id": "e21c", "from": "f2l", "to": "f1c", "kind": "request" },
+    { "id": "e20a", "from": "f2l", "to": "f0a", "kind": "request" },
+    { "id": "e21b", "from": "f2r", "to": "f1b", "kind": "request" },
+    { "id": "e20b", "from": "f2r", "to": "f0b", "kind": "request" },
+    { "id": "m2l", "from": "f2l", "to": "memo", "kind": "data", "style": "dashed", "curvature": 0.25 },
+    { "id": "m3", "from": "f3", "to": "memo", "kind": "data", "style": "dashed", "curvature": 0.2 },
+    { "id": "m2r", "from": "f2r", "to": "memo", "kind": "data", "style": "dashed", "curvature": -0.2 }
+  ],
+  "steps": [
+    {
+      "id": "baslangic",
+      "title": { "tr": "fib(4) çağrılır", "en": "fib(4) is called" },
+      "narration": {
+        "tr": "`fib(4)` temel durum değil (4 < 2 yanlış), bu yüzden `fib(3) + fib(2)` hesaplamalı. Python ifadeyi soldan sağa değerlendirir: önce yalnızca `fib(3)` çağrılır; `fib(2)` sırasını bekler.",
+        "en": "`fib(4)` is not a base case (4 < 2 is false), so it must compute `fib(3) + fib(2)`. Python evaluates the expression left to right: only `fib(3)` is called first; `fib(2)` waits its turn."
+      },
+      "durationMs": 3200,
+      "inherit": false,
+      "highlight": { "nodes": ["f4"], "edges": [] },
+      "nodeStates": {
+        "f4": { "status": "active", "sublabel": "fib(3) + fib(2)", "counter": 1 },
+        "f3": { "visible": false },
+        "f2r": { "visible": false },
+        "f2l": { "visible": false },
+        "f1a": { "visible": false },
+        "f1b": { "visible": false },
+        "f0b": { "visible": false },
+        "f1c": { "visible": false },
+        "f0a": { "visible": false },
+        "memo": { "visible": false }
+      },
+      "edgeStates": {
+        "e43": { "visible": false },
+        "e42": { "visible": false },
+        "e32": { "visible": false },
+        "e31": { "visible": false },
+        "e21c": { "visible": false },
+        "e20a": { "visible": false },
+        "e21b": { "visible": false },
+        "e20b": { "visible": false },
+        "m2l": { "visible": false },
+        "m3": { "visible": false },
+        "m2r": { "visible": false }
+      }
+    },
+    {
+      "id": "sol-dal",
+      "title": { "tr": "En sol dal boyunca iniş", "en": "Descending the leftmost branch" },
+      "narration": {
+        "tr": "`fib(3)` de `fib(2)`'yi, o da `fib(1)`'i çağırır. Yığında aynı anda dört çerçeve vardır: fib(4) → fib(3) → fib(2) → fib(1). Yığın ağacın tamamını değil, yalnızca o an çalışılan **tek dalı** tutar.",
+        "en": "`fib(3)` calls `fib(2)`, which calls `fib(1)`. There are four frames on the stack at once: fib(4) → fib(3) → fib(2) → fib(1). The stack never holds the whole tree, only the **single branch** being worked on."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["f4", "f3", "f2l", "f1c"], "edges": ["e43", "e32", "e21c"] },
+      "nodeStates": {
+        "f4": { "status": "busy", "counter": 4 },
+        "f3": { "visible": true, "status": "busy", "sublabel": "fib(2) + fib(1)" },
+        "f2l": { "visible": true, "status": "busy", "sublabel": "fib(1) + fib(0)" },
+        "f1c": { "visible": true, "status": "active", "sublabel": { "tr": "temel durum", "en": "base case" } }
+      },
+      "edgeStates": { "e43": { "visible": true, "status": "active" }, "e32": { "visible": true, "status": "active" }, "e21c": { "visible": true, "status": "active" } },
+      "packets": [
+        { "edge": "e43", "shape": "envelope", "label": "n=3", "durationMs": 900 },
+        { "edge": "e32", "shape": "envelope", "label": "n=2", "startAt": 1000, "durationMs": 900 },
+        { "edge": "e21c", "shape": "envelope", "label": "n=1", "startAt": 2000, "durationMs": 900 }
+      ],
+      "annotations": [
+        { "id": "derinlik", "x": 100, "y": 560, "text": { "tr": "yığın derinliği: 4", "en": "stack depth: 4" }, "target": "f1c", "tone": "info" }
+      ]
+    },
+    {
+      "id": "temel-donus",
+      "title": { "tr": "Temel durumlar döner, fib(2) = 1", "en": "Base cases return, fib(2) = 1" },
+      "narration": {
+        "tr": "`fib(1)` hiç dallanmadan 1 döndürür ve çerçevesi kapanır. Ardından `fib(0)` çağrılır ve 0 döner. `fib(2)` artık `1 + 0 = 1` sonucunu bilir ve onu çağırana, `fib(3)`'e verir.",
+        "en": "`fib(1)` returns 1 without branching and its frame closes. Then `fib(0)` is called and returns 0. `fib(2)` now knows `1 + 0 = 1` and hands it to its caller, `fib(3)`."
+      },
+      "durationMs": 4200,
+      "highlight": { "nodes": ["f2l", "f1c", "f0a"], "edges": ["e21c", "e20a", "e32"] },
+      "nodeStates": {
+        "f4": { "counter": 5 },
+        "f1c": { "status": "muted", "badge": "1" },
+        "f0a": { "visible": true, "status": "muted", "badge": "0", "sublabel": { "tr": "temel durum", "en": "base case" } },
+        "f2l": { "status": "success", "badge": "1" }
+      },
+      "edgeStates": { "e21c": { "status": "idle" }, "e20a": { "visible": true, "status": "idle" }, "e32": { "status": "idle" } },
+      "packets": [
+        { "edge": "e21c", "direction": "backward", "shape": "square", "color": "success", "label": "1", "durationMs": 800 },
+        { "edge": "e20a", "shape": "envelope", "label": "n=0", "startAt": 900, "durationMs": 800 },
+        { "edge": "e20a", "direction": "backward", "shape": "square", "color": "success", "label": "0", "startAt": 1800, "durationMs": 800 },
+        { "edge": "e32", "direction": "backward", "shape": "square", "color": "success", "label": "1", "startAt": 2800, "durationMs": 900 }
+      ]
+    },
+    {
+      "id": "fib3-biter",
+      "title": { "tr": "fib(3) = 2", "en": "fib(3) = 2" },
+      "narration": {
+        "tr": "Sol taraf bittiği için `fib(3)` sağ kolunu, `fib(1)`'i çağırır; o da hemen 1 döner. `fib(3) = 1 + 1 = 2` olur ve değer bir kat yukarı, `fib(4)`'e taşınır. Biten alt ağacın çerçevelerinin hepsi kapanmıştır.",
+        "en": "With the left side done, `fib(3)` calls its right arm, `fib(1)`, which immediately returns 1. `fib(3) = 1 + 1 = 2`, and the value moves one level up to `fib(4)`. All frames of the finished subtree are closed."
+      },
+      "durationMs": 3800,
+      "highlight": { "nodes": ["f3", "f1a"], "edges": ["e31", "e43"] },
+      "nodeStates": {
+        "f4": { "counter": 6 },
+        "f2l": { "status": "muted" },
+        "f1a": { "visible": true, "status": "muted", "badge": "1" },
+        "f3": { "status": "success", "badge": "2" }
+      },
+      "edgeStates": { "e31": { "visible": true, "status": "idle" }, "e43": { "status": "idle" } },
+      "packets": [
+        { "edge": "e31", "shape": "envelope", "label": "n=1", "durationMs": 800 },
+        { "edge": "e31", "direction": "backward", "shape": "square", "color": "success", "label": "1", "startAt": 900, "durationMs": 800 },
+        { "edge": "e43", "direction": "backward", "shape": "square", "color": "success", "label": "2", "startAt": 1900, "durationMs": 900 }
+      ]
+    },
+    {
+      "id": "tekrar-hesap",
+      "title": { "tr": "Sağ kol: fib(2) baştan hesaplanır", "en": "Right arm: fib(2) is computed from scratch" },
+      "narration": {
+        "tr": "Şimdi `fib(4)` ikinci terimi, `fib(2)`'yi çağırır. Bu değer az önce sol dalda zaten hesaplanmıştı ama naif fonksiyon bunu hatırlamaz: aynı alt ağacı (`fib(1)` ve `fib(0)`) yeniden açar. Boşa giden iş budur.",
+        "en": "Now `fib(4)` calls its second term, `fib(2)`. That value was already computed on the left branch, but the naive function does not remember it: it opens the same subtree (`fib(1)` and `fib(0)`) again. This is the wasted work."
+      },
+      "durationMs": 4200,
+      "highlight": { "nodes": ["f2r", "f1b", "f0b"], "edges": ["e42", "e21b", "e20b"] },
+      "nodeStates": {
+        "f4": { "counter": 9 },
+        "f3": { "status": "muted" },
+        "f2r": { "visible": true, "status": "warning", "badge": "tekrar", "sublabel": "fib(1) + fib(0)" },
+        "f1b": { "visible": true, "status": "muted", "badge": "1" },
+        "f0b": { "visible": true, "status": "muted", "badge": "0" }
+      },
+      "edgeStates": { "e42": { "visible": true, "status": "active" }, "e21b": { "visible": true, "status": "active" }, "e20b": { "visible": true, "status": "active" } },
+      "packets": [
+        { "edge": "e42", "shape": "envelope", "label": "n=2", "durationMs": 900 },
+        { "edge": "e21b", "shape": "envelope", "label": "n=1", "startAt": 1000, "durationMs": 800 },
+        { "edge": "e20b", "shape": "envelope", "label": "n=0", "startAt": 2000, "durationMs": 800 }
+      ],
+      "annotations": [
+        { "id": "ayni-is", "x": 700, "y": 115, "text": { "tr": "aynı soru ikinci kez", "en": "same question a second time" }, "target": "f2r", "tone": "warning" }
+      ]
+    },
+    {
+      "id": "sonuc",
+      "title": { "tr": "fib(4) = 3, toplam 9 çağrı", "en": "fib(4) = 3, 9 calls in total" },
+      "narration": {
+        "tr": "Sağ `fib(2)` de 1 döndürür ve `fib(4) = 2 + 1 = 3` olur. Ağaçta 9 düğüm var, yani 9 çağrı yapıldı. `n` bir arttıkça ağaç kabaca 1,6 katına çıkar; `fib(35)` için çağrı sayısı on milyonları geçer.",
+        "en": "The right `fib(2)` also returns 1 and `fib(4) = 2 + 1 = 3`. The tree has 9 nodes, so 9 calls were made. Each time `n` grows by one the tree grows roughly 1.6 times; for `fib(35)` the call count passes tens of millions."
+      },
+      "durationMs": 3800,
+      "highlight": { "nodes": ["f4", "f2r"], "edges": ["e42"] },
+      "nodeStates": {
+        "f2r": { "status": "muted", "badge": "1" },
+        "f4": { "status": "success", "badge": "3" }
+      },
+      "edgeStates": { "e21b": { "status": "idle" }, "e20b": { "status": "idle" }, "e42": { "status": "idle" } },
+      "packets": [
+        { "edge": "e21b", "direction": "backward", "shape": "square", "color": "success", "label": "1", "durationMs": 700 },
+        { "edge": "e20b", "direction": "backward", "shape": "square", "color": "success", "label": "0", "startAt": 300, "durationMs": 700 },
+        { "edge": "e42", "direction": "backward", "shape": "square", "color": "success", "label": "1", "startAt": 1200, "durationMs": 900 }
+      ]
+    },
+    {
+      "id": "memo-yaz",
+      "title": { "tr": "Memo: sonucu sözlüğe yaz", "en": "Memo: store the result in the dict" },
+      "narration": {
+        "tr": "Şimdi aynı hesabı bir `bellek` sözlüğüyle tekrarlıyoruz. Sol dal yine aynı şekilde açılır, ama `fib(2)` sonucunu döndürmeden önce `bellek[2] = 1`, `fib(3)` de `bellek[3] = 2` yazar. Bütün çerçeveler **aynı** sözlük nesnesini paylaşır.",
+        "en": "Now we repeat the same computation with a `bellek` dict. The left branch opens the same way, but before returning `fib(2)` writes `bellek[2] = 1` and `fib(3)` writes `bellek[3] = 2`. Every frame shares the **same** dict object."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["memo", "f2l", "f3"], "edges": ["m2l", "m3"] },
+      "nodeStates": {
+        "f4": { "status": "busy", "badge": "", "counter": 6 },
+        "f2l": { "status": "success" },
+        "f3": { "status": "success" },
+        "f2r": { "visible": false },
+        "f1b": { "visible": false },
+        "f0b": { "visible": false },
+        "memo": { "visible": true, "status": "active", "sublabel": "{2: 1, 3: 2}", "badge": "2" }
+      },
+      "edgeStates": {
+        "e42": { "visible": false },
+        "e21b": { "visible": false },
+        "e20b": { "visible": false },
+        "m2l": { "visible": true, "status": "active" },
+        "m3": { "visible": true, "status": "active" }
+      },
+      "packets": [
+        { "edge": "m2l", "shape": "diamond", "label": "2 → 1", "durationMs": 1200 },
+        { "edge": "m3", "shape": "diamond", "label": "3 → 2", "startAt": 1400, "durationMs": 1200 }
+      ]
+    },
+    {
+      "id": "memo-hit",
+      "title": { "tr": "İkinci fib(2): önbellekten", "en": "Second fib(2): from the cache" },
+      "narration": {
+        "tr": "`fib(4)` sağ kolu için `fib(2)`'yi çağırır. Fonksiyonun ilk satırı `if n in bellek` doğru çıkar ve 1 hemen döner: alt ağaç **hiç açılmaz**. Toplam çağrı sayısı 9'dan 7'ye düşer; büyük `n` için fark üstelden doğrusala iner.",
+        "en": "`fib(4)` calls `fib(2)` for its right arm. The function's first line `if n in bellek` is true and 1 returns immediately: the subtree is **never opened**. The total call count drops from 9 to 7; for large `n` the difference goes from exponential to linear."
+      },
+      "durationMs": 4200,
+      "highlight": { "nodes": ["f2r", "memo"], "edges": ["e42", "m2r"] },
+      "nodeStates": {
+        "f2l": { "status": "muted" },
+        "f3": { "status": "muted" },
+        "f2r": { "visible": true, "status": "success", "badge": "HIT", "sublabel": "bellek[2] = 1" },
+        "memo": { "status": "success", "sublabel": "{2: 1, 3: 2, 4: 3}", "badge": "3" },
+        "f4": { "status": "success", "badge": "3", "counter": 7 }
+      },
+      "edgeStates": { "m2l": { "status": "idle" }, "m3": { "status": "idle" }, "e42": { "visible": true, "status": "active" }, "m2r": { "visible": true, "status": "active" } },
+      "packets": [
+        { "edge": "e42", "shape": "envelope", "label": "n=2", "durationMs": 900 },
+        { "edge": "m2r", "shape": "diamond", "label": "2?", "startAt": 1000, "durationMs": 700 },
+        { "edge": "m2r", "direction": "backward", "shape": "square", "color": "success", "label": "1", "startAt": 1800, "durationMs": 700 },
+        { "edge": "e42", "direction": "backward", "shape": "square", "color": "success", "label": "1", "startAt": 2700, "durationMs": 900 }
+      ],
+      "annotations": [
+        { "id": "cagri-sayisi", "x": 500, "y": 560, "text": { "tr": "naif: 9 çağrı · memo: 7 çağrı", "en": "naive: 9 calls · memo: 7 calls" }, "tone": "success" }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["python", "recursion", "call-tree", "memoization"]
+}
