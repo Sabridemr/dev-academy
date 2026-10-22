@@ -42,7 +42,7 @@ Max değişmeli, birleşmeli ve eşgüçlü olduğu için G-Counter bir CRDT'dir
 
 **PN-Counter** azaltmaya da izin verir: biri artışlar (P), biri azalışlar (N) için iki G-Counter tutar ve değer `toplam(P) − toplam(N)` olur. Beğeniyi geri çekmek N bileşenini artırmaktır.
 
-:::diagram{src="diagram.svg" alt="G-Counter birleştirme: A replikası {A:6, B:2}, B replikası {A:3, B:4}; bileşen bileşen max ile {A:6, B:4} = 10; altta LWW'nin 8 ya da 7 vererek artışları kaybetmesi|G-Counter merge: replica A {A:6, B:2}, replica B {A:3, B:4}; component-wise max gives {A:6, B:4} = 10; below, LWW losing increments by returning 8 or 7"}
+:::diagram{src="diagram.svg" alt="G-Counter birleştirme: A replikası A=6 ve B=2, B replikası A=3 ve B=4 tutar; bileşen bileşen max ile A=6, B=4 ve toplam 10 bulunur; altta LWW'nin 8 ya da 7 vererek artışları kaybetmesi|G-Counter merge: replica A holds A=6 and B=2, replica B holds A=3 and B=4; component-wise max gives A=6, B=4 and a total of 10; below, LWW losing increments by returning 8 or 7"}
 Üstte CRDT birleştirmesi, altta düz sayı ile last-write-wins. CRDT hangi sırayla birleştirilirse birleştirilsin 10 bulur.
 :::
 
