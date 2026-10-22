@@ -1,0 +1,261 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "q-04-consistency-models-reads",
+  "title": { "tr": "Aynı Yazma, Farklı Modeller, Farklı Okumalar", "en": "One Write, Different Models, Different Reads" },
+  "summary": {
+    "tr": "Alice x=2 yazar; lider ve senkron replika güncellenir, asenkron replika geride kalır. Linearizable okuma 2, eventual okuma 1 döner; read-your-writes ve monotonic reads ihlalleri ve düzeltmeleri gösterilir; causal tutarlılıkta yorum, bağlı olduğu yazmadan önce görünmez.",
+    "en": "Alice writes x=2; the leader and the synchronous replica are updated, the asynchronous replica lags. A linearizable read returns 2, an eventual read returns 1; read-your-writes and monotonic reads violations and their fixes are shown; under causal consistency a comment never appears before the write it depends on."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Sol üstte Alice, sol altta Bob, ortada lider veritabanı, sağ üstte senkron Replika 1, sağ altta asenkron Replika 2. Başlangıçta herkeste x=1 vardır. Alice lidere x=2 yazar; lider bunu Replika 1'e senkron, Replika 2'ye asenkron gönderir ve Replika 2'ye giden kopya gecikir. Bob liderden okuyunca 2 görür (linearizable). Bob Replika 2'den okuyunca 1 görür (eventual). Alice Replika 2'den okuyunca kendi yazmasını göremez (read-your-writes ihlali); sürüm numarası 2 ile okununca istek lidere yönlendirilir. Bob önce Replika 1'den 2, sonra Replika 2'den 1 okur (monotonic reads ihlali); yapışkan oturumla hep Replika 1'e gider. Alice x'e bağlı bir yorum yazar; Replika 2 yorumu x=2'den önce alır ama causal kural gereği x=2 gelene kadar göstermez. Sonunda Replika 2 yakalar ve tüm replikalar x=2'ye yakınsar.",
+      "en": "Alice top left, Bob bottom left, the leader database in the middle, synchronous Replica 1 top right, asynchronous Replica 2 bottom right. Initially every node has x=1. Alice writes x=2 to the leader; the leader sends it synchronously to Replica 1 and asynchronously to Replica 2, and the copy to Replica 2 is delayed. Bob reads from the leader and sees 2 (linearizable). Bob reads from Replica 2 and sees 1 (eventual). Alice reads from Replica 2 and cannot see her own write (read-your-writes violation); reading with version 2 routes her to the leader. Bob reads 2 from Replica 1, then 1 from Replica 2 (monotonic reads violation); a sticky session keeps him on Replica 1. Alice writes a comment that depends on x; Replica 2 receives the comment before x=2 but, by the causal rule, does not show it until x=2 arrives. Finally Replica 2 catches up and all replicas converge on x=2."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "alice", "kind": "user", "label": "Alice", "x": 120, "y": 150, "w": 130, "h": 70 },
+    { "id": "bob", "kind": "user", "label": "Bob", "x": 120, "y": 460, "w": 130, "h": 70 },
+    { "id": "leader", "kind": "db", "label": { "tr": "Lider", "en": "Leader" }, "x": 480, "y": 300, "w": 160, "h": 84 },
+    { "id": "r1", "kind": "replica", "label": { "tr": "Replika 1", "en": "Replica 1" }, "sublabel": { "tr": "senkron", "en": "synchronous" }, "x": 840, "y": 140, "w": 160, "h": 80 },
+    { "id": "r2", "kind": "replica", "label": { "tr": "Replika 2", "en": "Replica 2" }, "sublabel": { "tr": "asenkron · uzak", "en": "asynchronous · remote" }, "x": 840, "y": 460, "w": 160, "h": 80 }
+  ],
+  "edges": [
+    { "id": "alice-leader", "from": "alice", "to": "leader", "kind": "request", "label": "WRITE" },
+    { "id": "leader-r1", "from": "leader", "to": "r1", "kind": "replication", "label": "sync" },
+    { "id": "leader-r2", "from": "leader", "to": "r2", "kind": "replication", "style": "dashed", "label": "async" },
+    { "id": "bob-leader", "from": "bob", "to": "leader", "kind": "request", "label": "READ" },
+    { "id": "bob-r1", "from": "bob", "to": "r1", "kind": "request", "style": "dashed", "curvature": -0.35, "label": "READ" },
+    { "id": "bob-r2", "from": "bob", "to": "r2", "kind": "request", "style": "dashed", "curvature": 0.15, "label": "READ" },
+    { "id": "alice-r2", "from": "alice", "to": "r2", "kind": "request", "style": "dotted", "curvature": 0.3, "label": "READ" }
+  ],
+  "steps": [
+    {
+      "id": "setup",
+      "title": { "tr": "Başlangıç: herkeste x=1", "en": "Start: x=1 everywhere" },
+      "narration": {
+        "tr": "Bir lider ve iki replika var. Replika 1 senkron (lider onu bekler), Replika 2 asenkron ve uzak bir bölgede. Şu an üç kopyada da x=1 ve sürüm v1.",
+        "en": "There is a leader and two replicas. Replica 1 is synchronous (the leader waits for it), Replica 2 is asynchronous and in a remote region. Right now all three copies hold x=1 at version v1."
+      },
+      "durationMs": 2600,
+      "inherit": false,
+      "highlight": { "nodes": ["leader", "r1", "r2"], "edges": [] },
+      "nodeStates": {
+        "alice": { "status": "idle", "badge": "" },
+        "bob": { "status": "idle", "badge": "" },
+        "leader": { "status": "idle", "badge": "x=1 · v1" },
+        "r1": { "status": "idle", "badge": "x=1 · v1" },
+        "r2": { "status": "idle", "badge": "x=1 · v1" }
+      },
+      "edgeStates": {
+        "bob-leader": { "status": "muted" },
+        "bob-r1": { "status": "muted" },
+        "bob-r2": { "status": "muted" },
+        "alice-r2": { "status": "muted" }
+      }
+    },
+    {
+      "id": "write",
+      "title": { "tr": "Alice x=2 yazar", "en": "Alice writes x=2" },
+      "narration": {
+        "tr": "Alice'in yazması lidere gider. Lider Replika 1'in onayını bekler, sonra Alice'e OK ve yazmanın sürümünü (v2) döner. Replika 2'ye giden kopya yolda; ağ gecikmesi yüzünden henüz ulaşmadı.",
+        "en": "Alice's write goes to the leader. The leader waits for Replica 1's ack, then returns OK and the write's version (v2) to Alice. The copy to Replica 2 is in flight; it has not arrived yet because of network delay."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["alice", "leader", "r1"], "edges": ["alice-leader", "leader-r1", "leader-r2"] },
+      "nodeStates": {
+        "alice": { "status": "active", "badge": "v2" },
+        "leader": { "status": "success", "badge": "x=2 · v2" },
+        "r1": { "status": "success", "badge": "x=2 · v2" },
+        "r2": { "status": "warning", "badge": "x=1 · v1" }
+      },
+      "edgeStates": {
+        "alice-leader": { "status": "active", "label": "x=2" },
+        "leader-r1": { "status": "active" },
+        "leader-r2": { "status": "error", "label": { "tr": "gecikiyor", "en": "lagging" } }
+      },
+      "packets": [
+        { "edge": "alice-leader", "shape": "envelope", "label": "x=2", "durationMs": 900 },
+        { "edge": "leader-r1", "shape": "square", "label": "v2", "startAt": 1000, "durationMs": 800 },
+        { "edge": "alice-leader", "direction": "backward", "shape": "dot", "label": "OK v2", "startAt": 2000, "durationMs": 800 },
+        { "edge": "leader-r2", "shape": "square", "label": "v2", "startAt": 1000, "durationMs": 3200 }
+      ]
+    },
+    {
+      "id": "linearizable",
+      "title": { "tr": "Linearizable okuma: 2", "en": "Linearizable read: 2" },
+      "narration": {
+        "tr": "Bob, Alice'in yazması tamamlandıktan sonra liderden okur ve x=2 görür. Linearizability'nin sözü budur: tamamlanmış bir yazmadan sonra başlayan her okuma onu görür; sistem tek kopya gibi davranır. Bedeli: okuma lidere (ya da çoğunluğa) gitmek zorunda.",
+        "en": "Bob reads from the leader after Alice's write has completed and sees x=2. That is linearizability's promise: every read that starts after a completed write sees it; the system behaves like a single copy. The price: the read has to go to the leader (or a majority)."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["bob", "leader"], "edges": ["bob-leader"] },
+      "nodeStates": {
+        "alice": { "status": "idle" },
+        "bob": { "status": "success", "badge": "x=2" }
+      },
+      "edgeStates": {
+        "alice-leader": { "status": "muted", "label": "WRITE" },
+        "leader-r1": { "status": "idle" },
+        "bob-leader": { "status": "active" }
+      },
+      "packets": [
+        { "edge": "bob-leader", "shape": "dot", "label": "GET x", "durationMs": 900 },
+        { "edge": "bob-leader", "direction": "backward", "shape": "envelope", "label": "2", "startAt": 1100, "durationMs": 900 }
+      ],
+      "annotations": [
+        { "id": "lin", "x": 300, "y": 330, "text": { "tr": "linearizable: tek kopya gibi", "en": "linearizable: like a single copy" }, "tone": "success" }
+      ]
+    },
+    {
+      "id": "eventual",
+      "title": { "tr": "Eventual okuma: 1", "en": "Eventual read: 1" },
+      "narration": {
+        "tr": "Bob bu kez yakındaki Replika 2'den okur ve x=1 görür. Eventual consistency buna izin verir: yazmalar durursa replikalar sonunda yakınsar, ama o ana kadar bayat değer dönebilir. Okuma hızlıdır ve uzak bölge liderden kopsa bile çalışır.",
+        "en": "This time Bob reads from the nearby Replica 2 and sees x=1. Eventual consistency allows this: if writes stop the replicas eventually converge, but until then stale values may be returned. The read is fast and works even if the remote region is cut off from the leader."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["bob", "r2"], "edges": ["bob-r2"] },
+      "nodeStates": { "bob": { "status": "warning", "badge": "x=1" } },
+      "edgeStates": { "bob-leader": { "status": "muted" }, "bob-r2": { "status": "active" } },
+      "packets": [
+        { "edge": "bob-r2", "shape": "dot", "label": "GET x", "durationMs": 800 },
+        { "edge": "bob-r2", "direction": "backward", "shape": "envelope", "label": "1", "startAt": 1000, "durationMs": 800 }
+      ],
+      "annotations": [
+        { "id": "ev", "x": 480, "y": 470, "text": { "tr": "eventual: bayat ama hızlı", "en": "eventual: stale but fast" }, "tone": "warning" }
+      ]
+    },
+    {
+      "id": "ryw-violation",
+      "title": { "tr": "Read-your-writes ihlali", "en": "Read-your-writes violation" },
+      "narration": {
+        "tr": "Alice sayfayı yeniler ve okuması Replika 2'ye düşer: x=1. Kendi az önce yaptığı değişiklik kaybolmuş gibi görünür. Sistem eventual sözünü tutuyor, ama kullanıcı 'kaydetmedi' sanıp tekrar dener.",
+        "en": "Alice refreshes the page and her read lands on Replica 2: x=1. Her own change seems to have vanished. The system keeps its eventual promise, but the user thinks 'it didn't save' and tries again."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["alice", "r2"], "edges": ["alice-r2"] },
+      "nodeStates": {
+        "bob": { "status": "idle", "badge": "" },
+        "alice": { "status": "error", "badge": "x=1 ?!" }
+      },
+      "edgeStates": { "bob-r2": { "status": "muted" }, "alice-r2": { "status": "error" } },
+      "packets": [
+        { "edge": "alice-r2", "shape": "dot", "label": "GET x", "durationMs": 1000 },
+        { "edge": "alice-r2", "direction": "backward", "shape": "envelope", "label": "1", "color": "danger", "startAt": 1200, "durationMs": 1000 }
+      ]
+    },
+    {
+      "id": "ryw-fix",
+      "title": { "tr": "Düzeltme: sürüm numarasıyla oku", "en": "Fix: read with a version number" },
+      "narration": {
+        "tr": "Alice'in istemcisi yazmadan dönen v2'yi saklar ve okumaya ekler: 'en az v2 olan bir kopyadan oku'. Replika 2 v1'de olduğu için istek lidere yönlendirilir ve Alice x=2 görür. Bu, tüm sistemi güçlü yapmadan tek kullanıcının deneyimini düzeltir.",
+        "en": "Alice's client keeps the v2 returned by the write and attaches it to the read: 'read from a copy at v2 or later'. Replica 2 is at v1, so the request is routed to the leader and Alice sees x=2. This fixes one user's experience without making the whole system strong."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["alice", "leader"], "edges": ["alice-leader"] },
+      "nodeStates": { "alice": { "status": "success", "badge": "x=2 ✓" } },
+      "edgeStates": { "alice-r2": { "status": "muted" }, "alice-leader": { "status": "active", "label": "READ ≥ v2" } },
+      "packets": [
+        { "edge": "alice-leader", "shape": "dot", "label": "GET x ≥v2", "durationMs": 900 },
+        { "edge": "alice-leader", "direction": "backward", "shape": "envelope", "label": "2", "startAt": 1100, "durationMs": 900 }
+      ],
+      "annotations": [
+        { "id": "ryw", "x": 300, "y": 230, "text": { "tr": "read-your-writes ✓", "en": "read-your-writes ✓" }, "tone": "success" }
+      ]
+    },
+    {
+      "id": "monotonic",
+      "title": { "tr": "Monotonic reads: zaman geri gitmesin", "en": "Monotonic reads: time must not go backwards" },
+      "narration": {
+        "tr": "Bob önce Replika 1'den okur ve x=2 görür; sonraki istek yük dengeleyiciyle Replika 2'ye düşer ve x=1 görür. Bob için zaman geri gitmiştir: bir yorum önce görünür, sonra kaybolur. Monotonic reads garantisi için Bob'un oturumu tek bir replikaya yapıştırılır ya da gördüğü en yüksek sürüm okumalarına eklenir.",
+        "en": "Bob first reads x=2 from Replica 1; the next request is load-balanced to Replica 2 and sees x=1. For Bob time has gone backwards: a comment appears, then disappears. For monotonic reads, Bob's session is pinned to one replica, or the highest version he has seen is attached to his reads."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["bob", "r1", "r2"], "edges": ["bob-r1", "bob-r2"] },
+      "nodeStates": {
+        "alice": { "status": "idle" },
+        "bob": { "status": "warning", "badge": "2 → 1 ?!" }
+      },
+      "edgeStates": {
+        "alice-leader": { "status": "muted", "label": "WRITE" },
+        "bob-r1": { "status": "active" },
+        "bob-r2": { "status": "error" }
+      },
+      "packets": [
+        { "edge": "bob-r1", "direction": "backward", "shape": "envelope", "label": "2", "durationMs": 1000 },
+        { "edge": "bob-r2", "direction": "backward", "shape": "envelope", "label": "1", "color": "danger", "startAt": 1400, "durationMs": 1000 }
+      ],
+      "annotations": [
+        { "id": "mono", "x": 480, "y": 560, "text": { "tr": "çözüm: yapışkan oturum ya da sürüm alt sınırı", "en": "fix: sticky session or version floor" }, "tone": "info" }
+      ]
+    },
+    {
+      "id": "causal",
+      "title": { "tr": "Causal: cevap sorudan önce görünmez", "en": "Causal: the reply never shows before the question" },
+      "narration": {
+        "tr": "Alice, x=2'ye bağlı bir yorum yazar (yorum, x=2'yi gördükten sonra yazıldı: happens-before). Yorumun kopyası Replika 2'ye x=2'den önce ulaşır. Causal tutarlı bir replika yorumun bağımlılığını (v2) kontrol eder ve x=2 gelene kadar yorumu görünür yapmaz. Eventual bir replika ise önce yorumu, sonra x=2'yi gösterebilirdi.",
+        "en": "Alice writes a comment that depends on x=2 (it was written after seeing x=2: happens-before). The comment's copy reaches Replica 2 before x=2 does. A causally consistent replica checks the comment's dependency (v2) and keeps it hidden until x=2 arrives. An eventual replica could show the comment first and x=2 later."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["alice", "leader", "r2"], "edges": ["alice-leader", "leader-r2"] },
+      "nodeStates": {
+        "bob": { "status": "idle", "badge": "" },
+        "alice": { "status": "active", "badge": "c1 → v2" },
+        "leader": { "status": "success", "badge": "x=2 · c1" },
+        "r2": { "status": "busy", "badge": "x=1 · c1 ⏳" }
+      },
+      "edgeStates": {
+        "bob-r1": { "status": "muted" },
+        "bob-r2": { "status": "muted" },
+        "alice-leader": { "status": "active", "label": { "tr": "yorum c1", "en": "comment c1" } },
+        "leader-r2": { "status": "active", "label": "c1 (dep v2)" }
+      },
+      "packets": [
+        { "edge": "alice-leader", "shape": "envelope", "label": "c1", "durationMs": 900 },
+        { "edge": "leader-r2", "shape": "square", "label": "c1 dep:v2", "startAt": 1000, "durationMs": 1100 }
+      ],
+      "annotations": [
+        { "id": "dep", "x": 840, "y": 560, "text": { "tr": "bağımlılık v2 yok → c1 gizli", "en": "dependency v2 missing → c1 hidden" }, "tone": "info", "target": "r2" }
+      ]
+    },
+    {
+      "id": "converge",
+      "title": { "tr": "Yakınsama", "en": "Convergence" },
+      "narration": {
+        "tr": "Gecikmiş v2 sonunda Replika 2'ye ulaşır. Replika 2 önce x=2'yi, ardından bekleyen c1'i uygular. Artık üç kopya da aynı durumda: eventual consistency'nin sözü yerine geldi ve causal sıra hiç bozulmadı.",
+        "en": "The delayed v2 finally reaches Replica 2. Replica 2 applies x=2 first, then the waiting c1. All three copies are now identical: eventual consistency's promise is kept and the causal order was never broken."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["leader", "r1", "r2"], "edges": ["leader-r2"] },
+      "nodeStates": {
+        "alice": { "status": "idle" },
+        "r1": { "status": "success", "badge": "x=2 · c1" },
+        "r2": { "status": "success", "badge": "x=2 · c1" }
+      },
+      "edgeStates": {
+        "alice-leader": { "status": "muted", "label": "WRITE" },
+        "leader-r2": { "status": "active", "label": "v2 ✓" }
+      },
+      "packets": [{ "edge": "leader-r2", "shape": "square", "label": "v2", "durationMs": 1100 }]
+    },
+    {
+      "id": "summary",
+      "title": { "tr": "Özet: aynı veri, dört sözleşme", "en": "Summary: same data, four contracts" },
+      "narration": {
+        "tr": "Aynı yazma; linearizable okumada hemen, eventual okumada sonunda görünür. Oturum garantileri tek kullanıcının deneyimini, causal tutarlılık bağımlı olayların sırasını korur. Doğru model, her okuma yolunda bayatlığın neye mal olacağına göre seçilir.",
+        "en": "The same write is visible immediately for a linearizable read and eventually for an eventual one. Session guarantees protect a single user's experience; causal consistency protects the order of dependent events. The right model is chosen per read path, by what staleness would cost."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["alice", "bob", "leader", "r1", "r2"], "edges": [] },
+      "nodeStates": {
+        "alice": { "status": "success", "badge": "x=2" },
+        "bob": { "status": "success", "badge": "x=2" },
+        "leader": { "status": "success" }
+      },
+      "edgeStates": { "leader-r2": { "status": "idle", "label": "async" } }
+    }
+  ],
+  "tags": ["consistency", "linearizability", "eventual-consistency", "session-guarantees"]
+}

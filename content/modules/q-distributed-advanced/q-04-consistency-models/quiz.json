@@ -1,0 +1,110 @@
+{
+  "id": "q-04-consistency-models-quiz",
+  "title": { "tr": "Tutarlılık Modelleri Quiz", "en": "Consistency Models Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Bir kullanıcı adı kayıt servisinde aynı adın iki kişiye verilmemesi gerekiyor. Ad kontrolü hangi tutarlılık modelini gerektirir?",
+        "en": "A username registration service must never give the same name to two people. Which consistency model does the name check require?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Eventual", "en": "Eventual" } },
+        { "id": "b", "text": { "tr": "Read-your-writes", "en": "Read-your-writes" } },
+        { "id": "c", "text": { "tr": "Linearizable", "en": "Linearizable" } },
+        { "id": "d", "text": { "tr": "Monotonic reads", "en": "Monotonic reads" } }
+      ],
+      "correct": ["c"],
+      "explanation": {
+        "tr": "Benzersizlik kısıtı 'tek gerçek' ister: iki eşzamanlı kayıt isteğinden yalnızca biri kazanmalı ve kazanan herkes tarafından görülmeli. Bu linearizability'dir (pratikte lider/konsensüs üzerinden koşullu yazma). Oturum garantileri tek kullanıcının görüşünü düzeltir, kullanıcılar arası çakışmayı değil.",
+        "en": "A uniqueness constraint needs 'one truth': only one of two concurrent registrations may win and everyone must see the winner. That is linearizability (in practice a conditional write via a leader/consensus). Session guarantees fix a single user's view, not conflicts between users."
+      },
+      "difficulty": "easy",
+      "concepts": ["linearizability"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "Bob bir yorumu görür, sayfayı yeniler ve yorum kaybolur; birkaç saniye sonra yeniden görünür. Hangi garanti ihlal edilmiştir?",
+        "en": "Bob sees a comment, refreshes the page and the comment disappears; a few seconds later it shows up again. Which guarantee was violated?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Read-your-writes", "en": "Read-your-writes" } },
+        { "id": "b", "text": { "tr": "Monotonic reads", "en": "Monotonic reads" } },
+        { "id": "c", "text": { "tr": "Monotonic writes", "en": "Monotonic writes" } },
+        { "id": "d", "text": { "tr": "Hiçbiri; eventual consistency buna izin vermez", "en": "None; eventual consistency forbids this" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Yorumu Bob yazmadı, dolayısıyla read-your-writes değil; Bob'un gördüğü durum zamanda geri gitti, bu monotonic reads ihlalidir. Genellikle ardışık okumaların farklı gecikmeli replikalara düşmesinden kaynaklanır. Eventual consistency tek başına buna izin verir.",
+        "en": "Bob did not write the comment, so it is not read-your-writes; the state Bob saw went back in time, which violates monotonic reads. It usually comes from consecutive reads hitting replicas with different lag. Eventual consistency on its own allows it."
+      },
+      "difficulty": "easy",
+      "concepts": ["monotonic-reads", "session-guarantees"]
+    },
+    {
+      "id": "q3",
+      "type": "order",
+      "prompt": {
+        "tr": "Modelleri en güçlüden en zayıfa sıralayın.",
+        "en": "Order the models from strongest to weakest."
+      },
+      "options": [
+        { "id": "eventual", "text": { "tr": "Eventual", "en": "Eventual" } },
+        { "id": "causal", "text": { "tr": "Causal", "en": "Causal" } },
+        { "id": "lin", "text": { "tr": "Linearizable", "en": "Linearizable" } },
+        { "id": "seq", "text": { "tr": "Sequential", "en": "Sequential" } }
+      ],
+      "correct": ["lin", "seq", "causal", "eventual"],
+      "explanation": {
+        "tr": "Linearizable, sequential'ın tüm garantilerine ek olarak gerçek zaman sırasını korur. Sequential herkes için tek bir sıra verir; causal yalnızca nedensel bağlı işlemleri sıralar; eventual yalnızca sonunda yakınsamayı vaat eder.",
+        "en": "Linearizable adds real-time order on top of everything sequential guarantees. Sequential gives a single order for everyone; causal orders only causally related operations; eventual only promises eventual convergence."
+      },
+      "difficulty": "medium",
+      "concepts": ["consistency-model", "causal-consistency", "sequential-consistency"]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Lidersiz bir sistemde W + R > N seçmek, tek başına linearizability garanti eder.",
+        "en": "In a leaderless system, choosing W + R > N guarantees linearizability on its own."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "Yanlış. Quorum kesişimi okuma kümesinin güncel bir kopyaya değmesini sağlar, ama süren eşzamanlı yazmalar, sloppy quorum ve last-write-wins çakışma çözümü yüzünden linearizable olmayan sonuçlar hâlâ mümkündür.",
+        "en": "False. Quorum overlap makes the read set touch an up-to-date copy, but concurrent in-flight writes, sloppy quorums and last-write-wins conflict resolution can still produce non-linearizable results."
+      },
+      "difficulty": "medium",
+      "concepts": ["linearizability", "eventual-consistency"]
+    },
+    {
+      "id": "q5",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Asenkron okuma replikaları olan bir sistemde read-your-writes nasıl sağlanabilir? (Birden fazla seçin)",
+        "en": "How can read-your-writes be provided in a system with asynchronous read replicas? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Kullanıcının kendi yazmasından sonraki bir süre okumalarını lidere yönlendirmek", "en": "Routing the user's reads to the leader for a while after their own write" } },
+        { "id": "b", "text": { "tr": "Yazmanın sürüm numarasını (LSN) istemciye verip yalnızca o sürüme ulaşmış replikadan okumak", "en": "Returning the write's version (LSN) to the client and reading only from replicas that reached it" } },
+        { "id": "c", "text": { "tr": "Okuma replikalarının sayısını artırmak", "en": "Adding more read replicas" } },
+        { "id": "d", "text": { "tr": "Önbellek TTL'sini uzatmak", "en": "Increasing the cache TTL" } }
+      ],
+      "correct": ["a", "b"],
+      "explanation": {
+        "tr": "İki yöntem de kullanıcının okumasının kendi yazmasını içeren bir kopyaya gitmesini sağlar. Daha fazla replika gecikmeyi değiştirmez; TTL'yi uzatmak bayat veri penceresini büyütür.",
+        "en": "Both make sure the user's read goes to a copy that contains their own write. More replicas do not change lag; a longer TTL widens the stale window."
+      },
+      "difficulty": "medium",
+      "concepts": ["read-your-writes"]
+    }
+  ]
+}
