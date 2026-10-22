@@ -1,0 +1,110 @@
+{
+  "id": "b-05-modular-monolith-quiz",
+  "title": { "tr": "Modüler Monolit Quiz", "en": "Modular Monolith Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Bir modüler monolitte Orders modülü, ürün fiyatını öğrenmek istiyor. Hangisi sınırları koruyan doğru yoldur?",
+        "en": "In a modular monolith, the Orders module wants to know a product's price. Which is the correct, boundary-preserving way?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "catalog.products tablosunu SQL ile doğrudan okumak; aynı veritabanı zaten paylaşılıyor", "en": "Read the catalog.products table directly with SQL; the database is shared anyway" } },
+        { "id": "b", "text": { "tr": "Catalog'un açık API'sindeki getPrice() fonksiyonunu çağırıp küçük bir fiyat görünümü almak", "en": "Call getPrice() on Catalog's public API and receive a small price view" } },
+        { "id": "c", "text": { "tr": "Catalog'un iç ProductRepository sınıfını import etmek; aynı süreçte olduğu için en hızlısı budur", "en": "Import Catalog's internal ProductRepository class; it is the fastest since they share a process" } },
+        { "id": "d", "text": { "tr": "Product sınıfını Orders modülüne kopyalayıp iki yerde güncel tutmak", "en": "Copy the Product class into Orders and keep both copies in sync" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Modüller birbirinin yalnızca açık API'sine dokunur. Tabloyu doğrudan okumak (a) veri sınırını, iç sınıfı import etmek (c) kod sınırını deler; ikisi de Catalog'un iç değişikliklerini ve ileride servise ayrılmasını engeller. Sınıfı kopyalamak (d) aynı modelin iki sahibini yaratır; Orders'ın ihtiyacı yalnızca fiyat görünümüdür.",
+        "en": "Modules only touch each other's public API. Reading the table directly (a) breaks the data boundary and importing the internal class (c) breaks the code boundary; both block Catalog's internal changes and a future extraction. Copying the class (d) creates two owners of one model; Orders only needs a price view."
+      },
+      "difficulty": "easy",
+      "concepts": ["module-public-api", "bounded-context"]
+    },
+    {
+      "id": "q2",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Modüler monolitte modüller arası süreç içi olaylar, transaction commit edilmeden önce dinleyicilere dağıtılmalıdır; böylece dinleyiciler aynı transaction'ın parçası olur.",
+        "en": "In a modular monolith, in-process events between modules should be dispatched to listeners before the transaction commits, so the listeners become part of the same transaction."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "Olay commit'ten önce dağıtılırsa ve transaction geri alınırsa, dinleyiciler hiç var olmamış bir sipariş için iş yapmış olur (ör. e-posta gönderir). Olaylar commit sonrasında dağıtılmalı; servis ayrıldığında aynı garanti outbox kalıbıyla sağlanır. Dinleyicileri aynı transaction'a bağlamak da modülleri yeniden sıkı bağlar.",
+        "en": "If the event is dispatched before commit and the transaction rolls back, listeners have acted on an order that never existed (e.g. sent an email). Events should be dispatched after commit; once a service is extracted, the outbox pattern provides the same guarantee. Tying listeners into the same transaction also re-couples the modules."
+      },
+      "difficulty": "medium",
+      "concepts": ["in-process-events"]
+    },
+    {
+      "id": "q3",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Hangileri bir modülü ayrı servise çıkarmak için geçerli, ölçülebilir gerekçelerdir? (Birden fazla seçin)",
+        "en": "Which are valid, measurable reasons to extract a module into its own service? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Modül toplam CPU'nun büyük kısmını tüketiyor ve diğerlerinden bağımsız ölçeklenmesi gerekiyor", "en": "The module consumes most of the CPU and needs to scale independently of the others" } },
+        { "id": "b", "text": { "tr": "Ekip, mikroservislerin daha modern göründüğünü düşünüyor", "en": "The team thinks microservices look more modern" } },
+        { "id": "c", "text": { "tr": "Kart verisi taşıyan modülün ayrı bir uyum/denetim kapsamına alınması gerekiyor", "en": "The module holding card data must be placed in a separate compliance/audit scope" } },
+        { "id": "d", "text": { "tr": "Modülün ekibi günde birkaç kez dağıtım yapmak istiyor ve ortak sürüm treni onu bekletiyor", "en": "The module's team wants to deploy several times a day and the shared release train holds it back" } }
+      ],
+      "correct": ["a", "c", "d"],
+      "explanation": {
+        "tr": "Ayrı ölçek profili, uyum kapsamı ve bağımsız dağıtım ritmi, ağ çağrısı ve dağıtık tutarlılık bedelini haklı çıkarabilecek somut sürtünmelerdir. Görünüş ya da moda (b) bir gerekçe değildir; o bedel karşılıksız ödenir.",
+        "en": "A different scaling profile, a compliance scope and an independent release cadence are concrete frictions that can justify the cost of network calls and distributed consistency. Looks or fashion (b) is not a reason; that cost would be paid for nothing."
+      },
+      "difficulty": "medium",
+      "concepts": ["service-extraction"]
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": {
+        "tr": "Yıllardır sınır kuralı olmadan büyümüş bir kod tabanına bağımlılık denetimi ekliyorsunuz ve yüzlerce mevcut ihlal çıkıyor. En pratik yaklaşım hangisidir?",
+        "en": "You are adding a dependency check to a codebase that has grown for years without boundary rules, and hundreds of existing violations show up. What is the most practical approach?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Tüm ihlaller düzeltilene kadar yeni özellik geliştirmeyi durdurmak", "en": "Stop all feature work until every violation is fixed" } },
+        { "id": "b", "text": { "tr": "Denetimi yalnızca uyarı seviyesinde çalıştırıp sonuçları kimsenin bakmadığı bir rapora yazmak", "en": "Run the check only as a warning and write the results to a report nobody reads" } },
+        { "id": "c", "text": { "tr": "Mevcut ihlalleri bir listeye kaydedip yalnızca yeni ihlallerde derlemeyi kırmak, listeyi zamanla küçültmek", "en": "Record existing violations in a list, break the build only on new ones, and shrink the list over time" } },
+        { "id": "d", "text": { "tr": "Sınır denetimini iptal edip kod incelemesinde dikkatli olmak", "en": "Drop the boundary check and be careful in code review" } }
+      ],
+      "correct": ["c"],
+      "explanation": {
+        "tr": "Mevcut ihlalleri kayıt altına alıp yalnızca yenileri engellemek (Packwerk'in yaklaşımı gibi) hem durumu kötüleştirmez hem de ekipleri durdurmaz. Her şeyi durdurmak (a) gerçekçi değildir; yalnızca uyarı (b) ve yalnızca kod incelemesi (d) ise ölçeklenmez ve sınırlar yavaşça çözülür.",
+        "en": "Recording existing violations and blocking only new ones (as Packwerk does) both stops things getting worse and keeps teams moving. Stopping everything (a) is unrealistic; warnings only (b) and code review only (d) do not scale and the boundaries slowly erode."
+      },
+      "difficulty": "medium",
+      "concepts": ["module-boundary-enforcement"]
+    },
+    {
+      "id": "q5",
+      "type": "order",
+      "prompt": {
+        "tr": "Sınırları temiz bir Payments modülünü ayrı servise çıkarma adımlarını mantıklı sıraya koyun.",
+        "en": "Put the steps for extracting a cleanly bounded Payments module into its own service in a sensible order."
+      },
+      "options": [
+        { "id": "contract", "text": { "tr": "Modülün açık API'sini bir ağ sözleşmesine (REST/gRPC) dönüştürmek", "en": "Turn the module's public API into a network contract (REST/gRPC)" } },
+        { "id": "adapter", "text": { "tr": "Çağıran modüllerde süreç içi adaptörü HTTP/gRPC adaptörüyle değiştirmek", "en": "Replace the in-process adapter in calling modules with an HTTP/gRPC adapter" } },
+        { "id": "data", "text": { "tr": "payments şemasını ayrı veritabanına taşımak", "en": "Move the payments schema into a separate database" } },
+        { "id": "events", "text": { "tr": "Süreç içi olayları outbox + mesaj kuyruğuna bağlamak", "en": "Wire in-process events to an outbox + message queue" } }
+      ],
+      "correct": ["contract", "adapter", "data", "events"],
+      "explanation": {
+        "tr": "Önce sözleşme tanımlanır, ardından çağıranlar o sözleşmeyi kullanan adaptöre geçer; bu noktada modül hâlâ aynı şemayı kullanarak ayrı süreçte çalışabilir. Veri ayrı veritabanına taşınınca iki veritabanı arasında atomik yayın gerektiği için süreç içi olaylar outbox ve kuyruğa bağlanır. Sınırlar baştan temiz olduğu için her adım küçük ve geri alınabilirdir.",
+        "en": "First the contract is defined, then callers switch to an adapter that uses it; at that point the module can run in its own process while still using the same schema. Once data moves to a separate database, atomic publishing across two databases is needed, so in-process events are wired to an outbox and a queue. Because the boundaries were clean from the start, each step is small and reversible."
+      },
+      "difficulty": "hard",
+      "concepts": ["service-extraction", "schema-per-module"]
+    }
+  ]
+}

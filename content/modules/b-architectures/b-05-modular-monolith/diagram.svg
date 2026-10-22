@@ -1,0 +1,102 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 470" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Modüler monolitin anatomisi</title>
+  <desc id="desc">Tek dağıtım birimi içinde Orders, Catalog ve Payments modülleri. Her modülde açık API, iç kod ve kendi veritabanı şeması bölgeleri var. Orders'tan Catalog'un açık API'sine ve Payments'a olayla giden oklar izinli; Orders'tan Catalog'un iç koduna giden kesikli ok yasak ve sağdaki CI sınır denetimi tarafından yakalanıyor.</desc>
+  <defs>
+    <marker id="mm-ok" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-success, #10b981)"/>
+    </marker>
+    <marker id="mm-bad" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-danger, #ef4444)"/>
+    </marker>
+    <marker id="mm-muted" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+  </defs>
+
+  <!-- Dağıtım birimi -->
+  <rect x="20" y="20" width="690" height="430" rx="18" fill="var(--da-surface, #f8fafc)" stroke="var(--da-primary, #6366f1)" stroke-width="2" stroke-dasharray="8 6"/>
+  <text x="40" y="46" font-size="14" font-weight="600" fill="var(--da-primary, #6366f1)">Tek dağıtım birimi · tek süreç · tek sürüm (v42)</text>
+
+  <!-- Modül şablonu: Orders -->
+  <g>
+    <rect x="45" y="70" width="190" height="270" rx="14" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5"/>
+    <text x="140" y="94" text-anchor="middle" font-size="15" font-weight="700" fill="var(--da-fg, #0f172a)">Orders</text>
+    <rect x="60" y="106" width="160" height="50" rx="8" fill="var(--da-success, #10b981)" fill-opacity="0.14" stroke="var(--da-success, #10b981)"/>
+    <text x="140" y="127" text-anchor="middle" font-size="12" font-weight="600" fill="var(--da-fg, #0f172a)">public/</text>
+    <text x="140" y="144" text-anchor="middle" font-size="11" fill="var(--da-muted, #64748b)">placeOrder() · OrderPlaced</text>
+    <rect x="60" y="166" width="160" height="90" rx="8" fill="var(--da-muted, #64748b)" fill-opacity="0.10" stroke="var(--da-border, #cbd5e1)"/>
+    <text x="140" y="190" text-anchor="middle" font-size="12" font-weight="600" fill="var(--da-fg, #0f172a)">internal/</text>
+    <text x="140" y="208" text-anchor="middle" font-size="11" fill="var(--da-muted, #64748b)">alan modeli · use case</text>
+    <text x="140" y="224" text-anchor="middle" font-size="11" fill="var(--da-muted, #64748b)">repository</text>
+    <rect x="60" y="266" width="160" height="58" rx="8" fill="var(--da-accent, #0ea5e9)" fill-opacity="0.12" stroke="var(--da-accent, #0ea5e9)"/>
+    <text x="140" y="291" text-anchor="middle" font-size="12" font-weight="600" fill="var(--da-fg, #0f172a)">şema: orders</text>
+    <text x="140" y="308" text-anchor="middle" font-size="11" fill="var(--da-muted, #64748b)">yalnızca Orders erişir</text>
+  </g>
+
+  <!-- Catalog -->
+  <g>
+    <rect x="270" y="70" width="190" height="270" rx="14" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5"/>
+    <text x="365" y="94" text-anchor="middle" font-size="15" font-weight="700" fill="var(--da-fg, #0f172a)">Catalog</text>
+    <rect x="285" y="106" width="160" height="50" rx="8" fill="var(--da-success, #10b981)" fill-opacity="0.14" stroke="var(--da-success, #10b981)"/>
+    <text x="365" y="127" text-anchor="middle" font-size="12" font-weight="600" fill="var(--da-fg, #0f172a)">public/</text>
+    <text x="365" y="144" text-anchor="middle" font-size="11" fill="var(--da-muted, #64748b)">getPrice() → PriceView</text>
+    <rect x="285" y="166" width="160" height="90" rx="8" fill="var(--da-muted, #64748b)" fill-opacity="0.10" stroke="var(--da-border, #cbd5e1)"/>
+    <text x="365" y="190" text-anchor="middle" font-size="12" font-weight="600" fill="var(--da-fg, #0f172a)">internal/</text>
+    <text x="365" y="208" text-anchor="middle" font-size="11" fill="var(--da-muted, #64748b)">Product · ProductRepository</text>
+    <rect x="285" y="266" width="160" height="58" rx="8" fill="var(--da-accent, #0ea5e9)" fill-opacity="0.12" stroke="var(--da-accent, #0ea5e9)"/>
+    <text x="365" y="291" text-anchor="middle" font-size="12" font-weight="600" fill="var(--da-fg, #0f172a)">şema: catalog</text>
+    <text x="365" y="308" text-anchor="middle" font-size="11" fill="var(--da-muted, #64748b)">yalnızca Catalog erişir</text>
+  </g>
+
+  <!-- Payments -->
+  <g>
+    <rect x="495" y="70" width="190" height="270" rx="14" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5"/>
+    <text x="590" y="94" text-anchor="middle" font-size="15" font-weight="700" fill="var(--da-fg, #0f172a)">Payments</text>
+    <rect x="510" y="106" width="160" height="50" rx="8" fill="var(--da-success, #10b981)" fill-opacity="0.14" stroke="var(--da-success, #10b981)"/>
+    <text x="590" y="127" text-anchor="middle" font-size="12" font-weight="600" fill="var(--da-fg, #0f172a)">public/</text>
+    <text x="590" y="144" text-anchor="middle" font-size="11" fill="var(--da-muted, #64748b)">on(OrderPlaced) · refund()</text>
+    <rect x="510" y="166" width="160" height="90" rx="8" fill="var(--da-muted, #64748b)" fill-opacity="0.10" stroke="var(--da-border, #cbd5e1)"/>
+    <text x="590" y="190" text-anchor="middle" font-size="12" font-weight="600" fill="var(--da-fg, #0f172a)">internal/</text>
+    <text x="590" y="208" text-anchor="middle" font-size="11" fill="var(--da-muted, #64748b)">Charge · PSP istemcisi</text>
+    <rect x="510" y="266" width="160" height="58" rx="8" fill="var(--da-accent, #0ea5e9)" fill-opacity="0.12" stroke="var(--da-accent, #0ea5e9)"/>
+    <text x="590" y="291" text-anchor="middle" font-size="12" font-weight="600" fill="var(--da-fg, #0f172a)">şema: payments</text>
+    <text x="590" y="308" text-anchor="middle" font-size="11" fill="var(--da-muted, #64748b)">yalnızca Payments erişir</text>
+  </g>
+
+  <!-- İzinli: Orders internal → Catalog public -->
+  <path d="M 220 190 C 250 190, 255 131, 285 131" fill="none" stroke="var(--da-success, #10b981)" stroke-width="2.2" marker-end="url(#mm-ok)"/>
+  <!-- İzinli: olay Orders → Payments public (üstten) -->
+  <path d="M 140 70 C 140 52, 590 52, 590 104" fill="none" stroke="var(--da-success, #10b981)" stroke-width="2" stroke-dasharray="3 4" marker-end="url(#mm-ok)"/>
+  <text x="365" y="64" text-anchor="middle" font-size="11" fill="var(--da-success, #10b981)">OrderPlaced (süreç içi olay, commit sonrası)</text>
+  <!-- Yasak: Orders internal → Catalog internal -->
+  <path d="M 220 240 C 250 240, 255 222, 285 222" fill="none" stroke="var(--da-danger, #ef4444)" stroke-width="2.2" stroke-dasharray="6 4" marker-end="url(#mm-bad)"/>
+  <text x="252" y="252" text-anchor="middle" font-size="16" font-weight="700" fill="var(--da-danger, #ef4444)">✕</text>
+
+  <!-- Tek veritabanı -->
+  <rect x="45" y="362" width="640" height="68" rx="12" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)" stroke-width="1.5"/>
+  <text x="365" y="390" text-anchor="middle" font-size="13" font-weight="600" fill="var(--da-fg, #0f172a)">Tek PostgreSQL sunucusu</text>
+  <text x="365" y="410" text-anchor="middle" font-size="11" fill="var(--da-muted, #64748b)">modül başına şema + modül başına veritabanı kullanıcısı → başkasının tablosuna JOIN yok</text>
+  <g stroke="var(--da-muted, #64748b)" stroke-width="1.5" fill="none" marker-end="url(#mm-muted)">
+    <path d="M 140 324 L 140 360"/>
+    <path d="M 365 324 L 365 360"/>
+    <path d="M 590 324 L 590 360"/>
+  </g>
+
+  <!-- CI -->
+  <rect x="735" y="150" width="150" height="150" rx="14" fill="var(--da-surface, #ffffff)" stroke="var(--da-danger, #ef4444)" stroke-width="1.8"/>
+  <text x="810" y="176" text-anchor="middle" font-size="14" font-weight="700" fill="var(--da-fg, #0f172a)">CI</text>
+  <text x="810" y="198" text-anchor="middle" font-size="11" fill="var(--da-muted, #64748b)">sınır denetimi</text>
+  <text x="810" y="216" text-anchor="middle" font-size="11" fill="var(--da-muted, #64748b)">dependency-cruiser ·</text>
+  <text x="810" y="232" text-anchor="middle" font-size="11" fill="var(--da-muted, #64748b)">ArchUnit · Packwerk</text>
+  <text x="810" y="262" text-anchor="middle" font-size="12" font-weight="600" fill="var(--da-danger, #ef4444)">build kırmızı</text>
+  <text x="810" y="282" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">orders → catalog/internal</text>
+  <path d="M 735 225 C 600 260, 330 270, 262 244" fill="none" stroke="var(--da-danger, #ef4444)" stroke-width="1.4" stroke-dasharray="2 4"/>
+
+  <!-- Gösterge -->
+  <g font-size="11" fill="var(--da-fg, #0f172a)">
+    <line x1="735" y1="345" x2="765" y2="345" stroke="var(--da-success, #10b981)" stroke-width="2.2"/>
+    <text x="772" y="349">izinli: açık API / olay</text>
+    <line x1="735" y1="370" x2="765" y2="370" stroke="var(--da-danger, #ef4444)" stroke-width="2.2" stroke-dasharray="6 4"/>
+    <text x="772" y="374">yasak: iç koda erişim</text>
+  </g>
+</svg>
