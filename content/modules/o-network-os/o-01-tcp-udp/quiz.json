@@ -1,0 +1,110 @@
+{
+  "id": "o-01-tcp-udp-quiz",
+  "title": { "tr": "TCP ve UDP Quiz", "en": "TCP and UDP Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "order",
+      "prompt": {
+        "tr": "Bir TCP bağlantısının kurulup ilk verinin gönderilmesine kadarki segmentleri doğru sıraya koyun.",
+        "en": "Put the segments from setting up a TCP connection to sending the first data in the correct order."
+      },
+      "options": [
+        { "id": "ack", "text": { "tr": "İstemci ACK gönderir (ack=y+1)", "en": "The client sends ACK (ack=y+1)" } },
+        { "id": "syn", "text": { "tr": "İstemci SYN gönderir (seq=x)", "en": "The client sends SYN (seq=x)" } },
+        { "id": "data", "text": { "tr": "İstemci ilk veri segmentini gönderir", "en": "The client sends the first data segment" } },
+        { "id": "synack", "text": { "tr": "Sunucu SYN-ACK gönderir (seq=y, ack=x+1)", "en": "The server sends SYN-ACK (seq=y, ack=x+1)" } }
+      ],
+      "correct": ["syn", "synack", "ack", "data"],
+      "explanation": {
+        "tr": "Her iki yön kendi başlangıç numarasını bildirmeli ve karşınınkini onaylamalıdır: SYN, SYN-ACK, ACK. Veri ancak bundan sonra (ya da ACK ile aynı anda) gider; bu yüzden yeni bir bağlantı en az bir RTT'lik bedelle başlar.",
+        "en": "Each direction must announce its initial number and acknowledge the other's: SYN, SYN-ACK, ACK. Data flows only after that (or together with the ACK), which is why a new connection always starts with at least one RTT of cost."
+      },
+      "difficulty": "easy",
+      "concepts": ["three-way-handshake", "sequence-number"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "Gönderici aynı ACK numarasını (ack=1001) art arda üç kez fazladan alıyor. En olası durum ve TCP'nin tepkisi nedir?",
+        "en": "The sender receives the same ACK number (ack=1001) three extra times in a row. What is the most likely situation and TCP's response?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Alıcı çöktü; gönderici bağlantıyı kapatır", "en": "The receiver crashed; the sender closes the connection" } },
+        { "id": "b", "text": { "tr": "1001'den başlayan segment kayboldu ama sonrakiler ulaşıyor; gönderici zaman aşımını beklemeden onu yeniden yollar", "en": "The segment starting at 1001 was lost but later ones are arriving; the sender retransmits it without waiting for the timeout" } },
+        { "id": "c", "text": { "tr": "Alıcı penceresi doldu; gönderici rwnd açılana kadar bekler", "en": "The receive window is full; the sender waits until rwnd opens" } },
+        { "id": "d", "text": { "tr": "ACK'ler ağda çoğaldı; gönderici fazlalıkları yok sayar ve devam eder", "en": "ACKs were duplicated in the network; the sender ignores the extras and continues" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Duplicate ACK, alıcının sıra dışı segmentler aldığını ama bir boşluk olduğunu gösterir. Üç duplicate ACK hızlı yeniden iletimi tetikler; RTO beklenmez. Dolu alıcı penceresi (c) ACK'teki pencere alanıyla bildirilir, aynı ACK numarasının tekrarıyla değil.",
+        "en": "Duplicate ACKs show the receiver is getting out-of-order segments but there is a gap. Three duplicate ACKs trigger fast retransmit; the RTO is not awaited. A full receive window (c) is signalled through the window field, not by repeating the ACK number."
+      },
+      "difficulty": "medium",
+      "concepts": ["retransmission", "sequence-number"]
+    },
+    {
+      "id": "q3",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Akış kontrolü (rwnd) ve tıkanıklık kontrolü (cwnd) için hangileri doğrudur? (Birden fazla seçin)",
+        "en": "Which statements are true about flow control (rwnd) and congestion control (cwnd)? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "rwnd'yi alıcı belirler ve her ACK'te bildirir", "en": "rwnd is set by the receiver and advertised in every ACK" } },
+        { "id": "b", "text": { "tr": "cwnd göndericinin ağ kapasitesine dair kendi tahminidir", "en": "cwnd is the sender's own estimate of network capacity" } },
+        { "id": "c", "text": { "tr": "Uçuşta olabilecek veri rwnd ile cwnd'nin toplamıdır", "en": "The data that can be in flight is the sum of rwnd and cwnd" } },
+        { "id": "d", "text": { "tr": "Slow start'ta cwnd her RTT'de kabaca ikiye katlanır", "en": "During slow start cwnd roughly doubles every RTT" } }
+      ],
+      "correct": ["a", "b", "d"],
+      "explanation": {
+        "tr": "rwnd alıcıyı, cwnd ağı korur ve uçuştaki veri ikisinin küçüğüyle sınırlanır, toplamıyla değil. Slow start adına rağmen üsteldir: her RTT'de pencere yaklaşık iki katına çıkar, bir eşikten sonra doğrusal büyümeye geçilir.",
+        "en": "rwnd protects the receiver, cwnd protects the network, and data in flight is limited by the smaller of the two, not their sum. Despite its name slow start is exponential: the window roughly doubles every RTT and switches to linear growth after a threshold."
+      },
+      "difficulty": "medium",
+      "concepts": ["flow-control", "congestion-control", "slow-start", "sliding-window"]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "UDP güvenilirlik sağlamadığı için, güvenilir teslimat gereken bir protokol asla UDP üzerine kurulamaz.",
+        "en": "Because UDP provides no reliability, a protocol that needs reliable delivery can never be built on top of UDP."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "Yanlış. UDP güvenilirlik kararını uygulamaya bırakır. QUIC, sıra numaralarını, yeniden iletimi ve tıkanıklık kontrolünü UDP üstünde kullanıcı alanında yeniden kurar ve bunu stream başına yaptığı için TCP'nin head-of-line blocking sorununu yaşamaz.",
+        "en": "False. UDP leaves the reliability decision to the application. QUIC rebuilds sequence numbers, retransmission and congestion control on top of UDP in user space, and because it does so per stream it avoids TCP's head-of-line blocking."
+      },
+      "difficulty": "easy",
+      "concepts": ["udp-datagram"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "Bir servis her istekte başka bir servise yeni bir TCP bağlantısı açıp kapatıyor ve yük altında 'cannot assign requested address' hataları görülüyor. En iyi ilk adım nedir?",
+        "en": "A service opens and closes a new TCP connection to another service on every request, and under load 'cannot assign requested address' errors appear. What is the best first step?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "UDP'ye geçmek", "en": "Switch to UDP" } },
+        { "id": "b", "text": { "tr": "Bağlantı havuzu / keep-alive ile bağlantıları yeniden kullanmak", "en": "Reuse connections with a connection pool / keep-alive" } },
+        { "id": "c", "text": { "tr": "TCP_NODELAY'i açmak", "en": "Enable TCP_NODELAY" } },
+        { "id": "d", "text": { "tr": "Tıkanıklık kontrol algoritmasını BBR yapmak", "en": "Switch the congestion control algorithm to BBR" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Kapatmayı başlatan taraf her bağlantıyı bir süre TIME_WAIT'te tutar; çok sayıda kısa ömürlü giden bağlantı geçici port aralığını tüketir. Bağlantıları yeniden kullanmak hem bu sorunu hem de her istekte ödenen el sıkışma ve slow start bedelini ortadan kaldırır. TCP_NODELAY ve BBR farklı sorunları çözer.",
+        "en": "The side that initiates the close keeps each connection in TIME_WAIT for a while; many short-lived outgoing connections exhaust the ephemeral port range. Reusing connections removes this problem as well as the handshake and slow-start cost paid on every request. TCP_NODELAY and BBR solve different problems."
+      },
+      "difficulty": "hard",
+      "concepts": ["three-way-handshake", "slow-start"]
+    }
+  ]
+}
