@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 420" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">G-Counter birleştirmesi ve last-write-wins karşılaştırması</title>
+  <desc id="desc">Üst bölüm: A replikası {A:6, B:2}, B replikası {A:3, B:4}; bileşen bileşen max ile birleşim {A:6, B:4}, değeri 10. Alt bölüm: düz sayıyla A 8, B 7 gönderir; son yazan kazanır kuralı 7 ya da 8 verir, beklenen 10'dur.</desc>
+  <defs>
+    <marker id="q05-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-fg, #0f172a)"/>
+    </marker>
+  </defs>
+
+  <text x="40" y="34" font-size="14" font-weight="600" fill="var(--da-success, #10b981)">CRDT: G-Counter (replika başına sayaç, merge = max)</text>
+
+  <!-- Replika A -->
+  <rect x="40" y="56" width="230" height="100" rx="12" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.6"/>
+  <text x="155" y="80" font-size="13" text-anchor="middle" font-weight="600" fill="var(--da-fg, #0f172a)">Replika A (çevrimdışı +3)</text>
+  <g font-size="13" fill="var(--da-fg, #0f172a)">
+    <rect x="70" y="94" width="80" height="34" rx="6" fill="var(--da-primary, #6366f1)" opacity="0.15" stroke="var(--da-primary, #6366f1)"/>
+    <rect x="160" y="94" width="80" height="34" rx="6" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+    <text x="110" y="116" text-anchor="middle">A: 6</text>
+    <text x="200" y="116" text-anchor="middle">B: 2</text>
+  </g>
+  <text x="155" y="148" font-size="12" text-anchor="middle" fill="var(--da-muted, #64748b)">yerel değer 8</text>
+
+  <!-- Replika B -->
+  <rect x="40" y="176" width="230" height="100" rx="12" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.6"/>
+  <text x="155" y="200" font-size="13" text-anchor="middle" font-weight="600" fill="var(--da-fg, #0f172a)">Replika B (çevrimdışı +2)</text>
+  <g font-size="13" fill="var(--da-fg, #0f172a)">
+    <rect x="70" y="214" width="80" height="34" rx="6" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+    <rect x="160" y="214" width="80" height="34" rx="6" fill="var(--da-accent, #f59e0b)" opacity="0.18" stroke="var(--da-accent, #f59e0b)"/>
+    <text x="110" y="236" text-anchor="middle">A: 3</text>
+    <text x="200" y="236" text-anchor="middle">B: 4</text>
+  </g>
+  <text x="155" y="268" font-size="12" text-anchor="middle" fill="var(--da-muted, #64748b)">yerel değer 7</text>
+
+  <!-- Birleştirme okları -->
+  <g stroke="var(--da-fg, #0f172a)" stroke-width="1.6" fill="none" marker-end="url(#q05-arrow)">
+    <path d="M 270 106 C 340 106, 350 160, 418 160"/>
+    <path d="M 270 226 C 340 226, 350 172, 418 172"/>
+  </g>
+  <rect x="420" y="140" width="110" height="52" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.6"/>
+  <text x="475" y="163" font-size="13" text-anchor="middle" font-weight="600" fill="var(--da-fg, #0f172a)">merge</text>
+  <text x="475" y="181" font-size="11" text-anchor="middle" fill="var(--da-muted, #64748b)">bileşen başına max</text>
+  <line x1="530" y1="166" x2="588" y2="166" stroke="var(--da-fg, #0f172a)" stroke-width="1.6" marker-end="url(#q05-arrow)"/>
+
+  <!-- Sonuç -->
+  <rect x="590" y="116" width="270" height="100" rx="12" fill="var(--da-success, #10b981)" opacity="0.12" stroke="var(--da-success, #10b981)" stroke-width="2"/>
+  <g font-size="13" fill="var(--da-fg, #0f172a)">
+    <rect x="620" y="140" width="90" height="34" rx="6" fill="var(--da-surface, #ffffff)" stroke="var(--da-success, #10b981)"/>
+    <rect x="730" y="140" width="90" height="34" rx="6" fill="var(--da-surface, #ffffff)" stroke="var(--da-success, #10b981)"/>
+    <text x="665" y="162" text-anchor="middle">A: max(6,3)=6</text>
+    <text x="775" y="162" text-anchor="middle">B: max(2,4)=4</text>
+  </g>
+  <text x="725" y="200" font-size="14" text-anchor="middle" font-weight="600" fill="var(--da-success, #10b981)">değer = 6 + 4 = 10 ✓</text>
+  <text x="725" y="240" font-size="11" text-anchor="middle" fill="var(--da-muted, #64748b)">sıra, gruplama ve tekrar sonucu değiştirmez</text>
+
+  <!-- Ayraç -->
+  <line x1="40" y1="290" x2="860" y2="290" stroke="var(--da-border, #cbd5e1)" stroke-dasharray="6 6"/>
+
+  <!-- LWW -->
+  <text x="40" y="320" font-size="14" font-weight="600" fill="var(--da-danger, #ef4444)">Düz sayı + last-write-wins</text>
+  <g font-size="13" fill="var(--da-fg, #0f172a)">
+    <rect x="40" y="338" width="130" height="40" rx="8" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+    <text x="105" y="363" text-anchor="middle">A gönderir: 8</text>
+    <rect x="190" y="338" width="130" height="40" rx="8" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+    <text x="255" y="363" text-anchor="middle">B gönderir: 7</text>
+  </g>
+  <line x1="322" y1="358" x2="418" y2="358" stroke="var(--da-fg, #0f172a)" stroke-width="1.6" marker-end="url(#q05-arrow)"/>
+  <rect x="420" y="338" width="200" height="40" rx="8" fill="var(--da-danger, #ef4444)" opacity="0.12" stroke="var(--da-danger, #ef4444)"/>
+  <text x="520" y="363" font-size="13" text-anchor="middle" fill="var(--da-danger, #ef4444)" font-weight="600">sonuç 7 ya da 8 ✗</text>
+  <text x="640" y="356" font-size="12" fill="var(--da-muted, #64748b)">beklenen 10: kimin ne kadar</text>
+  <text x="640" y="372" font-size="12" fill="var(--da-muted, #64748b)">artırdığı bilgisi kayboldu</text>
+</svg>

@@ -1,0 +1,208 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "q-01-lamport-vector-clocks",
+  "title": { "tr": "Lamport ve Vektör Saatlerle Olay Sıralama", "en": "Ordering Events with Lamport and Vector Clocks" },
+  "summary": {
+    "tr": "Üç düğüm mesajlaşırken Lamport sayaçları max+1 kuralıyla artar; aynı olaylar vektör saatlerle izlenince a1 ve c1'in eşzamanlı olduğu ortaya çıkar; kaymış duvar saatinin yanlış sıra verdiği görülür.",
+    "en": "As three nodes exchange messages, Lamport counters grow by the max+1 rule; tracking the same events with vector clocks reveals that a1 and c1 are concurrent; a skewed wall clock is shown to produce the wrong order."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda Node A, sağ üstte Node B, sağ altta Node C. Her düğümün üzerinde Lamport sayacı ve rozet olarak vektör saati görünür. A yerel olay a1 yaşar (L=1, [1,0,0]), sonra B'ye m1 mesajını L=2 ile gönderir; B max(0,2)+1 ile 3 olur. C, hiçbir mesaj almadan yerel olay c1 yaşar (L=1, [0,0,1]). B, C'ye m2'yi L=4 ile gönderir; C max(1,4)+1 ile 5 olur. C, A'ya m3'ü L=6 ile gönderir; A 7 olur. Sonra a1 ile c1 karşılaştırılır: Lamport değerleri eşit ama bu bir şey kanıtlamaz; vektörler [1,0,0] ve [0,0,1] karşılaştırılamaz, yani olaylar eşzamanlıdır. Son olarak B'nin duvar saatinin 40 ms geride olduğu ve zaman damgasına göre sıralamanın m1'in alınmasını gönderilmesinden önceymiş gibi gösterdiği anlatılır.",
+      "en": "Node A on the left, Node B top right, Node C bottom right. Each node shows its Lamport counter and its vector clock as a badge. A has local event a1 (L=1, [1,0,0]), then sends message m1 to B with L=2; B becomes max(0,2)+1 = 3. C, without receiving anything, has local event c1 (L=1, [0,0,1]). B sends m2 to C with L=4; C becomes max(1,4)+1 = 5. C sends m3 to A with L=6; A becomes 7. Then a1 and c1 are compared: their Lamport values are equal but that proves nothing; the vectors [1,0,0] and [0,0,1] are incomparable, so the events are concurrent. Finally, B's wall clock is shown to be 40 ms behind, and sorting by timestamp makes the receipt of m1 look earlier than its sending."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "a", "kind": "server", "label": "Node A", "sublabel": { "tr": "duvar saati 10:00:00.100", "en": "wall clock 10:00:00.100" }, "x": 190, "y": 300, "w": 170, "h": 84 },
+    { "id": "b", "kind": "server", "label": "Node B", "sublabel": { "tr": "duvar saati 10:00:00.060", "en": "wall clock 10:00:00.060" }, "x": 790, "y": 130, "w": 170, "h": 84 },
+    { "id": "c", "kind": "server", "label": "Node C", "sublabel": { "tr": "duvar saati 10:00:00.110", "en": "wall clock 10:00:00.110" }, "x": 790, "y": 470, "w": 170, "h": 84 }
+  ],
+  "edges": [
+    { "id": "a-b", "from": "a", "to": "b", "kind": "data", "label": "m1", "curvature": -0.15 },
+    { "id": "b-c", "from": "b", "to": "c", "kind": "data", "label": "m2", "curvature": -0.2 },
+    { "id": "c-a", "from": "c", "to": "a", "kind": "data", "label": "m3", "curvature": -0.15 }
+  ],
+  "steps": [
+    {
+      "id": "start",
+      "title": { "tr": "Üç düğüm, üç ayrı saat", "en": "Three nodes, three separate clocks" },
+      "narration": {
+        "tr": "Her düğümün kendi duvar saati var ve bunlar birbirinden farklı: B'nin saati A'nınkinden 40 ms geride. Fiziksel zamana güvenmek yerine her düğüm bir Lamport sayacı (sayı) ve bir vektör saat (rozet) tutar; hepsi sıfırdan başlar.",
+        "en": "Each node has its own wall clock and they disagree: B's clock is 40 ms behind A's. Instead of trusting physical time, each node keeps a Lamport counter (the number) and a vector clock (the badge); all start at zero."
+      },
+      "durationMs": 3200,
+      "inherit": false,
+      "highlight": { "nodes": ["a", "b", "c"], "edges": [] },
+      "nodeStates": {
+        "a": { "status": "idle", "counter": 0, "badge": "[0,0,0]" },
+        "b": { "status": "idle", "counter": 0, "badge": "[0,0,0]" },
+        "c": { "status": "idle", "counter": 0, "badge": "[0,0,0]" }
+      },
+      "annotations": [
+        { "id": "skew", "x": 790, "y": 225, "text": { "tr": "B'nin saati 40 ms geride", "en": "B's clock is 40 ms behind" }, "tone": "warning", "target": "b" }
+      ]
+    },
+    {
+      "id": "a1",
+      "title": { "tr": "A'da yerel olay a1", "en": "Local event a1 on A" },
+      "narration": {
+        "tr": "A bir yerel olay yaşar (ör. bir kaydı günceller). Kural: her olaydan önce sayacı 1 artır. A'nın Lamport değeri 1, vektörü [1,0,0] olur. Vektörde yalnızca A'nın kendi bileşeni artar.",
+        "en": "A has a local event (e.g. it updates a record). Rule: increment the counter before every event. A's Lamport value becomes 1 and its vector [1,0,0]. Only A's own component of the vector grows."
+      },
+      "durationMs": 2600,
+      "highlight": { "nodes": ["a"], "edges": [] },
+      "nodeStates": { "a": { "status": "active", "counter": 1, "badge": "a1 [1,0,0]" } },
+      "annotations": [
+        { "id": "a1-note", "x": 190, "y": 400, "text": { "tr": "a1: L=1", "en": "a1: L=1" }, "tone": "info", "target": "a" }
+      ]
+    },
+    {
+      "id": "m1",
+      "title": { "tr": "A, B'ye m1 gönderir", "en": "A sends m1 to B" },
+      "narration": {
+        "tr": "A göndermeden önce sayacı 2'ye çıkarır ve mesaja L=2 ile [2,0,0] ekler. B mesajı alınca max(0, 2) + 1 = 3 olur; vektörü bileşen bileşen max alıp kendi bileşenini artırır: [2,1,0]. Gönderme her zaman almadan küçük numara alır.",
+        "en": "Before sending, A bumps its counter to 2 and attaches L=2 and [2,0,0] to the message. On receipt B becomes max(0, 2) + 1 = 3; its vector takes the component-wise max and bumps its own entry: [2,1,0]. A send always gets a smaller number than its receive."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["a", "b"], "edges": ["a-b"] },
+      "nodeStates": {
+        "a": { "status": "idle", "counter": 2, "badge": "[2,0,0]" },
+        "b": { "status": "active", "counter": 3, "badge": "[2,1,0]" }
+      },
+      "edgeStates": { "a-b": { "status": "active", "label": "m1 · L=2" } },
+      "packets": [{ "edge": "a-b", "shape": "envelope", "label": "L=2 [2,0,0]", "durationMs": 1400 }],
+      "annotations": [
+        { "id": "m1-rule", "x": 500, "y": 120, "text": { "tr": "alırken: max(yerel, gelen) + 1", "en": "on receive: max(local, incoming) + 1" }, "tone": "info" }
+      ]
+    },
+    {
+      "id": "c1",
+      "title": { "tr": "C'de habersiz bir olay: c1", "en": "An unaware event on C: c1" },
+      "narration": {
+        "tr": "Bu sırada C, hiçbir mesaj almadan kendi yerel olayını yaşar: L=1, vektör [0,0,1]. C, A'nın a1 olayından tamamen habersizdir; aralarında hiçbir mesaj zinciri yoktur.",
+        "en": "Meanwhile C has its own local event without receiving anything: L=1, vector [0,0,1]. C knows nothing about A's event a1; there is no message chain between them."
+      },
+      "durationMs": 2800,
+      "highlight": { "nodes": ["c"], "edges": [] },
+      "nodeStates": {
+        "b": { "status": "idle" },
+        "c": { "status": "active", "counter": 1, "badge": "c1 [0,0,1]" }
+      },
+      "edgeStates": { "a-b": { "status": "muted" } },
+      "annotations": [
+        { "id": "c1-note", "x": 790, "y": 565, "text": { "tr": "c1: L=1", "en": "c1: L=1" }, "tone": "info", "target": "c" }
+      ]
+    },
+    {
+      "id": "m2",
+      "title": { "tr": "B, C'ye m2 gönderir", "en": "B sends m2 to C" },
+      "narration": {
+        "tr": "B sayacını 4'e çıkarıp m2'yi gönderir ([2,2,0]). C'nin sayacı 1 idi; max(1, 4) + 1 = 5 olur. Vektör birleşimi [2,2,2] verir: C artık A'nın ilk iki olayını ve B'nin iki olayını dolaylı olarak 'görmüştür'.",
+        "en": "B bumps its counter to 4 and sends m2 ([2,2,0]). C's counter was 1; it becomes max(1, 4) + 1 = 5. Merging vectors gives [2,2,2]: C has now indirectly 'seen' A's first two events and B's two events."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["b", "c"], "edges": ["b-c"] },
+      "nodeStates": {
+        "b": { "status": "idle", "counter": 4, "badge": "[2,2,0]" },
+        "c": { "status": "active", "counter": 5, "badge": "[2,2,2]" }
+      },
+      "edgeStates": { "b-c": { "status": "active", "label": "m2 · L=4" } },
+      "packets": [{ "edge": "b-c", "shape": "envelope", "label": "L=4 [2,2,0]", "durationMs": 1400 }]
+    },
+    {
+      "id": "m3",
+      "title": { "tr": "C, A'ya m3 gönderir", "en": "C sends m3 to A" },
+      "narration": {
+        "tr": "C sayacını 6'ya çıkarıp m3'ü A'ya yollar ([2,2,3]). A'nın sayacı 2'de kalmıştı; max(2, 6) + 1 = 7'ye sıçrar. Lamport saatinin sıçraması normaldir: sayaçlar zamanı değil, nedensel bilgi akışını sayar.",
+        "en": "C bumps its counter to 6 and sends m3 to A ([2,2,3]). A's counter was still 2; it jumps to max(2, 6) + 1 = 7. Jumps are normal: the counters measure causal information flow, not time."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["c", "a"], "edges": ["c-a"] },
+      "nodeStates": {
+        "c": { "status": "idle", "counter": 6, "badge": "[2,2,3]" },
+        "a": { "status": "active", "counter": 7, "badge": "[3,2,3]" }
+      },
+      "edgeStates": { "b-c": { "status": "muted" }, "c-a": { "status": "active", "label": "m3 · L=6" } },
+      "packets": [{ "edge": "c-a", "shape": "envelope", "label": "L=6 [2,2,3]", "durationMs": 1400 }]
+    },
+    {
+      "id": "lamport-blind",
+      "title": { "tr": "Lamport eşzamanlılığı göremez", "en": "Lamport cannot see concurrency" },
+      "narration": {
+        "tr": "Şimdi a1 ile c1'i karşılaştıralım: ikisinin de Lamport değeri 1. Süreç kimliğiyle eşitliği bozarsak 'a1 önce' deriz, ama bu yalnızca uydurma bir toplam sıradır. Lamport kuralı yalnızca tek yönde çalışır: a → b ise L(a) < L(b); tersi doğru değildir.",
+        "en": "Now compare a1 and c1: both have Lamport value 1. Breaking the tie by process id we would say 'a1 first', but that is just an invented total order. The Lamport rule only works in one direction: if a → b then L(a) < L(b); the converse does not hold."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["a", "c"], "edges": [] },
+      "nodeStates": {
+        "a": { "status": "warning", "badge": "a1 L=1" },
+        "c": { "status": "warning", "badge": "c1 L=1" }
+      },
+      "edgeStates": { "c-a": { "status": "muted" } },
+      "annotations": [
+        { "id": "blind", "x": 500, "y": 300, "text": { "tr": "L(a1) = L(c1) = 1 → hangisi önce? bilinmez", "en": "L(a1) = L(c1) = 1 → which first? unknown" }, "tone": "warning" }
+      ]
+    },
+    {
+      "id": "vector-concurrent",
+      "title": { "tr": "Vektörler eşzamanlılığı yakalar", "en": "Vectors catch concurrency" },
+      "narration": {
+        "tr": "Vektör saatlerde a1 = [1,0,0], c1 = [0,0,1]. Birinde A bileşeni büyük, ötekinde C bileşeni: hiçbiri diğerinden küçük-eşit değil. Bu, iki olayın eşzamanlı olduğunun kanıtıdır. Buna karşılık a1 = [1,0,0] ≤ C'nin m2'yi aldığı an [2,2,2]: a1, o olaydan kesinlikle önce olmuştur.",
+        "en": "With vector clocks a1 = [1,0,0] and c1 = [0,0,1]. One has the larger A entry, the other the larger C entry: neither is less-or-equal to the other. That proves the two events are concurrent. In contrast a1 = [1,0,0] ≤ [2,2,2] at the moment C received m2: a1 definitely happened before that event."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["a", "c"], "edges": ["a-b", "b-c"] },
+      "nodeStates": {
+        "a": { "status": "success", "badge": "a1 [1,0,0]" },
+        "c": { "status": "success", "badge": "c1 [0,0,1]" }
+      },
+      "edgeStates": { "a-b": { "status": "active" }, "b-c": { "status": "active" } },
+      "annotations": [
+        { "id": "conc", "x": 500, "y": 300, "text": { "tr": "[1,0,0] ∥ [0,0,1] → eşzamanlı", "en": "[1,0,0] ∥ [0,0,1] → concurrent" }, "tone": "success" },
+        { "id": "chain", "x": 560, "y": 470, "text": { "tr": "a1 → m1 → m2 zinciri: a1 önce", "en": "a1 → m1 → m2 chain: a1 first" }, "tone": "info" }
+      ]
+    },
+    {
+      "id": "wall-clock-trap",
+      "title": { "tr": "Duvar saati tuzağı", "en": "The wall clock trap" },
+      "narration": {
+        "tr": "Aynı m1 mesajını duvar saatleriyle damgalasaydık: A 10:00:00.120'de gönderdi, B'nin geride kalan saati alışı 10:00:00.095 olarak yazdı. Zaman damgasına göre sıralayan bir log ya da last-write-wins kuralı 'alındı, sonra gönderildi' der. Lamport değerleri (2 < 3) ise doğru sırayı verir.",
+        "en": "Had we stamped the same m1 with wall clocks: A sent it at 10:00:00.120, and B's lagging clock recorded the receipt as 10:00:00.095. A log sorted by timestamp, or a last-write-wins rule, would say 'received, then sent'. The Lamport values (2 < 3) give the correct order."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["a", "b"], "edges": ["a-b"] },
+      "nodeStates": {
+        "a": { "status": "idle", "badge": "↑ .120" },
+        "b": { "status": "error", "badge": "↓ .095" },
+        "c": { "status": "idle", "badge": "[2,2,3]" }
+      },
+      "edgeStates": { "a-b": { "status": "error", "label": { "tr": "duvar saatine göre ters sıra", "en": "reversed by wall clock" } }, "b-c": { "status": "muted" } },
+      "packets": [{ "edge": "a-b", "shape": "envelope", "label": "m1", "durationMs": 1200 }],
+      "annotations": [
+        { "id": "trap", "x": 500, "y": 330, "text": { "tr": "0.095 < 0.120 ama alma, göndermeden sonra!", "en": "0.095 < 0.120 yet the receive came after the send!" }, "tone": "danger" }
+      ]
+    },
+    {
+      "id": "summary",
+      "title": { "tr": "Özet: hangi saat ne için?", "en": "Summary: which clock for what?" },
+      "narration": {
+        "tr": "Lamport saati ucuzdur ve nedenselliğe uyan bir toplam sıra verir. Vektör saat eşzamanlılığı da tespit eder ama düğüm sayısıyla büyür. Takvim zamanı gerekiyorsa HLC ya da Spanner'ın TrueTime'ı gibi belirsizliği açıkça hesaba katan saatler kullanılır.",
+        "en": "A Lamport clock is cheap and gives a total order consistent with causality. A vector clock also detects concurrency but grows with the number of nodes. When calendar time is needed, use clocks that account for uncertainty explicitly, such as HLC or Spanner's TrueTime."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["a", "b", "c"], "edges": [] },
+      "nodeStates": {
+        "a": { "status": "success", "counter": 7, "badge": "[3,2,3]" },
+        "b": { "status": "success", "counter": 4, "badge": "[2,2,0]" },
+        "c": { "status": "success", "counter": 6, "badge": "[2,2,3]" }
+      },
+      "edgeStates": { "a-b": { "status": "idle", "label": "m1" } },
+      "annotations": [
+        { "id": "sum", "x": 500, "y": 300, "text": { "tr": "nedensellik için mantıksal saat, süre için monoton saat", "en": "logical clocks for causality, monotonic clocks for durations" }, "tone": "success" }
+      ]
+    }
+  ],
+  "tags": ["clocks", "lamport", "vector-clock", "causality"]
+}

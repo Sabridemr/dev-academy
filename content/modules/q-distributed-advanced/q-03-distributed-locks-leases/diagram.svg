@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 380" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Lease zaman çizelgesi ve fencing token</title>
+  <desc id="desc">Dört satır: kilit servisi, istemci 1, istemci 2 ve depolama. İstemci 1 token 33 ile 10 saniyelik lease alır, ardından 15 saniyelik GC duraklamasına girer. Lease bitince istemci 2 token 34 alır ve depoya yazar. İstemci 1 uyanıp token 33 ile yazınca depo reddeder.</desc>
+  <defs>
+    <marker id="q03-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-fg, #0f172a)"/>
+    </marker>
+    <marker id="q03-ok" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-success, #10b981)"/>
+    </marker>
+    <marker id="q03-bad" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-danger, #ef4444)"/>
+    </marker>
+  </defs>
+
+  <!-- Satır başlıkları ve çizgiler -->
+  <g font-size="13" fill="var(--da-fg, #0f172a)" text-anchor="end" font-weight="600">
+    <text x="128" y="74">Kilit servisi</text>
+    <text x="128" y="154">İstemci 1</text>
+    <text x="128" y="234">İstemci 2</text>
+    <text x="128" y="314">Depolama</text>
+  </g>
+  <g stroke="var(--da-border, #cbd5e1)" stroke-width="1.5">
+    <line x1="140" y1="70" x2="860" y2="70"/>
+    <line x1="140" y1="150" x2="860" y2="150"/>
+    <line x1="140" y1="230" x2="860" y2="230"/>
+    <line x1="140" y1="310" x2="860" y2="310"/>
+  </g>
+
+  <!-- GC duraklaması bandı -->
+  <rect x="260" y="128" width="375" height="44" rx="6" fill="var(--da-muted, #64748b)" opacity="0.18"/>
+  <text x="447" y="155" font-size="12" text-anchor="middle" fill="var(--da-fg, #0f172a)">GC duraklaması (15 s)</text>
+
+  <!-- Lease çubukları -->
+  <rect x="180" y="62" width="250" height="16" rx="4" fill="var(--da-primary, #6366f1)" opacity="0.25" stroke="var(--da-primary, #6366f1)"/>
+  <text x="305" y="58" font-size="11" text-anchor="middle" fill="var(--da-primary, #6366f1)">lease İstemci 1 · token 33 · 10 s</text>
+  <rect x="470" y="62" width="250" height="16" rx="4" fill="var(--da-success, #10b981)" opacity="0.25" stroke="var(--da-success, #10b981)"/>
+  <text x="595" y="58" font-size="11" text-anchor="middle" fill="var(--da-success, #10b981)">lease İstemci 2 · token 34</text>
+
+  <!-- Lease bitişi -->
+  <line x1="430" y1="40" x2="430" y2="335" stroke="var(--da-accent, #f59e0b)" stroke-width="2" stroke-dasharray="6 5"/>
+  <text x="430" y="352" font-size="12" text-anchor="middle" fill="var(--da-accent, #f59e0b)" font-weight="600">lease bitti</text>
+
+  <!-- Kilit verme okları -->
+  <g stroke="var(--da-fg, #0f172a)" stroke-width="1.6" fill="none" marker-end="url(#q03-arrow)">
+    <line x1="180" y1="78" x2="180" y2="142"/>
+    <line x1="470" y1="78" x2="470" y2="222"/>
+  </g>
+  <g font-size="11" fill="var(--da-fg, #0f172a)">
+    <text x="186" y="112">33</text>
+    <text x="476" y="190">34</text>
+  </g>
+
+  <!-- Yazmalar -->
+  <line x1="540" y1="230" x2="566" y2="302" stroke="var(--da-success, #10b981)" stroke-width="2" marker-end="url(#q03-ok)"/>
+  <circle cx="570" cy="310" r="6" fill="var(--da-success, #10b981)"/>
+  <text x="570" y="334" font-size="12" text-anchor="middle" fill="var(--da-success, #10b981)">34 ✓ (max = 34)</text>
+
+  <line x1="650" y1="150" x2="716" y2="302" stroke="var(--da-danger, #ef4444)" stroke-width="2" marker-end="url(#q03-bad)"/>
+  <circle cx="720" cy="310" r="6" fill="var(--da-danger, #ef4444)"/>
+  <text x="760" y="334" font-size="12" text-anchor="middle" fill="var(--da-danger, #ef4444)">33 &lt; 34 → reddedildi</text>
+  <text x="660" y="196" font-size="11" fill="var(--da-danger, #ef4444)">uyanır, token 33 ile yazar</text>
+
+  <!-- Zaman ekseni -->
+  <line x1="140" y1="365" x2="860" y2="365" stroke="var(--da-muted, #64748b)" stroke-width="1.2" marker-end="url(#q03-arrow)"/>
+  <text x="140" y="378" font-size="11" fill="var(--da-muted, #64748b)">zaman →</text>
+</svg>

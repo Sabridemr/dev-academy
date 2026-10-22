@@ -1,0 +1,112 @@
+{
+  "id": "q-06-distributed-transactions-quiz",
+  "title": { "tr": "Dağıtık Transaction'lar Quiz", "en": "Distributed Transactions Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "order",
+      "prompt": {
+        "tr": "Başarılı bir 2PC işleminin adımlarını doğru sıraya koyun.",
+        "en": "Put the steps of a successful 2PC transaction in the correct order."
+      },
+      "options": [
+        { "id": "decide", "text": { "tr": "Koordinatör COMMIT kararını log'una yazar", "en": "The coordinator writes the COMMIT decision to its log" } },
+        { "id": "prepare", "text": { "tr": "Koordinatör katılımcılara PREPARE gönderir", "en": "The coordinator sends PREPARE to the participants" } },
+        { "id": "release", "text": { "tr": "Katılımcılar commit edip kilitleri bırakır", "en": "Participants commit and release their locks" } },
+        { "id": "vote", "text": { "tr": "Katılımcılar hazırlanıp kilitleri tutarak YES oyu verir", "en": "Participants prepare, hold locks and vote YES" } },
+        { "id": "send", "text": { "tr": "Koordinatör COMMIT mesajını gönderir", "en": "The coordinator sends the COMMIT message" } }
+      ],
+      "correct": ["prepare", "vote", "decide", "send", "release"],
+      "explanation": {
+        "tr": "Önce oylama evresi (PREPARE, YES), sonra karar: koordinatör kararı önce kalıcı olarak kaydeder, ardından gönderir. Katılımcılar kilitleri ancak kararı aldıktan sonra bırakır.",
+        "en": "First the voting phase (PREPARE, YES), then the decision: the coordinator persists it first and only then sends it. Participants release their locks only after receiving the decision."
+      },
+      "difficulty": "easy",
+      "concepts": ["two-phase-commit"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "2PC neden 'engelleyici' (blocking) bir protokol olarak anılır?",
+        "en": "Why is 2PC called a 'blocking' protocol?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "PREPARE evresi her zaman saniyeler sürer", "en": "The PREPARE phase always takes seconds" } },
+        { "id": "b", "text": { "tr": "YES oyu vermiş katılımcılar koordinatörün kararını öğrenene kadar kilitleri tutarak beklemek zorundadır", "en": "Participants that voted YES must wait, holding locks, until they learn the coordinator's decision" } },
+        { "id": "c", "text": { "tr": "Koordinatör aynı anda yalnızca bir transaction yönetebilir", "en": "The coordinator can only manage one transaction at a time" } },
+        { "id": "d", "text": { "tr": "Katılımcılar birbirlerinin oylarını beklemek zorundadır", "en": "Participants must wait for each other's votes" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Prepared durumdaki bir katılımcı tek başına ne commit ne abort edebilir; koordinatör çökerse kilitleri tutarak bekler ve aynı verilere dokunan diğer işlemleri de bekletir.",
+        "en": "A prepared participant can neither commit nor abort on its own; if the coordinator crashes it waits while holding locks, and makes other transactions touching the same data wait too."
+      },
+      "difficulty": "medium",
+      "concepts": ["coordinator-failure", "in-doubt-transaction"]
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": {
+        "tr": "Bir saga T1 (sipariş oluştur), T2 (stok ayır), T3 (ödeme al) adımlarından oluşuyor. T3 başarısız olursa hangi sırayla ne çalıştırılır?",
+        "en": "A saga consists of T1 (create order), T2 (reserve stock), T3 (take payment). If T3 fails, what runs and in which order?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "C1, sonra C2", "en": "C1, then C2" } },
+        { "id": "b", "text": { "tr": "C2, sonra C1", "en": "C2, then C1" } },
+        { "id": "c", "text": { "tr": "C3, C2, C1", "en": "C3, C2, C1" } },
+        { "id": "d", "text": { "tr": "Veritabanları otomatik rollback yapar", "en": "The databases roll back automatically" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Telafiler, başarıyla commit edilmiş adımlar için ve ters sırada çalışır: önce stoğu bırak (C2), sonra siparişi iptal et (C1). T3 commit edilmediği için telafisine gerek yoktur. T1 ve T2 zaten commit edildiği için otomatik rollback mümkün değildir.",
+        "en": "Compensations run for the steps that committed, in reverse order: release stock (C2) first, then cancel the order (C1). T3 did not commit, so it needs no compensation. T1 and T2 already committed, so automatic rollback is impossible."
+      },
+      "difficulty": "easy",
+      "concepts": ["saga-pattern", "compensating-transaction"]
+    },
+    {
+      "id": "q4",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Transactional outbox kalıbı için hangileri doğrudur? (Birden fazla seçin)",
+        "en": "Which statements about the transactional outbox pattern are true? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "İş kaydı ve olay kaydı aynı yerel transaction'da yazılır", "en": "The business row and the event row are written in the same local transaction" } },
+        { "id": "b", "text": { "tr": "Olaylar ayrı bir aktarıcı (yoklama ya da CDC) ile kuyruğa taşınır", "en": "Events are moved to the queue by a separate relay (polling or CDC)" } },
+        { "id": "c", "text": { "tr": "Aynı olay iki kez yayınlanabileceği için tüketiciler idempotent olmalıdır", "en": "Consumers must be idempotent because the same event may be published twice" } },
+        { "id": "d", "text": { "tr": "Outbox, mesajların tam olarak bir kez teslim edilmesini kendiliğinden garanti eder", "en": "The outbox by itself guarantees exactly-once delivery" } }
+      ],
+      "correct": ["a", "b", "c"],
+      "explanation": {
+        "tr": "Outbox çift yazma sorununu tek veritabanının ACID garantisiyle çözer: olay kaybolmaz. Ama aktarıcı yayınladıktan sonra, kaydı işaretlemeden çökerse olay tekrar gider; yani teslimat en az bir kezdir. Tam olarak bir kez etkiyi tüketicinin idempotency'si sağlar.",
+        "en": "The outbox solves the dual-write problem with a single database's ACID guarantee: events are not lost. But if the relay crashes after publishing and before marking the row, the event goes out again; delivery is at-least-once. Exactly-once effect comes from consumer idempotency."
+      },
+      "difficulty": "medium",
+      "concepts": ["outbox-pattern", "idempotency-key"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "TCC (Try-Confirm-Cancel) koordinatörü çöktüğünde kaynakların sonsuza kadar kilitli kalmamasını ne sağlar?",
+        "en": "What keeps resources from being locked forever when a TCC (Try-Confirm-Cancel) coordinator crashes?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Try evresindeki rezervasyonların süresinin dolması", "en": "Reservations made in the Try phase expiring" } },
+        { "id": "b", "text": { "tr": "Katılımcıların birbirine COMMIT göndermesi", "en": "Participants sending COMMIT to each other" } },
+        { "id": "c", "text": { "tr": "Veritabanı kilitlerinin otomatik yükseltilmesi", "en": "Database locks being escalated automatically" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "TCC'de Try bir veritabanı kilidi değil, süreli bir iş rezervasyonudur (ör. koltuk 10 dakika tutulur). Confirm gelmezse rezervasyon süre dolunca bırakılır; 2PC'deki gibi süresiz bekleme olmaz.",
+        "en": "In TCC, Try is not a database lock but a time-limited business reservation (e.g. a seat held for 10 minutes). If no Confirm arrives, the reservation is released when it expires; there is no indefinite wait as in 2PC."
+      },
+      "difficulty": "medium",
+      "concepts": ["tcc"]
+    }
+  ]
+}

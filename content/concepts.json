@@ -2284,6 +2284,21 @@
       "thundering-herd"
     ]
   },
+  "causal-consistency": {
+    "term": {
+      "tr": "Nedensel tutarlılık (causal consistency)",
+      "en": "Causal consistency"
+    },
+    "definition": {
+      "tr": "Yalnızca nedensel olarak bağlı (happens-before) işlemlerin sırasının herkes için korunduğu tutarlılık modeli; örneğin bir yorumu gören, yorumlanan gönderiyi de görür. Birbirinden habersiz işlemler farklı istemcilere farklı sırada görünebilir; bağımlılıklar vektör saatler gibi yöntemlerle izlenir."
+    },
+    "related": [
+      "happens-before",
+      "vector-clock",
+      "sequential-consistency",
+      "eventual-consistency"
+    ]
+  },
   "cdn": {
     "term": {
       "tr": "CDN (içerik dağıtım ağı)",
@@ -2796,6 +2811,22 @@
       "first-contentful-paint"
     ]
   },
+  "clock-skew": {
+    "term": {
+      "tr": "Saat kayması (clock skew)",
+      "en": "Clock skew"
+    },
+    "definition": {
+      "tr": "Farklı makinelerin fiziksel saatlerinin aynı anda farklı değerler göstermesi; saatler farklı hızlarda ilerlediği ve senkronizasyon hiçbir zaman kusursuz olmadığı için oluşur. Farklı makinelerin duvar saati damgalarını karşılaştırarak olay sırası belirlemek bu yüzden yazmaların sessizce kaybolmasına yol açabilir."
+    },
+    "related": [
+      "ntp",
+      "lamport-clock",
+      "hybrid-logical-clock",
+      "truetime",
+      "lww-register"
+    ]
+  },
   "closure": {
     "term": {
       "tr": "Closure (kapanış)",
@@ -2971,6 +3002,20 @@
       "rebase"
     ]
   },
+  "commit-index": {
+    "term": {
+      "tr": "Commit indeksi",
+      "en": "Commit index"
+    },
+    "definition": {
+      "tr": "Raft'ta çoğunluğa kopyalandığı için kalıcı kabul edilen en yüksek log girdisinin konumu. Lider bu indeksi ilerletince girdileri durum makinesine uygular ve istemciye ancak o zaman yanıt verir; takipçiler indeksi liderin AppendEntries mesajlarından öğrenir."
+    },
+    "related": [
+      "log-replication",
+      "majority-quorum",
+      "raft"
+    ]
+  },
   "commit-message": {
     "term": {
       "tr": "Commit mesajı",
@@ -2983,6 +3028,20 @@
       "commit",
       "pull-request",
       "semantic-versioning"
+    ]
+  },
+  "commit-wait": {
+    "term": {
+      "tr": "Commit wait (commit beklemesi)",
+      "en": "Commit wait"
+    },
+    "definition": {
+      "tr": "Spanner'da bir transaction'a TrueTime aralığının üst sınırından zaman damgası verildikten sonra, bu damga kesin olarak geçmişte kalana kadar (TT.now().earliest onu geçene dek) sonucu görünür kılmadan beklemek. Böylece sonra başlayan her transaction daha büyük bir damga alır ve dış tutarlılık sağlanır; bedeli her yazmanın belirsizlik aralığı kadar gecikmesidir."
+    },
+    "related": [
+      "truetime",
+      "linearizability",
+      "clock-skew"
     ]
   },
   "comparison-lower-bound": {
@@ -3161,6 +3220,20 @@
       "race-condition"
     ]
   },
+  "concurrent-events": {
+    "term": {
+      "tr": "Eşzamanlı olaylar",
+      "en": "Concurrent events"
+    },
+    "definition": {
+      "tr": "Aralarında happens-before ilişkisi bulunmayan, yani biri diğerinden haberdar olmadan gerçekleşmiş olaylar. Buradaki \"eşzamanlı\" aynı anda değil birbirinden habersiz demektir; aynı veriye yapılan eşzamanlı yazmalar çakışma olarak ele alınmalıdır."
+    },
+    "related": [
+      "happens-before",
+      "vector-clock",
+      "write-conflict"
+    ]
+  },
   "conditional-statements": {
     "term": {
       "tr": "Koşul ifadeleri",
@@ -3304,6 +3377,24 @@
       "thundering-herd",
       "jitter",
       "offline-delivery"
+    ]
+  },
+  "consensus": {
+    "term": {
+      "tr": "Konsensüs (uzlaşma)",
+      "en": "Consensus"
+    },
+    "definition": {
+      "tr": "Bir grup düğümün, bazıları çökse ya da mesajlar gecikse bile tek bir değer (pratikte tek bir log sırası) üzerinde anlaşması. Protokol hiçbir zaman iki farklı karar verilmemesini (safety) ve çoğunluk çalışıp haberleşebildiğinde sonunda karar verilmesini (liveness) garanti etmelidir; Paxos ve Raft bu problemi çözer."
+    },
+    "aliases": [
+      "uzlaşma"
+    ],
+    "related": [
+      "raft",
+      "replicated-state-machine",
+      "majority-quorum",
+      "leader-election"
     ]
   },
   "consistency-models": {
@@ -3750,6 +3841,20 @@
       "token-storage"
     ]
   },
+  "coordinator-failure": {
+    "term": {
+      "tr": "Koordinatör çökmesi",
+      "en": "Coordinator failure"
+    },
+    "definition": {
+      "tr": "2PC'de katılımcılar oy verdikten sonra koordinatörün kararı iletemeden çökmesi. Katılımcılar kararı bilemeden belirsiz (in-doubt) durumda kalır ve koordinatör dönene kadar kilitleri bırakamaz; bu, 2PC'nin bilinen zayıflığıdır."
+    },
+    "related": [
+      "two-phase-commit",
+      "in-doubt-transaction",
+      "single-point-of-failure"
+    ]
+  },
   "core-web-vitals": {
     "term": {
       "tr": "Core Web Vitals",
@@ -3953,6 +4058,26 @@
       "read-replica",
       "eventual-consistency",
       "denormalization"
+    ]
+  },
+  "crdt": {
+    "term": {
+      "tr": "CRDT (çakışmasız replike veri tipi)",
+      "en": "Conflict-free Replicated Data Type (CRDT)"
+    },
+    "definition": {
+      "tr": "Replikaların koordinasyon olmadan yerel olarak güncellenip sonra hangi sırayla birleştirilirse birleştirilsin aynı duruma yakınsadığı veri tipi. Birleştirme işlemi değişmeli, birleşmeli ve eşgüçlü olduğu için çakışma oluşmaz; çevrimdışı ve eşler arası iş birliğinde kullanılır."
+    },
+    "aliases": [
+      "Conflict-free Replicated Data Type"
+    ],
+    "related": [
+      "strong-eventual-consistency",
+      "merge-function",
+      "g-counter",
+      "or-set",
+      "operational-transformation",
+      "local-first"
     ]
   },
   "create-index-concurrently": {
@@ -5755,6 +5880,20 @@
       "hybrid-search"
     ]
   },
+  "election-timeout": {
+    "term": {
+      "tr": "Seçim zaman aşımı (election timeout)",
+      "en": "Election timeout"
+    },
+    "definition": {
+      "tr": "Raft'ta bir takipçinin liderden heartbeat almadan bekleyeceği süre; dolarsa takipçi terimini artırıp aday olur ve seçim başlatır. Her düğümde rastgele seçilir (Raft makalesi 150–300 ms önerir), böylece adaylar genellikle aynı anda çıkıp oyları bölmez."
+    },
+    "related": [
+      "raft",
+      "raft-term",
+      "leader-election"
+    ]
+  },
   "embedding": {
     "term": {
       "tr": "Embedding (gömme vektörü)",
@@ -5868,6 +6007,23 @@
       "github-actions",
       "branch-protection",
       "continuous-delivery"
+    ]
+  },
+  "ephemeral-node": {
+    "term": {
+      "tr": "Ephemeral düğüm (ZooKeeper)",
+      "en": "Ephemeral node"
+    },
+    "definition": {
+      "tr": "ZooKeeper'da onu oluşturan istemcinin oturumuna bağlı düğüm (znode); oturum kapanır ya da zaman aşımına uğrarsa otomatik silinir. Sıralı (sequential) ephemeral düğümlerle kilit ve lider seçimi kurulur: en küçük sıra numaralı düğümün sahibi kilidi tutar."
+    },
+    "aliases": [
+      "ephemeral znode"
+    ],
+    "related": [
+      "distributed-lock",
+      "lease",
+      "leader-election"
     ]
   },
   "epoch": {
@@ -6588,6 +6744,21 @@
       "data-pipeline"
     ]
   },
+  "fencing-token": {
+    "term": {
+      "tr": "Fencing token",
+      "en": "Fencing token"
+    },
+    "definition": {
+      "tr": "Kilit servisinin kilidi her verişinde artırarak verdiği numara; istemci bu numarayı her yazmayla gönderir, depo da gördüğü en büyük numaradan küçük olanları reddeder. Böylece lease'i bir duraklama sırasında dolmuş eski sahibin gecikmiş yazması yeni sahibin verisini ezemez."
+    },
+    "related": [
+      "lease",
+      "distributed-lock",
+      "process-pause",
+      "redlock"
+    ]
+  },
   "fetch": {
     "term": {
       "tr": "fetch",
@@ -7036,6 +7207,23 @@
       "closure",
       "wrapper",
       "first-class-functions"
+    ]
+  },
+  "g-counter": {
+    "term": {
+      "tr": "G-Counter (yalnızca artan sayaç)",
+      "en": "G-Counter (grow-only counter)"
+    },
+    "definition": {
+      "tr": "Her replikanın kendi payını ayrı tuttuğu ve yalnızca artırılabilen CRDT sayaç; değer tüm payların toplamıdır, birleştirme bileşen bileşen max almaktır. Aynı durum iki kez alınsa bile sonuç değişmez."
+    },
+    "aliases": [
+      "grow-only counter"
+    ],
+    "related": [
+      "crdt",
+      "pn-counter",
+      "merge-function"
     ]
   },
   "gan": {
@@ -7578,6 +7766,25 @@
       "faithfulness",
       "guardrails",
       "human-in-the-loop"
+    ]
+  },
+  "happens-before": {
+    "term": {
+      "tr": "Happens-before (önce olma ilişkisi)",
+      "en": "Happens-before relation"
+    },
+    "definition": {
+      "tr": "Lamport'un tanımladığı nedensel sıra ilişkisi (a → b): a ile b aynı süreçte ve a önce olduysa, a bir mesajın gönderilmesi ve b o mesajın alınmasıysa ya da ikisi böyle adımlardan oluşan bir zincirle bağlıysa a, b'den önce olmuştur. Fiziksel zamana değil bilgi akışına dayanır; iki olay arasında bu ilişki yoksa olaylar eşzamanlıdır."
+    },
+    "aliases": [
+      "nedensel sıra",
+      "causal order"
+    ],
+    "related": [
+      "lamport-clock",
+      "vector-clock",
+      "concurrent-events",
+      "causal-consistency"
     ]
   },
   "hash-function": {
@@ -8211,6 +8418,23 @@
       "timeline-cache"
     ]
   },
+  "hybrid-logical-clock": {
+    "term": {
+      "tr": "Hybrid Logical Clock (hibrit mantıksal saat)",
+      "en": "Hybrid Logical Clock (HLC)"
+    },
+    "definition": {
+      "tr": "Fiziksel saat değeriyle mantıksal bir sayacı birleştiren zaman damgası. Fiziksel saate yakın kalır, ama mesaj alırken Lamport kuralını uyguladığı için nedenselliği bozmaz; CockroachDB ve YugabyteDB gibi dağıtık veritabanlarında kullanılır."
+    },
+    "aliases": [
+      "HLC"
+    ],
+    "related": [
+      "lamport-clock",
+      "clock-skew",
+      "truetime"
+    ]
+  },
   "hybrid-search": {
     "term": {
       "tr": "Hibrit arama",
@@ -8508,6 +8732,22 @@
       "package",
       "standard-library",
       "virtual-environment"
+    ]
+  },
+  "in-doubt-transaction": {
+    "term": {
+      "tr": "Belirsiz transaction (in-doubt)",
+      "en": "In-doubt transaction"
+    },
+    "definition": {
+      "tr": "2PC'de hazırlık aşamasında evet oyu vermiş ama koordinatörün nihai kararını henüz almamış bir katılımcıdaki transaction. Katılımcı diğerlerinin oylarını ve kararı bilmediği için tek başına ne commit ne abort edebilir; kararı öğrenene kadar kilitleri tutar."
+    },
+    "aliases": [
+      "in-doubt"
+    ],
+    "related": [
+      "two-phase-commit",
+      "coordinator-failure"
     ]
   },
   "in-place-sort": {
@@ -9398,6 +9638,26 @@
       "late-binding"
     ]
   },
+  "lamport-clock": {
+    "term": {
+      "tr": "Lamport saati",
+      "en": "Lamport clock"
+    },
+    "definition": {
+      "tr": "Her sürecin her olayda artırdığı, mesajla birlikte gönderdiği ve mesaj alırken max(yerel, gelen) + 1 kuralıyla güncellediği mantıksal sayaç. a → b ise L(a) < L(b) garanti edilir; ama tersi geçerli değildir, yani Lamport saati eşzamanlı olayları ayırt edemez."
+    },
+    "aliases": [
+      "Lamport timestamp",
+      "mantıksal saat",
+      "logical clock"
+    ],
+    "related": [
+      "happens-before",
+      "vector-clock",
+      "hybrid-logical-clock",
+      "raft-term"
+    ]
+  },
   "largest-contentful-paint": {
     "term": {
       "tr": "LCP (en büyük içerikli boyama)",
@@ -9630,6 +9890,42 @@
       "recommendations"
     ]
   },
+  "lease": {
+    "term": {
+      "tr": "Lease (süreli kilit)",
+      "en": "Lease"
+    },
+    "definition": {
+      "tr": "Bir kaynağın ya da kilidin bir sürece belirli bir süre için verilmesi; sahip yaşadığını göstermek için lease'i düzenli olarak yeniler, yenilemezse süre dolar ve kaynak başkasına geçer. Çöken sürecin kilidi sonsuza dek tutmasını önler, ama duraklayan bir sahip süresi dolmuş lease'i hâlâ geçerli sanabilir."
+    },
+    "aliases": [
+      "kira"
+    ],
+    "related": [
+      "distributed-lock",
+      "lease-keepalive",
+      "fencing-token",
+      "process-pause",
+      "ttl"
+    ]
+  },
+  "lease-keepalive": {
+    "term": {
+      "tr": "Lease yenileme (keepalive)",
+      "en": "Lease keepalive"
+    },
+    "definition": {
+      "tr": "Lease sahibinin süre dolmadan kilit servisine düzenli istek göndererek lease'i uzatması; etcd'de KeepAlive çağrısıyla yapılır. Yenileme kesilirse lease biter, ona bağlı anahtarlar silinir ve kilit serbest kalır."
+    },
+    "aliases": [
+      "KeepAlive"
+    ],
+    "related": [
+      "lease",
+      "ephemeral-node",
+      "distributed-lock"
+    ]
+  },
   "least-connections": {
     "term": {
       "tr": "Least connections (en az bağlantı)",
@@ -9780,6 +10076,26 @@
       "supervised-learning",
       "regularization",
       "feature-scaling"
+    ]
+  },
+  "linearizability": {
+    "term": {
+      "tr": "Linearizability (doğrusallaştırılabilirlik)",
+      "en": "Linearizability"
+    },
+    "definition": {
+      "tr": "Sistemin verinin tek bir kopyası varmış gibi davrandığı en güçlü tutarlılık modeli: her işlem başlangıcı ile bitişi arasındaki tek bir anda gerçekleşmiş gibi görünür ve bir yazma tamamlandıktan sonra başlayan her okuma onu ya da daha yenisini görür. Koordinasyon gerektirdiği için gecikme ve erişilebilirlik bedeli vardır."
+    },
+    "aliases": [
+      "linearizable",
+      "güçlü tutarlılık",
+      "strong consistency"
+    ],
+    "related": [
+      "consistency-models",
+      "sequential-consistency",
+      "consensus",
+      "cap-theorem"
     ]
   },
   "linux-namespaces": {
@@ -9949,6 +10265,20 @@
       "test-pyramid"
     ]
   },
+  "local-first": {
+    "term": {
+      "tr": "Local-first yazılım (önce yerel)",
+      "en": "Local-first software"
+    },
+    "definition": {
+      "tr": "Verinin birincil kopyasını kullanıcının cihazında tutan, çevrimdışıyken tam çalışan ve bağlantı geldiğinde diğer cihazlarla senkronize olan uygulama yaklaşımı; terimi Ink & Switch yaygınlaştırmıştır. Eşzamanlı değişikliklerin sunucuya ihtiyaç duymadan birleşmesi için genellikle CRDT'lerden yararlanır."
+    },
+    "related": [
+      "crdt",
+      "offline-sync",
+      "operational-transformation"
+    ]
+  },
   "local-state": {
     "term": {
       "tr": "Yerel state (bileşen state'i)",
@@ -10047,6 +10377,21 @@
       "data-retention",
       "append-only",
       "event-sourcing"
+    ]
+  },
+  "log-replication": {
+    "term": {
+      "tr": "Log replikasyonu",
+      "en": "Log replication"
+    },
+    "definition": {
+      "tr": "Raft'ta liderin istemci komutlarını kendi log'una ekleyip AppendEntries mesajlarıyla takipçilere kopyalaması. Her istek önceki girdinin index ve terimini taşır; uyuşmayan takipçinin farklı girdileri liderinkilerle değiştirilir, böylece tüm log'lar liderin log'una yakınsar."
+    },
+    "related": [
+      "raft",
+      "commit-index",
+      "replicated-state-machine",
+      "majority-quorum"
     ]
   },
   "log-store": {
@@ -10286,6 +10631,44 @@
       "backpropagation"
     ]
   },
+  "lww-register": {
+    "term": {
+      "tr": "LWW-Register (son yazan kazanır)",
+      "en": "Last-Writer-Wins Register"
+    },
+    "definition": {
+      "tr": "Tek bir değeri zaman damgasıyla saklayan CRDT; birleştirmede damgası büyük olan değer kazanır, eşitlik replika kimliğiyle bozulur. Deterministik olarak yakınsar ama eşzamanlı yazmalardan biri bilerek atılır ve damgalar saat kaymasından etkilenebilir."
+    },
+    "aliases": [
+      "LWW",
+      "last-write-wins"
+    ],
+    "related": [
+      "crdt",
+      "or-set",
+      "clock-skew",
+      "conflict-resolution"
+    ]
+  },
+  "majority-quorum": {
+    "term": {
+      "tr": "Çoğunluk (majority quorum)",
+      "en": "Majority quorum"
+    },
+    "definition": {
+      "tr": "N düğümlü bir kümede ⌊N/2⌋ + 1 düğümden oluşan grup; Raft'ta hem lider seçimi hem de bir girdinin commit edilmesi için gerekir. Herhangi iki çoğunluk en az bir düğümde kesiştiğinden ağ bölünmesinde iki taraf aynı anda karar veremez; 5 düğümlü küme 2 düğümün kaybına dayanır."
+    },
+    "aliases": [
+      "majority",
+      "çoğunluk"
+    ],
+    "related": [
+      "quorum",
+      "raft",
+      "split-brain",
+      "network-partition"
+    ]
+  },
   "manifest-review": {
     "term": {
       "tr": "Manifest denetimi (AI destekli)",
@@ -10462,6 +10845,24 @@
       "rebase",
       "branching",
       "trunk-based-development"
+    ]
+  },
+  "merge-function": {
+    "term": {
+      "tr": "Birleştirme fonksiyonu (merge)",
+      "en": "Merge function"
+    },
+    "definition": {
+      "tr": "CRDT'de iki replikanın durumunu tek bir durumda birleştiren fonksiyon. Değişmeli (sıra önemsiz), birleşmeli (gruplama önemsiz) ve eşgüçlü (aynı durumun tekrar gelmesi zararsız) olması, mesajlar hangi sırayla ve kaç kez gelirse gelsin replikaların aynı sonuca yakınsamasını sağlar."
+    },
+    "aliases": [
+      "CRDT merge"
+    ],
+    "related": [
+      "crdt",
+      "strong-eventual-consistency",
+      "g-counter",
+      "idempotency"
     ]
   },
   "merge-join": {
@@ -10868,6 +11269,21 @@
       "semantic-versioning",
       "continuous-integration",
       "trade-offs"
+    ]
+  },
+  "monotonic-reads": {
+    "term": {
+      "tr": "Monoton okumalar (monotonic reads)",
+      "en": "Monotonic reads"
+    },
+    "definition": {
+      "tr": "Bir kullanıcının ardışık okumalarının zamanda geri gitmemesini, yani daha yeni bir değeri gördükten sonra daha eskisini görmemesini sağlayan oturum garantisi. Genellikle kullanıcıyı aynı replikaya yönlendirerek ya da gördüğü sürümü izleyerek sağlanır."
+    },
+    "related": [
+      "session-guarantees",
+      "read-your-writes",
+      "replication-lag",
+      "eventual-consistency"
     ]
   },
   "monotonic-stack": {
@@ -11343,6 +11759,22 @@
       "dashboard"
     ]
   },
+  "ntp": {
+    "term": {
+      "tr": "NTP (Network Time Protocol)",
+      "en": "Network Time Protocol (NTP)"
+    },
+    "definition": {
+      "tr": "Bilgisayar saatlerini ağ üzerinden referans zaman sunucularına göre eşitleyen protokol. Ağ gecikmesini tahmin ederek düzeltme yapar ama hatayı sıfırlayamaz; düzeltme sırasında saat ileri ya da geri sıçrayabildiği için süre ölçmek için monoton saat tercih edilir."
+    },
+    "aliases": [
+      "Network Time Protocol"
+    ],
+    "related": [
+      "clock-skew",
+      "truetime"
+    ]
+  },
   "numeric-types": {
     "term": {
       "tr": "Sayısal tipler (int, float, complex)",
@@ -11660,6 +12092,23 @@
       "jwks"
     ]
   },
+  "operational-transformation": {
+    "term": {
+      "tr": "Operational Transformation (işlem dönüştürme)",
+      "en": "Operational Transformation (OT)"
+    },
+    "definition": {
+      "tr": "Eşzamanlı düzenlemelerde bir işlemi, ondan önce uygulanmış eşzamanlı işlemlere göre dönüştüren yöntem; örneğin önüne 3 karakter eklendiyse eklemenin konumu 3 kaydırılır. Genellikle işlemleri sıraya koyan merkezi bir sunucuyla çalışır; Google Docs bu yaklaşımı kullanır."
+    },
+    "aliases": [
+      "OT"
+    ],
+    "related": [
+      "crdt",
+      "conflict-resolution",
+      "local-first"
+    ]
+  },
   "operator-overloading": {
     "term": {
       "tr": "Operatör aşırı yükleme",
@@ -11738,6 +12187,23 @@
       "etag",
       "mvcc",
       "optimistic-concurrency"
+    ]
+  },
+  "or-set": {
+    "term": {
+      "tr": "OR-Set (gözlenen-silinen küme)",
+      "en": "Observed-Remove Set (OR-Set)"
+    },
+    "definition": {
+      "tr": "Her eklemeye benzersiz bir etiket veren küme CRDT'si; silme yalnızca silen replikanın o ana kadar gördüğü etiketleri kaldırır. Bu yüzden aynı öğenin eşzamanlı eklenmesi ve silinmesinde ekleme kazanır."
+    },
+    "aliases": [
+      "Observed-Remove Set"
+    ],
+    "related": [
+      "crdt",
+      "lww-register",
+      "merge-function"
     ]
   },
   "orchestration": {
@@ -12470,6 +12936,23 @@
       "video-storage"
     ]
   },
+  "pn-counter": {
+    "term": {
+      "tr": "PN-Counter (artan-azalan sayaç)",
+      "en": "PN-Counter"
+    },
+    "definition": {
+      "tr": "Artışlar ve azalışlar için iki ayrı G-Counter tutan CRDT sayaç; değer artışların toplamından azalışların toplamı çıkarılarak bulunur. Birleştirme, iki G-Counter'ı ayrı ayrı birleştirerek yapılır."
+    },
+    "aliases": [
+      "positive-negative counter"
+    ],
+    "related": [
+      "g-counter",
+      "crdt",
+      "merge-function"
+    ]
+  },
   "pod": {
     "term": {
       "tr": "Pod",
@@ -12861,6 +13344,25 @@
       "systemd-servisi",
       "shell",
       "kernel"
+    ]
+  },
+  "process-pause": {
+    "term": {
+      "tr": "Süreç duraklaması (process pause)",
+      "en": "Process pause"
+    },
+    "definition": {
+      "tr": "Bir sürecin kendi haberi olmadan uzun süre çalışamaması; stop-the-world çöp toplama, sanal makinenin canlı taşınması, diske takas ya da işletim sisteminin süreci zamanlamaması buna yol açabilir. Uyanan süreç aradan geçen zamanı fark etmeden, örneğin süresi dolmuş bir lease'e güvenerek devam edebilir."
+    },
+    "aliases": [
+      "GC pause",
+      "stop-the-world"
+    ],
+    "related": [
+      "lease",
+      "fencing-token",
+      "garbage-collection",
+      "clock-skew"
     ]
   },
   "process-states": {
@@ -13485,6 +13987,25 @@
       "leader-follower"
     ]
   },
+  "raft-term": {
+    "term": {
+      "tr": "Raft terimi (term)",
+      "en": "Raft term"
+    },
+    "definition": {
+      "tr": "Raft'ta zamanı bölen ve her yeni seçimle artan tamsayı; her terimde en fazla bir lider olur. Kendi teriminden büyük bir terim gören düğüm terimini günceller ve hemen takipçiye döner, böylece geri dönen eski bir lider sorun çıkaramaz."
+    },
+    "aliases": [
+      "term",
+      "dönem"
+    ],
+    "related": [
+      "raft",
+      "election-timeout",
+      "leader-election",
+      "lamport-clock"
+    ]
+  },
   "rag": {
     "term": {
       "tr": "RAG (getirme destekli üretim)",
@@ -14065,6 +14586,21 @@
       "write-back"
     ]
   },
+  "redlock": {
+    "term": {
+      "tr": "Redlock",
+      "en": "Redlock"
+    },
+    "definition": {
+      "tr": "Redis'in birden fazla bağımsız Redis sunucusu üzerinde önerdiği dağıtık kilit algoritması: istemci kilidi sunucuların çoğunluğundan belirli bir süre içinde alabilirse kilidi tuttuğunu kabul eder. Martin Kleppmann, süreç duraklamaları ve saat sıçramaları hakkında varsayımlar yaptığı ve fencing token üretmediği için doğruluk gerektiren durumlarda güvenli olmadığını savunmuştur."
+    },
+    "related": [
+      "distributed-lock",
+      "fencing-token",
+      "process-pause",
+      "clock-skew"
+    ]
+  },
   "reduce": {
     "term": {
       "tr": "reduce()",
@@ -14369,6 +14905,24 @@
       "rolling-deployment",
       "rollback",
       "declarative-reconciliation"
+    ]
+  },
+  "replicated-state-machine": {
+    "term": {
+      "tr": "Replike durum makinesi",
+      "en": "Replicated state machine"
+    },
+    "definition": {
+      "tr": "Her düğümün aynı komutları aynı sırayla uygulayarak aynı duruma ulaştığı replikasyon yaklaşımı. Komut sırası konsensüsle üzerinde anlaşılan bir log ile sağlanır; etcd, Consul ve CockroachDB bu yapıyı Raft ile kurar."
+    },
+    "aliases": [
+      "RSM"
+    ],
+    "related": [
+      "consensus",
+      "log-replication",
+      "raft",
+      "state-machine"
     ]
   },
   "replication": {
@@ -15426,6 +15980,20 @@
       "tcp-sliding-window"
     ]
   },
+  "sequential-consistency": {
+    "term": {
+      "tr": "Sıralı tutarlılık (sequential consistency)",
+      "en": "Sequential consistency"
+    },
+    "definition": {
+      "tr": "Tüm istemcilerin işlemleri aynı tek sırada gördüğü ve bu sıranın her istemcinin kendi işlem sırasına uyduğu tutarlılık modeli. Linearizability'den farkı, sıranın gerçek zamanla örtüşmek zorunda olmamasıdır: okumalar biraz bayat olabilir ama herkes aynı tarihçeyi görür."
+    },
+    "related": [
+      "linearizability",
+      "causal-consistency",
+      "consistency-models"
+    ]
+  },
   "serializable": {
     "term": {
       "tr": "Serializable (seri hâle getirilebilir izolasyon)",
@@ -15667,6 +16235,21 @@
       "samesite",
       "csrf",
       "xss"
+    ]
+  },
+  "session-guarantees": {
+    "term": {
+      "tr": "Oturum garantileri",
+      "en": "Session guarantees"
+    },
+    "definition": {
+      "tr": "Tüm sistemi güçlü tutarlı yapmadan tek bir istemcinin (oturumun) gördüğü tutarlılığı iyileştiren garantiler; 1990'larda Bayou projesinde tanımlanmıştır. Read-your-writes ve monotonic reads en bilinenleridir."
+    },
+    "related": [
+      "read-your-writes",
+      "monotonic-reads",
+      "eventual-consistency",
+      "consistency-models"
     ]
   },
   "session-key": {
@@ -16817,6 +17400,23 @@
       "slicing"
     ]
   },
+  "strong-eventual-consistency": {
+    "term": {
+      "tr": "Güçlü nihai tutarlılık (strong eventual consistency)",
+      "en": "Strong eventual consistency"
+    },
+    "definition": {
+      "tr": "Aynı güncelleme kümesini almış iki replikanın, ek bir koordinasyon turu olmadan, kesinlikle aynı durumda olmasını garanti eden model. Nihai tutarlılığın \"sonunda yakınsar\" sözünü güçlendirir ve CRDT'lerle sağlanır."
+    },
+    "aliases": [
+      "SEC"
+    ],
+    "related": [
+      "crdt",
+      "eventual-consistency",
+      "merge-function"
+    ]
+  },
   "structural-patterns": {
     "term": {
       "tr": "Yapısal tasarım kalıpları",
@@ -17164,6 +17764,24 @@
       "p95-latency",
       "latency",
       "latency-budget"
+    ]
+  },
+  "tcc": {
+    "term": {
+      "tr": "TCC (Try-Confirm-Cancel)",
+      "en": "Try-Confirm-Cancel (TCC)"
+    },
+    "definition": {
+      "tr": "Her servisin kaynağı geçici olarak ayıran Try, ayırmayı kesinleştiren Confirm ve bırakan Cancel işlemlerini sunduğu dağıtık transaction deseni. Orkestratör tüm Try çağrıları başarılıysa Confirm, biri başarısızsa Cancel çağırır; ayırmalar veritabanı kilidi değil iş düzeyinde süreli rezervasyonlardır."
+    },
+    "aliases": [
+      "Try-Confirm-Cancel"
+    ],
+    "related": [
+      "two-phase-commit",
+      "saga-pattern",
+      "compensating-transaction",
+      "idempotency-key"
     ]
   },
   "tcp-handshake": {
@@ -18087,6 +18705,24 @@
       "top-k"
     ]
   },
+  "truetime": {
+    "term": {
+      "tr": "TrueTime",
+      "en": "TrueTime"
+    },
+    "definition": {
+      "tr": "Google Spanner'ın saat API'si: şimdiki zamanı tek bir değer yerine, gerçek zamanın içinde olduğu garanti edilen bir [earliest, latest] aralığı olarak döndürür. Aralık veri merkezlerindeki GPS alıcıları ve atomik saatlerle dar tutulur; Spanner bu belirsizliği commit wait ile bekleyerek transaction'lara gerçek zamana uyan bir sıra verir."
+    },
+    "aliases": [
+      "Spanner TrueTime"
+    ],
+    "related": [
+      "commit-wait",
+      "clock-skew",
+      "hybrid-logical-clock",
+      "linearizability"
+    ]
+  },
   "truncation": {
     "term": {
       "tr": "Bağlam kesme (truncation)",
@@ -18271,6 +18907,25 @@
       "environment-variables",
       "build-once-deploy-many",
       "secrets-management"
+    ]
+  },
+  "two-phase-commit": {
+    "term": {
+      "tr": "İki aşamalı commit (2PC)",
+      "en": "Two-phase commit (2PC)"
+    },
+    "definition": {
+      "tr": "Birden fazla katılımcıya yayılan bir transaction'ı atomik yapmak için koordinatörün önce herkesten hazırlık oyu topladığı (prepare), herkes evet derse commit, aksi halde abort kararını ilettiği protokol. Engelleyicidir: koordinatör kararı iletemeden çökerse katılımcılar kilitleri tutarak bekler."
+    },
+    "aliases": [
+      "2PC"
+    ],
+    "related": [
+      "coordinator-failure",
+      "in-doubt-transaction",
+      "transaction",
+      "saga-pattern",
+      "tcc"
     ]
   },
   "two-pointers": {
@@ -18567,6 +19222,22 @@
       "mutability",
       "object-identity",
       "pass-by-object-reference"
+    ]
+  },
+  "vector-clock": {
+    "term": {
+      "tr": "Vektör saat",
+      "en": "Vector clock"
+    },
+    "definition": {
+      "tr": "Her sürecin, sistemdeki her süreç için bir sayaç içeren bir vektör tuttuğu mantıksal saat; mesaj alınırken vektörler bileşen bileşen max alınarak birleştirilir. İki damga karşılaştırılarak olayların nedensel olarak sıralı mı yoksa eşzamanlı mı olduğu kesin olarak anlaşılır; bedeli vektörün süreç sayısıyla büyümesidir."
+    },
+    "related": [
+      "lamport-clock",
+      "happens-before",
+      "concurrent-events",
+      "causal-consistency",
+      "conflict-resolution"
     ]
   },
   "vector-database": {

@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 430" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Tutarlılık modelleri hiyerarşisi</title>
+  <desc id="desc">Yukarıdan aşağıya dört model: linearizable, sequential, causal ve eventual. Her kutuda kısa tanım ve örnek sistem. Solda aşağı doğru koordinasyon ve gecikmenin azaldığını, erişilebilirliğin arttığını gösteren ok. Sağda eventual modele eklenebilen oturum garantileri: read-your-writes, monotonic reads, monotonic writes ve writes-follow-reads.</desc>
+  <defs>
+    <marker id="q04-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+  </defs>
+
+  <!-- Sol eksen -->
+  <line x1="60" y1="40" x2="60" y2="390" stroke="var(--da-muted, #64748b)" stroke-width="2" marker-end="url(#q04-arrow)"/>
+  <text x="74" y="36" font-size="12" fill="var(--da-fg, #0f172a)" font-weight="600">güçlü</text>
+  <text x="74" y="408" font-size="12" fill="var(--da-fg, #0f172a)" font-weight="600">zayıf</text>
+  <g font-size="11" fill="var(--da-muted, #64748b)">
+    <text x="30" y="160" transform="rotate(-90 30 160)" text-anchor="middle">koordinasyon ve gecikme azalır</text>
+    <text x="46" y="290" transform="rotate(-90 46 290)" text-anchor="middle">erişilebilirlik artar</text>
+  </g>
+
+  <!-- Model kutuları -->
+  <g stroke-width="2">
+    <rect x="100" y="30" width="470" height="76" rx="12" fill="var(--da-surface, #ffffff)" stroke="var(--da-primary, #6366f1)"/>
+    <rect x="100" y="120" width="470" height="76" rx="12" fill="var(--da-surface, #ffffff)" stroke="var(--da-primary, #6366f1)" opacity="0.9"/>
+    <rect x="100" y="210" width="470" height="76" rx="12" fill="var(--da-surface, #ffffff)" stroke="var(--da-accent, #f59e0b)"/>
+    <rect x="100" y="300" width="470" height="76" rx="12" fill="var(--da-surface, #ffffff)" stroke="var(--da-success, #10b981)"/>
+  </g>
+  <g font-size="15" font-weight="600" fill="var(--da-fg, #0f172a)">
+    <text x="120" y="58">Linearizable</text>
+    <text x="120" y="148">Sequential</text>
+    <text x="120" y="238">Causal</text>
+    <text x="120" y="328">Eventual</text>
+  </g>
+  <g font-size="12" fill="var(--da-fg, #0f172a)">
+    <text x="120" y="80">Tek kopya gibi; gerçek zaman sırası korunur.</text>
+    <text x="120" y="170">Herkes aynı sırayı görür; gerçek zamanla örtüşmesi gerekmez.</text>
+    <text x="120" y="260">Yalnızca nedensel bağlı işlemler sırayla görünür.</text>
+    <text x="120" y="350">Yazmalar durursa replikalar sonunda yakınsar.</text>
+  </g>
+  <g font-size="11" fill="var(--da-muted, #64748b)">
+    <text x="120" y="98">örn. etcd/ZooKeeper yazmaları, Spanner</text>
+    <text x="120" y="188">örn. ZooKeeper'ın varsayılan okumaları</text>
+    <text x="120" y="278">örn. MongoDB causal session'ları</text>
+    <text x="120" y="368">örn. DynamoDB varsayılan okuma, Cassandra ONE</text>
+  </g>
+
+  <!-- Oturum garantileri -->
+  <rect x="620" y="200" width="250" height="186" rx="12" fill="var(--da-surface, #f8fafc)" stroke="var(--da-border, #cbd5e1)" stroke-dasharray="6 5"/>
+  <text x="745" y="226" font-size="13" font-weight="600" text-anchor="middle" fill="var(--da-fg, #0f172a)">Oturum garantileri</text>
+  <g font-size="12" fill="var(--da-fg, #0f172a)">
+    <text x="640" y="256">• read-your-writes</text>
+    <text x="640" y="282">• monotonic reads</text>
+    <text x="640" y="308">• monotonic writes</text>
+    <text x="640" y="334">• writes-follow-reads</text>
+  </g>
+  <text x="745" y="366" font-size="11" text-anchor="middle" fill="var(--da-muted, #64748b)">tek kullanıcının deneyimini düzeltir</text>
+  <path d="M 620 330 C 600 330, 590 338, 572 338" fill="none" stroke="var(--da-border, #cbd5e1)" stroke-width="1.5" marker-end="url(#q04-arrow)"/>
+
+  <!-- CAP notu -->
+  <text x="745" y="60" font-size="12" text-anchor="middle" fill="var(--da-primary, #6366f1)" font-weight="600">Bölünmede azınlık cevap veremez</text>
+  <text x="745" y="80" font-size="11" text-anchor="middle" fill="var(--da-muted, #64748b)">(CAP: C seçildi)</text>
+  <text x="745" y="170" font-size="12" text-anchor="middle" fill="var(--da-success, #10b981)" font-weight="600">Causal ve altı: bölünmede de erişilebilir</text>
+</svg>

@@ -1,0 +1,109 @@
+{
+  "id": "q-02-consensus-raft-quiz",
+  "title": { "tr": "Konsensüs ve Raft Quiz", "en": "Consensus and Raft Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "5 düğümlü bir Raft kümesinde bir log girdisinin commit edilebilmesi için en az kaç düğümde (lider dahil) bulunması gerekir?",
+        "en": "In a 5-node Raft cluster, on how many nodes (including the leader) must a log entry be stored before it can be committed?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "2", "en": "2" } },
+        { "id": "b", "text": { "tr": "3", "en": "3" } },
+        { "id": "c", "text": { "tr": "4", "en": "4" } },
+        { "id": "d", "text": { "tr": "5", "en": "5" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Çoğunluk ⌊5/2⌋ + 1 = 3'tür. Girdi 3 düğümde olduğunda commit edilir; böylece 2 düğüm çökse ya da yavaş kalsa bile yazmalar devam eder.",
+        "en": "A majority is ⌊5/2⌋ + 1 = 3. Once the entry is on 3 nodes it is committed, so writes continue even if 2 nodes crash or lag."
+      },
+      "difficulty": "easy",
+      "concepts": ["majority-quorum", "log-replication"]
+    },
+    {
+      "id": "q2",
+      "type": "order",
+      "prompt": {
+        "tr": "Bir takipçinin lider olma sürecindeki adımları doğru sıraya koyun.",
+        "en": "Put the steps of a follower becoming leader in the correct order."
+      },
+      "options": [
+        { "id": "votes", "text": { "tr": "Çoğunluğun oyunu alır", "en": "It receives votes from a majority" } },
+        { "id": "timeout", "text": { "tr": "Election timeout süresince heartbeat almaz", "en": "It receives no heartbeat for an election timeout" } },
+        { "id": "heartbeat", "text": { "tr": "Lider olarak heartbeat gönderip diğer adayları susturur", "en": "As leader, it sends heartbeats and silences other candidates" } },
+        { "id": "candidate", "text": { "tr": "Terimini artırır, kendine oy verir ve RequestVote gönderir", "en": "It increments its term, votes for itself and sends RequestVote" } }
+      ],
+      "correct": ["timeout", "candidate", "votes", "heartbeat"],
+      "explanation": {
+        "tr": "Seçim heartbeat'in kesilmesiyle başlar. Takipçi aday olur, terimini artırır ve oy ister; çoğunluğu alınca lider olur ve heartbeat göndererek liderliğini duyurur.",
+        "en": "An election starts when heartbeats stop. The follower becomes a candidate, increments its term and asks for votes; once it has a majority it becomes leader and announces it by sending heartbeats."
+      },
+      "difficulty": "easy",
+      "concepts": ["leader-election", "election-timeout"]
+    },
+    {
+      "id": "q3",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Bir düğüm, log'u kendisininkinden daha geride olan bir adaya, o terimde henüz oy vermemişse yine de oy verir.",
+        "en": "A node will still vote for a candidate whose log is behind its own, as long as it has not voted yet in that term."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "Yanlış. Oy yalnızca log'u en az oy verenin log'u kadar güncel olan adaya verilir. Commit edilmiş her girdi çoğunlukta vardır; seçim de çoğunluk oyu gerektirdiği için eksik log'lu aday lider olamaz ve commit edilmiş veri kaybolmaz.",
+        "en": "False. A vote is only granted to a candidate whose log is at least as up to date as the voter's. Every committed entry is on a majority, and winning needs a majority of votes, so a candidate with a missing entry cannot win and committed data is never lost."
+      },
+      "difficulty": "medium",
+      "concepts": ["leader-election", "raft"]
+    },
+    {
+      "id": "q4",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Ağ bölünmesinden sonra term 2'nin eski lideri geri döner; küme bu arada term 4'e geçmiştir. Hangileri doğrudur? (Birden fazla seçin)",
+        "en": "After a partition, the old leader of term 2 comes back; the cluster has meanwhile moved to term 4. Which statements are true? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Daha yüksek terimi görünce follower olur", "en": "It becomes a follower when it sees the higher term" } },
+        { "id": "b", "text": { "tr": "Commit edilmemiş girdileri yeni liderin log'uyla ezilebilir", "en": "Its uncommitted entries may be overwritten by the new leader's log" } },
+        { "id": "c", "text": { "tr": "Term 2'de commit edilmiş girdiler yeni liderin log'unda zaten vardır", "en": "Entries committed in term 2 are already in the new leader's log" } },
+        { "id": "d", "text": { "tr": "Eski lider liderliği geri alır, çünkü log'u daha uzundur", "en": "The old leader takes back leadership because its log is longer" } }
+      ],
+      "correct": ["a", "b", "c"],
+      "explanation": {
+        "tr": "Terim karşılaştırması her şeyden önce gelir: daha yüksek terim gören düğüm follower'a döner. Commit edilmiş girdiler çoğunlukta olduğu için yeni lider onları içermek zorundadır; yalnızca commit edilmemiş, onaylanmamış girdiler ezilir. Log uzunluğu tek başına liderlik getirmez.",
+        "en": "Term comparison comes first: a node that sees a higher term becomes a follower. Committed entries are on a majority, so the new leader must contain them; only uncommitted, unacknowledged entries are overwritten. Log length alone never grants leadership."
+      },
+      "difficulty": "medium",
+      "concepts": ["raft-term", "split-brain"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "Bir ekip etcd kümesini 3 üyeden 4 üyeye çıkarıp 'artık iki üye kaybını tolere ederiz' diyor. Doğru mu?",
+        "en": "A team grows its etcd cluster from 3 to 4 members and says 'now we tolerate losing two members'. Are they right?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Evet, 4 üyenin yarısı ayakta kalır", "en": "Yes, half of the 4 members stay up" } },
+        { "id": "b", "text": { "tr": "Hayır; çoğunluk 3 olduğu için yine yalnızca 1 üye kaybı tolere edilir", "en": "No; the majority is 3, so still only 1 member can be lost" } },
+        { "id": "c", "text": { "tr": "Hayır; 4 üyeli küme hiç hata tolere etmez", "en": "No; a 4-member cluster tolerates no failures at all" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "4 üyede çoğunluk ⌊4/2⌋ + 1 = 3'tür; 2 üye düşerse kalan 2 üye çoğunluk değildir ve küme yazamaz. 4 üye, 3 üyeyle aynı hatayı tolere eder ama her yazma daha fazla kopyaya gider. Bu yüzden tek sayılar (3, 5) önerilir.",
+        "en": "With 4 members the majority is ⌊4/2⌋ + 1 = 3; if 2 members fail, the remaining 2 are not a majority and the cluster cannot write. 4 members tolerate the same failures as 3, but each write goes to more replicas. That is why odd sizes (3, 5) are recommended."
+      },
+      "difficulty": "medium",
+      "concepts": ["majority-quorum", "consensus"]
+    }
+  ]
+}
