@@ -115,6 +115,9 @@ export const InteractiveTypeSchema = z.enum([
   'jwt-inspector',
   'bruteforce-login',
   'git-graph',
+  'dp-table',
+  'heap',
+  'stack-queue',
   'python-memory',
   'predict-run',
 ]);
@@ -164,6 +167,9 @@ export const INTERACTIVE_PARAMS = {
   'jwt-inspector': ['secret', 'token'],
   'bruteforce-login': ['attemptsPerSecond', 'lockoutAfter', 'lockoutSeconds', 'passwordSpace'],
   'git-graph': ['scenario'],
+  'dp-table': ['problem', 'size'],
+  heap: ['initial', 'kind'],
+  'stack-queue': ['expression', 'mode'],
   'python-memory': ['scenario'],
   'predict-run': ['src'],
 } as const satisfies Record<InteractiveType, readonly string[]>;

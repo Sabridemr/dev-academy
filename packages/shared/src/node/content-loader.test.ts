@@ -65,6 +65,23 @@ describe('içerik doğrulayıcı', () => {
     expect(errors()).toEqual([]);
   });
 
+  it('öznitelik değerinde } olan directive satırını hata sayar', () => {
+    const dir = fixture();
+    const md = join(dir, 'lesson.md');
+    const src = readFileSync(md, 'utf8');
+    writeFileSync(
+      md,
+      src.replace(
+        /:::diagram\{[^}]*\}/,
+        ':::diagram{src="diagram.svg" alt="Sayaç {A:6, B:2}|Counter"}',
+      ),
+    );
+    const errs = errors();
+    expect(errs.some((e) => e.message.includes('directive açılış satırı ayrıştırılamadı'))).toBe(
+      true,
+    );
+  });
+
   it('simülatörün okumadığı interaktif parametreyi hata sayar', () => {
     const dir = fixture();
     const md = join(dir, 'lesson.md');

@@ -238,7 +238,9 @@ export function serializeBlock(block: LessonBlock, warn: Warn = () => {}): strin
         warn,
       );
       // Kod gövdesi kırpılmamalı ve ::: kontrolü çit içinde anlamsız: doğrudan yerleştir
-      return head.replace(/\n:::$/, `\n${body}\n:::`);
+      // Değiştirme metni fonksiyonla verilir: aksi hâlde koddaki `$$`, `$&` gibi diziler
+      // String.replace'in özel desenleri sayılır ve bozulur (ör. bash `$$` → `$`)
+      return head.replace(/\n:::$/, () => `\n${body}\n:::`);
     }
     case 'realworld':
       return directive('realworld', [['company', block.company]], block.markdown, where, warn);

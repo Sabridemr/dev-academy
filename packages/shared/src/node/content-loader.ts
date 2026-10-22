@@ -183,9 +183,21 @@ export function loadContent(root = findContentRoot()): LoadedContent {
         continue;
       }
       let doc: LessonDocument;
+      const mdSource = readFileSync(mdFile, 'utf8');
+      // `:::ad{...}` görünümlü ama ayrıştırıcının tanımadığı satırlar (ör. öznitelikte `}`): directive
+      // sessizce düz metne dönüşür; burada hata olarak raporlanır
+      for (const [i, line] of mdSource.split('\n').entries()) {
+        if (!/^:::[a-z][a-z0-9-]*\{/.test(line)) continue;
+        if (/^:::[a-z][a-z0-9-]*\{[^}]*\}\s*$/.test(line)) continue;
+        issues.push({
+          severity: 'error',
+          file: rel(mdFile),
+          message: `satır ${i + 1}: directive açılış satırı ayrıştırılamadı (öznitelik değerinde "}" olamaz): ${line.slice(0, 60)}`,
+        });
+      }
       try {
         const enFile = join(lessonDir, 'lesson.en.md');
-        doc = parseLessonMarkdown(readFileSync(mdFile, 'utf8'), {
+        doc = parseLessonMarkdown(mdSource, {
           sourcePath: rel(mdFile),
           englishMarkdown: existsSync(enFile) ? readFileSync(enFile, 'utf8') : undefined,
         });
