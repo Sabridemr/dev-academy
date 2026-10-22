@@ -1,0 +1,266 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "q-06-2pc-blocking-and-saga",
+  "title": { "tr": "2PC'de Koordinatör Çökmesi ve Saga ile Telafi", "en": "Coordinator Failure in 2PC and Compensation with a Saga" },
+  "summary": {
+    "tr": "Koordinatör üç katılımcıya PREPARE gönderir, hepsi YES der ve kilit tutar; koordinatör COMMIT kararını gönderemeden çöker ve katılımcılar kilitli bekler; geri dönünce COMMIT gönderir. Ardından aynı akış saga ile yürütülür: sipariş ve stok yerel olarak commit edilir, ödeme başarısız olunca stok ve sipariş ters sırada telafi edilir.",
+    "en": "The coordinator sends PREPARE to three participants, all vote YES and hold locks; the coordinator crashes before sending the COMMIT decision and the participants wait while locked; when it returns it sends COMMIT. Then the same flow runs as a saga: order and stock commit locally, and when payment fails stock and order are compensated in reverse order."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda koordinatör (sipariş servisi), sağda üç katılımcı: üstte Sipariş DB, ortada Stok DB, altta Ödeme DB. Önce 2PC: koordinatör üçüne PREPARE gönderir; her biri değişikliği hazırlayıp satırları kilitler ve YES oyu döner. Koordinatör COMMIT kararını log'una yazar ama göndermeden çöker. Katılımcılar belirsiz durumda kalır, kilitleri tutar ve başka işlemler bekler. Koordinatör yeniden başlar, log'dan kararı okur ve COMMIT gönderir; kilitler bırakılır. Sonra saga: koordinatör orkestratör olur. T1 siparişi PENDING olarak oluşturur ve hemen commit eder; T2 stoğu ayırır ve commit eder; T3 ödeme reddedilir. Telafi ters sırada çalışır: C2 stoğu serbest bırakır, C1 siparişi iptal eder. Son adımda iki yaklaşımın farkı özetlenir.",
+      "en": "Coordinator (order service) on the left, three participants on the right: Order DB at the top, Stock DB in the middle, Payment DB at the bottom. First 2PC: the coordinator sends PREPARE to all three; each prepares its change, locks rows and returns a YES vote. The coordinator writes the COMMIT decision to its log but crashes before sending it. The participants are left in doubt, hold their locks, and other transactions wait. The coordinator restarts, reads the decision from its log and sends COMMIT; the locks are released. Then the saga: the coordinator becomes an orchestrator. T1 creates the order as PENDING and commits immediately; T2 reserves stock and commits; T3 payment is declined. Compensation runs in reverse: C2 releases the stock, C1 cancels the order. The last step summarises the difference between the two approaches."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "coord", "kind": "service", "label": { "tr": "Koordinatör", "en": "Coordinator" }, "sublabel": { "tr": "sipariş servisi", "en": "order service" }, "x": 200, "y": 300, "w": 190, "h": 90 },
+    { "id": "orders", "kind": "db", "label": { "tr": "Sipariş DB", "en": "Order DB" }, "x": 780, "y": 110, "w": 170, "h": 80 },
+    { "id": "stock", "kind": "db", "label": { "tr": "Stok DB", "en": "Stock DB" }, "x": 780, "y": 300, "w": 170, "h": 80 },
+    { "id": "payment", "kind": "db", "label": { "tr": "Ödeme DB", "en": "Payment DB" }, "x": 780, "y": 490, "w": 170, "h": 80 }
+  ],
+  "edges": [
+    { "id": "c-orders", "from": "coord", "to": "orders", "kind": "control", "curvature": -0.1 },
+    { "id": "c-stock", "from": "coord", "to": "stock", "kind": "control" },
+    { "id": "c-payment", "from": "coord", "to": "payment", "kind": "control", "curvature": 0.1 }
+  ],
+  "steps": [
+    {
+      "id": "setup",
+      "title": { "tr": "Bir sipariş, üç veritabanı", "en": "One order, three databases" },
+      "narration": {
+        "tr": "Sipariş vermek üç ayrı veritabanını değiştirir: sipariş kaydı, stok düşümü ve ödeme. Hepsi ya birlikte olmalı ya hiç. 2PC'de sipariş servisi koordinatör, üç veritabanı katılımcıdır.",
+        "en": "Placing an order changes three separate databases: the order record, the stock decrement and the payment. All must happen together or not at all. In 2PC the order service is the coordinator and the three databases are participants."
+      },
+      "durationMs": 2800,
+      "inherit": false,
+      "highlight": { "nodes": ["coord", "orders", "stock", "payment"], "edges": [] },
+      "nodeStates": {
+        "coord": { "status": "idle", "badge": "tx#81" },
+        "orders": { "status": "idle", "badge": "" },
+        "stock": { "status": "idle", "badge": "" },
+        "payment": { "status": "idle", "badge": "" }
+      },
+      "edgeStates": {
+        "c-orders": { "status": "idle", "label": "" },
+        "c-stock": { "status": "idle", "label": "" },
+        "c-payment": { "status": "idle", "label": "" }
+      }
+    },
+    {
+      "id": "prepare",
+      "title": { "tr": "Evre 1: PREPARE", "en": "Phase 1: PREPARE" },
+      "narration": {
+        "tr": "Koordinatör üç katılımcıya PREPARE gönderir. Her katılımcı değişikliği hazırlar, 'prepared' kaydını diske yazar ve ilgili satırları kilitler. Bu noktadan sonra katılımcı kendi başına geri dönemez.",
+        "en": "The coordinator sends PREPARE to the three participants. Each prepares the change, writes a 'prepared' record to disk and locks the affected rows. From here on the participant cannot back out on its own."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["coord", "orders", "stock", "payment"], "edges": ["c-orders", "c-stock", "c-payment"] },
+      "nodeStates": {
+        "coord": { "status": "active" },
+        "orders": { "status": "busy", "badge": "🔒" },
+        "stock": { "status": "busy", "badge": "🔒" },
+        "payment": { "status": "busy", "badge": "🔒" }
+      },
+      "edgeStates": {
+        "c-orders": { "status": "active", "label": "PREPARE" },
+        "c-stock": { "status": "active", "label": "PREPARE" },
+        "c-payment": { "status": "active", "label": "PREPARE" }
+      },
+      "packets": [
+        { "edge": "c-orders", "shape": "diamond", "label": "PREPARE", "durationMs": 1100 },
+        { "edge": "c-stock", "shape": "diamond", "label": "PREPARE", "durationMs": 1100 },
+        { "edge": "c-payment", "shape": "diamond", "label": "PREPARE", "durationMs": 1100 }
+      ]
+    },
+    {
+      "id": "votes",
+      "title": { "tr": "Oylar: üç kez YES", "en": "Votes: three YES" },
+      "narration": {
+        "tr": "Üç katılımcı da YES oyu verir. YES bir sözdür: 'koordinatör ne karar verirse, çöksem bile onu uygulayabilirim'. Katılımcılar artık 'prepared' durumunda ve kilitleri tutuyor.",
+        "en": "All three participants vote YES. YES is a promise: 'whatever the coordinator decides, I can apply it even if I crash'. The participants are now 'prepared' and holding their locks."
+      },
+      "durationMs": 2800,
+      "highlight": { "nodes": ["orders", "stock", "payment"], "edges": ["c-orders", "c-stock", "c-payment"] },
+      "nodeStates": {
+        "orders": { "badge": "🔒 YES" },
+        "stock": { "badge": "🔒 YES" },
+        "payment": { "badge": "🔒 YES" },
+        "coord": { "counter": 3 }
+      },
+      "edgeStates": {
+        "c-orders": { "label": "YES" },
+        "c-stock": { "label": "YES" },
+        "c-payment": { "label": "YES" }
+      },
+      "packets": [
+        { "edge": "c-orders", "direction": "backward", "shape": "dot", "label": "YES", "durationMs": 1000 },
+        { "edge": "c-stock", "direction": "backward", "shape": "dot", "label": "YES", "durationMs": 1000 },
+        { "edge": "c-payment", "direction": "backward", "shape": "dot", "label": "YES", "durationMs": 1000 }
+      ]
+    },
+    {
+      "id": "crash",
+      "title": { "tr": "Karar yazıldı, koordinatör çöktü", "en": "Decision logged, coordinator crashed" },
+      "narration": {
+        "tr": "Koordinatör COMMIT kararını kendi log'una yazar ve tam mesajları göndermeden önce çöker. Karar artık kesindir ama yalnızca koordinatörün diskinde vardır; katılımcıların hiçbiri onu bilmez.",
+        "en": "The coordinator writes the COMMIT decision to its log and crashes just before sending the messages. The decision is now final but exists only on the coordinator's disk; none of the participants know it."
+      },
+      "durationMs": 2800,
+      "highlight": { "nodes": ["coord"], "edges": [] },
+      "nodeStates": {
+        "coord": { "status": "down", "badge": "log: COMMIT", "counter": 3 }
+      },
+      "edgeStates": {
+        "c-orders": { "status": "muted", "label": "" },
+        "c-stock": { "status": "muted", "label": "" },
+        "c-payment": { "status": "muted", "label": "" }
+      },
+      "annotations": [
+        { "id": "decided", "x": 200, "y": 410, "text": { "tr": "karar diskte, mesaj yolda değil", "en": "decision on disk, no message sent" }, "tone": "danger", "target": "coord" }
+      ]
+    },
+    {
+      "id": "blocked",
+      "title": { "tr": "Belirsiz katılımcılar kilitli bekler", "en": "In-doubt participants wait, locked" },
+      "narration": {
+        "tr": "Katılımcılar belirsiz (in-doubt) durumdadır. Kendi başlarına commit edemezler, çünkü başka biri NO demiş olabilir; abort edemezler, çünkü karar COMMIT olabilir. Kilitleri tutarak beklerler; aynı satırlara dokunmak isteyen diğer siparişler de beklemeye başlar. 2PC'nin engelleyici olmasının anlamı budur.",
+        "en": "The participants are in doubt. They cannot commit on their own, since someone may have voted NO; they cannot abort, since the decision may be COMMIT. They wait while holding their locks, and other orders touching the same rows start waiting too. This is what it means for 2PC to be blocking."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["orders", "stock", "payment"], "edges": [] },
+      "nodeStates": {
+        "orders": { "status": "warning", "badge": "🔒 ?" },
+        "stock": { "status": "warning", "badge": "🔒 ?" },
+        "payment": { "status": "warning", "badge": "🔒 ?" }
+      },
+      "annotations": [
+        { "id": "waiting", "x": 520, "y": 300, "text": { "tr": "COMMIT mi ABORT mu? bilinmiyor → bekle", "en": "COMMIT or ABORT? unknown → wait" }, "tone": "warning" },
+        { "id": "queue", "x": 780, "y": 580, "text": { "tr": "diğer işlemler kilit kuyruğunda", "en": "other transactions queued on locks" }, "tone": "warning" }
+      ]
+    },
+    {
+      "id": "recover",
+      "title": { "tr": "Koordinatör döner, COMMIT gönderir", "en": "The coordinator returns and sends COMMIT" },
+      "narration": {
+        "tr": "Koordinatör yeniden başlar, log'unda tx#81 için COMMIT kararını bulur ve katılımcılara gönderir. Katılımcılar commit eder ve kilitleri bırakır. Bekleme süresi, koordinatörün onarılma süresi kadardı. Spanner bu süreyi kısaltmak için kararı tek diske değil, replike bir Paxos log'una yazar.",
+        "en": "The coordinator restarts, finds the COMMIT decision for tx#81 in its log and sends it to the participants. They commit and release their locks. The wait lasted as long as the coordinator's repair. To shorten it, Spanner writes the decision to a replicated Paxos log instead of a single disk."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["coord", "orders", "stock", "payment"], "edges": ["c-orders", "c-stock", "c-payment"] },
+      "nodeStates": {
+        "coord": { "status": "success", "badge": "COMMIT" },
+        "orders": { "status": "success", "badge": "✓" },
+        "stock": { "status": "success", "badge": "✓" },
+        "payment": { "status": "success", "badge": "✓" }
+      },
+      "edgeStates": {
+        "c-orders": { "status": "active", "label": "COMMIT" },
+        "c-stock": { "status": "active", "label": "COMMIT" },
+        "c-payment": { "status": "active", "label": "COMMIT" }
+      },
+      "packets": [
+        { "edge": "c-orders", "shape": "envelope", "label": "COMMIT", "durationMs": 1100 },
+        { "edge": "c-stock", "shape": "envelope", "label": "COMMIT", "durationMs": 1100 },
+        { "edge": "c-payment", "shape": "envelope", "label": "COMMIT", "durationMs": 1100 }
+      ]
+    },
+    {
+      "id": "saga-local",
+      "title": { "tr": "Saga: T1 ve T2 hemen commit", "en": "Saga: T1 and T2 commit immediately" },
+      "narration": {
+        "tr": "Aynı sipariş şimdi saga ile: koordinatör bir orkestratördür ve kilit tutmaz. T1 siparişi PENDING olarak oluşturur ve yerel olarak hemen commit eder. T2 stoğu ayırır ve commit eder. Her adım bağımsızdır; ara durum (stok ayrıldı, ödeme alınmadı) başkalarına görünür.",
+        "en": "The same order now as a saga: the coordinator is an orchestrator and holds no locks. T1 creates the order as PENDING and commits locally right away. T2 reserves stock and commits. Each step is independent; the intermediate state (stock reserved, payment not taken) is visible to others."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["coord", "orders", "stock"], "edges": ["c-orders", "c-stock"] },
+      "nodeStates": {
+        "coord": { "status": "active", "label": { "tr": "Saga orkestratörü", "en": "Saga orchestrator" }, "badge": "saga#82", "counter": 0 },
+        "orders": { "status": "success", "badge": "T1 PENDING ✓" },
+        "stock": { "status": "success", "badge": "T2 -1 ✓" },
+        "payment": { "status": "idle", "badge": "" }
+      },
+      "edgeStates": {
+        "c-orders": { "status": "active", "label": "T1" },
+        "c-stock": { "status": "active", "label": "T2" },
+        "c-payment": { "status": "idle", "label": "" }
+      },
+      "packets": [
+        { "edge": "c-orders", "shape": "envelope", "label": "T1", "durationMs": 1000 },
+        { "edge": "c-stock", "shape": "envelope", "label": "T2", "startAt": 1400, "durationMs": 1000 }
+      ]
+    },
+    {
+      "id": "saga-fail",
+      "title": { "tr": "T3: ödeme reddedilir", "en": "T3: payment is declined" },
+      "narration": {
+        "tr": "Orkestratör T3 ile ödemeyi ister; kart reddedilir. 2PC'de olsaydık her şey abort edilirdi, ama burada T1 ve T2 çoktan commit edildi. Geri almak için ileriye dönük telafi işlemleri çalıştırılmalı.",
+        "en": "The orchestrator requests payment with T3; the card is declined. In 2PC everything would be aborted, but here T1 and T2 have already committed. Undoing them requires forward-moving compensating transactions."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["coord", "payment"], "edges": ["c-payment"] },
+      "nodeStates": {
+        "payment": { "status": "error", "badge": "T3 ✗" },
+        "coord": { "status": "warning" }
+      },
+      "edgeStates": {
+        "c-orders": { "status": "muted" },
+        "c-stock": { "status": "muted" },
+        "c-payment": { "status": "error", "label": "T3" }
+      },
+      "packets": [
+        { "edge": "c-payment", "shape": "envelope", "label": "T3", "durationMs": 1000 },
+        { "edge": "c-payment", "direction": "backward", "shape": "diamond", "label": "declined", "color": "danger", "startAt": 1300, "durationMs": 1000 }
+      ]
+    },
+    {
+      "id": "compensate",
+      "title": { "tr": "Telafi: ters sırada C2, C1", "en": "Compensation: C2, then C1 in reverse" },
+      "narration": {
+        "tr": "Orkestratör telafileri ters sırada çalıştırır: önce C2 ayrılan stoğu geri ekler, sonra C1 siparişi CANCELLED yapar. Telafiler idempotent olmalı ve başarılı olana kadar yeniden denenmelidir. Sonuç tutarlıdır ama arada stok kısa süre azalmış görünmüştü: saga izolasyon vermez.",
+        "en": "The orchestrator runs the compensations in reverse order: first C2 puts the reserved stock back, then C1 marks the order CANCELLED. Compensations must be idempotent and retried until they succeed. The end result is consistent, but stock briefly looked lower in between: sagas give no isolation."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["coord", "stock", "orders"], "edges": ["c-stock", "c-orders"] },
+      "nodeStates": {
+        "stock": { "status": "warning", "badge": "C2 +1" },
+        "orders": { "status": "warning", "badge": "C1 CANCELLED" },
+        "coord": { "status": "success" }
+      },
+      "edgeStates": {
+        "c-payment": { "status": "muted" },
+        "c-stock": { "status": "active", "label": "C2" },
+        "c-orders": { "status": "active", "label": "C1" }
+      },
+      "packets": [
+        { "edge": "c-stock", "shape": "envelope", "label": "C2", "durationMs": 1000 },
+        { "edge": "c-orders", "shape": "envelope", "label": "C1", "startAt": 1400, "durationMs": 1000 }
+      ]
+    },
+    {
+      "id": "summary",
+      "title": { "tr": "Özet: kilit mi, telafi mi?", "en": "Summary: locks or compensation?" },
+      "narration": {
+        "tr": "2PC atomikliği kilitler ve tek bir kararla korur, ama koordinatör çökünce katılımcılar bekler. Saga hiç kilit tutmaz ve her adımda ilerler, ama ara durumlar görünür ve her adımın bir telafisi olmalıdır. Mesajlar outbox ile güvenle yayınlanmalı, her adım idempotent olmalıdır.",
+        "en": "2PC protects atomicity with locks and a single decision, but participants wait when the coordinator crashes. A saga holds no locks and moves forward step by step, but intermediate states are visible and every step needs a compensation. Messages should be published reliably via an outbox, and every step must be idempotent."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["coord", "orders", "stock", "payment"], "edges": [] },
+      "nodeStates": {
+        "orders": { "status": "idle" },
+        "stock": { "status": "idle" },
+        "payment": { "status": "idle" }
+      },
+      "edgeStates": {
+        "c-orders": { "status": "idle", "label": "" },
+        "c-stock": { "status": "idle", "label": "" },
+        "c-payment": { "status": "idle", "label": "" }
+      },
+      "annotations": [
+        { "id": "sum", "x": 520, "y": 300, "text": { "tr": "2PC: bekle · Saga: telafi et", "en": "2PC: wait · Saga: compensate" }, "tone": "info" }
+      ]
+    }
+  ],
+  "tags": ["2pc", "saga", "compensation", "distributed-transactions"]
+}
