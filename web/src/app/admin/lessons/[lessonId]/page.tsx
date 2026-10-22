@@ -45,6 +45,8 @@ const BLOCK_TEMPLATES: Record<
   realworld: { type: 'realworld', company: 'Amazon', markdown: 'Gerçek dünya örneği…' },
   // İz içeriği içerik deposunda üretilir (pnpm content:traces); editör yalnızca dosya yolunu tutar
   trace: { type: 'trace', src: 'ornek.trace.json' },
+  // Alıştırma içeriği (ve çözümü) içerik deposundaki <ad>.exercise.json'dan seed ile gelir
+  exercise: { type: 'exercise', src: 'ornek.exercise.json' },
   callout: { type: 'callout', tone: 'tip', markdown: 'İpucu…' },
   quiz: { type: 'quiz', src: 'quiz.json' },
   next: { type: 'next', lesson: '' },

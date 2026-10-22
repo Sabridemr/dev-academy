@@ -11,6 +11,7 @@ import { AnimationBlock } from './AnimationBlock';
 import { InteractiveBlock } from './InteractiveBlock';
 import { QuizBlock } from './QuizBlock';
 import { TraceViewer } from './TraceViewer';
+import { ExerciseBlock } from './ExerciseBlock';
 
 const CALLOUT_STYLES = {
   info: { icon: Info, cls: 'border-primary/40 bg-primary/5', iconCls: 'text-primary' },
@@ -93,6 +94,14 @@ export function BlockRenderer({ block, lesson }: { block: LessonBlock; lesson: L
     case 'trace':
       return block.trace ? (
         <TraceViewer trace={block.trace} title={block.title} caption={block.caption} />
+      ) : null;
+    case 'exercise':
+      return block.exercise ? (
+        <ExerciseBlock
+          exercise={block.exercise}
+          instructions={block.instructions}
+          lessonId={lesson.id}
+        />
       ) : null;
     case 'next':
       // Sıradaki ders, ders sonu kartında (LessonFinish) tek yerden gösterilir

@@ -49,6 +49,8 @@ pnpm-debug.log*
 
 # Next.js
 web/next-env.d.ts
+# Pyodide çalışma zamanı (web/scripts/copy-pyodide.mjs, build/dev öncesi node_modules'tan kopyalanır)
+web/public/pyodide/
 
 # Redis yerel dump
 *.rdb

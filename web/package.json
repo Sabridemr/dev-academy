@@ -4,8 +4,8 @@
   "description": "DevAcademy web uygulaması (Next.js App Router)",
   "private": true,
   "scripts": {
-    "dev": "next dev -p 3000",
-    "build": "next build",
+    "dev": "node scripts/copy-pyodide.mjs && next dev -p 3000",
+    "build": "node scripts/copy-pyodide.mjs && next build",
     "start": "next start -p 3000",
     "lint": "eslint . --max-warnings=0",
     "typecheck": "tsc --noEmit -p tsconfig.json",
@@ -24,6 +24,7 @@
     "isomorphic-dompurify": "^2.36.0",
     "lucide-react": "^0.503.0",
     "next": "^15.3.0",
+    "pyodide": "314.0.7",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-markdown": "^10.1.0",
