@@ -40,6 +40,8 @@ En basitten başlayıp ancak gerektiğinde bir basamak yukarı çıkın:
 Solda istemci state'i için basamaklar; sağda sunucu state'i, bileşenlerle API arasında duran bir sorgu önbelleği olarak.
 :::
 
+Sık unutulan bir state deposu daha vardır: **URL**. Seçili sekme, arama sorgusu, filtreler ve sayfa numarası gibi değerler `?tab=quiz&page=2` biçiminde URL'de tutulursa kullanıcı sayfayı yenilediğinde ya da bağlantıyı bir arkadaşına gönderdiğinde aynı görünüme döner, tarayıcının geri butonu da beklendiği gibi çalışır. Bu değerleri bir store'a koymak, hem paylaşılabilirliği hem de geri/ileri gezinmesini bozar. Form taslakları ise genellikle form kütüphanesinin (ya da yerel state'in) içinde kalmalı; her tuş vuruşunu global bir store'a yazmak, bütün uygulamayı gereksiz yere yeniden render etmenin en kestirme yoludur. Kısacası her değer için "bu bilgi kime ait ve kim tarafından paylaşılmalı?" sorusunu sormak, doğru kabı seçmenin ilk adımıdır.
+
 ## Sunucu state'i: aslında bir önbellek problemi
 
 Sunucu verisini istemcide tutmak, [A-07](/lessons/a-07-caching)'de gördüğümüz önbellek problemlerinin aynısını getirir: ne kadar süre taze sayılır, ne zaman geçersiz kılınır, aynı anda gelen istekler birleştirilir mi? React Query (TanStack Query), SWR ve Apollo gibi kütüphaneler tam olarak bu soruları cevaplar. Ortak fikirleri:

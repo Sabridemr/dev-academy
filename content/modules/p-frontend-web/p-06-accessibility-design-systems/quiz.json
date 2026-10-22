@@ -1,0 +1,110 @@
+{
+  "id": "p-06-accessibility-design-systems-quiz",
+  "title": { "tr": "Erişilebilirlik ve Tasarım Sistemi Quiz", "en": "Accessibility and Design Systems Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "`<div onclick=\"save()\">Kaydet</div>` için en iyi düzeltme hangisidir?",
+        "en": "What is the best fix for `<div onclick=\"save()\">Save</div>`?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "role=\"button\" eklemek", "en": "Add role=\"button\"" } },
+        { "id": "b", "text": { "tr": "`<button type=\"button\" onclick=\"save()\">` kullanmak", "en": "Use `<button type=\"button\" onclick=\"save()\">`" } },
+        { "id": "c", "text": { "tr": "aria-label=\"Kaydet\" eklemek", "en": "Add aria-label=\"Save\"" } },
+        { "id": "d", "text": { "tr": "Daha büyük ve kalın yazmak", "en": "Make the text bigger and bold" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Yerel <button> rolü, odaklanabilirliği ve Enter/Space davranışını bedavaya verir. role=button yalnızca rolü ekler; odak ve klavye davranışı yine eksik kalır. aria-label ad verir ama rol ya da odak vermez.",
+        "en": "A native <button> gives role, focusability and Enter/Space behaviour for free. role=button adds only the role; focus and keyboard behaviour are still missing. aria-label gives a name but no role or focus."
+      },
+      "difficulty": "easy",
+      "concepts": ["semantic-html", "aria"]
+    },
+    {
+      "id": "q2",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Ekran okuyucu kullanıcısının sayfada hızlı gezinmesini hangileri sağlar? (Birden fazla seçin)",
+        "en": "Which of these let a screen reader user navigate a page quickly? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "<nav>, <main> gibi landmark öğeleri", "en": "Landmark elements such as <nav> and <main>" } },
+        { "id": "b", "text": { "tr": "Mantıklı bir h1–h6 başlık hiyerarşisi", "en": "A logical h1–h6 heading hierarchy" } },
+        { "id": "c", "text": { "tr": "Sayfa başındaki 'İçeriğe geç' bağlantısı", "en": "A 'Skip to content' link at the top" } },
+        { "id": "d", "text": { "tr": "Başlıkları büyük yazı tipli div'lerle yapmak", "en": "Building headings from large-font divs" } }
+      ],
+      "correct": ["a", "b", "c"],
+      "explanation": {
+        "tr": "Landmark'lar, başlıklar ve atlama bağlantısı erişilebilirlik ağacında gezinme noktaları oluşturur. Görsel olarak büyük bir div ağaçta yalnızca düz metindir.",
+        "en": "Landmarks, headings and a skip link create navigation points in the accessibility tree. A visually large div is just plain text in the tree."
+      },
+      "difficulty": "easy",
+      "concepts": ["accessibility-tree", "keyboard-navigation"]
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": {
+        "tr": "WCAG AA'ya göre normal boyutlu metin için minimum kontrast oranı nedir?",
+        "en": "Under WCAG AA, what is the minimum contrast ratio for normal-size text?"
+      },
+      "options": [
+        { "id": "a", "text": "2:1" },
+        { "id": "b", "text": "3:1" },
+        { "id": "c", "text": { "tr": "4,5:1", "en": "4.5:1" } },
+        { "id": "d", "text": "7:1" }
+      ],
+      "correct": ["c"],
+      "explanation": {
+        "tr": "AA normal metin için 4,5:1, büyük metin ve arayüz bileşenleri için 3:1 ister. 7:1 AAA düzeyinin normal metin eşiğidir.",
+        "en": "AA requires 4.5:1 for normal text and 3:1 for large text and UI components. 7:1 is the AAA threshold for normal text."
+      },
+      "difficulty": "medium",
+      "concepts": ["color-contrast"]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Görsel tasarım temiz görünsün diye `*:focus { outline: none; }` yazmak, yerine başka bir odak stili koymadıkça erişilebilirliği bozar.",
+        "en": "Writing `*:focus { outline: none; }` to keep the design clean breaks accessibility unless another focus style replaces it."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["t"],
+      "explanation": {
+        "tr": "Doğru. Klavye kullanıcısı odağın nerede olduğunu göremezse sayfada kaybolur. :focus-visible ile yalnızca klavyeyle gelindiğinde belirgin bir halka göstermek iyi bir dengedir.",
+        "en": "True. A keyboard user who cannot see where focus is gets lost on the page. Showing a clear ring only for keyboard focus with :focus-visible is a good balance."
+      },
+      "difficulty": "easy",
+      "concepts": ["focus-management", "keyboard-navigation"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "Bileşenlerin `#4f8cff` yerine `var(--da-primary)` kullanmasının asıl faydası nedir?",
+        "en": "What is the main benefit of components using `var(--da-primary)` instead of `#4f8cff`?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "CSS dosyası küçülür", "en": "The CSS file gets smaller" } },
+        { "id": "b", "text": { "tr": "Tema ve marka kararları tek yerden değişir; koyu/açık tema aynı adın farklı değerleri olur", "en": "Theme and brand decisions change in one place; dark/light themes are different values of the same name" } },
+        { "id": "c", "text": { "tr": "Tarayıcı renkleri daha hızlı çizer", "en": "The browser paints colours faster" } },
+        { "id": "d", "text": { "tr": "Ekran okuyucular rengi seslendirir", "en": "Screen readers announce the colour" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Tasarım token'ı, ham değere anlamsal bir ad verir. Bileşenler ve diyagramlar adı kullanır; tema değişince yalnızca token'ın değeri değişir ve kontrast kararları merkezden yönetilir.",
+        "en": "A design token gives a raw value a semantic name. Components and diagrams use the name; when the theme changes only the token's value changes and contrast decisions are managed centrally."
+      },
+      "difficulty": "easy",
+      "concepts": ["design-tokens", "component-library"]
+    }
+  ]
+}
