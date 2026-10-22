@@ -1,0 +1,787 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "n-07-stride-boundaries",
+  "title": {
+    "tr": "STRIDE ile Güven Sınırlarında Tehditler",
+    "en": "Threats at Trust Boundaries with STRIDE"
+  },
+  "summary": {
+    "tr": "Veri akış diyagramı internet, uygulama ve veri bölgelerine ayrılır. Her güven sınırı geçişinde bir STRIDE tehdidi işaretlenir ve hemen ardından önlemi eklenir: kimlik taklidi, enjeksiyon, yetki yükseltme, hizmet engelleme ve dış kimlik sağlayıcısı.",
+    "en": "The data flow diagram is split into internet, application and data zones. At every trust boundary crossing a STRIDE threat is flagged and its mitigation is added right after: spoofing, injection, elevation of privilege, denial of service and the external identity provider."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda internet bölgesinde tarayıcı ve saldırgan, ortada uygulama bölgesinde API ve yönetim uç noktaları, sağda veri bölgesinde PostgreSQL ve Redis, sağ üstte bölgelerin dışında Google ve Apple kimlik sağlayıcıları bulunur. Bölge kutuları güven sınırlarını gösterir. Saldırgan çalınmış bir token ile internetten API'ye gelir ve kimlik taklidi işaretlenir; önlem olarak kısa ömürlü token ve rotasyon eklenir. Ardından API'den veritabanına enjeksiyon ve bilgi sızması işaretlenir ve parametreli sorgu eklenir. Yönetim uç noktasında yetki yükseltme işaretlenir, varsayılan ret ve rol koruyucusu eklenir. Giriş uç noktası kaba kuvvetle boğulmaya çalışılır, Redis'te paylaşılan hız sınırı eklenir. Son adımda dış kimlik sağlayıcısına giden akışta aud ve JWKS doğrulaması işaretlenir.",
+      "en": "On the left, in the internet zone, are the browser and the attacker; in the middle, in the application zone, the API and the admin endpoints; on the right, in the data zone, PostgreSQL and Redis; at the top right, outside the zones, the Google and Apple identity providers. The zone boxes show the trust boundaries. The attacker reaches the API from the internet with a stolen token and spoofing is flagged; short-lived tokens and rotation are added as the mitigation. Next, injection and information disclosure are flagged on the API-to-database flow and parameterised queries are added. Elevation of privilege is flagged at the admin endpoints, and default deny with a role guard is added. The login endpoint is flooded with brute force attempts, and a shared rate limit in Redis is added. In the last step the aud and JWKS checks are flagged on the flow to the external identity provider."
+    }
+  },
+  "canvas": {
+    "width": 1000,
+    "height": 600
+  },
+  "nodes": [
+    {
+      "id": "z-net",
+      "kind": "zone",
+      "label": {
+        "tr": "İnternet (güvenilmez)",
+        "en": "Internet (untrusted)"
+      },
+      "x": 130,
+      "y": 320,
+      "w": 230,
+      "h": 500
+    },
+    {
+      "id": "z-app",
+      "kind": "zone",
+      "label": {
+        "tr": "Uygulama bölgesi",
+        "en": "Application zone"
+      },
+      "x": 440,
+      "y": 320,
+      "w": 280,
+      "h": 500
+    },
+    {
+      "id": "z-data",
+      "kind": "zone",
+      "label": {
+        "tr": "Veri bölgesi",
+        "en": "Data zone"
+      },
+      "x": 810,
+      "y": 380,
+      "w": 300,
+      "h": 380
+    },
+    {
+      "id": "browser",
+      "kind": "browser",
+      "label": {
+        "tr": "Tarayıcı",
+        "en": "Browser"
+      },
+      "x": 130,
+      "y": 200,
+      "w": 130,
+      "h": 70,
+      "parent": "z-net"
+    },
+    {
+      "id": "attacker",
+      "kind": "user",
+      "label": {
+        "tr": "Saldırgan",
+        "en": "Attacker"
+      },
+      "x": 130,
+      "y": 440,
+      "w": 130,
+      "h": 70,
+      "parent": "z-net"
+    },
+    {
+      "id": "api",
+      "kind": "server",
+      "label": "API",
+      "x": 440,
+      "y": 200,
+      "w": 140,
+      "h": 76,
+      "parent": "z-app"
+    },
+    {
+      "id": "admin",
+      "kind": "service",
+      "label": {
+        "tr": "Yönetim uç noktaları",
+        "en": "Admin endpoints"
+      },
+      "x": 440,
+      "y": 440,
+      "w": 170,
+      "h": 70,
+      "parent": "z-app"
+    },
+    {
+      "id": "db",
+      "kind": "db",
+      "label": "PostgreSQL",
+      "x": 760,
+      "y": 290,
+      "w": 130,
+      "h": 70,
+      "parent": "z-data"
+    },
+    {
+      "id": "redis",
+      "kind": "cache",
+      "label": "Redis",
+      "x": 880,
+      "y": 470,
+      "w": 120,
+      "h": 66,
+      "parent": "z-data"
+    },
+    {
+      "id": "idp",
+      "kind": "generic",
+      "label": "Google / Apple",
+      "sublabel": "IdP",
+      "x": 820,
+      "y": 85,
+      "w": 170,
+      "h": 60
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-browser-api",
+      "from": "browser",
+      "to": "api",
+      "kind": "request",
+      "label": "HTTPS"
+    },
+    {
+      "id": "e-attacker-api",
+      "from": "attacker",
+      "to": "api",
+      "kind": "request",
+      "style": "dashed"
+    },
+    {
+      "id": "e-api-admin",
+      "from": "api",
+      "to": "admin",
+      "kind": "control"
+    },
+    {
+      "id": "e-api-db",
+      "from": "api",
+      "to": "db",
+      "kind": "data"
+    },
+    {
+      "id": "e-api-redis",
+      "from": "api",
+      "to": "redis",
+      "kind": "data",
+      "curvature": 0.2
+    },
+    {
+      "id": "e-api-idp",
+      "from": "api",
+      "to": "idp",
+      "kind": "request",
+      "curvature": -0.15
+    }
+  ],
+  "steps": [
+    {
+      "id": "model",
+      "title": {
+        "tr": "Modeli çiz: bölgeler ve sınırlar",
+        "en": "Draw the model: zones and boundaries"
+      },
+      "narration": {
+        "tr": "Önce ne üzerinde çalıştığımızı çizeriz: dış varlıklar, süreçler, veri depoları ve aralarındaki akışlar. Kutuların kenarları güven sınırlarıdır; tehditlerin çoğu bir akışın bu sınırlardan birini geçtiği yerde yaşar.",
+        "en": "First we draw what we are working on: external entities, processes, data stores and the flows between them. The box edges are trust boundaries; most threats live where a flow crosses one of them."
+      },
+      "durationMs": 3200,
+      "inherit": false,
+      "highlight": {
+        "nodes": [
+          "z-net",
+          "z-app",
+          "z-data"
+        ],
+        "edges": [
+          "e-browser-api",
+          "e-api-db",
+          "e-api-idp"
+        ]
+      },
+      "nodeStates": {
+        "z-net": {
+          "status": "active"
+        },
+        "z-app": {
+          "status": "active"
+        },
+        "z-data": {
+          "status": "active"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-browser-api",
+          "shape": "dot",
+          "label": "HTTPS",
+          "durationMs": 900
+        },
+        {
+          "edge": "e-api-db",
+          "shape": "dot",
+          "label": "SQL",
+          "startAt": 1000,
+          "durationMs": 900
+        },
+        {
+          "edge": "e-api-idp",
+          "shape": "dot",
+          "label": "JWKS",
+          "startAt": 1000,
+          "durationMs": 900
+        }
+      ]
+    },
+    {
+      "id": "spoofing",
+      "title": {
+        "tr": "S: kimlik taklidi",
+        "en": "S: spoofing"
+      },
+      "narration": {
+        "tr": "İnternet ile API arasındaki sınırda ilk soru: biri başkası gibi davranabilir mi? Saldırgan XSS ile çalınmış bir access token'la istek atar ve API onu meşru kullanıcı sanar.",
+        "en": "At the boundary between the internet and the API the first question is: can someone pretend to be someone else? The attacker sends a request with an access token stolen via XSS and the API takes it for the legitimate user."
+      },
+      "durationMs": 3200,
+      "highlight": {
+        "nodes": [
+          "attacker",
+          "api"
+        ],
+        "edges": [
+          "e-attacker-api"
+        ]
+      },
+      "nodeStates": {
+        "z-net": {
+          "status": "idle"
+        },
+        "z-app": {
+          "status": "idle"
+        },
+        "z-data": {
+          "status": "idle"
+        },
+        "attacker": {
+          "status": "active"
+        },
+        "api": {
+          "status": "warning",
+          "badge": "S"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-attacker-api",
+          "shape": "envelope",
+          "label": {
+            "tr": "çalınmış token",
+            "en": "stolen token"
+          },
+          "color": "danger",
+          "durationMs": 1300
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a-s",
+          "x": 290,
+          "y": 280,
+          "text": {
+            "tr": "S · kimlik taklidi",
+            "en": "S · spoofing"
+          },
+          "tone": "danger",
+          "target": "api"
+        }
+      ]
+    },
+    {
+      "id": "spoofing-fix",
+      "title": {
+        "tr": "Önlem: kısa ömür ve rotasyon",
+        "en": "Mitigation: short life and rotation"
+      },
+      "narration": {
+        "tr": "Access token yalnızca bellekte tutulur ve dakikalarla ölçülür, refresh token HttpOnly çerezde durur ve her kullanımda döndürülür. Çalınan token'ın penceresi kısalır, yeniden kullanılan refresh token tüm aileyi iptal eder.",
+        "en": "The access token lives only in memory and is measured in minutes; the refresh token sits in an HttpOnly cookie and rotates on every use. A stolen token's window shrinks and a reused refresh token revokes the whole family."
+      },
+      "durationMs": 3000,
+      "highlight": {
+        "nodes": [
+          "api"
+        ],
+        "edges": [
+          "e-browser-api"
+        ]
+      },
+      "nodeStates": {
+        "api": {
+          "status": "success",
+          "badge": "kısa token + rotasyon"
+        },
+        "attacker": {
+          "status": "idle"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-browser-api",
+          "shape": "envelope",
+          "label": "Bearer (15 dk)",
+          "color": "success",
+          "durationMs": 1100
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a-s",
+          "x": 290,
+          "y": 280,
+          "text": {
+            "tr": "S → kısa ömür + rotasyon",
+            "en": "S → short life + rotation"
+          },
+          "tone": "success",
+          "target": "api"
+        }
+      ]
+    },
+    {
+      "id": "tampering",
+      "title": {
+        "tr": "T, I: enjeksiyon ve sızıntı",
+        "en": "T, I: injection and disclosure"
+      },
+      "narration": {
+        "tr": "Uygulama ile veri bölgesi arasındaki sınırda kurcalama ve bilgi sızması sorulur. İstekteki bir alan SQL'e string birleştirmeyle eklenirse saldırgan sorgunun yapısını değiştirip başka kullanıcıların verisini okuyabilir.",
+        "en": "At the boundary between the application and data zones we ask about tampering and disclosure. If a request field is concatenated into SQL, the attacker can change the query structure and read other users' data."
+      },
+      "durationMs": 3400,
+      "highlight": {
+        "nodes": [
+          "attacker",
+          "api",
+          "db"
+        ],
+        "edges": [
+          "e-attacker-api",
+          "e-api-db"
+        ]
+      },
+      "nodeStates": {
+        "attacker": {
+          "status": "active"
+        },
+        "db": {
+          "status": "error",
+          "badge": "T · I"
+        },
+        "api": {
+          "status": "active"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-attacker-api",
+          "shape": "dot",
+          "label": "' OR 1=1",
+          "color": "danger",
+          "durationMs": 1000
+        },
+        {
+          "edge": "e-api-db",
+          "shape": "dot",
+          "label": {
+            "tr": "bozuk sorgu",
+            "en": "broken query"
+          },
+          "color": "danger",
+          "startAt": 1200,
+          "durationMs": 1100
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a-t",
+          "x": 760,
+          "y": 190,
+          "text": {
+            "tr": "T/I · enjeksiyon",
+            "en": "T/I · injection"
+          },
+          "tone": "danger",
+          "target": "db"
+        }
+      ]
+    },
+    {
+      "id": "tampering-fix",
+      "title": {
+        "tr": "Önlem: parametreli sorgu",
+        "en": "Mitigation: parameterised queries"
+      },
+      "narration": {
+        "tr": "ORM ve parametreli sorgu veriyi koddan yapısal olarak ayırır; şifreler ve token'lar veritabanında yalnızca hash'li durur. Yedek sızsa bile kullanılabilir sır çıkmaz.",
+        "en": "The ORM and parameterised queries structurally separate data from code; passwords and tokens are stored only as hashes. Even if a backup leaks, no usable secret comes out."
+      },
+      "durationMs": 3000,
+      "highlight": {
+        "nodes": [
+          "db",
+          "api"
+        ],
+        "edges": [
+          "e-api-db"
+        ]
+      },
+      "nodeStates": {
+        "db": {
+          "status": "success",
+          "badge": "$1 · hash"
+        },
+        "attacker": {
+          "status": "idle"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-api-db",
+          "shape": "square",
+          "label": "WHERE id = $1",
+          "color": "success",
+          "durationMs": 1100
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a-t",
+          "x": 760,
+          "y": 190,
+          "text": {
+            "tr": "T/I → parametreli sorgu + hash",
+            "en": "T/I → parameterised + hashed"
+          },
+          "tone": "success",
+          "target": "db"
+        }
+      ]
+    },
+    {
+      "id": "elevation",
+      "title": {
+        "tr": "E: yetki yükseltme",
+        "en": "E: elevation of privilege"
+      },
+      "narration": {
+        "tr": "Yönetim uç noktaları uygulama bölgesinin içinde ayrı bir ayrıcalık sınırıdır. Saldırgan normal bir hesapla isteğe role: admin alanı ekleyip içerik düzenlemeyi dener.",
+        "en": "The admin endpoints form a separate privilege boundary inside the application zone. With an ordinary account the attacker adds a role: admin field to the request and tries to edit content."
+      },
+      "durationMs": 3400,
+      "highlight": {
+        "nodes": [
+          "attacker",
+          "api",
+          "admin"
+        ],
+        "edges": [
+          "e-attacker-api",
+          "e-api-admin"
+        ]
+      },
+      "nodeStates": {
+        "attacker": {
+          "status": "active"
+        },
+        "admin": {
+          "status": "error",
+          "badge": "E"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-attacker-api",
+          "shape": "dot",
+          "label": "{ role: \"admin\" }",
+          "color": "danger",
+          "durationMs": 1000
+        },
+        {
+          "edge": "e-api-admin",
+          "shape": "dot",
+          "label": "PUT /admin/…",
+          "color": "danger",
+          "startAt": 1200,
+          "durationMs": 1000
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a-e",
+          "x": 440,
+          "y": 540,
+          "text": {
+            "tr": "E · yetki yükseltme",
+            "en": "E · elevation"
+          },
+          "tone": "danger",
+          "target": "admin"
+        }
+      ]
+    },
+    {
+      "id": "elevation-fix",
+      "title": {
+        "tr": "Önlem: varsayılan ret, rol koruyucusu",
+        "en": "Mitigation: default deny, role guard"
+      },
+      "narration": {
+        "tr": "Rol koruyucusu isteği işleyiciye ulaşmadan durdurur; rol istemciden ya da token'dan değil, kullanıcının güncel durumundan okunur. Eşleşen kural yoksa cevap 403'tür.",
+        "en": "A role guard stops the request before it reaches the handler; the role is read from the user's current state, not from the client or the token. With no matching rule the answer is 403."
+      },
+      "durationMs": 3000,
+      "highlight": {
+        "nodes": [
+          "admin"
+        ],
+        "edges": [
+          "e-api-admin"
+        ]
+      },
+      "nodeStates": {
+        "admin": {
+          "status": "success",
+          "badge": "varsayılan ret"
+        },
+        "attacker": {
+          "status": "idle"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-api-admin",
+          "direction": "backward",
+          "shape": "dot",
+          "label": "403",
+          "color": "success",
+          "durationMs": 1000
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a-e",
+          "x": 440,
+          "y": 540,
+          "text": {
+            "tr": "E → varsayılan ret + rol koruyucusu",
+            "en": "E → default deny + role guard"
+          },
+          "tone": "success",
+          "target": "admin"
+        }
+      ]
+    },
+    {
+      "id": "dos",
+      "title": {
+        "tr": "D: hizmet engelleme",
+        "en": "D: denial of service"
+      },
+      "narration": {
+        "tr": "Giriş uç noktası pahalı bir argon2id doğrulaması yapar. Saldırgan saniyede yüzlerce deneme göndererek hem şifre tahmin eder hem de sunucuyu boğmaya çalışır.",
+        "en": "The login endpoint performs an expensive argon2id check. The attacker sends hundreds of attempts per second, both guessing passwords and trying to choke the server."
+      },
+      "durationMs": 3400,
+      "highlight": {
+        "nodes": [
+          "attacker",
+          "api"
+        ],
+        "edges": [
+          "e-attacker-api"
+        ]
+      },
+      "nodeStates": {
+        "attacker": {
+          "status": "active"
+        },
+        "api": {
+          "status": "error",
+          "badge": "D · S"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-attacker-api",
+          "shape": "dot",
+          "label": "/auth/login",
+          "color": "danger",
+          "durationMs": 500,
+          "repeat": 6,
+          "repeatGapMs": 100
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a-d",
+          "x": 290,
+          "y": 110,
+          "text": {
+            "tr": "D · kaba kuvvet",
+            "en": "D · brute force"
+          },
+          "tone": "danger",
+          "target": "api"
+        }
+      ]
+    },
+    {
+      "id": "dos-fix",
+      "title": {
+        "tr": "Önlem: paylaşılan hız sınırı",
+        "en": "Mitigation: a shared rate limit"
+      },
+      "narration": {
+        "tr": "Hız sınırı sayaçları Redis'te tutulur; böylece API'nin tüm kopyaları aynı sınırı uygular. Sınırı aşan istekler pahalı doğrulamaya ulaşmadan 429 alır.",
+        "en": "Rate limit counters live in Redis, so every API replica enforces the same limit. Requests over the limit get 429 before they reach the expensive check."
+      },
+      "durationMs": 3400,
+      "highlight": {
+        "nodes": [
+          "api",
+          "redis"
+        ],
+        "edges": [
+          "e-api-redis"
+        ]
+      },
+      "nodeStates": {
+        "redis": {
+          "status": "active",
+          "badge": "sayaç"
+        },
+        "api": {
+          "status": "success",
+          "badge": "429"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-api-redis",
+          "shape": "square",
+          "label": "INCR ip:…",
+          "durationMs": 900,
+          "repeat": 2,
+          "repeatGapMs": 200
+        },
+        {
+          "edge": "e-attacker-api",
+          "direction": "backward",
+          "shape": "dot",
+          "label": "429",
+          "color": "success",
+          "startAt": 2100,
+          "durationMs": 900
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a-d",
+          "x": 290,
+          "y": 110,
+          "text": {
+            "tr": "D → paylaşılan hız sınırı",
+            "en": "D → shared rate limit"
+          },
+          "tone": "success",
+          "target": "api"
+        }
+      ]
+    },
+    {
+      "id": "idp",
+      "title": {
+        "tr": "Dış sağlayıcı sınırı",
+        "en": "The external provider boundary"
+      },
+      "narration": {
+        "tr": "Sosyal girişte API, sistemin dışındaki bir kimlik sağlayıcısına güvenir. Başka bir uygulama için alınmış ID token'ın kabul edilmesi kimlik taklididir; önlem JWKS ile imza doğrulaması ve aud değerinin kendi istemci kimliklerimizle karşılaştırılmasıdır. Model, her sınırda bir tehdit ve bir önlemle tamamlanır.",
+        "en": "For social login the API trusts an identity provider outside the system. Accepting an ID token issued for another application is spoofing; the mitigation is verifying the signature via JWKS and comparing aud with our own client ids. The model is complete with one threat and one mitigation at every boundary."
+      },
+      "durationMs": 3600,
+      "highlight": {
+        "nodes": [
+          "api",
+          "idp"
+        ],
+        "edges": [
+          "e-api-idp"
+        ]
+      },
+      "nodeStates": {
+        "attacker": {
+          "status": "idle"
+        },
+        "redis": {
+          "status": "idle"
+        },
+        "idp": {
+          "status": "success",
+          "badge": "aud ✓ JWKS ✓"
+        },
+        "api": {
+          "status": "success"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-api-idp",
+          "shape": "dot",
+          "label": {
+            "tr": "ID token doğrula",
+            "en": "verify ID token"
+          },
+          "durationMs": 1100
+        },
+        {
+          "edge": "e-api-idp",
+          "direction": "backward",
+          "shape": "diamond",
+          "label": {
+            "tr": "açık anahtarlar",
+            "en": "public keys"
+          },
+          "startAt": 1300,
+          "durationMs": 1000
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a-idp",
+          "x": 620,
+          "y": 40,
+          "text": {
+            "tr": "S → JWKS + aud",
+            "en": "S → JWKS + aud"
+          },
+          "tone": "success",
+          "target": "idp"
+        }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": [
+    "threat-modeling",
+    "stride",
+    "trust-boundary",
+    "dfd"
+  ]
+}
