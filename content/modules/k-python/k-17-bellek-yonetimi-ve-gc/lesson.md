@@ -164,6 +164,10 @@ fark var: ilk simülasyondaki listenin sayacı 0'a inmişti ve hemen silinmişti
 kaldı (birbirlerini tutuyorlar). Referans sayımı onları asla silemez. Bunlar **erişilemeyen ama canlı**
 nesnelerdir: çöp.
 
+:::interactive{type="python-memory" scenario="refcount-gc" title="Kendin dene: sayaç sıfıra inince|Try it: when the count hits zero"}
+"Adım ileri" ile ilerle ve sağdaki kartlarda `ref=` sayacını izle: `b = a` sayacı 2'ye çıkarır, `del a` yalnızca ismi siler (sayaç 1), `b = None` ile sayaç 0'a iner ve liste hemen "silindi" olarak görünür. `del dis` dış listeyle birlikte içteki iki listeyi de zincirleme siler. `dugum.append(dugum)` kendini gösteren bir döngü kurar: `del dugum` sonrasında liste `ref=1` ile kalır ve "erişilemez (döngü)" uyarısı çıkar; son satırdaki `gc.collect()` (aşağıda anlatılan döngüsel toplayıcı) onu toplar. "Silinen nesne" sayacı o ana kadar silinenlerin toplamıdır; "Kodu düzenle" ile kendi senaryonu da deneyebilirsin.
+:::
+
 ### Döngüsel çöp toplayıcı ve nesiller
 
 CPython bu durum için ikinci bir mekanizma çalıştırır: **döngüsel çöp toplayıcı** (cyclic garbage collector, kısaca

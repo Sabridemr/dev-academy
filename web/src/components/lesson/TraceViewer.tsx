@@ -252,15 +252,18 @@ export function TraceViewer({
   trace,
   title,
   caption,
+  autoPlay = false,
 }: {
   trace: CodeTrace;
   title?: LocalizedString;
   caption?: LocalizedString;
+  /** Açılır açılmaz oynatmaya başlar (tahmin et-çalıştır simülatöründe cevaplardan sonra) */
+  autoPlay?: boolean;
 }) {
   const { t, tl } = useI18n();
   const reduced = usePrefersReducedMotion();
   const [index, setIndex] = useState(0);
-  const [playing, setPlaying] = useState(false);
+  const [playing, setPlaying] = useState(autoPlay);
   const stateRef = useRef<HTMLDivElement>(null);
   const total = trace.steps.length;
   const step: TraceStep = trace.steps[index];

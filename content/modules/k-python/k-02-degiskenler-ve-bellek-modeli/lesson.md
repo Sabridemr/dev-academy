@@ -117,6 +117,10 @@ değiştirir. Aynı nesneyi gösteren tüm isimler değişikliği görür. Buna 
 `yedek.append(...)` sonrasında iki ismin de aynı listeyi gösterdiğini, `sepet[:]` ile ise yeni bir liste oluştuğunu izle.
 :::
 
+:::interactive{type="python-memory" scenario="aliasing" title="Kendin dene: iki isim, tek nesne|Try it: two names, one object"}
+"Adım ileri" ile satırları tek tek çalıştır. Soldaki isim tablosunda `a` ile `b`nin aynı renkli #id rozetini gösterdiğine, sağdaki liste kartında `ref=2` yazdığına bak; `b.append(4)` sonrasında kart yerinde değişir ve kimliği aynı kalır. `c = [1, 2, 3, 4]` yeni bir liste oluşturur: çıktıda `a == c` True, `a is c` False olur. Son satırlardaki `a = a + [5]` ise yeni bir liste üretip yalnızca `a`yı ona bağlar; `b` eski listede kalır. Ardından "Kodu düzenle" ile `b = a` satırını `b = a[:]` yapıp "Çalıştır"a bas ve farkı karşılaştır.
+:::
+
 :::callout{tone="tip" title="Ne zaman kopya almalı?"}
 Bir listeyi başka bir yere verip orada değiştirilmesini istemiyorsan kopyasını ver: `liste.copy()`,
 `list(liste)` ya da `liste[:]`. İç içe listelerde bunlar **sığ kopyadır** (içteki listeler hâlâ paylaşılır);

@@ -50,6 +50,7 @@ export function BlockRenderer({ block, lesson }: { block: LessonBlock; lesson: L
           title={block.title}
           instructions={block.instructions}
           lessonId={lesson.id}
+          trace={block.trace}
         />
       );
     case 'code':
