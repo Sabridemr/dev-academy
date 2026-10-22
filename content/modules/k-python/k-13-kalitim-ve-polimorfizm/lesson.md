@@ -84,6 +84,10 @@ K-12'de bir nitelik okunurken önce nesneye, sonra sınıfa bakıldığını gö
 `issubclass(Kopek, object)` her zaman `True`'dur. Bu zincirin tam sırasına **metot arama sırası (method resolution
 order, MRO)** denir; birazdan ayrıntısına gireceğiz.
 
+:::diagram{src="kalitim-hiyerarsisi.svg" alt="object, Hayvan ve ondan türeyen Kopek ile Kedi sınıfları; sağda Kopek tanit çağrısının nesne, Kopek ve Hayvan sırasıyla aranması ve self.ses çağrısının yeniden Kopek sınıfında bulunması.|object, Hayvan and its subclasses Kopek and Kedi; on the right the Kopek tanit call being looked up on the object, Kopek and Hayvan in turn and the self.ses call being found again on Kopek."}
+`tanit` üst sınıfta bulunur, ama içindeki `self.ses()` aramaya yine nesnenin gerçek sınıfından başlar.
+:::
+
 ## super() ve super().__init__
 
 Alt sınıf bir metodu ezdiğinde üst sınıfın sürümü kaybolmaz; `super()` ile ona ulaşabilirsin. En sık kullanım
@@ -252,6 +256,14 @@ sonra gelmek zorundadır. Bu sayede `A` listede **bir kez** yer alır. Kurallar 
 reddeder: `class X(A, B):` (üst sınıfı alt sınıfından önce yazmak) `TypeError: Cannot create a consistent method
 resolution order (MRO) for bases A, B` hatası verir (mesajın satır bölünmesi sürüme göre değişebilir).
 
+MRO listesinin aramayı nasıl yönlendirdiğini adım adım izle. Animasyonun son üç adımı, aşağıdaki simülasyonda
+göreceğin `super()` zincirinin özetidir.
+
+:::animation{scene="mro-arama.scene.json"}
+`d.selam()` aramasının `B`'den sonra `A`'ya değil `C`'ye geçtiğine ve `super()` zincirinde `A`'nın yalnızca bir kez
+çalıştığına dikkat et.
+:::
+
 ### super() aslında "MRO'da sıradaki" demektir
 
 `super()` "benim üst sınıfım" demek değildir; **"bu nesnenin MRO'sunda benden sonra gelen sınıf"** demektir.
@@ -395,6 +407,27 @@ print(genislet(Kare(5)))            # 100 → beklenen 50 değil!
 "Kare bir dikdörtgendir" matematikte doğrudur, ama `Dikdortgen`'in "eni değiştirmek boyu etkilemez" sözünü `Kare`
 bozuyor. "is-a" testi gerekli ama yeterli değil: **davranış** da uyumlu olmalı. Bu ilkeyi ve diğer SOLID ilkelerini
 K-16'da ayrıntılı göreceksin.
+
+:::realworld{company="scikit-learn"}
+Python'un en yaygın makine öğrenmesi kütüphanesi **scikit-learn**, bu dersteki üç fikri birlikte kullanır ve
+geliştirici belgelerinde açıkça anlatır.
+
+**Polimorfizm:** Yüzlerce farklı model (doğrusal regresyon, karar ağacı, rastgele orman...) aynı arayüzü sunar:
+`fit(X, y)`, `predict(X)`, `score(X, y)`. `Pipeline` ya da `GridSearchCV` gibi araçlar ellerindeki modelin hangi
+sınıftan olduğunu bilmez; yalnızca bu metotları çağırır. Yeni bir model yazan kişi bu metotları sağladığı sürece
+mevcut araçların hepsiyle çalışır.
+
+**Kalıtım ve mixin'ler:** Modeller `BaseEstimator`'dan türer; bu sınıf `get_params`/`set_params` gibi ortak
+davranışı verir. Sınıflandırıcı olmak `ClassifierMixin`, dönüştürücü olmak `TransformerMixin` gibi küçük mixin
+sınıflarıyla eklenir (örneğin `TransformerMixin`, `fit` ve `transform`'u birleştiren `fit_transform`'u sağlar).
+
+**MRO:** Kütüphanenin "kendi estimator'ını geliştir" rehberi, mixin'lerin kalıtım listesinde `BaseEstimator`'ın
+**soluna** yazılmasını ister: `class Modelim(ClassifierMixin, BaseEstimator)`. Sebep bu derste gördüğün kuraldır:
+MRO soldan sağa ilerler, mixin'in sağladığı ya da ezdiği metotların temel sınıftakilerden önce bulunması gerekir.
+
+Ders: büyük bir kütüphanede kalıtım derin bir ağaç değil, küçük ve birleştirilebilir yetenek sınıflarıdır; doğru
+sırayı belirleyen de MRO'dur.
+:::
 
 ## Özet
 

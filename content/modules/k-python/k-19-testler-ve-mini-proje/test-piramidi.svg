@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 400" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Test piramidi</title>
+  <desc id="desc">Üç katmanlı piramit: tabanda çok sayıda hızlı birim testi, ortada daha az entegrasyon testi, tepede az sayıda yavaş uçtan uca test. Sağdaki oklar yukarı çıktıkça testlerin yavaşladığını ve bakım maliyetinin arttığını, aşağı indikçe sayının arttığını gösterir.</desc>
+  <defs>
+    <marker id="k19-ok" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+  </defs>
+
+  <!-- Piramit katmanları -->
+  <polygon points="330,40 410,40 470,140 270,140" fill="var(--da-danger, #ef4444)" fill-opacity="0.14" stroke="var(--da-danger, #ef4444)" stroke-width="1.5"/>
+  <polygon points="270,140 470,140 540,250 200,250" fill="var(--da-accent, #f59e0b)" fill-opacity="0.16" stroke="var(--da-accent, #f59e0b)" stroke-width="1.5"/>
+  <polygon points="200,250 540,250 610,360 130,360" fill="var(--da-success, #10b981)" fill-opacity="0.16" stroke="var(--da-success, #10b981)" stroke-width="1.5"/>
+
+  <g text-anchor="middle" fill="var(--da-fg, #0f172a)">
+    <text x="370" y="88" font-size="14" font-weight="600">Uçtan uca</text>
+    <text x="370" y="108" font-size="11" fill="var(--da-muted, #64748b)">tarayıcı / API</text>
+    <text x="370" y="190" font-size="14" font-weight="600">Entegrasyon</text>
+    <text x="370" y="210" font-size="11" fill="var(--da-muted, #64748b)">gerçek veritabanı, birkaç parça</text>
+    <text x="370" y="300" font-size="15" font-weight="600">Birim testleri</text>
+    <text x="370" y="320" font-size="11" fill="var(--da-muted, #64748b)">tek fonksiyon/sınıf, fake bağımlılıklar</text>
+  </g>
+
+  <!-- Sayı ve hız eksenleri -->
+  <g font-size="12" fill="var(--da-fg, #0f172a)">
+    <text x="20" y="92">Az</text>
+    <text x="20" y="198">Orta</text>
+    <text x="20" y="308">Çok</text>
+  </g>
+  <path d="M 60 90 L 60 300" stroke="var(--da-muted, #64748b)" stroke-width="1.6" fill="none" marker-end="url(#k19-ok)"/>
+  <text x="70" y="200" font-size="11" fill="var(--da-muted, #64748b)" transform="rotate(90 70 200)" text-anchor="middle">sayı artar</text>
+
+  <path d="M 650 340 L 650 60" stroke="var(--da-muted, #64748b)" stroke-width="1.6" fill="none" marker-end="url(#k19-ok)"/>
+  <g font-size="12" fill="var(--da-fg, #0f172a)">
+    <text x="666" y="70">daha yavaş, daha kırılgan</text>
+    <text x="666" y="88" fill="var(--da-muted, #64748b)">saniyeler-dakikalar</text>
+    <text x="666" y="190">gerçek bağımlılıkları dener</text>
+    <text x="666" y="208" fill="var(--da-muted, #64748b)">saniyeler</text>
+    <text x="666" y="320">hızlı ve izole</text>
+    <text x="666" y="338" fill="var(--da-muted, #64748b)">milisaniyeler</text>
+  </g>
+</svg>

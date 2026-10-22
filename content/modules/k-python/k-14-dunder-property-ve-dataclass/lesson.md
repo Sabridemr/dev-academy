@@ -141,6 +141,15 @@ döndür. Böylece Python karşı tarafın ters metodunu deneyebilir; o da yoksa
 `NotImplemented` (bir değer) ile `NotImplementedError` (bir hata sınıfı) farklı şeylerdir.
 :::
 
+Yorumlayıcının bir operatörü ya da yerleşik fonksiyonu hangi sınıfın hangi dunder metoduna gönderdiğini bütün
+yollarıyla izle: başarılı `__add__`, `NotImplemented` üzerine `__rmul__`, iki tarafın da reddettiği durum ve
+`print`/`==` çağrıları.
+
+:::animation{scene="dunder-dagitimi.scene.json"}
+`3 * v` adımında önce `int`'e gidildiğine, `NotImplemented` dönünce ancak o zaman `Vektor.__rmul__`'ın denendiğine
+dikkat et.
+:::
+
 ## Eşitlik ve hash: __eq__ ile __hash__ birlikte düşünülür
 
 Varsayılan olarak iki nesne yalnızca **aynı nesneyse** eşittir (`==`, `is` gibi davranır). Değere göre
@@ -401,6 +410,12 @@ s.ana = 5                      # dataclasses.FrozenInstanceError: cannot assign 
 ```
 :::
 
+Dekoratörün tip açıklamalı alanlardan neyi ürettiğini tek bakışta özetleyelim:
+
+:::diagram{src="dataclass-uretimi.svg" alt="Tip açıklamalı alanları olan Sepet sınıfı, dataclass dekoratöründen geçerek üretilen __init__, __repr__ ve __eq__ metotlarına dönüşür; altta order ve frozen bayraklarının ek etkileri.|The Sepet class with annotated fields passes through the dataclass decorator and turns into generated __init__, __repr__ and __eq__ methods; below, the extra effects of the order and frozen flags."}
+Sen yalnızca alanları yazarsın; dunder metotları dekoratör üretir.
+:::
+
 ## Soyut sınıflar: abc.ABC ve @abstractmethod
 
 K-13'te polimorfizmi gördün: farklı sınıflar aynı metodu kendi bildiği gibi uygular. Peki bir alt sınıfın o
@@ -455,6 +470,24 @@ ve örneklemeyi zorla engellemek istiyorsan ABC, sadece bir arayüz tarif etmek 
 Kütüphanelerde bu kalıpları her yerde görürsün: `pathlib.Path` `/` operatörünü `__truediv__` ile yazar
 (`Path("a") / "b"`), pandas `df["sutun"]` için `__getitem__` kullanır, Pydantic ve SQLAlchemy modelleri
 dataclass'a benzer bir alan tanımlama biçimi kullanır.
+
+:::realworld{company="NumPy"}
+Python'un bilimsel hesaplama ekosisteminin temeli olan **NumPy**, bu dersteki veri modelinin belki de en büyük
+kullanıcısıdır. `a + b`, `a * 2`, `a > 0` gibi ifadeler NumPy dizilerinde eleman eleman çalışır, çünkü `ndarray`
+sınıfı `__add__`, `__mul__`, `__gt__` gibi dunder metotları kendisi tanımlar. `2 * a` yazabilmen de bu dersteki
+ters metotlar sayesindedir: `int.__mul__` diziyi tanımaz, `NotImplemented` döner ve `ndarray.__rmul__` devreye girer.
+
+Hikâyenin ilginç kısmı, bilimsel Python topluluğunun dilin kendisini de değiştirmesidir. Matris çarpımı için
+ayrı bir operatör olmadığından kodlar `a.dot(b).dot(c)` gibi okunması zor zincirlerle doluydu. Topluluğun
+hazırladığı **PEP 465** ile Python 3.5'e `@` operatörü ve onun dunder karşılığı `__matmul__` eklendi; dilin
+yerleşik türlerinin hiçbiri `@`'i kullanmaz, operatör tamamen kütüphanelerin dunder metotlarla doldurması için
+vardır.
+
+NumPy ayrıca `__array_ufunc__` gibi kendi protokollerini tanımlar; pandas ya da GPU kütüphaneleri gibi başka dizi
+türleri bu metodu yazarak NumPy fonksiyonlarına kendi uygulamalarını takabilir. Ders: dunder metotlar yalnızca
+"güzel sözdizimi" değil, birbirini tanımayan kütüphanelerin aynı ifadeyle birlikte çalışmasını sağlayan bir
+sözleşmedir.
+:::
 
 ## Özet
 

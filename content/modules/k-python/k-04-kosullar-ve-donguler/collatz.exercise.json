@@ -1,0 +1,26 @@
+{
+  "id": "k-04-collatz-adimlari",
+  "title": {
+    "tr": "Collatz adımlarını say",
+    "en": "Count the Collatz steps"
+  },
+  "language": "python",
+  "prompt": {
+    "tr": "Pozitif bir tam sayı `n` ile başla: `n` çiftse ikiye böl, tekse `3 * n + 1` yap. Bu kural 1'e ulaşana kadar tekrarlanır.\n\n`collatz_adim(n)` fonksiyonu `n`'den 1'e kaç **adımda** ulaşıldığını döndürsün. `n` 1 ise cevap 0'dır. `n` 1'den küçükse `ValueError` fırlat.\n\nÖrnek: `6 → 3 → 10 → 5 → 16 → 8 → 4 → 2 → 1` sekiz adımdır.",
+    "en": "Start with a positive integer `n`: if `n` is even halve it, if odd make it `3 * n + 1`. Repeat until you reach 1.\n\n`collatz_adim(n)` should return how many **steps** it takes to get from `n` to 1. If `n` is 1 the answer is 0. Raise `ValueError` if `n` is less than 1.\n\nExample: `6 → 3 → 10 → 5 → 16 → 8 → 4 → 2 → 1` is eight steps."
+  },
+  "starter": "def collatz_adim(n):\n    # n < 1 ise ValueError fırlat\n    adim = 0\n    # while döngüsüyle n 1 olana kadar kuralı uygula ve adımları say\n    return adim\n",
+  "solution": "def collatz_adim(n):\n    if n < 1:\n        raise ValueError(\"n pozitif olmalı\")\n    adim = 0\n    while n != 1:\n        if n % 2 == 0:\n            n //= 2\n        else:\n            n = 3 * n + 1\n        adim += 1\n    return adim\n",
+  "tests": "assert collatz_adim(1) == 0\nassert collatz_adim(2) == 1\nassert collatz_adim(6) == 8\nassert collatz_adim(27) == 111\ntry:\n    collatz_adim(0)\n    assert False, \"0 için ValueError bekleniyordu\"\nexcept ValueError:\n    pass\n",
+  "hints": [
+    {
+      "tr": "Kaç tur döneceğini bilmiyorsun: koşulu `n != 1` olan bir `while` döngüsü uygun.",
+      "en": "You don't know how many iterations you need: a `while` loop with the condition `n != 1` fits."
+    },
+    {
+      "tr": "Çiftlik için `n % 2 == 0` kullan; bölmede `n // 2` yaz ki sonuç `int` kalsın. Her turda `adim += 1`.",
+      "en": "Use `n % 2 == 0` for evenness; divide with `n // 2` so the result stays an `int`. Do `adim += 1` every iteration."
+    }
+  ],
+  "timeoutMs": 5000
+}

@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { View } from 'react-native';
+import { router } from 'expo-router';
 import { useModule, useModules } from '@/hooks/content';
 import { useI18n } from '@/i18n';
 import { spacing } from '@/theme';
-import { EmptyState, ErrorView, IconButton, LoadingView, Screen, Text } from '@/components/ui';
+import { EmptyState, ErrorView, IconButton, LoadingView, Row, Screen, Text } from '@/components/ui';
 import { LessonRow, ModuleCard } from '@/components/content/ModuleCard';
 
 /** Modül ağacı: her modül genişletilerek dersleri görüntülenir */
@@ -18,9 +19,17 @@ export default function ModulesScreen() {
       onRefresh={() => void modules.refetch()}
       testID="modules-screen"
     >
-      <Text variant="heading" accessibilityRole="header">
-        {t('nav.modules')}
-      </Text>
+      <Row style={{ justifyContent: 'space-between' }}>
+        <Text variant="heading" accessibilityRole="header">
+          {t('nav.modules')}
+        </Text>
+        <IconButton
+          icon="book-outline"
+          label={t('nav.glossary')}
+          onPress={() => router.push('/glossary')}
+          testID="open-glossary"
+        />
+      </Row>
       {modules.isLoading ? <LoadingView /> : null}
       {modules.error ? (
         <ErrorView error={modules.error} onRetry={() => void modules.refetch()} />

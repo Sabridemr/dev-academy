@@ -20,6 +20,9 @@ vi.mock('@/lib/hooks', () => ({
   useUpdateProgress: () => ({ mutate, isPending: false }),
   useBookmarks: () => ({ data: [] }),
   useNotes: () => ({ data: [] }),
+  useConcepts: () => ({
+    data: [{ id: 'round-robin', term: { tr: 'Round-robin (sırayla)', en: 'Round-robin' } }],
+  }),
   usePrefersReducedMotion: () => true,
   useLessonFeedback: () => ({ data: undefined, isLoading: false }),
   useSubmitLessonFeedback: () => ({ mutateAsync: vi.fn(), isPending: false, isError: false }),
@@ -35,6 +38,7 @@ const initial = {
   durationMinutes: 10,
   level: 'beginner',
   tags: [],
+  concepts: [],
   blocks: [],
   module: { id: 'm1', slug: 'm1', code: 'A', title: { tr: 'Modül' } },
   prev: null,
@@ -85,5 +89,28 @@ describe('LessonView ilerleme', () => {
       vi.advanceTimersByTime(15_000);
     });
     expect(mutate).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('LessonView kavram çipleri', () => {
+  it('frontmatter kavramlarını sözlük terimiyle gösterir ve detay sayfasına bağlar', () => {
+    renderWithProviders(
+      <LessonView initial={{ ...initial, concepts: ['round-robin', 'sozlukte-yok'] }} />,
+    );
+    expect(screen.getByRole('heading', { name: 'Bu dersteki kavramlar' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Round-robin (sırayla)' })).toHaveAttribute(
+      'href',
+      '/glossary/round-robin',
+    );
+    // Sözlükte terimi bulunamayan kavram id'siyle gösterilir
+    expect(screen.getByRole('link', { name: 'sozlukte-yok' })).toHaveAttribute(
+      'href',
+      '/glossary/sozlukte-yok',
+    );
+  });
+
+  it('kavramı olmayan derste bölüm gösterilmez', () => {
+    renderWithProviders(<LessonView initial={initial} />);
+    expect(screen.queryByText('Bu dersteki kavramlar')).not.toBeInTheDocument();
   });
 });

@@ -41,6 +41,20 @@ Guardrail'lerin bir de ters yönde hata yapma riski vardır: **aşırı engellem
 Her katman bir kısmını yakalar; hiçbir katman tek başına yeterli değildir.
 :::
 
+Katmanları üç istek üzerinden çalışırken görelim: biri sorunsuz geçen normal bir soru, biri girdi filtresine takılan doğrudan enjeksiyon, biri de şemaya uyduğu hâlde kaynak doğrulamasında yakalanan uydurma bir cevap.
+
+:::predict{id="uydurma-kaynak-hangi-katman"}
+Model bağlamda olmayan bir politikayı uyduruyor ve var olmayan bir kaynak kimliği gösteriyor; çıktı JSON şemasına tam uyuyor. Bu hatayı hangi katman yakalar? | The model invents a policy that is not in the context and cites a non-existent source id; the output matches the JSON schema perfectly. Which layer catches this?
+- [ ] Girdi filtresi | The input filter
+- [ ] Şema doğrulaması | Schema validation
+- [x] Kaynak kimliklerini bağlama verilen parçalarla karşılaştıran kaynak doğrulaması | The citation check that compares source ids with the chunks given in the context
+Açıklama: Kullanıcının sorusu masumdur, bu yüzden girdi filtresi bir şey görmez; uydurma cevap biçim olarak kusursuz olduğu için şema da geçer. Ancak atıf yapılan kimliğin bağlamda olup olmadığını kodla kontrol eden katman hatayı yakalar. | The user's question is innocent, so the input filter sees nothing; the fabricated answer is perfectly formatted, so the schema passes too. Only the layer that checks in code whether the cited id exists in the context catches it.
+:::
+
+:::animation{scene="guardrail-layers.scene.json"}
+Normal istek tüm katmanlardan geçer; enjeksiyon girdi filtresinde, uydurma kaynak kaynak doğrulamasında durur ve güvenli ret yoluna düşer.
+:::
+
 ## Prompt enjeksiyonu
 
 **Prompt enjeksiyonu**, saldırganın modele kendi talimatlarını yerleştirerek sistemin amacını değiştirmesidir. İki türü vardır:

@@ -31,6 +31,12 @@ Bu dersin ana fikri tek cümleyle özetlenebilir: **yapay zekâ gözlemler, öne
 Model katmanı veriyi özete çevirir; üretime giden her aksiyon insan onay kapısından geçer.
 :::
 
+Bu ilkenin en küçük somut örneği, başarısız bir CI job'unun logunu modelin okuyup insana öneri sunmasıdır. Aşağıdaki animasyon, bir sonraki bölümde kodunu göreceğiniz workflow'un yaptığı işi adım adım gösteriyor.
+
+:::animation{scene="llm-log-triage.scene.json"}
+Düşen test job'unun logu çekilir, gizli değerler maskelenir ve log modele gider. Model PR'a taslak bir yorum yazar. Geliştirici iki öneriden birini doğrular, uydurma olanı reddeder, düzeltmeyi kendisi yapar ve CI yeniden geçer.
+:::
+
 ## CI/CD'de LLM: log özetleme, hata açıklama, test üretimi
 
 CI/CD, yapay zekânın en hızlı değer ürettiği yerdir çünkü girdiler metindir ve geri bildirim döngüsü kısadır.

@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import type { InteractiveType, LocalizedString } from '@devacademy/shared';
+import type { CodeTrace, InteractiveType, LocalizedString } from '@devacademy/shared';
 import { useI18n } from '@/i18n';
 import { useTrackInteractive } from '@/lib/hooks';
 import { SIMULATORS } from '../simulators/registry';
@@ -17,12 +17,15 @@ export function InteractiveBlock({
   title,
   instructions,
   lessonId,
+  trace,
 }: {
   type: InteractiveType;
   params: Record<string, unknown>;
   title?: LocalizedString;
   instructions?: LocalizedString;
   lessonId?: string;
+  /** İz kullanan simülatörler için (predict-run) */
+  trace?: CodeTrace;
 }) {
   const { t, tl } = useI18n();
   const track = useTrackInteractive(type, lessonId);
@@ -41,7 +44,7 @@ export function InteractiveBlock({
     <section aria-label={title ? tl(title) : type}>
       {Sim ? (
         <SimContext.Provider value={ctx}>
-          <Sim key={epoch} params={params} lessonId={lessonId} onInteract={track} />
+          <Sim key={epoch} params={params} lessonId={lessonId} onInteract={track} trace={trace} />
         </SimContext.Provider>
       ) : (
         <div className="card p-4 text-sm text-muted">

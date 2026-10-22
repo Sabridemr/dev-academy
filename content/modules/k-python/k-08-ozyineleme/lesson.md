@@ -69,6 +69,13 @@ print(faktoriyel(5))   # 120
 Üçüncü soruda bir "inanç sıçraması" yaparsın: alt çağrının doğru çalıştığını varsayarsın. Temel durum doğru
 ve her adım problemi gerçekten küçültüyorsa bu varsayım her zaman tutar (matematikteki tümevarımın aynısı).
 
+Her özyinelemeli çağrının iki evresi vardır: problem temel duruma kadar küçülürken bekleyen işler birikir, temel
+durumdan sonra cevaplar ters sırayla kurulur.
+
+:::diagram{src="inis-cikis.svg" alt="faktoriyel(4) çağrısının temel duruma inişi ve 1, 2, 6, 24 değerleriyle geri çıkışı|faktoriyel(4) descending to the base case and climbing back with the values 1, 2, 6, 24"}
+İnişte çarpmalar bekletilir; çıkışta her çerçeve bekleyen işini tamamlayıp kapanır.
+:::
+
 ## Yığında ne oluyor? Faktöriyel simülasyonu
 
 Şimdi `faktoriyel(4)` çağrısını izle. Her çağrı yığına yeni bir çerçeve ekler ve **her çerçevenin kendi `n`
@@ -131,6 +138,10 @@ Fibonacci dizisi: `fib(0) = 0`, `fib(1) = 1`, sonrası `fib(n) = fib(n-1) + fib(
 
 Dikkat: yığın aynı anda bu ağacın **yalnızca bir dalını** tutar. `fib(3)` bütün alt ağacıyla bitip dönmeden
 `fib(2)` (sağ kol) başlamaz. Simülasyonda bir global sayaç ile kaç çağrı yapıldığını da sayıyoruz.
+
+:::interactive{type="predict-run" src="fibonacci-agaci.trace.json" title="Önce tahmin et: kaç çağrı?|Predict first: how many calls?"}
+Simülasyonu izlemeden önce kodu oku: `fib(4)` için `fib` toplam kaç kez çağrılır ve program ne yazdırır? Her soruda bir seçenek işaretle. Sorulardaki satır numaraları soldaki kod listesine göredir. "Çalıştır ve karşılaştır" ile cevapların işaretlenir, doğru ve yanlış sayısı görünür ve iz oynamaya başlar; her sorunun altındaki adım numarasına izin kaydırıcısıyla gidip değeri kendin doğrula. Puan sunucuya gönderilmez; "Yeniden dene" ile tekrar cevaplayabilirsin.
+:::
 
 :::trace{src="fibonacci-agaci.trace.json" title="Naif fibonacci: çağrı ağacı|Naive fibonacci: the call tree"}
 Yığının en fazla 4 çerçeve derinliğe indiğine ama toplam 9 çağrı yapıldığına dikkat et; fib(2)'nin iki kez baştan hesaplandığını yakala.
@@ -202,6 +213,13 @@ sözlük verirsen `TypeError: unhashable type: 'list'` alırsın (yerine tuple v
 **saf fonksiyonlarda** (aynı girdiye hep aynı çıktıyı veren, dışarıyı değiştirmeyen) güvenlidir. Dosya okuyan ya da
 saate bakan bir fonksiyonu önbelleğe alırsan eski sonucu döndürür. `maxsize=None` önbelleği sınırsız büyütür; uzun
 yaşayan süreçlerde bir sınır ver.
+:::
+
+Naif fibonacci ile memoization'lı sürümü yan yana görmek farkı netleştirir. Animasyon önce çağrı ağacının derinlik
+öncelikli açılıp kapanmasını, sonra aynı ağacın sözlükle budanmasını gösteriyor.
+
+:::animation{scene="fib-cagri-agaci.scene.json"}
+Sayaçtaki çağrı sayısını ve sağdaki `fib(2)` düğümünü izle: naif sürümde alt ağaç ikinci kez açılır, memo sürümünde sözlükten tek adımda gelir.
 :::
 
 ## Yığının sınırı: RecursionError
@@ -365,6 +383,23 @@ seviye iç içe liste). Bu ikisi doğruysa tümevarım gereği gerisi de doğrud
   paylaşır (K-06). Her çağrıda yeni liste oluştur ya da dönüş değerlerini birleştir.
 - **Pahalı dilimleme:** `liste[1:]` her seviyede kopya üretir. Büyük veride bir indeks parametresi (`i + 1`) geçir.
 
+:::realworld{company="Microsoft"}
+Python'un özyinelemeye yaklaşımı, dili geliştirenlerin kamuya açık tartışmalarında açıkça gerekçelendirilmiştir.
+Guido van Rossum 2009'da kişisel blogunda yayımladığı "Tail Recursion Elimination" yazılarında kuyruk çağrısı
+optimizasyonunu bilerek eklemediğini anlattı: optimizasyon, hata anında traceback'ten çerçeveleri sileceği için
+hata ayıklamayı zorlaştırır ve Python'da döngü yazmak zaten doğal bir alternatiftir.
+
+Yıllar sonra Microsoft'un desteklediği **Faster CPython** projesi (Guido van Rossum ve Mark Shannon'ın da içinde
+olduğu ekip) yığının nasıl kullanıldığını değiştirdi. Python 3.11'in "What's New" belgesine göre bir Python
+fonksiyonu başka bir Python fonksiyonunu çağırdığında yorumlayıcı artık C düzeyinde yeni bir çağrı açmıyor, yeni
+çerçeveyi kurup doğrudan ona "atlıyor". Böylece çoğu Python çağrısı C yığınını tüketmiyor ve faktöriyel ya da
+fibonacci gibi basit özyinelemeli fonksiyonlar belirgin biçimde hızlandı. Python 3.12'de ise `sys.setrecursionlimit`
+sınırı yalnızca Python koduna uygulanır hâle geldi; C yığını ayrı bir mekanizmayla korunuyor.
+
+Bu derse bağlanan sonuç: çerçeveler artık daha ucuz, ama sınır ve kuyruk çağrısı politikası değişmedi. Derinliği
+girdiye bağlı olan özyinelemeyi (uzun bağlı liste, çok derin JSON) yine döngüye ya da açık bir yığına çevirmen gerekir.
+:::
+
 ## Özet
 
 - Özyineleme, problemi küçültüp fonksiyonun kendini çağırmasıdır. Her zaman bir **temel durum** ve problemi küçülten
@@ -377,6 +412,9 @@ seviye iç içe liste). Bu ikisi doğruysa tümevarım gereği gerisi de doğrud
   Sınırı yükseltmek kalıcı çözüm değildir.
 - Python kuyruk çağrısını optimize etmez. Derin özyinelemeyi döngüye ya da elle yönetilen bir yığına çevir.
 - İç içe listeler, klasör ağaçları ve JSON gibi **özyinelemeli verilerde** özyineleme en doğal ve okunur çözümdür.
+
+:::exercise{src="ic-ice-derinlik.exercise.json"}
+:::
 
 :::quiz{src="quiz.json"}
 :::

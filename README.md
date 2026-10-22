@@ -109,6 +109,7 @@ yeniden derlenmeli ve seed tekrar çalıştırılmalıdır (`docker compose run 
 | `pnpm test`                                  | Tüm birim testleri                                                       |
 | `pnpm typecheck`                             | Tüm paketlerde TypeScript kontrolü                                       |
 | `pnpm content:validate`                      | `content/` klasörünü şemalara göre doğrular, müfredat kapsamını raporlar |
+| `pnpm content:exercises`                     | Alıştırma çözümlerini `python3` ile testlere karşı çalıştırır            |
 | `pnpm db:migrate` / `pnpm db:seed`           | Migration uygular / içeriği yükler (idempotent)                          |
 | `pnpm --filter @devacademy/backend test:e2e` | Gerçek PostgreSQL + Redis ile API uçtan uca testleri                     |
 | `pnpm --filter @devacademy/web test:e2e`     | Playwright (masaüstü + mobil görünüm)                                    |
@@ -128,12 +129,18 @@ Animasyonlar platformdan bağımsız JSON “sahnelerinden” üretilir (`packag
 
 ```
 content/modules/<modül-id>/<ders-id>/
-  lesson.md        frontmatter + Markdown + :::diagram / :::animation / :::interactive / :::code / :::realworld / :::callout / :::trace / :::quiz / :::next
+  lesson.md        frontmatter + Markdown + :::diagram / :::animation / :::interactive / :::code / :::realworld / :::callout / :::trace / :::exercise / :::quiz / :::next
   scene.json       animasyon sahnesi (birden fazla olabilir: <ad>.scene.json)
   quiz.json        3–6 soru
   diagram.svg      tema uyumlu (CSS değişkenleri) SVG
   x.trace.py       Python kod simülasyonu kaynağı → pnpm content:traces ile x.trace.json
+  x.exercise.json  kodlama alıştırması (görev, starter, testler, çözüm) → pnpm content:exercises ile sınanır
 ```
+
+Kodlama alıştırmaları web'de **istemci tarafında** çalışır: Python, Pyodide (WebAssembly CPython) ile bir Web
+Worker içinde yürütülür, kod sunucuya gönderilmez. Pyodide dosyaları (~13 MB) build/dev öncesi
+`web/scripts/copy-pyodide.mjs` ile `web/public/pyodide/`'a kopyalanır ve aynı origin'den, ilk kullanımda yüklenir
+(CDN yok; ev sunucusu internete kapalıyken de çalışır).
 
 Admin panelinden (web) dersler taslak olarak düzenlenir, sahne editöründe görsel olarak düzenlenir ve yayınlanır; her yayın yeni bir ders sürümü oluşturur.
 

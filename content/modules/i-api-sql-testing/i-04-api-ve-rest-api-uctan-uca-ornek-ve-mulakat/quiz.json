@@ -249,6 +249,55 @@
       "concepts": [
         "http-status-codes"
       ]
+    },
+    {
+      "id": "q6",
+      "type": "single",
+      "prompt": {
+        "tr": "Sipariş API'si siparişi transaction içinde yazıyor ve onay e-postası için bir olay yayınlamak istiyor. Olayın siparişle tutarlı kalması için en güvenli yol hangisidir?",
+        "en": "The order API writes the order inside a transaction and wants to publish an event for the confirmation email. What is the safest way to keep the event consistent with the order?"
+      },
+      "options": [
+        {
+          "id": "a",
+          "text": {
+            "tr": "Olayı transaction açıkken doğrudan kuyruğa göndermek",
+            "en": "Sending the event straight to the queue while the transaction is open"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "tr": "Olayı aynı transaction içinde bir outbox tablosuna yazıp COMMIT sonrası ayrı bir süreçle yayınlamak",
+            "en": "Writing the event to an outbox table in the same transaction and publishing it with a separate process after COMMIT"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "tr": "E-postayı API yanıtı dönmeden önce senkron göndermek",
+            "en": "Sending the email synchronously before the API returns its response"
+          }
+        },
+        {
+          "id": "d",
+          "text": {
+            "tr": "Olayı istemcinin 201 yanıtını aldıktan sonra kendisinin yayınlaması",
+            "en": "Having the client publish the event itself after receiving the 201 response"
+          }
+        }
+      ],
+      "correct": [
+        "b"
+      ],
+      "explanation": {
+        "tr": "Outbox kaydı siparişle aynı transaction'da yazıldığı için ikisi birlikte kalıcı olur ya da birlikte geri alınır. Transaction içinden doğrudan kuyruğa gönderilen olay ROLLBACK ile geri alınamaz; senkron e-posta yanıtı yavaşlatır ve hata durumunda tutarsızlık bırakır; istemciye güvenmek ise olayın hiç gönderilmemesine yol açabilir.",
+        "en": "Because the outbox record is written in the same transaction as the order, both persist together or are rolled back together. An event sent straight to the queue from inside the transaction cannot be undone by ROLLBACK; a synchronous email slows the response and leaves inconsistency on failure; relying on the client may mean the event is never sent."
+      },
+      "difficulty": "medium",
+      "concepts": [
+        "order-lifecycle"
+      ]
     }
   ]
 }

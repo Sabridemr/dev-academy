@@ -1,0 +1,182 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "python-kaynaktan-bytecode",
+  "title": { "tr": "Kaynaktan Bytecode'a, Bytecode'dan Çıktıya", "en": "From Source to Bytecode, From Bytecode to Output" },
+  "summary": {
+    "tr": "CPython'un bir .py dosyasını token'lara bölmesi, AST'ye ayrıştırması, bytecode'a derlemesi, .pyc önbelleğini kullanması ve yorumlayıcı döngüsünün komutları tek tek yürütmesi.",
+    "en": "CPython splitting a .py file into tokens, parsing it into an AST, compiling it to bytecode, using the .pyc cache, and the interpreter loop executing instructions one by one."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda merhaba.py kaynak dosyası, üst sırada tokenizer, parser ve derleyici, sağda Python sanal makinesi (yorumlayıcı döngüsü), altında değer yığını, sağ üstte çıktı (stdout) ve derleyicinin altında __pycache__ önbelleği bulunur. Kaynak metin token'lara, token'lar AST'ye, AST bytecode'a dönüşür. Ayrıştırmada bir SyntaxError olsaydı hiçbir satır çalışmazdı. İçe aktarılan modülün bytecode'u .pyc olarak önbelleğe yazılır ve sonraki çalıştırmada derleme atlanır. Sanal makine LOAD, BINARY_OP, STORE gibi komutları değer yığınını kullanarak tek tek yürütür, print çıktıya yazılır. Son adımda bir NameError programı o satırda durdurur; önceki çıktı yazılmış kalır.",
+      "en": "On the left is the merhaba.py source file, along the top the tokenizer, parser and compiler, on the right the Python virtual machine (interpreter loop) with the value stack below it, at the top right the output (stdout), and below the compiler the __pycache__ cache. Source text becomes tokens, tokens become an AST, the AST becomes bytecode. A SyntaxError during parsing would mean no line runs. The imported module's bytecode is written to the cache as .pyc and compilation is skipped on the next run. The virtual machine executes instructions such as LOAD, BINARY_OP and STORE one by one using the value stack, and print writes to the output. In the last step a NameError stops the program at that line; earlier output stays printed."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "source", "kind": "storage", "label": "merhaba.py", "sublabel": { "tr": "kaynak metin", "en": "source text" }, "x": 90, "y": 300, "w": 130, "h": 70 },
+    { "id": "tokenizer", "kind": "service", "label": "Tokenizer", "sublabel": { "tr": "metni parçalara böler", "en": "splits text into tokens" }, "x": 270, "y": 160, "w": 140, "h": 70 },
+    { "id": "parser", "kind": "service", "label": "Parser", "sublabel": { "tr": "AST kurar", "en": "builds the AST" }, "x": 450, "y": 160, "w": 130, "h": 70 },
+    { "id": "compiler", "kind": "service", "label": { "tr": "Derleyici", "en": "Compiler" }, "sublabel": { "tr": "AST → bytecode", "en": "AST → bytecode" }, "x": 620, "y": 160, "w": 130, "h": 70 },
+    { "id": "pycache", "kind": "cache", "label": "__pycache__", "sublabel": { "tr": "yardimci.cpython-314.pyc", "en": "yardimci.cpython-314.pyc" }, "x": 450, "y": 430, "w": 200, "h": 70 },
+    { "id": "pvm", "kind": "worker", "label": { "tr": "Python sanal makinesi", "en": "Python virtual machine" }, "sublabel": { "tr": "yorumlayıcı döngüsü", "en": "interpreter loop" }, "x": 790, "y": 330, "w": 170, "h": 80 },
+    { "id": "stack", "kind": "queue", "label": { "tr": "Değer yığını", "en": "Value stack" }, "sublabel": { "tr": "ara sonuçlar", "en": "intermediate values" }, "x": 790, "y": 510, "w": 150, "h": 60 },
+    { "id": "stdout", "kind": "client", "label": { "tr": "Çıktı (stdout)", "en": "Output (stdout)" }, "x": 900, "y": 110, "w": 150, "h": 60 }
+  ],
+  "edges": [
+    { "id": "src-tok", "from": "source", "to": "tokenizer", "kind": "data", "label": { "tr": "metin", "en": "text" } },
+    { "id": "tok-parse", "from": "tokenizer", "to": "parser", "kind": "data", "label": { "tr": "token'lar", "en": "tokens" } },
+    { "id": "parse-comp", "from": "parser", "to": "compiler", "kind": "data", "label": "AST" },
+    { "id": "comp-pvm", "from": "compiler", "to": "pvm", "kind": "data", "label": { "tr": "kod nesnesi", "en": "code object" } },
+    { "id": "comp-cache", "from": "compiler", "to": "pycache", "kind": "data", "style": "dashed", "curvature": 0.2, "label": { "tr": ".pyc yaz", "en": "write .pyc" } },
+    { "id": "cache-pvm", "from": "pycache", "to": "pvm", "kind": "data", "style": "dashed", "label": { "tr": "önbellekten oku", "en": "read from cache" } },
+    { "id": "pvm-stack", "from": "pvm", "to": "stack", "kind": "control", "bidirectional": true, "label": { "tr": "it / çek", "en": "push / pop" } },
+    { "id": "pvm-out", "from": "pvm", "to": "stdout", "kind": "response", "label": "print" }
+  ],
+  "steps": [
+    {
+      "id": "kaynak",
+      "title": { "tr": "Kaynak dosya", "en": "The source file" },
+      "narration": {
+        "tr": "`python3 merhaba.py` dediğinde CPython önce dosyayı düz metin olarak okur. Bu aşamada henüz hiçbir satır çalışmamıştır; elimizde yalnızca karakterler vardır.",
+        "en": "When you run `python3 merhaba.py`, CPython first reads the file as plain text. No line has run yet; all we have are characters."
+      },
+      "durationMs": 3000,
+      "inherit": false,
+      "highlight": { "nodes": ["source"], "edges": [] },
+      "nodeStates": { "source": { "status": "active", "badge": "3 satır" } },
+      "annotations": [
+        { "id": "kod", "x": 240, "y": 430, "text": { "tr": "fiyat = 15 · toplam = fiyat * 2 · print(toplam)", "en": "fiyat = 15 · toplam = fiyat * 2 · print(toplam)" }, "target": "source" }
+      ]
+    },
+    {
+      "id": "tokenize",
+      "title": { "tr": "Token'lara bölme", "en": "Tokenizing" },
+      "narration": {
+        "tr": "Tokenizer metni anlamlı parçalara böler: `fiyat` bir isim, `=` bir operatör, `15` bir sayı. Girinti seviyeleri de burada INDENT/DEDENT token'larına dönüşür.",
+        "en": "The tokenizer splits the text into meaningful pieces: `fiyat` is a name, `=` an operator, `15` a number. Indentation levels also become INDENT/DEDENT tokens here."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["source", "tokenizer"], "edges": ["src-tok"] },
+      "nodeStates": { "source": { "status": "idle" }, "tokenizer": { "status": "active", "badge": "NAME OP NUMBER" } },
+      "packets": [
+        { "edge": "src-tok", "label": "fiyat", "shape": "square", "durationMs": 900 },
+        { "edge": "src-tok", "label": "=", "shape": "square", "startAt": 600, "durationMs": 900 },
+        { "edge": "src-tok", "label": "15", "shape": "square", "startAt": 1200, "durationMs": 900 }
+      ]
+    },
+    {
+      "id": "parse",
+      "title": { "tr": "Ayrıştırma: AST", "en": "Parsing: the AST" },
+      "narration": {
+        "tr": "Parser token'ları dilin kurallarına göre bir ağaca (AST) dizer. Kapanmamış bir parantez ya da bozuk girinti varsa `SyntaxError` burada çıkar ve program hiç başlamaz: ilk satırdaki `print` bile çalışmaz.",
+        "en": "The parser arranges the tokens into a tree (the AST) according to the grammar. An unclosed parenthesis or broken indentation raises `SyntaxError` here and the program never starts: not even the `print` on the first line runs."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["tokenizer", "parser"], "edges": ["tok-parse"] },
+      "nodeStates": { "tokenizer": { "status": "idle", "badge": "" }, "parser": { "status": "active", "badge": "Assign → BinOp" } },
+      "packets": [{ "edge": "tok-parse", "label": { "tr": "token'lar", "en": "tokens" }, "shape": "envelope", "durationMs": 1100 }],
+      "annotations": [
+        { "id": "syntax", "x": 450, "y": 60, "text": { "tr": "SyntaxError burada yakalanır", "en": "SyntaxError is caught here" }, "tone": "warning", "target": "parser" }
+      ]
+    },
+    {
+      "id": "compile",
+      "title": { "tr": "Derleme: bytecode", "en": "Compiling: bytecode" },
+      "narration": {
+        "tr": "Derleyici AST'yi bytecode'a çevirir: `toplam = fiyat * 2` satırı LOAD_NAME, LOAD_CONST, BINARY_OP ve STORE_NAME gibi küçük komutlara bölünür. Bu makine kodu değildir; yalnızca Python sanal makinesi anlar.",
+        "en": "The compiler turns the AST into bytecode: the line `toplam = fiyat * 2` becomes small instructions such as LOAD_NAME, LOAD_CONST, BINARY_OP and STORE_NAME. This is not machine code; only the Python virtual machine understands it."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["parser", "compiler"], "edges": ["parse-comp"] },
+      "nodeStates": { "parser": { "status": "success", "badge": "" }, "compiler": { "status": "active", "badge": "bytecode" } },
+      "packets": [{ "edge": "parse-comp", "label": "AST", "shape": "diamond", "durationMs": 1100 }]
+    },
+    {
+      "id": "pyc-yaz",
+      "title": { "tr": "İçe aktarılan modül önbelleğe yazılır", "en": "The imported module is cached" },
+      "narration": {
+        "tr": "Ana dosya `import yardimci` dediğinde o modülün bytecode'u da üretilir ve `__pycache__/yardimci.cpython-314.pyc` olarak diske yazılır. Ana dosyanın kendisi genellikle önbelleğe yazılmaz.",
+        "en": "When the main file runs `import yardimci`, that module's bytecode is also produced and written to disk as `__pycache__/yardimci.cpython-314.pyc`. The main file itself is usually not cached."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["compiler", "pycache"], "edges": ["comp-cache"] },
+      "nodeStates": { "compiler": { "status": "idle" }, "pycache": { "status": "active", "badge": "yeni" } },
+      "packets": [{ "edge": "comp-cache", "label": ".pyc", "shape": "square", "durationMs": 1200 }]
+    },
+    {
+      "id": "pyc-oku",
+      "title": { "tr": "Sonraki çalıştırma: derleme atlanır", "en": "Next run: compilation is skipped" },
+      "narration": {
+        "tr": "Program tekrar çalıştırıldığında kaynak değişmemişse CPython `yardimci` için tokenizer, parser ve derleyiciyi atlar; bytecode doğrudan `.pyc` dosyasından okunur. Kaynak değişirse `.pyc` yeniden üretilir.",
+        "en": "When the program runs again and the source has not changed, CPython skips the tokenizer, parser and compiler for `yardimci`; bytecode is read straight from the `.pyc` file. If the source changes, the `.pyc` is regenerated."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["pycache", "pvm"], "edges": ["cache-pvm"] },
+      "nodeStates": {
+        "pycache": { "status": "success", "badge": "HIT" },
+        "tokenizer": { "status": "muted" },
+        "parser": { "status": "muted" },
+        "compiler": { "status": "muted" }
+      },
+      "packets": [{ "edge": "cache-pvm", "label": "bytecode", "shape": "square", "durationMs": 1200 }]
+    },
+    {
+      "id": "eval-loop",
+      "title": { "tr": "Yorumlayıcı döngüsü", "en": "The interpreter loop" },
+      "narration": {
+        "tr": "Sanal makine bir döngüdür: sıradaki komutu al, uygula, devam et. LOAD komutları değerleri değer yığınına iter, BINARY_OP en üstteki iki değeri çekip `15 * 2` sonucunu geri iter, STORE_NAME sonucu `toplam` ismine bağlar.",
+        "en": "The virtual machine is a loop: fetch the next instruction, execute it, continue. LOAD instructions push values onto the value stack, BINARY_OP pops the top two and pushes `15 * 2` back, STORE_NAME binds the result to the name `toplam`."
+      },
+      "durationMs": 4200,
+      "highlight": { "nodes": ["pvm", "stack"], "edges": ["comp-pvm", "pvm-stack"] },
+      "nodeStates": {
+        "pycache": { "status": "idle", "badge": "" },
+        "tokenizer": { "status": "idle" },
+        "parser": { "status": "idle" },
+        "compiler": { "status": "idle" },
+        "pvm": { "status": "busy", "badge": "BINARY_OP" },
+        "stack": { "status": "active", "badge": "15, 2 → 30", "progress": 0.4 }
+      },
+      "packets": [
+        { "edge": "comp-pvm", "label": "LOAD_NAME", "shape": "square", "durationMs": 800 },
+        { "edge": "pvm-stack", "label": "15", "durationMs": 700, "startAt": 800 },
+        { "edge": "pvm-stack", "label": "2", "durationMs": 700, "startAt": 1500 },
+        { "edge": "pvm-stack", "label": "30", "direction": "backward", "durationMs": 700, "startAt": 2400 }
+      ],
+      "annotations": [
+        { "id": "dongu", "x": 600, "y": 330, "text": { "tr": "al → uygula → devam et", "en": "fetch → execute → continue" }, "target": "pvm" }
+      ]
+    },
+    {
+      "id": "print",
+      "title": { "tr": "print çıktıya yazar", "en": "print writes to output" },
+      "narration": {
+        "tr": "`print(toplam)` satırının komutları çalışınca 30 metne çevrilip stdout'a yazılır. Satırlar yukarıdan aşağıya, yazıldıkları sırayla yürütülür.",
+        "en": "When the instructions for `print(toplam)` run, 30 is converted to text and written to stdout. Lines execute top to bottom, in the order they were written."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["pvm", "stdout"], "edges": ["pvm-out"] },
+      "nodeStates": { "pvm": { "status": "active", "badge": "CALL print" }, "stack": { "status": "idle", "badge": "", "progress": 0 }, "stdout": { "status": "success", "badge": "30" } },
+      "packets": [{ "edge": "pvm-out", "label": "30", "shape": "envelope", "durationMs": 1000 }]
+    },
+    {
+      "id": "runtime-error",
+      "title": { "tr": "Çalışma zamanı hatası", "en": "A runtime error" },
+      "narration": {
+        "tr": "Dördüncü satırda yazım hatalı bir isim (`print(toplm)`) olsaydı derleme sorunsuz geçerdi; hata ancak sanal makine o satıra geldiğinde `NameError` olarak çıkar. Önceki çıktı (30) yazılmış kalır, sonraki satırlar çalışmaz.",
+        "en": "If line four had a misspelled name (`print(toplm)`), compilation would still succeed; the error only appears as `NameError` when the virtual machine reaches that line. The earlier output (30) stays printed and later lines never run."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["pvm"], "edges": [] },
+      "nodeStates": { "pvm": { "status": "error", "badge": "NameError", "sublabel": { "tr": "4. satırda durdu", "en": "stopped at line 4" } } },
+      "annotations": [
+        { "id": "hata", "x": 600, "y": 440, "text": { "tr": "Derleme geçti, çalışma sırasında patladı", "en": "Compiled fine, failed at run time" }, "tone": "danger", "target": "pvm" }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["python", "bytecode", "interpreter", "pycache"]
+}

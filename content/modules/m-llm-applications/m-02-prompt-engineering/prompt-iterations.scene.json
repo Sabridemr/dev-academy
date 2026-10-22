@@ -1,0 +1,600 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "m-02-prompt-iterations",
+  "title": {
+    "tr": "Zero-shot'tan Few-shot ve Zincirleme Düşünmeye",
+    "en": "From Zero-shot to Few-shot and Chain of Thought"
+  },
+  "summary": {
+    "tr": "Aynı sınıflandırma görevi için istem şablonu sürüm sürüm gelişir: yalın talimat, çıktı biçimi, few-shot örnekleri ve zincirleme düşünme. Her sürüm doğrulayıcıdan ve değerlendirme setinden geçer.",
+    "en": "For the same classification task the prompt template evolves version by version: a bare instruction, an output format, few-shot examples and chain of thought. Each version passes through a validator and the evaluation set."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda istem şablonu ve altında örnek dizini, ortada LLM, sağda JSON doğrulayıcı, sağ üstte değerlendirme seti ve sağ altta uygulama bulunur. İlk sürümde yalnızca talimat gider ve çıktı şemaya uymaz. Biçim ve çıkış yolu eklenince şema geçer ama sınır vakalar hatalıdır. Örnek dizininden few-shot örnekleri eklenince sınır vakalar düzelir. Zincirleme düşünme eklenince model önce gerekçe yazar; doğrulayıcı yalnızca cevap alanını uygulamaya iletir. Bozuk bir çıktıda hata modele geri verilip bir kez yeniden denenir. Her sürüm değerlendirme setinde bir öncekiyle karşılaştırılır.",
+      "en": "On the left the prompt template with the example index below it, in the middle the LLM, on the right the JSON validator, the evaluation set at the top right and the application at the bottom right. In the first version only an instruction is sent and the output does not match the schema. Adding a format and an escape hatch makes the schema pass but edge cases fail. Adding few-shot examples from the index fixes edge cases. With chain of thought the model writes its reasoning first; the validator forwards only the answer field to the application. On a broken output the error is fed back to the model for one retry. Every version is compared with the previous one on the evaluation set."
+    }
+  },
+  "canvas": {
+    "width": 1000,
+    "height": 600
+  },
+  "nodes": [
+    {
+      "id": "tmpl",
+      "kind": "generic",
+      "label": {
+        "tr": "İstem şablonu",
+        "en": "Prompt template"
+      },
+      "sublabel": "v1",
+      "x": 150,
+      "y": 290,
+      "w": 170,
+      "h": 80
+    },
+    {
+      "id": "shots",
+      "kind": "db",
+      "label": {
+        "tr": "Örnek dizini",
+        "en": "Example index"
+      },
+      "sublabel": "few-shot",
+      "x": 150,
+      "y": 490,
+      "w": 150,
+      "h": 76
+    },
+    {
+      "id": "model",
+      "kind": "model",
+      "label": "LLM",
+      "x": 470,
+      "y": 290,
+      "w": 140,
+      "h": 90
+    },
+    {
+      "id": "val",
+      "kind": "function",
+      "label": {
+        "tr": "Doğrulayıcı",
+        "en": "Validator"
+      },
+      "sublabel": {
+        "tr": "JSON şeması",
+        "en": "JSON schema"
+      },
+      "x": 760,
+      "y": 290,
+      "w": 150,
+      "h": 80
+    },
+    {
+      "id": "evals",
+      "kind": "db",
+      "label": {
+        "tr": "Değerlendirme seti",
+        "en": "Evaluation set"
+      },
+      "x": 760,
+      "y": 90,
+      "w": 170,
+      "h": 76
+    },
+    {
+      "id": "app",
+      "kind": "service",
+      "label": {
+        "tr": "Uygulama",
+        "en": "Application"
+      },
+      "x": 760,
+      "y": 500,
+      "w": 150,
+      "h": 76
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-tmpl-model",
+      "from": "tmpl",
+      "to": "model",
+      "kind": "request"
+    },
+    {
+      "id": "e-shots-tmpl",
+      "from": "shots",
+      "to": "tmpl",
+      "kind": "data"
+    },
+    {
+      "id": "e-model-val",
+      "from": "model",
+      "to": "val",
+      "kind": "response"
+    },
+    {
+      "id": "e-val-model",
+      "from": "val",
+      "to": "model",
+      "kind": "control",
+      "label": {
+        "tr": "hata + yeniden dene",
+        "en": "error + retry"
+      },
+      "style": "dashed",
+      "curvature": 0.45
+    },
+    {
+      "id": "e-evals-val",
+      "from": "evals",
+      "to": "val",
+      "kind": "data",
+      "label": {
+        "tr": "puanla",
+        "en": "score"
+      },
+      "style": "dashed"
+    },
+    {
+      "id": "e-val-app",
+      "from": "val",
+      "to": "app",
+      "kind": "response"
+    }
+  ],
+  "steps": [
+    {
+      "id": "zero-shot",
+      "title": {
+        "tr": "v1: yalın talimat (zero-shot)",
+        "en": "v1: bare instruction (zero-shot)"
+      },
+      "narration": {
+        "tr": "İlk şablon yalnızca \"bu mesajı sınıflandır\" der. Model hangi kategorileri, hangi biçimde istediğinizi bilmediği için boşlukları tahminle doldurur ve serbest metin döndürür. Doğrulayıcı JSON bulamaz.",
+        "en": "The first template just says \"classify this message\". The model does not know which categories or which format you want, so it fills the gaps with guesses and returns free text. The validator finds no JSON."
+      },
+      "durationMs": 3600,
+      "inherit": false,
+      "highlight": {
+        "nodes": [
+          "tmpl",
+          "model",
+          "val"
+        ],
+        "edges": [
+          "e-tmpl-model",
+          "e-model-val"
+        ]
+      },
+      "nodeStates": {
+        "tmpl": {
+          "status": "active",
+          "badge": "v1"
+        },
+        "model": {
+          "status": "busy"
+        },
+        "val": {
+          "status": "error",
+          "badge": "✗ şema"
+        },
+        "evals": {
+          "status": "warning",
+          "badge": "zayıf"
+        }
+      },
+      "edgeStates": {
+        "e-val-model": {
+          "status": "muted"
+        },
+        "e-shots-tmpl": {
+          "status": "muted"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-tmpl-model",
+          "shape": "envelope",
+          "label": "talimat + mesaj",
+          "durationMs": 1200
+        },
+        {
+          "edge": "e-model-val",
+          "shape": "dot",
+          "label": "\"Bence bu bir iade…\"",
+          "color": "danger",
+          "startAt": 1500,
+          "durationMs": 1200
+        }
+      ]
+    },
+    {
+      "id": "format",
+      "title": {
+        "tr": "v2: çıktı biçimi ve çıkış yolu",
+        "en": "v2: output format and escape hatch"
+      },
+      "narration": {
+        "tr": "Şablona kategori listesi, JSON biçimi ve \"politikada yoksa diger seç\" talimatı eklenir. Artık çıktı şemaya uyar; ama \"hem iade hem şikâyet\" gibi sınır vakalarda model tutarsızdır.",
+        "en": "The template gains the category list, a JSON format and an \"if the policy does not cover it, choose other\" rule. The output now matches the schema, but the model is inconsistent on edge cases such as \"both a return and a complaint\"."
+      },
+      "durationMs": 3400,
+      "highlight": {
+        "nodes": [
+          "tmpl",
+          "val"
+        ],
+        "edges": [
+          "e-tmpl-model",
+          "e-model-val"
+        ]
+      },
+      "nodeStates": {
+        "tmpl": {
+          "status": "active",
+          "badge": "v2"
+        },
+        "val": {
+          "status": "success",
+          "badge": "✓ şema"
+        },
+        "evals": {
+          "status": "warning",
+          "badge": "sınır vakalar ✗"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-tmpl-model",
+          "shape": "envelope",
+          "label": "rol + kısıt + şema",
+          "durationMs": 1100
+        },
+        {
+          "edge": "e-model-val",
+          "shape": "square",
+          "label": "{\"kategori\": …}",
+          "startAt": 1400,
+          "durationMs": 1100
+        }
+      ]
+    },
+    {
+      "id": "few-shot",
+      "title": {
+        "tr": "v3: few-shot örnekleri",
+        "en": "v3: few-shot examples"
+      },
+      "narration": {
+        "tr": "Örnek dizininden çeşitli ve zor vakaları kapsayan iki üç girdi–çıktı çifti şablona eklenir. Göstermek anlatmaktan güçlüdür: model sınır vakayı örnekteki gibi ayırır.",
+        "en": "Two or three diverse input–output pairs covering hard cases are pulled from the example index into the template. Showing beats telling: the model separates the edge case the way the example does."
+      },
+      "durationMs": 3600,
+      "highlight": {
+        "nodes": [
+          "shots",
+          "tmpl",
+          "evals"
+        ],
+        "edges": [
+          "e-shots-tmpl",
+          "e-tmpl-model",
+          "e-model-val"
+        ]
+      },
+      "nodeStates": {
+        "shots": {
+          "status": "active",
+          "badge": "3 örnek"
+        },
+        "tmpl": {
+          "status": "active",
+          "badge": "v3"
+        },
+        "evals": {
+          "status": "success",
+          "badge": "iyileşti"
+        }
+      },
+      "edgeStates": {
+        "e-shots-tmpl": {
+          "status": "active"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-shots-tmpl",
+          "shape": "square",
+          "label": "örnek çiftleri",
+          "durationMs": 1000
+        },
+        {
+          "edge": "e-tmpl-model",
+          "shape": "envelope",
+          "label": "şablon + örnekler",
+          "startAt": 1200,
+          "durationMs": 1000
+        },
+        {
+          "edge": "e-model-val",
+          "shape": "square",
+          "label": "{\"kategori\":\"iade\"}",
+          "color": "success",
+          "startAt": 2300,
+          "durationMs": 900
+        }
+      ]
+    },
+    {
+      "id": "dynamic",
+      "title": {
+        "tr": "Dinamik few-shot",
+        "en": "Dynamic few-shot"
+      },
+      "narration": {
+        "tr": "Örnek sayısını artırmak bir noktadan sonra yalnızca maliyeti artırır. Bunun yerine her istekte gelen mesaja en çok benzeyen örnekler dizinden seçilir; bu, getirme fikrinin prompt'un kendisine uygulanmasıdır.",
+        "en": "Beyond a point, more examples only add cost. Instead, for every request the examples most similar to the incoming message are selected from the index; this is retrieval applied to the prompt itself."
+      },
+      "durationMs": 3000,
+      "highlight": {
+        "nodes": [
+          "shots",
+          "tmpl"
+        ],
+        "edges": [
+          "e-shots-tmpl"
+        ]
+      },
+      "nodeStates": {
+        "shots": {
+          "status": "busy",
+          "badge": "en benzer k"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-shots-tmpl",
+          "shape": "square",
+          "label": "benzer örnekler",
+          "durationMs": 1100,
+          "repeat": 2,
+          "repeatGapMs": 300
+        }
+      ]
+    },
+    {
+      "id": "cot",
+      "title": {
+        "tr": "v4: zincirleme düşünme",
+        "en": "v4: chain of thought"
+      },
+      "narration": {
+        "tr": "Çok adımlı kararlar için model cevaptan önce gerekçesini ayrı bir etikette yazar. Ara adımlar modele fazladan hesap alanı verir, ama bunlar en pahalı token türü olan çıkış tokenlarıdır.",
+        "en": "For multi-step decisions the model writes its reasoning in a separate tag before the answer. The intermediate steps give the model extra room to compute, but they are output tokens, the most expensive kind."
+      },
+      "durationMs": 3800,
+      "highlight": {
+        "nodes": [
+          "tmpl",
+          "model"
+        ],
+        "edges": [
+          "e-tmpl-model",
+          "e-model-val"
+        ]
+      },
+      "nodeStates": {
+        "tmpl": {
+          "status": "active",
+          "badge": "v4 + CoT"
+        },
+        "model": {
+          "status": "busy",
+          "badge": "<dusunce>"
+        },
+        "shots": {
+          "status": "idle"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-tmpl-model",
+          "shape": "envelope",
+          "label": "adım adım düşün",
+          "durationMs": 1000
+        },
+        {
+          "edge": "e-model-val",
+          "shape": "square",
+          "label": "<dusunce>…</dusunce><cevap>",
+          "startAt": 1300,
+          "durationMs": 1600
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a-cot-cost",
+          "x": 470,
+          "y": 180,
+          "text": {
+            "tr": "çıkış tokenı = maliyet + gecikme",
+            "en": "output tokens = cost + latency"
+          },
+          "tone": "warning",
+          "target": "model"
+        }
+      ]
+    },
+    {
+      "id": "parse",
+      "title": {
+        "tr": "Yalnızca cevap uygulamaya gider",
+        "en": "Only the answer reaches the app"
+      },
+      "narration": {
+        "tr": "Doğrulayıcı gerekçe ile cevabı ayırır, cevabı şemaya karşı kontrol eder ve uygulamaya yalnızca cevap alanını iletir. Kullanıcı gerekçeyi görmez; kod cevabı programatik olarak okur.",
+        "en": "The validator separates reasoning from the answer, checks the answer against the schema and forwards only the answer field to the application. The user never sees the reasoning; code reads the answer programmatically."
+      },
+      "durationMs": 3000,
+      "highlight": {
+        "nodes": [
+          "val",
+          "app"
+        ],
+        "edges": [
+          "e-val-app"
+        ]
+      },
+      "nodeStates": {
+        "val": {
+          "status": "success",
+          "badge": "<cevap> ✓"
+        },
+        "app": {
+          "status": "success"
+        },
+        "model": {
+          "status": "idle"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-val-app",
+          "shape": "square",
+          "label": "{\"kategori\":\"iade\"}",
+          "color": "success",
+          "durationMs": 1200
+        }
+      ]
+    },
+    {
+      "id": "retry",
+      "title": {
+        "tr": "Bozuk çıktı: hatayı geri ver",
+        "en": "Broken output: feed back the error"
+      },
+      "narration": {
+        "tr": "Bazen bir alan eksik ya da geçersiz gelir. Doğrulayıcı hatayı mesajıyla birlikte modele geri verir ve bir kez daha dener; ikinci deneme de başarısızsa uygulama güvenli bir varsayılana düşer.",
+        "en": "Sometimes a field is missing or invalid. The validator sends the error message back to the model and retries once; if the second attempt also fails the application falls back to a safe default."
+      },
+      "durationMs": 4000,
+      "highlight": {
+        "nodes": [
+          "val",
+          "model"
+        ],
+        "edges": [
+          "e-model-val",
+          "e-val-model"
+        ]
+      },
+      "nodeStates": {
+        "val": {
+          "status": "error",
+          "badge": "eksik alan"
+        },
+        "app": {
+          "status": "idle"
+        },
+        "model": {
+          "status": "active"
+        }
+      },
+      "edgeStates": {
+        "e-val-model": {
+          "status": "active"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-model-val",
+          "shape": "dot",
+          "label": "{\"kategori\": null}",
+          "color": "danger",
+          "durationMs": 1000
+        },
+        {
+          "edge": "e-val-model",
+          "shape": "diamond",
+          "label": "hata: kategori zorunlu",
+          "startAt": 1200,
+          "durationMs": 1100
+        },
+        {
+          "edge": "e-model-val",
+          "shape": "dot",
+          "label": "düzeltilmiş JSON",
+          "color": "success",
+          "startAt": 2500,
+          "durationMs": 1000
+        }
+      ]
+    },
+    {
+      "id": "regression",
+      "title": {
+        "tr": "Her sürüm değerlendirme setinden geçer",
+        "en": "Every version runs on the eval set"
+      },
+      "narration": {
+        "tr": "Prompt bir yazılım bileşenidir: her şablon sürümü aynı değerlendirme setinde bir öncekiyle karşılaştırılır. Yeni kural yeni vakayı düzeltirken eski vakaları bozmuyorsa sürüm kabul edilir.",
+        "en": "A prompt is a software component: every template version is compared with the previous one on the same evaluation set. The version is accepted only if the new rule fixes the new case without breaking old ones."
+      },
+      "durationMs": 3600,
+      "highlight": {
+        "nodes": [
+          "evals",
+          "val",
+          "tmpl"
+        ],
+        "edges": [
+          "e-evals-val"
+        ]
+      },
+      "nodeStates": {
+        "evals": {
+          "status": "success",
+          "badge": "v4 ≥ v3"
+        },
+        "val": {
+          "status": "success"
+        },
+        "tmpl": {
+          "status": "success",
+          "badge": "v4"
+        }
+      },
+      "edgeStates": {
+        "e-val-model": {
+          "status": "idle"
+        },
+        "e-evals-val": {
+          "status": "active"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-evals-val",
+          "shape": "square",
+          "label": "test vakası",
+          "durationMs": 700,
+          "repeat": 4,
+          "repeatGapMs": 200
+        }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": [
+    "llm",
+    "prompt-engineering",
+    "few-shot",
+    "chain-of-thought",
+    "structured-output"
+  ]
+}

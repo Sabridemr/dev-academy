@@ -1,0 +1,179 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "python-tip-operator-secimi",
+  "title": { "tr": "Tip, Operatörün Anlamını Belirler", "en": "The Type Decides What an Operator Means" },
+  "summary": {
+    "tr": "Aynı + operatörünün int, float, str ve bool nesnelerinde farklı işe yönlendirilmesi; uyumsuz tiplerde TypeError ve her işlemin yeni bir nesne üretmesi.",
+    "en": "The same + operator being routed to different work for int, float, str and bool objects; TypeError for incompatible types, and every operation producing a new object."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda değerlendirilecek ifade, ortada + operatörü, sağda sayısal toplama ve metin birleştirme işleri, altta TypeError, en sağda sonuç nesneleri bulunur. 3 + 4 sayısal toplamaya gider ve yeni bir 7 nesnesi üretir. \"3\" + \"4\" metin birleştirmeye gider ve yeni bir \"34\" metni üretir. \"3\" + 4 için tanımlı bir işlem olmadığından TypeError oluşur; Python otomatik dönüştürmez. int(\"3\") + 4 önce dönüşüm yapar ve 7 üretir. 3 + 4.5 float sonuç verir, True + 1 bool bir int olduğu için 2 verir, 0.1 + 0.2 ise kayan nokta yuvarlaması nedeniyle 0.30000000000000004 olur.",
+      "en": "On the left is the expression being evaluated, in the middle the + operator, on the right the numeric addition and string concatenation routines, TypeError below, and the result objects at the far right. 3 + 4 goes to numeric addition and produces a new 7 object. \"3\" + \"4\" goes to string concatenation and produces a new \"34\" string. \"3\" + 4 has no defined operation, so TypeError is raised; Python does not convert automatically. int(\"3\") + 4 converts first and produces 7. 3 + 4.5 gives a float, True + 1 gives 2 because bool is an int, and 0.1 + 0.2 becomes 0.30000000000000004 because of floating-point rounding."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "ifade", "kind": "client", "label": { "tr": "İfade", "en": "Expression" }, "sublabel": "3 + 4", "x": 110, "y": 300, "w": 150, "h": 70 },
+    { "id": "arti", "kind": "service", "label": { "tr": "+ operatörü", "en": "+ operator" }, "sublabel": { "tr": "operandların tipine bakar", "en": "looks at operand types" }, "x": 350, "y": 300, "w": 170, "h": 76 },
+    { "id": "sayisal", "kind": "function", "label": { "tr": "Sayısal toplama", "en": "Numeric addition" }, "sublabel": "int / float / bool", "x": 620, "y": 140, "w": 170, "h": 70 },
+    { "id": "metin", "kind": "function", "label": { "tr": "Metin birleştirme", "en": "String concatenation" }, "sublabel": "str + str", "x": 620, "y": 300, "w": 170, "h": 70 },
+    { "id": "hata", "kind": "generic", "label": "TypeError", "sublabel": { "tr": "tanımlı işlem yok", "en": "no defined operation" }, "x": 620, "y": 470, "w": 170, "h": 70, "color": "danger" },
+    { "id": "sonuc", "kind": "storage", "label": { "tr": "Yeni sonuç nesnesi", "en": "New result object" }, "x": 880, "y": 220, "w": 170, "h": 76 }
+  ],
+  "edges": [
+    { "id": "ifade-arti", "from": "ifade", "to": "arti", "kind": "request" },
+    { "id": "arti-sayisal", "from": "arti", "to": "sayisal", "kind": "control", "curvature": -0.1 },
+    { "id": "arti-metin", "from": "arti", "to": "metin", "kind": "control" },
+    { "id": "arti-hata", "from": "arti", "to": "hata", "kind": "control", "style": "dashed", "curvature": 0.1 },
+    { "id": "sayisal-sonuc", "from": "sayisal", "to": "sonuc", "kind": "data" },
+    { "id": "metin-sonuc", "from": "metin", "to": "sonuc", "kind": "data" }
+  ],
+  "steps": [
+    {
+      "id": "giris",
+      "title": { "tr": "Bir ifade değerlendirilecek", "en": "An expression to evaluate" },
+      "narration": {
+        "tr": "`3 + 4` ifadesinde iki int nesnesi ve bir `+` operatörü var. `+` tek başına ne yapacağını bilmez; ne olacağına operandların **tipi** karar verir.",
+        "en": "In `3 + 4` there are two int objects and a `+` operator. `+` alone does not know what to do; the **types** of the operands decide."
+      },
+      "durationMs": 3000,
+      "inherit": false,
+      "highlight": { "nodes": ["ifade", "arti"], "edges": ["ifade-arti"] },
+      "nodeStates": { "ifade": { "status": "active" }, "arti": { "status": "active", "badge": "int + int" } },
+      "packets": [
+        { "edge": "ifade-arti", "label": "3", "shape": "square", "durationMs": 900 },
+        { "edge": "ifade-arti", "label": "4", "shape": "square", "startAt": 600, "durationMs": 900 }
+      ]
+    },
+    {
+      "id": "int-toplama",
+      "title": { "tr": "int + int → sayısal toplama", "en": "int + int → numeric addition" },
+      "narration": {
+        "tr": "İki operand da int olduğu için iş sayısal toplamaya gider. Sonuç heap'te **yeni** bir int nesnesidir: 7. Ne 3 ne de 4 değişir; int değiştirilemez bir tiptir.",
+        "en": "Both operands are int, so the work goes to numeric addition. The result is a **new** int object on the heap: 7. Neither 3 nor 4 changes; int is immutable."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["sayisal", "sonuc"], "edges": ["arti-sayisal", "sayisal-sonuc"] },
+      "nodeStates": { "ifade": { "status": "idle" }, "arti": { "status": "idle" }, "sayisal": { "status": "active" }, "sonuc": { "status": "success", "badge": "7 · int" } },
+      "packets": [
+        { "edge": "arti-sayisal", "label": "3, 4", "durationMs": 900 },
+        { "edge": "sayisal-sonuc", "label": "7", "shape": "envelope", "startAt": 1100, "durationMs": 900 }
+      ]
+    },
+    {
+      "id": "str-birlestirme",
+      "title": { "tr": "str + str → birleştirme", "en": "str + str → concatenation" },
+      "narration": {
+        "tr": "`\"3\" + \"4\"` aynı `+` işaretini kullanır ama operandlar str olduğu için iş metin birleştirmeye gider. Sonuç toplama değil yan yana koymadır: yepyeni bir `\"34\"` metni. Eski metinler olduğu gibi kalır.",
+        "en": "`\"3\" + \"4\"` uses the same `+` sign, but the operands are str, so the work goes to string concatenation. The result is not a sum but a join: a brand new `\"34\"` string. The old strings stay as they were."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["ifade", "arti", "metin", "sonuc"], "edges": ["ifade-arti", "arti-metin", "metin-sonuc"] },
+      "nodeStates": {
+        "ifade": { "sublabel": "\"3\" + \"4\"" },
+        "arti": { "badge": "str + str" },
+        "sayisal": { "status": "idle" },
+        "metin": { "status": "active" },
+        "sonuc": { "status": "success", "badge": "\"34\" · str" }
+      },
+      "packets": [
+        { "edge": "ifade-arti", "label": "\"3\", \"4\"", "shape": "square", "durationMs": 800 },
+        { "edge": "arti-metin", "label": "\"3\", \"4\"", "startAt": 900, "durationMs": 800 },
+        { "edge": "metin-sonuc", "label": "\"34\"", "shape": "envelope", "startAt": 1800, "durationMs": 800 }
+      ]
+    },
+    {
+      "id": "uyumsuz",
+      "title": { "tr": "str + int → TypeError", "en": "str + int → TypeError" },
+      "narration": {
+        "tr": "`\"3\" + 4` için tanımlı bir işlem yoktur. Python **güçlü tipli** bir dildir: metni sayıya ya da sayıyı metne kendiliğinden çevirmez, `TypeError: can only concatenate str (not \"int\") to str` hatası verir.",
+        "en": "There is no defined operation for `\"3\" + 4`. Python is **strongly typed**: it does not silently turn the string into a number or the number into a string, it raises `TypeError: can only concatenate str (not \"int\") to str`."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["arti", "hata"], "edges": ["arti-hata"] },
+      "nodeStates": {
+        "ifade": { "sublabel": "\"3\" + 4" },
+        "arti": { "status": "warning", "badge": "str + int" },
+        "metin": { "status": "idle" },
+        "hata": { "status": "error", "badge": "!" },
+        "sonuc": { "status": "muted", "badge": "" }
+      },
+      "edgeStates": { "arti-hata": { "status": "error" } },
+      "packets": [{ "edge": "arti-hata", "label": "\"3\", 4", "color": "danger", "shape": "square", "durationMs": 1100 }],
+      "annotations": [{ "id": "guclu-tip", "x": 350, "y": 470, "text": { "tr": "otomatik dönüşüm yok", "en": "no implicit conversion" }, "tone": "danger", "target": "arti" }]
+    },
+    {
+      "id": "acik-donusum",
+      "title": { "tr": "Açık dönüşüm: int(\"3\") + 4", "en": "Explicit conversion: int(\"3\") + 4" },
+      "narration": {
+        "tr": "Çözüm dönüşümü kendin yazmaktır. `int(\"3\")` önce yeni bir int nesnesi üretir; artık iki operand da int olduğu için iş tekrar sayısal toplamaya gider ve sonuç 7 olur.",
+        "en": "The fix is to write the conversion yourself. `int(\"3\")` first produces a new int object; now both operands are int, so the work goes to numeric addition again and the result is 7."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["arti", "sayisal", "sonuc"], "edges": ["arti-sayisal", "sayisal-sonuc"] },
+      "nodeStates": {
+        "ifade": { "sublabel": "int(\"3\") + 4" },
+        "arti": { "status": "active", "badge": "int + int" },
+        "hata": { "status": "idle", "badge": "" },
+        "sayisal": { "status": "active" },
+        "sonuc": { "status": "success", "badge": "7 · int" }
+      },
+      "edgeStates": { "arti-hata": { "status": "idle" } },
+      "packets": [
+        { "edge": "arti-sayisal", "label": "3, 4", "durationMs": 900 },
+        { "edge": "sayisal-sonuc", "label": "7", "shape": "envelope", "startAt": 1100, "durationMs": 900 }
+      ]
+    },
+    {
+      "id": "karisik",
+      "title": { "tr": "int + float → float", "en": "int + float → float" },
+      "narration": {
+        "tr": "Sayısal tipler kendi aralarında uyumludur. `3 + 4.5` işleminde int, float'a genişletilir ve sonuç bir float olur: 7.5. Bilgi kaybetmemek için sonuç her zaman \"daha geniş\" tipte çıkar.",
+        "en": "Numeric types work together. In `3 + 4.5` the int is widened to float and the result is a float: 7.5. To avoid losing information, the result always comes out in the \"wider\" type."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["sayisal", "sonuc"], "edges": ["arti-sayisal", "sayisal-sonuc"] },
+      "nodeStates": { "ifade": { "sublabel": "3 + 4.5" }, "arti": { "badge": "int + float" }, "sonuc": { "badge": "7.5 · float" } },
+      "packets": [
+        { "edge": "arti-sayisal", "label": "3, 4.5", "durationMs": 900 },
+        { "edge": "sayisal-sonuc", "label": "7.5", "shape": "envelope", "startAt": 1100, "durationMs": 900 }
+      ]
+    },
+    {
+      "id": "bool",
+      "title": { "tr": "True + 1 → 2", "en": "True + 1 → 2" },
+      "narration": {
+        "tr": "`bool`, int'in bir alt sınıfıdır: True 1, False 0 gibi davranır. Bu yüzden `True + 1` hata vermez, 2 üretir. `sum([True, False, True])` ifadesinin 2 vermesi de bu özelliğe dayanır.",
+        "en": "`bool` is a subclass of int: True behaves like 1 and False like 0. That is why `True + 1` does not fail and gives 2. `sum([True, False, True])` giving 2 relies on this too."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["sayisal", "sonuc"], "edges": ["arti-sayisal", "sayisal-sonuc"] },
+      "nodeStates": { "ifade": { "sublabel": "True + 1" }, "arti": { "badge": "bool + int" }, "sonuc": { "badge": "2 · int" } },
+      "packets": [
+        { "edge": "arti-sayisal", "label": "True, 1", "durationMs": 900 },
+        { "edge": "sayisal-sonuc", "label": "2", "shape": "envelope", "startAt": 1100, "durationMs": 900 }
+      ]
+    },
+    {
+      "id": "kayan-nokta",
+      "title": { "tr": "0.1 + 0.2 → 0.30000000000000004", "en": "0.1 + 0.2 → 0.30000000000000004" },
+      "narration": {
+        "tr": "float, ikili tabanda sınırlı hassasiyetle saklanır; 0.1 ve 0.2 tam olarak temsil edilemez. Toplam 0.3'e çok yakın ama eşit olmayan bir sayıdır. Bu yüzden float'ları `==` ile değil `math.isclose` ile karşılaştır; para için `Decimal` kullan.",
+        "en": "A float is stored in binary with limited precision; 0.1 and 0.2 cannot be represented exactly. The sum is very close to, but not equal to, 0.3. So compare floats with `math.isclose`, not `==`, and use `Decimal` for money."
+      },
+      "durationMs": 3800,
+      "highlight": { "nodes": ["sayisal", "sonuc"], "edges": ["arti-sayisal", "sayisal-sonuc"] },
+      "nodeStates": { "ifade": { "sublabel": "0.1 + 0.2" }, "arti": { "badge": "float + float" }, "sonuc": { "status": "warning", "badge": "0.30000000000000004" } },
+      "packets": [
+        { "edge": "arti-sayisal", "label": "0.1, 0.2", "durationMs": 900 },
+        { "edge": "sayisal-sonuc", "label": "≈ 0.3", "shape": "envelope", "startAt": 1100, "durationMs": 900 }
+      ],
+      "annotations": [{ "id": "isclose", "x": 860, "y": 360, "text": "math.isclose(a, 0.3)", "tone": "warning", "target": "sonuc" }]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["python", "types", "operators", "typeerror", "float"]
+}

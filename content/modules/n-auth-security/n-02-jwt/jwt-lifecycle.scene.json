@@ -1,0 +1,599 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "n-02-jwt-lifecycle",
+  "title": {
+    "tr": "JWT'nin Yaşam Döngüsü",
+    "en": "The Life Cycle of a JWT"
+  },
+  "summary": {
+    "tr": "Kimlik servisi başlık ve gövdeyi kurar, özel anahtarla imzalar ve token'ı verir. API imzayı JWKS'teki açık anahtarla doğrular; kurcalanmış gövde ve süresi dolmuş token reddedilir, refresh adımı yeni bir çift üretir.",
+    "en": "The identity service builds the header and payload, signs them with the private key and issues the token. The API verifies the signature with the public key from JWKS; a tampered payload and an expired token are rejected, and the refresh step issues a new pair."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda istemci, üst ortada kimlik servisi, sağ üstte özel anahtar, sağ ortada JWKS açık anahtar listesi, alt ortada API ve sağ altta refresh kayıtları bulunur. İstemci giriş yapar; kimlik servisi base64url kodlu başlık ve gövdeyi birleştirip özel anahtarla imzalar ve access token ile refresh token döndürür, refresh token'ın özetini veritabanına yazar. İstemci access token'ı API'ye gönderir; API başlıktaki kid ile JWKS'ten açık anahtarı alır ve imza, süre, yayıncı ve hedef kontrollerini geçirir. Gövdedeki rolü değiştirilmiş token imza kontrolünde 401 alır. Süresi dolan token da reddedilir. İstemci refresh uç noktasını çağırır; eski refresh token iptal edilir ve yeni bir çift verilir.",
+      "en": "On the left the client, at top centre the identity service, the private key at the top right, the JWKS public key list at the middle right, the API at bottom centre and refresh records at the bottom right. The client logs in; the identity service concatenates the base64url header and payload, signs them with the private key, returns an access token and a refresh token and stores a hash of the refresh token. The client sends the access token to the API; the API fetches the public key from JWKS using the kid in the header and passes the signature, expiry, issuer and audience checks. A token whose role was edited in the payload gets 401 at the signature check. An expired token is rejected too. The client calls the refresh endpoint; the old refresh token is revoked and a new pair is issued."
+    }
+  },
+  "canvas": {
+    "width": 1000,
+    "height": 600
+  },
+  "nodes": [
+    {
+      "id": "client",
+      "kind": "browser",
+      "label": {
+        "tr": "İstemci",
+        "en": "Client"
+      },
+      "x": 110,
+      "y": 300,
+      "w": 130,
+      "h": 80
+    },
+    {
+      "id": "auth",
+      "kind": "service",
+      "label": {
+        "tr": "Kimlik servisi",
+        "en": "Identity service"
+      },
+      "x": 440,
+      "y": 120,
+      "w": 160,
+      "h": 80
+    },
+    {
+      "id": "key",
+      "kind": "generic",
+      "label": {
+        "tr": "Özel anahtar",
+        "en": "Private key"
+      },
+      "sublabel": "RS256 · kid=k1",
+      "x": 800,
+      "y": 80,
+      "w": 140,
+      "h": 64
+    },
+    {
+      "id": "jwks",
+      "kind": "storage",
+      "label": "JWKS",
+      "sublabel": {
+        "tr": "açık anahtarlar",
+        "en": "public keys"
+      },
+      "x": 800,
+      "y": 300,
+      "w": 140,
+      "h": 70
+    },
+    {
+      "id": "api",
+      "kind": "server",
+      "label": "API",
+      "x": 440,
+      "y": 480,
+      "w": 150,
+      "h": 80
+    },
+    {
+      "id": "refresh",
+      "kind": "db",
+      "label": {
+        "tr": "Refresh kayıtları",
+        "en": "Refresh records"
+      },
+      "sublabel": {
+        "tr": "yalnızca özet",
+        "en": "hash only"
+      },
+      "x": 800,
+      "y": 500,
+      "w": 150,
+      "h": 70
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-client-auth",
+      "from": "client",
+      "to": "auth",
+      "kind": "request",
+      "curvature": -0.15
+    },
+    {
+      "id": "e-auth-key",
+      "from": "auth",
+      "to": "key",
+      "kind": "control",
+      "style": "dotted"
+    },
+    {
+      "id": "e-auth-refresh",
+      "from": "auth",
+      "to": "refresh",
+      "kind": "data",
+      "curvature": 0.25
+    },
+    {
+      "id": "e-client-api",
+      "from": "client",
+      "to": "api",
+      "kind": "request",
+      "curvature": 0.15
+    },
+    {
+      "id": "e-api-jwks",
+      "from": "api",
+      "to": "jwks",
+      "kind": "data"
+    },
+    {
+      "id": "e-key-jwks",
+      "from": "key",
+      "to": "jwks",
+      "kind": "event",
+      "label": {
+        "tr": "açık anahtar yayınlanır",
+        "en": "public key published"
+      },
+      "style": "dashed"
+    }
+  ],
+  "steps": [
+    {
+      "id": "login",
+      "title": {
+        "tr": "Giriş",
+        "en": "Login"
+      },
+      "narration": {
+        "tr": "İstemci kimlik bilgilerini kimlik servisine gönderir. Servis şifreyi doğrular ve kullanıcı için bir token üretmeye hazırlanır.",
+        "en": "The client sends its credentials to the identity service. The service verifies the password and prepares to issue a token for the user."
+      },
+      "durationMs": 2800,
+      "inherit": false,
+      "highlight": {
+        "nodes": [
+          "client",
+          "auth"
+        ],
+        "edges": [
+          "e-client-auth"
+        ]
+      },
+      "nodeStates": {
+        "client": {
+          "status": "active"
+        },
+        "auth": {
+          "status": "active"
+        }
+      },
+      "edgeStates": {
+        "e-key-jwks": {
+          "status": "muted"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-client-auth",
+          "shape": "envelope",
+          "label": "POST /login",
+          "durationMs": 1200
+        }
+      ]
+    },
+    {
+      "id": "build",
+      "title": {
+        "tr": "Başlık ve gövde kurulur",
+        "en": "Header and payload are built"
+      },
+      "narration": {
+        "tr": "Başlık algoritmayı ve anahtar kimliğini, gövde ise sub, rol, iss, aud ve exp taleplerini taşır. İkisi de yalnızca base64url ile kodlanır: bu şifreleme değildir, token'ı gören herkes gövdeyi okuyabilir.",
+        "en": "The header carries the algorithm and key id; the payload carries the sub, role, iss, aud and exp claims. Both are only base64url-encoded: this is not encryption, anyone holding the token can read the payload."
+      },
+      "durationMs": 3200,
+      "highlight": {
+        "nodes": [
+          "auth"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "auth": {
+          "status": "busy",
+          "badge": "header.payload"
+        }
+      },
+      "annotations": [
+        {
+          "id": "a-header",
+          "x": 440,
+          "y": 30,
+          "text": "{\"alg\":\"RS256\",\"kid\":\"k1\"} . {\"sub\":\"u_42\",\"role\":\"user\",\"exp\":…}",
+          "tone": "info",
+          "target": "auth"
+        }
+      ]
+    },
+    {
+      "id": "sign",
+      "title": {
+        "tr": "Özel anahtarla imza",
+        "en": "Signed with the private key"
+      },
+      "narration": {
+        "tr": "İmza girdisi base64url(başlık) + \".\" + base64url(gövde) dizesidir. Yalnızca kimlik servisinin bildiği özel anahtar bu diziyi imzalar. Açık anahtar JWKS'te yayınlanır; o anahtarla doğrulanabilir ama imza üretilemez.",
+        "en": "The signing input is base64url(header) + \".\" + base64url(payload). Only the private key known to the identity service signs it. The public key is published in JWKS; it can verify but cannot produce signatures."
+      },
+      "durationMs": 3400,
+      "highlight": {
+        "nodes": [
+          "auth",
+          "key",
+          "jwks"
+        ],
+        "edges": [
+          "e-auth-key",
+          "e-key-jwks"
+        ]
+      },
+      "nodeStates": {
+        "key": {
+          "status": "active",
+          "badge": "sign"
+        },
+        "jwks": {
+          "status": "active",
+          "badge": "k1"
+        }
+      },
+      "edgeStates": {
+        "e-auth-key": {
+          "status": "active"
+        },
+        "e-key-jwks": {
+          "status": "idle"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-auth-key",
+          "shape": "diamond",
+          "label": "imza girdisi",
+          "durationMs": 900
+        },
+        {
+          "edge": "e-auth-key",
+          "direction": "backward",
+          "shape": "diamond",
+          "label": "imza",
+          "startAt": 1100,
+          "durationMs": 900
+        }
+      ]
+    },
+    {
+      "id": "issue",
+      "title": {
+        "tr": "İki token verilir",
+        "en": "Two tokens are issued"
+      },
+      "narration": {
+        "tr": "İstemci kısa ömürlü bir access token ve uzun ömürlü bir refresh token alır. Refresh token sunucuda yalnızca özetiyle saklanır; iptal bu kayıt üzerinden yapılacaktır.",
+        "en": "The client receives a short-lived access token and a long-lived refresh token. The refresh token is stored server-side only as a hash; revocation will happen through this record."
+      },
+      "durationMs": 3400,
+      "highlight": {
+        "nodes": [
+          "auth",
+          "client",
+          "refresh"
+        ],
+        "edges": [
+          "e-client-auth",
+          "e-auth-refresh"
+        ]
+      },
+      "nodeStates": {
+        "auth": {
+          "status": "success"
+        },
+        "key": {
+          "status": "idle"
+        },
+        "client": {
+          "status": "success",
+          "badge": "JWT"
+        },
+        "refresh": {
+          "status": "active",
+          "badge": "sha256"
+        }
+      },
+      "edgeStates": {
+        "e-auth-key": {
+          "status": "idle"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-client-auth",
+          "direction": "backward",
+          "shape": "envelope",
+          "label": "access (15 dk) + refresh",
+          "color": "success",
+          "durationMs": 1300
+        },
+        {
+          "edge": "e-auth-refresh",
+          "shape": "square",
+          "label": "hash(refresh)",
+          "startAt": 600,
+          "durationMs": 1100
+        }
+      ]
+    },
+    {
+      "id": "verify",
+      "title": {
+        "tr": "API yerelde doğrular",
+        "en": "The API verifies locally"
+      },
+      "narration": {
+        "tr": "İstemci access token'ı Bearer başlığında gönderir. API algoritmayı yapılandırmadan sabitler, kid ile JWKS'ten açık anahtarı seçer, imzayı doğrular, ardından exp, iss ve aud değerlerini kontrol eder. Hiçbir oturum deposuna sormaz.",
+        "en": "The client sends the access token in a Bearer header. The API pins the algorithm from configuration, picks the public key from JWKS by kid, verifies the signature, then checks exp, iss and aud. It never asks a session store."
+      },
+      "durationMs": 4000,
+      "highlight": {
+        "nodes": [
+          "client",
+          "api",
+          "jwks"
+        ],
+        "edges": [
+          "e-client-api",
+          "e-api-jwks"
+        ]
+      },
+      "nodeStates": {
+        "client": {
+          "status": "active",
+          "badge": "JWT"
+        },
+        "api": {
+          "status": "success",
+          "badge": "alg ✓ imza ✓ exp ✓ aud ✓"
+        },
+        "refresh": {
+          "status": "idle"
+        },
+        "auth": {
+          "status": "idle"
+        },
+        "jwks": {
+          "status": "active"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-client-api",
+          "shape": "envelope",
+          "label": "Bearer eyJ…",
+          "durationMs": 1000
+        },
+        {
+          "edge": "e-api-jwks",
+          "shape": "dot",
+          "label": "kid=k1",
+          "startAt": 1100,
+          "durationMs": 800
+        },
+        {
+          "edge": "e-api-jwks",
+          "direction": "backward",
+          "shape": "diamond",
+          "label": {
+            "tr": "açık anahtar",
+            "en": "public key"
+          },
+          "startAt": 2000,
+          "durationMs": 800
+        },
+        {
+          "edge": "e-client-api",
+          "direction": "backward",
+          "shape": "dot",
+          "label": "200",
+          "color": "success",
+          "startAt": 3000,
+          "durationMs": 900
+        }
+      ]
+    },
+    {
+      "id": "tamper",
+      "title": {
+        "tr": "Kurcalanmış gövde",
+        "en": "Tampered payload"
+      },
+      "narration": {
+        "tr": "Biri gövdedeki rolü \"admin\" yapıp token'ı yeniden kodlar. Gövde değişti ama imza eski gövdeye aittir; özel anahtar olmadan yeni imza üretilemez. İmza kontrolü başarısız olur ve istek 401 alır.",
+        "en": "Someone changes the role in the payload to \"admin\" and re-encodes the token. The payload changed but the signature belongs to the old one; without the private key no new signature can be made. The signature check fails and the request gets 401."
+      },
+      "durationMs": 3600,
+      "highlight": {
+        "nodes": [
+          "client",
+          "api"
+        ],
+        "edges": [
+          "e-client-api"
+        ]
+      },
+      "nodeStates": {
+        "client": {
+          "status": "warning",
+          "badge": "role: admin"
+        },
+        "api": {
+          "status": "error",
+          "badge": "✗ imza"
+        },
+        "jwks": {
+          "status": "idle"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-client-api",
+          "shape": "envelope",
+          "label": "eyJ…(role:admin)…",
+          "color": "danger",
+          "durationMs": 1100
+        },
+        {
+          "edge": "e-client-api",
+          "direction": "backward",
+          "shape": "dot",
+          "label": "401",
+          "color": "danger",
+          "startAt": 1500,
+          "durationMs": 900
+        }
+      ]
+    },
+    {
+      "id": "expire",
+      "title": {
+        "tr": "Süre doluyor",
+        "en": "The token expires"
+      },
+      "narration": {
+        "tr": "Access token'ın exp anı geçti. İmza hâlâ matematiksel olarak doğrudur ama doğrulayıcı zamanı kontrol ettiği için token reddedilir. Kısa ömür, çalınan bir token'ın işe yaradığı pencereyi dakikalarla sınırlar.",
+        "en": "The access token's exp has passed. The signature is still mathematically valid, but the verifier checks time, so the token is rejected. A short lifetime limits the window in which a stolen token is useful to minutes."
+      },
+      "durationMs": 3200,
+      "highlight": {
+        "nodes": [
+          "client",
+          "api"
+        ],
+        "edges": [
+          "e-client-api"
+        ]
+      },
+      "nodeStates": {
+        "client": {
+          "status": "warning",
+          "badge": "exp geçti"
+        },
+        "api": {
+          "status": "warning",
+          "badge": "✗ exp"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-client-api",
+          "shape": "envelope",
+          "label": "Bearer eyJ…",
+          "durationMs": 1000
+        },
+        {
+          "edge": "e-client-api",
+          "direction": "backward",
+          "shape": "dot",
+          "label": "401 token_expired",
+          "color": "danger",
+          "startAt": 1300,
+          "durationMs": 1000
+        }
+      ]
+    },
+    {
+      "id": "refresh",
+      "title": {
+        "tr": "Refresh ve rotasyon",
+        "en": "Refresh and rotation"
+      },
+      "narration": {
+        "tr": "İstemci refresh token'ı yalnızca yenileme uç noktasına gönderir. Servis özeti kayıtlarda bulur, eski refresh token'ı iptal eder ve yeni bir access + refresh çifti verir. İptal edilmiş token tekrar kullanılırsa bütün aile iptal edilir.",
+        "en": "The client sends the refresh token only to the refresh endpoint. The service finds its hash in the records, revokes the old refresh token and issues a new access + refresh pair. If a revoked token is ever reused, the whole family is revoked."
+      },
+      "durationMs": 4200,
+      "highlight": {
+        "nodes": [
+          "client",
+          "auth",
+          "refresh"
+        ],
+        "edges": [
+          "e-client-auth",
+          "e-auth-refresh"
+        ]
+      },
+      "nodeStates": {
+        "api": {
+          "status": "idle"
+        },
+        "auth": {
+          "status": "active"
+        },
+        "refresh": {
+          "status": "active",
+          "badge": "rotate"
+        },
+        "client": {
+          "status": "success",
+          "badge": "yeni JWT"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-client-auth",
+          "shape": "envelope",
+          "label": "POST /refresh",
+          "durationMs": 1000
+        },
+        {
+          "edge": "e-auth-refresh",
+          "shape": "square",
+          "label": {
+            "tr": "eskiyi iptal et",
+            "en": "revoke old"
+          },
+          "startAt": 1100,
+          "durationMs": 1000
+        },
+        {
+          "edge": "e-client-auth",
+          "direction": "backward",
+          "shape": "envelope",
+          "label": {
+            "tr": "yeni access + refresh",
+            "en": "new access + refresh"
+          },
+          "color": "success",
+          "startAt": 2300,
+          "durationMs": 1200
+        }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": [
+    "jwt",
+    "signature",
+    "jwks",
+    "expiry",
+    "refresh-token"
+  ]
+}

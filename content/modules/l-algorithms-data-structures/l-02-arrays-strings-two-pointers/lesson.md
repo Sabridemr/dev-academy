@@ -88,6 +88,13 @@ alt dizi, tekrar eden karakter içermeyen en uzun alt string, belirli bir toplam
 neredeyse tamamı aynı kalır. Yalnızca soldan bir eleman düşer ve sağdan bir eleman katılır. Toplamı sıfırdan hesaplamak
 yerine bu iki değişikliği uygularsan her kaydırma O(1) olur ve tüm dizi O(n)'de taranır.
 
+Önce pencerenin dizi üzerinde nasıl kaydığını ve toplamın nasıl güncellendiğini bir sahnede izleyelim, sonra aynı
+mantığı kodda satır satır görelim.
+
+:::animation{scene="kayan-pencere-kayma.scene.json"}
+Her kaymada yalnızca giren eleman eklenir, çıkan eleman çıkarılır.
+:::
+
 :::trace{src="kayan-pencere.trace.json" title="Sabit boyutlu kayan pencere|Fixed-size sliding window"}
 `toplam` değişkeninin her turda nasıl güncellendiğini izle: yeniden toplama yok, yalnızca bir ekleme ve bir çıkarma var.
 :::
@@ -110,6 +117,13 @@ Klasik örnek: sıralı bir dizide toplamı hedefe eşit olan iki eleman bulmak.
 elemanla hedefe ulaşamaz (en büyük eşi bile yetmedi), o hâlde onu eleyip sol işaretçiyi ilerletirsin. Toplam büyükse
 aynı mantıkla en büyük elemanı eler, sağ işaretçiyi geri çekersin. Her adımda bir eleman elendiği için en fazla n adımda
 cevaba ulaşırsın.
+
+Aşağıdaki sahnede işaretçilerin dizinin iki ucundan içeri doğru nasıl yaklaştığını ve her karşılaştırmanın hangi
+elemanı kalıcı olarak elediğini izleyebilirsin.
+
+:::animation{scene="iki-isaretci-yaklasma.scene.json"}
+Gri hücreler elenen adaylardır; her adımda tam olarak biri elenir.
+:::
 
 :::trace{src="iki-isaretci.trace.json" title="Sıralı dizide iki toplam|Two-sum on a sorted array"}
 `sol` ve `sag` değerlerini ve her turdaki `toplam`ı izle. Hangi koşulda hangi işaretçinin hareket ettiğine dikkat et.

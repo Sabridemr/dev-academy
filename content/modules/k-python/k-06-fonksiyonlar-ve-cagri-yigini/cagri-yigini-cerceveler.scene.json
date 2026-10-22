@@ -1,0 +1,189 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "k-06-cagri-yigini-cerceveler",
+  "title": { "tr": "Çağrı Yığını: Çerçeveler İtilir ve Çekilir", "en": "The Call Stack: Frames Are Pushed and Popped" },
+  "summary": {
+    "tr": "siparis → toplam_hesapla → kdv_ekle zincirinde her çağrının yığına yeni bir çerçeve koyması, return ile çerçevenin kalkıp değerin çağırana taşınması.",
+    "en": "In the siparis → toplam_hesapla → kdv_ekle chain each call pushes a new frame onto the stack, and each return pops the frame and carries the value back to the caller."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Ortada alttan üste doğru dizilen bir çağrı yığını vardır: en altta Global çerçeve, üstüne sırayla siparis, toplam_hesapla ve kdv_ekle çerçeveleri eklenir. Her çağrıda argümanlar yukarı doğru bir paketle taşınır, çağıran çerçeve bekleme durumuna geçer. kdv_ekle 36.0 döndürdüğünde çerçevesi kaybolur ve değer bir alttaki çerçeveye iner; aynı şey toplam_hesapla ve siparis için tekrarlanır. siparis ekrana 'kalem 36.0' yazar. Son adımda ikinci siparis çağrısı yepyeni bir çerçeve açar.",
+      "en": "In the middle there is a call stack growing from bottom to top: the Global frame at the bottom, then siparis, toplam_hesapla and kdv_ekle frames are added in turn. On each call the arguments travel upward as a packet and the calling frame switches to waiting. When kdv_ekle returns 36.0 its frame disappears and the value goes down to the frame below; the same repeats for toplam_hesapla and siparis. siparis prints 'kalem 36.0'. In the last step a second siparis call opens a brand-new frame."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "stack", "kind": "group", "label": { "tr": "Çağrı yığını (LIFO)", "en": "Call stack (LIFO)" }, "x": 420, "y": 315, "w": 360, "h": 530 },
+    { "id": "global", "kind": "service", "parent": "stack", "label": { "tr": "Global çerçeve", "en": "Global frame" }, "sublabel": { "tr": "a = siparis(...)", "en": "a = siparis(...)" }, "x": 420, "y": 515, "w": 290, "h": 70 },
+    { "id": "siparis", "kind": "function", "parent": "stack", "label": { "tr": "siparis() çerçevesi", "en": "siparis() frame" }, "x": 420, "y": 395, "w": 290, "h": 70 },
+    { "id": "toplam", "kind": "function", "parent": "stack", "label": { "tr": "toplam_hesapla() çerçevesi", "en": "toplam_hesapla() frame" }, "x": 420, "y": 275, "w": 290, "h": 70 },
+    { "id": "kdv", "kind": "function", "parent": "stack", "label": { "tr": "kdv_ekle() çerçevesi", "en": "kdv_ekle() frame" }, "x": 420, "y": 155, "w": 290, "h": 70 },
+    { "id": "stdout", "kind": "client", "label": { "tr": "Ekran (stdout)", "en": "Screen (stdout)" }, "x": 840, "y": 395, "w": 170, "h": 70 }
+  ],
+  "edges": [
+    { "id": "g-s", "from": "global", "to": "siparis", "kind": "request", "curvature": -0.5, "label": { "tr": "çağrı / dönüş", "en": "call / return" } },
+    { "id": "s-t", "from": "siparis", "to": "toplam", "kind": "request", "curvature": -0.5 },
+    { "id": "t-k", "from": "toplam", "to": "kdv", "kind": "request", "curvature": -0.5 },
+    { "id": "s-out", "from": "siparis", "to": "stdout", "kind": "data", "style": "dashed", "label": "print" }
+  ],
+  "steps": [
+    {
+      "id": "baslangic",
+      "title": { "tr": "Yalnızca Global çerçeve", "en": "Only the Global frame" },
+      "narration": {
+        "tr": "Program başladığında yığında tek bir çerçeve vardır: modülün Global çerçevesi. `def` satırları yalnızca fonksiyon nesneleri oluşturdu; henüz hiçbir fonksiyon çalışmıyor. Sıradaki satır `a = siparis(\"kalem\", 10, 3)`.",
+        "en": "When the program starts the stack holds a single frame: the module's Global frame. The `def` lines only created function objects; no function is running yet. The next line is `a = siparis(\"kalem\", 10, 3)`."
+      },
+      "durationMs": 3200,
+      "inherit": false,
+      "highlight": { "nodes": ["global"], "edges": [] },
+      "nodeStates": {
+        "global": { "status": "active", "badge": "1" },
+        "siparis": { "visible": false },
+        "toplam": { "visible": false },
+        "kdv": { "visible": false }
+      },
+      "edgeStates": { "g-s": { "visible": false }, "s-t": { "visible": false }, "t-k": { "visible": false } }
+    },
+    {
+      "id": "push-siparis",
+      "title": { "tr": "siparis çerçevesi itilir", "en": "siparis frame is pushed" },
+      "narration": {
+        "tr": "Çağrı yeni bir çerçeve oluşturur ve onu yığının tepesine koyar. `urun`, `fiyat`, `adet` parametreleri bu çerçevede argüman nesnelerine bağlanır. Global çerçeve, çağrının yapıldığı satırda bekler.",
+        "en": "The call creates a new frame and pushes it on top of the stack. The parameters `urun`, `fiyat`, `adet` are bound to the argument objects inside this frame. The Global frame waits on the line where the call was made."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["siparis"], "edges": ["g-s"] },
+      "nodeStates": {
+        "global": { "status": "busy", "badge": "", "sublabel": { "tr": "bekliyor: a = ?", "en": "waiting: a = ?" } },
+        "siparis": { "visible": true, "status": "active", "badge": "tepe", "sublabel": { "tr": "urun='kalem' fiyat=10 adet=3", "en": "urun='kalem' fiyat=10 adet=3" } }
+      },
+      "edgeStates": { "g-s": { "visible": true, "status": "active" } },
+      "packets": [{ "edge": "g-s", "shape": "envelope", "label": "('kalem', 10, 3)", "durationMs": 1200 }]
+    },
+    {
+      "id": "push-toplam",
+      "title": { "tr": "toplam_hesapla üstüne gelir", "en": "toplam_hesapla goes on top" },
+      "narration": {
+        "tr": "`siparis` daha ilk satırında `toplam_hesapla(fiyat, adet)` çağırır. Yeni çerçeve öncekinin üstüne itilir; `ara = 30` hesaplanır. Artık `siparis` de bekleme durumundadır.",
+        "en": "On its very first line `siparis` calls `toplam_hesapla(fiyat, adet)`. The new frame is pushed on top of the previous one; `ara = 30` is computed. Now `siparis` is waiting too."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["toplam"], "edges": ["s-t"] },
+      "nodeStates": {
+        "siparis": { "status": "busy", "badge": "", "sublabel": { "tr": "bekliyor: tutar = ?", "en": "waiting: tutar = ?" } },
+        "toplam": { "visible": true, "status": "active", "badge": "tepe", "sublabel": { "tr": "fiyat=10 adet=3 ara=30", "en": "fiyat=10 adet=3 ara=30" } }
+      },
+      "edgeStates": { "g-s": { "status": "idle" }, "s-t": { "visible": true, "status": "active" } },
+      "packets": [{ "edge": "s-t", "shape": "envelope", "label": "(10, 3)", "durationMs": 1200 }]
+    },
+    {
+      "id": "push-kdv",
+      "title": { "tr": "En derin nokta: dört çerçeve", "en": "Deepest point: four frames" },
+      "narration": {
+        "tr": "`kdv_ekle(ara)` çağrısıyla yığın en yüksek hâline ulaşır. Yalnızca en üstteki çerçeve çalışır; alttaki üçü kendi satırında donmuş bekler. Burada bir hata olsaydı Traceback tam olarak bu dört çerçeveyi listelerdi.",
+        "en": "With the `kdv_ekle(ara)` call the stack reaches its peak. Only the top frame runs; the three below are frozen on their own lines. If an error happened here, the traceback would list exactly these four frames."
+      },
+      "durationMs": 3800,
+      "highlight": { "nodes": ["kdv"], "edges": ["t-k"] },
+      "nodeStates": {
+        "toplam": { "status": "busy", "badge": "", "sublabel": { "tr": "bekliyor: toplam = ?", "en": "waiting: toplam = ?" } },
+        "kdv": { "visible": true, "status": "active", "badge": "tepe", "sublabel": { "tr": "tutar=30 sonuc=36.0", "en": "tutar=30 sonuc=36.0" } }
+      },
+      "edgeStates": { "s-t": { "status": "idle" }, "t-k": { "visible": true, "status": "active" } },
+      "packets": [{ "edge": "t-k", "shape": "envelope", "label": "ara=30", "durationMs": 1200 }],
+      "annotations": [
+        { "id": "derinlik", "x": 790, "y": 155, "text": { "tr": "derinlik: 4 çerçeve", "en": "depth: 4 frames" }, "target": "kdv", "tone": "info" }
+      ]
+    },
+    {
+      "id": "pop-kdv",
+      "title": { "tr": "return 36.0: kdv_ekle çekilir", "en": "return 36.0: kdv_ekle is popped" },
+      "narration": {
+        "tr": "`return sonuc` çalışınca 36.0 değeri çağırana taşınır ve `kdv_ekle` çerçevesi yığından çıkarılır. `tutar` ve `sonuc` isimleri çerçeveyle birlikte yok olur; `toplam_hesapla` kaldığı satırdan devam eder ve `toplam = 36.0` olur.",
+        "en": "When `return sonuc` runs the value 36.0 is carried back to the caller and the `kdv_ekle` frame is popped off the stack. The names `tutar` and `sonuc` vanish with the frame; `toplam_hesapla` resumes on its line and `toplam = 36.0`."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["kdv", "toplam"], "edges": ["t-k"] },
+      "nodeStates": {
+        "kdv": { "status": "muted", "badge": "pop", "sublabel": { "tr": "yerel isimler silindi", "en": "locals destroyed" } },
+        "toplam": { "status": "active", "badge": "tepe", "sublabel": { "tr": "ara=30 toplam=36.0", "en": "ara=30 toplam=36.0" } }
+      },
+      "packets": [{ "edge": "t-k", "direction": "backward", "shape": "square", "color": "success", "label": "36.0", "durationMs": 1200 }]
+    },
+    {
+      "id": "pop-toplam",
+      "title": { "tr": "Değer bir kat daha iner", "en": "The value goes down one more level" },
+      "narration": {
+        "tr": "`kdv_ekle` çerçevesi artık yok. `toplam_hesapla` da `return toplam` ile biter: 36.0 `siparis`'e iner ve `tutar` ismine bağlanır. Yığın, büyüdüğü sıranın tersine küçülür: son giren ilk çıkar.",
+        "en": "The `kdv_ekle` frame is gone. `toplam_hesapla` also ends with `return toplam`: 36.0 goes down to `siparis` and is bound to `tutar`. The stack shrinks in the reverse order it grew: last in, first out."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["toplam", "siparis"], "edges": ["s-t"] },
+      "nodeStates": {
+        "kdv": { "visible": false },
+        "toplam": { "status": "muted", "badge": "pop", "sublabel": { "tr": "yerel isimler silindi", "en": "locals destroyed" } },
+        "siparis": { "status": "active", "badge": "tepe", "sublabel": { "tr": "urun='kalem' tutar=36.0", "en": "urun='kalem' tutar=36.0" } }
+      },
+      "edgeStates": { "t-k": { "visible": false } },
+      "packets": [{ "edge": "s-t", "direction": "backward", "shape": "square", "color": "success", "label": "36.0", "durationMs": 1200 }]
+    },
+    {
+      "id": "print",
+      "title": { "tr": "print bir yan etkidir", "en": "print is a side effect" },
+      "narration": {
+        "tr": "`siparis` sonucu ekrana yazar. Bu bir yan etkidir, dönüş değeri değildir: ekrana giden metin çağırana ulaşmaz. Çağırana yalnızca `return` ile verilen değer gider.",
+        "en": "`siparis` prints the result. This is a side effect, not a return value: text sent to the screen never reaches the caller. Only the value given with `return` goes back."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["siparis", "stdout"], "edges": ["s-out"] },
+      "nodeStates": {
+        "toplam": { "visible": false },
+        "stdout": { "status": "active", "sublabel": "kalem 36.0" }
+      },
+      "edgeStates": { "s-t": { "visible": false }, "s-out": { "status": "active" } },
+      "packets": [{ "edge": "s-out", "shape": "envelope", "label": "kalem 36.0", "durationMs": 1100 }]
+    },
+    {
+      "id": "pop-siparis",
+      "title": { "tr": "Yığın yeniden tek çerçeve", "en": "Back to a single frame" },
+      "narration": {
+        "tr": "`return tutar` ile 36.0 Global çerçeveye iner ve `a` ismine bağlanır. `siparis` çerçevesi de çekilir; yığında yine yalnızca Global kalır.",
+        "en": "With `return tutar` the value 36.0 goes down to the Global frame and is bound to `a`. The `siparis` frame is popped too; only Global remains on the stack."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["global", "siparis"], "edges": ["g-s"] },
+      "nodeStates": {
+        "siparis": { "status": "muted", "badge": "pop", "sublabel": { "tr": "yerel isimler silindi", "en": "locals destroyed" } },
+        "global": { "status": "active", "badge": "1", "sublabel": "a = 36.0" },
+        "stdout": { "status": "idle" }
+      },
+      "edgeStates": { "s-out": { "status": "idle" } },
+      "packets": [{ "edge": "g-s", "direction": "backward", "shape": "square", "color": "success", "label": "36.0", "durationMs": 1200 }]
+    },
+    {
+      "id": "ikinci-cagri",
+      "title": { "tr": "İkinci çağrı: sıfırdan çerçeve", "en": "Second call: a frame from scratch" },
+      "narration": {
+        "tr": "`b = siparis(\"defter\", 25, 2)` yepyeni bir çerçeve açar. Önceki çağrının `tutar`'ı burada yoktur: fonksiyonun hafızası olmaz, her çağrı kendi yerel isimleriyle başlar. Zincir aynı şekilde büyüyüp küçülecek ve `b = 60.0` olacak.",
+        "en": "`b = siparis(\"defter\", 25, 2)` opens a brand-new frame. The previous call's `tutar` is not here: functions have no memory, every call starts with its own locals. The chain will grow and shrink the same way and `b = 60.0`."
+      },
+      "durationMs": 3800,
+      "highlight": { "nodes": ["siparis"], "edges": ["g-s"] },
+      "nodeStates": {
+        "global": { "status": "busy", "badge": "", "sublabel": { "tr": "a = 36.0, bekliyor: b = ?", "en": "a = 36.0, waiting: b = ?" } },
+        "siparis": { "status": "active", "badge": "yeni", "sublabel": { "tr": "urun='defter' fiyat=25 adet=2", "en": "urun='defter' fiyat=25 adet=2" } }
+      },
+      "edgeStates": { "g-s": { "status": "active" } },
+      "packets": [{ "edge": "g-s", "shape": "envelope", "label": "('defter', 25, 2)", "durationMs": 1200 }],
+      "annotations": [
+        { "id": "hafiza-yok", "x": 790, "y": 250, "text": { "tr": "önceki çağrıdan iz yok", "en": "nothing left from the previous call" }, "target": "siparis", "tone": "success" }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["python", "call-stack", "frame", "return"]
+}

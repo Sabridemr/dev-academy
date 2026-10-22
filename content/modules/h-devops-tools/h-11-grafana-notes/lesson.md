@@ -40,6 +40,20 @@ Dört metrik türü vardır: **counter** yalnızca artar (toplam istek, toplam h
 
 Prometheus'un ayırt edici özelliği **pull (çekme)** modelidir: uygulamalar metriklerini `/metrics` uç noktasında düz metin olarak yayınlar, Prometheus belirli aralıklarla (örneğin 15 saniye) bu uç noktaları **kazır (scrape)**. Push yerine pull'un avantajları: hedefin ayakta olup olmadığı otomatik bilinir (`up` metriği), yapılandırma merkezidir ve bir uygulama hatasının izleme sistemini mesaj seliyle boğması zorlaşır. Kubernetes gibi ortamlarda hedefler **servis keşfi** ile otomatik bulunur. Kısa ömürlü toplu işler için istisna olarak **Pushgateway** vardır.
 
+Bir metriğin `/metrics` uç noktasından nöbetçinin telefonuna kadar izlediği yol, bu dersin geri kalanının iskeletidir. PromQL, panel ve alert kuralı bölümlerine geçmeden önce yolun tamamını izleyin.
+
+:::predict{id="alert-for-suresi"}
+Kuralda `expr: hata oranı > 0.02` ve `for: 5m` yazıyor. Hata oranı 2 dakika boyunca %3'e çıkıp sonra normale dönerse ne olur? | The rule says `expr: error ratio > 0.02` and `for: 5m`. If the error ratio jumps to 3% for 2 minutes and then returns to normal, what happens?
+- [ ] Uyarı hemen tetiklenir ve nöbetçi aranır | The alert fires immediately and on-call is paged
+- [x] Uyarı pending olur ama firing'e geçmeden kapanır; bildirim gitmez | The alert goes pending but clears before firing; no notification is sent
+- [ ] Uyarı 5 dakika sonra yine de tetiklenir | The alert still fires after 5 minutes
+Açıklama: `for`, koşulun kesintisiz doğru kalması gereken süredir. Koşul ilk kez sağlandığında uyarı pending olur. Süre dolmadan koşul bozulursa uyarı sessizce kapanır. Bu, kısa dalgalanmaların gece kimseyi uyandırmamasını sağlar. | `for` is how long the condition must stay continuously true. When it first holds, the alert goes pending; if the condition breaks before the time is up, the alert quietly clears. This keeps short blips from waking anyone at night.
+:::
+
+:::animation{scene="metrics-to-alert.scene.json"}
+Prometheus'un hedefleri kazıması, Grafana'nın PromQL ile panel çizmesi ve kuralın pending ile firing durumları. Ardından Alertmanager'ın uyarıyı Slack'e ve nöbetçiye yönlendirmesi, instance kırılımıyla kök nedenin bulunması ve uyarının çözülmesi gösteriliyor.
+:::
+
 ## PromQL: zaman serisi sorgulama dili
 
 **PromQL**, serileri seçen, zaman penceresinde işleyen ve toplayan bir ifade dilidir. En önemli fikir şudur: counter'ların ham değeri anlamsızdır, her zaman **rate** ile hıza çevrilir. `rate(x[5m])` son beş dakikadaki saniye başına artışı verir; pencere, kazıma aralığının en az dört katı olmalıdır ki aradaki boşluklar sonucu bozmasın.

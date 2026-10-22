@@ -41,6 +41,24 @@ export async function networkFirst<T>(
   }
 }
 
+/** Kavram sözlüğü (≈1000 kavram tek istekte; arama istemcide) */
+export function useConcepts() {
+  return useQuery({
+    queryKey: queryKeys.concepts,
+    queryFn: () => endpoints.concepts(),
+    staleTime: 10 * 60_000,
+  });
+}
+
+export function useConcept(id: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.concept(id ?? ''),
+    enabled: Boolean(id),
+    queryFn: () => endpoints.concept(id!),
+    staleTime: 10 * 60_000,
+  });
+}
+
 export function usePaths() {
   return useQuery({ queryKey: queryKeys.paths, queryFn: () => endpoints.paths() });
 }
