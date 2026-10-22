@@ -265,17 +265,15 @@ Tasarım notları:
 - **Yarış durumu (race condition):** Stok düşerken `UPDATE stock SET quantity = quantity - $1 WHERE product_id = $2 AND quantity >= $1` kullan. Etkilenen satır sayısı 0 ise stok yetmemiştir.
 - **IDOR koruması:** Sipariş sorgularında her zaman `WHERE id = $1 AND user_id = $currentUser` kullan.
 
-## Postman koleksiyonu
+## Postman koleksiyonu oluşturma
 
-Bu PDF ile birlikte masaüstüne **Toptan_Eticaret_API.postman_collection.json** dosyası kaydedildi. Kullanımı:
+Bu dersteki uç noktaları elle denemek için Postman'de **Toptan E-ticaret API** adında bir koleksiyon kur. Koleksiyonu sıfırdan kurmak, API'nin kimlik doğrulama ve idempotency kurallarını pekiştirir:
 
-1. Postman'de **Import** düğmesine tıkla ve dosyayı seç.
-2. Koleksiyonun **Variables** sekmesinde `baseUrl` değerini kontrol et (varsayılan: `http://localhost:3000/api/v1`).
-3. Önce **Auth → Login** isteğini çalıştır. Test betiği gelen token'ı otomatik olarak `accessToken` değişkenine kaydeder.
-4. Diğer istekler `Authorization: Bearer {{accessToken}}` başlığını otomatik kullanır.
-5. **Orders → Create Order** isteği her çalıştırmada yeni bir `Idempotency-Key` üretir (`{{$guid}}`).
-
-Koleksiyonda Auth, Products, Cart, Orders, Admin ve Webhooks klasörleri ile durum kodu testleri bulunur.
+1. Koleksiyonun **Variables** sekmesine `baseUrl` değişkenini ekle (varsayılan: `http://localhost:3000/api/v1`). Her istek adresi `{{baseUrl}}/...` ile başlasın.
+2. Koleksiyonun **Authorization** sekmesini *Bearer Token* yap ve değer olarak `{{accessToken}}` ver; klasörler ve istekler bunu *Inherit auth from parent* ile devralır.
+3. **Auth → Login** isteğinin **Tests** sekmesine gelen token'ı kaydeden bir betik yaz: `pm.collectionVariables.set("accessToken", pm.response.json().accessToken)`. Böylece bir kez giriş yapınca diğer istekler otomatik yetkilenir.
+4. **Orders → Create Order** isteğinin başlıklarına `Idempotency-Key: {{$guid}}` ekle; Postman her çalıştırmada yeni bir GUID üretir. Aynı anahtarla tekrar göndermek istediğinde değeri sabit bir dizeyle değiştirip 200 (önbellekten) yanıtını gözle.
+5. İstekleri Auth, Products, Cart, Orders, Admin ve Webhooks klasörlerine ayır; her isteğin **Tests** sekmesine en azından beklenen durum kodunu doğrulayan bir satır koy: `pm.test("201", () => pm.response.to.have.status(201))`.
 
 ## Mülakat soru-cevap
 
