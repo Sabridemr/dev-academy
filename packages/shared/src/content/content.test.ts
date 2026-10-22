@@ -1,3 +1,5 @@
+import { readdirSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { parseLessonMarkdown, parseDirectiveAttributes, lessonPlainText } from './parser';
 import {
@@ -9,6 +11,8 @@ import {
 } from './schema';
 import { buildSearchText } from './search-text';
 import { CURRICULUM, allLessons, findLesson, nextLessonOf, TOTAL_LESSON_COUNT } from './curriculum';
+
+const CONTENT_MODULES = resolve(__dirname, '../../../../content/modules');
 
 const SAMPLE = `---
 id: a-05-load-balancing
@@ -293,20 +297,48 @@ describe('Alıştırma şeması', () => {
 });
 
 describe('Müfredat', () => {
-  it('15 modül ve benzersiz ders id’leri', () => {
-    expect(CURRICULUM).toHaveLength(15);
+  // Beklentiler içerikten türetilir: yeni modül eklenince bu dosyaya dokunmak gerekmez.
+  const moduleDirs = readdirSync(CONTENT_MODULES, { withFileTypes: true })
+    .filter((d) => d.isDirectory())
+    .map((d) => d.name)
+    .sort();
+
+  it('content/modules klasörleriyle aynı modüller ve benzersiz ders id’leri', () => {
+    expect(CURRICULUM.length).toBeGreaterThan(0);
+    expect(CURRICULUM).toHaveLength(moduleDirs.length);
+    expect(CURRICULUM.map((m) => m.id).sort()).toEqual(moduleDirs);
     const ids = allLessons().map((x) => x.lesson.id);
     expect(new Set(ids).size).toBe(ids.length);
     expect(TOTAL_LESSON_COUNT).toBe(ids.length);
   });
-  it('ders arama ve sonraki ders', () => {
+
+  it('modüller order alanına göre artan sırada', () => {
+    const orders = CURRICULUM.map((m) => m.order);
+    expect(orders).toEqual([...orders].sort((a, b) => a - b));
+    expect(new Set(orders).size).toBe(orders.length);
+  });
+
+  it('ders arama ve modül içi sonraki ders', () => {
     expect(findLesson('a-05-load-balancing')?.module.code).toBe('A');
-    expect(nextLessonOf('a-13-observability-12-factor')?.id).toBe('b-01-monolith-to-microservices');
-    // Modül sınırını aşar: G'nin son dersinden H'nin ilk dersine
-    expect(nextLessonOf('g-08-nn-playground')?.id).toBe('h-01-linux-notes');
-    expect(nextLessonOf('j-11-odunlesimler-mulakat-ve-ozet')?.id).toBe('k-01-python-nasil-calisir');
-    expect(nextLessonOf('k-19-testler-ve-mini-proje')?.id).toBe('l-01-big-o-complexity');
-    expect(nextLessonOf('n-07-threat-modeling')?.id).toBe('p-01-browser-rendering-pipeline');
-    expect(nextLessonOf('p-06-accessibility-design-systems')).toBeUndefined();
+    for (const module of CURRICULUM) {
+      expect(module.lessons.length).toBeGreaterThan(0);
+      for (let i = 0; i < module.lessons.length - 1; i++) {
+        expect(nextLessonOf(module.lessons[i].id)?.id).toBe(module.lessons[i + 1].id);
+      }
+    }
+  });
+
+  it('modül sınırını aşar: her modülün son dersinden sonraki modülün ilk dersine', () => {
+    for (let i = 0; i < CURRICULUM.length - 1; i++) {
+      const last = CURRICULUM[i].lessons.at(-1)!;
+      const firstOfNext = CURRICULUM[i + 1].lessons[0];
+      expect(nextLessonOf(last.id)?.id, `${last.id} sonrası`).toBe(firstOfNext.id);
+    }
+  });
+
+  it('müfredatın son dersinin sonraki dersi yoktur', () => {
+    const lastLesson = CURRICULUM.at(-1)!.lessons.at(-1)!;
+    expect(nextLessonOf(lastLesson.id)).toBeUndefined();
+    expect(nextLessonOf('olmayan-ders')).toBeUndefined();
   });
 });
