@@ -211,6 +211,12 @@ görürsün. DIP'te iş katmanı bir `SiparisDeposu` protokolü tanımlar ve `Po
 artık ayrıntı, iş katmanının koyduğu sözleşmeye bağımlıdır. Peki servis, somut depoyu nereden bulacak? Cevap:
 **dependency injection**.
 
+Aşağıdaki şema bu ters dönüşü iki tasarımı yan yana koyarak gösteriyor.
+
+:::diagram{src="bagimlilik-yonu.svg" alt="Solda SiparisServisi doğrudan PostgresDepo'ya bağlı; sağda servis SiparisDeposu protokolünü kullanıyor, PostgresDepo ve SahteDepo protokole uyuyor|Left: SiparisServisi depends directly on PostgresDepo; right: the service uses the SiparisDeposu protocol, PostgresDepo and SahteDepo conform to it"}
+Ok yönüne dikkat et: sağda ayrıntılar iş katmanının tanımladığı sözleşmeye doğru bakıyor.
+:::
+
 ## Sorun: bağımlılığını kendisi oluşturan sınıf
 
 :::code{lang="python" title="Sıkı bağlı (tightly coupled) servis"}
@@ -274,6 +280,13 @@ class SiparisServisi:
         self.depo.kaydet(urun)
         self.bildirim.gonder(f"{urun} alındı")
 ```
+:::
+
+Simülasyonda nesne referanslarını satır satır gördün. Aşağıdaki animasyon aynı fikri kuşbakışı gösteriyor: önce
+sıkı bağlı servis, sonra protokol, composition root ve aynı servise takılan sahte depo.
+
+:::animation{scene="constructor-injection.scene.json"}
+Servis sınıfının hiçbir adımda değişmediğine, yalnızca kurucuya verilen nesnenin değiştiğine dikkat et.
 :::
 
 ## Testte fake, stub ve mock
@@ -452,6 +465,20 @@ SOLID ve DI güçlü araçlardır, ama her araç gibi yanlış yerde kullanılab
   kolayca test edilir. DI'ı **yan etkili** bağımlılıklar için sakla.
 - İyi bir ölçüt: bir değişiklik yapmak için kaç dosyayı açmak zorundasın ve testini yazmak ne kadar kolay?
   Soyutlama bu iki soruya fayda sağlamıyorsa gereksizdir.
+
+:::realworld{company="Instagram"}
+Instagram'ın sunucu tarafı, dünyanın en büyük Django uygulamalarından biri olarak bilinen tek bir Python monolitidir.
+Instagram Engineering'in 2019'da yayımladığı **"Python at Scale: Strict Modules"** yazısı, bu büyüklükte bir kod
+tabanında **import anında çalışan yan etkili kodun** ne kadar pahalı olduğunu anlatır: modül düzeyinde bağlantı açan,
+global durum kuran ya da başka modülleri değiştiren kod, sunucunun açılışını yavaşlatır, testleri birbirine bağlar ve
+hangi parçanın neye bağımlı olduğunu görünmez kılar. Ekibin çözümü, belirli modüllerin import edilirken yan etki
+üretmesini yasaklayan ve bunu araçla denetleyen "strict modules" yaklaşımı oldu.
+
+Bu dersteki ilkelerle bağlantı açıktır: bağımlılığı modül yüklenirken gizlice oluşturmak yerine onu **açıkça kurup
+dışarıdan vermek** (composition root ve constructor injection) hem testleri izole eder hem de bağımlılık grafiğini
+okunur kılar. Büyük ekiplerde bu disiplin tek tek geliştiricinin iyi niyetine bırakılmaz; lint kuralları ve statik
+analiz araçlarıyla otomatik olarak korunur.
+:::
 
 ## Özet
 

@@ -35,11 +35,10 @@ function roundTrip(markdown: string, englishMarkdown?: string) {
 }
 
 /**
- * Bilinen içerik sorunları: başlığında `{}` olan callout, açılış satırı directive deseniyle eşleşmediği için
- * ayrıştırıcıda metin bloğu olarak okunuyor (ders dosyasındaki hata; gidiş-dönüş yine birebir).
+ * Bilinen içerik sorunları (ders dosyası yolu → beklenen serileştirici uyarıları). Örneğin başlığında `}` olan
+ * bir callout directive deseniyle eşleşmez ve metin bloğu olarak okunur. Şu an bilinen sorun yok.
  */
-const KNOWN_WARNINGS: Record<string, string[]> = {
-};
+const KNOWN_WARNINGS: Record<string, string[]> = {};
 
 describe('serializeLesson — gerçek derslerle gidiş-dönüş', () => {
   const files = lessonFiles();

@@ -73,6 +73,12 @@ print(iter(it) is it)               # True  → iterator'ın iter()'i kendisi
 `StopIteration` bir hata değildir. K-10'da gördüğün istisna mekanizmasını Python burada **"bitti" sinyali** olarak
 kullanır.
 
+Protokolün iki yarısını ve generator'ın bu resme nereden girdiğini tek bir şemada görelim:
+
+:::diagram{src="iterator-protokolu.svg" alt="Iterable liste iter ile bir iterator verir, next her çağrıda sıradaki elemanı döndürür ve sonunda StopIteration fırlatır; generator fonksiyonu çağrılınca aynı protokolü uygulayan bir generator nesnesi döner.|An iterable list yields an iterator via iter, next returns the next element on every call and finally raises StopIteration; calling a generator function returns a generator object that implements the same protocol."}
+Üstte liste ile protokol, altta aynı protokolü bir fonksiyonla yazan generator.
+:::
+
 ## for döngüsünün arka planı
 
 Python'da `for x in kaynak: gövde` yazdığında yorumlayıcı kabaca şunu yapar:
@@ -162,6 +168,14 @@ fonksiyon çerçevesini taşıyan bir kaptır. `gen` ismi yaşadıkça çerçeve
 Generator içinde `return deger` yazabilirsin. Bu, generator'ı bitirir ve fırlatılan `StopIteration`'ın `value`
 niteliğine `deger` konur. `for` döngüsü bu değeri yok sayar; asıl kullanım yeri aşağıdaki `yield from`'dur. Generator
 içinde **elle** `raise StopIteration` yazma: Python 3.7'den beri bu `RuntimeError`'a dönüştürülür (PEP 479).
+:::
+
+Simülasyonda gördüğün askıya alma-devam etme döngüsünü bir de bileşenler arasında akan mesajlar olarak izle:
+çağıran kod, generator nesnesi, içindeki çerçeve ve çağrı yığını.
+
+:::animation{scene="generator-askiya-alma.scene.json"}
+Her `next()` çağrısında çerçevenin yığına girdiğine, `yield`'de "ASKIDA" rozetiyle yığından çıktığına ama `n`
+değerini koruduğuna; en sonda `StopIteration`'ın çağırana nasıl döndüğüne dikkat et.
 :::
 
 ## Generator ifadeleri ve bellek
@@ -270,13 +284,11 @@ for kod, yol in hatalar(satirlar(dosya)):
 ```
 :::
 
-## yield from: başka bir generator'a devretmek
-
+:::callout{tone="info" title="Derinleşme: yield from ile başka bir generator'a devretmek"}
 Bir generator, başka bir iterable'ın bütün değerlerini olduğu gibi dışarı vermek istiyorsa `for x in alt: yield x`
 yazmak yerine **`yield from alt`** yazabilir. Bu özellikle K-08'deki özyinelemeli düzleştirmeyi tembel hâle getirmek
 için çok doğaldır:
 
-:::code{lang="python" title="yield from ile özyinelemeli generator"}
 ```python
 def duzlestir(veri):
     for oge in veri:
@@ -287,11 +299,11 @@ def duzlestir(veri):
 
 print(list(duzlestir([1, [2, [3, 4]], 5])))   # [1, 2, 3, 4, 5]
 ```
-:::
 
 `yield from`, `for` + `yield`'den fazlasını da yapar. `send()` ile gönderilen değerleri ve istisnaları alt
 generator'a iletir. Ayrıca alt generator `return deger` ile bittiğinde o değer `yield from` ifadesinin **sonucu**
 olur. Bu mekanizma, K-18'de göreceğin `async`/`await`'in tarihsel temelidir.
+:::
 
 ## itertools: hazır iterator araçları
 
@@ -364,6 +376,25 @@ print(o.send(10), o.send(20), o.send(60))   # 10.0 15.0 30.0
   (`__iter__` içinde generator döndürmek çoğu zaman en temizidir).
 - Aynı veriyi birkaç kez kullanacaksın, `len` ya da indeks gerekiyor → **liste**.
 - Hazır bir kalıp varsa önce **itertools**'a bak; tekerleği yeniden icat etme.
+
+:::realworld{company="Django"}
+Instagram'ın da üzerine kurulduğu web çatısı **Django**, tembel dolaşımı iki yerde açıkça kullanır ve resmi
+belgelerinde anlatır.
+
+Birincisi veritabanı sorguları. Normal bir `QuerySet` dolaşıldığında bütün satırlar belleğe alınır ve sonuç
+önbelleğe yazılır; ikinci dolaşım veritabanına tekrar gitmez. Milyonlarca satırlık bir tabloyu bir kez taramak
+istediğinde bu önbellek belleği gereksiz yere doldurur. Bunun için `QuerySet.iterator()` vardır: sonuçları
+veritabanından parça parça (chunk) okur, önbelleğe yazmaz ve sana bir iterator verir. Bu dersteki kural aynen
+geçerlidir: bellek kazanırsın ama aynı sonucu ikinci kez dolaşamazsın.
+
+İkincisi HTTP yanıtları. `StreamingHttpResponse`, gövde olarak bir iterator kabul eder. Belgelerdeki "büyük CSV
+dosyalarını akıtma" örneğinde her satır bir generator ifadesiyle üretilir ve istemciye üretildiği anda gönderilir;
+bütün dosya hiçbir zaman sunucunun belleğinde birikmez. Yani Django, senin yazdığın generator'ın `next()`
+çağrılarını yanıtı ağa yazarken tek tek yapar.
+
+Ders: büyük veri, akış ve "bir kez geç" senaryolarında çatılar seçimi sana bırakır; generator ile liste arasındaki
+farkı bilmek, doğru metodu seçmenin ön koşuludur.
+:::
 
 ## Özet
 

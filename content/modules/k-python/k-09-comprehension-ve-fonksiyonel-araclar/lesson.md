@@ -87,6 +87,12 @@ print(["A" if n >= 80 else "B" for n in notlar if n >= 50])  # ['A', 'B']
 Her eleman için bir değer seçmek istiyorsan koşullu ifadeyi başa taşı: `[n if n >= 50 else 0 for n in notlar]`.
 :::
 
+Comprehension'ı okurken zorlanıyorsan onu parçalarına ayırıp eşdeğer döngüyle yan yana koy:
+
+:::diagram{src="comprehension-anatomisi.svg" alt="List comprehension'ın ifade, for ve if parçaları ile eşdeğer for döngüsündeki karşılıkları|The expression, for and if parts of a list comprehension and their counterparts in the equivalent for loop"}
+İfade başta yazılır ama her eleman için en son, filtreden geçtikten sonra hesaplanır.
+:::
+
 ## Yorumlayıcıda ne oluyor?
 
 Python 3.12'den önce her comprehension, arka planda gizli bir fonksiyon olarak derlenir ve çağrıldığında **kendi
@@ -184,6 +190,12 @@ print(sum(x * x for x in range(1_000_000)))   # 333332833333500000
 Son satır bir milyon elemanlı bir liste **kurmadan** toplamı hesaplar; bellekte aynı anda tek bir sayı tutulur.
 Sonucu tek seferde tüketeceksen (`sum`, `max`, `any`, `"".join`) generator ifadesi tercih edilir. Iterator ve
 generator'ları K-11'de ayrıntılı göreceksin.
+
+Hevesli liste ile tembel generator arasındaki farkı en iyi, elemanların hattan nasıl aktığını izleyerek görürsün.
+
+:::animation{scene="comprehension-boru-hatti.scene.json"}
+İlk yarıda sonuç listesinin baştan sona dolduğuna, ikinci yarıda ise hiçbir liste kurulmadan `sum`'ın her `next()` çağrısında yalnızca bir değer aldığına dikkat et.
+:::
 
 ## lambda: tek satırlık isimsiz fonksiyon
 
@@ -359,6 +371,21 @@ yan etkileri kenarlarda toplar, hesaplamanın kendisini saf tutar.
 Bir API'den gelen sipariş listesinden "aktif siparişlerin müşteri e-postalarını tekil ve sıralı" almak tek okunur
 satırdır: `sorted({s["email"] for s in siparisler if s["durum"] == "aktif"})`. Set comprehension tekrarları atar,
 `sorted` sıralar ve listeye çevirir.
+:::
+
+:::realworld{company="Yelp"}
+Yelp, kullanıcı etkinliği ve log verisini işlemek için yazdığı **mrjob** kütüphanesini 2010'da açık kaynak yaptı.
+mrjob, MapReduce işlerini saf Python ile yazmanı ve aynı kodu kendi bilgisayarında, bir Hadoop kümesinde ya da
+Amazon EMR üzerinde çalıştırmanı sağlar. Kütüphanenin belgelerindeki klasik örnek bir kelime sayacıdır: `MRJob`'dan
+türeyen bir sınıfta `mapper` metodu her satır için `(kelime, 1)` çiftlerini **yield** eder, `reducer` metodu da bir
+kelimeye ait değerleri bir iterator olarak alıp `sum(degerler)` ile toplar.
+
+Bu derste gördüğün fikirler burada dağıtık ölçekte karşına çıkıyor. `mapper` bir dönüştürme ve filtre adımıdır,
+tıpkı bir comprehension'ın `if` ve ifade kısımları gibi; `reducer` ise `reduce` ya da `sum` gibi bir koleksiyonu tek
+değere indirir. Fonksiyonların **saf** olması (yalnızca girdisine bakıp çıktı üretmesi) burada bir zorunluluktur:
+çerçeve aynı fonksiyonu farklı makinelerde, verinin farklı parçaları üzerinde paralel çalıştırır ve hata olursa bir
+parçayı yeniden dener. Değerlerin liste yerine generator ile akması da, tek bir makinenin belleğine sığmayacak kadar
+büyük veriyle çalışmayı mümkün kılar.
 :::
 
 ## Özet

@@ -90,6 +90,13 @@ print(en_kucuk, en_buyuk)   # 1 9
 ```
 :::
 
+Şimdiye kadar gördüğün parçaları tek bir resimde toplayalım: tanım bir kez çalışıp fonksiyon nesnesini oluşturur,
+her çağrı ise argümanları parametrelere bağlayan yeni bir çerçeve açar.
+
+:::diagram{src="fonksiyon-anatomisi.svg" alt="def satırındaki ad, parametreler, gövde ve return; çağrıda argümanın parametreye bağlanması ve dönen değer|Name, parameters, body and return in a def; at the call the argument binds to the parameter and the value comes back"}
+Tanım ile çağrı ayrı şeylerdir: tanım fonksiyonu oluşturur, çağrı onu çalıştırır.
+:::
+
 ## Çağrı yığını: her çağrıya bir çerçeve
 
 Bir fonksiyonu çağırdığında Python şunları yapar:
@@ -155,6 +162,12 @@ göreceksin.
 Yığının bir sınırı vardır: CPython varsayılan olarak yaklaşık 1000 iç içe Python çağrısına izin verir
 (`sys.getrecursionlimit()`), aşılırsa `RecursionError` oluşur. Bunu özyineleme dersinde (K-08) ayrıntılı
 göreceğiz.
+
+Simülasyonda yığını satır satır izledin; aşağıdaki animasyon aynı zinciri çerçeve düzeyinde, kuş bakışı gösteriyor.
+
+:::animation{scene="cagri-yigini-cerceveler.scene.json"}
+Argümanların yukarı, `return` değerlerinin aşağı aktığına ve her `return`de en üstteki çerçevenin kaybolduğuna bak. Son adımdaki ikinci çağrı öncekinden hiçbir şey hatırlamaz.
+:::
 
 ## Parametre türleri
 
@@ -319,6 +332,24 @@ ortak = {"Accept": "application/json"}
 print(istek_olustur("GET", "/api", "kullanicilar", "42", **ortak))
 # {'metot': 'GET', 'url': '/api/kullanicilar/42', 'zaman_asimi': 10, 'basliklar': {'Accept': 'application/json'}}
 ```
+:::
+
+:::realworld{company="Uber"}
+Uber Engineering, 2016'da yayımladığı "Pyflame: Uber Engineering's Ptracing Profiler for Python" yazısında,
+Python servislerinin nerede zaman harcadığını bulmak için geliştirdiği **Pyflame** aracını açık kaynak olarak
+tanıttı. Aracın çalışma ilkesi doğrudan bu dersteki çağrı yığınına dayanır: Pyflame, çalışan bir Python sürecini
+durdurmadan kısa aralıklarla yoklar ve her yoklamada yorumlayıcının o anki **yığınını**, yani hangi fonksiyonun
+hangi fonksiyonu çağırdığını en dıştaki çerçeveden en içtekine kadar okur.
+
+Binlerce örnek toplandıktan sonra aynı yığınlar birleştirilir ve bir **alev grafiği** (flame graph) çizilir. Bu
+grafikte her kutu bir çerçevedir; altındaki kutu onu çağıran fonksiyondur, genişliği ise o fonksiyonun yığında ne
+kadar sık görüldüğünü, yani ne kadar zaman harcadığını gösterir. Simülasyonda izlediğin "çerçeve itilir, işi bitince
+çekilir" hareketi, bu grafikte üst üste dizilmiş kutulara dönüşür. Uber'in yazısı, kodun içine ölçüm satırları
+eklemeden ve servisi yeniden başlatmadan, üretimdeki bir sürecin yavaşlığını bu yolla incelemenin değerini anlatır.
+
+Pyflame'in geliştirilmesi sonradan durdu; bugün aynı fikir py-spy gibi araçlarla ve Python 3.12'den itibaren
+`perf` profiler desteğiyle sürüyor. Bir traceback'i okurken de, bir alev grafiğine bakarken de okuduğun şey aynıdır:
+çağrı yığını.
 :::
 
 ## Özet

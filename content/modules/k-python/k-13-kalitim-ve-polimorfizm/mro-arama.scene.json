@@ -1,0 +1,195 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "mro-arama",
+  "title": { "tr": "MRO: metot araması sınıf zincirinde nasıl ilerler?", "en": "MRO: how method lookup walks the class chain" },
+  "summary": {
+    "tr": "Elmas kalıtımda (D(B, C), B(A), C(A)) MRO'nun D → B → C → A → object olarak hesaplanması, metot aramasının bu sırayla ilerlemesi ve super() zincirinin B'den A'ya değil C'ye geçmesi.",
+    "en": "In diamond inheritance (D(B, C), B(A), C(A)) the MRO is computed as D → B → C → A → object, method lookup follows this order and the super() chain goes from B to C, not to A."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda d = D() nesnesini kullanan kod bulunur. Sağda elmas biçiminde dört sınıf vardır: altta D, ortada solda B ve sağda C, üstte A; A'nın sağında object. Düz çizgiler kalıtımı, noktalı oklar MRO sırasını gösterir: D, B, C, A, object. d.kim() çağrısında arama D'de bulamaz, B'de bulur. d.selam() çağrısında arama D ve B'de bulamaz, A'ya değil C'ye geçer ve orada bulur. d.kaydet() çağrısında her sınıf super().kaydet() çağırır; zincir D'den B'ye, B'den C'ye, C'den A'ya ilerler ve A tek bir kez çalışır.",
+      "en": "On the left the code using d = D(). On the right four classes in a diamond: D at the bottom, B on the left and C on the right in the middle, A at the top, and object to the right of A. Solid lines show inheritance, dotted arrows show the MRO order: D, B, C, A, object. For d.kim() the lookup does not find it in D and finds it in B. For d.selam() the lookup misses in D and B, moves to C rather than A and finds it there. For d.kaydet() every class calls super().kaydet(); the chain goes from D to B, from B to C, from C to A, and A runs exactly once."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "code", "kind": "client", "label": { "tr": "Çağıran kod", "en": "Calling code" }, "sublabel": "d = D()", "x": 150, "y": 470, "w": 180, "h": 80 },
+    { "id": "D", "kind": "service", "label": "class D(B, C)", "sublabel": { "tr": "kaydet()", "en": "kaydet()" }, "x": 560, "y": 490, "w": 190, "h": 70 },
+    { "id": "B", "kind": "service", "label": "class B(A)", "sublabel": "kim(), kaydet()", "x": 400, "y": 300, "w": 180, "h": 70 },
+    { "id": "C", "kind": "service", "label": "class C(A)", "sublabel": "kim(), selam(), kaydet()", "x": 720, "y": 300, "w": 210, "h": 70 },
+    { "id": "A", "kind": "service", "label": "class A", "sublabel": "kim(), selam(), kaydet()", "x": 560, "y": 110, "w": 210, "h": 70 },
+    { "id": "obj", "kind": "generic", "label": "object", "sublabel": { "tr": "en son", "en": "last" }, "x": 880, "y": 110, "w": 140, "h": 60 }
+  ],
+  "edges": [
+    { "id": "call", "from": "code", "to": "D", "kind": "request", "label": { "tr": "d.metot()", "en": "d.method()" } },
+    { "id": "inh-db", "from": "D", "to": "B", "kind": "generic", "style": "solid" },
+    { "id": "inh-dc", "from": "D", "to": "C", "kind": "generic", "style": "solid" },
+    { "id": "inh-ba", "from": "B", "to": "A", "kind": "generic", "style": "solid" },
+    { "id": "inh-ca", "from": "C", "to": "A", "kind": "generic", "style": "solid" },
+    { "id": "inh-ao", "from": "A", "to": "obj", "kind": "generic", "style": "solid" },
+    { "id": "m1", "from": "D", "to": "B", "kind": "control", "style": "dotted", "curvature": 0.35, "label": "MRO 1→2" },
+    { "id": "m2", "from": "B", "to": "C", "kind": "control", "style": "dotted", "curvature": 0.25, "label": "MRO 2→3" },
+    { "id": "m3", "from": "C", "to": "A", "kind": "control", "style": "dotted", "curvature": 0.35, "label": "MRO 3→4" },
+    { "id": "m4", "from": "A", "to": "obj", "kind": "control", "style": "dotted", "curvature": -0.35, "label": "MRO 4→5" }
+  ],
+  "steps": [
+    {
+      "id": "diamond",
+      "title": { "tr": "Elmas şekli", "en": "The diamond shape" },
+      "narration": {
+        "tr": "`D`, `B` ve `C`'den; ikisi de `A`'dan türüyor. Düz çizgiler \"kimden türedi\" ilişkisini gösterir. Soru şu: `D` üzerinde bir metot arandığında sınıflara hangi sırayla bakılır?",
+        "en": "`D` derives from `B` and `C`; both derive from `A`. Solid lines show the \"derives from\" relation. The question: when a method is looked up on `D`, in which order are the classes checked?"
+      },
+      "durationMs": 3200,
+      "inherit": false,
+      "highlight": { "nodes": ["D", "B", "C", "A"], "edges": ["inh-db", "inh-dc", "inh-ba", "inh-ca"] },
+      "nodeStates": { "D": { "status": "active" } },
+      "edgeStates": { "m1": { "visible": false }, "m2": { "visible": false }, "m3": { "visible": false }, "m4": { "visible": false } }
+    },
+    {
+      "id": "mro",
+      "title": { "tr": "MRO hesaplanır", "en": "The MRO is computed" },
+      "narration": {
+        "tr": "Python sınıf oluşturulurken C3 algoritmasıyla tek bir doğrusal liste çıkarır: `D → B → C → A → object`. Alt sınıf üst sınıftan önce gelir, `class D(B, C)` satırındaki yazım sırası korunur ve ortak ata `A` yalnızca **bir kez**, en sonda yer alır.",
+        "en": "When the class is created Python derives a single linear list with the C3 algorithm: `D → B → C → A → object`. Subclasses come before base classes, the order written in `class D(B, C)` is preserved and the common ancestor `A` appears only **once**, at the end."
+      },
+      "durationMs": 4200,
+      "highlight": { "nodes": ["D", "B", "C", "A", "obj"], "edges": ["m1", "m2", "m3", "m4"] },
+      "nodeStates": {
+        "D": { "status": "idle", "badge": "1" },
+        "B": { "badge": "2" },
+        "C": { "badge": "3" },
+        "A": { "badge": "4" },
+        "obj": { "badge": "5" }
+      },
+      "edgeStates": {
+        "m1": { "visible": true, "status": "active" },
+        "m2": { "visible": true, "status": "active" },
+        "m3": { "visible": true, "status": "active" },
+        "m4": { "visible": true, "status": "active" }
+      },
+      "packets": [
+        { "edge": "m1", "shape": "diamond", "durationMs": 700 },
+        { "edge": "m2", "shape": "diamond", "startAt": 700, "durationMs": 700 },
+        { "edge": "m3", "shape": "diamond", "startAt": 1400, "durationMs": 700 },
+        { "edge": "m4", "shape": "diamond", "startAt": 2100, "durationMs": 700 }
+      ],
+      "annotations": [
+        { "id": "a-mro", "x": 200, "y": 120, "text": "D.__mro__ = (D, B, C, A, object)", "tone": "info" }
+      ]
+    },
+    {
+      "id": "kim-d",
+      "title": { "tr": "d.kim(): önce D", "en": "d.kim(): D first" },
+      "narration": {
+        "tr": "`d.kim()` çağrısında arama nesnenin kendisinden sonra MRO'nun ilk sınıfı `D`'ye bakar. `D`'de `kim` tanımlı değil.",
+        "en": "For `d.kim()` the lookup checks, after the object itself, the first class of the MRO: `D`. `kim` is not defined in `D`."
+      },
+      "durationMs": 2800,
+      "highlight": { "nodes": ["code", "D"], "edges": ["call"] },
+      "nodeStates": { "code": { "status": "active", "sublabel": "d.kim()" }, "D": { "status": "warning", "badge": "MISS" } },
+      "edgeStates": { "m1": { "status": "idle" }, "m2": { "status": "idle" }, "m3": { "status": "idle" }, "m4": { "status": "idle" } },
+      "packets": [{ "edge": "call", "label": "kim?", "durationMs": 1100 }]
+    },
+    {
+      "id": "kim-b",
+      "title": { "tr": "d.kim(): B'de bulundu", "en": "d.kim(): found in B" },
+      "narration": {
+        "tr": "Arama MRO'da bir sonraki sınıf `B`'ye geçer ve `kim` orada bulunur; sonuç `\"B\"`. Arama ilk bulduğu yerde durur: `C` ve `A`'daki `kim` hiç görülmez.",
+        "en": "The lookup moves to the next class in the MRO, `B`, and finds `kim` there; the result is `\"B\"`. The lookup stops at the first hit: `kim` in `C` and `A` is never seen."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["D", "B"], "edges": ["m1"] },
+      "nodeStates": { "B": { "status": "success", "badge": "HIT" }, "code": { "status": "success", "sublabel": "d.kim() → 'B'" } },
+      "edgeStates": { "m1": { "status": "active" } },
+      "packets": [{ "edge": "m1", "label": "kim?", "durationMs": 1100 }]
+    },
+    {
+      "id": "selam",
+      "title": { "tr": "d.selam(): B'den sonra C", "en": "d.selam(): after B comes C" },
+      "narration": {
+        "tr": "`selam` yalnızca `C` ve `A`'da var. Arama `D` ve `B`'de bulamaz; ama `B`'nin üst sınıfı `A`'ya değil, MRO'da sıradaki **`C`**'ye geçer ve orada bulur. Arama sırasını belirleyen kalıtım çizgileri değil, MRO listesidir.",
+        "en": "`selam` exists only in `C` and `A`. The lookup misses in `D` and `B`; but it moves not to `B`'s base `A` but to **`C`**, the next class in the MRO, and finds it there. The order is decided by the MRO list, not by the inheritance lines."
+      },
+      "durationMs": 4200,
+      "highlight": { "nodes": ["D", "B", "C"], "edges": ["m1", "m2"] },
+      "nodeStates": {
+        "code": { "status": "active", "sublabel": "d.selam()" },
+        "D": { "status": "warning", "badge": "MISS" },
+        "B": { "status": "warning", "badge": "MISS" },
+        "C": { "status": "success", "badge": "HIT" }
+      },
+      "edgeStates": { "m1": { "status": "active" }, "m2": { "status": "active" }, "inh-ba": { "status": "muted" } },
+      "packets": [
+        { "edge": "call", "label": "selam?", "durationMs": 900 },
+        { "edge": "m1", "label": "selam?", "startAt": 900, "durationMs": 900 },
+        { "edge": "m2", "label": "selam?", "startAt": 1800, "durationMs": 900 }
+      ],
+      "annotations": [
+        { "id": "a-not-a", "x": 400, "y": 200, "text": { "tr": "B'den sonra A değil, C", "en": "after B: C, not A" }, "tone": "warning", "target": "B" }
+      ]
+    },
+    {
+      "id": "super-d",
+      "title": { "tr": "d.kaydet(): super() zinciri başlar", "en": "d.kaydet(): the super() chain starts" },
+      "narration": {
+        "tr": "Şimdi her sınıfın `kaydet` metodu kendi işini yapıp `super().kaydet()` çağırıyor. `D.kaydet` çalışır ve `super()` ile MRO'da kendinden sonraki sınıfa, `B`'ye geçer.",
+        "en": "Now every class's `kaydet` does its own work and calls `super().kaydet()`. `D.kaydet` runs and with `super()` moves to the next class after itself in the MRO, `B`."
+      },
+      "durationMs": 3400,
+      "inherit": false,
+      "highlight": { "nodes": ["code", "D", "B"], "edges": ["call", "m1"] },
+      "nodeStates": {
+        "code": { "status": "active", "sublabel": "d.kaydet()" },
+        "D": { "status": "success", "badge": "1" },
+        "B": { "status": "active" }
+      },
+      "edgeStates": { "m1": { "status": "active" } },
+      "packets": [
+        { "edge": "call", "label": "kaydet()", "durationMs": 900 },
+        { "edge": "m1", "shape": "envelope", "label": "super()", "startAt": 1100, "durationMs": 1100 }
+      ]
+    },
+    {
+      "id": "super-b",
+      "title": { "tr": "B içindeki super() C'ye gider", "en": "super() inside B goes to C" },
+      "narration": {
+        "tr": "Kritik an: `B` yalnızca `A`'dan türüyor, ama `B.kaydet` içindeki `super()` **`C`**'ye gider. Çünkü `super()` \"benim üst sınıfım\" değil, \"bu nesnenin (`D`'nin) MRO'sunda benden sonraki sınıf\" demektir.",
+        "en": "The key moment: `B` derives only from `A`, yet `super()` inside `B.kaydet` goes to **`C`**. That is because `super()` does not mean \"my base class\" but \"the class after me in this object's (`D`'s) MRO\"."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["B", "C"], "edges": ["m2"] },
+      "nodeStates": { "B": { "status": "success", "badge": "2" }, "C": { "status": "active" } },
+      "edgeStates": { "m2": { "status": "active" }, "inh-ba": { "status": "muted" } },
+      "packets": [{ "edge": "m2", "shape": "envelope", "label": "super()", "durationMs": 1300 }],
+      "annotations": [
+        { "id": "a-super", "x": 560, "y": 400, "text": { "tr": "super() = MRO'da sıradaki", "en": "super() = next in the MRO" }, "tone": "warning", "target": "C" }
+      ]
+    },
+    {
+      "id": "super-a",
+      "title": { "tr": "Zincir A'da biter, A bir kez çalışır", "en": "The chain ends at A, A runs once" },
+      "narration": {
+        "tr": "`C.kaydet` de `super()` ile `A`'ya geçer; `A` zinciri bitirir (onun `object`'te karşılığı yok, bu yüzden `super()` çağırmaz). Ortak ata `A`, iki yoldan da ulaşılabilir olduğu hâlde **yalnızca bir kez** çalıştı. İşbirlikçi `super()` kullanımının elmasta değeri budur.",
+        "en": "`C.kaydet` also moves to `A` with `super()`; `A` ends the chain (there is no counterpart in `object`, so it does not call `super()`). The common ancestor `A` ran **only once** although it is reachable along two paths. That is the value of cooperative `super()` in a diamond."
+      },
+      "durationMs": 4200,
+      "highlight": { "nodes": ["C", "A", "code"], "edges": ["m3"] },
+      "nodeStates": {
+        "C": { "status": "success", "badge": "3" },
+        "A": { "status": "success", "badge": "4" },
+        "code": { "status": "success", "sublabel": { "tr": "sıra: D, B, C, A", "en": "order: D, B, C, A" } }
+      },
+      "edgeStates": { "m3": { "status": "active" } },
+      "packets": [
+        { "edge": "m3", "shape": "envelope", "label": "super()", "durationMs": 1100 },
+        { "edge": "call", "direction": "backward", "shape": "diamond", "label": "None", "startAt": 1500, "durationMs": 1100 }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["python", "inheritance", "mro", "super"]
+}
