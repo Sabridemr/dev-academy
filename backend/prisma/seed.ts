@@ -109,6 +109,13 @@ function resolveBlocks(lesson: LoadedLesson, assets: Record<string, StoredAsset>
         return { ...b, quizId: lesson.quiz?.id };
       case 'trace':
         return { ...b, trace: lesson.traces[b.src] };
+      case 'exercise': {
+        // Çözüm ayrı alanda: ders API'si bloklardan çıkarır, yalnızca çözüm uç noktası döner
+        const ex = lesson.exercises[b.src];
+        if (!ex) return b;
+        const { solution, ...exercise } = ex;
+        return { ...b, exercise, solution };
+      }
       default:
         return b;
     }
