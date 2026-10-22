@@ -5,6 +5,7 @@ Tüm dersler bu klasörde **Markdown + JSON** olarak tutulur. Backend seed scrip
 ```
 content/
   paths.json                                  → öğrenme yolları
+  concepts.json                               → kavram sözlüğü
   modules/<module-id>/module.json             → modül bilgisi
   modules/<module-id>/<lesson-id>/
       lesson.md                               → ders (frontmatter + Markdown + directive blokları)
@@ -170,6 +171,38 @@ Her türün web ve mobilde bir bileşeni vardır; ek öznitelikler `params` olar
 ```
 
 Soru tipleri: `single`, `multiple`, `truefalse`, `order`. Her derste 3–6 soru bulunmalıdır (genellikle 5); doğrulayıcı bu aralığın dışını hata sayar. `concepts` alanı yanlış cevaplarda tekrar listesine (spaced repetition) eklenecek kavramı belirler.
+
+## Sözlük (`concepts.json`)
+
+Frontmatter'daki `concepts` listesi ve quiz sorularındaki `concepts` alanı, `content/concepts.json` sözlüğündeki
+kimliklere işaret eder. Sözlük web'de `/glossary` sayfasında, ders başlığının altındaki "Bu dersteki kavramlar"
+çiplerinde ve mobilde sözlük ekranında gösterilir; API `GET /concepts?q=` ve `GET /concepts/:id` ile sunar.
+
+```json
+{
+  "round-robin": {
+    "term": { "tr": "Round-robin (sırayla dağıtım)", "en": "Round-robin" },
+    "definition": { "tr": "Gelen istekleri sunucu listesinde sırayla dolaşarak dağıtan yük dengeleme algoritması. …" },
+    "aliases": ["RR"],
+    "related": ["weighted-round-robin", "least-connections", "load-balancer"]
+  }
+}
+```
+
+- Anahtar kebab-case kavram id'sidir (frontmatter'da yazıldığı gibi). Dosya anahtar sırasına göre alfabetik tutulur.
+- `term.tr` ve `term.en` zorunludur. Sektörde İngilizce terim yerleşmişse `term.tr` onu kullanır, gerekirse parantezde
+  Türkçe karşılık verir ("Cache-aside (tembel yükleme)").
+- `definition.tr` 1–3 cümlelik özgün, doğru bir tanımdır: kavramın ne olduğu ve neden/ne zaman önemli olduğu.
+  Kavram birden çok anlamda kullanılabiliyorsa (ör. `panel`, `state`, `needs`) geçtiği dersteki anlam yazılır.
+  `definition.en` opsiyoneldir; yoksa İngilizce arayüzde Türkçe tanım gösterilir.
+- `aliases` (opsiyonel): kısaltmalar ve eş anlamlılar; aramada kullanılır.
+- `related` (opsiyonel): ilgili kavram id'leri. Yakın eş kimlikler (ör. `pubsub` / `pub-sub`) birbirini göstermelidir.
+- Kavramın geçtiği dersler dosyada tutulmaz; yayındaki derslerden hesaplanır (`buildConceptIndex`).
+
+Doğrulayıcı kuralları: derste ya da quizde geçip sözlükte olmayan kavram **hata**, sözlükte olup hiçbir derste
+geçmeyen kavram **uyarı** (`--strict` ile hata), `related` içinde bilinmeyen ya da kendine işaret eden id **hata**.
+Yeni bir kavram kullanan dersi eklerken tanımını da sözlüğe ekleyin. JSON şeması:
+`packages/shared/schema/concepts.schema.json`.
 
 ## SVG diyagramlar
 
