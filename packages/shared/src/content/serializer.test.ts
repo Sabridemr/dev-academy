@@ -130,6 +130,24 @@ describe('serializeLesson — zor durumlar', () => {
     expect(out.warnings).toEqual([]);
   });
 
+  it('kod gövdesindeki $ dizileri ($$, $&, $1) birebir korunur', () => {
+    const blocks: LessonBlock[] = [
+      {
+        id: 'code-1',
+        order: 0,
+        type: 'code',
+        language: 'bash',
+        code: 'echo "pid=$$ match=$& grup=$1 fiyat=$\'x\'"\nls /proc/$$/ns\n',
+        alternatives: [],
+        highlightLines: [],
+      },
+    ];
+    const out = serializeLesson({ meta: META, blocks });
+    expect(out.markdown).toContain('/proc/$$/ns');
+    const doc = parseLessonMarkdown(out.markdown);
+    expect(doc.blocks).toEqual(blocks);
+  });
+
   it('taşınamayan bilgi uyarı olarak raporlanır', () => {
     const out = serializeLesson({
       meta: { ...META, status: 'published' },

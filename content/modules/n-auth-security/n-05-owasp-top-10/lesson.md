@@ -74,6 +74,20 @@ Savunma, girdiyi "temizlemeye" çalışmak değil, veriyi koddan **yapısal olar
 
 Aynı ilke işletim sistemi komutları için de geçerlidir: kullanıcı girdisini bir kabuk komutuna yapıştırmak yerine, argümanları dizi olarak alan ve kabuk çağırmayan API'ler kullanılır; çoğu zaman da dış komut çalıştırmak yerine aynı işi yapan bir kütüphane tercih edilir.
 
+Aynı girdinin string birleştirmeyle ve parametreli sorguyla nasıl iki farklı sonuca yol açtığını adım adım izleyelim.
+
+:::predict{id="parametreli-sorgu-sonucu"}
+Arama kutusuna `' OR '1'='1` yazılıyor. API parametreli sorgu kullanıyorsa sonuç ne olur? | Someone types `' OR '1'='1` into the search box. If the API uses a parameterised query, what is the result?
+- [ ] Tablodaki bütün satırlar döner | Every row in the table is returned
+- [x] Bu adda bir kullanıcı olmadığı için sonuç boş döner | The result is empty because no user has that name
+- [ ] Veritabanı sözdizimi hatası verir | The database raises a syntax error
+Açıklama: Parametreli sorguda sorgunun yapısı değer gelmeden belirlenir; değer ne içerirse içersin tek bir ad olarak karşılaştırılır. Tüm satırların dönmesi, string birleştirmeyle kurulan sorgunun sonucudur. | With a parameterised query the structure is fixed before the value arrives; whatever the value contains, it is compared as a single name. All rows returning is what happens with a string-concatenated query.
+:::
+
+:::animation{scene="sql-injection.scene.json"}
+Tırnak içeren girdi string birleştirmeyle sorgunun yapısını değiştirir ve tüm tablo sızar; parametreli sorguda şablon ve değer ayrı gider, sonuç boş döner.
+:::
+
 :::code{lang="ts" title="SQL enjeksiyonu: string birleştirme ve parametreli sorgu"}
 ```ts
 // ✗ ZAFİYETLİ: girdi sorgu metninin parçası oluyor
@@ -130,6 +144,12 @@ res.setHeader(
 **Siteler arası istek sahteciliği (CSRF)**, kimlik doğrulaması çerezle yapılan uygulamalara özgüdür. Kullanıcı sizin sitenizde oturum açmışken başka bir sayfayı ziyaret eder; o sayfadaki gizli bir form, kullanıcının tarayıcısından sizin sitenize "e-posta adresini değiştir" isteği gönderir ve tarayıcı oturum çerezini otomatik olarak ekler. Sunucu açısından istek meşru görünür.
 
 Savunma, isteğin gerçekten sizin sayfanızdan geldiğini doğrulamaktır. `SameSite=Lax` ya da `Strict` çerezler, siteler arası POST isteklerinde çerezin gönderilmesini engelleyerek ilk ve en etkili katmanı oluşturur. Durum değiştiren uç noktalarda buna ek olarak bir **CSRF token'ı** (sayfaya gömülen ve her istekle gönderilen, oturuma bağlı rastgele değer) ya da `Origin` başlığının beklenen kaynakla eşleştiği kontrol edilir. `GET` istekleri hiçbir zaman durum değiştirmemelidir; aksi hâlde bir resim etiketi bile saldırı aracına dönüşür. Kimlik doğrulaması yalnızca `Authorization` başlığıyla yapılan API'ler klasik CSRF'den etkilenmez, çünkü saldırganın sayfası bu başlığı kurbanın tarayıcısına ekletemez.
+
+CSRF'nin nasıl işlediğini ve XSS'in bu savunmaları neden aştığını aynı tarayıcı üzerinde görelim.
+
+:::animation{scene="csrf-xss.scene.json"}
+Gizli form tarayıcıya çerezli bir istek attırır; SameSite ve Origin + CSRF token kontrolü onu durdurur. Sitenin kendi kökeninde çalışan XSS betiğini ise kaçışlama ve nonce'lu CSP durdurur.
+:::
 
 :::code{lang="ts" title="CSRF: çerezli durum değişikliği ve Origin + token kontrolü"}
 ```ts

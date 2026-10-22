@@ -1,0 +1,168 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "j-05-region-failover-dlq",
+  "title": { "tr": "Bölge Kesintisinde Failover ve DLQ ile Yeniden Deneme", "en": "Failover During a Region Outage and Retries with a DLQ" },
+  "summary": {
+    "tr": "GeoDNS sağlık kontrolüyle çöken bölgeyi devreden çıkarıp trafiği yedek bölgeye yönlendirir; ardından bir e-posta işi üstel geri çekilmeyle yeniden denenir, üç denemede başarısız olunca DLQ'ya düşer ve düzeltmeden sonra yeniden sürülür.",
+    "en": "GeoDNS removes the failed region using health checks and sends traffic to the standby region; then an email job is retried with exponential backoff, lands in the DLQ after three failures and is redriven after a fix."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda kullanıcı ve GeoDNS, ortada iki bölge bulunur: üstte eu-central, altta us-east; her birinde yük dengeleyici ve sipariş servisi vardır. Sağda e-posta kuyruğu, e-posta tüketicisi ve dead letter queue yer alır. Önce trafik en yakın bölge olan eu-central'a gider. Bölge çökünce sağlık kontrolü başarısız olur ve DNS yeni istekleri us-east'e yönlendirir. us-east'teki sipariş servisi bir e-posta işi kuyruğa bırakır; tüketici hata verir, iş 1, 2 ve 4 saniye arayla yeniden denenir, üçüncü hatadan sonra DLQ'ya taşınır. Ana kuyruk akmaya devam eder. Hata düzeltilince DLQ'daki iş ana kuyruğa geri gönderilir ve başarıyla işlenir.",
+      "en": "The user and GeoDNS are on the left and two regions in the middle: eu-central at the top and us-east at the bottom, each with a load balancer and an order service. The email queue, the email consumer and the dead letter queue are on the right. First traffic goes to eu-central, the nearest region. When the region fails, the health check fails and DNS sends new requests to us-east. The order service in us-east drops an email job onto the queue; the consumer fails, the job is retried after 1, 2 and 4 seconds and moved to the DLQ after the third failure. The main queue keeps flowing. Once the bug is fixed the job is sent from the DLQ back to the main queue and processed successfully."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "user", "kind": "user", "label": { "tr": "Kullanıcı (İstanbul)", "en": "User (Istanbul)" }, "x": 70, "y": 300, "w": 120, "h": 70 },
+    { "id": "dns", "kind": "dns", "label": "GeoDNS", "sublabel": { "tr": "sağlık kontrolü, TTL 60 sn", "en": "health check, TTL 60 s" }, "x": 210, "y": 300, "w": 130, "h": 70 },
+    { "id": "eu", "kind": "region", "label": "eu-central", "x": 440, "y": 160, "w": 290, "h": 180 },
+    { "id": "lbeu", "kind": "lb", "label": "LB", "x": 370, "y": 175, "w": 100, "h": 60, "parent": "eu" },
+    { "id": "svceu", "kind": "service", "label": { "tr": "Sipariş", "en": "Orders" }, "x": 510, "y": 175, "w": 110, "h": 60, "parent": "eu" },
+    { "id": "us", "kind": "region", "label": "us-east", "x": 440, "y": 440, "w": 290, "h": 180 },
+    { "id": "lbus", "kind": "lb", "label": "LB", "x": 370, "y": 455, "w": 100, "h": 60, "parent": "us" },
+    { "id": "svcus", "kind": "service", "label": { "tr": "Sipariş", "en": "Orders" }, "x": 510, "y": 455, "w": 110, "h": 60, "parent": "us" },
+    { "id": "queue", "kind": "queue", "label": "q.email", "x": 700, "y": 330, "w": 110, "h": 60 },
+    { "id": "worker", "kind": "worker", "label": { "tr": "E-posta tüketicisi", "en": "Email consumer" }, "x": 880, "y": 200, "w": 150, "h": 64 },
+    { "id": "dlq", "kind": "queue", "label": "DLQ", "sublabel": "q.email.dlq", "x": 880, "y": 470, "w": 130, "h": 64 }
+  ],
+  "edges": [
+    { "id": "user-dns", "from": "user", "to": "dns", "kind": "request" },
+    { "id": "dns-lbeu", "from": "dns", "to": "lbeu", "kind": "request" },
+    { "id": "dns-lbus", "from": "dns", "to": "lbus", "kind": "request" },
+    { "id": "lbeu-svceu", "from": "lbeu", "to": "svceu", "kind": "request" },
+    { "id": "lbus-svcus", "from": "lbus", "to": "svcus", "kind": "request" },
+    { "id": "svceu-queue", "from": "svceu", "to": "queue", "kind": "event" },
+    { "id": "svcus-queue", "from": "svcus", "to": "queue", "kind": "event" },
+    { "id": "queue-worker", "from": "queue", "to": "worker", "kind": "data" },
+    { "id": "queue-dlq", "from": "queue", "to": "dlq", "kind": "data", "style": "dashed" }
+  ],
+  "steps": [
+    {
+      "id": "normal",
+      "title": { "tr": "Normal durum: en yakın bölge", "en": "Normal state: the nearest region" },
+      "narration": {
+        "tr": "İstanbul'daki kullanıcının DNS sorgusu GeoDNS tarafından en yakın sağlıklı bölgeye, eu-central'a çözülür. İstek bölgedeki yük dengeleyiciden sipariş servisine gider. us-east aynı kodu çalıştırır ve sipariş verisinin asenkron kopyasını tutar.",
+        "en": "GeoDNS resolves the Istanbul user's query to the nearest healthy region, eu-central. The request goes through the region's load balancer to the order service. us-east runs the same code and keeps an asynchronous copy of the order data."
+      },
+      "durationMs": 4000,
+      "inherit": false,
+      "highlight": { "nodes": ["user", "dns", "eu", "lbeu", "svceu"], "edges": ["user-dns", "dns-lbeu", "lbeu-svceu"] },
+      "nodeStates": { "svceu": { "status": "active" }, "lbeu": { "status": "active" }, "svcus": { "status": "idle", "progress": 0.1 } },
+      "edgeStates": { "user-dns": { "status": "active" }, "dns-lbeu": { "status": "active" }, "lbeu-svceu": { "status": "active" }, "dns-lbus": { "status": "muted" } },
+      "packets": [
+        { "edge": "user-dns", "durationMs": 800 },
+        { "edge": "dns-lbeu", "startAt": 900, "durationMs": 900 },
+        { "edge": "lbeu-svceu", "startAt": 1900, "durationMs": 700 }
+      ]
+    },
+    {
+      "id": "outage",
+      "title": { "tr": "Bölge kesintisi", "en": "Region outage" },
+      "narration": {
+        "tr": "eu-central'da bölge çapında bir sorun olur. GeoDNS'in sağlık kontrolleri art arda başarısız döner. Bu sırada eu'ya yönlendirilen istekler zaman aşımına uğrar; kullanıcı hata görür. Ne kadar süre göreceğini sağlık kontrolü aralığı ve DNS TTL'i belirler.",
+        "en": "A region-wide problem hits eu-central. GeoDNS health checks fail in a row. Meanwhile requests sent to eu time out and the user sees errors. How long this lasts is set by the health check interval and the DNS TTL."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["eu", "lbeu", "svceu"], "edges": ["dns-lbeu"] },
+      "nodeStates": { "lbeu": { "status": "down" }, "svceu": { "status": "down", "badge": "503" }, "dns": { "status": "warning", "badge": "check FAIL" } },
+      "edgeStates": { "dns-lbeu": { "status": "error" }, "lbeu-svceu": { "status": "error" } },
+      "packets": [{ "edge": "dns-lbeu", "label": "timeout", "color": "danger", "durationMs": 1200 }],
+      "annotations": [{ "id": "hc", "x": 210, "y": 200, "text": { "tr": "3 başarısız kontrol → sağlıksız", "en": "3 failed checks → unhealthy" }, "target": "dns", "tone": "danger" }]
+    },
+    {
+      "id": "failover",
+      "title": { "tr": "DNS failover", "en": "DNS failover" },
+      "narration": {
+        "tr": "GeoDNS eu-central'ı yanıtlardan çıkarır ve yeni sorguları us-east'e çözer. Kısa TTL (60 sn) sayesinde istemciler eski adresi uzun süre önbellekte tutmaz. Gecikme artar (Atlantik'i geçmek), ama sipariş verilebilir: bozulmuş hizmet, kesintiden iyidir.",
+        "en": "GeoDNS drops eu-central from its answers and resolves new queries to us-east. Thanks to a short TTL (60 s) clients do not keep the old address cached for long. Latency rises (crossing the Atlantic), but orders can be placed: degraded service beats an outage."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["dns", "us", "lbus", "svcus"], "edges": ["dns-lbus", "lbus-svcus"] },
+      "nodeStates": { "dns": { "status": "active", "badge": "→ us-east" }, "lbus": { "status": "active" }, "svcus": { "status": "active", "progress": 0.7 } },
+      "edgeStates": { "dns-lbeu": { "status": "muted" }, "dns-lbus": { "status": "active" }, "lbus-svcus": { "status": "active" } },
+      "packets": [
+        { "edge": "user-dns", "durationMs": 700 },
+        { "edge": "dns-lbus", "startAt": 800, "durationMs": 1000 },
+        { "edge": "lbus-svcus", "startAt": 1900, "durationMs": 700 }
+      ]
+    },
+    {
+      "id": "rpo",
+      "title": { "tr": "Bedel: kopyalanmamış son yazmalar", "en": "The cost: the last unreplicated writes" },
+      "narration": {
+        "tr": "Bölgeler arası replikasyon asenkron olduğu için eu'da commit edilmiş son birkaç saniyelik siparişler us-east'e ulaşmamış olabilir (RPO > 0). Bu yüzden failover planı önceden yazılır: hangi veri senkron korunacak, hangisinde kayıp kabul edilip sonradan mutabakat yapılacak. us-east tepe yükü kaldırmak için önceden ölçeklenmiş olmalıdır.",
+        "en": "Because cross-region replication is asynchronous, orders committed in eu during the last few seconds may not have reached us-east (RPO > 0). That is why the failover plan is written in advance: which data is protected synchronously and where loss is accepted and reconciled later. us-east must be pre-scaled to absorb the peak."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["svcus"], "edges": [] },
+      "nodeStates": { "svcus": { "status": "warning", "progress": 0.85, "badge": "RPO > 0" } },
+      "annotations": [{ "id": "rpo-note", "x": 440, "y": 570, "text": { "tr": "asenkron kopya: son saniyeler eksik olabilir", "en": "async copy: the last seconds may be missing" }, "target": "us", "tone": "warning" }]
+    },
+    {
+      "id": "enqueue",
+      "title": { "tr": "E-posta işi kuyruğa", "en": "The email job is enqueued" },
+      "narration": {
+        "tr": "Sipariş onaylanınca us-east'teki servis \"onay e-postası gönder\" işini q.email kuyruğuna bırakır ve kullanıcıya yanıt verir. E-postanın gönderilmesi sipariş akışının kritik yolunda değildir.",
+        "en": "Once the order is confirmed, the service in us-east drops a \"send confirmation email\" job onto the q.email queue and answers the user. Sending the email is not on the critical path of the order flow."
+      },
+      "durationMs": 3500,
+      "highlight": { "nodes": ["svcus", "queue"], "edges": ["svcus-queue"] },
+      "nodeStates": { "svcus": { "status": "active", "badge": "" }, "queue": { "status": "active", "progress": 0.3 } },
+      "edgeStates": { "dns-lbus": { "status": "idle" }, "lbus-svcus": { "status": "idle" }, "user-dns": { "status": "idle" }, "svcus-queue": { "status": "active" } },
+      "packets": [{ "edge": "svcus-queue", "shape": "envelope", "label": "mail #42", "durationMs": 1100 }]
+    },
+    {
+      "id": "retry",
+      "title": { "tr": "Hata ve üstel geri çekilme", "en": "Failure and exponential backoff" },
+      "narration": {
+        "tr": "Tüketici mesajı işlerken hata alır (ör. şablonda eksik alan). ACK gönderilmez; mesaj 1, 2 ve 4 saniye sonra rastgele bir sapmayla (jitter) yeniden teslim edilir. Geri çekilme, zaten zorlanan bir bağımlılığı tekrar denemelerle boğmayı önler.",
+        "en": "The consumer fails while processing the message (e.g. a missing template field). No ACK is sent; the message is redelivered after 1, 2 and 4 seconds with random jitter. Backoff avoids drowning an already struggling dependency in retries."
+      },
+      "durationMs": 5000,
+      "highlight": { "nodes": ["queue", "worker"], "edges": ["queue-worker"] },
+      "nodeStates": { "svcus": { "status": "idle" }, "worker": { "status": "error", "badge": "deneme 3/3" } },
+      "edgeStates": { "svcus-queue": { "status": "idle" }, "queue-worker": { "status": "error" } },
+      "packets": [
+        { "edge": "queue-worker", "shape": "envelope", "label": "mail #42 (1)", "color": "danger", "durationMs": 800 },
+        { "edge": "queue-worker", "shape": "envelope", "label": "mail #42 (2)", "color": "danger", "startAt": 1400, "durationMs": 800 },
+        { "edge": "queue-worker", "shape": "envelope", "label": "mail #42 (3)", "color": "danger", "startAt": 3200, "durationMs": 800 }
+      ],
+      "annotations": [{ "id": "backoff", "x": 830, "y": 110, "text": { "tr": "1 sn → 2 sn → 4 sn (+ jitter)", "en": "1 s → 2 s → 4 s (+ jitter)" }, "target": "worker", "tone": "warning" }]
+    },
+    {
+      "id": "to-dlq",
+      "title": { "tr": "Zehirli mesaj DLQ'ya", "en": "The poison message goes to the DLQ" },
+      "narration": {
+        "tr": "Deneme sınırı dolunca mesaj ana kuyruktan alınıp dead letter queue'ya taşınır ve alarm üretir. Böylece bozuk tek bir mesaj kuyruğun başını tıkamaz: arkasındaki e-postalar normal akmaya devam eder.",
+        "en": "When the retry limit is reached the message is moved from the main queue to the dead letter queue and an alert fires. A single broken message no longer blocks the head of the queue: the emails behind it keep flowing normally."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["queue", "dlq", "worker"], "edges": ["queue-dlq", "queue-worker"] },
+      "nodeStates": { "dlq": { "status": "warning", "badge": "1 mesaj", "progress": 0.2 }, "worker": { "status": "success", "badge": "" }, "queue": { "progress": 0.1 } },
+      "edgeStates": { "queue-dlq": { "status": "active" }, "queue-worker": { "status": "active" } },
+      "packets": [
+        { "edge": "queue-dlq", "shape": "envelope", "label": "mail #42", "color": "warning", "durationMs": 1100 },
+        { "edge": "queue-worker", "shape": "envelope", "label": "mail #43", "color": "success", "startAt": 1200, "durationMs": 800 },
+        { "edge": "queue-worker", "shape": "envelope", "label": "mail #44", "color": "success", "startAt": 2200, "durationMs": 800 }
+      ]
+    },
+    {
+      "id": "redrive",
+      "title": { "tr": "Düzelt ve yeniden sür", "en": "Fix and redrive" },
+      "narration": {
+        "tr": "Ekip DLQ'daki mesajı inceler, şablon hatasını düzeltir ve mesajı ana kuyruğa geri gönderir (redrive). Tüketici idempotent olduğu için aynı e-posta ikinci kez gitmez; işlem başarıyla tamamlanır. DLQ boyutu her zaman izlenen bir metriktir.",
+        "en": "The team inspects the message in the DLQ, fixes the template bug and sends the message back to the main queue (redrive). Because the consumer is idempotent the same email is not sent twice; processing completes successfully. DLQ size is always a monitored metric."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["dlq", "queue", "worker"], "edges": ["queue-dlq", "queue-worker"] },
+      "nodeStates": { "dlq": { "status": "success", "badge": "0", "progress": 0 }, "worker": { "status": "success", "badge": "#42 gönderildi" } },
+      "edgeStates": { "queue-dlq": { "status": "active" }, "queue-worker": { "status": "active" } },
+      "packets": [
+        { "edge": "queue-dlq", "direction": "backward", "shape": "envelope", "label": "redrive #42", "durationMs": 1100 },
+        { "edge": "queue-worker", "shape": "envelope", "label": "mail #42", "color": "success", "startAt": 1300, "durationMs": 900 }
+      ]
+    }
+  ]
+}

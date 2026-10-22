@@ -1,0 +1,201 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "i-04-order-flow",
+  "title": { "tr": "Bir Siparişin Uçtan Uca Yolculuğu", "en": "An Order's End-to-End Journey" },
+  "summary": {
+    "tr": "POST /orders isteğinin doğrulama, iş kuralları ve tek transaction'dan geçip 201 dönmesi, olayın kuyruğa yayınlanması, ödeme webhook'uyla siparişin paid olması ve stok yetmediğinde her şeyin geri alınması.",
+    "en": "A POST /orders request passing validation, business rules and a single transaction and returning 201, the event being published to a queue, the payment webhook turning the order paid, and everything being rolled back when stock runs out."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda tarayıcı, ortada sipariş API'si, altında PostgreSQL veritabanı, sağ altta olay kuyruğu ve e-posta/depo işçisi, sağ üstte ödeme sağlayıcı bulunur. Tarayıcı Idempotency-Key ile POST /orders gönderir. API önce gövdeyi doğrular, sonra minimum miktar ve stok kurallarını kontrol eder. Ardından tek bir transaction içinde sipariş satırını pending olarak ekler, stoğu rezerve eder ve bir olay kaydı yazar; COMMIT sonrası 201 döner. Olay kuyruğa yayınlanır ve işçi onay e-postası gönderir. Tarayıcı ödeme sağlayıcının sayfasına yönlenir; sağlayıcı imzalı webhook ile sonucu bildirir ve sipariş paid olur. Son adımda stok yetmediğinde transaction'ın ROLLBACK ile geri alındığı ve hiçbir olayın yayınlanmadığı gösterilir.",
+      "en": "A browser is on the left, the order API in the middle, a PostgreSQL database below it, an event queue and an email/warehouse worker at the bottom right and the payment provider at the top right. The browser sends POST /orders with an Idempotency-Key. The API first validates the body, then checks the minimum quantity and stock rules. Then, inside a single transaction, it inserts the order as pending, reserves the stock and writes an event record; after COMMIT it returns 201. The event is published to the queue and the worker sends a confirmation email. The browser is redirected to the provider's payment page; the provider reports the result with a signed webhook and the order becomes paid. The last step shows that when stock runs out the transaction is rolled back and no event is published."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "browser", "kind": "browser", "label": { "tr": "Tarayıcı", "en": "Browser" }, "sublabel": { "tr": "bayi müşteri", "en": "dealer customer" }, "x": 110, "y": 300, "w": 150, "h": 80 },
+    { "id": "api", "kind": "service", "label": { "tr": "Sipariş API'si", "en": "Order API" }, "sublabel": "POST /orders", "x": 400, "y": 300, "w": 180, "h": 90 },
+    { "id": "db", "kind": "db", "label": "PostgreSQL", "sublabel": "orders · stock · outbox", "x": 400, "y": 510, "w": 200, "h": 70 },
+    { "id": "queue", "kind": "queue", "label": { "tr": "Olay kuyruğu", "en": "Event queue" }, "sublabel": "OrderCreated", "x": 690, "y": 510, "w": 170, "h": 70 },
+    { "id": "worker", "kind": "worker", "label": { "tr": "E-posta / depo", "en": "Email / warehouse" }, "sublabel": { "tr": "tüketici", "en": "consumer" }, "x": 900, "y": 510, "w": 150, "h": 70 },
+    { "id": "psp", "kind": "service", "label": { "tr": "Ödeme sağlayıcı", "en": "Payment provider" }, "sublabel": { "tr": "ödeme sayfası", "en": "payment page" }, "x": 780, "y": 120, "w": 180, "h": 80 }
+  ],
+  "edges": [
+    { "id": "b-api", "from": "browser", "to": "api", "kind": "request", "label": "HTTPS" },
+    { "id": "api-db", "from": "api", "to": "db", "kind": "data", "label": "SQL" },
+    { "id": "db-queue", "from": "db", "to": "queue", "kind": "event", "label": { "tr": "outbox → yayın", "en": "outbox → publish" } },
+    { "id": "queue-worker", "from": "queue", "to": "worker", "kind": "event" },
+    { "id": "b-psp", "from": "browser", "to": "psp", "kind": "request", "label": { "tr": "yönlendirme", "en": "redirect" }, "curvature": -0.25 },
+    { "id": "psp-api", "from": "psp", "to": "api", "kind": "event", "label": "webhook", "style": "dashed" }
+  ],
+  "steps": [
+    {
+      "id": "request",
+      "title": { "tr": "Sipariş isteği", "en": "Order request" },
+      "narration": {
+        "tr": "Sepet onaylandı. Tarayıcı POST /api/v1/orders gönderir: Authorization: Bearer <JWT>, Idempotency-Key ve gövdede 10 adet zeytinyağı. Çift tıklama ya da ağ tekrarı ikinci bir sipariş yaratmasın diye anahtar bu sipariş girişimi için bir kez üretilmiştir.",
+        "en": "The cart is confirmed. The browser sends POST /api/v1/orders: Authorization: Bearer <JWT>, an Idempotency-Key and 10 units of olive oil in the body. The key was generated once for this order attempt so that a double click or a network retry does not create a second order."
+      },
+      "durationMs": 3500,
+      "inherit": false,
+      "highlight": { "nodes": ["browser", "api"], "edges": ["b-api"] },
+      "nodeStates": {
+        "browser": { "status": "active", "badge": "POST" },
+        "api": { "status": "active" },
+        "db": { "status": "idle" },
+        "queue": { "status": "idle", "counter": 0 },
+        "worker": { "status": "idle" },
+        "psp": { "status": "idle" }
+      },
+      "edgeStates": { "b-api": { "status": "active" }, "b-psp": { "visible": false }, "psp-api": { "visible": false } },
+      "packets": [
+        { "edge": "b-api", "shape": "envelope", "label": { "tr": "POST /orders · 10 adet", "en": "POST /orders · 10 units" }, "durationMs": 1200 }
+      ]
+    },
+    {
+      "id": "validate",
+      "title": { "tr": "1. Doğrulama", "en": "1. Validation" },
+      "narration": {
+        "tr": "API iş mantığına girmeden önce gövdeyi şemaya göre doğrular: productId tam sayı mı, quantity pozitif mi, zorunlu alanlar var mı? Biçim bozuksa burada 400 döner ve veritabanına hiç gidilmez. Bu istek geçer.",
+        "en": "Before entering business logic the API validates the body against the schema: is productId an integer, is quantity positive, are required fields present? If the shape is wrong it returns 400 here and the database is never touched. This request passes."
+      },
+      "durationMs": 3500,
+      "highlight": { "nodes": ["api"], "edges": [] },
+      "nodeStates": { "browser": { "status": "busy", "badge": "" }, "api": { "status": "busy", "badge": "1 ✓" } },
+      "edgeStates": { "b-api": { "status": "idle" } },
+      "annotations": [
+        { "id": "v400", "x": 400, "y": 190, "text": { "tr": "biçim hatalı → 400", "en": "malformed → 400" }, "tone": "warning", "target": "api" }
+      ]
+    },
+    {
+      "id": "rules",
+      "title": { "tr": "2. İş kuralları", "en": "2. Business rules" },
+      "narration": {
+        "tr": "Sonra iş kuralları: token'daki priceTier bayi fiyatını belirler, minimum sipariş miktarı (6) karşılanmış mı, stokta yeterli ürün var mı? Biçim doğru ama kural çiğneniyorsa yanıt 422 olur. Stok veritabanından okunur; 85 adet var.",
+        "en": "Next come the business rules: priceTier in the token selects the dealer price, is the minimum order quantity (6) met, is there enough stock? If the shape is right but a rule is broken the answer is 422. Stock is read from the database; there are 85 units."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["api", "db"], "edges": ["api-db"] },
+      "nodeStates": { "api": { "badge": "2 ✓" }, "db": { "status": "active" } },
+      "edgeStates": { "api-db": { "status": "active" } },
+      "packets": [
+        { "edge": "api-db", "shape": "square", "label": "SELECT stock", "durationMs": 900 },
+        { "edge": "api-db", "shape": "square", "direction": "backward", "label": "85", "color": "success", "startAt": 1100, "durationMs": 900 }
+      ],
+      "annotations": [
+        { "id": "r422", "x": 400, "y": 190, "text": { "tr": "kural ihlali → 422", "en": "rule violated → 422" }, "tone": "warning", "target": "api" }
+      ]
+    },
+    {
+      "id": "transaction",
+      "title": { "tr": "3. Tek transaction", "en": "3. One transaction" },
+      "narration": {
+        "tr": "Yazma işleri tek bir transaction içinde yapılır: sipariş pending olarak eklenir, stok koşullu UPDATE ile rezerve edilir (available >= 10) ve aynı transaction'da outbox tablosuna bir OrderCreated olay kaydı yazılır. COMMIT'e kadar başka hiçbir bağlantı bu satırları görmez.",
+        "en": "The writes happen inside a single transaction: the order is inserted as pending, stock is reserved with a conditional UPDATE (available >= 10), and an OrderCreated event record is written to the outbox table in the same transaction. Until COMMIT no other connection sees these rows."
+      },
+      "durationMs": 5000,
+      "highlight": { "nodes": ["api", "db"], "edges": ["api-db"] },
+      "nodeStates": { "api": { "badge": "3 · TX" }, "db": { "status": "busy", "badge": "BEGIN" } },
+      "packets": [
+        { "edge": "api-db", "shape": "square", "label": "INSERT order (pending)", "durationMs": 900 },
+        { "edge": "api-db", "shape": "square", "label": "UPDATE stock reserve", "startAt": 1100, "durationMs": 900 },
+        { "edge": "api-db", "shape": "square", "label": "INSERT outbox", "startAt": 2200, "durationMs": 900 },
+        { "edge": "api-db", "shape": "diamond", "label": "COMMIT", "color": "success", "startAt": 3300, "durationMs": 900 }
+      ]
+    },
+    {
+      "id": "created",
+      "title": { "tr": "201 Created", "en": "201 Created" },
+      "narration": {
+        "tr": "COMMIT başarılı. API 201 Created ve Location: /api/v1/orders/ORD-1045 ile { orderId, status: pending } döner. Kullanıcı ödeme adımına geçebilir; sipariş henüz ödenmedi, yalnızca stoğu tutuldu.",
+        "en": "COMMIT succeeded. The API returns 201 Created with Location: /api/v1/orders/ORD-1045 and { orderId, status: pending }. The user can move on to payment; the order is not paid yet, its stock is only held."
+      },
+      "durationMs": 3500,
+      "highlight": { "nodes": ["browser", "api"], "edges": ["b-api"] },
+      "nodeStates": { "browser": { "status": "success", "badge": "201" }, "api": { "status": "active", "badge": "" }, "db": { "status": "success", "badge": "pending" } },
+      "edgeStates": { "api-db": { "status": "idle" }, "b-api": { "status": "active" } },
+      "packets": [
+        { "edge": "b-api", "shape": "envelope", "direction": "backward", "label": "201 · ORD-1045 · pending", "color": "success", "durationMs": 1200 }
+      ]
+    },
+    {
+      "id": "publish",
+      "title": { "tr": "4. Olay yayını", "en": "4. Event publishing" },
+      "narration": {
+        "tr": "Ayrı bir aktarıcı outbox tablosundaki yeni kaydı okuyup OrderCreated olayını kuyruğa yayınlar; e-posta ve depo işçileri bunu kendi hızlarında tüketir. Olay transaction ile birlikte yazıldığı için 'sipariş var ama olay kayboldu' ya da 'olay gitti ama sipariş yok' durumu oluşmaz.",
+        "en": "A separate relay reads the new row from the outbox table and publishes the OrderCreated event to the queue; email and warehouse workers consume it at their own pace. Because the event was written in the same transaction there is no 'order exists but the event was lost' or 'event went out but there is no order' situation."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["db", "queue", "worker"], "edges": ["db-queue", "queue-worker"] },
+      "nodeStates": { "browser": { "status": "idle" }, "api": { "status": "idle" }, "db": { "status": "active" }, "queue": { "status": "active", "counter": 1 }, "worker": { "status": "busy", "badge": "✉" } },
+      "edgeStates": { "b-api": { "status": "idle" }, "db-queue": { "status": "active" }, "queue-worker": { "status": "active" } },
+      "packets": [
+        { "edge": "db-queue", "shape": "diamond", "label": "OrderCreated", "durationMs": 1100 },
+        { "edge": "queue-worker", "shape": "diamond", "label": "OrderCreated", "startAt": 1500, "durationMs": 1000 }
+      ]
+    },
+    {
+      "id": "pay",
+      "title": { "tr": "5. Ödeme sayfası", "en": "5. Payment page" },
+      "narration": {
+        "tr": "Tarayıcı ödeme sağlayıcının sayfasına yönlendirilir. Kart bilgileri doğrudan sağlayıcıya gider; senin sunucun kart numarasını hiç görmez. Bu hem güvenliği hem de kart verisi standartlarına uyumu kolaylaştırır.",
+        "en": "The browser is redirected to the payment provider's page. Card details go straight to the provider; your server never sees the card number. This makes both security and compliance with card data standards easier."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["browser", "psp"], "edges": ["b-psp"] },
+      "nodeStates": { "browser": { "status": "active" }, "psp": { "status": "active" }, "db": { "status": "idle" }, "queue": { "status": "idle" }, "worker": { "status": "idle", "badge": "" } },
+      "edgeStates": { "db-queue": { "status": "idle" }, "queue-worker": { "status": "idle" }, "b-psp": { "visible": true, "status": "active" } },
+      "packets": [
+        { "edge": "b-psp", "shape": "envelope", "label": { "tr": "kart bilgisi", "en": "card details" }, "durationMs": 1200 },
+        { "edge": "b-psp", "shape": "envelope", "direction": "backward", "label": { "tr": "onaylandı", "en": "approved" }, "color": "success", "startAt": 1600, "durationMs": 1200 }
+      ]
+    },
+    {
+      "id": "webhook",
+      "title": { "tr": "6. Webhook: paid", "en": "6. Webhook: paid" },
+      "narration": {
+        "tr": "Sağlayıcı sonucu POST /webhooks/payment ile bildirir. API imzayı doğrular, olay kimliğini kaydeder (aynı bildirim iki kez gelirse ikincisi yok sayılır), siparişi paid yapar ve rezerve stoğu kalıcı olarak düşer. Sağlayıcıya hızla 200 döner; yoksa sağlayıcı bildirimi tekrar gönderir.",
+        "en": "The provider reports the result with POST /webhooks/payment. The API verifies the signature, records the event id (if the same notification arrives twice the second is ignored), marks the order paid and permanently deducts the reserved stock. It quickly returns 200 to the provider; otherwise the provider resends the notification."
+      },
+      "durationMs": 5000,
+      "highlight": { "nodes": ["psp", "api", "db"], "edges": ["psp-api", "api-db"] },
+      "nodeStates": { "browser": { "status": "idle" }, "psp": { "status": "active" }, "api": { "status": "busy", "badge": "sig ✓" }, "db": { "status": "success", "badge": "paid" } },
+      "edgeStates": { "b-psp": { "status": "idle" }, "psp-api": { "visible": true, "status": "active" }, "api-db": { "status": "active" } },
+      "packets": [
+        { "edge": "psp-api", "shape": "envelope", "label": "payment.succeeded", "durationMs": 1100 },
+        { "edge": "api-db", "shape": "square", "label": { "tr": "UPDATE paid · stok düş", "en": "UPDATE paid · deduct stock" }, "startAt": 1400, "durationMs": 1000 },
+        { "edge": "psp-api", "shape": "envelope", "direction": "backward", "label": "200", "color": "success", "startAt": 2700, "durationMs": 900 }
+      ]
+    },
+    {
+      "id": "rollback",
+      "title": { "tr": "Stok yetmezse: ROLLBACK", "en": "If stock runs out: ROLLBACK" },
+      "narration": {
+        "tr": "Başka bir müşteri son 4 ürün için 10 adet isterse koşullu UPDATE 0 satır etkiler. API ROLLBACK çağırır: sipariş satırı da outbox kaydı da hiç var olmamış gibi geri alınır, kuyruğa olay gitmez. İstemci 409 alır ve sepetini güncelleyebilir.",
+        "en": "If another customer asks for 10 units while only 4 are left, the conditional UPDATE affects 0 rows. The API calls ROLLBACK: both the order row and the outbox record are undone as if they never existed, and no event reaches the queue. The client gets 409 and can update the cart."
+      },
+      "durationMs": 5000,
+      "highlight": { "nodes": ["browser", "api", "db"], "edges": ["b-api", "api-db"] },
+      "nodeStates": {
+        "browser": { "status": "warning", "badge": "409" },
+        "api": { "status": "warning", "badge": "0 ✗" },
+        "db": { "status": "error", "badge": "ROLLBACK" },
+        "queue": { "status": "muted", "counter": 1 },
+        "worker": { "status": "muted" },
+        "psp": { "status": "muted" }
+      },
+      "edgeStates": { "psp-api": { "status": "muted" }, "b-api": { "status": "active" }, "api-db": { "status": "error" }, "db-queue": { "status": "muted" } },
+      "packets": [
+        { "edge": "b-api", "shape": "envelope", "label": { "tr": "POST /orders · 10 adet", "en": "POST /orders · 10 units" }, "durationMs": 900 },
+        { "edge": "api-db", "shape": "square", "label": "UPDATE … available >= 10", "startAt": 1000, "durationMs": 900 },
+        { "edge": "api-db", "shape": "square", "direction": "backward", "label": { "tr": "0 satır", "en": "0 rows" }, "color": "danger", "startAt": 2000, "durationMs": 800 },
+        { "edge": "b-api", "shape": "envelope", "direction": "backward", "label": "409", "color": "warning", "startAt": 3100, "durationMs": 900 }
+      ],
+      "annotations": [
+        { "id": "no-event", "x": 690, "y": 420, "text": { "tr": "olay yok: yarım sipariş de yok", "en": "no event: no half-order either" }, "tone": "info", "target": "queue" }
+      ]
+    }
+  ]
+}

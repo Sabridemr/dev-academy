@@ -29,6 +29,18 @@ Sistem tasarımında "doğru" cevap yoktur; her karar bir şey kazandırır, bir
 | Önbellek | Daha hızlı okuma · Bayat veri riski |
 | Mikroservis vs monolit | Mikroservis = ölçeklenebilir · Monolit = basit |
 
+Tablodaki kararlar tek bir sistem için bir kez verilmez; aynı platformda her veri ve akış farklı uca yakın durabilir. Aşağıdaki harita, yemek siparişi vakasının parçalarını bu eksenlere yerleştiriyor.
+
+:::diagram{src="diagram.svg" alt="Altı ödünleşim ekseninde yemek siparişi platformunun parçaları: sipariş, ödeme ve stok SQL, senkron, CP ve taze okuma tarafında; menü, restoran listesi, kurye konumu ve bildirimler NoSQL, asenkron, AP ve önbellek tarafında|The parts of the food delivery platform on six trade-off axes: orders, payments and stock on the SQL, synchronous, CP and fresh-read side; menus, restaurant list, courier location and notifications on the NoSQL, asynchronous, AP and cache side"}
+Seçim sistem için değil, her veri ve akış için ayrı yapılır.
+:::
+
+En keskin ödünleşim ağ bölündüğünde ortaya çıkar. Animasyonda aynı bölünme anında ödeme yolunun yazmayı reddettiğini, restoran listesinin ise bayat da olsa yanıt verdiğini izle.
+
+:::animation{scene="cap-partition.scene.json"}
+Ağ bölünmesinde ödeme CP davranır ve reddeder, restoran listesi AP davranır ve bayat veriyle yanıt verir; bölünme onarılınca kopyalar uzlaşır.
+:::
+
 ### SQL ve NoSQL
 
 |  | SQL (PostgreSQL, MySQL) | NoSQL (MongoDB, Cassandra, Redis) |
@@ -48,6 +60,10 @@ Dağıtık bir sistem ağ bölünmesi (Partition) yaşadığında, **Consistency
 - **Ödeme ve stok:** Tutarlılık seçilir (CP). Yanlış bakiye göstermektense hata vermek daha iyidir.
 - **Restoran listesi ve kurye konumu:** Erişilebilirlik seçilir (AP). Birkaç saniye eski veri göstermek kabul edilebilir.
 
+:::interactive{type="cap-theorem" replicas=3 mode="cp" partition=false}
+Ödeme ve restoran listesi kararını kendin dene. "Ağı böl" düğmesiyle bölünmeyi aç ve CP modunda azınlık tarafındaki düğüme yazmayı dene: istek reddedilir, tıpkı animasyondaki ödeme takipçisi gibi. AP moduna geçip aynı senaryoyu tekrarla: yazma kabul edilir ama diğer taraf bayat okur. İki tarafa da yazdıktan sonra "Bölünmeyi onar" ile çakışan değerlerin günlükte nasıl uzlaştırıldığını izle ve kendine sor: bu kayıp hangi veride kabul edilebilir?
+:::
+
 ### Eventual consistency
 
 Asenkron sistemlerde veri tüm servislere aynı anda ulaşmaz; kısa bir süre sonra tutarlı hâle gelir. Örneğin restoran bir ürünü "tükendi" yaptığında arama sonuçlarında birkaç saniye daha görünebilir. Bu, ölçeklenebilirlik için ödenen bedeldir. Bu yüzden ödeme adımında stok mutlaka asıl kaynaktan (veritabanı) tekrar kontrol edilir.
@@ -63,7 +79,7 @@ Asenkron sistemlerde veri tüm servislere aynı anda ulaşmaz; kısa bir süre s
 
 ## 18. Mülakat soruları ve örnek cevaplar
 
-Notlardaki 10 sık sorulan mülakat sorusu ve her biri için cevap çerçevesi:
+Bu vaka için 10 sık sorulan mülakat sorusu ve her biri için cevap çerçevesi:
 
 **1. Gerçek zamanlı konum takibi nasıl çalışır?** Kurye uygulaması 5–10 saniyede bir konumu API Gateway üzerinden ingestion servisine gönderir. Konum doğrulanır, Redis'e GeoHash ile yazılır ve Kafka'ya olay olarak yayınlanır. Tracking Service bu olayı dinler ve WebSocket ile o siparişi takip eden kullanıcıya iletir. Geçmiş veri asenkron olarak veritabanına yazılır.
 
@@ -85,7 +101,8 @@ Notlardaki 10 sık sorulan mülakat sorusu ve her biri için cevap çerçevesi:
 
 **10. Başarıyı ölçmek için hangi metrikleri izlersin?** İş metrikleri: sipariş başarı oranı, ortalama teslimat süresi, iptal oranı, ortalama sipariş tutarı, kullanıcı tutma. Teknik metrikler: p95/p99 gecikme, hata oranı, çalışma süresi, önbellek isabet oranı, Kafka tüketici gecikmesi (consumer lag), WebSocket bağlantı sayısı.
 
-### Ek mülakat soruları
+:::callout{tone="info" title="Derinleşme"}
+**Ek mülakat soruları**
 
 **11. Monolit mi mikroservis mi ile başlarsın?** Küçük ekip ve yeni ürün için modüler monolitle başlarım; iş alanı sınırları netleşip ölçek sorunu ortaya çıkınca en çok yük alan modülü ayırırım.
 
@@ -96,10 +113,11 @@ Notlardaki 10 sık sorulan mülakat sorusu ve her biri için cevap çerçevesi:
 **14. Aynı ürünü son stokta iki kişi aynı anda alırsa?** Stok düşümü atomik yapılır: `UPDATE stock SET qty = qty - 1 WHERE id = $1 AND qty >= 1`. Etkilenen satır yoksa ikinci kullanıcıya "stok tükendi" denir. Alternatif olarak satır kilidi (`SELECT ... FOR UPDATE`) veya ödeme süresince stok rezervasyonu kullanılır.
 
 **15. Bayram gibi tepe yüklere nasıl hazırlanırsın?** Geçmiş verilerle trafik tahmini, önceden yük testi, önceden ölçekleme (pre-scaling), otomatik ölçekleme, kritik olmayan özellikleri kapatma (graceful degradation), kuyruklarla yük tamponlama ve sıkı izleme.
+:::
 
 ## 19. Senin projen için yol haritası
 
-Bu notlardaki fikirleri toptan gıda e-ticaret sitene aşamalı olarak uygulamak için önerilen sıra:
+Bu modüldeki fikirleri toptan gıda e-ticaret sitene aşamalı olarak uygulamak için önerilen sıra:
 
 ### Aşama 1: Temel (şimdi)
 
@@ -183,6 +201,12 @@ Notların son bölümündeki öneriler:
 | Sayılar |
 |---|
 | Arama < 200 ms · Takip < 2 sn · Konum 5–10 sn'de bir · %99,99 ≈ yılda 52 dk kesinti · 500K kurye / 5 sn = 100K güncelleme/sn · Sepet TTL 30 dk · Menü önbelleği 5–15 dk |
+
+:::realworld{company="Discord"}
+SQL ve NoSQL ödünleşiminin gerçek bir örneğini Discord, 2017'de mühendislik blogunda yayımladığı "How Discord Stores Billions of Messages" yazısında anlatır. Discord mesajları başlangıçta tek bir MongoDB kümesinde tutuyordu. Mesaj sayısı büyüdükçe veri ve indeksler belleğe sığmaz hâle geldi ve gecikmeler öngörülemez oldu. Ekip ihtiyacını açıkça tanımladı: yazma ağırlıklı, sürekli büyüyen, çoğunlukla "bir kanalın son mesajları" biçiminde okunan veri. Bu tanım onları Cassandra'ya götürdü; mesajlar kanal ve zaman dilimine göre bölümlenerek düğümler arasında yatay dağıtıldı.
+
+Yazı kazanılanlar kadar ödenen bedeli de anlatır: Cassandra'nın nihai tutarlılık modeli nedeniyle eşzamanlı düzenleme ve silme gibi durumlar uygulama tarafında ele alınmak zorunda kaldı, silinen verinin bıraktığı izler (tombstone) beklenmedik performans sorunlarına yol açtı. Discord 2023'te yayımladığı devam yazısında bu kümeyi ScyllaDB'ye taşıdığını anlatır. Ders şu: veritabanı seçimi bir kez verilip unutulan bir karar değildir; erişim kalıbı ve ölçek değiştikçe yeniden sorgulanır.
+:::
 
 :::quiz{src="quiz.json"}
 :::
