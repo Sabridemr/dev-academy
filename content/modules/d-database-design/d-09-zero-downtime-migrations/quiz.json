@@ -1,0 +1,111 @@
+{
+  "id": "d-09-zero-downtime-migrations-quiz",
+  "title": { "tr": "Sıfır Kesintili Migration Quiz", "en": "Zero-Downtime Migrations Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "order",
+      "prompt": {
+        "tr": "`users.name` sütununu kesintisiz olarak `display_name` yapmanın adımlarını doğru sıraya koyun.",
+        "en": "Put the steps for renaming `users.name` to `display_name` without downtime in the correct order."
+      },
+      "options": [
+        { "id": "contract", "text": { "tr": "Ayrı bir dağıtımda `name` sütununu silmek", "en": "Drop the `name` column in a separate deploy" } },
+        { "id": "backfill", "text": { "tr": "Eski satırları partiler hâlinde kopyalamak", "en": "Copy old rows in batches" } },
+        { "id": "expand", "text": { "tr": "`display_name` sütununu NULL olabilir şekilde eklemek", "en": "Add the nullable `display_name` column" } },
+        { "id": "reads", "text": { "tr": "Okumaları `display_name`'e taşımak", "en": "Move reads to `display_name`" } },
+        { "id": "dual", "text": { "tr": "Her yazmada iki sütunu da doldurmak", "en": "Fill both columns on every write" } }
+      ],
+      "correct": ["expand", "dual", "backfill", "reads", "contract"],
+      "explanation": {
+        "tr": "Önce sütun eklenir (expand), sonra yeni yazmalar iki yere gider, ardından geçmiş veri doldurulur. Okuma ancak veri tamamlanınca yeni sütuna geçer. Silme geri alınamadığı için en son ve ayrı yapılır.",
+        "en": "First the column is added (expand), then new writes go to both places, then historical data is filled in. Reads switch only once the data is complete. Dropping cannot be undone, so it comes last and separately."
+      },
+      "difficulty": "medium",
+      "concepts": ["expand-contract", "batched-backfill"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "Milisaniyede biten bir `ALTER TABLE ... ADD COLUMN` üretimde birkaç saniyelik toplu zaman aşımına yol açtı. En olası neden nedir?",
+        "en": "An `ALTER TABLE ... ADD COLUMN` that takes milliseconds caused a few seconds of widespread timeouts in production. What is the most likely cause?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Sütun ekleme tabloyu baştan yazdı", "en": "Adding the column rewrote the whole table" } },
+        { "id": "b", "text": { "tr": "ALTER uzun süren bir sorgunun kilidini bekledi ve arkasına sıradan sorgular da dizildi", "en": "The ALTER waited behind a long-running query's lock and ordinary queries queued up behind it" } },
+        { "id": "c", "text": { "tr": "PostgreSQL yeni sütun için otomatik indeks oluşturdu", "en": "PostgreSQL created an automatic index for the new column" } },
+        { "id": "d", "text": { "tr": "Prisma istemcisi yeniden başlatıldı", "en": "The Prisma client restarted" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "`ACCESS EXCLUSIVE` kilidi bekleyen bir `ALTER`, kendisinden sonra gelen ve normalde çakışmayan sorguları da bekletir: kilit kuyruğu. Çözüm, migration oturumunda kısa bir `lock_timeout` ile hızlı düşüp yeniden denemektir. NULL olabilen sütun eklemek tabloyu yeniden yazmaz.",
+        "en": "An `ALTER` waiting for an `ACCESS EXCLUSIVE` lock also blocks queries arriving after it that would not normally conflict: the lock queue. The fix is a short `lock_timeout` in the migration session so it fails fast and retries. Adding a nullable column does not rewrite the table."
+      },
+      "difficulty": "hard",
+      "concepts": ["lock-queue", "lock-timeout"]
+    },
+    {
+      "id": "q3",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Büyük bir PostgreSQL tablosunda hangileri okuma ve yazmaları uzun süre bloklamadan yapılabilir? (Birden fazla seçin)",
+        "en": "On a large PostgreSQL table, which of these can be done without blocking reads and writes for a long time? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "`CREATE INDEX CONCURRENTLY`", "en": "`CREATE INDEX CONCURRENTLY`" } },
+        { "id": "b", "text": { "tr": "`ADD CONSTRAINT ... CHECK (...) NOT VALID` ve ardından `VALIDATE CONSTRAINT`", "en": "`ADD CONSTRAINT ... CHECK (...) NOT VALID` followed by `VALIDATE CONSTRAINT`" } },
+        { "id": "c", "text": { "tr": "Doğrudan `ALTER COLUMN ... SET NOT NULL` (önceden doğrulanmış kısıt olmadan)", "en": "A plain `ALTER COLUMN ... SET NOT NULL` (without a previously validated constraint)" } },
+        { "id": "d", "text": { "tr": "Tek ifadede tüm tabloyu güncelleyen `UPDATE`", "en": "A single `UPDATE` statement over the whole table" } }
+      ],
+      "correct": ["a", "b"],
+      "explanation": {
+        "tr": "CONCURRENTLY yazmaları bloklamadan indeks kurar; `VALIDATE CONSTRAINT` daha hafif bir kilitle tarar. Doğrudan `SET NOT NULL` tüm tabloyu en güçlü kilit altında tarar; tek dev `UPDATE` ise satır kilitlerini uzun tutar ve büyük WAL üretir.",
+        "en": "CONCURRENTLY builds the index without blocking writes; `VALIDATE CONSTRAINT` scans under a lighter lock. A plain `SET NOT NULL` scans the whole table under the strongest lock; one giant `UPDATE` holds row locks for long and generates a lot of WAL."
+      },
+      "difficulty": "medium",
+      "concepts": ["create-index-concurrently", "not-null-constraint", "batched-backfill"]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Bu projenin CI'ındaki `prisma migrate diff --exit-code` adımı, bir migration'ın üretimde kesinti yaratmayacağını garanti eder.",
+        "en": "The `prisma migrate diff --exit-code` step in this project's CI guarantees that a migration will not cause downtime in production."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "Bu adım migration geçmişini gölge veritabanında uygulayıp sonucu `schema.prisma` ile karşılaştırır; yani eksik ya da şemayla uyumsuz migration'ı yakalar. Bir migration'ın kilit alıp almadığını, tabloyu yeniden yazıp yazmadığını ya da eski sürümü kırıp kırmadığını denetlemez.",
+        "en": "This step applies the migration history to a shadow database and compares the result with `schema.prisma`; it catches missing or mismatched migrations. It does not check whether a migration takes heavy locks, rewrites the table or breaks the old release."
+      },
+      "difficulty": "easy",
+      "concepts": ["migration-drift"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "Expand/contract sürecinde hangi adımdan sonra \"uygulama sürümünü geri almak\" artık tek başına yeterli bir geri alma planı değildir?",
+        "en": "In an expand/contract process, after which step is \"rolling back the app release\" no longer a sufficient rollback plan on its own?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Yeni sütunun eklenmesi", "en": "Adding the new column" } },
+        { "id": "b", "text": { "tr": "Çift yazmanın başlaması", "en": "Starting dual writes" } },
+        { "id": "c", "text": { "tr": "Okumaların yeni sütuna geçmesi", "en": "Switching reads to the new column" } },
+        { "id": "d", "text": { "tr": "Eski sütunun silinmesi (contract)", "en": "Dropping the old column (contract)" } }
+      ],
+      "correct": ["d"],
+      "explanation": {
+        "tr": "Contract'a kadar eski sütun yerindedir ve geri dönülen sürüm onu kullanabilir (eski sütuna yazmayı bırakan adımdan sonra eksik veri riski başlasa da sütun hâlâ vardır). Sütun silindikten sonra eski sürüm çalışamaz ve veri ancak yedekten geri gelir.",
+        "en": "Until contract the old column is still there and a rolled-back release can use it (after writes to it stop, data gaps become a risk, but the column still exists). Once it is dropped the old release cannot run and the data only comes back from a backup."
+      },
+      "difficulty": "medium",
+      "concepts": ["roll-forward", "expand-contract", "backward-compatible-migration"]
+    }
+  ]
+}
