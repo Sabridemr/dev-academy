@@ -122,6 +122,10 @@ export const InteractiveTypeSchema = z.enum([
   'predict-run',
   'sql-playground',
   'docker-layers',
+  'rbac-abac',
+  'threat-model',
+  'hash-salt',
+  'regex-playground',
 ]);
 export type InteractiveType = z.infer<typeof InteractiveTypeSchema>;
 
@@ -176,6 +180,10 @@ export const INTERACTIVE_PARAMS = {
   'predict-run': ['src'],
   'sql-playground': ['dataset', 'query'],
   'docker-layers': ['contextMb', 'example'],
+  'rbac-abac': ['mode', 'scenario'],
+  'threat-model': ['scenario'],
+  'hash-salt': ['algorithm', 'showAttack'],
+  'regex-playground': ['preset'],
 } as const satisfies Record<InteractiveType, readonly string[]>;
 
 /** Kod izini (`*.trace.json`) girdi olarak alan interaktif türler: iz, `src` parametresinden çözülür */
