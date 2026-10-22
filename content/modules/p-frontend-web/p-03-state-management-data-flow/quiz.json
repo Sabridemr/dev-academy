@@ -1,0 +1,110 @@
+{
+  "id": "p-03-state-management-data-flow-quiz",
+  "title": { "tr": "State Yönetimi Quiz", "en": "State Management Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Bir akordiyon bileşeninin açık/kapalı durumu nerede tutulmalı?",
+        "en": "Where should an accordion component's open/closed state live?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Global Redux store'da", "en": "In the global Redux store" } },
+        { "id": "b", "text": { "tr": "Bileşenin kendi yerel state'inde (useState)", "en": "In the component's own local state (useState)" } },
+        { "id": "c", "text": { "tr": "Sorgu önbelleğinde", "en": "In the query cache" } },
+        { "id": "d", "text": { "tr": "Uygulama genelindeki bir context'te", "en": "In an app-wide context" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Yalnızca o bileşeni ilgilendiren istemci state'i yerelde kalmalıdır. Global store ya da context, gereksiz bağımlılık ve render'a yol açar; sorgu önbelleği ise sunucu verisi içindir.",
+        "en": "Client state that concerns only one component should stay local. A global store or context adds needless coupling and renders; the query cache is for server data."
+      },
+      "difficulty": "easy",
+      "concepts": ["local-state"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "stale-while-revalidate davranışında, bayat veriye sahip bir bileşen yeniden göründüğünde ne olur?",
+        "en": "With stale-while-revalidate, what happens when a component holding stale data appears again?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Yükleme göstergesi çıkar, yeni veri gelene kadar boş ekran", "en": "A spinner shows; blank screen until new data arrives" } },
+        { "id": "b", "text": { "tr": "Bayat veri hemen gösterilir, arka planda yeniden istek atılır ve gelince arayüz güncellenir", "en": "Stale data is shown immediately, a background request is made and the UI updates when it arrives" } },
+        { "id": "c", "text": { "tr": "Bayat veri silinir ve hata gösterilir", "en": "Stale data is deleted and an error is shown" } },
+        { "id": "d", "text": { "tr": "Hiçbir şey olmaz; veri ancak sayfa yenilenince güncellenir", "en": "Nothing happens; data updates only on page reload" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "SWR'ın özü budur: kullanıcıyı bekletmeden eldeki değeri göster, tazesini arkada getir. Boş ekran yalnızca hiç veri yokken (ilk yükleme) görülür.",
+        "en": "That is the essence of SWR: show what you have without making the user wait, fetch the fresh value behind the scenes. A blank screen appears only when there is no data at all (first load)."
+      },
+      "difficulty": "easy",
+      "concepts": ["stale-while-revalidate", "server-state"]
+    },
+    {
+      "id": "q3",
+      "type": "order",
+      "prompt": {
+        "tr": "Bir 'Tamamla' mutasyonundan sonra ilerleme rozetinin güncellenme adımlarını sıralayın.",
+        "en": "Order the steps by which the progress badge updates after a 'Complete' mutation."
+      },
+      "options": [
+        { "id": "refetch", "text": { "tr": "Aktif abone olduğu için yeniden fetch tetiklenir", "en": "A refetch is triggered because there are active subscribers" } },
+        { "id": "post", "text": { "tr": "POST isteği sunucuya gider ve başarılı döner", "en": "The POST request reaches the server and succeeds" } },
+        { "id": "render", "text": { "tr": "Yeni değer önbelleğe yazılır, rozet yeniden render olur", "en": "The new value is written to the cache and the badge re-renders" } },
+        { "id": "invalidate", "text": { "tr": "onSuccess içinde ['progress'] anahtarı geçersiz kılınır", "en": "The ['progress'] key is invalidated inside onSuccess" } }
+      ],
+      "correct": ["post", "invalidate", "refetch", "render"],
+      "explanation": {
+        "tr": "Önce sunucuda yazma başarılı olmalı; sonra önbellek geçersiz kılınır, ekrandaki aboneler yeniden fetch tetikler ve yeni değer tüm abonelere dağılır.",
+        "en": "The server write must succeed first; then the cache is invalidated, on-screen subscribers trigger a refetch and the new value is delivered to all subscribers."
+      },
+      "difficulty": "medium",
+      "concepts": ["query-invalidation"]
+    },
+    {
+      "id": "q4",
+      "type": "multiple",
+      "prompt": {
+        "tr": "React context için hangileri doğrudur? (Birden fazla seçin)",
+        "en": "Which statements about React context are true? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Prop drilling'i önler", "en": "It avoids prop drilling" } },
+        { "id": "b", "text": { "tr": "Değeri değişince onu okuyan tüm bileşenler yeniden render olur", "en": "When its value changes, all components reading it re-render" } },
+        { "id": "c", "text": { "tr": "Saniyede onlarca kez değişen değerler için idealdir", "en": "It is ideal for values that change dozens of times per second" } },
+        { "id": "d", "text": { "tr": "Tema ve dil gibi seyrek değişen değerler için iyi bir adaydır", "en": "It is a good fit for rarely changing values like theme and language" } }
+      ],
+      "correct": ["a", "b", "d"],
+      "explanation": {
+        "tr": "Context derin ağaçlara değer taşır ama seçici abonelik sunmaz; sık değişen değerler tüm okuyucuları yeniden render eder. Bu yüzden sık değişen paylaşılan state için selector'lı bir store daha uygundur.",
+        "en": "Context carries values deep into the tree but offers no selective subscription; frequently changing values re-render all readers. A store with selectors is better for frequently changing shared state."
+      },
+      "difficulty": "medium",
+      "concepts": ["react-context", "global-store"]
+    },
+    {
+      "id": "q5",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Aynı sorgu anahtarını isteyen iki bileşen aynı anda mount olursa, sorgu önbelleği API'ye iki ayrı istek gönderir.",
+        "en": "If two components requesting the same query key mount at the same time, the query cache sends two separate requests to the API."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "Yanlış. Sorgu önbellekleri devam eden isteği anahtar bazında paylaşır (deduplication); ikinci abone aynı sonucu bekler.",
+        "en": "False. Query caches share the in-flight request per key (deduplication); the second subscriber waits for the same result."
+      },
+      "difficulty": "easy",
+      "concepts": ["request-deduplication"]
+    }
+  ]
+}

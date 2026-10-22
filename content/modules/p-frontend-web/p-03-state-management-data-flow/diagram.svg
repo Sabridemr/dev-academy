@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 420" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">İstemci state'i ve sunucu state'i</title>
+  <desc id="desc">Solda istemci state'i için dört basamaklı merdiven: yerel state, yukarı kaldırma, context ve store; her basamakta tipik bir örnek. Sağda sunucu state'i: bileşenler sorgu önbelleğine abone olur, önbellek API ile konuşur; staleTime, arka planda yenileme ve mutasyon sonrası invalidation okları gösterilir.</desc>
+  <defs>
+    <marker id="p03-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+  </defs>
+
+  <text x="480" y="30" text-anchor="middle" font-size="15" font-weight="600" fill="var(--da-fg, #0f172a)">State nerede yaşamalı?</text>
+
+  <!-- Sol: istemci state merdiveni -->
+  <text x="230" y="66" text-anchor="middle" font-size="13" font-weight="600" fill="var(--da-primary, #2563eb)">İstemci (UI) state'i</text>
+  <g stroke="var(--da-primary, #2563eb)" stroke-width="1.5" fill="var(--da-primary, #2563eb)" fill-opacity="0.08">
+    <rect x="40" y="320" width="150" height="56" rx="8"/>
+    <rect x="130" y="250" width="160" height="56" rx="8"/>
+    <rect x="220" y="180" width="160" height="56" rx="8"/>
+    <rect x="310" y="110" width="130" height="56" rx="8"/>
+  </g>
+  <g font-size="13" font-weight="600" fill="var(--da-fg, #0f172a)">
+    <text x="52" y="342">1. Yerel state</text>
+    <text x="142" y="272">2. Yukarı kaldır</text>
+    <text x="232" y="202">3. Context</text>
+    <text x="322" y="132">4. Store</text>
+  </g>
+  <g font-size="11" fill="var(--da-muted, #64748b)">
+    <text x="52" y="362">akordiyon açık mı</text>
+    <text x="142" y="292">iki kardeşin filtresi</text>
+    <text x="232" y="222">tema, dil, kullanıcı</text>
+    <text x="322" y="152">sık değişen, paylaşılan</text>
+  </g>
+  <text x="40" y="402" font-size="11" fill="var(--da-muted, #64748b)">Gerekmedikçe bir basamak yukarı çıkmayın.</text>
+
+  <line x1="480" y1="60" x2="480" y2="400" stroke="var(--da-border, #cbd5e1)" stroke-dasharray="5 5"/>
+
+  <!-- Sağ: sunucu state -->
+  <text x="720" y="66" text-anchor="middle" font-size="13" font-weight="600" fill="var(--da-accent, #0891b2)">Sunucu state'i = önbellek</text>
+  <g fill="var(--da-surface, #fff)" stroke="var(--da-border, #cbd5e1)" stroke-width="1.5">
+    <rect x="520" y="100" width="120" height="44" rx="8"/>
+    <rect x="520" y="170" width="120" height="44" rx="8"/>
+  </g>
+  <rect x="680" y="125" width="130" height="66" rx="10" fill="var(--da-accent, #0891b2)" fill-opacity="0.12" stroke="var(--da-accent, #0891b2)" stroke-width="1.5"/>
+  <rect x="840" y="125" width="90" height="66" rx="10" fill="var(--da-surface, #fff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5"/>
+  <g font-size="12" font-weight="600" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="580" y="127">Bileşen A</text>
+    <text x="580" y="197">Bileşen B</text>
+    <text x="745" y="155">Sorgu önbelleği</text>
+    <text x="885" y="163">API</text>
+  </g>
+  <text x="745" y="174" text-anchor="middle" font-size="11" fill="var(--da-muted, #64748b)">['progress', id]</text>
+  <g stroke="var(--da-muted, #64748b)" stroke-width="1.5" fill="none" marker-end="url(#p03-arrow)">
+    <line x1="640" y1="122" x2="676" y2="145"/>
+    <line x1="640" y1="192" x2="676" y2="172"/>
+    <line x1="810" y1="158" x2="836" y2="158"/>
+  </g>
+
+  <!-- Kurallar -->
+  <g font-size="12" fill="var(--da-fg, #0f172a)">
+    <circle cx="530" cy="256" r="5" fill="var(--da-success, #059669)"/>
+    <text x="544" y="260">Aynı anahtar → tek istek (deduplication)</text>
+    <circle cx="530" cy="290" r="5" fill="var(--da-warning, #d97706)"/>
+    <text x="544" y="294">staleTime dolunca: bayatı göster, arkada yenile</text>
+    <circle cx="530" cy="324" r="5" fill="var(--da-danger, #dc2626)"/>
+    <text x="544" y="328">Mutasyon başarılı → invalidate → yeniden fetch</text>
+    <circle cx="530" cy="358" r="5" fill="var(--da-primary, #2563eb)"/>
+    <text x="544" y="362">İyimser güncelleme: önce yaz, hata olursa geri al</text>
+  </g>
+</svg>
