@@ -40,9 +40,27 @@ pnpm test                         # birim testleri (veritabanı gerekmez)
 export DATABASE_URL=postgresql://devacademy:devacademy@localhost:5432/devacademy_test?schema=public
 pnpm exec prisma migrate deploy && pnpm prisma:seed
 pnpm test:e2e
+pnpm test:e2e test/e2e/auth.e2e-spec.ts   # tek bir modülün dosyası
 ```
 
-E2E kapsamı: health, kayıt/giriş/doğrulama hataları, refresh rotasyonu ve yeniden kullanım tespiti, profil, içerik (modül, ders, slug, ETag/304, sahne, offline paket), quiz puanlama ve cevap gizliliği, ilerleme/seri/rozet, yer imi/not, arama, admin yetkisi, taslak → yayın akışı, sahne doğrulaması.
+E2E testleri `test/e2e/` altında modül bazlı dosyalara bölünmüştür; her dosya kendi uygulama örneğini açar ve tek başına çalışabilir:
+
+| Dosya                      | Kapsam                                                                                                                                                                                    |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `helpers.ts`               | ortak kurulum: `useE2eApp()` (uygulama + içerik önbelleği + `e2e_` kullanıcı temizliği), `createDirectUser`/`directUser`, `seedQuizAttempt`                                               |
+| `health.e2e-spec.ts`       | liveness / readiness                                                                                                                                                                      |
+| `auth.e2e-spec.ts`         | kayıt/giriş/doğrulama hataları, refresh rotasyonu ve yeniden kullanım tespiti, şifre değiştirme, web çerez modu, şifre sıfırlama, e-posta doğrulama, tüm cihazlardan çıkış ve hesap silme |
+| `users.e2e-spec.ts`        | profil, saat dilimi, push token                                                                                                                                                           |
+| `content.e2e-spec.ts`      | modül, ders, slug, ETag/304, cache başlıkları, sahne, offline paket, WebSocket CORS, ders görselleri (`/assets`)                                                                          |
+| `progress.e2e-spec.ts`     | quiz puanlama ve cevap gizliliği, ilerleme/seri/rozet, tekrar kartları (SM-2), XP, günlük hedef, aktivite                                                                                 |
+| `bookmarks.e2e-spec.ts`    | yer imi / not                                                                                                                                                                             |
+| `search.e2e-spec.ts`       | arama                                                                                                                                                                                     |
+| `admin.e2e-spec.ts`        | admin yetkisi, istatistikler, taslak → yayın akışı, sahne/quiz doğrulaması, yayından kaldırma                                                                                             |
+| `certificates.e2e-spec.ts` | modül sertifikası ve herkese açık doğrulama                                                                                                                                               |
+| `feedback.e2e-spec.ts`     | ders geri bildirimi ve admin analitiği                                                                                                                                                    |
+| `exams.e2e-spec.ts`        | deneme sınavı                                                                                                                                                                             |
+
+Testler dosyalar arasında veri paylaşmaz: öğrenci hesapları `createDirectUser` ile doğrudan oluşturulur (kayıt uç noktasının hız sınırını tüketmez), başka bir testin bıraktığı veriye ihtiyaç duyan dosyalar bunu `beforeAll` içinde açıkça kurar (ör. `seedQuizAttempt`).
 
 ## Hata formatı
 
@@ -76,5 +94,5 @@ prisma/
   schema.prisma    veri modeli
   migrations/      SQL migration'lar
   seed.ts          içerik yükleyici
-test/              e2e testleri
+test/e2e/          e2e testleri (modül bazlı, ortak kurulum helpers.ts)
 ```
