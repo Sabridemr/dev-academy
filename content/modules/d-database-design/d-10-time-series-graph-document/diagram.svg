@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 420" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Üç veri düzeni: zaman serisi, graf, belge</title>
+  <desc id="desc">Solda zaman aralıklarına bölünmüş chunk'lar: en yeni chunk sıcak ve sıkıştırılmamış, eskiler sıkıştırılmış, en eskisi retention ile düşürülüyor; bir zaman aralığı sorgusu yalnızca iki chunk'a dokunuyor. Ortada kenarlarını işaretçi olarak tutan düğümler ve iki atlamalı bir gezinti. Sağda kalemleri ve adresi gömülü, müşteriye referans veren bir sipariş belgesi.</desc>
+  <defs>
+    <marker id="d10-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+    <marker id="d10-arrow-p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-primary, #6366f1)"/>
+    </marker>
+  </defs>
+
+  <!-- Başlıklar -->
+  <g font-size="15" font-weight="600" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="150" y="32">Zaman serisi</text>
+    <text x="450" y="32">Graf</text>
+    <text x="750" y="32">Belge</text>
+  </g>
+  <g font-size="11" fill="var(--da-muted, #64748b)" text-anchor="middle">
+    <text x="150" y="50">sorgu = zaman aralığı</text>
+    <text x="450" y="50">sorgu = gezinti</text>
+    <text x="750" y="50">sorgu = bütünü getir</text>
+  </g>
+  <g stroke="var(--da-border, #cbd5e1)" stroke-dasharray="5 5">
+    <line x1="300" y1="20" x2="300" y2="400"/>
+    <line x1="600" y1="20" x2="600" y2="400"/>
+  </g>
+
+  <!-- Zaman serisi chunk'ları -->
+  <g stroke-width="1.5">
+    <rect x="30" y="80" width="240" height="40" rx="8" fill="var(--da-success, #10b981)" fill-opacity="0.15" stroke="var(--da-success, #10b981)"/>
+    <rect x="30" y="130" width="240" height="40" rx="8" fill="var(--da-success, #10b981)" fill-opacity="0.15" stroke="var(--da-success, #10b981)"/>
+    <rect x="30" y="180" width="240" height="40" rx="8" fill="var(--da-surface, #f8fafc)" stroke="var(--da-fg, #0f172a)"/>
+    <rect x="30" y="230" width="240" height="40" rx="8" fill="var(--da-surface, #f8fafc)" stroke="var(--da-fg, #0f172a)"/>
+    <rect x="30" y="280" width="240" height="40" rx="8" fill="var(--da-danger, #ef4444)" fill-opacity="0.10" stroke="var(--da-danger, #ef4444)" stroke-dasharray="5 4"/>
+  </g>
+  <g font-size="12" fill="var(--da-fg, #0f172a)">
+    <text x="45" y="105">chunk: bu hafta (sıcak)</text>
+    <text x="45" y="155">chunk: geçen hafta</text>
+    <text x="45" y="205">chunk: 2 hafta önce · sıkıştırılmış</text>
+    <text x="45" y="255">chunk: 3 hafta önce · sıkıştırılmış</text>
+    <text x="45" y="305">chunk: süresi doldu → DROP</text>
+  </g>
+  <path d="M 280 82 L 288 82 L 288 168 L 280 168" fill="none" stroke="var(--da-success, #10b981)" stroke-width="2"/>
+  <text x="150" y="350" font-size="11" text-anchor="middle" fill="var(--da-muted, #64748b)">WHERE time &gt; now() - '10 days'</text>
+  <text x="150" y="368" font-size="11" text-anchor="middle" fill="var(--da-muted, #64748b)">→ yalnızca iki chunk taranır</text>
+  <text x="150" y="392" font-size="11" text-anchor="middle" fill="var(--da-muted, #64748b)">retention = bütün chunk'ı düşürmek</text>
+
+  <!-- Graf -->
+  <g stroke="var(--da-muted, #64748b)" stroke-width="1.5">
+    <line x1="380" y1="210" x2="450" y2="140"/>
+    <line x1="380" y1="210" x2="450" y2="290"/>
+    <line x1="450" y1="140" x2="540" y2="100"/>
+    <line x1="450" y1="140" x2="540" y2="210"/>
+    <line x1="450" y1="290" x2="540" y2="210"/>
+    <line x1="450" y1="290" x2="540" y2="330"/>
+  </g>
+  <g stroke="var(--da-primary, #6366f1)" stroke-width="2.4" fill="none" marker-end="url(#d10-arrow-p)">
+    <path d="M 392 198 L 436 152"/>
+    <path d="M 464 146 L 524 202"/>
+  </g>
+  <g stroke-width="1.6">
+    <circle cx="380" cy="210" r="22" fill="var(--da-primary, #6366f1)" fill-opacity="0.18" stroke="var(--da-primary, #6366f1)"/>
+    <circle cx="450" cy="140" r="20" fill="var(--da-surface, #f8fafc)" stroke="var(--da-fg, #0f172a)"/>
+    <circle cx="450" cy="290" r="20" fill="var(--da-surface, #f8fafc)" stroke="var(--da-fg, #0f172a)"/>
+    <circle cx="540" cy="100" r="18" fill="var(--da-surface, #f8fafc)" stroke="var(--da-fg, #0f172a)"/>
+    <circle cx="540" cy="210" r="18" fill="var(--da-accent, #f59e0b)" fill-opacity="0.2" stroke="var(--da-accent, #f59e0b)"/>
+    <circle cx="540" cy="330" r="18" fill="var(--da-surface, #f8fafc)" stroke="var(--da-fg, #0f172a)"/>
+  </g>
+  <g font-size="11" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="380" y="214">Ayşe</text>
+    <text x="450" y="144">Ali</text>
+    <text x="450" y="294">Can</text>
+    <text x="540" y="104">Deniz</text>
+    <text x="540" y="214">Ece</text>
+    <text x="540" y="334">Fatih</text>
+  </g>
+  <text x="450" y="368" font-size="11" text-anchor="middle" fill="var(--da-muted, #64748b)">her düğüm kenarlarına işaretçi tutar</text>
+  <text x="450" y="386" font-size="11" text-anchor="middle" fill="var(--da-muted, #64748b)">maliyet ≈ gezilen kenarlar</text>
+
+  <!-- Belge -->
+  <rect x="625" y="75" width="250" height="250" rx="12" fill="var(--da-surface, #f8fafc)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5"/>
+  <g font-size="11" fill="var(--da-fg, #0f172a)" font-family="ui-monospace, monospace">
+    <text x="640" y="100">{ _id: "ord_81",</text>
+    <text x="650" y="120">customerId: "c_42",</text>
+    <text x="650" y="140">status: "paid",</text>
+    <text x="650" y="160">shippingAddress: {…},</text>
+    <text x="650" y="180">items: [</text>
+    <text x="662" y="200">{ sku: "KB-101", qty: 1 },</text>
+    <text x="662" y="220">{ sku: "MS-220", qty: 2 }</text>
+    <text x="650" y="240">] }</text>
+  </g>
+  <rect x="644" y="150" width="200" height="98" rx="6" fill="var(--da-success, #10b981)" fill-opacity="0.10" stroke="var(--da-success, #10b981)"/>
+  <text x="852" y="200" font-size="10" fill="var(--da-success, #10b981)" transform="rotate(90 852 200)" text-anchor="middle">gömülü</text>
+  <rect x="644" y="107" width="140" height="18" rx="4" fill="none" stroke="var(--da-accent, #f59e0b)"/>
+  <path d="M 700 125 C 700 300, 700 330, 700 342" fill="none" stroke="var(--da-accent, #f59e0b)" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#d10-arrow)"/>
+  <rect x="640" y="345" width="200" height="30" rx="8" fill="var(--da-accent, #f59e0b)" fill-opacity="0.12" stroke="var(--da-accent, #f59e0b)"/>
+  <text x="740" y="365" font-size="11" text-anchor="middle" fill="var(--da-fg, #0f172a)">customers koleksiyonu (referans)</text>
+  <text x="750" y="395" font-size="11" text-anchor="middle" fill="var(--da-muted, #64748b)">atomiklik belge düzeyinde · en fazla 16 MB</text>
+</svg>

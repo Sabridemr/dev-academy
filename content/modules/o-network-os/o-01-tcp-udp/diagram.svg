@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 440" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">TCP el sıkışması ve kayan pencere</title>
+  <desc id="desc">Sol yarıda istemci ve sunucu zaman çizgileri arasında SYN, SYN-ACK ve ACK okları, ardından veri segmentleri ve kümülatif ACK. Sağ yarıda göndericinin byte dizisi dört bölgeye ayrılır: onaylanmış, gönderilmiş ama onay bekleyen, pencere içinde gönderilebilir ve pencere dışında bekleyen. Pencere boyutu alıcı penceresi ile tıkanıklık penceresinin küçüğüdür.</desc>
+  <defs>
+    <marker id="o1-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-primary, #6366f1)"/>
+    </marker>
+    <marker id="o1-arrow-ok" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-success, #10b981)"/>
+    </marker>
+  </defs>
+
+  <text x="230" y="30" text-anchor="middle" font-size="14" font-weight="600" fill="var(--da-fg, #0f172a)">Bağlantı kurulumu (1 RTT)</text>
+  <text x="700" y="30" text-anchor="middle" font-size="14" font-weight="600" fill="var(--da-fg, #0f172a)">Gönderici penceresi</text>
+
+  <!-- Zaman çizgileri -->
+  <g font-size="13" font-weight="600" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="90" y="60">İstemci</text>
+    <text x="370" y="60">Sunucu</text>
+  </g>
+  <g stroke="var(--da-border, #cbd5e1)" stroke-width="2">
+    <line x1="90" y1="70" x2="90" y2="420"/>
+    <line x1="370" y1="70" x2="370" y2="420"/>
+  </g>
+
+  <!-- El sıkışma okları -->
+  <g stroke="var(--da-primary, #6366f1)" stroke-width="1.8" fill="none" marker-end="url(#o1-arrow)">
+    <path d="M 92 90 L 366 130"/>
+    <path d="M 368 140 L 94 180"/>
+    <path d="M 92 190 L 366 230"/>
+  </g>
+  <g font-size="12" fill="var(--da-primary, #6366f1)" text-anchor="middle">
+    <text x="230" y="100">SYN  seq=x</text>
+    <text x="230" y="150">SYN-ACK  seq=y, ack=x+1</text>
+    <text x="230" y="202">ACK  ack=y+1</text>
+  </g>
+  <g font-size="11" fill="var(--da-muted, #64748b)">
+    <text x="20" y="94">SYN_SENT</text>
+    <text x="378" y="134">SYN_RCVD</text>
+    <text x="10" y="194">ESTABLISHED</text>
+    <text x="378" y="234">ESTABLISHED</text>
+  </g>
+
+  <!-- Veri segmentleri -->
+  <g stroke="var(--da-fg, #0f172a)" stroke-width="1.4" fill="none" marker-end="url(#o1-arrow)" opacity="0.75">
+    <path d="M 92 260 L 366 290"/>
+    <path d="M 92 300 L 366 330"/>
+  </g>
+  <path d="M 92 280 L 220 294" stroke="var(--da-danger, #ef4444)" stroke-width="1.6" fill="none" stroke-dasharray="5 4"/>
+  <text x="228" y="300" font-size="14" font-weight="700" fill="var(--da-danger, #ef4444)">✕</text>
+  <g font-size="11" fill="var(--da-fg, #0f172a)">
+    <text x="150" y="262">seq=1</text>
+    <text x="110" y="278" fill="var(--da-danger, #ef4444)">seq=1001 (kayıp)</text>
+    <text x="150" y="304">seq=2001</text>
+  </g>
+  <g stroke="var(--da-success, #10b981)" stroke-width="1.6" fill="none" marker-end="url(#o1-arrow-ok)">
+    <path d="M 368 345 L 94 375"/>
+  </g>
+  <text x="230" y="352" text-anchor="middle" font-size="11" fill="var(--da-success, #10b981)">ack=1001 (tekrarlanır → hızlı yeniden iletim)</text>
+  <text x="230" y="410" text-anchor="middle" font-size="11" fill="var(--da-muted, #64748b)">ACK numarası = sırayla alınan son byte + 1</text>
+
+  <!-- Kayan pencere -->
+  <g font-size="11" text-anchor="middle">
+    <rect x="490" y="90" width="110" height="56" rx="6" fill="var(--da-success, #10b981)" opacity="0.18" stroke="var(--da-success, #10b981)"/>
+    <rect x="600" y="90" width="120" height="56" rx="0" fill="var(--da-primary, #6366f1)" opacity="0.22" stroke="var(--da-primary, #6366f1)"/>
+    <rect x="720" y="90" width="110" height="56" rx="0" fill="var(--da-primary, #6366f1)" opacity="0.08" stroke="var(--da-primary, #6366f1)" stroke-dasharray="4 3"/>
+    <rect x="830" y="90" width="100" height="56" rx="6" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+    <text x="545" y="114" fill="var(--da-fg, #0f172a)">gönderildi</text>
+    <text x="545" y="130" fill="var(--da-fg, #0f172a)">+ onaylandı</text>
+    <text x="660" y="114" fill="var(--da-fg, #0f172a)">gönderildi,</text>
+    <text x="660" y="130" fill="var(--da-fg, #0f172a)">onay bekliyor</text>
+    <text x="775" y="114" fill="var(--da-fg, #0f172a)">gönderilebilir</text>
+    <text x="775" y="130" fill="var(--da-fg, #0f172a)">(pencere içinde)</text>
+    <text x="880" y="114" fill="var(--da-muted, #64748b)">bekliyor</text>
+    <text x="880" y="130" fill="var(--da-muted, #64748b)">(pencere dışı)</text>
+  </g>
+  <!-- Pencere parantezi -->
+  <path d="M 600 160 L 600 172 L 830 172 L 830 160" stroke="var(--da-accent, #f59e0b)" stroke-width="2" fill="none"/>
+  <text x="715" y="192" text-anchor="middle" font-size="12" font-weight="600" fill="var(--da-accent, #f59e0b)">pencere = min(rwnd, cwnd)</text>
+  <text x="600" y="80" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">son ACK</text>
+
+  <!-- rwnd ve cwnd açıklamaları -->
+  <g font-size="12" fill="var(--da-fg, #0f172a)">
+    <rect x="490" y="220" width="440" height="80" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+    <text x="508" y="246" font-weight="600">rwnd — akış kontrolü</text>
+    <text x="508" y="266" fill="var(--da-muted, #64748b)">Alıcı her ACK'te tamponundaki boş yeri bildirir.</text>
+    <text x="508" y="284" fill="var(--da-muted, #64748b)">Uygulama yavaş okursa rwnd → 0, gönderici durur.</text>
+    <rect x="490" y="314" width="440" height="96" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+    <text x="508" y="340" font-weight="600">cwnd — tıkanıklık kontrolü</text>
+    <text x="508" y="360" fill="var(--da-muted, #64748b)">Gönderici kendi tahminini tutar: slow start'ta her RTT</text>
+    <text x="508" y="378" fill="var(--da-muted, #64748b)">yaklaşık ikiye katlanır, kayıpta küçülür (Reno, CUBIC),</text>
+    <text x="508" y="396" fill="var(--da-muted, #64748b)">BBR ise bant genişliği ve RTT ölçümüne göre ayarlar.</text>
+  </g>
+</svg>

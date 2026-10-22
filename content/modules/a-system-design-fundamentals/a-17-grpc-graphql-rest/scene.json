@@ -1,0 +1,226 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "a-17-rest-graphql-grpc",
+  "title": {
+    "tr": "Aynı veri üç stilde: REST, GraphQL, gRPC",
+    "en": "The same data in three styles: REST, GraphQL, gRPC"
+  },
+  "summary": {
+    "tr": "Sipariş + müşteri + ürünler verisi REST'te üç sıralı istekle, GraphQL'de tek sorgu ve DataLoader ile toplu resolver çağrısıyla, gRPC'de ise sözleşmeli unary çağrı ve server streaming ile taşınır.",
+    "en": "Order + customer + products data travels as three sequential requests in REST, as one query with batched resolver calls via DataLoader in GraphQL, and as a contract-based unary call plus server streaming in gRPC."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda mobil istemci, ortada API katmanı, sağda üstten alta sipariş, müşteri ve katalog servisleri. REST bölümünde istemci üç isteği sırayla gönderir; her biri bir mobil ağ gidiş-dönüşü sürer ve ürün yanıtı gereksiz alanlar içerir. GraphQL bölümünde istemci tek bir sorgu gönderir; API katmanındaki resolver'lar önce siparişi getirir, sonra her ürün için ayrı çağrı yapar (N+1), ardından DataLoader bu çağrıları tek bir toplu çağrıda birleştirir ve istemciye sorgunun şeklinde tek yanıt döner. gRPC bölümünde API katmanı sipariş servisini protobuf sözleşmesiyle çağırır ve katalog servisi ürünleri server streaming ile tek tek gönderir.",
+      "en": "Mobile client on the left, the API layer in the middle, and order, customer and catalog services on the right from top to bottom. In the REST part the client sends three requests in sequence; each costs one mobile round trip and the product response carries unneeded fields. In the GraphQL part the client sends one query; resolvers in the API layer first fetch the order, then make a separate call per product (N+1), then DataLoader merges these into one batch call and a single response shaped like the query returns to the client. In the gRPC part the API layer calls the order service using a protobuf contract and the catalog service sends products one by one via server streaming."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "mobile", "kind": "mobile", "label": { "tr": "Mobil istemci", "en": "Mobile client" }, "sublabel": "RTT 100 ms", "x": 100, "y": 300 },
+    { "id": "gw", "kind": "gateway", "label": { "tr": "API katmanı", "en": "API layer" }, "sublabel": "REST", "x": 380, "y": 300, "w": 170, "h": 80 },
+    { "id": "orders", "kind": "service", "label": { "tr": "Sipariş servisi", "en": "Order service" }, "x": 760, "y": 110, "w": 160, "h": 70 },
+    { "id": "customers", "kind": "service", "label": { "tr": "Müşteri servisi", "en": "Customer service" }, "x": 760, "y": 300, "w": 160, "h": 70 },
+    { "id": "catalog", "kind": "service", "label": { "tr": "Katalog servisi", "en": "Catalog service" }, "x": 760, "y": 490, "w": 160, "h": 70 }
+  ],
+  "edges": [
+    { "id": "m-gw", "from": "mobile", "to": "gw", "kind": "request", "label": "GET /orders/42" },
+    { "id": "gw-orders", "from": "gw", "to": "orders", "kind": "request" },
+    { "id": "gw-customers", "from": "gw", "to": "customers", "kind": "request" },
+    { "id": "gw-catalog", "from": "gw", "to": "catalog", "kind": "request" }
+  ],
+  "steps": [
+    {
+      "id": "rest-1",
+      "title": { "tr": "REST 1/3: sipariş", "en": "REST 1/3: the order" },
+      "narration": {
+        "tr": "Mobil istemci önce GET /orders/42 gönderir. Yanıtta sipariş durumu, müşteri kimliği (7) ve ürün kimlikleri (11, 12, 13) vardır. İstemci müşteri adını ve ürünleri henüz bilmiyor; bu yüzden sonraki istekler bu yanıtı beklemek zorunda.",
+        "en": "The mobile client first sends GET /orders/42. The response holds the order status, the customer id (7) and the product ids (11, 12, 13). The client does not yet know the customer's name or the products, so the next requests must wait for this response."
+      },
+      "durationMs": 3000,
+      "inherit": false,
+      "highlight": { "nodes": ["mobile", "gw", "orders"], "edges": ["m-gw", "gw-orders"] },
+      "nodeStates": { "mobile": { "status": "active", "badge": "100 ms" }, "orders": { "status": "active" } },
+      "packets": [
+        { "edge": "m-gw", "label": "GET", "shape": "envelope", "durationMs": 800 },
+        { "edge": "gw-orders", "label": "GET", "shape": "envelope", "startAt": 850, "durationMs": 500 },
+        { "edge": "gw-orders", "direction": "backward", "label": "{order}", "shape": "square", "startAt": 1400, "durationMs": 500 },
+        { "edge": "m-gw", "direction": "backward", "label": "200", "color": "success", "shape": "envelope", "startAt": 1950, "durationMs": 800 }
+      ]
+    },
+    {
+      "id": "rest-2",
+      "title": { "tr": "REST 2/3: müşteri", "en": "REST 2/3: the customer" },
+      "narration": {
+        "tr": "İkinci istek GET /customers/7. Birincinin yanıtına bağlı olduğu için paralel gönderilemez; mobil ağda bir gidiş-dönüş daha harcanır. Sorun sunucunun yavaşlığı değil, istemci ile sunucu arasındaki gidiş-dönüş sayısıdır.",
+        "en": "The second request is GET /customers/7. It depends on the first response, so it cannot be sent in parallel; another mobile round trip is spent. The problem is not server slowness but the number of client-server round trips."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["mobile", "gw", "customers"], "edges": ["m-gw", "gw-customers"] },
+      "nodeStates": { "mobile": { "status": "active", "badge": "200 ms" }, "orders": { "status": "idle" }, "customers": { "status": "active" } },
+      "edgeStates": { "m-gw": { "label": "GET /customers/7" } },
+      "packets": [
+        { "edge": "m-gw", "label": "GET", "shape": "envelope", "durationMs": 800 },
+        { "edge": "gw-customers", "label": "GET", "shape": "envelope", "startAt": 850, "durationMs": 500 },
+        { "edge": "gw-customers", "direction": "backward", "label": "{customer}", "shape": "square", "startAt": 1400, "durationMs": 500 },
+        { "edge": "m-gw", "direction": "backward", "label": "200", "color": "success", "shape": "envelope", "startAt": 1950, "durationMs": 800 }
+      ]
+    },
+    {
+      "id": "rest-3",
+      "title": { "tr": "REST 3/3: ürünler ve fazla veri", "en": "REST 3/3: products and over-fetching" },
+      "narration": {
+        "tr": "Üçüncü istek GET /products?ids=11,12,13. Yanıt her ürün için 40 alan döndürür ama ekran yalnızca ad ve fiyatı kullanır (over-fetching). Ekran ancak üç gidiş-dönüşten sonra, yaklaşık 300 ms ağ beklemesiyle çizilebilir.",
+        "en": "The third request is GET /products?ids=11,12,13. The response returns 40 fields per product but the screen uses only name and price (over-fetching). The screen can be drawn only after three round trips, about 300 ms of network waiting."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["mobile", "gw", "catalog"], "edges": ["m-gw", "gw-catalog"] },
+      "nodeStates": { "mobile": { "status": "warning", "badge": "300 ms" }, "customers": { "status": "idle" }, "catalog": { "status": "active" } },
+      "edgeStates": { "m-gw": { "label": "GET /products?ids=…" } },
+      "packets": [
+        { "edge": "m-gw", "label": "GET", "shape": "envelope", "durationMs": 800 },
+        { "edge": "gw-catalog", "label": "GET", "shape": "envelope", "startAt": 850, "durationMs": 500 },
+        { "edge": "gw-catalog", "direction": "backward", "label": "3 × 40", "shape": "square", "startAt": 1400, "durationMs": 500 },
+        { "edge": "m-gw", "direction": "backward", "label": "3 × 40", "color": "warning", "shape": "square", "startAt": 1950, "durationMs": 900 }
+      ],
+      "annotations": [
+        { "id": "rest-note", "x": 120, "y": 420, "text": { "tr": "3 sıralı RTT + gereksiz alanlar", "en": "3 sequential RTTs + unneeded fields" }, "tone": "warning", "target": "mobile" }
+      ]
+    },
+    {
+      "id": "gql-query",
+      "title": { "tr": "GraphQL: tek sorgu", "en": "GraphQL: one query" },
+      "narration": {
+        "tr": "Aynı ekran şimdi GraphQL ile. İstemci tek bir POST /graphql gönderir ve tam istediği şekli tarif eder: siparişin durumu, müşterinin adı, ürünlerin adı ve fiyatı. API katmanındaki order resolver'ı önce siparişi getirir.",
+        "en": "The same screen, now with GraphQL. The client sends one POST /graphql describing exactly the shape it needs: order status, customer name, product names and prices. The order resolver in the API layer fetches the order first."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["mobile", "gw", "orders"], "edges": ["m-gw", "gw-orders"] },
+      "nodeStates": {
+        "mobile": { "status": "active", "badge": "" },
+        "gw": { "status": "busy", "sublabel": "GraphQL" },
+        "catalog": { "status": "idle" },
+        "orders": { "status": "active" }
+      },
+      "edgeStates": { "m-gw": { "label": "POST /graphql" } },
+      "packets": [
+        { "edge": "m-gw", "label": "query", "shape": "envelope", "durationMs": 900 },
+        { "edge": "gw-orders", "label": "order(42)", "shape": "envelope", "startAt": 1000, "durationMs": 600 },
+        { "edge": "gw-orders", "direction": "backward", "label": "{order}", "shape": "square", "startAt": 1700, "durationMs": 600 }
+      ]
+    },
+    {
+      "id": "gql-n1",
+      "title": { "tr": "Naif resolver'lar: N+1", "en": "Naive resolvers: N+1" },
+      "narration": {
+        "tr": "customer resolver'ı müşteri servisini çağırır. product resolver'ı ise her öğe için ayrı çalışır ve katalog servisine üç ayrı çağrı gönderir. 50 ürünlü bir siparişte bu 50 çağrı olurdu: 1 + N problemi.",
+        "en": "The customer resolver calls the customer service. The product resolver runs separately for each item and sends three separate calls to the catalog service. An order with 50 products would mean 50 calls: the 1 + N problem."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["gw", "customers", "catalog"], "edges": ["gw-customers", "gw-catalog"] },
+      "nodeStates": { "orders": { "status": "idle" }, "customers": { "status": "active" }, "catalog": { "status": "error", "badge": "×3" } },
+      "packets": [
+        { "edge": "gw-customers", "label": "customer(7)", "shape": "envelope", "durationMs": 700 },
+        { "edge": "gw-catalog", "label": "11", "shape": "envelope", "durationMs": 600 },
+        { "edge": "gw-catalog", "label": "12", "shape": "envelope", "startAt": 400, "durationMs": 600 },
+        { "edge": "gw-catalog", "label": "13", "shape": "envelope", "startAt": 800, "durationMs": 600 }
+      ],
+      "annotations": [
+        { "id": "n1-note", "x": 760, "y": 585, "text": { "tr": "her öğe için ayrı çağrı", "en": "one call per item" }, "tone": "danger", "target": "catalog" }
+      ]
+    },
+    {
+      "id": "gql-dataloader",
+      "title": { "tr": "DataLoader: tek toplu çağrı", "en": "DataLoader: one batch call" },
+      "narration": {
+        "tr": "Resolver'lar artık productLoader.load(id) çağırır. DataLoader aynı turda gelen 11, 12 ve 13 anahtarlarını toplar ve katalog servisine tek bir batchGet çağrısı gönderir. Müşteri ve ürün çağrıları da birbirini beklemeden paralel yürür.",
+        "en": "The resolvers now call productLoader.load(id). DataLoader collects keys 11, 12 and 13 arriving in the same tick and sends one batchGet call to the catalog service. The customer and product calls also run in parallel without waiting for each other."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["gw", "customers", "catalog"], "edges": ["gw-customers", "gw-catalog"] },
+      "nodeStates": { "catalog": { "status": "success", "badge": "×1" }, "customers": { "status": "success" } },
+      "packets": [
+        { "edge": "gw-customers", "label": "customer(7)", "shape": "envelope", "durationMs": 700 },
+        { "edge": "gw-catalog", "label": "batchGet[11,12,13]", "shape": "envelope", "durationMs": 800 },
+        { "edge": "gw-customers", "direction": "backward", "label": "{name}", "shape": "square", "startAt": 900, "durationMs": 600 },
+        { "edge": "gw-catalog", "direction": "backward", "label": { "tr": "3 ürün", "en": "3 products" }, "shape": "square", "startAt": 1000, "durationMs": 700 }
+      ],
+      "annotations": [
+        { "id": "dl-note", "x": 560, "y": 585, "text": { "tr": "1 + N → 1 + 1", "en": "1 + N → 1 + 1" }, "tone": "success", "target": "catalog" }
+      ]
+    },
+    {
+      "id": "gql-response",
+      "title": { "tr": "Sorgunun şeklinde tek yanıt", "en": "One response shaped like the query" },
+      "narration": {
+        "tr": "API katmanı yanıtı sorgunun birebir şeklinde birleştirip tek seferde döner: yalnızca istenen alanlar, tek mobil gidiş-dönüş. İç çağrılar veri merkezinde milisaniyeler sürdüğü için toplam süre REST'teki üç RTT'nin yaklaşık üçte birine iner.",
+        "en": "The API layer assembles a response shaped exactly like the query and returns it at once: only the requested fields, a single mobile round trip. Internal calls take milliseconds inside the data centre, so the total drops to roughly a third of REST's three RTTs."
+      },
+      "durationMs": 2800,
+      "highlight": { "nodes": ["gw", "mobile"], "edges": ["m-gw"] },
+      "nodeStates": { "mobile": { "status": "success", "badge": "≈110 ms" }, "gw": { "status": "success" }, "customers": { "status": "idle" }, "catalog": { "status": "idle", "badge": "" } },
+      "packets": [{ "edge": "m-gw", "direction": "backward", "label": "{data}", "color": "success", "shape": "envelope", "durationMs": 1000 }]
+    },
+    {
+      "id": "grpc-unary",
+      "title": { "tr": "gRPC: sözleşmeli unary çağrı", "en": "gRPC: a contract-based unary call" },
+      "narration": {
+        "tr": "Şimdi API katmanının iç servislerle nasıl konuştuğuna bakalım. gRPC'de order.proto dosyası OrderService.GetOrder metodunu ve mesajları tanımlar; istemci kodu derleyiciyle üretilir. Çağrı HTTP/2 üzerinden ikili protobuf olarak gider; alanlar adla değil numarayla taşınır.",
+        "en": "Now look at how the API layer talks to internal services. In gRPC, order.proto defines the OrderService.GetOrder method and its messages; client code is generated by the compiler. The call travels over HTTP/2 as binary protobuf; fields are carried by number, not by name."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["gw", "orders"], "edges": ["gw-orders"] },
+      "nodeStates": { "gw": { "status": "busy", "sublabel": "gRPC (HTTP/2)" }, "orders": { "status": "active", "badge": "proto" }, "mobile": { "status": "muted", "badge": "" } },
+      "edgeStates": { "gw-orders": { "label": "GetOrder" }, "m-gw": { "status": "muted" } },
+      "packets": [
+        { "edge": "gw-orders", "label": "0a 2a…", "shape": "diamond", "durationMs": 700 },
+        { "edge": "gw-orders", "direction": "backward", "label": "Order", "shape": "diamond", "startAt": 800, "durationMs": 700 }
+      ],
+      "annotations": [
+        { "id": "proto-note", "x": 560, "y": 60, "text": { "tr": "deadline: 200 ms alt çağrılara da taşınır", "en": "deadline: 200 ms propagates to sub-calls" }, "tone": "info", "target": "orders" }
+      ]
+    },
+    {
+      "id": "grpc-stream",
+      "title": { "tr": "gRPC server streaming", "en": "gRPC server streaming" },
+      "narration": {
+        "tr": "Katalog servisi ListProducts çağrısına tek büyük yanıt yerine bir akışla cevap verir: ürünler hazır oldukça aynı HTTP/2 akışı üzerinden tek tek gelir. API katmanı ilk ürünü beklemeden işlemeye başlayabilir; büyük listelerde bellek ve gecikme düşer.",
+        "en": "The catalog service answers ListProducts with a stream instead of one big response: products arrive one by one over the same HTTP/2 stream as they become ready. The API layer can start processing without waiting for the whole list; memory and latency drop for large lists."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["gw", "catalog"], "edges": ["gw-catalog"] },
+      "nodeStates": { "orders": { "status": "idle", "badge": "" }, "catalog": { "status": "active", "badge": "stream" } },
+      "edgeStates": { "gw-catalog": { "label": "ListProducts (stream)" } },
+      "packets": [
+        { "edge": "gw-catalog", "label": "ids", "shape": "diamond", "durationMs": 600 },
+        { "edge": "gw-catalog", "direction": "backward", "label": "Product", "shape": "diamond", "color": "success", "startAt": 700, "durationMs": 600, "repeat": 3, "repeatGapMs": 350 }
+      ]
+    },
+    {
+      "id": "summary",
+      "title": { "tr": "Birlikte kullanım", "en": "Using them together" },
+      "narration": {
+        "tr": "Gerçek sistemlerde bu stiller birbirinin rakibi değil, katmanlarıdır: istemci dış dünyaya REST ya da GraphQL ile konuşur, API katmanı veya BFF iç servisleri gRPC ile çağırır. Seçimi istemcinin türü, önbellek ihtiyacı ve ekiplerin sözleşme disiplini belirler.",
+        "en": "In real systems these styles are layers rather than rivals: clients talk REST or GraphQL to the outside, and the API layer or BFF calls internal services over gRPC. The choice depends on the client type, caching needs and the teams' contract discipline."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["mobile", "gw", "orders", "customers", "catalog"], "edges": ["m-gw", "gw-orders", "gw-customers", "gw-catalog"] },
+      "nodeStates": {
+        "mobile": { "status": "success", "badge": "" },
+        "gw": { "status": "success", "sublabel": "GraphQL / BFF" },
+        "orders": { "status": "success" },
+        "customers": { "status": "success" },
+        "catalog": { "status": "success", "badge": "" }
+      },
+      "edgeStates": { "m-gw": { "status": "active", "label": "REST / GraphQL" }, "gw-orders": { "label": "gRPC" }, "gw-customers": { "label": "gRPC" }, "gw-catalog": { "label": "gRPC" } },
+      "annotations": [
+        { "id": "sum-out", "x": 230, "y": 200, "text": { "tr": "Dış: REST / GraphQL", "en": "External: REST / GraphQL" }, "tone": "info", "target": "mobile" },
+        { "id": "sum-in", "x": 560, "y": 400, "text": { "tr": "İç: gRPC", "en": "Internal: gRPC" }, "tone": "info", "target": "gw" }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["rest", "graphql", "grpc", "dataloader", "streaming"]
+}

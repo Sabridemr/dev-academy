@@ -1,0 +1,214 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "a-16-job-retry-dlq",
+  "title": {
+    "tr": "Bir arka plan işi: hata, backoff, DLQ ve idempotent tekrar",
+    "en": "A background job: failure, backoff, DLQ and an idempotent retry"
+  },
+  "summary": {
+    "tr": "Makbuz e-postası işi kuyruğa girer; işçi alır, dış servis hata verir; iş üstel geri çekilmeyle tekrar denenir, sınır aşılınca DLQ'ya düşer; sorun giderilince yeniden oynatılır ve ACK kaybından sonraki tekrar teslim idempotency anahtarıyla atlanır.",
+    "en": "A receipt email job is enqueued; a worker takes it and the external service fails; the job is retried with exponential backoff, lands in the DLQ after the limit; once fixed it is replayed and the redelivery after a lost ACK is skipped by the idempotency key."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda kullanıcı ve API, ortada iş kuyruğu (üstte) ile gecikmeli deneme kümesi (altta), sağ ortada işçi, en sağda e-posta sağlayıcısı ve idempotency kaydı, işçinin altında DLQ. API işi kuyruğa yazar ve kullanıcıya hemen yanıt verir. İşçi işi alır, idempotency kaydında işin yapılmadığını görür ve sağlayıcıyı çağırır; sağlayıcı 503 döner. İş 15 saniye ve 30 saniyelik beklemelerle iki kez daha denenir ve üçüncü hatada DLQ'ya taşınır. Sağlayıcı düzelince iş DLQ'dan kuyruğa geri alınır ve başarıyla gönderilir, ancak işçi ACK vermeden çöker. İş yeniden teslim edilir; işçi idempotency kaydında işin tamamlandığını görür, e-postayı tekrar göndermeden ACK verir.",
+      "en": "User and API on the left, the job queue (top) and delayed retry set (bottom) in the middle, the worker centre right, the email provider and idempotency record on the far right, and the DLQ below the worker. The API writes the job to the queue and answers the user immediately. The worker takes the job, sees in the idempotency record that it has not been done and calls the provider; the provider returns 503. The job is retried twice more after waits of 15 and 30 seconds and moved to the DLQ on the third failure. Once the provider recovers the job is replayed from the DLQ and sent successfully, but the worker crashes before acknowledging. The job is redelivered; the worker sees in the idempotency record that it is complete and acknowledges without sending the email again."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "user", "kind": "user", "label": { "tr": "Kullanıcı", "en": "User" }, "x": 80, "y": 300 },
+    { "id": "api", "kind": "service", "label": "API", "sublabel": "POST /orders", "x": 250, "y": 300, "w": 130, "h": 70 },
+    { "id": "queue", "kind": "queue", "label": { "tr": "İş kuyruğu", "en": "Job queue" }, "sublabel": "send-receipt", "x": 470, "y": 160, "w": 160, "h": 70 },
+    { "id": "retry", "kind": "queue", "label": { "tr": "Gecikmeli denemeler", "en": "Delayed retries" }, "sublabel": "backoff + jitter", "x": 470, "y": 450, "w": 170, "h": 70 },
+    { "id": "worker", "kind": "worker", "label": { "tr": "İşçi", "en": "Worker" }, "x": 690, "y": 300, "w": 130, "h": 70 },
+    { "id": "provider", "kind": "service", "label": { "tr": "E-posta sağlayıcı", "en": "Email provider" }, "sublabel": { "tr": "dış servis", "en": "external" }, "x": 900, "y": 300, "w": 150, "h": 70 },
+    { "id": "idem", "kind": "db", "label": { "tr": "Idempotency kaydı", "en": "Idempotency record" }, "sublabel": "receipt:order-42", "x": 900, "y": 110, "w": 170, "h": 70 },
+    { "id": "dlq", "kind": "queue", "label": "DLQ", "sublabel": { "tr": "insan bakacak", "en": "needs a human" }, "x": 750, "y": 520, "w": 140, "h": 66 }
+  ],
+  "edges": [
+    { "id": "user-api", "from": "user", "to": "api", "kind": "request" },
+    { "id": "api-queue", "from": "api", "to": "queue", "kind": "data", "label": "enqueue" },
+    { "id": "queue-worker", "from": "queue", "to": "worker", "kind": "data", "label": "reserve" },
+    { "id": "worker-provider", "from": "worker", "to": "provider", "kind": "request", "label": "send" },
+    { "id": "worker-idem", "from": "worker", "to": "idem", "kind": "data", "curvature": 0.15 },
+    { "id": "worker-retry", "from": "worker", "to": "retry", "kind": "data", "label": "retry" },
+    { "id": "retry-queue", "from": "retry", "to": "queue", "kind": "data", "style": "dashed", "label": { "tr": "süre doldu", "en": "delay elapsed" } },
+    { "id": "worker-dlq", "from": "worker", "to": "dlq", "kind": "data", "label": "dead" },
+    { "id": "dlq-queue", "from": "dlq", "to": "queue", "kind": "control", "style": "dashed", "label": "replay", "curvature": 0.45 }
+  ],
+  "steps": [
+    {
+      "id": "enqueue",
+      "title": { "tr": "İş kuyruğa girer, kullanıcı beklemez", "en": "Job enqueued, the user does not wait" },
+      "narration": {
+        "tr": "Sipariş veritabanına yazılıp commit edildikten sonra API 'makbuz gönder' işini idempotency anahtarı receipt:order-42 ile kuyruğa bırakır ve kullanıcıya hemen 201 döner. E-postanın gönderilmesi artık yanıt süresinin parçası değildir.",
+        "en": "After the order is written and committed, the API drops a 'send receipt' job with idempotency key receipt:order-42 onto the queue and answers the user with 201 right away. Sending the email is no longer part of the response time."
+      },
+      "durationMs": 3000,
+      "inherit": false,
+      "highlight": { "nodes": ["user", "api", "queue"], "edges": ["user-api", "api-queue"] },
+      "nodeStates": { "api": { "status": "active" }, "queue": { "status": "active", "badge": "1" } },
+      "edgeStates": { "dlq-queue": { "visible": false }, "retry-queue": { "visible": false } },
+      "packets": [
+        { "edge": "user-api", "label": "POST", "shape": "envelope", "durationMs": 800 },
+        { "edge": "api-queue", "label": "job #81", "shape": "square", "startAt": 900, "durationMs": 800 },
+        { "edge": "user-api", "direction": "backward", "label": "201", "color": "success", "shape": "envelope", "startAt": 1800, "durationMs": 800 }
+      ]
+    },
+    {
+      "id": "reserve",
+      "title": { "tr": "İşçi işi rezerve eder", "en": "The worker reserves the job" },
+      "narration": {
+        "tr": "İşçi işi alır. İş kuyruktan silinmez, yalnızca diğer işçilere görünmez olur. İşçi belirlenen süre içinde ACK vermezse iş yeniden görünür hâle gelir; at-least-once teslimin temeli budur.",
+        "en": "The worker takes the job. It is not deleted from the queue, only hidden from other workers. If the worker does not ACK within the set time the job becomes visible again; that is the basis of at-least-once delivery."
+      },
+      "durationMs": 2600,
+      "highlight": { "nodes": ["queue", "worker"], "edges": ["queue-worker"] },
+      "nodeStates": { "api": { "status": "idle" }, "queue": { "status": "busy", "badge": "in-flight" }, "worker": { "status": "active", "badge": "#81" } },
+      "packets": [{ "edge": "queue-worker", "label": "#81", "shape": "square", "durationMs": 900 }],
+      "annotations": [
+        { "id": "vis-note", "x": 470, "y": 80, "text": { "tr": "ACK gelmezse 30 sn sonra tekrar görünür", "en": "Reappears after 30 s without an ACK" }, "tone": "info", "target": "queue" }
+      ]
+    },
+    {
+      "id": "fail-1",
+      "title": { "tr": "Kontrol et, gönder: 503", "en": "Check, send: 503" },
+      "narration": {
+        "tr": "İşçi önce idempotency kaydına bakar: receipt:order-42 tamamlanmamış. Sonra sağlayıcıyı çağırır ve 503 Service Unavailable alır. Bu geçici bir hatadır; tekrar denemek mantıklıdır.",
+        "en": "The worker first checks the idempotency record: receipt:order-42 is not done. It then calls the provider and gets 503 Service Unavailable. This is a transient error; retrying makes sense."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["worker", "idem", "provider"], "edges": ["worker-idem", "worker-provider"] },
+      "nodeStates": { "idem": { "status": "active", "badge": "nil" }, "provider": { "status": "error", "badge": "503" }, "worker": { "status": "error" } },
+      "packets": [
+        { "edge": "worker-idem", "label": "GET", "shape": "square", "durationMs": 600 },
+        { "edge": "worker-idem", "direction": "backward", "label": "nil", "shape": "square", "startAt": 700, "durationMs": 600 },
+        { "edge": "worker-provider", "label": "send", "shape": "envelope", "startAt": 1400, "durationMs": 700 },
+        { "edge": "worker-provider", "direction": "backward", "label": "503", "color": "danger", "shape": "envelope", "startAt": 2200, "durationMs": 700 }
+      ]
+    },
+    {
+      "id": "backoff-1",
+      "title": { "tr": "1. deneme: 15 sn + jitter", "en": "Retry 1: 15 s + jitter" },
+      "narration": {
+        "tr": "İş gecikmeli deneme kümesine konur ve 15 saniye artı rastgele bir payla bekler. Jitter olmasaydı aynı anda düşen sağlayıcı yüzünden biriken binlerce iş aynı saniyede tekrar denenir ve servisi yeniden devirirdi.",
+        "en": "The job goes into the delayed retry set and waits 15 seconds plus a random jitter. Without jitter, thousands of jobs that piled up during the outage would retry in the same second and knock the service over again."
+      },
+      "durationMs": 2600,
+      "highlight": { "nodes": ["worker", "retry"], "edges": ["worker-retry"] },
+      "nodeStates": { "worker": { "status": "idle", "badge": "" }, "queue": { "status": "idle", "badge": "0" }, "retry": { "status": "warning", "badge": "1/3" }, "idem": { "status": "idle", "badge": "" } },
+      "packets": [{ "edge": "worker-retry", "label": "15 s", "shape": "square", "durationMs": 900 }],
+      "annotations": [
+        { "id": "bo1-note", "x": 470, "y": 545, "text": { "tr": "15 s → 30 s → 60 s (+ jitter)", "en": "15 s → 30 s → 60 s (+ jitter)" }, "tone": "info", "target": "retry" }
+      ]
+    },
+    {
+      "id": "retry-2",
+      "title": { "tr": "2. deneme de başarısız", "en": "Retry 2 fails too" },
+      "narration": {
+        "tr": "Süre dolunca iş kuyruğa geri döner, işçi tekrar alır ve sağlayıcı yine 503 döner. Bekleme bu kez 30 saniyeye katlanır. Üstel artış, kısa aksaklıkları hızla atlatırken uzun kesintilerde sağlayıcıya yüklenmeyi önler.",
+        "en": "When the delay elapses the job returns to the queue, the worker takes it again and the provider returns 503 again. This time the wait doubles to 30 seconds. Exponential growth recovers fast from short blips while sparing the provider during long outages."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["retry", "queue", "worker", "provider"], "edges": ["retry-queue", "queue-worker", "worker-provider", "worker-retry"] },
+      "nodeStates": { "retry": { "status": "warning", "badge": "2/3" }, "worker": { "status": "error" } },
+      "edgeStates": { "retry-queue": { "visible": true } },
+      "packets": [
+        { "edge": "retry-queue", "label": "#81", "shape": "square", "durationMs": 700 },
+        { "edge": "queue-worker", "label": "#81", "shape": "square", "startAt": 800, "durationMs": 600 },
+        { "edge": "worker-provider", "label": "send", "shape": "envelope", "startAt": 1500, "durationMs": 600 },
+        { "edge": "worker-provider", "direction": "backward", "label": "503", "color": "danger", "shape": "envelope", "startAt": 2150, "durationMs": 600 },
+        { "edge": "worker-retry", "label": "30 s", "shape": "square", "startAt": 2850, "durationMs": 600 }
+      ]
+    },
+    {
+      "id": "dead",
+      "title": { "tr": "Sınır aşıldı: DLQ", "en": "Limit exceeded: DLQ" },
+      "narration": {
+        "tr": "Üçüncü deneme de başarısız olunca deneme sınırı dolar ve iş DLQ'ya taşınır. DLQ bir çöp kutusu değildir: boyutuna alarm kurulur, iş tüm geçmişi ve hata mesajıyla bir insanın incelemesini bekler.",
+        "en": "When the third attempt fails too the retry limit is reached and the job moves to the DLQ. The DLQ is not a bin: it has an alert on its size and the job waits, with its history and error message, for a human to inspect."
+      },
+      "durationMs": 3800,
+      "highlight": { "nodes": ["retry", "queue", "worker", "provider", "dlq"], "edges": ["retry-queue", "queue-worker", "worker-provider", "worker-dlq"] },
+      "nodeStates": { "retry": { "status": "idle", "badge": "3/3" }, "dlq": { "status": "error", "badge": "1" }, "worker": { "status": "error" } },
+      "packets": [
+        { "edge": "retry-queue", "label": "#81", "shape": "square", "durationMs": 600 },
+        { "edge": "queue-worker", "label": "#81", "shape": "square", "startAt": 650, "durationMs": 550 },
+        { "edge": "worker-provider", "label": "send", "shape": "envelope", "startAt": 1250, "durationMs": 550 },
+        { "edge": "worker-provider", "direction": "backward", "label": "503", "color": "danger", "shape": "envelope", "startAt": 1850, "durationMs": 550 },
+        { "edge": "worker-dlq", "label": "#81", "shape": "square", "color": "danger", "startAt": 2500, "durationMs": 900 }
+      ],
+      "annotations": [
+        { "id": "dlq-note", "x": 900, "y": 470, "text": { "tr": "Alarm: DLQ > 0", "en": "Alert: DLQ > 0" }, "tone": "danger", "target": "dlq" }
+      ]
+    },
+    {
+      "id": "replay",
+      "title": { "tr": "Düzelt ve yeniden oynat", "en": "Fix and replay" },
+      "narration": {
+        "tr": "Sağlayıcı düzelir. Operatör DLQ'daki işi kuyruğa geri alır (replay). Bu güvenli bir işlemdir, çünkü iş idempotent tasarlandı: kaç kez çalışırsa çalışsın müşteri tek makbuz alacak.",
+        "en": "The provider recovers. An operator moves the job from the DLQ back to the queue (replay). This is safe because the job was designed to be idempotent: however many times it runs, the customer gets one receipt."
+      },
+      "durationMs": 2800,
+      "highlight": { "nodes": ["dlq", "queue", "provider"], "edges": ["dlq-queue"] },
+      "nodeStates": { "provider": { "status": "success", "badge": "200" }, "dlq": { "status": "idle", "badge": "0" }, "queue": { "status": "active", "badge": "1" } },
+      "edgeStates": { "dlq-queue": { "visible": true, "status": "active" } },
+      "packets": [{ "edge": "dlq-queue", "label": "#81", "shape": "square", "durationMs": 1200 }]
+    },
+    {
+      "id": "lost-ack",
+      "title": { "tr": "Gönderildi ama ACK kayboldu", "en": "Sent, but the ACK was lost" },
+      "narration": {
+        "tr": "İşçi işi alır, e-postayı başarıyla gönderir ve idempotency kaydına 'tamamlandı' yazar. Tam ACK vereceği anda bir deploy süreci sonlandırır. Kuyruk ACK görmediği için işi tamamlanmamış sayar.",
+        "en": "The worker takes the job, sends the email successfully and writes 'done' to the idempotency record. Right as it is about to ACK, a deploy kills the process. Having seen no ACK, the queue treats the job as incomplete."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["queue", "worker", "provider", "idem"], "edges": ["queue-worker", "worker-provider", "worker-idem"] },
+      "nodeStates": {
+        "worker": { "status": "down", "badge": "SIGKILL" },
+        "idem": { "status": "success", "badge": "done" },
+        "queue": { "status": "busy", "badge": "in-flight" }
+      },
+      "edgeStates": { "dlq-queue": { "status": "idle" } },
+      "packets": [
+        { "edge": "queue-worker", "label": "#81", "shape": "square", "durationMs": 600 },
+        { "edge": "worker-provider", "label": "send", "shape": "envelope", "startAt": 700, "durationMs": 600 },
+        { "edge": "worker-provider", "direction": "backward", "label": "200", "color": "success", "shape": "envelope", "startAt": 1350, "durationMs": 600 },
+        { "edge": "worker-idem", "label": "SET done", "shape": "square", "startAt": 2050, "durationMs": 700 }
+      ],
+      "annotations": [
+        { "id": "ack-note", "x": 690, "y": 210, "text": { "tr": "ACK gönderilemedi", "en": "ACK never sent" }, "tone": "warning", "target": "worker" }
+      ]
+    },
+    {
+      "id": "redeliver",
+      "title": { "tr": "Tekrar teslim: anahtar sayesinde atlanır", "en": "Redelivery: skipped thanks to the key" },
+      "narration": {
+        "tr": "Rezervasyon süresi dolar, iş yeni bir işçi sürecine yeniden teslim edilir. İşçi önce idempotency kaydına bakar, receipt:order-42'nin tamamlandığını görür ve sağlayıcıyı hiç çağırmadan ACK verir. At-least-once teslim, idempotent işle birleşince 'etkisi bir kez' olur.",
+        "en": "The reservation times out and the job is redelivered to a fresh worker process. The worker checks the idempotency record first, sees receipt:order-42 is done and ACKs without calling the provider at all. At-least-once delivery combined with an idempotent job yields an effect that happens once."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["queue", "worker", "idem"], "edges": ["queue-worker", "worker-idem"] },
+      "nodeStates": {
+        "worker": { "status": "success", "badge": "ACK" },
+        "queue": { "status": "success", "badge": "0" },
+        "provider": { "status": "muted", "badge": "" },
+        "idem": { "status": "success", "badge": "done" }
+      },
+      "packets": [
+        { "edge": "queue-worker", "label": "#81", "shape": "square", "durationMs": 700 },
+        { "edge": "worker-idem", "label": "GET", "shape": "square", "startAt": 800, "durationMs": 600 },
+        { "edge": "worker-idem", "direction": "backward", "label": "done", "color": "success", "shape": "square", "startAt": 1450, "durationMs": 600 },
+        { "edge": "queue-worker", "direction": "backward", "label": "ACK", "color": "success", "shape": "dot", "startAt": 2150, "durationMs": 700 }
+      ],
+      "annotations": [
+        { "id": "idem-note", "x": 900, "y": 210, "text": { "tr": "Çift e-posta yok", "en": "No duplicate email" }, "tone": "success", "target": "idem" }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["background-jobs", "retry", "backoff", "dlq", "idempotency"]
+}

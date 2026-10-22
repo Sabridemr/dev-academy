@@ -1,0 +1,110 @@
+{
+  "id": "a-17-grpc-graphql-rest-quiz",
+  "title": { "tr": "gRPC, GraphQL ve REST Quiz", "en": "gRPC, GraphQL and REST Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Bir mobil ekran, birbirine bağlı üç REST isteğiyle (sipariş → müşteri → ürünler) çiziliyor ve kullanıcılar yavaş mobil ağlarda. Gecikmenin baskın nedeni nedir?",
+        "en": "A mobile screen is drawn with three dependent REST requests (order → customer → products) and users are on slow mobile networks. What is the dominant cause of latency?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "JSON ayrıştırmanın yavaşlığı", "en": "Slow JSON parsing" } },
+        { "id": "b", "text": { "tr": "Sıralı istemci-sunucu gidiş-dönüşleri: her istek bir öncekini bekler ve her biri bir mobil RTT harcar", "en": "Sequential client-server round trips: each request waits for the previous one and each costs one mobile RTT" } },
+        { "id": "c", "text": { "tr": "HTTP durum kodlarının fazlalığı", "en": "Too many HTTP status codes" } },
+        { "id": "d", "text": { "tr": "Sunucudaki veritabanı sorgularının paralel çalışması", "en": "Database queries running in parallel on the server" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Mobil RTT'si 100 ms ise üç sıralı istek yalnızca ağ beklemesiyle 300 ms eder; sunucu tarafındaki iş genellikle bunun yanında küçüktür. GraphQL ya da bir BFF, birleştirmeyi veri merkezi içine taşıyarak istemci tarafını tek gidiş-dönüşe indirir.",
+        "en": "With a 100 ms mobile RTT, three sequential requests cost 300 ms in network waiting alone; server-side work is usually small by comparison. GraphQL or a BFF moves the aggregation inside the data centre and reduces the client side to one round trip."
+      },
+      "difficulty": "easy",
+      "concepts": ["rest", "bff"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "GraphQL'de N+1 problemi en doğrudan nasıl çözülür?",
+        "en": "What is the most direct fix for the N+1 problem in GraphQL?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Her resolver'a ayrı bir veritabanı bağlantısı vermek", "en": "Giving each resolver its own database connection" } },
+        { "id": "b", "text": { "tr": "Yanıtı CDN'de önbelleğe almak", "en": "Caching the response at the CDN" } },
+        { "id": "c", "text": { "tr": "DataLoader ile aynı turdaki anahtarları toplayıp tek toplu çağrı yapmak ve istek boyunca tekrarları önbelleklemek", "en": "Using DataLoader to collect keys from the same tick into one batch call and cache repeats for the request" } },
+        { "id": "d", "text": { "tr": "Şemadaki ilişkileri kaldırıp her şeyi düz alan yapmak", "en": "Removing relationships from the schema and flattening everything" } }
+      ],
+      "correct": ["c"],
+      "explanation": {
+        "tr": "N+1, alan başına çalışan resolver'ların her öğe için ayrı çağrı yapmasından doğar. DataLoader bu çağrıları toplu tek bir çağrıya dönüştürür. Ek bağlantılar çağrı sayısını azaltmaz (a); CDN önbelleği iç çağrıları azaltmaz ve tek uç noktalı POST sorgularında doğal çalışmaz (b); ilişkileri kaldırmak GraphQL'in değerini yok eder (d).",
+        "en": "N+1 comes from per-field resolvers making a separate call per item. DataLoader turns those calls into a single batch call. More connections do not reduce the call count (a); a CDN cache does not reduce internal calls and does not work naturally with single-endpoint POST queries (b); removing relationships destroys GraphQL's value (d)."
+      },
+      "difficulty": "medium",
+      "concepts": ["n-plus-one", "dataloader"]
+    },
+    {
+      "id": "q3",
+      "type": "multiple",
+      "prompt": {
+        "tr": "gRPC için hangileri doğrudur? (Birden fazla seçin)",
+        "en": "Which statements are true for gRPC? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Sözleşme .proto dosyasında tanımlanır ve istemci/sunucu kodu üretilir", "en": "The contract is defined in a .proto file and client/server code is generated" } },
+        { "id": "b", "text": { "tr": "HTTP/2 üzerinde çalışır ve tek bağlantıda birden çok çağrıyı çoğullar", "en": "It runs over HTTP/2 and multiplexes many calls over one connection" } },
+        { "id": "c", "text": { "tr": "Server, client ve çift yönlü streaming desteklenir", "en": "Server, client and bidirectional streaming are supported" } },
+        { "id": "d", "text": { "tr": "Tarayıcılar ek bir katman olmadan doğrudan gRPC servislerini çağırabilir", "en": "Browsers can call gRPC services directly without an extra layer" } }
+      ],
+      "correct": ["a", "b", "c"],
+      "explanation": {
+        "tr": "gRPC protobuf sözleşmesi, kod üretimi, HTTP/2 ve dört çağrı biçimi (unary, server/client/bidi streaming) üzerine kuruludur. Tarayıcılar HTTP/2 çerçevelerine gRPC'nin gerektirdiği düzeyde erişemediği için gRPC-Web ve bir proxy gerekir; bu yüzden gRPC en çok servisler arası iletişimde kullanılır.",
+        "en": "gRPC is built on protobuf contracts, code generation, HTTP/2 and four call types (unary, server/client/bidi streaming). Browsers cannot access HTTP/2 frames at the level gRPC requires, so gRPC-Web and a proxy are needed; that is why gRPC is used mostly for service-to-service communication."
+      },
+      "difficulty": "medium",
+      "concepts": ["grpc", "protobuf", "streaming-rpc"]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "GraphQL yanıtları, REST GET yanıtları kadar kolay biçimde CDN ve tarayıcı tarafından HTTP önbelleğine alınır; ek bir mekanizma gerekmez.",
+        "en": "GraphQL responses are cached by CDNs and browsers through HTTP caching as easily as REST GET responses; no extra mechanism is needed."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "Yanlış. GraphQL genellikle tek bir uç noktaya POST ile gönderilir; URL kaynağı tanımlamaz ve POST yanıtları HTTP önbelleklerinde varsayılan olarak tutulmaz. Persisted query ile sorguyu kimliğiyle GET olarak göndermek ya da istemci tarafında normalize edilmiş önbellek kullanmak gibi ek mekanizmalar gerekir.",
+        "en": "False. GraphQL is usually sent via POST to a single endpoint; the URL does not identify the resource and POST responses are not stored by HTTP caches by default. Extra mechanisms are needed, such as persisted queries sent as GET by id, or a normalised client-side cache."
+      },
+      "difficulty": "medium",
+      "concepts": ["graphql", "graphql-schema"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "Bir şirketin herkese açık bir API'si, web/mobil/TV istemcileri olan zengin ekranları ve onlarca iç mikroservisi var. En makul API stili dağılımı hangisidir?",
+        "en": "A company has a public API, rich screens for web/mobile/TV clients and dozens of internal microservices. What is the most sensible split of API styles?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Her yerde gRPC", "en": "gRPC everywhere" } },
+        { "id": "b", "text": { "tr": "Herkese açık API için REST, istemci ekranları için GraphQL (ya da BFF), iç servisler arası gRPC", "en": "REST for the public API, GraphQL (or a BFF) for client screens, gRPC between internal services" } },
+        { "id": "c", "text": { "tr": "Her yerde GraphQL, iç servisler de birbirine GraphQL sorgusu gönderir", "en": "GraphQL everywhere, with internal services sending GraphQL queries to each other" } },
+        { "id": "d", "text": { "tr": "Her yerde REST, iç servisler de kaynak URL'leri üzerinden konuşur", "en": "REST everywhere, with internal services talking over resource URLs" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Stiller rakip değil katmandır. Üçüncü taraflar evrensel araç desteği ve HTTP önbelleği için REST'i tercih eder; farklı istemcilerin zengin ekranları GraphQL ya da BFF ile tek gidiş-dönüşe iner; iç servisler sözleşmeli, hızlı ve streaming destekli gRPC'den faydalanır. Tek bir stili her yere zorlamak, o stilin zayıf olduğu yerlerde bedel ödetir.",
+        "en": "The styles are layers, not rivals. Third parties prefer REST for universal tooling and HTTP caching; rich screens on varied clients collapse to one round trip with GraphQL or a BFF; internal services benefit from contract-based, fast, streaming-capable gRPC. Forcing a single style everywhere makes you pay where that style is weak."
+      },
+      "difficulty": "medium",
+      "concepts": ["rest", "graphql", "grpc", "bff", "api-federation"]
+    }
+  ]
+}

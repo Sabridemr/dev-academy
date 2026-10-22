@@ -1,0 +1,611 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "o-07-filesystem-io-write-fsync",
+  "title": {
+    "tr": "write() → page cache → fsync() → disk",
+    "en": "write() → page cache → fsync() → disk"
+  },
+  "summary": {
+    "tr": "Bir uygulamanın write() çağrısının page cache'te kirli sayfa bırakıp hemen dönmesi, fsync() ile sayfanın blok katmanı üzerinden diske inmesi ve sonraki read() çağrısının cache'ten karşılanması.",
+    "en": "An application's write() leaving a dirty page in the page cache and returning immediately, fsync() pushing the page through the block layer to disk, and a later read() being served from the cache."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda uygulama süreci, ortada çekirdek içinde VFS ve page cache, sağda blok katmanı ve disk. write() çağrısı VFS üzerinden page cache'e gider, sayfa kirli işaretlenir ve çağrı hemen döner. Bu anda güç kesilirse verinin kaybolabileceği vurgulanır. Ardından fsync() çağrılır, kirli sayfa blok katmanına ve diske iner, disk yazmayı onaylar, sayfa temiz olur ve fsync döner. Son adımda read() çağrısı page cache'ten hit alır ve diske gidilmez.",
+      "en": "Application process on the left, the VFS and page cache inside the kernel in the middle, block layer and disk on the right. The write() call goes through the VFS to the page cache, the page is marked dirty and the call returns immediately. It is highlighted that data may be lost if power fails at this moment. Then fsync() is called, the dirty page goes to the block layer and the disk, the disk acknowledges the write, the page becomes clean and fsync returns. In the last step a read() call hits the page cache and the disk is not touched."
+    }
+  },
+  "canvas": {
+    "width": 1000,
+    "height": 600
+  },
+  "nodes": [
+    {
+      "id": "kernel",
+      "kind": "group",
+      "label": {
+        "tr": "Çekirdek alanı",
+        "en": "Kernel space"
+      },
+      "x": 480,
+      "y": 300,
+      "w": 360,
+      "h": 420
+    },
+    {
+      "id": "app",
+      "kind": "service",
+      "label": {
+        "tr": "Uygulama",
+        "en": "Application"
+      },
+      "sublabel": {
+        "tr": "kullanıcı alanı",
+        "en": "user space"
+      },
+      "x": 130,
+      "y": 300,
+      "w": 160,
+      "h": 80
+    },
+    {
+      "id": "vfs",
+      "kind": "generic",
+      "label": "VFS",
+      "sublabel": {
+        "tr": "sistem çağrısı katmanı",
+        "en": "system call layer"
+      },
+      "x": 480,
+      "y": 170,
+      "w": 170,
+      "h": 70,
+      "parent": "kernel"
+    },
+    {
+      "id": "pagecache",
+      "kind": "cache",
+      "label": "Page cache",
+      "sublabel": {
+        "tr": "RAM'deki sayfalar",
+        "en": "pages in RAM"
+      },
+      "x": 480,
+      "y": 400,
+      "w": 190,
+      "h": 80,
+      "parent": "kernel"
+    },
+    {
+      "id": "block",
+      "kind": "queue",
+      "label": {
+        "tr": "Blok katmanı",
+        "en": "Block layer"
+      },
+      "sublabel": {
+        "tr": "I/O zamanlayıcı + sürücü",
+        "en": "I/O scheduler + driver"
+      },
+      "x": 820,
+      "y": 170,
+      "w": 170,
+      "h": 76
+    },
+    {
+      "id": "disk",
+      "kind": "storage",
+      "label": "Disk (NVMe)",
+      "sublabel": {
+        "tr": "kalıcı",
+        "en": "durable"
+      },
+      "x": 820,
+      "y": 430,
+      "w": 170,
+      "h": 80
+    }
+  ],
+  "edges": [
+    {
+      "id": "app-vfs",
+      "from": "app",
+      "to": "vfs",
+      "kind": "request",
+      "label": "write(fd, buf)"
+    },
+    {
+      "id": "vfs-pc",
+      "from": "vfs",
+      "to": "pagecache",
+      "kind": "data"
+    },
+    {
+      "id": "app-vfs-sync",
+      "from": "app",
+      "to": "vfs",
+      "kind": "control",
+      "style": "dashed",
+      "curvature": 0.35,
+      "label": "fsync(fd)"
+    },
+    {
+      "id": "pc-block",
+      "from": "pagecache",
+      "to": "block",
+      "kind": "data",
+      "label": {
+        "tr": "kirli sayfa",
+        "en": "dirty page"
+      }
+    },
+    {
+      "id": "block-disk",
+      "from": "block",
+      "to": "disk",
+      "kind": "data"
+    },
+    {
+      "id": "app-vfs-read",
+      "from": "app",
+      "to": "vfs",
+      "kind": "request",
+      "style": "dotted",
+      "curvature": -0.35,
+      "label": "read(fd)"
+    }
+  ],
+  "steps": [
+    {
+      "id": "write-call",
+      "title": {
+        "tr": "write() çağrısı",
+        "en": "The write() call"
+      },
+      "narration": {
+        "tr": "Uygulama 4 KB'lık bir kaydı dosyaya yazmak için write() sistem çağrısı yapar. Kontrol kullanıcı alanından çekirdeğe geçer ve önce VFS (sanal dosya sistemi) katmanına ulaşır; VFS, ext4 ya da XFS fark etmeksizin ortak arayüzdür.",
+        "en": "The application issues the write() system call to append a 4 KB record to a file. Control passes from user space to the kernel and first reaches the VFS (virtual file system) layer, the common interface regardless of ext4 or XFS."
+      },
+      "durationMs": 3000,
+      "inherit": false,
+      "highlight": {
+        "nodes": [
+          "app",
+          "vfs"
+        ],
+        "edges": [
+          "app-vfs"
+        ]
+      },
+      "nodeStates": {
+        "app": {
+          "status": "active"
+        },
+        "vfs": {
+          "status": "active"
+        }
+      },
+      "edgeStates": {
+        "app-vfs-sync": {
+          "visible": false
+        },
+        "app-vfs-read": {
+          "visible": false
+        }
+      },
+      "packets": [
+        {
+          "edge": "app-vfs",
+          "shape": "square",
+          "label": "4 KB",
+          "durationMs": 1200
+        }
+      ]
+    },
+    {
+      "id": "dirty",
+      "title": {
+        "tr": "Sayfa kirli işaretlenir",
+        "en": "The page is marked dirty"
+      },
+      "narration": {
+        "tr": "Çekirdek veriyi page cache'teki ilgili sayfaya kopyalar ve sayfayı kirli (dirty) olarak işaretler. Disk henüz hiçbir şey görmedi; veri yalnızca RAM'de.",
+        "en": "The kernel copies the data into the matching page in the page cache and marks it dirty. The disk has seen nothing yet; the data lives only in RAM."
+      },
+      "durationMs": 3000,
+      "highlight": {
+        "nodes": [
+          "vfs",
+          "pagecache"
+        ],
+        "edges": [
+          "vfs-pc"
+        ]
+      },
+      "nodeStates": {
+        "vfs": {
+          "status": "idle"
+        },
+        "pagecache": {
+          "status": "warning",
+          "badge": "DIRTY"
+        }
+      },
+      "packets": [
+        {
+          "edge": "vfs-pc",
+          "shape": "square",
+          "label": "4 KB",
+          "durationMs": 1200
+        }
+      ]
+    },
+    {
+      "id": "write-returns",
+      "title": {
+        "tr": "write() hemen döner",
+        "en": "write() returns immediately"
+      },
+      "narration": {
+        "tr": "write() birkaç mikro saniye içinde başarıyla döner. Uygulama işine devam eder. Hızlıdır ama bu dönüş yalnızca belleğe kopyalamanın başarılı olduğunu söyler, kalıcılığı değil.",
+        "en": "write() returns successfully within microseconds and the application moves on. It is fast, but the return only says the copy into memory succeeded, not that the data is durable."
+      },
+      "durationMs": 2800,
+      "highlight": {
+        "nodes": [
+          "app"
+        ],
+        "edges": [
+          "app-vfs"
+        ]
+      },
+      "nodeStates": {
+        "app": {
+          "status": "success",
+          "badge": "OK"
+        }
+      },
+      "packets": [
+        {
+          "edge": "app-vfs",
+          "direction": "backward",
+          "label": "4096",
+          "color": "success",
+          "durationMs": 1000
+        }
+      ],
+      "annotations": [
+        {
+          "id": "fast-note",
+          "x": 130,
+          "y": 420,
+          "text": {
+            "tr": "≈ µs: yalnızca RAM'e kopya",
+            "en": "≈ µs: just a copy into RAM"
+          },
+          "tone": "info",
+          "target": "app"
+        }
+      ]
+    },
+    {
+      "id": "crash-risk",
+      "title": {
+        "tr": "Çökme penceresi",
+        "en": "The crash window"
+      },
+      "narration": {
+        "tr": "Şu anda elektrik kesilirse kirli sayfa kaybolur; çünkü diske hiç inmedi. Uygulama sürecinin çökmesi ise veriyi kaybettirmez, veri zaten çekirdektedir. Arka plandaki writeback birkaç saniye içinde sayfayı kendiliğinden yazacaktır, ama ne zaman olacağını uygulama bilmez.",
+        "en": "If power fails right now the dirty page is lost, because it never reached the disk. An application crash would not lose it, since the data is already in the kernel. Background writeback will write the page on its own within seconds, but the application does not know when."
+      },
+      "durationMs": 3600,
+      "highlight": {
+        "nodes": [
+          "pagecache",
+          "disk"
+        ]
+      },
+      "nodeStates": {
+        "app": {
+          "status": "idle",
+          "badge": ""
+        },
+        "disk": {
+          "status": "muted",
+          "badge": "v1"
+        }
+      },
+      "annotations": [
+        {
+          "id": "crash-note",
+          "x": 650,
+          "y": 545,
+          "text": {
+            "tr": "Güç kesilirse: kirli sayfa kaybolur",
+            "en": "Power loss: the dirty page is gone"
+          },
+          "tone": "danger",
+          "target": "pagecache"
+        }
+      ]
+    },
+    {
+      "id": "fsync-call",
+      "title": {
+        "tr": "fsync() çağrısı",
+        "en": "The fsync() call"
+      },
+      "narration": {
+        "tr": "Kalıcılık isteyen uygulama fsync(fd) çağırır ve bu kez bloklanır. Çekirdek bu dosyaya ait kirli sayfaları ve meta veriyi toplar.",
+        "en": "An application that needs durability calls fsync(fd) and this time it blocks. The kernel gathers the dirty pages and metadata belonging to this file."
+      },
+      "durationMs": 2800,
+      "highlight": {
+        "nodes": [
+          "app",
+          "vfs"
+        ],
+        "edges": [
+          "app-vfs-sync"
+        ]
+      },
+      "nodeStates": {
+        "app": {
+          "status": "busy",
+          "badge": "fsync…"
+        },
+        "vfs": {
+          "status": "active"
+        }
+      },
+      "edgeStates": {
+        "app-vfs-sync": {
+          "visible": true,
+          "status": "active"
+        }
+      },
+      "packets": [
+        {
+          "edge": "app-vfs-sync",
+          "shape": "diamond",
+          "label": "fsync",
+          "durationMs": 1100
+        }
+      ]
+    },
+    {
+      "id": "to-block",
+      "title": {
+        "tr": "Blok katmanına",
+        "en": "Into the block layer"
+      },
+      "narration": {
+        "tr": "Kirli sayfa bir I/O isteği olarak blok katmanına verilir. Burada istekler sıraya konur, komşu bloklar birleştirilir ve aygıt sürücüsü üzerinden diske gönderilir.",
+        "en": "The dirty page is handed to the block layer as an I/O request. Requests are queued, adjacent blocks are merged and the request is sent to the disk through the device driver."
+      },
+      "durationMs": 3200,
+      "highlight": {
+        "nodes": [
+          "pagecache",
+          "block"
+        ],
+        "edges": [
+          "pc-block"
+        ]
+      },
+      "nodeStates": {
+        "vfs": {
+          "status": "idle"
+        },
+        "pagecache": {
+          "status": "busy",
+          "badge": "writeback"
+        },
+        "block": {
+          "status": "active",
+          "badge": "bio"
+        }
+      },
+      "edgeStates": {
+        "app-vfs-sync": {
+          "status": "idle"
+        }
+      },
+      "packets": [
+        {
+          "edge": "pc-block",
+          "shape": "square",
+          "label": "4 KB",
+          "durationMs": 1400
+        }
+      ]
+    },
+    {
+      "id": "disk-write",
+      "title": {
+        "tr": "Diske yazma ve onay",
+        "en": "Disk write and acknowledgement"
+      },
+      "narration": {
+        "tr": "İstek diske ulaşır. Disk yazmayı kalıcı ortama tamamladığını (gerekirse kendi önbelleğini boşalttıktan sonra) onaylar. Bu adım fsync'in asıl maliyetidir: yerel NVMe'de kısa, ağ üzerinden bağlı bulut diskinde çok daha uzun sürebilir.",
+        "en": "The request reaches the disk. The disk acknowledges that the write is on stable media (flushing its own cache if needed). This step is the real cost of fsync: short on a local NVMe, much longer on a network-attached cloud disk."
+      },
+      "durationMs": 3400,
+      "highlight": {
+        "nodes": [
+          "block",
+          "disk"
+        ],
+        "edges": [
+          "block-disk"
+        ]
+      },
+      "nodeStates": {
+        "block": {
+          "status": "idle",
+          "badge": ""
+        },
+        "disk": {
+          "status": "success",
+          "badge": "v2"
+        }
+      },
+      "packets": [
+        {
+          "edge": "block-disk",
+          "shape": "square",
+          "label": "4 KB",
+          "durationMs": 1200
+        },
+        {
+          "edge": "block-disk",
+          "direction": "backward",
+          "label": "ACK",
+          "color": "success",
+          "startAt": 1500,
+          "durationMs": 1000
+        }
+      ]
+    },
+    {
+      "id": "fsync-returns",
+      "title": {
+        "tr": "Sayfa temiz, fsync döner",
+        "en": "Page clean, fsync returns"
+      },
+      "narration": {
+        "tr": "Onay geldikten sonra çekirdek sayfayı temiz işaretler ve fsync() 0 ile döner. Artık güç kesilse bile kayıt diskte. Veritabanları her commit'te WAL için tam olarak bunu bekler.",
+        "en": "Once the acknowledgement arrives the kernel marks the page clean and fsync() returns 0. Even if power fails now, the record is on disk. Databases wait for exactly this on every commit for their WAL."
+      },
+      "durationMs": 3000,
+      "highlight": {
+        "nodes": [
+          "pagecache",
+          "app"
+        ],
+        "edges": [
+          "app-vfs-sync"
+        ]
+      },
+      "nodeStates": {
+        "pagecache": {
+          "status": "success",
+          "badge": "CLEAN"
+        },
+        "app": {
+          "status": "success",
+          "badge": "fsync = 0"
+        }
+      },
+      "edgeStates": {
+        "app-vfs-sync": {
+          "status": "active"
+        }
+      },
+      "packets": [
+        {
+          "edge": "app-vfs-sync",
+          "direction": "backward",
+          "label": "0",
+          "color": "success",
+          "durationMs": 1100
+        }
+      ],
+      "annotations": [
+        {
+          "id": "durable-note",
+          "x": 650,
+          "y": 545,
+          "text": {
+            "tr": "Kalıcılık fsync dönüşüyle başlar",
+            "en": "Durability starts when fsync returns"
+          },
+          "tone": "success",
+          "target": "disk"
+        }
+      ]
+    },
+    {
+      "id": "read-hit",
+      "title": {
+        "tr": "read(): page cache hit",
+        "en": "read(): page cache hit"
+      },
+      "narration": {
+        "tr": "Biraz sonra aynı bölge okunur. Sayfa hâlâ page cache'te olduğundan read() diske hiç gitmeden RAM'den kopyalanır. Aynı dosyayı ikinci kez okumanın çok daha hızlı olmasının nedeni budur.",
+        "en": "A little later the same region is read. Because the page is still in the page cache, read() copies it from RAM without touching the disk. That is why reading the same file a second time is much faster."
+      },
+      "durationMs": 3600,
+      "highlight": {
+        "nodes": [
+          "app",
+          "vfs",
+          "pagecache"
+        ],
+        "edges": [
+          "app-vfs-read",
+          "vfs-pc"
+        ]
+      },
+      "nodeStates": {
+        "app": {
+          "status": "active",
+          "badge": ""
+        },
+        "pagecache": {
+          "status": "success",
+          "badge": "HIT"
+        },
+        "disk": {
+          "status": "muted",
+          "badge": ""
+        }
+      },
+      "edgeStates": {
+        "app-vfs-sync": {
+          "visible": false
+        },
+        "app-vfs-read": {
+          "visible": true,
+          "status": "active"
+        }
+      },
+      "packets": [
+        {
+          "edge": "app-vfs-read",
+          "label": "read",
+          "durationMs": 900
+        },
+        {
+          "edge": "vfs-pc",
+          "label": "?",
+          "startAt": 1000,
+          "durationMs": 800
+        },
+        {
+          "edge": "app-vfs-read",
+          "direction": "backward",
+          "shape": "square",
+          "label": "4 KB",
+          "color": "success",
+          "startAt": 2000,
+          "durationMs": 1000
+        }
+      ],
+      "annotations": [
+        {
+          "id": "hit-note",
+          "x": 820,
+          "y": 540,
+          "text": {
+            "tr": "Diske gidilmedi",
+            "en": "Disk not touched"
+          },
+          "tone": "success",
+          "target": "disk"
+        }
+      ]
+    }
+  ]
+}

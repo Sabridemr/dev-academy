@@ -208,6 +208,53 @@ export const CURRICULUM: CurriculumModule[] = [
           en: 'Logging, metrics, tracing; twelve principles for production.',
         },
       ),
+      lesson(
+        'a',
+        14,
+        'websocket-realtime',
+        { tr: 'WebSocket ve Gerçek Zamanlı Sistemler', en: 'WebSockets and Real-Time Systems' },
+        {
+          tr: 'Polling → long polling → SSE → WebSocket; Redis pub/sub ile ölçekleme, yeniden bağlanma ve presence.',
+          en: 'Polling → long polling → SSE → WebSocket; scaling with Redis pub/sub, reconnection and presence.',
+        },
+        ['request-journey'],
+      ),
+      lesson(
+        'a',
+        15,
+        'search-systems',
+        { tr: 'Arama Sistemleri', en: 'Search Systems' },
+        {
+          tr: 'Ters indeks, tokenizasyon, BM25, facet, Elasticsearch shard/replica ve PostgreSQL full-text.',
+          en: 'Inverted index, tokenization, BM25, facets, Elasticsearch shards/replicas and PostgreSQL full-text.',
+        },
+        ['request-journey'],
+      ),
+      lesson(
+        'a',
+        16,
+        'background-jobs-scheduling',
+        {
+          tr: 'Arka Plan İşleri ve Zamanlanmış Görevler',
+          en: 'Background Jobs and Scheduled Tasks',
+        },
+        {
+          tr: 'Kuyruk işçileri, idempotent işler, retry/backoff/DLQ, cron ve dağıtık kilit.',
+          en: 'Queue workers, idempotent jobs, retry/backoff/DLQ, cron and distributed locks.',
+        },
+        ['message-queue'],
+      ),
+      lesson(
+        'a',
+        17,
+        'grpc-graphql-rest',
+        { tr: 'gRPC, GraphQL ve REST Karşılaştırması', en: 'gRPC, GraphQL and REST Compared' },
+        {
+          tr: 'Sözleşme, streaming, N+1 ve DataLoader, BFF; hangi durumda hangisi.',
+          en: 'Contracts, streaming, N+1 and DataLoader, BFF; which one when.',
+        },
+        ['request-journey'],
+      ),
     ],
   },
   {
@@ -275,6 +322,62 @@ export const CURRICULUM: CurriculumModule[] = [
           tr: 'RPO/RTO, failover animasyonu, veri yerleşimi.',
           en: 'RPO/RTO, failover animation, data residency.',
         },
+      ),
+      lesson(
+        'b',
+        5,
+        'modular-monolith',
+        {
+          tr: 'Modüler Monolit: Sınırlı Bağlamlar, Tek Dağıtım',
+          en: 'Modular Monolith: Bounded Contexts, Single Deploy',
+        },
+        {
+          tr: "Mikroservise geçmeden modül sınırları, iç API'ler, sınır ihlalinin CI'da yakalanması ve bir modülün servise ayrılması.",
+          en: 'Module boundaries without microservices, internal APIs, catching boundary violations in CI and extracting a module into a service.',
+        },
+        ['pipeline'],
+      ),
+      lesson(
+        'b',
+        6,
+        'hexagonal-clean-architecture',
+        {
+          tr: 'Hexagonal ve Clean Architecture: Port, Adaptör, Use Case',
+          en: 'Hexagonal and Clean Architecture: Ports, Adapters, Use Cases',
+        },
+        {
+          tr: 'Bağımlılık yönü, use case katmanı, sürücü ve sürülen adaptörler, veritabanını sahteyle değiştirerek test.',
+          en: 'Dependency direction, the use case layer, driving and driven adapters, testing by swapping the database for a fake.',
+        },
+        ['request-journey'],
+      ),
+      lesson(
+        'b',
+        7,
+        'event-sourcing-cqrs',
+        {
+          tr: 'Event Sourcing ve CQRS: Olay Deposu, Projeksiyon, Replay',
+          en: 'Event Sourcing and CQRS: Event Store, Projections, Replay',
+        },
+        {
+          tr: 'Olay deposu, projeksiyonlar, replay ve snapshot, okuma/yazma ayrımı, nihai tutarlılık ve ne zaman kullanılmaz.',
+          en: 'Event store, projections, replay and snapshots, read/write separation, eventual consistency and when not to use it.',
+        },
+        ['message-queue'],
+      ),
+      lesson(
+        'b',
+        8,
+        'saga-distributed-workflows',
+        {
+          tr: "Saga ve Dağıtık İş Akışları: Telafi, Zaman Aşımı, Orkestratör",
+          en: 'Sagas and Distributed Workflows: Compensation, Timeouts, Orchestrators',
+        },
+        {
+          tr: 'Koreografi ve orkestrasyon, telafi işlemleri, zaman aşımı, Temporal/Step Functions, idempotency ve outbox ile ilişki.',
+          en: 'Choreography and orchestration, compensating actions, timeouts, Temporal/Step Functions, and how idempotency and the outbox fit in.',
+        },
+        ['pipeline'],
       ),
     ],
   },
@@ -438,6 +541,60 @@ export const CURRICULUM: CurriculumModule[] = [
           en: 'Four real-world schemas and their design decisions.',
         },
         ['er-diagram'],
+      ),
+      lesson(
+        'd',
+        7,
+        'query-planner-explain',
+        {
+          tr: 'Sorgu Planlayıcı ve EXPLAIN Okuma: Tarama, Join Yöntemleri, İstatistikler',
+          en: 'The Query Planner and Reading EXPLAIN: Scans, Join Methods, Statistics',
+        },
+        {
+          tr: 'Planlayıcının maliyet tahminini, tarama ve join seçimlerini EXPLAIN çıktısından okuyun; yavaş sorgu kalıplarını düzeltin.',
+          en: 'Read the planner’s cost estimates, scan and join choices from EXPLAIN output; fix common slow-query patterns.',
+        },
+        ['index-query-plan'],
+      ),
+      lesson(
+        'd',
+        8,
+        'connection-pooling-n-plus-one',
+        {
+          tr: 'Bağlantı Havuzu, N+1 ve ORM Tuzakları',
+          en: 'Connection Pools, N+1 and ORM Pitfalls',
+        },
+        {
+          tr: 'Bağlantının maliyeti, havuz boyutu ve PgBouncer; N+1 sorgunun tespiti ve Prisma ile çözümü.',
+          en: 'The cost of a connection, pool sizing and PgBouncer; detecting N+1 queries and fixing them with Prisma.',
+        },
+      ),
+      lesson(
+        'd',
+        9,
+        'zero-downtime-migrations',
+        {
+          tr: 'Sıfır Kesintiyle Şema Değişiklikleri: Expand/Contract',
+          en: 'Zero-Downtime Schema Changes: Expand/Contract',
+        },
+        {
+          tr: 'Geriye uyumlu migration, CONCURRENTLY indeks, NOT NULL tuzağı, partili backfill ve geri alma planı.',
+          en: 'Backward-compatible migrations, CONCURRENTLY indexes, the NOT NULL trap, batched backfills and rollback plans.',
+        },
+      ),
+      lesson(
+        'd',
+        10,
+        'time-series-graph-document',
+        {
+          tr: 'Zaman Serisi, Graf ve Belge Veritabanları: Veri Düzeni ve Sorgu Şekli',
+          en: 'Time-Series, Graph and Document Databases: Data Layout and Query Shape',
+        },
+        {
+          tr: 'Chunk ve retention, düğüm/kenar gezintisi, gömme ve referans; ilişkisel modelin yetmediği yerler.',
+          en: 'Chunks and retention, node/edge traversal, embedding and referencing; where the relational model falls short.',
+        },
+        ['graph-traversal'],
       ),
     ],
   },
@@ -1279,6 +1436,30 @@ export const CURRICULUM: CurriculumModule[] = [
       lesson('n', 5, 'owasp-top-10', { tr: 'OWASP Top 10 ile Web Güvenliği', en: 'Web Security with OWASP Top 10' }, { tr: 'Enjeksiyon, XSS, CSRF, kırık erişim kontrolü, güvensiz tasarım ve kaba kuvvet; savunmalar ve kod örnekleri; kaba kuvvet simülatörü.', en: 'Injection, XSS, CSRF, broken access control, insecure design and brute force; defences and code examples; brute-force simulator.' }, ['bruteforce-login']),
       lesson('n', 6, 'cryptography-basics', { tr: 'Kriptografi Temelleri', en: 'Cryptography Basics' }, { tr: 'Hash ve şifre saklama (bcrypt/argon2), simetrik ve asimetrik şifreleme, TLS el sıkışması, imza ve anahtar yönetimi.', en: 'Hashing and password storage (bcrypt/argon2), symmetric and asymmetric encryption, the TLS handshake, signatures and key management.' }, ['jwt-inspector', 'hash-salt']),
       lesson('n', 7, 'threat-modeling', { tr: 'Tehdit Modelleme ve Güvenli Tasarım', en: 'Threat Modelling and Secure Design' }, { tr: 'STRIDE, saldırı yüzeyi, güven sınırları, gizli bilgi yönetimi ve tedarik zinciri güvenliği.', en: 'STRIDE, attack surface, trust boundaries, secrets management and supply-chain security.' }, ['threat-model']),
+    ],
+  },
+  {
+    id: 'o-network-os',
+    slug: 'network-os',
+    code: 'O',
+    order: 15,
+    title: { tr: 'Ağ ve İşletim Sistemi Temelleri', en: 'Networking and Operating System Fundamentals' },
+    description: {
+      tr: 'TCP/UDP, DNS, TLS ve HTTP sürümlerinden süreçlere, sanal belleğe, dosya I/O\'suna ve konteynerlerin altındaki namespace ve cgroup\'lara: backend ve DevOps\'un altında yatan katman.',
+      en: 'From TCP/UDP, DNS, TLS and HTTP versions to processes, virtual memory, file I/O and the namespaces and cgroups beneath containers: the layer underneath backend and DevOps.',
+    },
+    icon: 'cpu',
+    color: '#0891b2',
+    group: 'infrastructure',
+    lessons: [
+      lesson('o', 1, 'tcp-udp', { tr: 'TCP ve UDP: Güvenilir Akış ve Hızlı Datagram', en: 'TCP and UDP: Reliable Streams and Fast Datagrams' }, { tr: 'Üçlü el sıkışma, sıra numaraları, yeniden iletim, akış ve tıkanıklık kontrolü; UDP ne zaman doğru seçimdir.', en: 'The three-way handshake, sequence numbers, retransmission, flow and congestion control; when UDP is the right choice.' }, ['request-journey']),
+      lesson('o', 2, 'dns-ip', { tr: 'DNS ve IP: Çözümleme Zinciri, Adresler ve NAT', en: 'DNS and IP: The Resolution Chain, Addresses and NAT' }, { tr: 'Recursive → root → TLD → authoritative zinciri, TTL ve önbellek, IPv4/IPv6, özel ağlar ve NAT.', en: 'The recursive → root → TLD → authoritative chain, TTL and caching, IPv4/IPv6, private networks and NAT.' }, ['request-journey']),
+      lesson('o', 3, 'tls-https', { tr: 'TLS ve HTTPS: Sertifikalar ve Şifreli Kanal', en: 'TLS and HTTPS: Certificates and the Encrypted Channel' }, { tr: 'Sertifika ve CA zinciri, asimetrikten simetrik oturum anahtarına el sıkışma, TLS 1.3 ve Let\'s Encrypt ile otomatik sertifika.', en: 'Certificates and the CA chain, the handshake from asymmetric keys to a symmetric session key, TLS 1.3 and automated certificates with Let\'s Encrypt.' }),
+      lesson('o', 4, 'http-versions', { tr: 'HTTP/1.1, HTTP/2 ve HTTP/3', en: 'HTTP/1.1, HTTP/2 and HTTP/3' }, { tr: 'Keep-alive, head-of-line blocking, multiplexing ve QUIC: aynı istekler üç protokolde nasıl taşınır.', en: 'Keep-alive, head-of-line blocking, multiplexing and QUIC: how the same requests travel over three protocols.' }, ['request-journey']),
+      lesson('o', 5, 'processes-threads', { tr: 'Süreçler ve Thread\'ler: Zamanlayıcı ve Yarış Koşulları', en: 'Processes and Threads: The Scheduler and Race Conditions' }, { tr: 'Süreç yaşam döngüsü, fork/exec, context switch, CPU zamanlayıcısı, thread\'ler ve yarış koşulları; GIL\'e köprü.', en: 'Process lifecycle, fork/exec, context switches, the CPU scheduler, threads and race conditions; a bridge to the GIL.' }),
+      lesson('o', 6, 'virtual-memory', { tr: 'Bellek: Sanal Bellek, Sayfalama ve Sızıntılar', en: 'Memory: Virtual Memory, Paging and Leaks' }, { tr: 'Sanal adres alanı, sayfa tablosu ve TLB, page fault, swap, heap ve stack, bellek sızıntısı ve OOM killer.', en: 'Virtual address spaces, page tables and the TLB, page faults, swap, heap and stack, memory leaks and the OOM killer.' }, ['cache']),
+      lesson('o', 7, 'filesystem-io', { tr: 'Dosya Sistemi ve I/O: inode, Page Cache ve epoll', en: 'File Systems and I/O: inodes, the Page Cache and epoll' }, { tr: 'inode ve dizinler, izinler, page cache, sync/fsync ve dayanıklılık, blocking ve non-blocking I/O, epoll ile olay döngüsü.', en: 'inodes and directories, permissions, the page cache, sync/fsync and durability, blocking vs non-blocking I/O, event loops with epoll.' }, ['cache']),
+      lesson('o', 8, 'container-internals', { tr: 'Konteynerlerin Altındaki OS: Namespace, cgroup ve Union FS', en: 'The OS Beneath Containers: Namespaces, cgroups and Union File Systems' }, { tr: 'Konteyner bir süreçtir: namespace\'lerle yalıtım, cgroup\'larla kaynak sınırı, overlay dosya sistemiyle katmanlı imaj.', en: 'A container is a process: isolation with namespaces, resource limits with cgroups, layered images with an overlay file system.' }),
     ],
   },
   {

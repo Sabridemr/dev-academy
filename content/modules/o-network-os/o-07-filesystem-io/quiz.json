@@ -1,0 +1,110 @@
+{
+  "id": "o-07-filesystem-io-quiz",
+  "title": { "tr": "Dosya Sistemi ve I/O Quiz", "en": "File Systems and I/O Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Linux'ta `write()` başarılı döndüğünde aşağıdakilerden hangisi kesin olarak doğrudur?",
+        "en": "On Linux, when `write()` returns successfully, which of the following is guaranteed?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Veri diske yazılmıştır", "en": "The data has been written to disk" } },
+        { "id": "b", "text": { "tr": "Veri çekirdeğin page cache'ine kopyalanmıştır; diske inip inmediği bilinmez", "en": "The data has been copied into the kernel page cache; whether it reached the disk is unknown" } },
+        { "id": "c", "text": { "tr": "Veri disk sürücüsünün kuyruğuna alınmıştır ve 1 saniye içinde yazılacaktır", "en": "The data is in the disk driver's queue and will be written within one second" } },
+        { "id": "d", "text": { "tr": "Veri diğer süreçler tarafından okunamaz, ta ki fsync çağrılana kadar", "en": "Other processes cannot read the data until fsync is called" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "`write()` yalnızca veriyi page cache'teki sayfaya kopyalayıp sayfayı kirli işaretler. Diske inme işi arka plan writeback'inde ya da `fsync()` ile olur ve süresi garanti edilmez. Diğer süreçler page cache üzerinden yeni veriyi hemen görebilir; görünürlük ile kalıcılık ayrı kavramlardır.",
+        "en": "`write()` only copies the data into a page in the page cache and marks it dirty. Reaching the disk happens through background writeback or `fsync()`, with no guaranteed timing. Other processes can see the new data immediately through the page cache; visibility and durability are separate concepts."
+      },
+      "difficulty": "easy",
+      "concepts": ["page-cache", "dirty-page"]
+    },
+    {
+      "id": "q2",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Bir yapılandırma dosyasını çökmelere karşı güvenli ve atomik biçimde değiştirmek için hangi adımlar gerekir? (Birden fazla seçin)",
+        "en": "Which steps are needed to replace a configuration file atomically and safely against crashes? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Yeni içeriği geçici bir dosyaya yazıp o dosyayı fsync etmek", "en": "Write the new content to a temporary file and fsync it" } },
+        { "id": "b", "text": { "tr": "Geçici dosyayı aynı dosya sisteminde hedefin üzerine rename etmek", "en": "Rename the temporary file over the target on the same file system" } },
+        { "id": "c", "text": { "tr": "Rename'den sonra dizini fsync etmek", "en": "fsync the directory after the rename" } },
+        { "id": "d", "text": { "tr": "Hedef dosyayı açıp yerinde üzerine yazmak, sonra chmod çağırmak", "en": "Open the target and overwrite it in place, then call chmod" } }
+      ],
+      "correct": ["a", "b", "c"],
+      "explanation": {
+        "tr": "İçerik geçici dosyada kalıcı hale getirilir, `rename` aynı dosya sisteminde atomik olduğu için okuyan ya eski ya yeni dosyayı görür, dizinin fsync'i de ad → inode girdisini kalıcı yapar. Yerinde üzerine yazmak (d) çökme anında yarım kalmış bir dosya bırakabilir.",
+        "en": "The content is made durable in the temporary file, `rename` is atomic on the same file system so readers see either the old or the new file, and fsyncing the directory makes the name → inode entry durable. Overwriting in place (d) can leave a half-written file after a crash."
+      },
+      "difficulty": "medium",
+      "concepts": ["fsync", "inode"]
+    },
+    {
+      "id": "q3",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Bir dosyanın adı ve izinleri aynı yerde, dosyanın inode'unda saklanır.",
+        "en": "A file's name and its permissions are stored in the same place: the file's inode."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "Yanlış. İzinler, sahip, boyut ve blok adresleri inode'dadır; ad ise dizin girdisindedir (ad → inode numarası). Bu yüzden hard link ile aynı inode'a birden çok ad verilebilir ve `mv` aynı dosya sisteminde veriyi kopyalamaz.",
+        "en": "False. Permissions, owner, size and block addresses live in the inode; the name lives in the directory entry (name → inode number). That is why a hard link can give one inode several names and `mv` does not copy data within the same file system."
+      },
+      "difficulty": "easy",
+      "concepts": ["inode"]
+    },
+    {
+      "id": "q4",
+      "type": "order",
+      "prompt": {
+        "tr": "Bir uygulama `write()` ardından `fsync()` çağırıyor. Olayları doğru sıraya koyun.",
+        "en": "An application calls `write()` followed by `fsync()`. Put the events in the correct order."
+      },
+      "options": [
+        { "id": "ack", "text": { "tr": "Disk yazmanın kalıcı ortama ulaştığını onaylar", "en": "The disk acknowledges the write reached stable media" } },
+        { "id": "dirty", "text": { "tr": "Veri page cache'e kopyalanır ve sayfa kirli işaretlenir", "en": "Data is copied into the page cache and the page is marked dirty" } },
+        { "id": "block", "text": { "tr": "Kirli sayfa blok katmanına bir I/O isteği olarak verilir", "en": "The dirty page is submitted to the block layer as an I/O request" } },
+        { "id": "ret", "text": { "tr": "Sayfa temiz işaretlenir ve fsync() 0 ile döner", "en": "The page is marked clean and fsync() returns 0" } }
+      ],
+      "correct": ["dirty", "block", "ack", "ret"],
+      "explanation": {
+        "tr": "write() veriyi page cache'e bırakır; fsync() kirli sayfayı blok katmanı üzerinden diske gönderir, diskin onayını bekler ve ancak sonra sayfayı temiz işaretleyip döner. fsync'in gecikmesi büyük ölçüde onay beklemesinden gelir.",
+        "en": "write() leaves the data in the page cache; fsync() sends the dirty page through the block layer to disk, waits for the disk's acknowledgement and only then marks the page clean and returns. Most of fsync's latency comes from waiting for that acknowledgement."
+      },
+      "difficulty": "medium",
+      "concepts": ["fsync", "dirty-page"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "Tek thread'li bir sunucu 20.000 açık soketi verimli biçimde izlemek istiyor. Linux'ta en uygun yaklaşım hangisidir?",
+        "en": "A single-threaded server wants to watch 20,000 open sockets efficiently. What is the best approach on Linux?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Her soket için blocking read() çağıran ayrı bir thread açmak", "en": "Start a separate thread per socket that calls blocking read()" } },
+        { "id": "b", "text": { "tr": "Soketleri O_NONBLOCK yapıp döngüde tek tek read() ile yoklamak", "en": "Set the sockets to O_NONBLOCK and poll each one with read() in a loop" } },
+        { "id": "c", "text": { "tr": "Soketleri O_NONBLOCK yapıp epoll'a kaydetmek ve epoll_wait ile yalnızca hazır olanları işlemek", "en": "Set the sockets to O_NONBLOCK, register them with epoll and handle only the ready ones from epoll_wait" } },
+        { "id": "d", "text": { "tr": "Her istekten sonra fsync çağırarak soket tamponlarını boşaltmak", "en": "Call fsync after each request to drain socket buffers" } }
+      ],
+      "correct": ["c"],
+      "explanation": {
+        "tr": "epoll ilgilenilen fd'leri çekirdekte bir kez kaydeder ve epoll_wait yalnızca hazır olanları döner; tek thread binlerce bağlantıyı bir olay döngüsünde gezebilir. (a) thread başına bellek ve context switch maliyeti yüzünden ölçeklenmez, (b) CPU'yu boş yoklamayla yakar, (d) fsync soketlerle ilgili değildir.",
+        "en": "epoll registers the interesting fds in the kernel once and epoll_wait returns only the ready ones, so one thread can serve thousands of connections in an event loop. (a) does not scale due to per-thread memory and context switches, (b) burns CPU on busy polling, (d) fsync has nothing to do with sockets."
+      },
+      "difficulty": "medium",
+      "concepts": ["epoll", "non-blocking-io", "blocking-io", "file-descriptor"]
+    }
+  ]
+}

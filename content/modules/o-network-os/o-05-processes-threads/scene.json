@@ -1,0 +1,208 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "o-05-processes-threads-scheduler",
+  "title": {
+    "tr": "Zamanlayıcı: tek çekirdek, üç süreç ve bir disk okuması",
+    "en": "The scheduler: one core, three processes and a disk read"
+  },
+  "summary": {
+    "tr": "Zamanlayıcı tek bir CPU çekirdeğini A, B ve C süreçleri arasında zaman dilimleriyle paylaştırır; B read() ile diske bloklanınca bekleme kuyruğuna geçer, CPU boş kalmaz; disk kesmesi B'yi yeniden hazır kuyruğuna taşır.",
+    "en": "The scheduler shares a single CPU core between processes A, B and C in time slices; when B blocks on a disk read() it moves to the wait queue and the CPU stays busy; a disk interrupt moves B back to the ready queue."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Ortada tek bir CPU çekirdeği, solda hazır kuyruğu, üstte zamanlayıcı, altta bekleme kuyruğu, sağ altta disk. A süreci çalışırken zamanlayıcı kesmesi gelir ve A hazır kuyruğuna döner (context switch). B CPU'ya alınır, read() çağırır, disk isteği gönderilir ve B bekleme kuyruğuna geçer. CPU bu sırada C'yi ve ardından A'yı çalıştırır. Disk işini bitirince kesme üretir, çekirdek B'yi hazır kuyruğuna taşır ve B sırası gelince veriyle birlikte çalışmaya devam eder.",
+      "en": "A single CPU core in the middle, the ready queue on the left, the scheduler on top, the wait queue below and a disk bottom right. While process A runs a timer interrupt arrives and A returns to the ready queue (context switch). B is dispatched, calls read(), a disk request is sent and B moves to the wait queue. Meanwhile the CPU runs C and then A. When the disk finishes it raises an interrupt, the kernel moves B to the ready queue and B resumes with its data when its turn comes."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "sched", "kind": "generic", "label": { "tr": "Zamanlayıcı", "en": "Scheduler" }, "sublabel": { "tr": "çekirdek (kernel)", "en": "kernel" }, "x": 500, "y": 100, "w": 170, "h": 70 },
+    { "id": "rq", "kind": "queue", "label": { "tr": "Hazır kuyruğu", "en": "Ready queue" }, "sublabel": "run queue", "x": 170, "y": 300, "w": 170, "h": 76 },
+    { "id": "cpu", "kind": "server", "label": { "tr": "CPU çekirdeği", "en": "CPU core" }, "sublabel": { "tr": "aynı anda tek akış", "en": "one flow at a time" }, "x": 500, "y": 300, "w": 180, "h": 84 },
+    { "id": "wq", "kind": "queue", "label": { "tr": "Bekleme kuyruğu", "en": "Wait queue" }, "sublabel": { "tr": "blocked (D/S)", "en": "blocked (D/S)" }, "x": 500, "y": 500, "w": 170, "h": 76 },
+    { "id": "disk", "kind": "storage", "label": "Disk", "sublabel": { "tr": "~5 ms", "en": "~5 ms" }, "x": 840, "y": 420, "w": 150, "h": 76 }
+  ],
+  "edges": [
+    { "id": "rq-cpu", "from": "rq", "to": "cpu", "kind": "control", "label": { "tr": "dispatch", "en": "dispatch" }, "curvature": -0.25 },
+    { "id": "cpu-rq", "from": "cpu", "to": "rq", "kind": "control", "label": { "tr": "preemption", "en": "preemption" }, "curvature": -0.25, "style": "dashed" },
+    { "id": "sched-cpu", "from": "sched", "to": "cpu", "kind": "control", "label": { "tr": "timer kesmesi", "en": "timer interrupt" } },
+    { "id": "cpu-wq", "from": "cpu", "to": "wq", "kind": "control", "label": { "tr": "bloklan", "en": "block" } },
+    { "id": "cpu-disk", "from": "cpu", "to": "disk", "kind": "request", "label": "read()" },
+    { "id": "disk-sched", "from": "disk", "to": "sched", "kind": "event", "label": { "tr": "IRQ: veri hazır", "en": "IRQ: data ready" }, "curvature": -0.3 },
+    { "id": "wq-rq", "from": "wq", "to": "rq", "kind": "control", "label": { "tr": "uyandır", "en": "wake up" }, "curvature": 0.25 }
+  ],
+  "steps": [
+    {
+      "id": "a-running",
+      "title": { "tr": "A çalışıyor", "en": "A is running" },
+      "narration": {
+        "tr": "Tek çekirdekte aynı anda yalnızca bir süreç çalışabilir. Şu an A çalışıyor; B ve C hazır kuyruğunda, yalnızca CPU bekliyorlar. Hepsi çalışıyormuş gibi görünmesi, zamanlayıcının çekirdeği milisaniyelik dilimlerle paylaştırmasından gelir.",
+        "en": "Only one process can run on a single core at a time. A is running now; B and C sit in the ready queue waiting only for the CPU. The illusion that they all run comes from the scheduler sharing the core in millisecond slices."
+      },
+      "durationMs": 3000,
+      "inherit": false,
+      "highlight": { "nodes": ["cpu", "rq"] },
+      "nodeStates": {
+        "cpu": { "status": "busy", "badge": "A" },
+        "rq": { "status": "active", "badge": "B, C" },
+        "wq": { "status": "idle", "badge": "" },
+        "disk": { "status": "idle" },
+        "sched": { "status": "idle" }
+      },
+      "annotations": [
+        { "id": "rq-note", "x": 170, "y": 390, "text": { "tr": "hazır: yalnızca CPU bekliyor", "en": "ready: waiting only for the CPU" }, "tone": "info", "target": "rq" }
+      ]
+    },
+    {
+      "id": "preempt-a",
+      "title": { "tr": "Zaman dilimi doldu: context switch", "en": "Time slice over: context switch" },
+      "narration": {
+        "tr": "Donanım zamanlayıcısı kesme üretir; zamanlayıcı A'nın payının dolduğuna karar verir. Çekirdek A'nın yazmaçlarını (program sayacı, yığın işaretçisi) kaydeder ve A'yı hazır kuyruğunun sonuna koyar. Bu kaydet-yükle işine context switch denir.",
+        "en": "The hardware timer raises an interrupt; the scheduler decides A's share is used up. The kernel saves A's registers (program counter, stack pointer) and puts A at the back of the ready queue. This save-and-restore is a context switch."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["sched", "cpu", "rq"], "edges": ["sched-cpu", "cpu-rq"] },
+      "nodeStates": {
+        "sched": { "status": "active", "badge": "tick" },
+        "cpu": { "status": "warning", "badge": "switch" },
+        "rq": { "status": "active", "badge": "B, C, A" }
+      },
+      "packets": [
+        { "edge": "sched-cpu", "shape": "diamond", "label": "IRQ", "durationMs": 800 },
+        { "edge": "cpu-rq", "shape": "square", "label": "A", "startAt": 1000, "durationMs": 1100 }
+      ],
+      "annotations": [
+        { "id": "cs-note", "x": 760, "y": 230, "text": { "tr": "yazmaçlar kaydedildi; önbellek soğuyacak", "en": "registers saved; caches will go cold" }, "tone": "warning", "target": "cpu" }
+      ]
+    },
+    {
+      "id": "dispatch-b",
+      "title": { "tr": "B CPU'ya alınır", "en": "B is dispatched" },
+      "narration": {
+        "tr": "Zamanlayıcı kuyruğun başındaki B'yi seçer, B'nin kayıtlı yazmaçlarını yükler ve CPU'yu ona verir. B kaldığı yerden devam eder; kesildiğini fark etmez.",
+        "en": "The scheduler picks B from the head of the queue, loads B's saved registers and hands it the CPU. B continues where it left off; it never notices it was interrupted."
+      },
+      "durationMs": 2600,
+      "highlight": { "nodes": ["rq", "cpu"], "edges": ["rq-cpu"] },
+      "nodeStates": {
+        "sched": { "status": "idle", "badge": "" },
+        "cpu": { "status": "busy", "badge": "B" },
+        "rq": { "status": "active", "badge": "C, A" }
+      },
+      "packets": [{ "edge": "rq-cpu", "shape": "square", "label": "B", "durationMs": 1100 }]
+    },
+    {
+      "id": "b-read",
+      "title": { "tr": "B read() çağırır ve bloklanır", "en": "B calls read() and blocks" },
+      "narration": {
+        "tr": "B diskten veri ister. Disk milisaniyeler sürecek; bu, CPU için milyonlarca talimat demektir. Çekirdek disk isteğini başlatır ve B'yi blocked durumuna alıp bekleme kuyruğuna koyar. B artık CPU'da da hazır kuyruğunda da değildir.",
+        "en": "B asks for data from disk. The disk will take milliseconds, which is millions of instructions for the CPU. The kernel starts the disk request, marks B blocked and puts it on the wait queue. B is now neither on the CPU nor in the ready queue."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["cpu", "disk", "wq"], "edges": ["cpu-disk", "cpu-wq"] },
+      "nodeStates": {
+        "cpu": { "status": "warning", "badge": "switch" },
+        "disk": { "status": "busy", "badge": "read(B)" },
+        "wq": { "status": "warning", "badge": "B" }
+      },
+      "packets": [
+        { "edge": "cpu-disk", "shape": "envelope", "label": "read()", "durationMs": 1100 },
+        { "edge": "cpu-wq", "shape": "square", "label": "B", "startAt": 1300, "durationMs": 1100 }
+      ],
+      "annotations": [
+        { "id": "block-note", "x": 760, "y": 560, "text": { "tr": "B CPU harcamadan bekliyor", "en": "B waits without using CPU" }, "tone": "warning", "target": "wq" }
+      ]
+    },
+    {
+      "id": "dispatch-c",
+      "title": { "tr": "CPU boş kalmaz: C çalışır", "en": "The CPU stays busy: C runs" },
+      "narration": {
+        "tr": "B beklerken CPU boşa dönmez: zamanlayıcı hemen C'yi seçer. I/O ağırlıklı bir sunucunun az çekirdekle binlerce bağlantı taşıyabilmesinin sırrı budur; bekleyen iş CPU'yu bırakır.",
+        "en": "While B waits the CPU does not idle: the scheduler immediately picks C. This is how an I/O-heavy server carries thousands of connections on few cores; waiting work gives up the CPU."
+      },
+      "durationMs": 2800,
+      "highlight": { "nodes": ["rq", "cpu"], "edges": ["rq-cpu"] },
+      "nodeStates": {
+        "cpu": { "status": "busy", "badge": "C" },
+        "rq": { "status": "active", "badge": "A" }
+      },
+      "packets": [{ "edge": "rq-cpu", "shape": "square", "label": "C", "durationMs": 1100 }]
+    },
+    {
+      "id": "c-to-a",
+      "title": { "tr": "Zaman paylaşımı sürer: C → A", "en": "Time sharing continues: C → A" },
+      "narration": {
+        "tr": "C'nin dilimi dolar, C kuyruğa döner ve A yeniden CPU'ya alınır. Disk hâlâ çalışıyor. Her geçiş birkaç mikrosaniye sürer ama önbellek ve TLB'yi soğuttuğu için çok sık geçiş gerçek işten çalar.",
+        "en": "C's slice expires, C returns to the queue and A gets the CPU again. The disk is still working. Each switch takes a few microseconds, but because it cools the caches and TLB, switching too often steals time from real work."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["cpu", "rq"], "edges": ["cpu-rq", "rq-cpu"] },
+      "nodeStates": {
+        "cpu": { "status": "busy", "badge": "A" },
+        "rq": { "status": "active", "badge": "C" }
+      },
+      "packets": [
+        { "edge": "cpu-rq", "shape": "square", "label": "C", "durationMs": 1000 },
+        { "edge": "rq-cpu", "shape": "square", "label": "A", "startAt": 1200, "durationMs": 1000 }
+      ],
+      "annotations": [
+        { "id": "vmstat-note", "x": 170, "y": 180, "text": { "tr": "vmstat: r = kuyruk, cs = geçiş/s", "en": "vmstat: r = queue, cs = switches/s" }, "tone": "info", "target": "rq" }
+      ]
+    },
+    {
+      "id": "irq",
+      "title": { "tr": "Disk kesmesi", "en": "Disk interrupt" },
+      "narration": {
+        "tr": "Disk B'nin istediği bloğu belleğe aktarır ve bir kesme (IRQ) üretir. CPU o an A'yı çalıştırıyor olsa da kesme işleyicisi kısa süreliğine devreye girer ve çekirdeğe 'B'nin verisi hazır' haberini verir.",
+        "en": "The disk transfers B's block into memory and raises an interrupt (IRQ). Even though the CPU is running A, the interrupt handler briefly takes over and tells the kernel that B's data is ready."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["disk", "sched"], "edges": ["disk-sched"] },
+      "nodeStates": {
+        "disk": { "status": "success", "badge": "bitti" },
+        "sched": { "status": "active", "badge": "IRQ" }
+      },
+      "packets": [{ "edge": "disk-sched", "shape": "diamond", "label": "IRQ", "color": "success", "durationMs": 1400 }]
+    },
+    {
+      "id": "wake-b",
+      "title": { "tr": "B uyanır: önce hazır kuyruğuna", "en": "B wakes: first to the ready queue" },
+      "narration": {
+        "tr": "Çekirdek B'yi bekleme kuyruğundan alıp hazır kuyruğuna koyar. Dikkat: B doğrudan CPU'ya geçmez. Blocked durumundan running'e kısa yol yoktur; sırası gelene kadar hazır kuyruğunda bekler.",
+        "en": "The kernel takes B off the wait queue and puts it on the ready queue. Note: B does not jump straight onto the CPU. There is no shortcut from blocked to running; it waits in the ready queue until its turn."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["wq", "rq"], "edges": ["wq-rq"] },
+      "nodeStates": {
+        "wq": { "status": "idle", "badge": "" },
+        "rq": { "status": "active", "badge": "C, B" },
+        "sched": { "status": "idle", "badge": "" },
+        "disk": { "status": "idle", "badge": "" }
+      },
+      "packets": [{ "edge": "wq-rq", "shape": "square", "label": "B", "color": "success", "durationMs": 1400 }]
+    },
+    {
+      "id": "b-resumes",
+      "title": { "tr": "B veriyle devam eder", "en": "B resumes with its data" },
+      "narration": {
+        "tr": "Sıra B'ye gelir; read() çağrısı veriyle geri döner ve B hiçbir şey olmamış gibi bir sonraki satıra geçer. Programcının gözünden read() yalnızca 'biraz uzun süren' bir fonksiyondu; altında süreç iki kuyruk ve bir kesme dolaştı.",
+        "en": "B's turn comes; read() returns with the data and B moves to the next line as if nothing happened. From the programmer's view read() was just a function that took a while; underneath, the process travelled through two queues and an interrupt."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["rq", "cpu"], "edges": ["cpu-rq", "rq-cpu"] },
+      "nodeStates": {
+        "cpu": { "status": "success", "badge": "B" },
+        "rq": { "status": "active", "badge": "C, A" }
+      },
+      "packets": [
+        { "edge": "cpu-rq", "shape": "square", "label": "A", "durationMs": 1000 },
+        { "edge": "rq-cpu", "shape": "square", "label": "B", "color": "success", "startAt": 1200, "durationMs": 1000 }
+      ],
+      "annotations": [
+        { "id": "load-note", "x": 760, "y": 230, "text": { "tr": "load average = R + D durumundaki süreçler", "en": "load average = processes in R + D states" }, "tone": "success", "target": "cpu" }
+      ]
+    }
+  ]
+}

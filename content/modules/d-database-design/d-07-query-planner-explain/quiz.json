@@ -1,0 +1,110 @@
+{
+  "id": "d-07-query-planner-explain-quiz",
+  "title": { "tr": "Sorgu Planlayıcı ve EXPLAIN Quiz", "en": "Query Planner and EXPLAIN Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "`EXPLAIN ANALYZE` çıktısında iç içe döngünün iç tarafındaki bir düğüm `actual time=0.050..0.050 rows=1 loops=40000` gösteriyor. Bu düğümün sorguya toplam katkısı yaklaşık ne kadardır?",
+        "en": "In `EXPLAIN ANALYZE` output, a node on the inner side of a nested loop shows `actual time=0.050..0.050 rows=1 loops=40000`. Roughly how much does this node contribute to the query in total?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "0,05 ms", "en": "0.05 ms" } },
+        { "id": "b", "text": { "tr": "Yaklaşık 2 saniye", "en": "About 2 seconds" } },
+        { "id": "c", "text": { "tr": "40 ms", "en": "40 ms" } },
+        { "id": "d", "text": { "tr": "Belirlenemez; loops yalnızca tahmindir", "en": "Cannot be known; loops is only an estimate" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "`actual time` ve `rows` döngü başına raporlanır. 0,05 ms × 40.000 döngü ≈ 2.000 ms. `loops` gerçek ölçümdür; çarpmayı unutmak, asıl darboğazı küçük görünen bir satırda kaçırmanın en yaygın nedenidir.",
+        "en": "`actual time` and `rows` are reported per loop. 0.05 ms × 40,000 loops ≈ 2,000 ms. `loops` is a real measurement; forgetting to multiply is the most common way to miss the real bottleneck hiding in an innocent-looking line."
+      },
+      "difficulty": "medium",
+      "concepts": ["nested-loop-join", "query-planner"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "İki büyük tablo eşitlik koşuluyla birleştiriliyor; join sütunlarında indeks yok ve girdiler sıralı değil. Planlayıcının en olası seçimi hangisidir?",
+        "en": "Two large tables are joined on an equality condition; there are no indexes on the join columns and the inputs are unsorted. What is the planner's most likely choice?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Nested Loop", "en": "Nested Loop" } },
+        { "id": "b", "text": { "tr": "Hash Join", "en": "Hash Join" } },
+        { "id": "c", "text": { "tr": "Merge Join, sıralama olmadan", "en": "Merge Join, without sorting" } },
+        { "id": "d", "text": { "tr": "Index Only Scan", "en": "Index Only Scan" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Hash join küçük girdiden bellekte tablo kurar ve büyük girdiyi bir kez tarar; indeks ya da sıralama gerektirmez, yalnızca eşitlik ister. Nested loop indeks olmadan N × M karşılaştırma yapar. Merge join için girdilerin sıralı olması gerekir; değilse önce sort maliyeti eklenir. Index Only Scan bir join yöntemi değil, tarama yöntemidir.",
+        "en": "A hash join builds an in-memory table from the smaller input and scans the larger one once; it needs neither an index nor sorting, only equality. A nested loop without an index does N × M comparisons. A merge join needs sorted inputs; otherwise a sort cost is added first. Index Only Scan is a scan method, not a join method."
+      },
+      "difficulty": "easy",
+      "concepts": ["hash-join", "merge-join", "nested-loop-join"]
+    },
+    {
+      "id": "q3",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Bir düğümde tahmini satır 1, gerçek satır 50.000 görünüyor. Hangileri bu sapmanın olası nedenleri ya da doğru ilk adımlardır? (Birden fazla seçin)",
+        "en": "A node estimates 1 row but actually returns 50,000. Which are likely causes of this gap or correct first steps? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Toplu yüklemeden sonra istatistikler güncellenmedi; `ANALYZE` çalıştırmak", "en": "Statistics were not refreshed after a bulk load; run `ANALYZE`" } },
+        { "id": "b", "text": { "tr": "Koşuldaki iki sütun birbirine bağımlı; `CREATE STATISTICS` ile bağımlılığı tanıtmak", "en": "Two columns in the condition are correlated; declare it with `CREATE STATISTICS`" } },
+        { "id": "c", "text": { "tr": "`random_page_cost` değerini 100 yapmak", "en": "Set `random_page_cost` to 100" } },
+        { "id": "d", "text": { "tr": "Tablodaki tüm indeksleri silmek", "en": "Drop every index on the table" } }
+      ],
+      "correct": ["a", "b"],
+      "explanation": {
+        "tr": "Satır tahmini istatistiklerden gelir: bayat istatistik ve bağımsız sayılan ilişkili sütunlar en yaygın iki nedendir. `random_page_cost` maliyet hesabını değiştirir ama satır tahminini düzeltmez; indeksleri silmek ise sorunu büyütür.",
+        "en": "Row estimates come from statistics: stale statistics and correlated columns treated as independent are the two most common causes. `random_page_cost` changes costing but does not fix the row estimate; dropping indexes makes things worse."
+      },
+      "difficulty": "medium",
+      "concepts": ["table-statistics", "analyze"]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Arama indeksi `to_tsvector('simple', \"searchText\")` ifadesi üzerine kurulmuşsa, `to_tsvector('turkish', \"searchText\") @@ ...` koşullu bir sorgu da bu indeksi kullanabilir.",
+        "en": "If the search index is built on the expression `to_tsvector('simple', \"searchText\")`, a query with the condition `to_tsvector('turkish', \"searchText\") @@ ...` can also use that index."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "İfade indeksi yalnızca sorgudaki ifade indeksteki ifadeyle birebir aynıysa kullanılır. Farklı sözlük farklı bir ifadedir ve farklı kelime kökleri üretir; planlayıcı indeksi göremez ve Seq Scan'e düşer.",
+        "en": "An expression index is only used when the query's expression matches the indexed expression exactly. A different dictionary is a different expression and produces different lexemes; the planner cannot use the index and falls back to a Seq Scan."
+      },
+      "difficulty": "medium",
+      "concepts": ["expression-index", "query-planner"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "Birkaç yüz satırlık bir tabloda doğru indeks olduğu hâlde plan `Seq Scan` gösteriyor. Ne yapmalısınız?",
+        "en": "A table with a few hundred rows shows `Seq Scan` in the plan even though the right index exists. What should you do?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "`enable_seqscan = off` ayarını üretimde kalıcı yapmak", "en": "Set `enable_seqscan = off` permanently in production" } },
+        { "id": "b", "text": { "tr": "Hiçbir şey; birkaç sayfayı sırayla okumak indeksten ucuzdur", "en": "Nothing; reading a few pages sequentially is cheaper than the index" } },
+        { "id": "c", "text": { "tr": "İndeksi hash indekse çevirmek", "en": "Convert the index to a hash index" } },
+        { "id": "d", "text": { "tr": "Sorguya `LIMIT 1` eklemek", "en": "Add `LIMIT 1` to the query" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Maliyet modeli sayfa okumalarını sayar; birkaç sayfalık tabloda tam tarama doğru seçimdir ve tablo büyüdükçe plan kendiliğinden değişir. `enable_seqscan = off` yalnızca teşhis için oturum düzeyinde kullanılır; kalıcı yapmak başka sorguların planını bozar.",
+        "en": "The cost model counts page reads; on a table of a few pages a full scan is the right choice and the plan changes on its own as the table grows. `enable_seqscan = off` is for session-level diagnosis only; making it permanent breaks other queries' plans."
+      },
+      "difficulty": "easy",
+      "concepts": ["cost-model", "seq-scan"]
+    }
+  ]
+}

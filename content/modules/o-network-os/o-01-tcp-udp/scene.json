@@ -1,0 +1,276 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "o-01-tcp-handshake-retransmit",
+  "title": {
+    "tr": "TCP: El Sıkışma, Kayıp Segment ve Pencere",
+    "en": "TCP: Handshake, a Lost Segment and the Window"
+  },
+  "summary": {
+    "tr": "Bir TCP bağlantısının üçlü el sıkışmayla kurulması, beş segmentten birinin router'da kaybolması, duplicate ACK'lerin hızlı yeniden iletimi tetiklemesi, tıkanıklık penceresinin küçülmesi ve alıcı penceresinin sıfıra inip yeniden açılması.",
+    "en": "A TCP connection is set up with the three-way handshake, one of five segments is lost at a router, duplicate ACKs trigger fast retransmit, the congestion window shrinks and the receive window drops to zero and reopens."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda istemci, ortada bir router, sağda sunucu ve sunucunun üstünde veriyi okuyan uygulama var. İstemci SYN gönderir, sunucu SYN-ACK ile döner, istemci ACK ile bağlantıyı kurar. İstemci beş veri segmenti gönderir; ikincisi router'da kaybolur. Sunucu 1001 numaralı ACK'i dört kez gönderir; üç duplicate ACK'i gören istemci kayıp segmenti zaman aşımını beklemeden yeniden yollar. Sunucu boşluğu doldurur, tüm veriyi uygulamaya teslim eder ve 5001'i onaylar. İstemci tıkanıklık penceresini küçültür. Uygulama yavaş okuyunca sunucu alıcı penceresini sıfır bildirir ve istemci durur; uygulama tamponu boşaltınca pencere yeniden açılır ve gönderim sürer.",
+      "en": "Client on the left, a router in the middle, the server on the right and the application reading data above the server. The client sends SYN, the server replies with SYN-ACK and the client completes the connection with ACK. The client sends five data segments; the second is lost at the router. The server sends ACK 1001 four times; after three duplicate ACKs the client retransmits the lost segment without waiting for a timeout. The server fills the gap, delivers all data to the application and acknowledges 5001. The client shrinks its congestion window. When the application reads slowly the server advertises a zero receive window and the client stops; once the application drains the buffer the window reopens and sending resumes."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    {
+      "id": "client",
+      "kind": "client",
+      "label": { "tr": "İstemci", "en": "Client" },
+      "sublabel": { "tr": "gönderici", "en": "sender" },
+      "x": 130,
+      "y": 340,
+      "w": 160,
+      "h": 80
+    },
+    {
+      "id": "router",
+      "kind": "generic",
+      "label": "Router",
+      "sublabel": { "tr": "sınırlı kuyruk", "en": "bounded queue" },
+      "x": 490,
+      "y": 340,
+      "w": 150,
+      "h": 76
+    },
+    {
+      "id": "server",
+      "kind": "server",
+      "label": { "tr": "Sunucu çekirdeği", "en": "Server kernel" },
+      "sublabel": { "tr": "alıcı tamponu", "en": "receive buffer" },
+      "x": 850,
+      "y": 340,
+      "w": 170,
+      "h": 80
+    },
+    {
+      "id": "app",
+      "kind": "service",
+      "label": { "tr": "Uygulama", "en": "Application" },
+      "sublabel": "recv()",
+      "x": 850,
+      "y": 130,
+      "w": 150,
+      "h": 70
+    }
+  ],
+  "edges": [
+    { "id": "c-r", "from": "client", "to": "router", "kind": "request" },
+    { "id": "r-s", "from": "router", "to": "server", "kind": "request" },
+    { "id": "s-app", "from": "server", "to": "app", "kind": "data", "style": "dashed" }
+  ],
+  "steps": [
+    {
+      "id": "syn",
+      "title": { "tr": "1. SYN", "en": "1. SYN" },
+      "narration": {
+        "tr": "İstemci bağlanmak ister ve rastgele seçtiği başlangıç sıra numarasıyla bir SYN segmenti gönderir. Henüz hiç uygulama verisi yoktur; istemci SYN_SENT durumundadır.",
+        "en": "The client wants to connect and sends a SYN segment carrying a randomly chosen initial sequence number. There is no application data yet; the client is in SYN_SENT."
+      },
+      "durationMs": 2600,
+      "inherit": false,
+      "highlight": { "nodes": ["client", "router", "server"], "edges": ["c-r", "r-s"] },
+      "nodeStates": { "client": { "status": "active", "badge": "SYN_SENT" } },
+      "packets": [
+        { "edge": "c-r", "label": "SYN seq=x", "shape": "diamond", "durationMs": 800 },
+        { "edge": "r-s", "label": "SYN seq=x", "shape": "diamond", "startAt": 850, "durationMs": 800 }
+      ]
+    },
+    {
+      "id": "syn-ack",
+      "title": { "tr": "2. SYN-ACK", "en": "2. SYN-ACK" },
+      "narration": {
+        "tr": "Sunucu x+1'i beklediğini onaylar ve kendi rastgele numarasını (y) bildirir. Bu segment hem SYN hem ACK taşır; sunucu yarım açık bağlantı için kuyrukta yer ayırır.",
+        "en": "The server acknowledges that it expects x+1 and announces its own random number (y). This segment carries both SYN and ACK; the server reserves a slot for the half-open connection."
+      },
+      "durationMs": 2600,
+      "highlight": { "nodes": ["server", "router", "client"], "edges": ["r-s", "c-r"] },
+      "nodeStates": { "server": { "status": "active", "badge": "SYN_RCVD" } },
+      "packets": [
+        { "edge": "r-s", "direction": "backward", "label": "SYN-ACK y, ack=x+1", "shape": "diamond", "durationMs": 800 },
+        { "edge": "c-r", "direction": "backward", "label": "SYN-ACK", "shape": "diamond", "startAt": 850, "durationMs": 800 }
+      ]
+    },
+    {
+      "id": "ack",
+      "title": { "tr": "3. ACK: bağlantı kuruldu", "en": "3. ACK: connection established" },
+      "narration": {
+        "tr": "İstemci y+1'i beklediğini onaylar. İki taraf da ESTABLISHED olur. Bağlanmak için tam bir gidiş-dönüş (RTT) harcandı; istemci veriyi bu ACK'in hemen arkasından gönderebilir.",
+        "en": "The client acknowledges that it expects y+1. Both sides are now ESTABLISHED. A full round trip (RTT) was spent just connecting; the client may send data right behind this ACK."
+      },
+      "durationMs": 2800,
+      "highlight": { "nodes": ["client", "server"], "edges": ["c-r", "r-s"] },
+      "nodeStates": {
+        "client": { "status": "success", "badge": "ESTABLISHED" },
+        "server": { "status": "success", "badge": "ESTABLISHED" }
+      },
+      "packets": [
+        { "edge": "c-r", "label": "ACK y+1", "shape": "diamond", "durationMs": 800 },
+        { "edge": "r-s", "label": "ACK y+1", "shape": "diamond", "startAt": 850, "durationMs": 800 }
+      ],
+      "annotations": [
+        { "id": "rtt-note", "x": 490, "y": 470, "text": { "tr": "El sıkışma = 1 RTT", "en": "Handshake = 1 RTT" }, "tone": "info", "target": "router" }
+      ]
+    },
+    {
+      "id": "send-window",
+      "title": { "tr": "Beş segment uçuşta, biri kayboluyor", "en": "Five segments in flight, one is lost" },
+      "narration": {
+        "tr": "Tıkanıklık penceresi 5 segmente izin verir; istemci onay beklemeden 1, 1001, 2001, 3001 ve 4001 numaralı segmentleri art arda yollar. Router'ın kuyruğu o an doludur ve seq=1001'i atar. Diğer dört segment sunucuya ulaşır.",
+        "en": "The congestion window allows 5 segments; the client sends segments 1, 1001, 2001, 3001 and 4001 back to back without waiting for acknowledgements. The router's queue is full at that moment and drops seq=1001. The other four reach the server."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["client", "router", "server"], "edges": ["c-r", "r-s"] },
+      "nodeStates": {
+        "client": { "status": "busy", "badge": "cwnd=5" },
+        "server": { "status": "active", "badge": "" },
+        "router": { "status": "warning", "badge": "kuyruk dolu" }
+      },
+      "packets": [
+        { "edge": "c-r", "label": "seq=1", "shape": "square", "durationMs": 700 },
+        { "edge": "c-r", "label": "seq=1001", "shape": "square", "color": "danger", "startAt": 250, "durationMs": 700 },
+        { "edge": "c-r", "label": "seq=2001", "shape": "square", "startAt": 500, "durationMs": 700 },
+        { "edge": "c-r", "label": "seq=3001", "shape": "square", "startAt": 750, "durationMs": 700 },
+        { "edge": "c-r", "label": "seq=4001", "shape": "square", "startAt": 1000, "durationMs": 700 },
+        { "edge": "r-s", "label": "seq=1", "shape": "square", "startAt": 750, "durationMs": 700 },
+        { "edge": "r-s", "label": "seq=2001", "shape": "square", "startAt": 1250, "durationMs": 700 },
+        { "edge": "r-s", "label": "seq=3001", "shape": "square", "startAt": 1500, "durationMs": 700 },
+        { "edge": "r-s", "label": "seq=4001", "shape": "square", "startAt": 1750, "durationMs": 700 }
+      ],
+      "annotations": [
+        { "id": "lost-note", "x": 490, "y": 460, "text": { "tr": "seq=1001 atıldı", "en": "seq=1001 dropped" }, "tone": "danger", "target": "router" }
+      ]
+    },
+    {
+      "id": "dup-acks",
+      "title": { "tr": "Duplicate ACK'ler", "en": "Duplicate ACKs" },
+      "narration": {
+        "tr": "Sunucu 1. segmentten sonra 1001'i bekler. 2001, 3001 ve 4001 gelir ama aradaki boşluk yüzünden ACK numarası ilerleyemez: sunucu aynı 'ack=1001'i dört kez gönderir. Gelen üç segment çekirdek tamponunda bekler; uygulamaya henüz teslim edilemez.",
+        "en": "After segment 1 the server expects 1001. Segments 2001, 3001 and 4001 arrive but the gap prevents the ACK number from advancing: the server sends 'ack=1001' four times. The three segments wait in the kernel buffer; they cannot be delivered to the application yet."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["server", "client"], "edges": ["r-s", "c-r"] },
+      "nodeStates": {
+        "server": { "status": "warning", "badge": "3 segment bekliyor" },
+        "router": { "status": "idle", "badge": "" },
+        "app": { "status": "muted" }
+      },
+      "packets": [
+        { "edge": "r-s", "direction": "backward", "label": "ack=1001", "shape": "dot", "durationMs": 500, "repeat": 4, "repeatGapMs": 200 },
+        { "edge": "c-r", "direction": "backward", "label": "ack=1001", "shape": "dot", "startAt": 550, "durationMs": 500, "repeat": 4, "repeatGapMs": 200 }
+      ],
+      "annotations": [
+        { "id": "hol-note", "x": 850, "y": 470, "text": { "tr": "Sıralı teslim: boşluk dolana kadar bekle", "en": "In-order delivery: wait for the gap" }, "tone": "warning", "target": "server" }
+      ]
+    },
+    {
+      "id": "fast-retransmit",
+      "title": { "tr": "Hızlı yeniden iletim", "en": "Fast retransmit" },
+      "narration": {
+        "tr": "Üç duplicate ACK, istemciye 'arkadakiler geliyor, yalnızca 1001 eksik' der. İstemci zaman aşımını (RTO) beklemeden yalnızca seq=1001'i yeniden gönderir. Zaman aşımı en az birkaç RTT sürerdi.",
+        "en": "Three duplicate ACKs tell the client 'later segments are arriving, only 1001 is missing'. The client retransmits only seq=1001 without waiting for the retransmission timeout (RTO), which would take at least several RTTs."
+      },
+      "durationMs": 2800,
+      "highlight": { "nodes": ["client", "router", "server"], "edges": ["c-r", "r-s"] },
+      "nodeStates": { "client": { "status": "warning", "badge": "3 dup ACK" } },
+      "packets": [
+        { "edge": "c-r", "label": { "tr": "seq=1001 (tekrar)", "en": "seq=1001 (again)" }, "shape": "square", "color": "warning", "durationMs": 800 },
+        { "edge": "r-s", "label": { "tr": "seq=1001 (tekrar)", "en": "seq=1001 (again)" }, "shape": "square", "color": "warning", "startAt": 850, "durationMs": 800 }
+      ],
+      "annotations": [
+        { "id": "rto-note", "x": 150, "y": 460, "text": { "tr": "RTO beklenmedi", "en": "No RTO wait" }, "tone": "success", "target": "client" }
+      ]
+    },
+    {
+      "id": "cumulative-ack",
+      "title": { "tr": "Boşluk doldu: kümülatif ACK", "en": "Gap filled: cumulative ACK" },
+      "narration": {
+        "tr": "Eksik segment gelince sunucu 1001'den 5000'e kadar tüm byte'ları sırayla uygulamaya teslim eder ve tek bir ACK ile 'ack=5001' der. Kümülatif ACK, aradaki tüm segmentleri birden onaylar.",
+        "en": "Once the missing segment arrives the server delivers bytes 1001 through 5000 to the application in order and says 'ack=5001' in a single ACK. A cumulative ACK acknowledges every segment in between at once."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["server", "app", "client"], "edges": ["s-app", "r-s", "c-r"] },
+      "nodeStates": {
+        "server": { "status": "success", "badge": "ack=5001" },
+        "app": { "status": "active", "badge": "4000 byte" }
+      },
+      "edgeStates": { "s-app": { "status": "active" } },
+      "packets": [
+        { "edge": "s-app", "label": { "tr": "sıralı veri", "en": "ordered data" }, "shape": "square", "color": "success", "durationMs": 800 },
+        { "edge": "r-s", "direction": "backward", "label": "ack=5001", "color": "success", "startAt": 300, "durationMs": 800 },
+        { "edge": "c-r", "direction": "backward", "label": "ack=5001", "color": "success", "startAt": 1150, "durationMs": 800 }
+      ]
+    },
+    {
+      "id": "cwnd-shrink",
+      "title": { "tr": "Tıkanıklık tepkisi", "en": "Congestion response" },
+      "narration": {
+        "tr": "Kayıp, ağda tıkanıklık olduğunun işareti sayılır. İstemci tıkanıklık penceresini küçültür (Reno yarıya indirir, Linux'un varsayılanı CUBIC daha az azaltır) ve bundan sonra daha az segmenti aynı anda uçuşta tutar; pencere sonra yavaşça yeniden büyür.",
+        "en": "The loss is treated as a sign of congestion. The client shrinks its congestion window (Reno halves it, Linux's default CUBIC cuts it less) and keeps fewer segments in flight from now on; the window then grows back slowly."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["client", "router"], "edges": ["c-r", "r-s"] },
+      "nodeStates": {
+        "client": { "status": "active", "badge": "cwnd 5 → 3" },
+        "app": { "status": "idle", "badge": "" },
+        "server": { "status": "active", "badge": "" }
+      },
+      "edgeStates": { "s-app": { "status": "idle" } },
+      "packets": [
+        { "edge": "c-r", "label": "seq=5001…", "shape": "square", "durationMs": 700, "repeat": 3, "repeatGapMs": 150 },
+        { "edge": "r-s", "label": "seq=5001…", "shape": "square", "startAt": 750, "durationMs": 700, "repeat": 3, "repeatGapMs": 150 }
+      ],
+      "annotations": [
+        { "id": "inflight-note", "x": 300, "y": 200, "text": { "tr": "uçuştaki veri = min(rwnd, cwnd)", "en": "in flight = min(rwnd, cwnd)" }, "tone": "info", "target": "client" }
+      ]
+    },
+    {
+      "id": "zero-window",
+      "title": { "tr": "Akış kontrolü: rwnd = 0", "en": "Flow control: rwnd = 0" },
+      "narration": {
+        "tr": "Bu kez sorun ağ değil alıcıdır: uygulama veriyi yavaş okur ve sunucunun alıcı tamponu dolar. Sunucu ACK'te 'win=0' bildirir; istemci ağ ne kadar boş olursa olsun göndermeyi durdurur.",
+        "en": "This time the problem is the receiver, not the network: the application reads slowly and the server's receive buffer fills up. The server advertises 'win=0' in its ACK; the client stops sending however idle the network is."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["app", "server", "client"], "edges": ["r-s", "c-r"] },
+      "nodeStates": {
+        "app": { "status": "busy", "badge": "yavaş okuyor" },
+        "server": { "status": "warning", "badge": "rwnd=0" },
+        "client": { "status": "idle", "badge": "durdu" }
+      },
+      "packets": [
+        { "edge": "r-s", "direction": "backward", "label": "ack, win=0", "color": "warning", "durationMs": 800 },
+        { "edge": "c-r", "direction": "backward", "label": "ack, win=0", "color": "warning", "startAt": 850, "durationMs": 800 }
+      ],
+      "annotations": [
+        { "id": "flow-note", "x": 650, "y": 200, "text": { "tr": "rwnd alıcıyı, cwnd ağı korur", "en": "rwnd protects the receiver, cwnd the network" }, "tone": "info", "target": "server" }
+      ]
+    },
+    {
+      "id": "window-update",
+      "title": { "tr": "Pencere yeniden açılır", "en": "The window reopens" },
+      "narration": {
+        "tr": "Uygulama tamponu okuyup boşaltınca sunucu bir pencere güncellemesi gönderir. İstemci, tıkanıklık penceresinin izin verdiği kadar segmentle göndermeye devam eder. Uygulama hiçbir şey fark etmedi: kayıp, yeniden iletim ve bekleme çekirdekte çözüldü.",
+        "en": "Once the application drains the buffer the server sends a window update. The client resumes sending as many segments as the congestion window allows. The application noticed nothing: loss, retransmission and waiting were all handled in the kernel."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["client", "router", "server", "app"], "edges": ["c-r", "r-s", "s-app"] },
+      "nodeStates": {
+        "app": { "status": "success", "badge": "" },
+        "server": { "status": "success", "badge": "rwnd=64K" },
+        "client": { "status": "active", "badge": "cwnd=4" }
+      },
+      "edgeStates": { "s-app": { "status": "active" } },
+      "packets": [
+        { "edge": "r-s", "direction": "backward", "label": "win=64K", "color": "success", "durationMs": 700 },
+        { "edge": "c-r", "direction": "backward", "label": "win=64K", "color": "success", "startAt": 750, "durationMs": 700 },
+        { "edge": "c-r", "label": "seq=8001…", "shape": "square", "startAt": 1500, "durationMs": 700, "repeat": 3, "repeatGapMs": 120 }
+      ]
+    }
+  ]
+}
