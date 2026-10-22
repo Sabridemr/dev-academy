@@ -51,6 +51,8 @@ pnpm-debug.log*
 web/next-env.d.ts
 # sql.js wasm ikilisi (web/scripts/copy-sqljs.mjs ile node_modules'tan kopyalanır)
 web/public/sql.js/
+# Pyodide çalışma zamanı (web/scripts/copy-pyodide.mjs, build/dev öncesi node_modules'tan kopyalanır)
+web/public/pyodide/
 
 # Redis yerel dump
 *.rdb

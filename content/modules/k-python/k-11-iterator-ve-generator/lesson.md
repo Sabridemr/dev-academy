@@ -379,6 +379,9 @@ print(o.send(10), o.send(20), o.send(60))   # 10.0 15.0 30.0
   sunar; `groupby` önce sıralama ister.
 - `send()` generator'a dışarıdan değer gönderir. Modern eşzamanlı kodda bunun yerini `async`/`await` aldı.
 
+:::exercise{src="parcala.exercise.json"}
+:::
+
 :::quiz{src="quiz.json"}
 :::
 

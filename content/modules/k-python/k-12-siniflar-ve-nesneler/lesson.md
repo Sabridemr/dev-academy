@@ -336,6 +336,9 @@ yazıyorsan `dataclass` (K-14) daha uygun olabilir; durumu olmayan tek bir işle
 - `@classmethod` sınıfı (`cls`) alır ve alternatif kurucular için idealdir; `@staticmethod` hiçbir şeyi otomatik almaz.
 - `__eq__` tanımlanmadıkça `==` kimliği karşılaştırır.
 
+:::exercise{src="hesap.exercise.json"}
+:::
+
 :::quiz{src="quiz.json"}
 :::
 

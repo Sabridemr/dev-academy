@@ -17,6 +17,7 @@ import {
   ListChecks,
   ListTree,
   NotebookPen,
+  TerminalSquare,
   Trash2,
 } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
@@ -37,7 +38,7 @@ import { markdownHeadingText, slugify } from './Markdown';
 interface TocItem {
   id: string;
   title: string;
-  kind: 'heading' | 'animation' | 'interactive' | 'quiz' | 'trace';
+  kind: 'heading' | 'animation' | 'interactive' | 'quiz' | 'trace' | 'exercise';
 }
 
 const BLOCK_ICONS = {
@@ -45,6 +46,7 @@ const BLOCK_ICONS = {
   interactive: FlaskConical,
   quiz: ListChecks,
   trace: Code2,
+  exercise: TerminalSquare,
 } as const;
 
 /**
@@ -106,14 +108,17 @@ export function LessonView({ initial }: { initial: LessonDetail }) {
           b.type === 'animation' ||
           b.type === 'interactive' ||
           b.type === 'quiz' ||
-          b.type === 'trace'
+          b.type === 'trace' ||
+          b.type === 'exercise'
         ) {
           const label =
             b.type === 'interactive' && b.title
               ? tl(b.title)
               : b.type === 'trace' && b.title
                 ? tl(b.title)
-                : t(`lesson.blockLabels.${b.type}` as 'lesson.blockLabels.quiz');
+                : b.type === 'exercise' && b.exercise
+                  ? tl(b.exercise.title)
+                  : t(`lesson.blockLabels.${b.type}` as 'lesson.blockLabels.quiz');
           return [{ id: `block-${b.id}`, title: label, kind: b.type }];
         }
         return [];
@@ -217,6 +222,7 @@ export function LessonView({ initial }: { initial: LessonDetail }) {
     interactive: lesson.blocks.filter((b) => b.type === 'interactive').length,
     quiz: lesson.blocks.filter((b) => b.type === 'quiz').length,
     trace: lesson.blocks.filter((b) => b.type === 'trace').length,
+    exercise: lesson.blocks.filter((b) => b.type === 'exercise').length,
   };
   const moduleColor = moduleDetail?.color ?? 'var(--da-primary)';
   const lessonIndex = moduleDetail?.lessons.findIndex((l) => l.id === lesson.id) ?? -1;
@@ -363,6 +369,11 @@ export function LessonView({ initial }: { initial: LessonDetail }) {
               {counts.trace > 0 && (
                 <span className="chip">
                   <Code2 size={12} /> {t('lesson.blockLabels.trace')}
+                </span>
+              )}
+              {counts.exercise > 0 && (
+                <span className="chip">
+                  <TerminalSquare size={12} /> {t('lesson.blockLabels.exercise')}
                 </span>
               )}
               {counts.quiz > 0 && (

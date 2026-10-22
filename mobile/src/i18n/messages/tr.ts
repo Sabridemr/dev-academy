@@ -119,6 +119,14 @@ export const tr = {
     },
     loginRequired: 'Bu işlem için giriş yapmalısın.',
   },
+  exercise: {
+    role: 'Kodlama alıştırması',
+    starter: 'Başlangıç kodu',
+    webOnly:
+      'Kodu çalıştırmak ve testleri geçmek için alıştırmayı web’de aç: Python tarayıcıda çalışır, mobilde henüz yok.',
+    openOnWeb: 'Web’de çöz',
+    hints: '{count} ipucu web’de',
+  },
   trace: {
     role: 'Kod simülasyonu',
     hint: 'Adım adım ilerle: kod, değişkenler ve bellek birlikte değişir.',

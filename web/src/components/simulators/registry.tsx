@@ -77,4 +77,8 @@ export const SIMULATORS: Partial<Record<InteractiveType, ComponentType<Simulator
   'predict-run': load(() => import('./PredictRunSim')),
   'sql-playground': load(() => import('./SqlPlaygroundSim')),
   'docker-layers': load(() => import('./DockerLayersSim')),
+  'rbac-abac': load(() => import('./RbacAbacSim')),
+  'threat-model': load(() => import('./ThreatModelSim')),
+  'hash-salt': load(() => import('./HashSaltSim')),
+  'regex-playground': load(() => import('./RegexPlaygroundSim')),
 };

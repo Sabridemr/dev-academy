@@ -15,6 +15,7 @@
  *     modules/<module-id>/<lesson-id>/quiz.json
  *     modules/<module-id>/<lesson-id>/*.svg
  *     modules/<module-id>/<lesson-id>/*.trace.py → *.trace.json   (pnpm content:traces)
+ *     modules/<module-id>/<lesson-id>/*.exercise.json             (pnpm content:exercises çözümü sınar)
  */
 import { createHash } from 'node:crypto';
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
@@ -29,6 +30,8 @@ import {
   QUIZ_QUESTION_RANGE,
   ModuleManifestSchema,
   QuizSchema,
+  ExerciseSchema,
+  type Exercise,
   type LearningPathManifest,
   type LessonDocument,
   type ModuleManifest,
@@ -42,6 +45,7 @@ import { readImageSize } from './image-size';
 import { validateScene } from '../scene/validate';
 import type { AnimationScene } from '../scene/schema';
 import { CURRICULUM } from '../content/curriculum';
+import type { LocalizedString } from '../i18n';
 import { GlossarySchema, buildConceptIndex, type Glossary } from '../content/glossary';
 
 export interface LoadedScene {
@@ -62,6 +66,8 @@ export interface LoadedLesson {
   images: Record<string, LoadedImage>;
   /** iz dosya adı (`x.trace.json`) → doğrulanmış kod izi */
   traces: Record<string, CodeTrace>;
+  /** alıştırma dosya adı (`x.exercise.json`) → doğrulanmış alıştırma (çözüm dahil) */
+  exercises: Record<string, Exercise>;
 }
 
 export interface LoadedImage {
@@ -460,6 +466,73 @@ export function loadContent(root = findContentRoot()): LoadedContent {
         traces[f] = parsed.data;
       }
 
+      // Kodlama alıştırmaları: yalnızca yapı doğrulanır; çözümün testleri geçtiğini
+      // `pnpm content:exercises` (python3) sınar
+      const exercises: Record<string, Exercise> = {};
+      for (const f of files.filter((x) => x.endsWith('.exercise.json'))) {
+        const file = join(lessonDir, f);
+        let raw: unknown;
+        try {
+          raw = readJson(file);
+        } catch (err) {
+          issues.push({
+            severity: 'error',
+            file: rel(file),
+            message: `JSON parse hatası: ${String(err)}`,
+          });
+          continue;
+        }
+        const parsed = ExerciseSchema.safeParse(raw);
+        if (!parsed.success) {
+          issues.push({
+            severity: 'error',
+            file: rel(file),
+            message: parsed.error.issues
+              .slice(0, 5)
+              .map((i) => `${i.path.join('.')}: ${i.message}`)
+              .join('; '),
+          });
+          continue;
+        }
+        const ex = parsed.data;
+        if (ex.starter.trim() === ex.solution.trim()) {
+          issues.push({
+            severity: 'error',
+            file: rel(file),
+            message: 'starter çözümle aynı: alıştırmada tamamlanacak bir şey kalmıyor',
+          });
+        }
+        if (!/^\s*assert\b/m.test(ex.tests)) {
+          issues.push({
+            severity: 'warning',
+            file: rel(file),
+            message: 'tests içinde assert yok; testler başarısızlıkta hata fırlatmalı',
+          });
+        }
+        const hasEn = (v: LocalizedString) => typeof v !== 'string' && Boolean(v.en);
+        const untranslated: string[] = [];
+        if (!hasEn(ex.title)) untranslated.push('title');
+        if (!hasEn(ex.prompt)) untranslated.push('prompt');
+        if (!ex.hints.every(hasEn)) untranslated.push('hints');
+        if (untranslated.length) {
+          issues.push({
+            severity: 'warning',
+            file: rel(file),
+            message: `İngilizce metin eksik: ${untranslated.join(', ')}`,
+          });
+        }
+        exercises[f] = ex;
+      }
+      for (const f of Object.keys(exercises)) {
+        if (!doc.blocks.some((b) => b.type === 'exercise' && b.src === f)) {
+          issues.push({
+            severity: 'warning',
+            file: rel(join(lessonDir, f)),
+            message: 'Alıştırma derste kullanılmıyor (:::exercise{src=...} yok)',
+          });
+        }
+      }
+
       // İçerik kalitesi kontrolleri (uyarı; --strict ile hata)
       const rawMd = readFileSync(mdFile, 'utf8');
       if (
@@ -529,6 +602,13 @@ export function loadContent(root = findContentRoot()): LoadedContent {
             severity: 'warning',
             file: rel(mdFile),
             message: `':::resources' ${b.items.length} öğe içeriyor (en fazla ${RESOURCES_SOFT_MAX} önerilir); en değerli kaynakları seçin`,
+          });
+        }
+        if (b.type === 'exercise' && !exercises[b.src]) {
+          issues.push({
+            severity: 'error',
+            file: rel(mdFile),
+            message: `Alıştırma dosyası bulunamadı ya da geçersiz: ${b.src}`,
           });
         }
         if (b.type === 'trace' && !traces[b.src]) {
@@ -607,7 +687,17 @@ export function loadContent(root = findContentRoot()): LoadedContent {
         });
       }
 
-      lessons.push({ dir: lessonDir, doc, scenes, quiz, quizFile, svgs, images, traces });
+      lessons.push({
+        dir: lessonDir,
+        doc,
+        scenes,
+        quiz,
+        quizFile,
+        svgs,
+        images,
+        traces,
+        exercises,
+      });
     }
 
     lessons.sort((a, b) => a.doc.meta.order - b.doc.meta.order);
@@ -638,6 +728,24 @@ export function loadContent(root = findContentRoot()): LoadedContent {
             message: `Ön koşul bilinmeyen ders: ${p}`,
           });
         }
+      }
+    }
+  }
+
+  // Alıştırma id'leri tüm içerikte benzersiz olmalı (çözüm uç noktası ve ilerleme kaydı id ile çalışır)
+  const exerciseOwners = new Map<string, string>();
+  for (const m of modules) {
+    for (const l of m.lessons) {
+      for (const [f, ex] of Object.entries(l.exercises)) {
+        const file = rel(join(l.dir, f));
+        const owner = exerciseOwners.get(ex.id);
+        if (owner) {
+          issues.push({
+            severity: 'error',
+            file,
+            message: `Alıştırma id'si tekrar ediyor: ${ex.id} (ilk: ${owner})`,
+          });
+        } else exerciseOwners.set(ex.id, file);
       }
     }
   }

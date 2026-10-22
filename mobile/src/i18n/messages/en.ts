@@ -118,6 +118,14 @@ export const en: Messages = {
     },
     loginRequired: 'You need to log in for this.',
   },
+  exercise: {
+    role: 'Coding exercise',
+    starter: 'Starter code',
+    webOnly:
+      'Open the exercise on the web to run the code and pass the tests: Python runs in the browser, not on mobile yet.',
+    openOnWeb: 'Solve on web',
+    hints: '{count} hints on the web',
+  },
   trace: {
     role: 'Code simulation',
     hint: 'Step through: code, variables and memory change together.',

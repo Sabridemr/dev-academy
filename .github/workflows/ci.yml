@@ -64,6 +64,8 @@ jobs:
         run: pnpm content:validate --strict
       - name: Kod izi üreticisi (Python) testleri
         run: python3 -m unittest discover -s packages/shared/scripts/python-trace
+      - name: Kodlama alıştırmaları (çözümler python3 ile testlerden geçer)
+        run: pnpm content:exercises
 
   backend:
     name: Backend (birim + e2e)

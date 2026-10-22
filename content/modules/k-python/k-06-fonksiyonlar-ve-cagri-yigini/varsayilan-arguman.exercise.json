@@ -1,0 +1,26 @@
+{
+  "id": "k-06-varsayilan-arguman-hatasi",
+  "title": {
+    "tr": "Değiştirilebilir varsayılan argümanı düzelt",
+    "en": "Fix the mutable default argument"
+  },
+  "language": "python",
+  "prompt": {
+    "tr": "Aşağıdaki `etiket_ekle` fonksiyonu bir etiketi listeye ekleyip listeyi döndürüyor. Ama liste verilmeden yapılan çağrılar **aynı listeyi paylaşıyor**: `etiket_ekle(\"a\")` ardından `etiket_ekle(\"b\")` çağrısı `['a', 'b']` döndürüyor.\n\nFonksiyonu düzelt:\n\n- Liste verilmezse her çağrı **yeni, boş** bir listeyle başlasın.\n- Liste verilirse o listenin kendisine eklensin ve aynı nesne döndürülsün.",
+    "en": "The `etiket_ekle` function below appends a tag to a list and returns the list. But calls made without a list **share the same list**: calling `etiket_ekle(\"a\")` then `etiket_ekle(\"b\")` returns `['a', 'b']`.\n\nFix the function:\n\n- When no list is given, each call starts with a **new, empty** list.\n- When a list is given, append to that very list and return the same object."
+  },
+  "starter": "def etiket_ekle(etiket, etiketler=[]):\n    etiketler.append(etiket)\n    return etiketler\n",
+  "solution": "def etiket_ekle(etiket, etiketler=None):\n    if etiketler is None:\n        etiketler = []\n    etiketler.append(etiket)\n    return etiketler\n",
+  "tests": "assert etiket_ekle(\"a\") == [\"a\"]\nassert etiket_ekle(\"b\") == [\"b\"], \"çağrılar listeyi paylaşmamalı\"\nmevcut = [\"x\"]\nassert etiket_ekle(\"y\", mevcut) is mevcut\nassert mevcut == [\"x\", \"y\"]\nassert etiket_ekle(\"c\") == [\"c\"]\n",
+  "hints": [
+    {
+      "tr": "Varsayılan değer fonksiyon **tanımlanırken bir kez** oluşturulur; `[]` her çağrıda yeniden yaratılmaz.",
+      "en": "A default value is created **once, when the function is defined**; `[]` is not recreated on every call."
+    },
+    {
+      "tr": "Varsayılanı `None` yap ve gövdenin başında `if etiketler is None: etiketler = []` yaz.",
+      "en": "Make the default `None` and write `if etiketler is None: etiketler = []` at the top of the body."
+    }
+  ],
+  "timeoutMs": 5000
+}

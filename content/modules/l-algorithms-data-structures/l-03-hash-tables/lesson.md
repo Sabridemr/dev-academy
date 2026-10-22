@@ -152,6 +152,9 @@ sınırlamasının pratikte iki yapıyı birleştirerek nasıl aşıldığının
 - Anahtar olarak liste kullanman gerekiyorsa `tuple`'a çevir; anagram gruplamada `tuple(sorted(kelime))` klasik bir anahtardır.
 :::
 
+:::exercise{src="anagram-gruplari.exercise.json"}
+:::
+
 :::quiz{src="quiz.json"}
 :::
 

@@ -1,0 +1,26 @@
+{
+  "id": "l-08-merge-sort",
+  "title": {
+    "tr": "Merge sort'u yaz",
+    "en": "Write merge sort"
+  },
+  "language": "python",
+  "prompt": {
+    "tr": "`merge_sort(xs)` listeyi **merge sort** ile sıralayıp **yeni** bir liste döndürsün; `sorted` ya da `list.sort` kullanma.\n\n1. Uzunluk 0 ya da 1 ise listenin kopyasını döndür.\n2. Ortadan ikiye böl, iki yarıyı özyinelemeyle sırala.\n3. İki sıralı listeyi `birlestir` adımıyla tek sıralı listede birleştir.\n\nSıralama **kararlı** olmalı: eşit elemanlarda soldaki yarıdan gelen önce yazılır. Girdi listesi değişmemeli.",
+    "en": "`merge_sort(xs)` should sort the list with **merge sort** and return a **new** list; don't use `sorted` or `list.sort`.\n\n1. If the length is 0 or 1, return a copy of the list.\n2. Split in the middle and sort both halves recursively.\n3. Merge the two sorted lists into one sorted list.\n\nThe sort must be **stable**: for equal elements, the one from the left half comes first. The input list must not change."
+  },
+  "starter": "def merge_sort(xs):\n    if len(xs) <= 1:\n        return list(xs)\n    orta = len(xs) // 2\n    sol = merge_sort(xs[:orta])\n    sag = merge_sort(xs[orta:])\n    return birlestir(sol, sag)\n\n\ndef birlestir(sol, sag):\n    # iki sıralı listeyi iki işaretçiyle birleştir\n    return sol + sag\n",
+  "solution": "def merge_sort(xs):\n    if len(xs) <= 1:\n        return list(xs)\n    orta = len(xs) // 2\n    sol = merge_sort(xs[:orta])\n    sag = merge_sort(xs[orta:])\n    return birlestir(sol, sag)\n\n\ndef birlestir(sol, sag):\n    sonuc = []\n    i = j = 0\n    while i < len(sol) and j < len(sag):\n        if sol[i] <= sag[j]:\n            sonuc.append(sol[i])\n            i += 1\n        else:\n            sonuc.append(sag[j])\n            j += 1\n    sonuc.extend(sol[i:])\n    sonuc.extend(sag[j:])\n    return sonuc\n",
+  "tests": "import random\nassert merge_sort([]) == []\nassert merge_sort([5, 2, 9, 1, 5, 6]) == [1, 2, 5, 5, 6, 9]\nrng = random.Random(42)\nveri = [rng.randint(-100, 100) for _ in range(300)]\nkopya = list(veri)\nassert merge_sort(veri) == sorted(veri)\nassert veri == kopya, \"girdi listesi değişmemeli\"\nclass Kayit:\n    def __init__(self, anahtar, ad):\n        self.anahtar, self.ad = anahtar, ad\n    def __le__(self, diger):\n        return self.anahtar <= diger.anahtar\n    def __lt__(self, diger):\n        return self.anahtar < diger.anahtar\nkayitlar = [Kayit(2, \"a\"), Kayit(1, \"b\"), Kayit(2, \"c\"), Kayit(1, \"d\")]\nassert [k.ad for k in merge_sort(kayitlar)] == [\"b\", \"d\", \"a\", \"c\"], \"sıralama kararlı olmalı\"\n",
+  "hints": [
+    {
+      "tr": "`birlestir` iki işaretçi (`i`, `j`) ile çalışır: iki listenin baştaki elemanlarından küçük olanı sonuca ekle ve o işaretçiyi ilerlet.",
+      "en": "`birlestir` works with two pointers (`i`, `j`): append the smaller of the two front elements to the result and advance that pointer."
+    },
+    {
+      "tr": "Kararlılık için eşitlikte soldakini seç: `if sol[i] <= sag[j]`. Döngü bitince kalanları `sonuc.extend(sol[i:])` ve `sonuc.extend(sag[j:])` ile ekle.",
+      "en": "For stability pick the left one on ties: `if sol[i] <= sag[j]`. After the loop, add the leftovers with `sonuc.extend(sol[i:])` and `sonuc.extend(sag[j:])`."
+    }
+  ],
+  "timeoutMs": 5000
+}
