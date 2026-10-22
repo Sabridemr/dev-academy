@@ -70,4 +70,8 @@ export const SIMULATORS: Partial<Record<InteractiveType, ComponentType<Simulator
   'jwt-inspector': load(() => import('./JwtInspectorSim')),
   'bruteforce-login': load(() => import('./BruteforceLoginSim')),
   'git-graph': load(() => import('./GitGraphSim')),
+  'rbac-abac': load(() => import('./RbacAbacSim')),
+  'threat-model': load(() => import('./ThreatModelSim')),
+  'hash-salt': load(() => import('./HashSaltSim')),
+  'regex-playground': load(() => import('./RegexPlaygroundSim')),
 };
