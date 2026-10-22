@@ -115,6 +115,8 @@ export const InteractiveTypeSchema = z.enum([
   'jwt-inspector',
   'bruteforce-login',
   'git-graph',
+  'sql-playground',
+  'docker-layers',
 ]);
 export type InteractiveType = z.infer<typeof InteractiveTypeSchema>;
 
@@ -162,6 +164,8 @@ export const INTERACTIVE_PARAMS = {
   'jwt-inspector': ['secret', 'token'],
   'bruteforce-login': ['attemptsPerSecond', 'lockoutAfter', 'lockoutSeconds', 'passwordSpace'],
   'git-graph': ['scenario'],
+  'sql-playground': ['dataset', 'query'],
+  'docker-layers': ['contextMb', 'example'],
 } as const satisfies Record<InteractiveType, readonly string[]>;
 
 /** Quiz soru sayısı kuralı (içerik yazım kılavuzu): en az 3, en fazla 6 */
