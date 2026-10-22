@@ -97,6 +97,30 @@ describe('içerik doğrulayıcı', () => {
     ]);
   });
 
+  it('predict-run iz dosyası yoksa ya da src verilmemişse hata verir', () => {
+    const dir = fixture();
+    const md = join(dir, 'lesson.md');
+    const original = readFileSync(md, 'utf8');
+    writeFileSync(
+      md,
+      original.replace(
+        ':::quiz{',
+        ':::interactive{type="predict-run" src="yok.trace.json"}\nTahmin et.\n:::\n\n:::quiz{',
+      ),
+    );
+    expect(errors().map((e) => e.message)).toEqual([
+      expect.stringContaining('iz dosyası bulunamadı ya da geçersiz: yok.trace.json'),
+    ]);
+    writeFileSync(
+      md,
+      original.replace(
+        ':::quiz{',
+        ':::interactive{type="predict-run"}\nTahmin et.\n:::\n\n:::quiz{',
+      ),
+    );
+    expect(errors().map((e) => e.message)).toEqual([expect.stringContaining('src parametresi')]);
+  });
+
   it('3 sorudan az quiz hata verir', () => {
     const dir = fixture();
     const qf = join(dir, 'quiz.json');

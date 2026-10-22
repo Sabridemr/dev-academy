@@ -73,4 +73,6 @@ export const SIMULATORS: Partial<Record<InteractiveType, ComponentType<Simulator
   'dp-table': load(() => import('./DpTableSim')),
   heap: load(() => import('./HeapSim')),
   'stack-queue': load(() => import('./StackQueueSim')),
+  'python-memory': load(() => import('./PythonMemorySim')),
+  'predict-run': load(() => import('./PredictRunSim')),
 };
