@@ -108,7 +108,7 @@ erDiagram
 ### Mobil offline
 
 1. Kullanıcı bir modülü indirir: `GET /offline/modules/:id` (ETag ile).
-2. Dersler, sahneler ve quizler SQLite’a yazılır (modül başına ETag ve `synced_at` dahil); son senkron zamanı MMKV’de.
+2. Dersler, sahneler ve quizler SQLite’a yazılır (modül başına ETag ve `synced_at` dahil); son senkron zamanı expo-sqlite/kv-store’da.
 3. Çevrimdışıyken içerik SQLite’tan okunur; ilerleme güncellemeleri kuyruğa alınır, bağlantı gelince gönderilir.
 
 ## Ölçekleme notları
