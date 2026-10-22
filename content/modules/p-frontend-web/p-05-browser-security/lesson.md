@@ -13,7 +13,7 @@ durationMinutes: 35
 level: intermediate
 tags: [frontend, security, cors, csp, xss, csrf, cookies]
 prerequisites: [p-01-browser-rendering-pipeline, n-05-owasp-top-10]
-concepts: [same-origin-policy, origin, cors, cors-preflight, content-security-policy, csp-nonce, xss, csrf, httponly-cookie, samesite-cookie]
+concepts: [same-origin-policy, origin, cors, cors-preflight, content-security-policy, csp-nonce, xss, csrf, httponly-cookie, samesite]
 ---
 
 ## Kavram: tarayıcı, birbirine güvenmeyen kodların ortak evidir
