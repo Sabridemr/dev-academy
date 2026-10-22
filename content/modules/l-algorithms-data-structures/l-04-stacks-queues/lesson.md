@@ -35,6 +35,13 @@ Temel işlemlerin isimleri de bu benzetmeden gelir:
 Yığında tek bir uç (tepe) vardır; kuyrukta giriş ve çıkış farklı uçlardadır.
 :::
 
+İki yapıyı iş başında görmek için aşağıdaki sahnede fonksiyon çağrılarını bir yığına, yazdırma işlerini bir kuyruğa
+koyuyoruz.
+
+:::animation{scene="yigin-kuyruk.scene.json"}
+Yığında çerçeveler giriş sırasının tersine çıkar; kuyrukta işler geldikleri sırayla yazdırılır.
+:::
+
 ## Yığın: geri dönmenin veri yapısı
 
 Yığının öne çıktığı her problemde ortak bir desen vardır: bir şeyi **yarıda bırakıp** daha yeni bir şeyle uğraşırsın, o bitince de yarıda bıraktığına **geri dönersin**. En yeni iş, ilk bitirilmesi gereken iştir. Metin düzenleyicideki "geri al" (undo) özelliği böyle çalışır: yaptığın her değişiklik yığına konur, Ctrl+Z en son değişikliği çıkarıp geri alır. Tarayıcının geri tuşu, ziyaret ettiğin sayfaları bir yığında tutar. Derleyiciler ifadeleri ayrıştırırken, labirent çözen bir program çıkmaz sokaktan geri dönerken ve derinlik öncelikli arama (DFS) bir dalı bitirip bir önceki düğüme dönerken hep yığın kullanır.
