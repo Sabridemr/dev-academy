@@ -1,0 +1,17 @@
+{
+  "id": "p-frontend-web",
+  "slug": "frontend-web",
+  "code": "P",
+  "order": 16,
+  "title": {
+    "tr": "Frontend Mimarisi ve Web Performansı",
+    "en": "Frontend Architecture and Web Performance"
+  },
+  "description": {
+    "tr": "Tarayıcının bir sayfayı çizmesinden CSR/SSR/ISR'a, state yönetiminden Core Web Vitals'a, CORS/CSP'den erişilebilirliğe.",
+    "en": "From how the browser paints a page to CSR/SSR/ISR, from state management to Core Web Vitals, from CORS/CSP to accessibility."
+  },
+  "icon": "code",
+  "color": "#06b6d4",
+  "group": "software"
+}

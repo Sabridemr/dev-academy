@@ -1462,6 +1462,28 @@ export const CURRICULUM: CurriculumModule[] = [
       lesson('o', 8, 'container-internals', { tr: 'Konteynerlerin Altındaki OS: Namespace, cgroup ve Union FS', en: 'The OS Beneath Containers: Namespaces, cgroups and Union File Systems' }, { tr: 'Konteyner bir süreçtir: namespace\'lerle yalıtım, cgroup\'larla kaynak sınırı, overlay dosya sistemiyle katmanlı imaj.', en: 'A container is a process: isolation with namespaces, resource limits with cgroups, layered images with an overlay file system.' }),
     ],
   },
+  {
+    id: 'p-frontend-web',
+    slug: 'frontend-web',
+    code: 'P',
+    order: 16,
+    title: { tr: 'Frontend Mimarisi ve Web Performansı', en: 'Frontend Architecture and Web Performance' },
+    description: {
+      tr: "Tarayıcının bir sayfayı çizmesinden CSR/SSR/ISR'a, state yönetiminden Core Web Vitals'a, CORS/CSP'den erişilebilirliğe.",
+      en: 'From how the browser paints a page to CSR/SSR/ISR, from state management to Core Web Vitals, from CORS/CSP to accessibility.',
+    },
+    icon: 'code',
+    color: '#06b6d4',
+    group: 'software',
+    lessons: [
+      lesson('p', 1, 'browser-rendering-pipeline', { tr: 'Tarayıcı Bir Sayfayı Nasıl Çizer?', en: 'How Does the Browser Paint a Page?' }, { tr: "HTML → DOM, CSS → CSSOM, render ağacı, layout, paint ve composite; kritik render yolu ve JavaScript'in ayrıştırıcıyı neden durdurduğu.", en: 'HTML → DOM, CSS → CSSOM, render tree, layout, paint and composite; the critical rendering path and why JavaScript blocks the parser.' }),
+      lesson('p', 2, 'csr-ssr-ssg-isr', { tr: 'CSR, SSR, SSG ve ISR', en: 'CSR, SSR, SSG and ISR' }, { tr: 'HTML kim, ne zaman üretir? Dört render stratejisinde isteğin akışı, TTFB/FCP/TTI ödünleşimleri, hydration ve hydration hataları.', en: 'Who produces the HTML, and when? The request flow in four rendering strategies, TTFB/FCP/TTI trade-offs, hydration and hydration errors.' }, ['request-journey']),
+      lesson('p', 3, 'state-management-data-flow', { tr: 'State Yönetimi ve Veri Akışı', en: 'State Management and Data Flow' }, { tr: "Yerel state, yukarı kaldırma, context, store ve sunucu state'i; stale-while-revalidate, cache invalidation ve mutasyon sonrası yeniden fetch.", en: 'Local state, lifting state up, context, stores and server state; stale-while-revalidate, cache invalidation and refetching after a mutation.' }, ['cache']),
+      lesson('p', 4, 'web-performance', { tr: 'Web Performansı ve Core Web Vitals', en: 'Web Performance and Core Web Vitals' }, { tr: 'LCP, INP ve CLS; bundle boyutu, code splitting, lazy loading, görsel optimizasyonu, önbellek başlıkları ve CDN.', en: 'LCP, INP and CLS; bundle size, code splitting, lazy loading, image optimisation, cache headers and CDNs.' }, ['request-journey']),
+      lesson('p', 5, 'browser-security', { tr: 'Tarayıcı Güvenliği: SOP, CORS ve CSP', en: 'Browser Security: SOP, CORS and CSP' }, { tr: "Same-origin policy, CORS ön uçuş isteği, nonce'lu CSP, XSS ve CSRF'in tarayıcı tarafı, HttpOnly ve SameSite çerezler.", en: 'The same-origin policy, CORS preflight, nonce-based CSP, the browser side of XSS and CSRF, HttpOnly and SameSite cookies.' }, ['request-journey']),
+      lesson('p', 6, 'accessibility-design-systems', { tr: 'Erişilebilirlik ve Tasarım Sistemi', en: 'Accessibility and Design Systems' }, { tr: 'Semantik HTML, klavye gezinmesi, ARIA, kontrast, prefers-reduced-motion; bileşen kütüphanesi ve tasarım token’ları.', en: 'Semantic HTML, keyboard navigation, ARIA, contrast, prefers-reduced-motion; component libraries and design tokens.' }),
+    ],
+  },
 ];
 
 

@@ -143,6 +143,20 @@
       "denormalization"
     ]
   },
+  "accessibility-tree": {
+    "term": {
+      "tr": "Erişilebilirlik ağacı",
+      "en": "Accessibility tree"
+    },
+    "definition": {
+      "tr": "Tarayıcının DOM'dan türettiği, her öğenin rolünü, adını ve durumunu ekran okuyucu gibi yardımcı teknolojilere sunan ağaç. Semantik HTML ve ARIA bu ağaca ne yazılacağını belirler; görsel olarak doğru görünen bir sayfa bu ağaçta anlamsız olabilir."
+    },
+    "related": [
+      "dom",
+      "semantic-html",
+      "aria"
+    ]
+  },
   "acid": {
     "term": {
       "tr": "ACID",
@@ -713,6 +727,23 @@
       "decorator",
       "tuple",
       "dict"
+    ]
+  },
+  "aria": {
+    "term": {
+      "tr": "ARIA",
+      "en": "Accessible Rich Internet Applications"
+    },
+    "definition": {
+      "tr": "HTML öğelerine role, aria-label, aria-expanded gibi özniteliklerle erişilebilirlik ağacında rol, ad ve durum bilgisi ekleyen W3C standardı. Yalnızca anlamı değiştirir, davranış eklemez; ilk kural uygun yerel HTML öğesi varsa ARIA yerine onu kullanmaktır."
+    },
+    "aliases": [
+      "WAI-ARIA"
+    ],
+    "related": [
+      "accessibility-tree",
+      "semantic-html",
+      "focus-management"
     ]
   },
   "artifact-registry": {
@@ -1866,6 +1897,21 @@
       "fallback"
     ]
   },
+  "bundle-size": {
+    "term": {
+      "tr": "Bundle boyutu",
+      "en": "Bundle size"
+    },
+    "definition": {
+      "tr": "Tarayıcıya gönderilen JavaScript paketlerinin toplam boyutu. JavaScript görselden farklı olarak ana iş parçacığında ayrıştırılıp derlenip çalıştırıldığı için her kilobayt hem indirme hem işlemci maliyeti getirir; code splitting ve gereksiz bağımlılıkları atmak bu maliyeti düşürür."
+    },
+    "related": [
+      "code-splitting",
+      "lazy-loading",
+      "long-tasks",
+      "hydration"
+    ]
+  },
   "bytecode": {
     "term": {
       "tr": "Bytecode (bayt kodu)",
@@ -2732,6 +2778,24 @@
       "dns-resolution"
     ]
   },
+  "client-side-rendering": {
+    "term": {
+      "tr": "CSR (istemci tarafında render)",
+      "en": "Client-side rendering"
+    },
+    "definition": {
+      "tr": "Sunucunun neredeyse boş bir HTML kabuğu ve JavaScript paketi gönderdiği, sayfanın içeriğinin tarayıcıda JavaScript ile oluşturulduğu yaklaşım. Sunucu yükü düşüktür ama ilk içerik JS indirilip çalışana ve veri gelene kadar görünmez; SEO ve yavaş cihazlarda zayıf kalabilir."
+    },
+    "aliases": [
+      "CSR"
+    ],
+    "related": [
+      "server-side-rendering",
+      "static-site-generation",
+      "hydration",
+      "first-contentful-paint"
+    ]
+  },
   "closure": {
     "term": {
       "tr": "Closure (kapanış)",
@@ -2764,6 +2828,20 @@
       "aiops",
       "human-in-the-loop",
       "budget-tracking"
+    ]
+  },
+  "code-splitting": {
+    "term": {
+      "tr": "Code splitting (kod bölme)",
+      "en": "Code splitting"
+    },
+    "definition": {
+      "tr": "Uygulama kodunu tek dev paket yerine rota ya da özellik başına parçalara ayırıp her sayfada yalnızca gerekenleri yüklemek. Dinamik import() ile yapılır; Next.js gibi çatılar her rotayı otomatik böler."
+    },
+    "related": [
+      "bundle-size",
+      "lazy-loading",
+      "largest-contentful-paint"
     ]
   },
   "codeql": {
@@ -2825,6 +2903,22 @@
       "open-addressing",
       "hash-function",
       "load-factor"
+    ]
+  },
+  "color-contrast": {
+    "term": {
+      "tr": "Renk kontrastı",
+      "en": "Color contrast"
+    },
+    "definition": {
+      "tr": "Metin rengi ile arka plan rengi arasındaki parlaklık oranı. WCAG AA düzeyi normal metin için en az 4,5:1, büyük metin için 3:1 ister; düşük kontrast az gören kullanıcılar ve güneş altındaki ekranlar için metni okunmaz kılar."
+    },
+    "aliases": [
+      "kontrast oranı"
+    ],
+    "related": [
+      "design-tokens",
+      "semantic-html"
     ]
   },
   "command": {
@@ -2923,6 +3017,23 @@
       "orchestration"
     ]
   },
+  "component-library": {
+    "term": {
+      "tr": "Bileşen kütüphanesi",
+      "en": "Component library"
+    },
+    "definition": {
+      "tr": "Buton, form alanı, modal gibi tekrar kullanılan arayüz bileşenlerinin erişilebilirlik ve tasarım kurallarıyla bir kez doğru yazılıp tüm ekiplerce paylaşıldığı koleksiyon. Tasarım token'larının üstüne kurulur; tutarlılığı artırır ve erişilebilirlik hatalarını tek yerde düzeltmeyi sağlar."
+    },
+    "aliases": [
+      "tasarım sistemi"
+    ],
+    "related": [
+      "design-tokens",
+      "semantic-html",
+      "focus-management"
+    ]
+  },
   "composite": {
     "term": {
       "tr": "Composite (bileşik) kalıbı",
@@ -2955,6 +3066,21 @@
       "b-tree",
       "selectivity",
       "index"
+    ]
+  },
+  "compositing": {
+    "term": {
+      "tr": "Compositing (katman birleştirme)",
+      "en": "Compositing"
+    },
+    "definition": {
+      "tr": "Ayrı katmanlarda boyanmış sayfa parçalarının GPU yardımıyla doğru sırada üst üste bindirilerek son kareyi oluşturduğu adım. transform ve opacity animasyonları çoğu zaman yalnızca bu adımı tetikler; düzen ve boyamayı atladıkları için akıcıdır."
+    },
+    "related": [
+      "paint",
+      "layout-reflow",
+      "render-tree",
+      "prefers-reduced-motion"
     ]
   },
   "composition": {
@@ -3624,6 +3750,23 @@
       "token-storage"
     ]
   },
+  "core-web-vitals": {
+    "term": {
+      "tr": "Core Web Vitals",
+      "en": "Core Web Vitals"
+    },
+    "definition": {
+      "tr": "Google'ın gerçek kullanıcı deneyimini üç ölçüyle özetlediği metrik seti: yükleme için LCP, tepki için INP, görsel kararlılık için CLS. İyi eşikler LCP ≤ 2,5 s, INP ≤ 200 ms ve CLS ≤ 0,1'dir ve sahadaki sayfa yüklemelerinin 75. yüzdeliğinde değerlendirilir."
+    },
+    "aliases": [
+      "CWV"
+    ],
+    "related": [
+      "largest-contentful-paint",
+      "interaction-to-next-paint",
+      "cumulative-layout-shift"
+    ]
+  },
   "correlation-id": {
     "term": {
       "tr": "Korelasyon kimliği (correlation ID)",
@@ -3660,6 +3803,24 @@
       "csrf",
       "samesite",
       "http-methods"
+    ]
+  },
+  "cors-preflight": {
+    "term": {
+      "tr": "CORS ön uçuş isteği (preflight)",
+      "en": "CORS preflight request"
+    },
+    "definition": {
+      "tr": "Basit olmayan bir kaynaklar arası istekten (ör. PUT, DELETE, application/json gövdesi ya da özel başlıklar) önce tarayıcının sunucuya otomatik gönderdiği OPTIONS isteği. Sunucu Access-Control-Allow-Methods ve Access-Control-Allow-Headers ile izin vermezse asıl istek hiç gönderilmez."
+    },
+    "aliases": [
+      "preflight"
+    ],
+    "related": [
+      "cors",
+      "same-origin-policy",
+      "http-methods",
+      "http-headers"
     ]
   },
   "cosine-similarity": {
@@ -3828,6 +3989,25 @@
       "singleton"
     ]
   },
+  "critical-rendering-path": {
+    "term": {
+      "tr": "Kritik render yolu",
+      "en": "Critical rendering path"
+    },
+    "definition": {
+      "tr": "Tarayıcının HTML, CSS ve JavaScript'i alıp ilk pikselleri ekrana çizene kadar izlediği adımlar dizisi: DOM, CSSOM, render ağacı, düzen ve boyama. Bu yolu kısaltmak, yani engelleyen kaynakları azaltıp küçültmek ilk boyamayı ve LCP'yi hızlandırır."
+    },
+    "aliases": [
+      "CRP"
+    ],
+    "related": [
+      "dom",
+      "cssom",
+      "render-blocking-resources",
+      "parser-blocking-script",
+      "first-contentful-paint"
+    ]
+  },
   "cron": {
     "term": {
       "tr": "Cron",
@@ -3898,6 +4078,19 @@
       "symmetric-encryption"
     ]
   },
+  "csp-nonce": {
+    "term": {
+      "tr": "CSP nonce",
+      "en": "CSP nonce"
+    },
+    "definition": {
+      "tr": "Her yanıtta rastgele üretilen ve hem Content-Security-Policy başlığına hem izin verilen <script> etiketlerine nonce özniteliği olarak yazılan tek kullanımlık değer. Tarayıcı yalnızca nonce'u eşleşen script'leri çalıştırır; saldırganın enjekte ettiği satır içi script'ler bu değeri bilemediği için engellenir."
+    },
+    "related": [
+      "content-security-policy",
+      "xss"
+    ]
+  },
   "csrf": {
     "term": {
       "tr": "CSRF (siteler arası istek sahteciliği)",
@@ -3915,6 +4108,41 @@
       "session-cookie",
       "xss",
       "owasp-top-10"
+    ]
+  },
+  "cssom": {
+    "term": {
+      "tr": "CSSOM (CSS Nesne Modeli)",
+      "en": "CSS Object Model"
+    },
+    "definition": {
+      "tr": "Tarayıcının tüm stil sayfalarını ayrıştırarak kurduğu, hangi kuralın hangi öğeye uygulanacağını belirleyen ağaç. CSSOM tamamlanmadan render ağacı kurulamaz; bu yüzden CSS varsayılan olarak render'ı engelleyen bir kaynaktır."
+    },
+    "aliases": [
+      "CSSOM"
+    ],
+    "related": [
+      "dom",
+      "render-tree",
+      "render-blocking-resources",
+      "critical-rendering-path"
+    ]
+  },
+  "cumulative-layout-shift": {
+    "term": {
+      "tr": "CLS (kümülatif düzen kayması)",
+      "en": "Cumulative Layout Shift"
+    },
+    "definition": {
+      "tr": "Sayfadaki beklenmedik düzen kaymalarının, kayan alanın büyüklüğü ve kayma mesafesiyle puanlanmış toplamı. Boyutu belirtilmemiş görseller, sonradan eklenen reklam ve banner'lar ile web fontları tipik nedenlerdir; görsellere width/height vermek ya da yer ayırmak önler."
+    },
+    "aliases": [
+      "CLS"
+    ],
+    "related": [
+      "core-web-vitals",
+      "layout-reflow",
+      "image-optimization"
     ]
   },
   "curl": {
@@ -4642,6 +4870,19 @@
       "sliding-window"
     ]
   },
+  "design-tokens": {
+    "term": {
+      "tr": "Tasarım token'ları",
+      "en": "Design tokens"
+    },
+    "definition": {
+      "tr": "Renk, boşluk, yazı tipi boyutu, köşe yarıçapı gibi tasarım kararlarının isimlendirilmiş değişkenler olarak tek yerde tutulması (CSS değişkenleri gibi). Bileşenler sabit değer yerine token'a başvurur; tema değişikliği ya da koyu mod tek noktadan yapılabilir."
+    },
+    "related": [
+      "component-library",
+      "color-contrast"
+    ]
+  },
   "dfs": {
     "term": {
       "tr": "DFS (derinlik öncelikli arama)",
@@ -5066,6 +5307,24 @@
       "sql-vs-nosql",
       "denormalization",
       "wide-column-store"
+    ]
+  },
+  "dom": {
+    "term": {
+      "tr": "DOM (Belge Nesne Modeli)",
+      "en": "Document Object Model"
+    },
+    "definition": {
+      "tr": "Tarayıcının HTML'i ayrıştırarak kurduğu, her etiketin bir düğüm olduğu ağaç yapısı. JavaScript sayfayı bu ağaç üzerinden okur ve değiştirir; DOM'daki her değişiklik stil, düzen ve boyama adımlarını yeniden tetikleyebilir."
+    },
+    "aliases": [
+      "DOM"
+    ],
+    "related": [
+      "cssom",
+      "render-tree",
+      "layout-reflow",
+      "critical-rendering-path"
     ]
   },
   "dora-metrics": {
@@ -6478,6 +6737,24 @@
       "key-function"
     ]
   },
+  "first-contentful-paint": {
+    "term": {
+      "tr": "FCP (ilk içerikli boyama)",
+      "en": "First Contentful Paint"
+    },
+    "definition": {
+      "tr": "Tarayıcının sayfadan ilk metin ya da görsel içeriği ekrana çizdiği an. Kullanıcının sayfanın yüklenmeye başladığını ilk fark ettiği andır; render'ı engelleyen kaynaklar ve yüksek TTFB bu süreyi uzatır."
+    },
+    "aliases": [
+      "FCP"
+    ],
+    "related": [
+      "ttfb",
+      "largest-contentful-paint",
+      "time-to-interactive",
+      "critical-rendering-path"
+    ]
+  },
   "fixed-window": {
     "term": {
       "tr": "Sabit pencere (fixed window)",
@@ -6543,6 +6820,23 @@
       "tcp-sliding-window",
       "congestion-control",
       "backpressure"
+    ]
+  },
+  "focus-management": {
+    "term": {
+      "tr": "Odak yönetimi",
+      "en": "Focus management"
+    },
+    "definition": {
+      "tr": "Klavye odağının nerede olduğunu görünür kılmak ve arayüz değiştiğinde odağı bilinçli taşımak: modal açılınca içine almak, içinde tutmak, kapanınca açan butona geri vermek. Kaybolan ya da görünmeyen odak klavye ve ekran okuyucu kullanıcısının yolunu kaybetmesine yol açar."
+    },
+    "aliases": [
+      "focus trap"
+    ],
+    "related": [
+      "keyboard-navigation",
+      "aria",
+      "accessibility-tree"
     ]
   },
   "for-loop": {
@@ -6969,6 +7263,25 @@
       "closure",
       "unboundlocalerror",
       "variable-binding"
+    ]
+  },
+  "global-store": {
+    "term": {
+      "tr": "Global store (merkezi state deposu)",
+      "en": "Global store"
+    },
+    "definition": {
+      "tr": "Birçok uzak bileşenin okuyup yazdığı istemci state'inin tutulduğu, bileşen ağacından bağımsız depo (Redux, Zustand gibi). Bileşenler selector ile yalnızca ihtiyaç duydukları dilime abone olur; sunucudan gelen veriyi buraya elle senkronize etmek ise önbellek mantığını yeniden yazmak demektir."
+    },
+    "aliases": [
+      "store",
+      "Redux store"
+    ],
+    "related": [
+      "react-context",
+      "unidirectional-data-flow",
+      "server-state",
+      "local-state"
     ]
   },
   "golden-dataset": {
@@ -7834,6 +8147,22 @@
       "hpack"
     ]
   },
+  "httponly-cookie": {
+    "term": {
+      "tr": "HttpOnly çerez",
+      "en": "HttpOnly cookie"
+    },
+    "definition": {
+      "tr": "HttpOnly özniteliği taşıyan, JavaScript'in document.cookie ile okuyamadığı çerez. Tarayıcı istekle göndermeye devam eder; XSS durumunda oturum çerezinin çalınmasını engeller ama saldırganın kullanıcı adına istek atmasını engellemez."
+    },
+    "related": [
+      "cookie-attributes",
+      "session-cookie",
+      "xss",
+      "samesite",
+      "token-storage"
+    ]
+  },
   "human-in-the-loop": {
     "term": {
       "tr": "Human-in-the-loop (döngüde insan)",
@@ -7896,6 +8225,37 @@
       "re-ranking",
       "retrieval",
       "metadata-filtering"
+    ]
+  },
+  "hydration": {
+    "term": {
+      "tr": "Hydration",
+      "en": "Hydration"
+    },
+    "definition": {
+      "tr": "Sunucuda üretilmiş, görünür ama etkileşimsiz HTML'e tarayıcıda JavaScript ile olay dinleyicilerinin ve state'in bağlanması. React bileşen ağacını yeniden kurup mevcut DOM ile eşleştirir; bu bitene kadar sayfa görünür ama tepkisizdir."
+    },
+    "related": [
+      "hydration-mismatch",
+      "server-side-rendering",
+      "time-to-interactive",
+      "bundle-size"
+    ]
+  },
+  "hydration-mismatch": {
+    "term": {
+      "tr": "Hydration uyuşmazlığı",
+      "en": "Hydration mismatch"
+    },
+    "definition": {
+      "tr": "İstemcinin ilk render'ının sunucunun ürettiği HTML ile aynı çıkmaması durumu. Date.now(), Math.random(), window gibi yalnızca tarayıcıda olan ya da her çalıştırmada değişen değerler ve saat dilimi farkları tipik nedenlerdir; React uyarı verir ve ilgili bölümü istemcide yeniden çizebilir."
+    },
+    "aliases": [
+      "hydration hatası"
+    ],
+    "related": [
+      "hydration",
+      "server-side-rendering"
     ]
   },
   "hypertable-chunk": {
@@ -8085,6 +8445,21 @@
       "owasp-top-10"
     ]
   },
+  "image-optimization": {
+    "term": {
+      "tr": "Görsel optimizasyonu",
+      "en": "Image optimization"
+    },
+    "definition": {
+      "tr": "Görselleri doğru boyut, modern format (WebP, AVIF) ve sıkıştırmayla, cihaza göre srcset ile sunmak. Web sayfalarındaki baytların büyük kısmı görsellerdir; LCP görselini küçültüp erken keşfettirmek ve boyutunu belirtmek hem LCP'yi hem CLS'i iyileştirir."
+    },
+    "related": [
+      "largest-contentful-paint",
+      "lazy-loading",
+      "cumulative-layout-shift",
+      "cdn"
+    ]
+  },
   "immutable-artifact": {
     "term": {
       "tr": "Değişmez artefakt",
@@ -8099,6 +8474,25 @@
       "docker-image",
       "rollback",
       "artifacts"
+    ]
+  },
+  "immutable-caching": {
+    "term": {
+      "tr": "Immutable önbellekleme",
+      "en": "Immutable caching"
+    },
+    "definition": {
+      "tr": "Adı içerik özeti taşıyan (main.3f9a1c.js gibi) build çıktılarının Cache-Control: max-age=31536000, immutable ile uzun süre önbelleğe alınması. İçerik değişince dosya adı da değiştiği için bayatlık riski olmaz; HTML ise kısa ömürle ve yeniden doğrulamayla sunulur."
+    },
+    "aliases": [
+      "content hashing",
+      "cache busting"
+    ],
+    "related": [
+      "cache-control-headers",
+      "cdn",
+      "etag",
+      "versioned-content"
     ]
   },
   "import-system": {
@@ -8148,6 +8542,24 @@
       "observer",
       "pub-sub",
       "outbox-pattern"
+    ]
+  },
+  "incremental-static-regeneration": {
+    "term": {
+      "tr": "ISR (artımlı statik yeniden üretim)",
+      "en": "Incremental static regeneration"
+    },
+    "definition": {
+      "tr": "Next.js'in statik sayfalara bir revalidate süresi tanıdığı yaklaşım: süre dolduktan sonraki ilk istek yine bayat sayfayı hızla alır, sayfa arka planda yeniden üretilip önbellek güncellenir. SSG'nin hızını korurken bayatlığı sınırlar; stale-while-revalidate fikrinin sayfa düzeyindeki karşılığıdır."
+    },
+    "aliases": [
+      "ISR"
+    ],
+    "related": [
+      "static-site-generation",
+      "stale-while-revalidate",
+      "server-side-rendering",
+      "cache-invalidation"
     ]
   },
   "indentation": {
@@ -8417,6 +8829,23 @@
       "self",
       "init-method",
       "slots"
+    ]
+  },
+  "interaction-to-next-paint": {
+    "term": {
+      "tr": "INP (etkileşimden sonraki boyamaya kadar)",
+      "en": "Interaction to Next Paint"
+    },
+    "definition": {
+      "tr": "Sayfa ömrü boyunca tıklama, dokunma ve tuş vuruşlarından bir sonraki karenin çizilmesine kadar geçen sürelerin en kötülerinden biri; sayfanın ne kadar tepkili olduğunu ölçer. Ana iş parçacığını meşgul eden uzun görevler INP'yi yükseltir."
+    },
+    "aliases": [
+      "INP"
+    ],
+    "related": [
+      "core-web-vitals",
+      "long-tasks",
+      "time-to-interactive"
     ]
   },
   "interpreter": {
@@ -8879,6 +9308,20 @@
       "sql-vs-nosql"
     ]
   },
+  "keyboard-navigation": {
+    "term": {
+      "tr": "Klavye ile gezinme",
+      "en": "Keyboard navigation"
+    },
+    "definition": {
+      "tr": "Sayfadaki tüm etkileşimlerin fare olmadan Tab, Shift+Tab, Enter, Space ve ok tuşlarıyla yapılabilmesi. Yerel <button> ve <a> öğeleri bunu kendiliğinden sağlar; div ile yapılan özel bileşenlerde tabindex ve tuş olaylarını elle eklemek gerekir."
+    },
+    "related": [
+      "focus-management",
+      "semantic-html",
+      "aria"
+    ]
+  },
   "kill-switch": {
     "term": {
       "tr": "Kill switch (acil kapatma)",
@@ -8955,6 +9398,24 @@
       "late-binding"
     ]
   },
+  "largest-contentful-paint": {
+    "term": {
+      "tr": "LCP (en büyük içerikli boyama)",
+      "en": "Largest Contentful Paint"
+    },
+    "definition": {
+      "tr": "Görünür alandaki en büyük içerik öğesinin (genellikle kahraman görseli ya da başlık) çizildiği an; sayfanın yüklendiği algısını ölçer. Yavaş sunucu yanıtı, render'ı engelleyen kaynaklar ve geç keşfedilen büyük görseller LCP'yi bozar."
+    },
+    "aliases": [
+      "LCP"
+    ],
+    "related": [
+      "core-web-vitals",
+      "first-contentful-paint",
+      "image-optimization",
+      "critical-rendering-path"
+    ]
+  },
   "late-binding": {
     "term": {
       "tr": "Geç bağlama (late binding)",
@@ -9000,6 +9461,25 @@
       "tail-latency",
       "ttft",
       "sla-slo-sli"
+    ]
+  },
+  "layout-reflow": {
+    "term": {
+      "tr": "Layout / reflow (yerleşim hesabı)",
+      "en": "Layout / reflow"
+    },
+    "definition": {
+      "tr": "Tarayıcının render ağacındaki her kutunun konumunu ve boyutunu hesapladığı adım; sonradan yeniden yapılmasına reflow denir. Genişlik, yükseklik ya da yazı tipi değişimi gibi geometriyi etkileyen değişiklikler alt ağacın, bazen tüm sayfanın düzenini yeniden hesaplatır ve pahalıdır."
+    },
+    "aliases": [
+      "reflow",
+      "layout"
+    ],
+    "related": [
+      "render-tree",
+      "paint",
+      "compositing",
+      "cumulative-layout-shift"
     ]
   },
   "lazy-evaluation": {
@@ -9272,6 +9752,20 @@
       "bracket-matching"
     ]
   },
+  "lifting-state-up": {
+    "term": {
+      "tr": "State'i yukarı kaldırma",
+      "en": "Lifting state up"
+    },
+    "definition": {
+      "tr": "İki kardeş bileşenin paylaşması gereken state'i en yakın ortak üst bileşene taşıyıp değeri prop olarak, değiştirme fonksiyonunu geri çağırma olarak aşağı vermek. Tek doğruluk kaynağı oluşturur; ağaç derinleştikçe prop zinciri uzar ve context ya da store'a geçiş düşünülür."
+    },
+    "related": [
+      "local-state",
+      "react-context",
+      "unidirectional-data-flow"
+    ]
+  },
   "linear-regression": {
     "term": {
       "tr": "Doğrusal regresyon",
@@ -9455,6 +9949,23 @@
       "test-pyramid"
     ]
   },
+  "local-state": {
+    "term": {
+      "tr": "Yerel state (bileşen state'i)",
+      "en": "Local state"
+    },
+    "definition": {
+      "tr": "Yalnızca tek bir bileşenin kullandığı ve o bileşenin içinde tutulan durum; React'te useState ile. Değişince sadece o bileşen ve çocukları yeniden render olur; bir değer başka bileşenlere gerekmedikçe en doğru başlangıç yeridir."
+    },
+    "aliases": [
+      "component state"
+    ],
+    "related": [
+      "lifting-state-up",
+      "react-context",
+      "global-store"
+    ]
+  },
   "location-ingestion": {
     "term": {
       "tr": "Konum verisi alımı",
@@ -9615,6 +10126,20 @@
       "server-sent-events",
       "websocket",
       "missed-messages"
+    ]
+  },
+  "long-tasks": {
+    "term": {
+      "tr": "Uzun görevler (long tasks)",
+      "en": "Long tasks"
+    },
+    "definition": {
+      "tr": "Tarayıcının ana iş parçacığını 50 ms'den uzun süre meşgul eden görevler. Bu sırada kullanıcı girdisi kuyrukta bekler ve sayfa takılmış hisseder; işi küçük parçalara bölmek, ana iş parçacığına düzenli olarak kontrolü geri vermek ya da web worker'a taşımak çözümdür."
+    },
+    "related": [
+      "interaction-to-next-paint",
+      "time-to-interactive",
+      "bundle-size"
     ]
   },
   "loop-else": {
@@ -11279,6 +11804,20 @@
       "stock-reservation"
     ]
   },
+  "origin": {
+    "term": {
+      "tr": "Origin (köken)",
+      "en": "Origin"
+    },
+    "definition": {
+      "tr": "Web güvenliğinde bir kaynağın şema, alan adı ve port üçlüsü (https://example.com:443 gibi). Üçünden biri farklıysa iki URL farklı origin'dir; tarayıcının same-origin policy ve CORS kararları bu kimliğe göre verilir. CDN'deki origin sunucusundan farklı bir kavramdır."
+    },
+    "related": [
+      "same-origin-policy",
+      "cors",
+      "url-anatomy"
+    ]
+  },
   "origin-shield": {
     "term": {
       "tr": "Origin shield",
@@ -11547,6 +12086,24 @@
       "composite-index"
     ]
   },
+  "paint": {
+    "term": {
+      "tr": "Paint (boyama)",
+      "en": "Paint"
+    },
+    "definition": {
+      "tr": "Düzeni hesaplanmış kutuların metin, renk, kenarlık, gölge ve görsel olarak piksellere dönüştürülmesi için çizim komutlarının üretildiği adım. Yalnızca renk ya da arka plan değişiklikleri düzeni değil boyamayı yeniden tetikler."
+    },
+    "aliases": [
+      "repaint"
+    ],
+    "related": [
+      "layout-reflow",
+      "compositing",
+      "render-tree",
+      "first-contentful-paint"
+    ]
+  },
   "paket-yonetimi": {
     "term": {
       "tr": "Paket yönetimi",
@@ -11621,6 +12178,23 @@
       "fixture",
       "unit-testing",
       "boundary-testing"
+    ]
+  },
+  "parser-blocking-script": {
+    "term": {
+      "tr": "Ayrıştırıcıyı engelleyen script",
+      "en": "Parser-blocking script"
+    },
+    "definition": {
+      "tr": "async ya da defer özniteliği olmayan bir <script> etiketi; tarayıcı HTML ayrıştırmayı durdurur, script'i indirip çalıştırana kadar DOM kurulumu bekler. defer, script'i ayrıştırma bittikten sonra sırayla; async ise iner inmez çalıştırarak bu beklemeyi kaldırır."
+    },
+    "aliases": [
+      "senkron script"
+    ],
+    "related": [
+      "render-blocking-resources",
+      "critical-rendering-path",
+      "dom"
     ]
   },
   "pass-by-object-reference": {
@@ -12110,6 +12684,19 @@
       "stemming",
       "elasticsearch",
       "hybrid-search"
+    ]
+  },
+  "prefers-reduced-motion": {
+    "term": {
+      "tr": "prefers-reduced-motion",
+      "en": "prefers-reduced-motion"
+    },
+    "definition": {
+      "tr": "Kullanıcının işletim sisteminde hareketi azaltma tercihini açıp açmadığını bildiren CSS medya sorgusu. Vestibüler bozukluğu olan kullanıcılarda büyük animasyonlar baş dönmesi yapabileceği için bu tercih açıkken animasyonlar kapatılmalı ya da sadeleştirilmelidir."
+    },
+    "related": [
+      "compositing",
+      "design-tokens"
     ]
   },
   "prefill-decode": {
@@ -12745,6 +13332,20 @@
       "query-plan"
     ]
   },
+  "query-invalidation": {
+    "term": {
+      "tr": "Sorgu geçersizleştirme",
+      "en": "Query invalidation"
+    },
+    "definition": {
+      "tr": "Bir mutasyondan sonra ilgili sorgu anahtarlarını bayat ilan edip yeniden çekilmelerini tetiklemek. Ekranda görünen verinin sunucudaki son durumla uyumlu kalmasını sağlar; önbellek geçersizleştirmenin istemci tarafındaki karşılığıdır."
+    },
+    "related": [
+      "server-state",
+      "stale-while-revalidate",
+      "cache-invalidation"
+    ]
+  },
   "query-plan": {
     "term": {
       "tr": "Sorgu planı (query plan)",
@@ -13059,6 +13660,23 @@
       "ranking",
       "candidate-generation",
       "learning-to-rank"
+    ]
+  },
+  "react-context": {
+    "term": {
+      "tr": "React Context",
+      "en": "React Context"
+    },
+    "definition": {
+      "tr": "Bir değeri ara bileşenlerden prop olarak geçirmeden alt ağaçtaki tüm bileşenlere ulaştıran React mekanizması. Tema, oturumdaki kullanıcı ve dil gibi seyrek değişen değerler için uygundur; değer değişince onu okuyan tüm bileşenler yeniden render olduğundan sık değişen state için store daha uygundur."
+    },
+    "aliases": [
+      "Context API"
+    ],
+    "related": [
+      "lifting-state-up",
+      "global-store",
+      "local-state"
     ]
   },
   "read-model": {
@@ -13688,6 +14306,36 @@
       "branching"
     ]
   },
+  "render-blocking-resources": {
+    "term": {
+      "tr": "Render'ı engelleyen kaynaklar",
+      "en": "Render-blocking resources"
+    },
+    "definition": {
+      "tr": "İndirilip işlenmeden tarayıcının sayfayı çizmeye başlayamadığı kaynaklar; tipik olarak <head> içindeki stil sayfaları ve senkron script'ler. Kritik CSS'i satır içine almak, kalanını ertelemek ve script'lere defer/async eklemek ilk boyamayı öne çeker."
+    },
+    "related": [
+      "critical-rendering-path",
+      "cssom",
+      "parser-blocking-script",
+      "first-contentful-paint"
+    ]
+  },
+  "render-tree": {
+    "term": {
+      "tr": "Render ağacı",
+      "en": "Render tree"
+    },
+    "definition": {
+      "tr": "DOM ve CSSOM'un birleştirilmesiyle oluşan, yalnızca ekranda görünecek düğümleri ve hesaplanmış stillerini içeren ağaç. display:none olan öğeler bu ağaca girmez; düzen (layout) ve boyama adımları bu ağaç üzerinden yapılır."
+    },
+    "related": [
+      "dom",
+      "cssom",
+      "layout-reflow",
+      "paint"
+    ]
+  },
   "replay": {
     "term": {
       "tr": "Replay (olayları yeniden oynatma)",
@@ -13772,6 +14420,22 @@
       "rpo",
       "sync-vs-async-replication",
       "eventual-consistency"
+    ]
+  },
+  "request-deduplication": {
+    "term": {
+      "tr": "İstek tekilleştirme",
+      "en": "Request deduplication"
+    },
+    "definition": {
+      "tr": "Aynı veriyi (aynı sorgu anahtarını) aynı anda isteyen birden çok bileşenin tek bir ağ isteğini paylaşması. Gereksiz trafiği ve sunucu yükünü önler; sorgu önbelleği kütüphanelerinin temel özelliklerinden biridir."
+    },
+    "aliases": [
+      "dedup"
+    ],
+    "related": [
+      "server-state",
+      "stale-while-revalidate"
     ]
   },
   "request-response-cycle": {
@@ -14398,6 +15062,24 @@
       "compensating-transaction"
     ]
   },
+  "same-origin-policy": {
+    "term": {
+      "tr": "Same-origin policy (aynı köken politikası)",
+      "en": "Same-origin policy"
+    },
+    "definition": {
+      "tr": "Tarayıcının bir origin'den yüklenen script'in başka bir origin'in verisini okumasını varsayılan olarak engelleyen temel güvenlik kuralı. İstek çoğu zaman gönderilebilir ama yanıt okunamaz; kontrollü istisnalar CORS ile tanınır."
+    },
+    "aliases": [
+      "SOP"
+    ],
+    "related": [
+      "origin",
+      "cors",
+      "cors-preflight",
+      "csrf"
+    ]
+  },
   "samesite": {
     "term": {
       "tr": "SameSite çerez özniteliği",
@@ -14676,6 +15358,20 @@
       "ttl"
     ]
   },
+  "semantic-html": {
+    "term": {
+      "tr": "Semantik HTML",
+      "en": "Semantic HTML"
+    },
+    "definition": {
+      "tr": "Öğeleri görünüşlerine göre değil anlamlarına göre seçmek: tıklanabilir şey için <button>, gezinme için <nav>, başlık hiyerarşisi için <h1>–<h6>. Tarayıcı bu öğelere erişilebilirlik rolünü, klavye davranışını ve odak desteğini ücretsiz verir."
+    },
+    "related": [
+      "accessibility-tree",
+      "aria",
+      "keyboard-navigation"
+    ]
+  },
   "semantic-versioning": {
     "term": {
       "tr": "Semantic versioning (SemVer)",
@@ -14782,6 +15478,24 @@
       "http-versions"
     ]
   },
+  "server-side-rendering": {
+    "term": {
+      "tr": "SSR (sunucu tarafında render)",
+      "en": "Server-side rendering"
+    },
+    "definition": {
+      "tr": "Sayfanın HTML'inin her istekte sunucuda, güncel veriyle üretilip tarayıcıya gönderildiği yaklaşım. İçerik hızlı görünür ve kişiselleştirilebilir; bedeli her istekteki sunucu işi nedeniyle daha yüksek TTFB ve etkileşim için gereken hydration adımıdır."
+    },
+    "aliases": [
+      "SSR"
+    ],
+    "related": [
+      "client-side-rendering",
+      "static-site-generation",
+      "hydration",
+      "ttfb"
+    ]
+  },
   "server-side-session": {
     "term": {
       "tr": "Sunucu taraflı oturum",
@@ -14796,6 +15510,21 @@
       "jwt",
       "token-revocation",
       "session-state"
+    ]
+  },
+  "server-state": {
+    "term": {
+      "tr": "Sunucu state'i",
+      "en": "Server state"
+    },
+    "definition": {
+      "tr": "İstemcide tutulan ama asıl sahibi sunucu olan verinin kopyası; başkaları tarafından değiştirilebilir ve bayatlayabilir. Önbellekleme, yeniden doğrulama, tekilleştirme ve mutasyon sonrası geçersizleştirme gerektirdiği için TanStack Query ya da SWR gibi ayrı bir sorgu önbelleğinde yönetilir."
+    },
+    "related": [
+      "stale-while-revalidate",
+      "query-invalidation",
+      "request-deduplication",
+      "global-store"
     ]
   },
   "serverless": {
@@ -15720,6 +16449,24 @@
       "remote-repository"
     ]
   },
+  "stale-while-revalidate": {
+    "term": {
+      "tr": "Stale-while-revalidate",
+      "en": "Stale-while-revalidate"
+    },
+    "definition": {
+      "tr": "Önbellekteki bayat veriyi hemen gösterip arka planda yeniden isteyen, yeni veri gelince sessizce güncelleyen strateji. Adını RFC 5861'deki HTTP Cache-Control yönergesinden alır; kullanıcı boş ekran görmez ama kısa süre eski veri görebilir."
+    },
+    "aliases": [
+      "SWR"
+    ],
+    "related": [
+      "server-state",
+      "query-invalidation",
+      "cache-control-headers",
+      "incremental-static-regeneration"
+    ]
+  },
   "standard-library": {
     "term": {
       "tr": "Standart kütüphane",
@@ -15842,6 +16589,24 @@
       "stateless-processes",
       "horizontal-scaling",
       "sticky-session"
+    ]
+  },
+  "static-site-generation": {
+    "term": {
+      "tr": "SSG (statik site üretimi)",
+      "en": "Static site generation"
+    },
+    "definition": {
+      "tr": "Sayfaların HTML'inin build anında bir kez üretilip CDN'den statik dosya olarak sunulduğu yaklaşım. TTFB çok düşük ve maliyet azdır; ancak veri değiştiğinde sayfa yeniden build edilene kadar bayat kalır."
+    },
+    "aliases": [
+      "SSG"
+    ],
+    "related": [
+      "incremental-static-regeneration",
+      "server-side-rendering",
+      "cdn",
+      "ttfb"
     ]
   },
   "static-type-checking": {
@@ -16865,6 +17630,24 @@
       "sql-vs-nosql"
     ]
   },
+  "time-to-interactive": {
+    "term": {
+      "tr": "TTI (etkileşime hazır olma süresi)",
+      "en": "Time to Interactive"
+    },
+    "definition": {
+      "tr": "Sayfanın kullanıcı girdisine güvenilir biçimde yanıt verebildiği an. FCP ile TTI arasındaki boşluk, içeriğin görünüp butonların henüz çalışmadığı süredir; büyük JS paketleri ve uzun hydration bu aralığı genişletir."
+    },
+    "aliases": [
+      "TTI"
+    ],
+    "related": [
+      "first-contentful-paint",
+      "hydration",
+      "long-tasks",
+      "interaction-to-next-paint"
+    ]
+  },
   "timeline-cache": {
     "term": {
       "tr": "Timeline önbelleği",
@@ -17386,6 +18169,24 @@
       "error-handling"
     ]
   },
+  "ttfb": {
+    "term": {
+      "tr": "TTFB (ilk bayta kadar geçen süre)",
+      "en": "Time to First Byte"
+    },
+    "definition": {
+      "tr": "İsteğin gönderilmesinden yanıtın ilk baytının tarayıcıya ulaşmasına kadar geçen süre; DNS, bağlantı kurulumu, ağ gecikmesi ve sunucudaki işlem süresini kapsar. SSR'da sunucu işi bu süreye eklenir; CDN'den gelen statik HTML'de çok kısadır."
+    },
+    "aliases": [
+      "TTFB"
+    ],
+    "related": [
+      "first-contentful-paint",
+      "server-side-rendering",
+      "cdn",
+      "latency"
+    ]
+  },
   "ttft": {
     "term": {
       "tr": "TTFT (ilk tokena kadar geçen süre)",
@@ -17613,6 +18414,24 @@
       "bias-variance",
       "regularization",
       "loss-curve"
+    ]
+  },
+  "unidirectional-data-flow": {
+    "term": {
+      "tr": "Tek yönlü veri akışı",
+      "en": "Unidirectional data flow"
+    },
+    "definition": {
+      "tr": "Verinin tek yönde aktığı mimari ilke: görünüm bir eylem üretir, eylem state'i günceller, güncellenen state görünümü yeniden çizer. Facebook'un Flux mimarisi ve Redux bu ilkeye dayanır; hangi değişikliğin neyi tetiklediğini izlemeyi kolaylaştırır."
+    },
+    "aliases": [
+      "one-way data flow",
+      "Flux"
+    ],
+    "related": [
+      "global-store",
+      "lifting-state-up",
+      "pure-function"
     ]
   },
   "unit-testing": {

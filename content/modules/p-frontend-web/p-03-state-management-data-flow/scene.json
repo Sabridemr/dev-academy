@@ -1,0 +1,177 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "p-03-query-invalidation",
+  "title": { "tr": "Sorgu önbelleği: SWR, mutasyon ve invalidation", "en": "Query cache: SWR, mutation and invalidation" },
+  "summary": {
+    "tr": "İki bileşen aynı ['progress'] sorgusunu tek istekle paylaşır; veri bayatlayınca önce eski değer gösterilip arka planda yenilenir; Tamamla mutasyonu sorguyu geçersiz kılar ve yeniden fetch tetiklenir.",
+    "en": "Two components share the same ['progress'] query with a single request; when data goes stale the old value is shown first and refreshed in the background; the Complete mutation invalidates the query and triggers a refetch."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda üç bileşen: ders listesi, ilerleme rozeti ve Tamamla butonu. Ortada sorgu önbelleği, sağda API sunucusu; altta yalnızca arayüz durumunu tutan ayrı bir UI store. İlk açılışta iki bileşen aynı sorguyu ister ama API'ye tek istek gider. Veri gelince iki bileşen de %42 gösterir. Süre dolunca veri bayat işaretlenir; bileşen eski değeri hemen gösterir, arka planda yeniden istek atılır. Kullanıcı Tamamla'ya basınca API'ye POST gider; başarı sonrası sorgu geçersiz kılınır, otomatik yeniden fetch yapılır ve iki bileşen de %43'e güncellenir. Tema gibi arayüz durumu ise sorgu önbelleğine hiç uğramaz.",
+      "en": "Three components on the left: lesson list, progress badge and Complete button. The query cache is in the middle, the API server on the right; at the bottom a separate UI store holds only interface state. On first load two components request the same query but only one request goes to the API. When data arrives both show 42%. After the stale time the data is marked stale; the component shows the old value immediately and a background request is made. When the user presses Complete a POST goes to the API; on success the query is invalidated, an automatic refetch happens and both components update to 43%. Interface state such as the theme never touches the query cache."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "list", "kind": "client", "label": { "tr": "Ders listesi", "en": "Lesson list" }, "sublabel": "useQuery(['progress'])", "x": 140, "y": 110, "w": 190, "h": 70 },
+    { "id": "badge", "kind": "client", "label": { "tr": "İlerleme rozeti", "en": "Progress badge" }, "sublabel": "useQuery(['progress'])", "x": 140, "y": 260, "w": 190, "h": 70 },
+    { "id": "button", "kind": "client", "label": { "tr": "Tamamla butonu", "en": "Complete button" }, "sublabel": "useMutation", "x": 140, "y": 410, "w": 190, "h": 70 },
+    { "id": "qcache", "kind": "cache", "label": { "tr": "Sorgu önbelleği", "en": "Query cache" }, "sublabel": "['progress']", "x": 520, "y": 230, "w": 170, "h": 80 },
+    { "id": "api", "kind": "server", "label": "API", "sublabel": "/progress", "x": 870, "y": 300, "w": 140, "h": 76 },
+    { "id": "uistore", "kind": "storage", "label": { "tr": "UI store", "en": "UI store" }, "sublabel": { "tr": "tema, açık panel", "en": "theme, open panel" }, "x": 520, "y": 520, "w": 170, "h": 64 }
+  ],
+  "edges": [
+    { "id": "list-q", "from": "list", "to": "qcache", "kind": "request" },
+    { "id": "badge-q", "from": "badge", "to": "qcache", "kind": "request" },
+    { "id": "q-api", "from": "qcache", "to": "api", "kind": "request", "label": "GET /progress" },
+    { "id": "btn-api", "from": "button", "to": "api", "kind": "request", "label": "POST /complete", "curvature": 0.15 },
+    { "id": "btn-q", "from": "button", "to": "qcache", "kind": "control", "style": "dashed", "label": "invalidateQueries" },
+    { "id": "btn-ui", "from": "button", "to": "uistore", "kind": "generic", "style": "dotted" }
+  ],
+  "steps": [
+    {
+      "id": "mount-dedupe",
+      "title": { "tr": "İki bileşen, tek istek", "en": "Two components, one request" },
+      "narration": {
+        "tr": "Sayfa açılır; ders listesi ve ilerleme rozeti aynı ['progress'] anahtarını ister. Önbellek boştur ama iki istek birleştirilir: API'ye yalnızca bir GET gider (deduplication).",
+        "en": "The page opens; the lesson list and progress badge request the same ['progress'] key. The cache is empty but the two requests are merged: only one GET reaches the API (deduplication)."
+      },
+      "durationMs": 3000,
+      "inherit": false,
+      "highlight": { "nodes": ["list", "badge", "qcache", "api"], "edges": ["list-q", "badge-q", "q-api"] },
+      "nodeStates": { "qcache": { "status": "busy", "badge": "loading" }, "api": { "status": "active" }, "uistore": { "status": "muted" } },
+      "edgeStates": { "btn-q": { "visible": false }, "btn-ui": { "visible": false } },
+      "packets": [
+        { "edge": "list-q", "label": "?", "durationMs": 700 },
+        { "edge": "badge-q", "label": "?", "durationMs": 700 },
+        { "edge": "q-api", "shape": "envelope", "label": "GET ×1", "startAt": 800, "durationMs": 1000 }
+      ],
+      "annotations": [
+        { "id": "dedupe-note", "x": 700, "y": 150, "text": { "tr": "2 abone → 1 ağ isteği", "en": "2 subscribers → 1 network request" }, "tone": "info", "target": "qcache" }
+      ]
+    },
+    {
+      "id": "data-arrives",
+      "title": { "tr": "Veri gelir: taze", "en": "Data arrives: fresh" },
+      "narration": {
+        "tr": "API %42 döner. Önbellek veriyi saklar ve taze işaretler (staleTime: 30 sn). Abone olan iki bileşen de aynı değeri gösterir.",
+        "en": "The API returns 42%. The cache stores the data and marks it fresh (staleTime: 30 s). Both subscribed components show the same value."
+      },
+      "durationMs": 2800,
+      "highlight": { "nodes": ["qcache", "list", "badge"], "edges": ["q-api", "list-q", "badge-q"] },
+      "nodeStates": { "qcache": { "status": "success", "badge": "fresh · 42%" }, "api": { "status": "idle" }, "list": { "status": "success", "badge": "42%" }, "badge": { "status": "success", "badge": "42%" } },
+      "packets": [
+        { "edge": "q-api", "direction": "backward", "shape": "square", "label": "42%", "durationMs": 900 },
+        { "edge": "list-q", "direction": "backward", "shape": "square", "color": "success", "startAt": 1000, "durationMs": 700 },
+        { "edge": "badge-q", "direction": "backward", "shape": "square", "color": "success", "startAt": 1000, "durationMs": 700 }
+      ]
+    },
+    {
+      "id": "goes-stale",
+      "title": { "tr": "30 sn sonra: bayat", "en": "After 30 s: stale" },
+      "narration": {
+        "tr": "staleTime doldu; veri silinmez, yalnızca bayat işaretlenir. Henüz ağ isteği yok: bayatlık, bir sonraki fırsatta yenileme yapılacağı anlamına gelir.",
+        "en": "The staleTime has passed; the data is not removed, only marked stale. No network request yet: staleness means a refresh will happen at the next opportunity."
+      },
+      "durationMs": 2400,
+      "highlight": { "nodes": ["qcache"] },
+      "nodeStates": { "qcache": { "status": "warning", "badge": "stale · 42%" } }
+    },
+    {
+      "id": "swr",
+      "title": { "tr": "stale-while-revalidate", "en": "stale-while-revalidate" },
+      "narration": {
+        "tr": "Kullanıcı sekmeye geri döner (window focus). Rozet bayat %42'yi HEMEN gösterir; boş ekran yok. Aynı anda önbellek arka planda yeni bir GET atar.",
+        "en": "The user returns to the tab (window focus). The badge shows the stale 42% IMMEDIATELY; no blank screen. At the same time the cache fires a new GET in the background."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["badge", "qcache", "api"], "edges": ["badge-q", "q-api"] },
+      "nodeStates": { "api": { "status": "active" }, "qcache": { "status": "busy", "badge": "revalidating" } },
+      "packets": [
+        { "edge": "badge-q", "direction": "backward", "shape": "square", "color": "warning", "label": "42% (stale)", "durationMs": 800 },
+        { "edge": "q-api", "shape": "envelope", "label": "GET", "startAt": 300, "durationMs": 1000 },
+        { "edge": "q-api", "direction": "backward", "shape": "square", "label": "42%", "startAt": 1500, "durationMs": 900 }
+      ]
+    },
+    {
+      "id": "mutation",
+      "title": { "tr": "Mutasyon: Tamamla", "en": "Mutation: Complete" },
+      "narration": {
+        "tr": "Kullanıcı dersi tamamlar. Buton bir mutasyon çalıştırır: POST /lessons/42/complete. Sunucuda ilerleme %43 olur; önbellekteki %42 artık yanlıştır.",
+        "en": "The user completes the lesson. The button runs a mutation: POST /lessons/42/complete. On the server progress becomes 43%; the cached 42% is now wrong."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["button", "api"], "edges": ["btn-api"] },
+      "nodeStates": { "qcache": { "status": "success", "badge": "fresh · 42%" }, "button": { "status": "busy", "badge": "pending" }, "api": { "status": "busy", "badge": "43%" } },
+      "packets": [
+        { "edge": "btn-api", "shape": "envelope", "label": "POST", "durationMs": 1100 },
+        { "edge": "btn-api", "direction": "backward", "shape": "square", "color": "success", "label": "201", "startAt": 1400, "durationMs": 1000 }
+      ]
+    },
+    {
+      "id": "invalidate",
+      "title": { "tr": "invalidateQueries", "en": "invalidateQueries" },
+      "narration": {
+        "tr": "onSuccess içinde ['progress'] anahtarı geçersiz kılınır. İstemci tarafındaki 'DB'ye yaz, önbelleği sil' kuralı budur: önbellek kendini elle güncellemeye çalışmaz, yeniden sorar.",
+        "en": "Inside onSuccess the ['progress'] key is invalidated. This is the client-side 'write to DB, delete the cache' rule: the cache does not try to patch itself, it asks again."
+      },
+      "durationMs": 2600,
+      "highlight": { "nodes": ["button", "qcache"], "edges": ["btn-q"] },
+      "nodeStates": { "button": { "status": "success", "badge": "" }, "qcache": { "status": "error", "badge": "invalid" }, "api": { "status": "idle", "badge": "" } },
+      "edgeStates": { "btn-q": { "visible": true, "status": "active" } },
+      "packets": [{ "edge": "btn-q", "shape": "diamond", "color": "danger", "label": "invalidate", "durationMs": 1000 }]
+    },
+    {
+      "id": "refetch",
+      "title": { "tr": "Otomatik yeniden fetch", "en": "Automatic refetch" },
+      "narration": {
+        "tr": "Geçersiz anahtarı ekranda gösteren aktif abone olduğu için önbellek hemen yeniden fetch tetikler. Yine tek bir GET gider.",
+        "en": "Because active subscribers display the invalid key, the cache immediately triggers a refetch. Again only one GET goes out."
+      },
+      "durationMs": 2600,
+      "highlight": { "nodes": ["qcache", "api"], "edges": ["q-api"] },
+      "nodeStates": { "qcache": { "status": "busy", "badge": "refetching" }, "api": { "status": "active" } },
+      "edgeStates": { "btn-q": { "status": "idle" } },
+      "packets": [
+        { "edge": "q-api", "shape": "envelope", "label": "GET", "durationMs": 900 },
+        { "edge": "q-api", "direction": "backward", "shape": "square", "color": "success", "label": "43%", "startAt": 1100, "durationMs": 900 }
+      ]
+    },
+    {
+      "id": "rerender",
+      "title": { "tr": "Tüm aboneler güncellenir", "en": "All subscribers update" },
+      "narration": {
+        "tr": "Yeni değer önbelleğe yazılır ve iki bileşen de %43 gösterecek şekilde yeniden render olur. Hiçbir bileşen diğerine elle haber vermedi; tek doğruluk kaynağı önbellektir.",
+        "en": "The new value is written to the cache and both components re-render to show 43%. No component had to notify another by hand; the cache is the single source of truth."
+      },
+      "durationMs": 2600,
+      "highlight": { "nodes": ["qcache", "list", "badge"], "edges": ["list-q", "badge-q"] },
+      "nodeStates": { "qcache": { "status": "success", "badge": "fresh · 43%" }, "api": { "status": "idle" }, "list": { "status": "success", "badge": "43%" }, "badge": { "status": "success", "badge": "43%" } },
+      "packets": [
+        { "edge": "list-q", "direction": "backward", "shape": "square", "color": "success", "label": "43%", "durationMs": 800 },
+        { "edge": "badge-q", "direction": "backward", "shape": "square", "color": "success", "label": "43%", "durationMs": 800 }
+      ]
+    },
+    {
+      "id": "ui-state",
+      "title": { "tr": "UI state ayrı yaşar", "en": "UI state lives separately" },
+      "narration": {
+        "tr": "Kullanıcı temayı koyuya çevirir. Bu sunucunun kopyası değil, istemciye ait bir durumdur: UI store'da (ya da context'te) tutulur ve sorgu önbelleğine hiç uğramaz.",
+        "en": "The user switches to dark theme. This is not a copy of server data but state owned by the client: it lives in the UI store (or context) and never touches the query cache."
+      },
+      "durationMs": 2600,
+      "highlight": { "nodes": ["button", "uistore"], "edges": ["btn-ui"] },
+      "nodeStates": { "uistore": { "status": "active", "badge": "theme=dark" }, "qcache": { "status": "idle" } },
+      "edgeStates": { "btn-ui": { "visible": true, "status": "active" } },
+      "packets": [{ "edge": "btn-ui", "shape": "dot", "label": "setTheme", "durationMs": 900 }],
+      "annotations": [
+        { "id": "ui-note", "x": 760, "y": 520, "text": { "tr": "istemci state'i ≠ sunucu state'i", "en": "client state ≠ server state" }, "tone": "info", "target": "uistore" }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["state", "react-query", "stale-while-revalidate", "invalidation"]
+}

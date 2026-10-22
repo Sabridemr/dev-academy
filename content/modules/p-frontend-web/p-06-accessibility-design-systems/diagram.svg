@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 420" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Semantik HTML ve div çorbasının erişilebilirlik ağaçları</title>
+  <desc id="desc">Solda semantik HTML ile yazılmış sayfanın erişilebilirlik ağacı: belge altında gezinme ve ana bölge landmark'ları, ana bölge altında birinci düzey başlık ve Tamamla düğmesi; her düğümde rol ve ad. Sağda aynı görünümün div'lerle yazılmış hâli: belge altında rolsüz dört düğüm, düz metin ve odaklanamayan tıklanabilir div. Altta tasarım token'larının akışı: ham RGB değeri, anlamsal --da-primary token'ı ve onu kullanan bileşenler ile SVG diyagramlar.</desc>
+
+  <text x="480" y="30" text-anchor="middle" font-size="15" font-weight="600" fill="var(--da-fg, #0f172a)">Ekran okuyucu pikselleri değil, erişilebilirlik ağacını okur</text>
+
+  <!-- Sol: semantik -->
+  <text x="235" y="62" text-anchor="middle" font-size="13" font-weight="700" fill="var(--da-success, #059669)">Semantik HTML</text>
+  <g stroke="var(--da-border, #cbd5e1)" stroke-width="1.5" fill="none">
+    <path d="M 235 96 L 235 110 L 120 110 L 120 124"/>
+    <path d="M 235 110 L 340 110 L 340 124"/>
+    <path d="M 340 160 L 340 172 L 270 172 L 270 186"/>
+    <path d="M 340 172 L 410 172 L 410 186"/>
+  </g>
+  <g stroke-width="1.5">
+    <rect x="175" y="70" width="120" height="26" rx="6" fill="var(--da-surface, #fff)" stroke="var(--da-border, #cbd5e1)"/>
+    <rect x="50" y="124" width="140" height="36" rx="6" fill="var(--da-success, #059669)" fill-opacity="0.12" stroke="var(--da-success, #059669)"/>
+    <rect x="270" y="124" width="140" height="36" rx="6" fill="var(--da-success, #059669)" fill-opacity="0.12" stroke="var(--da-success, #059669)"/>
+    <rect x="205" y="186" width="130" height="36" rx="6" fill="var(--da-success, #059669)" fill-opacity="0.12" stroke="var(--da-success, #059669)"/>
+    <rect x="345" y="186" width="120" height="36" rx="6" fill="var(--da-success, #059669)" fill-opacity="0.12" stroke="var(--da-success, #059669)"/>
+  </g>
+  <g font-size="11" text-anchor="middle" fill="var(--da-fg, #0f172a)">
+    <text x="235" y="88">belge</text>
+    <text x="120" y="140" font-weight="600">navigation</text>
+    <text x="120" y="154" fill="var(--da-muted, #64748b)">&lt;nav&gt; · landmark</text>
+    <text x="340" y="140" font-weight="600">main</text>
+    <text x="340" y="154" fill="var(--da-muted, #64748b)">&lt;main&gt; · landmark</text>
+    <text x="270" y="202" font-weight="600">heading, düzey 1</text>
+    <text x="270" y="216" fill="var(--da-muted, #64748b)">&lt;h1&gt;</text>
+    <text x="405" y="202" font-weight="600">button "Tamamla"</text>
+    <text x="405" y="216" fill="var(--da-muted, #64748b)">odaklanabilir</text>
+  </g>
+
+  <line x1="480" y1="50" x2="480" y2="250" stroke="var(--da-border, #cbd5e1)" stroke-dasharray="5 5"/>
+
+  <!-- Sağ: div çorbası -->
+  <text x="720" y="62" text-anchor="middle" font-size="13" font-weight="700" fill="var(--da-danger, #dc2626)">Div çorbası</text>
+  <g stroke="var(--da-border, #cbd5e1)" stroke-width="1.5" fill="none">
+    <path d="M 720 96 L 720 110 L 560 110 L 560 124"/>
+    <path d="M 720 110 L 670 110 L 670 124"/>
+    <path d="M 720 110 L 780 110 L 780 124"/>
+    <path d="M 720 110 L 890 110 L 890 124"/>
+  </g>
+  <rect x="660" y="70" width="120" height="26" rx="6" fill="var(--da-surface, #fff)" stroke="var(--da-border, #cbd5e1)" stroke-width="1.5"/>
+  <g stroke="var(--da-danger, #dc2626)" stroke-width="1.2" fill="var(--da-danger, #dc2626)" fill-opacity="0.08" stroke-dasharray="4 3">
+    <rect x="510" y="124" width="100" height="36" rx="6"/>
+    <rect x="620" y="124" width="100" height="36" rx="6"/>
+    <rect x="730" y="124" width="100" height="36" rx="6"/>
+    <rect x="840" y="124" width="100" height="36" rx="6"/>
+  </g>
+  <g font-size="11" text-anchor="middle" fill="var(--da-fg, #0f172a)">
+    <text x="720" y="88">belge</text>
+    <text x="560" y="140">generic</text>
+    <text x="560" y="154" fill="var(--da-muted, #64748b)">rol yok</text>
+    <text x="670" y="140">generic</text>
+    <text x="670" y="154" fill="var(--da-muted, #64748b)">rol yok</text>
+    <text x="780" y="140">metin</text>
+    <text x="780" y="154" fill="var(--da-muted, #64748b)">başlık değil</text>
+    <text x="890" y="140">generic</text>
+    <text x="890" y="154" fill="var(--da-danger, #dc2626)">Tab ile ulaşılamaz</text>
+  </g>
+  <text x="720" y="200" text-anchor="middle" font-size="12" fill="var(--da-muted, #64748b)">Landmark listesi: boş · Başlık listesi: boş</text>
+
+  <!-- Alt: token akışı -->
+  <line x1="30" y1="262" x2="930" y2="262" stroke="var(--da-border, #cbd5e1)"/>
+  <text x="30" y="290" font-size="13" font-weight="700" fill="var(--da-fg, #0f172a)">Tasarım token'ları: bir karar, her yerde</text>
+  <g stroke-width="1.5">
+    <rect x="30" y="310" width="200" height="56" rx="8" fill="var(--da-surface, #fff)" stroke="var(--da-border, #cbd5e1)"/>
+    <rect x="290" y="310" width="200" height="56" rx="8" fill="var(--da-primary, #2563eb)" fill-opacity="0.12" stroke="var(--da-primary, #2563eb)"/>
+    <rect x="550" y="300" width="170" height="36" rx="8" fill="var(--da-surface, #fff)" stroke="var(--da-border, #cbd5e1)"/>
+    <rect x="550" y="344" width="170" height="36" rx="8" fill="var(--da-surface, #fff)" stroke="var(--da-border, #cbd5e1)"/>
+    <rect x="760" y="300" width="170" height="36" rx="8" fill="var(--da-surface, #fff)" stroke="var(--da-border, #cbd5e1)"/>
+    <rect x="760" y="344" width="170" height="36" rx="8" fill="var(--da-surface, #fff)" stroke="var(--da-border, #cbd5e1)"/>
+  </g>
+  <g stroke="var(--da-muted, #64748b)" stroke-width="1.5">
+    <line x1="230" y1="338" x2="290" y2="338"/>
+    <line x1="490" y1="330" x2="550" y2="318"/>
+    <line x1="490" y1="346" x2="550" y2="362"/>
+  </g>
+  <g font-size="11" text-anchor="middle" fill="var(--da-fg, #0f172a)">
+    <text x="130" y="334">--da-primary-rgb</text>
+    <text x="130" y="352" fill="var(--da-muted, #64748b)">ham değer (koyu/açık tema)</text>
+    <text x="390" y="334" font-weight="600">--da-primary</text>
+    <text x="390" y="352" fill="var(--da-muted, #64748b)">anlamsal token</text>
+    <text x="635" y="322">Button, odak halkası</text>
+    <text x="635" y="366">SVG diyagramlar</text>
+    <text x="845" y="322">kontrast: 4,5:1 / 3:1</text>
+    <text x="845" y="366">prefers-reduced-motion</text>
+  </g>
+  <text x="30" y="404" font-size="11" fill="var(--da-muted, #64748b)">Tema değişince yalnızca ham değer değişir; bileşenler ve diyagramlar aynı adı kullanmaya devam eder.</text>
+</svg>
