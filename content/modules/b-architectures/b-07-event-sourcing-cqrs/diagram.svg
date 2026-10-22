@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 480" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Event sourcing ve CQRS: yazma yolu, olay deposu, projeksiyonlar</title>
+  <desc id="desc">Solda komut, decide ve evolve fonksiyonları; ortada wallet-42 akışındaki sürüm numaralı olaylar ve sürüm 100'deki snapshot; sağda abonelikle beslenen bakiye okuma modeli ve replay ile sonradan kurulan şüpheli işlem okuma modeli; altta sorgu tarafı ve nihai tutarlılık gecikmesi.</desc>
+  <defs>
+    <marker id="es-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+    <marker id="es-ev" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-accent, #0ea5e9)"/>
+    </marker>
+  </defs>
+
+  <!-- Başlıklar -->
+  <g font-size="13" font-weight="700" fill="var(--da-muted, #64748b)">
+    <text x="30" y="30">YAZMA TARAFI (komut)</text>
+    <text x="330" y="30">OLAY DEPOSU (doğruluk kaynağı)</text>
+    <text x="660" y="30">OKUMA TARAFI (sorgu)</text>
+  </g>
+
+  <!-- Yazma tarafı -->
+  <rect x="30" y="50" width="220" height="44" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)"/>
+  <text x="140" y="77" text-anchor="middle" font-size="13" fill="var(--da-fg, #0f172a)">Withdraw(50) komutu</text>
+  <rect x="30" y="118" width="220" height="150" rx="12" fill="var(--da-primary, #6366f1)" fill-opacity="0.08" stroke="var(--da-primary, #6366f1)"/>
+  <text x="140" y="142" text-anchor="middle" font-size="13" font-weight="700" fill="var(--da-primary, #6366f1)">Aggregate: wallet-42</text>
+  <text x="48" y="168" font-size="12" fill="var(--da-fg, #0f172a)">1. akışı oku (v7)</text>
+  <text x="48" y="190" font-size="12" fill="var(--da-fg, #0f172a)">2. evolve → bakiye 70</text>
+  <text x="48" y="212" font-size="12" fill="var(--da-fg, #0f172a)">3. decide → MoneyWithdrawn</text>
+  <text x="48" y="234" font-size="12" fill="var(--da-fg, #0f172a)">4. ekle, beklenen sürüm 7</text>
+  <text x="48" y="256" font-size="11" fill="var(--da-danger, #ef4444)">sürüm değiştiyse → yeniden dene</text>
+  <path d="M 140 94 L 140 116" stroke="var(--da-muted, #64748b)" stroke-width="1.6" marker-end="url(#es-arrow)"/>
+  <path d="M 250 230 C 290 230, 300 210, 328 210" fill="none" stroke="var(--da-muted, #64748b)" stroke-width="1.8" marker-end="url(#es-arrow)"/>
+  <text x="290" y="250" text-anchor="middle" font-size="11" fill="var(--da-muted, #64748b)">append</text>
+
+  <!-- Olay deposu -->
+  <rect x="330" y="50" width="290" height="250" rx="14" fill="var(--da-surface, #f8fafc)" stroke="var(--da-border, #cbd5e1)" stroke-width="1.5"/>
+  <text x="345" y="74" font-size="12" font-weight="600" fill="var(--da-fg, #0f172a)">akış: wallet-42 (yalnızca ekleme)</text>
+  <g font-size="11" fill="var(--da-fg, #0f172a)">
+    <rect x="345" y="86" width="260" height="24" rx="6" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+    <text x="355" y="102">v1 · WalletOpened</text>
+    <rect x="345" y="114" width="260" height="24" rx="6" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+    <text x="355" y="130">v2 · MoneyDeposited(100)</text>
+    <rect x="345" y="142" width="260" height="24" rx="6" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+    <text x="355" y="158">v3 … v7 · …</text>
+    <rect x="345" y="170" width="260" height="24" rx="6" fill="var(--da-success, #10b981)" fill-opacity="0.15" stroke="var(--da-success, #10b981)"/>
+    <text x="355" y="186" font-weight="600">v8 · MoneyWithdrawn(50)  ← yeni</text>
+    <rect x="345" y="198" width="260" height="24" rx="6" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)" stroke-dasharray="4 3"/>
+    <text x="355" y="214" fill="var(--da-muted, #64748b)">v9 … v100 …</text>
+  </g>
+  <rect x="345" y="236" width="140" height="48" rx="8" fill="var(--da-accent, #0ea5e9)" fill-opacity="0.10" stroke="var(--da-accent, #0ea5e9)" stroke-dasharray="5 3"/>
+  <text x="415" y="256" text-anchor="middle" font-size="11" font-weight="600" fill="var(--da-fg, #0f172a)">Snapshot @ v100</text>
+  <text x="415" y="272" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">önbellek, gerçek değil</text>
+  <text x="500" y="256" font-size="10" fill="var(--da-muted, #64748b)">yükle = snapshot</text>
+  <text x="500" y="270" font-size="10" fill="var(--da-muted, #64748b)">+ sonraki olaylar</text>
+
+  <!-- Abonelik okları -->
+  <path d="M 620 182 C 650 182, 640 100, 658 100" fill="none" stroke="var(--da-accent, #0ea5e9)" stroke-width="2" marker-end="url(#es-ev)"/>
+  <path d="M 620 182 C 650 182, 640 220, 658 220" fill="none" stroke="var(--da-accent, #0ea5e9)" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#es-ev)"/>
+  <text x="640" y="320" text-anchor="middle" font-size="11" fill="var(--da-accent, #0ea5e9)">abonelik (global konum)</text>
+
+  <!-- Okuma tarafı -->
+  <rect x="660" y="60" width="220" height="90" rx="12" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)"/>
+  <text x="770" y="84" text-anchor="middle" font-size="12" font-weight="700" fill="var(--da-fg, #0f172a)">Bakiye projeksiyonu</text>
+  <text x="770" y="104" text-anchor="middle" font-size="11" fill="var(--da-muted, #64748b)">→ wallet_balances</text>
+  <text x="770" y="122" text-anchor="middle" font-size="11" fill="var(--da-muted, #64748b)">checkpoint = 8 (idempotent)</text>
+  <text x="770" y="140" text-anchor="middle" font-size="11" fill="var(--da-success, #10b981)">bakiye: 20</text>
+
+  <rect x="660" y="180" width="220" height="90" rx="12" fill="var(--da-surface, #ffffff)" stroke="var(--da-accent, #0ea5e9)" stroke-dasharray="6 4"/>
+  <text x="770" y="204" text-anchor="middle" font-size="12" font-weight="700" fill="var(--da-fg, #0f172a)">Şüpheli işlem projeksiyonu</text>
+  <text x="770" y="224" text-anchor="middle" font-size="11" fill="var(--da-muted, #64748b)">sonradan eklendi</text>
+  <text x="770" y="242" text-anchor="middle" font-size="11" fill="var(--da-muted, #64748b)">konum 0'dan replay → canlı</text>
+  <text x="770" y="260" text-anchor="middle" font-size="11" fill="var(--da-accent, #0ea5e9)">aynı olaylar, yeni model</text>
+
+  <!-- Alt şerit: sorgu ve gecikme -->
+  <rect x="30" y="350" width="850" height="110" rx="14" fill="var(--da-surface, #f8fafc)" stroke="var(--da-border, #cbd5e1)"/>
+  <text x="50" y="376" font-size="12" font-weight="600" fill="var(--da-muted, #64748b)">Zaman çizgisi: nihai tutarlılık</text>
+  <line x1="60" y1="420" x2="850" y2="420" stroke="var(--da-border, #cbd5e1)" stroke-width="2"/>
+  <rect x="140" y="412" width="545" height="16" rx="8" fill="var(--da-warning, #d97706)" fill-opacity="0.15"/>
+  <g font-size="11" text-anchor="middle" fill="var(--da-fg, #0f172a)">
+    <circle cx="120" cy="420" r="7" fill="var(--da-primary, #6366f1)"/>
+    <text x="120" y="400">v8 eklendi</text>
+    <text x="120" y="446" fill="var(--da-muted, #64748b)">komut 200 döner</text>
+    <circle cx="400" cy="420" r="7" fill="var(--da-warning, #d97706)"/>
+    <text x="400" y="400">sorgu: bakiye 70</text>
+    <text x="400" y="446" fill="var(--da-muted, #64748b)">okuma modeli geride</text>
+    <circle cx="700" cy="420" r="7" fill="var(--da-success, #10b981)"/>
+    <text x="700" y="400">projeksiyon v8'i uyguladı</text>
+    <text x="700" y="446" fill="var(--da-muted, #64748b)">sorgu: bakiye 20</text>
+  </g>
+</svg>

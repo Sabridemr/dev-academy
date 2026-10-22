@@ -1,0 +1,186 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "travel-booking-saga",
+  "title": { "tr": "Seyahat Rezervasyonu Saga'sı: Otel Başarısız, Uçuş Telafi Edilir", "en": "Travel Booking Saga: Hotel Fails, Flight Is Compensated" },
+  "summary": {
+    "tr": "Orkestratörün uçuşu tutması, otel adımında zaman aşımı ve aynı anahtarla yeniden deneme, 'müsait oda yok' sonrası telafiye geçiş, orkestratörün çöküp olay geçmişinden devam etmesi ve uçuşun yeniden denenen bir telafiyle iptali.",
+    "en": "The orchestrator holding a flight, a timeout and same-key retry at the hotel step, switching to compensation after 'no availability', the orchestrator crashing and resuming from its event history, and the flight being cancelled by a retried compensation."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda kullanıcı, ortada rezervasyon orkestratörü ve altında saga durumunu tutan olay geçmişi, sağda üst üste uçuş, otel ve araç kiralama servisleri. Orkestratör uçuşu başarıyla tutar ve durumu kaydeder. Otel isteği zaman aşımına uğrar; orkestratör aynı idempotency anahtarıyla yeniden dener ve otel 'müsait oda yok' cevabı verir. Araç adımı hiç çalışmadığı için telafisi yoktur; saga telafi durumuna geçer. Orkestratör bu sırada çöker, yeni bir işçi olay geçmişini yeniden oynatarak kaldığı yerden devam eder. Uçuş iptali ilk denemede 503 hatası alır, yeniden denenir ve başarılı olur. Son adımda kullanıcıya rezervasyonun iptal edildiği ve ücret alınmadığı bildirilir.",
+      "en": "A user on the left, the booking orchestrator in the middle with the event history holding the saga state below it, and the flight, hotel and car rental services stacked on the right. The orchestrator holds the flight and records the state. The hotel request times out; the orchestrator retries with the same idempotency key and the hotel answers 'no availability'. The car step never ran, so it has no compensation; the saga moves to compensating. The orchestrator crashes at that moment, and a new worker replays the event history and resumes. The flight cancellation gets a 503 on the first attempt, is retried and succeeds. In the last step the user is told the booking was cancelled and nothing was charged."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "user", "kind": "user", "label": { "tr": "Kullanıcı", "en": "User" }, "x": 70, "y": 300 },
+    { "id": "orch", "kind": "service", "label": { "tr": "Rezervasyon orkestratörü", "en": "Booking orchestrator" }, "sublabel": "saga trip-77", "x": 330, "y": 300, "w": 190, "h": 76 },
+    { "id": "history", "kind": "db", "label": { "tr": "Saga durumu / olay geçmişi", "en": "Saga state / event history" }, "x": 330, "y": 500, "w": 210, "h": 64 },
+    { "id": "flight", "kind": "service", "label": { "tr": "Uçuş servisi", "en": "Flight service" }, "sublabel": { "tr": "havayolu API'si", "en": "airline API" }, "x": 760, "y": 110, "w": 170, "h": 70 },
+    { "id": "hotel", "kind": "service", "label": { "tr": "Otel servisi", "en": "Hotel service" }, "sublabel": { "tr": "envanter", "en": "inventory" }, "x": 760, "y": 300, "w": 170, "h": 70 },
+    { "id": "car", "kind": "service", "label": { "tr": "Araç kiralama", "en": "Car rental" }, "x": 760, "y": 490, "w": 170, "h": 70 }
+  ],
+  "edges": [
+    { "id": "u-o", "from": "user", "to": "orch", "kind": "request", "label": "BookTrip" },
+    { "id": "o-h", "from": "orch", "to": "history", "kind": "data" },
+    { "id": "o-flight", "from": "orch", "to": "flight", "kind": "request", "curvature": -0.1 },
+    { "id": "o-hotel", "from": "orch", "to": "hotel", "kind": "request" },
+    { "id": "o-car", "from": "orch", "to": "car", "kind": "request", "curvature": 0.1 }
+  ],
+  "steps": [
+    {
+      "id": "start",
+      "title": { "tr": "Saga başlar", "en": "The saga starts" },
+      "narration": {
+        "tr": "Kullanıcı 'Tatili rezerve et' düğmesine basar. İstek bir idempotency anahtarı taşır; çift tıklama ikinci bir saga başlatmaz. Orkestratör saga'yı STARTED olarak kaydeder.",
+        "en": "The user presses 'Book the trip'. The request carries an idempotency key, so a double click does not start a second saga. The orchestrator records the saga as STARTED."
+      },
+      "durationMs": 3200,
+      "inherit": false,
+      "highlight": { "nodes": ["user", "orch", "history"], "edges": ["u-o", "o-h"] },
+      "nodeStates": { "orch": { "status": "active" }, "history": { "status": "active", "badge": "STARTED" } },
+      "edgeStates": { "u-o": { "status": "active" }, "o-h": { "status": "active" } },
+      "packets": [
+        { "edge": "u-o", "shape": "envelope", "label": "key=trip-77", "durationMs": 1300 },
+        { "edge": "o-h", "shape": "square", "startAt": 1400, "durationMs": 900 }
+      ]
+    },
+    {
+      "id": "flight-held",
+      "title": { "tr": "Adım 1: uçuş tutuldu", "en": "Step 1: flight held" },
+      "narration": {
+        "tr": "Orkestratör uçuş servisine ReserveFlight komutunu trip-77:flight anahtarıyla gönderir. Koltuk geçici olarak tutulur ve PNR döner. Adım tamamlandı olarak geçmişe yazılır; artık bu adımın bir telafisi borçtur.",
+        "en": "The orchestrator sends ReserveFlight to the flight service with key trip-77:flight. The seat is held temporarily and a PNR comes back. The step is written to the history as completed; it now owes a compensation."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["orch", "flight", "history"], "edges": ["o-flight", "o-h"] },
+      "nodeStates": { "flight": { "status": "success", "badge": "HOLD" }, "history": { "badge": "FLIGHT_HELD" } },
+      "edgeStates": { "u-o": { "status": "idle" }, "o-flight": { "status": "active" } },
+      "packets": [
+        { "edge": "o-flight", "label": "ReserveFlight", "durationMs": 1000 },
+        { "edge": "o-flight", "direction": "backward", "label": "PNR ABC123", "startAt": 1200, "durationMs": 1000, "color": "success" },
+        { "edge": "o-h", "shape": "square", "label": "✓ 1", "startAt": 2400, "durationMs": 800 }
+      ]
+    },
+    {
+      "id": "hotel-timeout",
+      "title": { "tr": "Adım 2: otel zaman aşımı", "en": "Step 2: hotel timeout" },
+      "narration": {
+        "tr": "ReserveHotel gönderilir ama 10 saniye içinde cevap gelmez. Bu bir hata değil, belirsizliktir: otel odayı tutmuş ve cevap kaybolmuş olabilir. Orkestratör hemen telafiye geçmez.",
+        "en": "ReserveHotel is sent but no answer arrives within 10 seconds. This is not a failure but uncertainty: the hotel may have held the room and the reply got lost. The orchestrator does not jump to compensation."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["orch", "hotel"], "edges": ["o-hotel"] },
+      "nodeStates": { "hotel": { "status": "busy", "badge": "?" } },
+      "edgeStates": { "o-flight": { "status": "idle" }, "o-h": { "status": "idle" }, "o-hotel": { "status": "error", "label": "timeout 10 s" } },
+      "packets": [{ "edge": "o-hotel", "label": "ReserveHotel", "durationMs": 1600, "color": "warning" }],
+      "annotations": [
+        { "id": "unknown", "x": 560, "y": 240, "text": { "tr": "sonuç bilinmiyor", "en": "outcome unknown" }, "tone": "warning", "target": "hotel" }
+      ]
+    },
+    {
+      "id": "hotel-retry",
+      "title": { "tr": "Aynı anahtarla yeniden deneme", "en": "Retry with the same key" },
+      "narration": {
+        "tr": "Orkestratör isteği aynı trip-77:hotel anahtarıyla yeniden gönderir. Otel ilk isteği işlemiş olsaydı ikinci bir oda tutmaz, ilk sonucu döndürürdü. Bu kez cevap gelir: müsait oda yok. Bu geçici bir hata değil, iş kuralı sonucudur.",
+        "en": "The orchestrator resends the request with the same key trip-77:hotel. Had the hotel processed the first request, it would not hold a second room but return the first result. This time an answer arrives: no availability. That is a business outcome, not a transient error."
+      },
+      "durationMs": 3800,
+      "highlight": { "nodes": ["orch", "hotel"], "edges": ["o-hotel"] },
+      "nodeStates": { "hotel": { "status": "error", "badge": "✕" } },
+      "edgeStates": { "o-hotel": { "status": "active", "label": "" } },
+      "packets": [
+        { "edge": "o-hotel", "label": { "tr": "aynı anahtar", "en": "same key" }, "durationMs": 1100 },
+        { "edge": "o-hotel", "direction": "backward", "label": "NoAvailability", "startAt": 1400, "durationMs": 1100, "color": "danger" }
+      ],
+      "annotations": [
+        { "id": "idem", "x": 560, "y": 240, "text": { "tr": "idempotency: çift oda yok", "en": "idempotency: no double room" }, "target": "hotel" }
+      ]
+    },
+    {
+      "id": "compensating",
+      "title": { "tr": "Telafiye geçiş", "en": "Switch to compensation" },
+      "narration": {
+        "tr": "Saga ileri gidemez. Orkestratör durumu COMPENSATING olarak kaydeder ve tamamlanmış adımları ters sırayla telafi etmeye karar verir. Araç adımı hiç çalışmadı; onun için telafi gerekmez. Borçlu olan tek adım uçuştur.",
+        "en": "The saga cannot move forward. The orchestrator records the state as COMPENSATING and decides to compensate completed steps in reverse order. The car step never ran, so it needs no compensation. The only step owed is the flight."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["orch", "history", "car"], "edges": ["o-h"] },
+      "nodeStates": { "orch": { "status": "warning" }, "history": { "status": "warning", "badge": "COMPENSATING" }, "car": { "status": "muted", "badge": "—" } },
+      "edgeStates": { "o-hotel": { "status": "idle" }, "o-h": { "status": "active" }, "o-car": { "status": "muted" } },
+      "packets": [{ "edge": "o-h", "shape": "square", "label": "COMPENSATING", "durationMs": 1100 }],
+      "annotations": [
+        { "id": "no-car", "x": 560, "y": 560, "text": { "tr": "araç hiç çağrılmadı → telafi yok", "en": "car never called → nothing to undo" }, "target": "car" }
+      ]
+    },
+    {
+      "id": "crash",
+      "title": { "tr": "Orkestratör çöker", "en": "The orchestrator crashes" },
+      "narration": {
+        "tr": "Tam bu anda orkestratörün çalıştığı süreç çöker. Bellekteki her şey kaybolur, ama saga'nın durumu ve tamamlanan her adımın sonucu olay geçmişinde kalıcıdır. Uçuş tutması hâlâ açıktır.",
+        "en": "Right then the orchestrator's process crashes. Everything in memory is lost, but the saga state and the result of every completed step are durable in the event history. The flight hold is still open."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["orch", "history"] },
+      "nodeStates": { "orch": { "status": "down", "badge": "✕" }, "history": { "status": "active" } },
+      "edgeStates": { "o-h": { "status": "idle" } },
+      "annotations": [
+        { "id": "durable", "x": 330, "y": 420, "text": { "tr": "durum kalıcı: geçmişte", "en": "state is durable: in history" }, "tone": "danger", "target": "orch" }
+      ]
+    },
+    {
+      "id": "resume",
+      "title": { "tr": "Geçmişten kaldığı yere", "en": "Resume from history" },
+      "narration": {
+        "tr": "Yeni bir işçi saga'yı devralır ve olay geçmişini yeniden oynatır: uçuş tutuldu, otel reddetti, telafi başladı. Tamamlanmış adımlar yeniden çalıştırılmaz; sonuçları geçmişten okunur. Temporal ve Cadence tam olarak bunu yapar.",
+        "en": "A new worker takes over the saga and replays the event history: flight held, hotel rejected, compensation started. Completed steps are not executed again; their results are read from history. Temporal and Cadence do exactly this."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["orch", "history"], "edges": ["o-h"] },
+      "nodeStates": { "orch": { "status": "active", "badge": "↻" }, "history": { "status": "idle" } },
+      "edgeStates": { "o-h": { "status": "active" } },
+      "packets": [
+        { "edge": "o-h", "direction": "backward", "shape": "square", "label": { "tr": "geçmiş", "en": "history" }, "durationMs": 700, "repeat": 3, "repeatGapMs": 200 }
+      ]
+    },
+    {
+      "id": "cancel-flight",
+      "title": { "tr": "Telafi: uçuşu iptal et", "en": "Compensate: cancel the flight" },
+      "narration": {
+        "tr": "Orkestratör CancelFlight'ı trip-77:cancel-flight anahtarıyla gönderir. Havayolu API'si ilk denemede 503 döner. Telafi başarısız olamaz: geri çekilmeyle yeniden denenir ve ikinci denemede koltuk serbest bırakılır.",
+        "en": "The orchestrator sends CancelFlight with key trip-77:cancel-flight. The airline API returns 503 on the first attempt. A compensation cannot give up: it is retried with backoff, and on the second attempt the seat is released."
+      },
+      "durationMs": 4200,
+      "highlight": { "nodes": ["orch", "flight"], "edges": ["o-flight"] },
+      "nodeStates": { "orch": { "status": "warning", "badge": "" }, "flight": { "status": "muted", "badge": "İPTAL" } },
+      "edgeStates": { "o-h": { "status": "idle" }, "o-flight": { "status": "active" } },
+      "packets": [
+        { "edge": "o-flight", "label": "CancelFlight", "durationMs": 900, "color": "warning" },
+        { "edge": "o-flight", "direction": "backward", "label": "503", "startAt": 1000, "durationMs": 800, "color": "danger" },
+        { "edge": "o-flight", "label": { "tr": "yeniden dene", "en": "retry" }, "startAt": 2000, "durationMs": 900 },
+        { "edge": "o-flight", "direction": "backward", "label": "CANCELLED", "startAt": 3000, "durationMs": 900, "color": "success" }
+      ]
+    },
+    {
+      "id": "done",
+      "title": { "tr": "Saga telafiyle tamamlandı", "en": "Saga completed by compensation" },
+      "narration": {
+        "tr": "Bütün borçlu telafiler tamamlandı; saga COMPENSATED olarak kapanır. Karttan hiç tahsilat yapılmadı çünkü ödeme, telafi edilebilir adımlardan sonraya konmuştu. Kullanıcıya otel bulunamadığı ve rezervasyonun iptal edildiği net bir mesajla bildirilir.",
+        "en": "All owed compensations are done; the saga closes as COMPENSATED. The card was never charged because payment was placed after the compensatable steps. The user is told clearly that no hotel was available and the booking was cancelled."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["user", "orch", "history"], "edges": ["u-o", "o-h"] },
+      "nodeStates": { "orch": { "status": "success" }, "history": { "status": "success", "badge": "COMPENSATED" } },
+      "edgeStates": { "o-flight": { "status": "idle" }, "o-h": { "status": "active" }, "u-o": { "status": "active" } },
+      "packets": [
+        { "edge": "o-h", "shape": "square", "label": "COMPENSATED", "durationMs": 900 },
+        { "edge": "u-o", "direction": "backward", "shape": "envelope", "label": { "tr": "otel yok · ücret alınmadı", "en": "no hotel · not charged" }, "startAt": 1100, "durationMs": 1500 }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["saga", "orchestration", "compensation", "idempotency", "durable-execution"]
+}

@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 470" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Orkestrasyonlu seyahat saga'sı</title>
+  <desc id="desc">Üstte ileri adımlar: uçuş tut, otel tut, araç tut, karttan tahsil et (pivot), biletleri kes. Altta ters sırada telafiler: araç iptal, otel iptal, uçuş iptal. Otel adımında zaman aşımı ve aynı idempotency anahtarıyla yeniden deneme gösteriliyor. Altta orkestratör durumunu ve sonraki komutu outbox ile aynı transaction'da kaydediyor.</desc>
+  <defs>
+    <marker id="sg-fwd" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-primary, #6366f1)"/>
+    </marker>
+    <marker id="sg-back" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-danger, #ef4444)"/>
+    </marker>
+  </defs>
+
+  <text x="30" y="34" font-size="13" font-weight="700" fill="var(--da-muted, #64748b)">İLERİ ADIMLAR</text>
+  <text x="30" y="250" font-size="13" font-weight="700" fill="var(--da-muted, #64748b)">TELAFİLER (ters sıra)</text>
+
+  <!-- Bölge ayrımı: telafi edilebilir | pivot | tekrarlanabilir -->
+  <rect x="20" y="44" width="500" height="150" rx="14" fill="var(--da-success, #10b981)" fill-opacity="0.06" stroke="var(--da-success, #10b981)" stroke-dasharray="6 4"/>
+  <text x="270" y="186" text-anchor="middle" font-size="11" fill="var(--da-success, #10b981)">telafi edilebilir</text>
+  <line x1="535" y1="40" x2="535" y2="330" stroke="var(--da-fg, #0f172a)" stroke-width="1.5" stroke-dasharray="4 4"/>
+  <text x="545" y="186" font-size="11" fill="var(--da-fg, #0f172a)">geri dönüş yok →</text>
+  <text x="780" y="186" text-anchor="middle" font-size="11" fill="var(--da-accent, #0ea5e9)">tekrarlanabilir</text>
+
+  <!-- İleri adımlar -->
+  <g font-size="12" text-anchor="middle" fill="var(--da-fg, #0f172a)">
+    <rect x="35" y="70" width="140" height="56" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-success, #10b981)" stroke-width="1.8"/>
+    <text x="105" y="94" font-weight="600">1 · Uçuş tut</text>
+    <text x="105" y="112" font-size="10" fill="var(--da-muted, #64748b)">key trip-77:flight ✓</text>
+
+    <rect x="200" y="70" width="140" height="56" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-danger, #ef4444)" stroke-width="1.8"/>
+    <text x="270" y="94" font-weight="600">2 · Otel tut</text>
+    <text x="270" y="112" font-size="10" fill="var(--da-danger, #ef4444)">NoAvailability ✕</text>
+
+    <rect x="365" y="70" width="140" height="56" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)" stroke-dasharray="5 3"/>
+    <text x="435" y="94" font-weight="600" fill="var(--da-muted, #64748b)">3 · Araç tut</text>
+    <text x="435" y="112" font-size="10" fill="var(--da-muted, #64748b)">çalışmadı</text>
+
+    <rect x="555" y="70" width="140" height="56" rx="10" fill="var(--da-warning, #d97706)" fill-opacity="0.12" stroke="var(--da-warning, #d97706)" stroke-width="1.8"/>
+    <text x="625" y="94" font-weight="600">4 · Tahsil et</text>
+    <text x="625" y="112" font-size="10" fill="var(--da-warning, #d97706)">pivot</text>
+
+    <rect x="720" y="70" width="150" height="56" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-accent, #0ea5e9)" stroke-width="1.8"/>
+    <text x="795" y="94" font-weight="600">5 · Biletleri kes</text>
+    <text x="795" y="112" font-size="10" fill="var(--da-muted, #64748b)">başarana kadar dene</text>
+  </g>
+  <g stroke="var(--da-primary, #6366f1)" stroke-width="1.8" fill="none" marker-end="url(#sg-fwd)">
+    <path d="M 175 98 L 196 98"/>
+    <path d="M 340 98 L 361 98"/>
+    <path d="M 505 98 L 551 98"/>
+    <path d="M 695 98 L 716 98"/>
+  </g>
+
+  <!-- Otel: zaman aşımı + yeniden deneme -->
+  <path d="M 240 70 C 240 40, 300 40, 300 68" fill="none" stroke="var(--da-warning, #d97706)" stroke-width="1.6" marker-end="url(#sg-fwd)"/>
+  <text x="270" y="38" text-anchor="middle" font-size="10" fill="var(--da-warning, #d97706)">timeout → aynı anahtarla tekrar</text>
+
+  <!-- Telafiler -->
+  <g font-size="12" text-anchor="middle" fill="var(--da-fg, #0f172a)">
+    <rect x="365" y="262" width="140" height="50" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)" stroke-dasharray="5 3"/>
+    <text x="435" y="285" fill="var(--da-muted, #64748b)">Araç iptal</text>
+    <text x="435" y="301" font-size="10" fill="var(--da-muted, #64748b)">gerekmez</text>
+    <rect x="200" y="262" width="140" height="50" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)" stroke-dasharray="5 3"/>
+    <text x="270" y="285" fill="var(--da-muted, #64748b)">Otel iptal</text>
+    <text x="270" y="301" font-size="10" fill="var(--da-muted, #64748b)">tutulmadı → gerekmez</text>
+    <rect x="35" y="262" width="140" height="50" rx="10" fill="var(--da-danger, #ef4444)" fill-opacity="0.10" stroke="var(--da-danger, #ef4444)" stroke-width="1.8"/>
+    <text x="105" y="285" font-weight="600">Uçuş iptal</text>
+    <text x="105" y="301" font-size="10" fill="var(--da-muted, #64748b)">503 → tekrar → ✓</text>
+  </g>
+  <path d="M 105 128 L 105 258" fill="none" stroke="var(--da-danger, #ef4444)" stroke-width="1.6" stroke-dasharray="4 3" marker-end="url(#sg-back)"/>
+  <path d="M 270 128 C 270 200, 140 200, 120 256" fill="none" stroke="var(--da-danger, #ef4444)" stroke-width="2" marker-end="url(#sg-back)"/>
+  <text x="200" y="225" text-anchor="middle" font-size="11" fill="var(--da-danger, #ef4444)">hata → tamamlanan adımları ters sırayla telafi et</text>
+
+  <!-- Orkestratör + outbox -->
+  <rect x="20" y="350" width="860" height="104" rx="14" fill="var(--da-surface, #f8fafc)" stroke="var(--da-border, #cbd5e1)"/>
+  <text x="40" y="374" font-size="12" font-weight="600" fill="var(--da-muted, #64748b)">Orkestratörün kalıcılığı</text>
+  <g font-size="11" text-anchor="middle" fill="var(--da-fg, #0f172a)">
+    <rect x="40" y="386" width="230" height="52" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-primary, #6366f1)"/>
+    <text x="155" y="407" font-weight="600">tek transaction</text>
+    <text x="155" y="425">saga_state = COMPENSATING</text>
+    <rect x="300" y="386" width="230" height="52" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-primary, #6366f1)"/>
+    <text x="415" y="407" font-weight="600">outbox</text>
+    <text x="415" y="425">CancelFlight(key=trip-77:cancel-flight)</text>
+    <rect x="570" y="386" width="290" height="52" rx="10" fill="var(--da-accent, #0ea5e9)" fill-opacity="0.10" stroke="var(--da-accent, #0ea5e9)"/>
+    <text x="715" y="407" font-weight="600">ya da dayanıklı yürütme</text>
+    <text x="715" y="425">Temporal / Cadence olay geçmişi · Step Functions</text>
+  </g>
+</svg>

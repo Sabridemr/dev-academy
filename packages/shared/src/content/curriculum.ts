@@ -276,6 +276,62 @@ export const CURRICULUM: CurriculumModule[] = [
           en: 'RPO/RTO, failover animation, data residency.',
         },
       ),
+      lesson(
+        'b',
+        5,
+        'modular-monolith',
+        {
+          tr: 'Modüler Monolit: Sınırlı Bağlamlar, Tek Dağıtım',
+          en: 'Modular Monolith: Bounded Contexts, Single Deploy',
+        },
+        {
+          tr: "Mikroservise geçmeden modül sınırları, iç API'ler, sınır ihlalinin CI'da yakalanması ve bir modülün servise ayrılması.",
+          en: 'Module boundaries without microservices, internal APIs, catching boundary violations in CI and extracting a module into a service.',
+        },
+        ['pipeline'],
+      ),
+      lesson(
+        'b',
+        6,
+        'hexagonal-clean-architecture',
+        {
+          tr: 'Hexagonal ve Clean Architecture: Port, Adaptör, Use Case',
+          en: 'Hexagonal and Clean Architecture: Ports, Adapters, Use Cases',
+        },
+        {
+          tr: 'Bağımlılık yönü, use case katmanı, sürücü ve sürülen adaptörler, veritabanını sahteyle değiştirerek test.',
+          en: 'Dependency direction, the use case layer, driving and driven adapters, testing by swapping the database for a fake.',
+        },
+        ['request-journey'],
+      ),
+      lesson(
+        'b',
+        7,
+        'event-sourcing-cqrs',
+        {
+          tr: 'Event Sourcing ve CQRS: Olay Deposu, Projeksiyon, Replay',
+          en: 'Event Sourcing and CQRS: Event Store, Projections, Replay',
+        },
+        {
+          tr: 'Olay deposu, projeksiyonlar, replay ve snapshot, okuma/yazma ayrımı, nihai tutarlılık ve ne zaman kullanılmaz.',
+          en: 'Event store, projections, replay and snapshots, read/write separation, eventual consistency and when not to use it.',
+        },
+        ['message-queue'],
+      ),
+      lesson(
+        'b',
+        8,
+        'saga-distributed-workflows',
+        {
+          tr: "Saga ve Dağıtık İş Akışları: Telafi, Zaman Aşımı, Orkestratör",
+          en: 'Sagas and Distributed Workflows: Compensation, Timeouts, Orchestrators',
+        },
+        {
+          tr: 'Koreografi ve orkestrasyon, telafi işlemleri, zaman aşımı, Temporal/Step Functions, idempotency ve outbox ile ilişki.',
+          en: 'Choreography and orchestration, compensating actions, timeouts, Temporal/Step Functions, and how idempotency and the outbox fit in.',
+        },
+        ['pipeline'],
+      ),
     ],
   },
   {
