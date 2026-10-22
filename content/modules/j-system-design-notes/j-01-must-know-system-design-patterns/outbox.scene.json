@@ -1,0 +1,204 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "j-01-transactional-outbox",
+  "title": { "tr": "Outbox Kalıbı: Yazma ve Olayı Birlikte Garantilemek", "en": "The Outbox Pattern: Guaranteeing the Write and the Event Together" },
+  "summary": {
+    "tr": "Sipariş satırı ve OrderCreated olayı aynı transaction'da yazılır; ayrı bir relay olayı Kafka'ya taşır; relay çökünce olay yeniden yayınlanır ve idempotent tüketici tekrarı ayıklar.",
+    "en": "The order row and the OrderCreated event are written in the same transaction; a separate relay moves the event to Kafka; when the relay crashes the event is republished and an idempotent consumer drops the duplicate."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda mobil istemci ve sipariş servisi, ortada tek bir PostgreSQL transaction'ı içinde orders ve outbox tabloları, sağ altta outbox relay işçisi, sağda Kafka ve iki tüketici (envanter, bildirim) bulunur. Sipariş servisi iki satırı tek transaction'da yazar ve çöker, ama olay outbox'ta güvendedir. Relay olayı okuyup Kafka'ya yayınlar, tüketiciler işler. Relay işaretlemeden önce çöküp olayı ikinci kez yayınlar; envanter servisi olay kimliğini daha önce işlediği için tekrarı atlar. Sonunda outbox satırı gönderildi olarak işaretlenir.",
+      "en": "The mobile client and the order service are on the left, the orders and outbox tables inside a single PostgreSQL transaction in the middle, the outbox relay worker at the bottom right, and Kafka with two consumers (inventory, notification) on the right. The order service writes both rows in one transaction and then crashes, but the event is safe in the outbox. The relay reads the event and publishes it to Kafka, and the consumers process it. The relay crashes before marking the row and publishes the event a second time; the inventory service skips the duplicate because it has already processed that event id. Finally the outbox row is marked as sent."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "client", "kind": "mobile", "label": { "tr": "Mobil uygulama", "en": "Mobile app" }, "x": 90, "y": 300, "w": 120, "h": 70 },
+    { "id": "order", "kind": "service", "label": { "tr": "Sipariş servisi", "en": "Order service" }, "x": 270, "y": 300, "w": 140, "h": 70 },
+    { "id": "tx", "kind": "group", "label": { "tr": "PostgreSQL — tek transaction", "en": "PostgreSQL — one transaction" }, "x": 500, "y": 300, "w": 220, "h": 340 },
+    { "id": "orders", "kind": "db", "label": "orders", "sublabel": { "tr": "iş verisi", "en": "business data" }, "x": 500, "y": 210, "w": 150, "h": 70, "parent": "tx" },
+    { "id": "outbox", "kind": "db", "label": "outbox", "sublabel": { "tr": "gönderilecek olaylar", "en": "events to send" }, "x": 500, "y": 390, "w": 150, "h": 70, "parent": "tx" },
+    { "id": "relay", "kind": "worker", "label": { "tr": "Outbox relay", "en": "Outbox relay" }, "sublabel": { "tr": "yoklar ve yayınlar", "en": "polls and publishes" }, "x": 720, "y": 500, "w": 140, "h": 64 },
+    { "id": "kafka", "kind": "queue", "label": "Kafka", "sublabel": { "tr": "topic: orders", "en": "topic: orders" }, "x": 740, "y": 300, "w": 120, "h": 64 },
+    { "id": "inv", "kind": "service", "label": { "tr": "Envanter", "en": "Inventory" }, "sublabel": { "tr": "idempotent tüketici", "en": "idempotent consumer" }, "x": 910, "y": 190, "w": 130, "h": 64 },
+    { "id": "ntf", "kind": "service", "label": { "tr": "Bildirim", "en": "Notification" }, "x": 910, "y": 410, "w": 130, "h": 64 }
+  ],
+  "edges": [
+    { "id": "client-order", "from": "client", "to": "order", "kind": "request", "label": "POST /orders" },
+    { "id": "order-orders", "from": "order", "to": "orders", "kind": "data", "curvature": -0.15 },
+    { "id": "order-outbox", "from": "order", "to": "outbox", "kind": "data", "curvature": 0.15 },
+    { "id": "outbox-relay", "from": "outbox", "to": "relay", "kind": "data", "curvature": 0.2 },
+    { "id": "relay-kafka", "from": "relay", "to": "kafka", "kind": "event" },
+    { "id": "kafka-inv", "from": "kafka", "to": "inv", "kind": "event", "curvature": -0.1 },
+    { "id": "kafka-ntf", "from": "kafka", "to": "ntf", "kind": "event", "curvature": 0.1 }
+  ],
+  "steps": [
+    {
+      "id": "request",
+      "title": { "tr": "Sipariş isteği gelir", "en": "The order request arrives" },
+      "narration": {
+        "tr": "Mobil uygulama `POST /orders` isteğini bir `Idempotency-Key` başlığıyla gönderir. Sipariş servisinin iki işi var: siparişi kaydetmek ve diğer servislere OrderCreated olayını duyurmak. Bu ikisini ayrı ayrı yapmak (önce veritabanı, sonra Kafka) dual write sorununu doğurur.",
+        "en": "The mobile app sends `POST /orders` with an `Idempotency-Key` header. The order service has two jobs: store the order and announce an OrderCreated event to the other services. Doing them separately (database first, then Kafka) creates the dual write problem."
+      },
+      "durationMs": 3500,
+      "inherit": false,
+      "highlight": { "nodes": ["client", "order"], "edges": ["client-order"] },
+      "nodeStates": { "order": { "status": "active" } },
+      "edgeStates": { "client-order": { "status": "active" } },
+      "packets": [{ "edge": "client-order", "shape": "envelope", "label": "order#9", "durationMs": 1200 }]
+    },
+    {
+      "id": "write-both",
+      "title": { "tr": "İki satır, tek transaction", "en": "Two rows, one transaction" },
+      "narration": {
+        "tr": "Servis `BEGIN` ile transaction açar; sipariş satırını `orders` tablosuna, olayı ise aynı transaction içinde `outbox` tablosuna yazar. Olay henüz Kafka'ya gitmez; yalnızca \"gönderilecek\" olarak veritabanında durur.",
+        "en": "The service opens a transaction with `BEGIN`; it writes the order row to the `orders` table and the event to the `outbox` table inside the same transaction. The event does not go to Kafka yet; it simply sits in the database as \"to be sent\"."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["order", "tx", "orders", "outbox"], "edges": ["order-orders", "order-outbox"] },
+      "nodeStates": {
+        "orders": { "status": "busy", "badge": "INSERT" },
+        "outbox": { "status": "busy", "badge": "INSERT" }
+      },
+      "edgeStates": { "client-order": { "status": "idle" }, "order-orders": { "status": "active" }, "order-outbox": { "status": "active" } },
+      "packets": [
+        { "edge": "order-orders", "shape": "square", "label": "order#9", "durationMs": 1200 },
+        { "edge": "order-outbox", "shape": "envelope", "label": "OrderCreated", "durationMs": 1200 }
+      ],
+      "annotations": [{ "id": "tx-note", "x": 500, "y": 525, "text": { "tr": "BEGIN … COMMIT: ya ikisi ya hiçbiri", "en": "BEGIN … COMMIT: both or neither" }, "target": "tx" }]
+    },
+    {
+      "id": "commit",
+      "title": { "tr": "COMMIT ve yanıt", "en": "COMMIT and response" },
+      "narration": {
+        "tr": "`COMMIT` iki satırı atomik olarak kalıcı yapar. Kullanıcıya hemen 201 döner; olayın yayınlanmasını beklemek zorunda değildir. Artık sipariş varsa olayı da vardır, sipariş yoksa olay da yoktur.",
+        "en": "`COMMIT` makes both rows durable atomically. The user gets a 201 right away; it does not have to wait for the event to be published. Now if the order exists its event exists too, and if not, neither does."
+      },
+      "durationMs": 3500,
+      "highlight": { "nodes": ["orders", "outbox", "client"], "edges": ["client-order"] },
+      "nodeStates": {
+        "orders": { "status": "success", "badge": "order#9" },
+        "outbox": { "status": "warning", "badge": "1 bekleyen" },
+        "client": { "status": "success", "badge": "201" }
+      },
+      "edgeStates": { "order-orders": { "status": "idle" }, "order-outbox": { "status": "idle" }, "client-order": { "status": "active" } },
+      "packets": [{ "edge": "client-order", "direction": "backward", "shape": "dot", "label": "201 Created", "durationMs": 1100 }]
+    },
+    {
+      "id": "service-crash",
+      "title": { "tr": "Servis çökse bile olay kaybolmaz", "en": "Even if the service crashes, the event is not lost" },
+      "narration": {
+        "tr": "Sipariş servisi tam bu anda çöksün. Dual write'ta bu, \"sipariş kaydedildi ama olay hiç gitmedi\" demekti: envanter düşülmez, kullanıcıya bildirim gitmez. Outbox'ta ise olay satırı zaten commit edilmiştir; onu taşıyacak olan servis değil, ayrı bir süreçtir.",
+        "en": "Let the order service crash right now. With dual writes this meant \"the order was saved but the event never went out\": stock is not reduced and the user gets no notification. With the outbox the event row is already committed; it is a separate process, not the service, that will deliver it."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["order", "outbox"], "edges": [] },
+      "nodeStates": { "order": { "status": "down", "badge": "çöktü" }, "client": { "status": "idle", "badge": "" } },
+      "edgeStates": { "client-order": { "status": "muted" } },
+      "annotations": [{ "id": "safe-note", "x": 300, "y": 470, "text": { "tr": "olay outbox'ta güvende", "en": "the event is safe in the outbox" }, "target": "outbox", "tone": "success" }]
+    },
+    {
+      "id": "relay-poll",
+      "title": { "tr": "Relay outbox'ı yoklar", "en": "The relay polls the outbox" },
+      "narration": {
+        "tr": "Outbox relay, gönderilmemiş satırları sırayla okur (`SELECT … WHERE sent_at IS NULL ORDER BY id`). Yoklama yerine Debezium gibi bir CDC aracı veritabanı günlüğünü de izleyebilir; fikir aynıdır: olayın kaynağı veritabanıdır.",
+        "en": "The outbox relay reads unsent rows in order (`SELECT … WHERE sent_at IS NULL ORDER BY id`). Instead of polling, a CDC tool such as Debezium can tail the database log; the idea is the same: the database is the source of the event."
+      },
+      "durationMs": 3500,
+      "highlight": { "nodes": ["outbox", "relay"], "edges": ["outbox-relay"] },
+      "nodeStates": { "relay": { "status": "active" }, "outbox": { "status": "warning" } },
+      "edgeStates": { "outbox-relay": { "status": "active" } },
+      "packets": [{ "edge": "outbox-relay", "shape": "envelope", "label": "e-77", "durationMs": 1200 }]
+    },
+    {
+      "id": "publish",
+      "title": { "tr": "Olay Kafka'ya yayınlanır", "en": "The event is published to Kafka" },
+      "narration": {
+        "tr": "Relay olayı benzersiz kimliğiyle (e-77) Kafka'daki orders topic'ine yazar. Kafka kaydı kalıcı log'a ekler ve offset verir. Bu noktadan sonra olay, tüketicilerin hızından bağımsız olarak saklanır.",
+        "en": "The relay writes the event with its unique id (e-77) to the orders topic in Kafka. Kafka appends the record to its durable log and assigns an offset. From now on the event is stored independently of how fast the consumers are."
+      },
+      "durationMs": 3500,
+      "highlight": { "nodes": ["relay", "kafka"], "edges": ["relay-kafka"] },
+      "nodeStates": { "kafka": { "status": "active", "badge": "offset 120" } },
+      "edgeStates": { "outbox-relay": { "status": "idle" }, "relay-kafka": { "status": "active" } },
+      "packets": [{ "edge": "relay-kafka", "shape": "envelope", "label": "e-77", "durationMs": 1200 }]
+    },
+    {
+      "id": "consume",
+      "title": { "tr": "Tüketiciler işler", "en": "Consumers process it" },
+      "narration": {
+        "tr": "Envanter ve bildirim servisleri olayı kendi hızlarında okur. Envanter stoğu düşer ve işlediği olay kimliğini (e-77) kendi veritabanındaki `processed_events` tablosuna yazar; bildirim servisi \"Siparişiniz alındı\" push'unu gönderir.",
+        "en": "The inventory and notification services read the event at their own pace. Inventory reduces stock and records the processed event id (e-77) in a `processed_events` table in its own database; the notification service sends the \"Order received\" push."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["kafka", "inv", "ntf"], "edges": ["kafka-inv", "kafka-ntf"] },
+      "nodeStates": {
+        "kafka": { "status": "idle" },
+        "inv": { "status": "success", "badge": "e-77 işlendi" },
+        "ntf": { "status": "success", "badge": "push" }
+      },
+      "edgeStates": { "relay-kafka": { "status": "idle" }, "kafka-inv": { "status": "active" }, "kafka-ntf": { "status": "active" } },
+      "packets": [
+        { "edge": "kafka-inv", "shape": "envelope", "label": "e-77", "durationMs": 1100 },
+        { "edge": "kafka-ntf", "shape": "envelope", "label": "e-77", "startAt": 400, "durationMs": 1100 }
+      ]
+    },
+    {
+      "id": "relay-crash",
+      "title": { "tr": "Relay işaretlemeden çöker", "en": "The relay crashes before marking" },
+      "narration": {
+        "tr": "Relay, Kafka'dan onay aldıktan sonra ama outbox satırını `sent_at = now()` ile işaretlemeden önce çöker. Satır hâlâ \"bekleyen\" görünür. Outbox kalıbı olayın kaybolmamasını garanti eder, tek sefer gitmesini değil: teslimat en az bir kezdir.",
+        "en": "The relay crashes after Kafka acknowledged the event but before it marked the outbox row with `sent_at = now()`. The row still looks \"pending\". The outbox pattern guarantees the event is not lost, not that it goes out exactly once: delivery is at least once."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["relay", "outbox"], "edges": [] },
+      "nodeStates": {
+        "relay": { "status": "error", "badge": "çöktü" },
+        "outbox": { "status": "warning", "badge": "hâlâ bekleyen" },
+        "inv": { "status": "idle" },
+        "ntf": { "status": "idle" }
+      },
+      "edgeStates": { "kafka-inv": { "status": "idle" }, "kafka-ntf": { "status": "idle" } },
+      "annotations": [{ "id": "alo-note", "x": 720, "y": 410, "text": { "tr": "en az bir kez teslimat", "en": "at-least-once delivery" }, "target": "relay", "tone": "warning" }]
+    },
+    {
+      "id": "duplicate",
+      "title": { "tr": "Tekrar gelir, idempotent tüketici atlar", "en": "A duplicate arrives, the idempotent consumer skips it" },
+      "narration": {
+        "tr": "Yeniden başlayan relay aynı satırı tekrar yayınlar; e-77 ikinci kez Kafka'ya ve tüketicilere ulaşır. Envanter servisi olay kimliğini `processed_events` tablosunda bulur ve stoğu ikinci kez düşmez. Outbox + idempotent tüketici birlikte \"etkide tam bir kez\" sonucunu verir.",
+        "en": "The restarted relay publishes the same row again; e-77 reaches Kafka and the consumers a second time. The inventory service finds the event id in its `processed_events` table and does not reduce stock twice. Outbox plus an idempotent consumer together give \"exactly once in effect\"."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["relay", "kafka", "inv"], "edges": ["relay-kafka", "kafka-inv"] },
+      "nodeStates": {
+        "relay": { "status": "active", "badge": "" },
+        "inv": { "status": "warning", "badge": "tekrar, atlandı" }
+      },
+      "edgeStates": { "relay-kafka": { "status": "active" }, "kafka-inv": { "status": "active" } },
+      "packets": [
+        { "edge": "relay-kafka", "shape": "envelope", "label": "e-77", "durationMs": 1100 },
+        { "edge": "kafka-inv", "shape": "envelope", "label": "e-77", "startAt": 1300, "durationMs": 1100 }
+      ]
+    },
+    {
+      "id": "mark-sent",
+      "title": { "tr": "Satır gönderildi olarak işaretlenir", "en": "The row is marked as sent" },
+      "narration": {
+        "tr": "Relay bu kez satırı işaretler; outbox'ta bekleyen olay kalmaz. Sipariş servisi de yeniden ayağa kalkmıştır. Özet: iş verisi ve olay tek transaction'da yazılır, taşıma ayrı bir süreçle yapılır, tekrarlar tüketicide olay kimliğiyle ayıklanır.",
+        "en": "This time the relay marks the row; no pending events remain in the outbox. The order service is back up as well. In short: business data and the event are written in one transaction, delivery is done by a separate process, and duplicates are filtered at the consumer by event id."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["outbox", "order"], "edges": ["outbox-relay"] },
+      "nodeStates": {
+        "outbox": { "status": "success", "badge": "0 bekleyen" },
+        "relay": { "status": "idle" },
+        "order": { "status": "idle", "badge": "" },
+        "inv": { "status": "success", "badge": "" }
+      },
+      "edgeStates": { "relay-kafka": { "status": "idle" }, "kafka-inv": { "status": "idle" }, "outbox-relay": { "status": "active" }, "client-order": { "status": "idle" } },
+      "packets": [{ "edge": "outbox-relay", "direction": "backward", "shape": "dot", "label": "sent_at", "durationMs": 1000 }]
+    }
+  ]
+}
