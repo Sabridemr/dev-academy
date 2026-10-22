@@ -1281,6 +1281,28 @@ export const CURRICULUM: CurriculumModule[] = [
       lesson('n', 7, 'threat-modeling', { tr: 'Tehdit Modelleme ve Güvenli Tasarım', en: 'Threat Modelling and Secure Design' }, { tr: 'STRIDE, saldırı yüzeyi, güven sınırları, gizli bilgi yönetimi ve tedarik zinciri güvenliği.', en: 'STRIDE, attack surface, trust boundaries, secrets management and supply-chain security.' }),
     ],
   },
+  {
+    id: 'q-distributed-advanced',
+    slug: 'distributed-advanced',
+    code: 'Q',
+    order: 17,
+    title: { tr: 'İleri Dağıtık Sistemler', en: 'Advanced Distributed Systems' },
+    description: {
+      tr: 'Zaman ve sıralama, Raft ile konsensüs, dağıtık kilitler, tutarlılık modelleri, CRDT\'ler ve dağıtık transaction\'lar: temellerden vakalara köprü.',
+      en: 'Time and ordering, consensus with Raft, distributed locks, consistency models, CRDTs and distributed transactions: the bridge from fundamentals to case studies.',
+    },
+    icon: 'network',
+    color: '#ca8a04',
+    group: 'system-design',
+    lessons: [
+      lesson('q', 1, 'time-and-ordering', { tr: 'Zaman ve Sıralama: Saat Kayması, Lamport ve Vektör Saatler', en: 'Time and Ordering: Clock Skew, Lamport and Vector Clocks' }, { tr: 'Dağıtık sistemde "önce ne oldu?" sorusu; fiziksel saatlerin kayması, happens-before, Lamport ve vektör saatler, TrueTime fikri.', en: 'The "what happened first?" question in distributed systems; physical clock skew, happens-before, Lamport and vector clocks, the TrueTime idea.' }),
+      lesson('q', 2, 'consensus-raft', { tr: 'Konsensüs ve Raft', en: 'Consensus and Raft' }, { tr: 'Lider seçimi, log replikasyonu, çoğunluk, terim numaraları ve ağ bölünmesinde Raft\'ın davranışı.', en: 'Leader election, log replication, majorities, terms and how Raft behaves during a network partition.' }, ['cap-theorem']),
+      lesson('q', 3, 'distributed-locks-leases', { tr: 'Dağıtık Kilit, Lease ve Fencing Token', en: 'Distributed Locks, Leases and Fencing Tokens' }, { tr: 'ZooKeeper/etcd lease\'leri, pratikte lider seçimi, fencing token, Redlock tartışması ve süresi dolan kilidin tehlikesi.', en: 'ZooKeeper/etcd leases, leader election in practice, fencing tokens, the Redlock debate and the danger of an expired lock.' }),
+      lesson('q', 4, 'consistency-models', { tr: 'Tutarlılık Modelleri', en: 'Consistency Models' }, { tr: 'Linearizability, sequential, causal ve eventual tutarlılık; read-your-writes ve monotonic reads gibi oturum garantileri.', en: 'Linearizability, sequential, causal and eventual consistency; session guarantees such as read-your-writes and monotonic reads.' }, ['replication-quorum']),
+      lesson('q', 5, 'crdts-offline-collaboration', { tr: 'CRDT\'ler ve Çevrimdışı İş Birliği', en: 'CRDTs and Offline Collaboration' }, { tr: 'G-Counter, PN-Counter, LWW-Register, OR-Set ve metin CRDT\'leri; Figma ve Google Docs\'un eşzamanlı düzenleme yaklaşımları.', en: 'G-Counter, PN-Counter, LWW-Register, OR-Set and text CRDTs; how Figma and Google Docs handle concurrent editing.' }, ['cap-theorem']),
+      lesson('q', 6, 'distributed-transactions', { tr: 'Dağıtık Transaction\'lar: 2PC, Saga, Outbox ve TCC', en: 'Distributed Transactions: 2PC, Saga, Outbox and TCC' }, { tr: 'İki aşamalı commit ve koordinatör çökmesi, saga ile telafi, outbox, idempotency ve TCC; hangisi ne zaman.', en: 'Two-phase commit and coordinator failure, compensation with sagas, the outbox, idempotency and TCC; which one when.' }, ['message-queue']),
+    ],
+  },
 ];
 
 export const LEARNING_PATHS: LearningPathManifest[] = [

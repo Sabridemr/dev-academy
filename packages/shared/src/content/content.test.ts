@@ -244,8 +244,8 @@ describe('Quiz şeması', () => {
 });
 
 describe('Müfredat', () => {
-  it('14 modül ve benzersiz ders id’leri', () => {
-    expect(CURRICULUM).toHaveLength(14);
+  it('15 modül ve benzersiz ders id’leri', () => {
+    expect(CURRICULUM).toHaveLength(15);
     const ids = allLessons().map((x) => x.lesson.id);
     expect(new Set(ids).size).toBe(ids.length);
     expect(TOTAL_LESSON_COUNT).toBe(ids.length);
@@ -257,6 +257,7 @@ describe('Müfredat', () => {
     expect(nextLessonOf('g-08-nn-playground')?.id).toBe('h-01-linux-notes');
     expect(nextLessonOf('j-11-odunlesimler-mulakat-ve-ozet')?.id).toBe('k-01-python-nasil-calisir');
     expect(nextLessonOf('k-19-testler-ve-mini-proje')?.id).toBe('l-01-big-o-complexity');
-    expect(nextLessonOf('n-07-threat-modeling')).toBeUndefined();
+    expect(nextLessonOf('n-07-threat-modeling')?.id).toBe('q-01-time-and-ordering');
+    expect(nextLessonOf('q-06-distributed-transactions')).toBeUndefined();
   });
 });
