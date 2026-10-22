@@ -58,10 +58,12 @@ function yamlFlowItem(s: string): string {
     : JSON.stringify(s);
 }
 
-function yamlLocalized(key: string, v: LocalizedString): string {
-  if (typeof v === 'string') return `${key}: ${yamlString(v)}`;
-  const lines = [`${key}:`, `  tr: ${yamlString(v.tr)}`];
-  if (v.en !== undefined) lines.push(`  en: ${yamlString(v.en)}`);
+/** `quoted`: mevcut derslerdeki gibi başlıklar her zaman çift tırnaklı yazılır */
+function yamlLocalized(key: string, v: LocalizedString, quoted = false): string {
+  const str = (x: string) => (quoted ? JSON.stringify(x) : yamlString(x));
+  if (typeof v === 'string') return `${key}: ${str(v)}`;
+  const lines = [`${key}:`, `  tr: ${str(v.tr)}`];
+  if (v.en !== undefined) lines.push(`  en: ${str(v.en)}`);
   return lines.join('\n');
 }
 
@@ -72,7 +74,7 @@ export function serializeFrontmatter(meta: LessonFrontmatter): string {
     `slug: ${yamlString(meta.slug)}`,
     `module: ${yamlString(meta.module)}`,
     `order: ${meta.order}`,
-    yamlLocalized('title', meta.title),
+    yamlLocalized('title', meta.title, true),
     yamlLocalized('summary', meta.summary),
     `durationMinutes: ${meta.durationMinutes}`,
     `level: ${meta.level}`,
