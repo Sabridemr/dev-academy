@@ -40,6 +40,20 @@ Kural şudur: bir şeyi kodla kontrol edebiliyorsanız modelle kontrol etmeyin. 
 Değerlendirme bir döngüdür: üretimde yakalanan her hata altın veri setine bir test olarak geri döner.
 :::
 
+Bu döngüyü tek bir değişiklik üzerinden izleyelim: bir prompt değişikliği CI'da altın veri setiyle çalışıyor, ortalama yükseliyor ama bir kırılım geriliyor.
+
+:::predict{id="ci-kapisi-kirilim"}
+Yeni prompt sürümünde ortalama puan önceki sürümden yüksek, ama "iade" etiketli sorularda belirlenen paydan fazla gerileme var. CI kapısı ne yapmalı? | In the new prompt version the average score beats the previous one, but questions labelled "returns" regress by more than the agreed margin. What should the CI gate do?
+- [ ] Ortalama yükseldiği için geçirmeli | Pass, because the average went up
+- [x] Kırılımdaki gerileme eşiği aştığı için durdurmalı | Block, because the slice regression exceeds the threshold
+- [ ] Testi tekrar çalıştırıp geçen sonucu kabul etmeli | Rerun the tests and accept whichever run passes
+Açıklama: Ortalama, belirli bir soru tipindeki çöküşü gizleyebilir. Kapı toplu eşiklere ve etiket kırılımlarına bağlanır; geçene kadar yeniden çalıştırmak ise olasılıksal sonuçları kendi lehine okumaktır. | An average can hide a collapse in one question type. The gate is tied to aggregate thresholds and label slices; rerunning until it passes just reads probabilistic results in your favour.
+:::
+
+:::animation{scene="eval-pipeline.scene.json"}
+Değişiklik CI'ı tetikler; kural kontrolleri ve LLM yargıcı puanlar, kırılımdaki gerileme kapıyı kapatır, düzeltme sonrası kademeli dağıtım yapılır ve üretimdeki hata veri setine döner.
+:::
+
 ## Altın veri seti nasıl kurulur?
 
 **Altın veri seti (golden dataset)**, girdileri ve mümkünse beklenen çıktıları ya da değerlendirme ölçütleri belirlenmiş örnekler koleksiyonudur. Büyük olması gerekmez; iyi seçilmiş 50–200 örnek, rastgele seçilmiş binlerce örnekten daha değerlidir. Başlangıç için üç kaynak kullanılır:
@@ -120,6 +134,10 @@ def test_rag_case(case):
 Altın veri seti hazır olduğunda onu her prompt, model, chunk ayarı ya da kod değişikliğinde çalıştırmak gerekir. Ancak LLM testleri klasik testlerden iki noktada ayrılır. Birincisi, sonuçlar olasılıksaldır; tek bir örneğin bir çalıştırmada geçip diğerinde kalması normaldir. Bu yüzden kararı tek tek testlere değil, **toplu eşiklere** bağlayın: "sadakat oranı %95'in, context recall %90'ın altına düşmesin ve önceki sürüme göre hiçbir etiket kırılımında beş puandan fazla gerileme olmasın." İkincisi maliyet ve süredir; yüzlerce LLM yargıcı çağrısı her commit'te çalıştırılamayabilir. Yaygın çözüm, her pull request'te küçük ve hızlı bir alt kümeyi, gece ya da sürüm öncesinde tam seti çalıştırmaktır.
 
 Sonuçları bir tabloya değil, karşılaştırmaya dönüştürün. "Yeni sürüm %87" bilgisi tek başına anlamsızdır; "eski sürüm %84, yeni sürüm %87; dört örnek düzeldi, bir örnek bozuldu, bozulan şu" bilgisi karar vermenizi sağlar. Bozulan örnekleri tek tek okumak, ortalama puana bakmaktan çok daha fazla şey öğretir.
+
+:::interactive{type="prompt-playground" preset="classify" temperature=0.8}
+Değerlendirmenin neden tek bir çalıştırmaya güvenemeyeceğini kendiniz görün. "Sınıflandır" şablonuyla, sıcaklık 0,8'deyken "Çalıştır"a basın; ardından "Yeni tohum" ile birkaç kez daha çalıştırıp çıktıdaki kelimelerin nasıl değiştiğini izleyin. Sonra sıcaklığı 0'a çekin ve aynı tohumla çıktının birebir tekrarlandığını doğrulayın. Son olarak "Yapılandırılmış çıktı (JSON)" anahtarını açın: serbest metin yerine JSON dönen bir çıktı, LLM yargıcına gerek kalmadan şema ve etiket eşleşmesi gibi deterministik kontrollerle puanlanabilir.
+:::
 
 ## Çevrimiçi değerlendirme
 

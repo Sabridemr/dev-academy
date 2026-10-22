@@ -1,0 +1,634 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "n-04-policy-decision",
+  "title": {
+    "tr": "PEP ve PDP: İzin mi, Ret mi?",
+    "en": "PEP and PDP: Allow or Deny?"
+  },
+  "summary": {
+    "tr": "Aynı belgeye iki editör istek atar. PEP özne, eylem, kaynak ve bağlamı toplayıp PDP'ye sorar; PDP politika deposu ve öznitelik kaynağıyla RBAC ve ABAC kurallarını değerlendirir. Ekip eşleşince izin, eşleşmeyince ret; kural yoksa varsayılan ret, açık ret ise her izni ezer.",
+    "en": "Two editors request the same document. The PEP gathers subject, action, resource and context and asks the PDP; the PDP evaluates RBAC and ABAC rules with the policy store and an attribute source. Matching team means allow, otherwise deny; no matching rule means default deny, and an explicit deny overrides any allow."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda üstte Ayşe (editör, ekip A), altta Mehmet (editör, ekip B) bulunur. Ortada politika uygulama noktası PEP, sağında politika karar noktası PDP, PDP'nin üstünde politika deposu, altında belge özniteliklerini sağlayan PIP ve en sağda 42 numaralı belge vardır. Ayşe belgeyi düzenlemek ister; PEP soruyu PDP'ye iletir, PDP kuralları ve belgenin ekibini alır, rol ve ekip koşulu sağlandığı için izin verir ve belge güncellenir. Mehmet aynı isteği yapar; rolü yeterlidir ama ekip koşulu tutmaz ve 403 alır. Mehmet'in silme isteğine hiçbir kural uymaz ve varsayılan ret uygulanır. Son adımda Ayşe şirket ağı dışından bağlanır; bağlama dayalı açık ret kuralı, rol izninin önüne geçer.",
+      "en": "At the top left is Ayşe (editor, team A), below her Mehmet (editor, team B). In the middle the policy enforcement point PEP, to its right the policy decision point PDP, the policy store above the PDP, the PIP providing document attributes below it and document 42 at the far right. Ayşe wants to edit the document; the PEP forwards the question to the PDP, which loads the rules and the document's team, allows it because both role and team conditions hold, and the document is updated. Mehmet makes the same request; his role is sufficient but the team condition fails and he gets 403. No rule matches Mehmet's delete request and default deny applies. In the last step Ayşe connects from outside the company network; a context-based explicit deny rule takes precedence over the role permission."
+    }
+  },
+  "canvas": {
+    "width": 1000,
+    "height": 600
+  },
+  "nodes": [
+    {
+      "id": "ayse",
+      "kind": "user",
+      "label": "Ayşe",
+      "sublabel": {
+        "tr": "editör · ekip A",
+        "en": "editor · team A"
+      },
+      "x": 90,
+      "y": 170,
+      "w": 120,
+      "h": 76
+    },
+    {
+      "id": "mehmet",
+      "kind": "user",
+      "label": "Mehmet",
+      "sublabel": {
+        "tr": "editör · ekip B",
+        "en": "editor · team B"
+      },
+      "x": 90,
+      "y": 430,
+      "w": 120,
+      "h": 76
+    },
+    {
+      "id": "pep",
+      "kind": "gateway",
+      "label": "PEP",
+      "sublabel": {
+        "tr": "API ara katmanı",
+        "en": "API middleware"
+      },
+      "x": 330,
+      "y": 300,
+      "w": 140,
+      "h": 80
+    },
+    {
+      "id": "pdp",
+      "kind": "service",
+      "label": "PDP",
+      "sublabel": {
+        "tr": "politika motoru",
+        "en": "policy engine"
+      },
+      "x": 620,
+      "y": 300,
+      "w": 150,
+      "h": 84
+    },
+    {
+      "id": "policy",
+      "kind": "storage",
+      "label": {
+        "tr": "Politika deposu",
+        "en": "Policy store"
+      },
+      "sublabel": {
+        "tr": "git + test",
+        "en": "git + tests"
+      },
+      "x": 620,
+      "y": 90,
+      "w": 160,
+      "h": 70
+    },
+    {
+      "id": "pip",
+      "kind": "db",
+      "label": "PIP",
+      "sublabel": {
+        "tr": "belge öznitelikleri",
+        "en": "document attributes"
+      },
+      "x": 620,
+      "y": 510,
+      "w": 160,
+      "h": 70
+    },
+    {
+      "id": "doc",
+      "kind": "db",
+      "label": {
+        "tr": "Belge #42",
+        "en": "Document #42"
+      },
+      "sublabel": {
+        "tr": "ekip A · taslak",
+        "en": "team A · draft"
+      },
+      "x": 890,
+      "y": 300,
+      "w": 140,
+      "h": 76
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-ayse-pep",
+      "from": "ayse",
+      "to": "pep",
+      "kind": "request"
+    },
+    {
+      "id": "e-mehmet-pep",
+      "from": "mehmet",
+      "to": "pep",
+      "kind": "request"
+    },
+    {
+      "id": "e-pep-pdp",
+      "from": "pep",
+      "to": "pdp",
+      "kind": "request",
+      "label": {
+        "tr": "karar?",
+        "en": "decision?"
+      }
+    },
+    {
+      "id": "e-policy-pdp",
+      "from": "policy",
+      "to": "pdp",
+      "kind": "data"
+    },
+    {
+      "id": "e-pip-pdp",
+      "from": "pip",
+      "to": "pdp",
+      "kind": "data"
+    },
+    {
+      "id": "e-pep-doc",
+      "from": "pep",
+      "to": "doc",
+      "kind": "request",
+      "curvature": -0.35
+    }
+  ],
+  "steps": [
+    {
+      "id": "request",
+      "title": {
+        "tr": "Ayşe düzenleme ister",
+        "en": "Ayşe asks to edit"
+      },
+      "narration": {
+        "tr": "Ayşe kimliği doğrulanmış bir istekle 42 numaralı belgeyi güncellemek ister. PEP isteği karşılar ama kararı kendisi vermez.",
+        "en": "Ayşe sends an authenticated request to update document 42. The PEP receives it but does not decide on its own."
+      },
+      "durationMs": 2800,
+      "inherit": false,
+      "highlight": {
+        "nodes": [
+          "ayse",
+          "pep"
+        ],
+        "edges": [
+          "e-ayse-pep"
+        ]
+      },
+      "nodeStates": {
+        "ayse": {
+          "status": "active"
+        },
+        "pep": {
+          "status": "active",
+          "badge": "kimlik ✓"
+        },
+        "mehmet": {
+          "status": "idle"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-ayse-pep",
+          "shape": "envelope",
+          "label": "PUT /docs/42",
+          "durationMs": 1100
+        }
+      ]
+    },
+    {
+      "id": "ask",
+      "title": {
+        "tr": "PEP dört parçayı sorar",
+        "en": "The PEP asks with four parts"
+      },
+      "narration": {
+        "tr": "PEP özneyi (Ayşe, editör, ekip A), eylemi (düzenle), kaynağı (belge 42) ve bağlamı (şirket ağı, MFA yapılmış) toplayıp PDP'ye gönderir.",
+        "en": "The PEP gathers the subject (Ayşe, editor, team A), action (edit), resource (document 42) and context (company network, MFA done) and sends them to the PDP."
+      },
+      "durationMs": 3000,
+      "highlight": {
+        "nodes": [
+          "pep",
+          "pdp"
+        ],
+        "edges": [
+          "e-pep-pdp"
+        ]
+      },
+      "nodeStates": {
+        "pdp": {
+          "status": "busy"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-pep-pdp",
+          "shape": "square",
+          "label": {
+            "tr": "özne, eylem, kaynak, bağlam",
+            "en": "subject, action, resource, context"
+          },
+          "durationMs": 1400
+        }
+      ]
+    },
+    {
+      "id": "load",
+      "title": {
+        "tr": "Kurallar ve öznitelikler",
+        "en": "Rules and attributes"
+      },
+      "narration": {
+        "tr": "PDP sürümlenmiş politikaları depodan, belgenin ekibini ve durumunu PIP'ten alır. Politika kodla aynı depoda durur ve testlerle korunur.",
+        "en": "The PDP loads versioned policies from the store and the document's team and status from the PIP. Policies live in the same repository as code and are covered by tests."
+      },
+      "durationMs": 3200,
+      "highlight": {
+        "nodes": [
+          "policy",
+          "pip",
+          "pdp"
+        ],
+        "edges": [
+          "e-policy-pdp",
+          "e-pip-pdp"
+        ]
+      },
+      "nodeStates": {
+        "policy": {
+          "status": "active",
+          "badge": "v12"
+        },
+        "pip": {
+          "status": "active",
+          "badge": "ekip=A, taslak"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-policy-pdp",
+          "shape": "square",
+          "label": {
+            "tr": "kurallar",
+            "en": "rules"
+          },
+          "durationMs": 1000
+        },
+        {
+          "edge": "e-pip-pdp",
+          "shape": "square",
+          "label": "team=A",
+          "durationMs": 1000
+        }
+      ]
+    },
+    {
+      "id": "rbac",
+      "title": {
+        "tr": "RBAC: rol izni",
+        "en": "RBAC: role permission"
+      },
+      "narration": {
+        "tr": "İlk koşul rol tabanlıdır: editör rolünün belgeleri düzenleme izni var mı? Var. Ama tek başına bu, her ekibin taslağını düzenlemeye izin verirdi.",
+        "en": "The first condition is role based: does the editor role have permission to edit documents? Yes. On its own, though, that would allow editing every team's drafts."
+      },
+      "durationMs": 2800,
+      "highlight": {
+        "nodes": [
+          "pdp"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "pdp": {
+          "status": "busy",
+          "badge": "rol: editör ✓"
+        },
+        "policy": {
+          "status": "idle"
+        },
+        "pip": {
+          "status": "idle"
+        }
+      },
+      "annotations": [
+        {
+          "id": "a-rbac",
+          "x": 620,
+          "y": 200,
+          "text": {
+            "tr": "RBAC: editör → düzenle",
+            "en": "RBAC: editor → edit"
+          },
+          "tone": "info",
+          "target": "pdp"
+        }
+      ]
+    },
+    {
+      "id": "allow",
+      "title": {
+        "tr": "ABAC: ekip eşleşir → izin",
+        "en": "ABAC: team matches → allow"
+      },
+      "narration": {
+        "tr": "İkinci koşul özniteliklere bakar: özne.ekip = kaynak.ekip ve kaynak.durum = taslak. İkisi de doğru; PDP izin döndürür, PEP isteği belgeye iletir.",
+        "en": "The second condition looks at attributes: subject.team = resource.team and resource.status = draft. Both hold; the PDP returns allow and the PEP forwards the request to the document."
+      },
+      "durationMs": 3600,
+      "highlight": {
+        "nodes": [
+          "pdp",
+          "pep",
+          "doc"
+        ],
+        "edges": [
+          "e-pep-pdp",
+          "e-pep-doc"
+        ]
+      },
+      "nodeStates": {
+        "pdp": {
+          "status": "success",
+          "badge": "İZİN"
+        },
+        "doc": {
+          "status": "success",
+          "badge": "güncellendi"
+        },
+        "ayse": {
+          "status": "success"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-pep-pdp",
+          "direction": "backward",
+          "shape": "diamond",
+          "label": "allow",
+          "color": "success",
+          "durationMs": 900
+        },
+        {
+          "edge": "e-pep-doc",
+          "shape": "envelope",
+          "label": {
+            "tr": "güncelle",
+            "en": "update"
+          },
+          "startAt": 1100,
+          "durationMs": 1100
+        },
+        {
+          "edge": "e-ayse-pep",
+          "direction": "backward",
+          "shape": "dot",
+          "label": "200",
+          "color": "success",
+          "startAt": 2400,
+          "durationMs": 900
+        }
+      ]
+    },
+    {
+      "id": "deny-team",
+      "title": {
+        "tr": "Mehmet: ekip tutmaz → 403",
+        "en": "Mehmet: team mismatch → 403"
+      },
+      "narration": {
+        "tr": "Mehmet de editördür ve aynı isteği atar. RBAC koşulu sağlanır, ama özne.ekip = B, kaynak.ekip = A. PDP ret döndürür; Mehmet 403 alır ve belgeye hiç dokunulmaz.",
+        "en": "Mehmet is an editor too and sends the same request. The RBAC condition holds, but subject.team = B, resource.team = A. The PDP returns deny; Mehmet gets 403 and the document is never touched."
+      },
+      "durationMs": 4200,
+      "highlight": {
+        "nodes": [
+          "mehmet",
+          "pep",
+          "pdp"
+        ],
+        "edges": [
+          "e-mehmet-pep",
+          "e-pep-pdp",
+          "e-pip-pdp"
+        ]
+      },
+      "nodeStates": {
+        "ayse": {
+          "status": "idle"
+        },
+        "mehmet": {
+          "status": "active"
+        },
+        "doc": {
+          "status": "idle"
+        },
+        "pdp": {
+          "status": "error",
+          "badge": "ekip B ≠ A"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-mehmet-pep",
+          "shape": "envelope",
+          "label": "PUT /docs/42",
+          "durationMs": 900
+        },
+        {
+          "edge": "e-pep-pdp",
+          "shape": "dot",
+          "label": {
+            "tr": "karar?",
+            "en": "decision?"
+          },
+          "startAt": 1000,
+          "durationMs": 800
+        },
+        {
+          "edge": "e-pip-pdp",
+          "shape": "square",
+          "label": "team=A",
+          "startAt": 1000,
+          "durationMs": 800
+        },
+        {
+          "edge": "e-pep-pdp",
+          "direction": "backward",
+          "shape": "diamond",
+          "label": "deny",
+          "color": "danger",
+          "startAt": 2000,
+          "durationMs": 800
+        },
+        {
+          "edge": "e-mehmet-pep",
+          "direction": "backward",
+          "shape": "dot",
+          "label": "403",
+          "color": "danger",
+          "startAt": 2900,
+          "durationMs": 900
+        }
+      ]
+    },
+    {
+      "id": "default-deny",
+      "title": {
+        "tr": "Kural yoksa: varsayılan ret",
+        "en": "No rule: default deny"
+      },
+      "narration": {
+        "tr": "Mehmet belgeyi silmeyi dener. Politikada editörlere silme izni veren hiçbir kural yoktur. Varsayılan ret sayesinde unutulmuş bir kural açık bir kapı değil, reddedilen bir istek olarak ortaya çıkar.",
+        "en": "Mehmet tries to delete the document. No policy rule grants editors delete. Thanks to default deny, a forgotten rule shows up as a rejected request rather than an open door."
+      },
+      "durationMs": 3400,
+      "highlight": {
+        "nodes": [
+          "mehmet",
+          "pdp"
+        ],
+        "edges": [
+          "e-mehmet-pep",
+          "e-pep-pdp"
+        ]
+      },
+      "nodeStates": {
+        "pdp": {
+          "status": "error",
+          "badge": "eşleşen kural yok"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-mehmet-pep",
+          "shape": "envelope",
+          "label": "DELETE /docs/42",
+          "durationMs": 900
+        },
+        {
+          "edge": "e-pep-pdp",
+          "direction": "backward",
+          "shape": "diamond",
+          "label": "deny",
+          "color": "danger",
+          "startAt": 1100,
+          "durationMs": 800
+        },
+        {
+          "edge": "e-mehmet-pep",
+          "direction": "backward",
+          "shape": "dot",
+          "label": "403",
+          "color": "danger",
+          "startAt": 2100,
+          "durationMs": 900
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a-default",
+          "x": 620,
+          "y": 410,
+          "text": {
+            "tr": "varsayılan ret",
+            "en": "default deny"
+          },
+          "tone": "warning",
+          "target": "pdp"
+        }
+      ]
+    },
+    {
+      "id": "explicit-deny",
+      "title": {
+        "tr": "Açık ret izni ezer",
+        "en": "Explicit deny overrides allow"
+      },
+      "narration": {
+        "tr": "Ayşe bu kez şirket ağı dışından bağlanır. Rol ve ekip koşulları yine sağlanır, ama \"taslaklar şirket ağı dışından düzenlenemez\" diyen bağlam kuralı açık bir rettir. Çakışmada ret kazanır.",
+        "en": "This time Ayşe connects from outside the company network. Role and team conditions still hold, but the context rule \"drafts cannot be edited from outside the company network\" is an explicit deny. In a conflict, deny wins."
+      },
+      "durationMs": 3800,
+      "highlight": {
+        "nodes": [
+          "ayse",
+          "pep",
+          "pdp"
+        ],
+        "edges": [
+          "e-ayse-pep",
+          "e-pep-pdp"
+        ]
+      },
+      "nodeStates": {
+        "mehmet": {
+          "status": "idle"
+        },
+        "ayse": {
+          "status": "warning",
+          "badge": "dış ağ"
+        },
+        "pdp": {
+          "status": "error",
+          "badge": "açık ret > izin"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-ayse-pep",
+          "shape": "envelope",
+          "label": "PUT /docs/42",
+          "durationMs": 900
+        },
+        {
+          "edge": "e-pep-pdp",
+          "shape": "square",
+          "label": {
+            "tr": "bağlam: dış ağ",
+            "en": "context: external"
+          },
+          "startAt": 1000,
+          "durationMs": 900
+        },
+        {
+          "edge": "e-pep-pdp",
+          "direction": "backward",
+          "shape": "diamond",
+          "label": "deny",
+          "color": "danger",
+          "startAt": 2100,
+          "durationMs": 800
+        },
+        {
+          "edge": "e-ayse-pep",
+          "direction": "backward",
+          "shape": "dot",
+          "label": "403",
+          "color": "danger",
+          "startAt": 3000,
+          "durationMs": 800
+        }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": [
+    "authorization",
+    "rbac",
+    "abac",
+    "policy-engine",
+    "default-deny"
+  ]
+}
