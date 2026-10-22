@@ -1281,6 +1281,30 @@ export const CURRICULUM: CurriculumModule[] = [
       lesson('n', 7, 'threat-modeling', { tr: 'Tehdit Modelleme ve Güvenli Tasarım', en: 'Threat Modelling and Secure Design' }, { tr: 'STRIDE, saldırı yüzeyi, güven sınırları, gizli bilgi yönetimi ve tedarik zinciri güvenliği.', en: 'STRIDE, attack surface, trust boundaries, secrets management and supply-chain security.' }),
     ],
   },
+  {
+    id: 'o-network-os',
+    slug: 'network-os',
+    code: 'O',
+    order: 15,
+    title: { tr: 'Ağ ve İşletim Sistemi Temelleri', en: 'Networking and Operating System Fundamentals' },
+    description: {
+      tr: 'TCP/UDP, DNS, TLS ve HTTP sürümlerinden süreçlere, sanal belleğe, dosya I/O\'suna ve konteynerlerin altındaki namespace ve cgroup\'lara: backend ve DevOps\'un altında yatan katman.',
+      en: 'From TCP/UDP, DNS, TLS and HTTP versions to processes, virtual memory, file I/O and the namespaces and cgroups beneath containers: the layer underneath backend and DevOps.',
+    },
+    icon: 'cpu',
+    color: '#0891b2',
+    group: 'infrastructure',
+    lessons: [
+      lesson('o', 1, 'tcp-udp', { tr: 'TCP ve UDP: Güvenilir Akış ve Hızlı Datagram', en: 'TCP and UDP: Reliable Streams and Fast Datagrams' }, { tr: 'Üçlü el sıkışma, sıra numaraları, yeniden iletim, akış ve tıkanıklık kontrolü; UDP ne zaman doğru seçimdir.', en: 'The three-way handshake, sequence numbers, retransmission, flow and congestion control; when UDP is the right choice.' }, ['request-journey']),
+      lesson('o', 2, 'dns-ip', { tr: 'DNS ve IP: Çözümleme Zinciri, Adresler ve NAT', en: 'DNS and IP: The Resolution Chain, Addresses and NAT' }, { tr: 'Recursive → root → TLD → authoritative zinciri, TTL ve önbellek, IPv4/IPv6, özel ağlar ve NAT.', en: 'The recursive → root → TLD → authoritative chain, TTL and caching, IPv4/IPv6, private networks and NAT.' }, ['request-journey']),
+      lesson('o', 3, 'tls-https', { tr: 'TLS ve HTTPS: Sertifikalar ve Şifreli Kanal', en: 'TLS and HTTPS: Certificates and the Encrypted Channel' }, { tr: 'Sertifika ve CA zinciri, asimetrikten simetrik oturum anahtarına el sıkışma, TLS 1.3 ve Let\'s Encrypt ile otomatik sertifika.', en: 'Certificates and the CA chain, the handshake from asymmetric keys to a symmetric session key, TLS 1.3 and automated certificates with Let\'s Encrypt.' }),
+      lesson('o', 4, 'http-versions', { tr: 'HTTP/1.1, HTTP/2 ve HTTP/3', en: 'HTTP/1.1, HTTP/2 and HTTP/3' }, { tr: 'Keep-alive, head-of-line blocking, multiplexing ve QUIC: aynı istekler üç protokolde nasıl taşınır.', en: 'Keep-alive, head-of-line blocking, multiplexing and QUIC: how the same requests travel over three protocols.' }, ['request-journey']),
+      lesson('o', 5, 'processes-threads', { tr: 'Süreçler ve Thread\'ler: Zamanlayıcı ve Yarış Koşulları', en: 'Processes and Threads: The Scheduler and Race Conditions' }, { tr: 'Süreç yaşam döngüsü, fork/exec, context switch, CPU zamanlayıcısı, thread\'ler ve yarış koşulları; GIL\'e köprü.', en: 'Process lifecycle, fork/exec, context switches, the CPU scheduler, threads and race conditions; a bridge to the GIL.' }),
+      lesson('o', 6, 'virtual-memory', { tr: 'Bellek: Sanal Bellek, Sayfalama ve Sızıntılar', en: 'Memory: Virtual Memory, Paging and Leaks' }, { tr: 'Sanal adres alanı, sayfa tablosu ve TLB, page fault, swap, heap ve stack, bellek sızıntısı ve OOM killer.', en: 'Virtual address spaces, page tables and the TLB, page faults, swap, heap and stack, memory leaks and the OOM killer.' }, ['cache']),
+      lesson('o', 7, 'filesystem-io', { tr: 'Dosya Sistemi ve I/O: inode, Page Cache ve epoll', en: 'File Systems and I/O: inodes, the Page Cache and epoll' }, { tr: 'inode ve dizinler, izinler, page cache, sync/fsync ve dayanıklılık, blocking ve non-blocking I/O, epoll ile olay döngüsü.', en: 'inodes and directories, permissions, the page cache, sync/fsync and durability, blocking vs non-blocking I/O, event loops with epoll.' }, ['cache']),
+      lesson('o', 8, 'container-internals', { tr: 'Konteynerlerin Altındaki OS: Namespace, cgroup ve Union FS', en: 'The OS Beneath Containers: Namespaces, cgroups and Union File Systems' }, { tr: 'Konteyner bir süreçtir: namespace\'lerle yalıtım, cgroup\'larla kaynak sınırı, overlay dosya sistemiyle katmanlı imaj.', en: 'A container is a process: isolation with namespaces, resource limits with cgroups, layered images with an overlay file system.' }),
+    ],
+  },
 ];
 
 export const LEARNING_PATHS: LearningPathManifest[] = [

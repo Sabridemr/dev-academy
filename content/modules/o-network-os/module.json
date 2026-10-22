@@ -1,0 +1,17 @@
+{
+  "id": "o-network-os",
+  "slug": "network-os",
+  "code": "O",
+  "order": 15,
+  "title": {
+    "tr": "Ağ ve İşletim Sistemi Temelleri",
+    "en": "Networking and Operating System Fundamentals"
+  },
+  "description": {
+    "tr": "TCP/UDP, DNS, TLS ve HTTP sürümlerinden süreçlere, sanal belleğe, dosya I/O'suna ve konteynerlerin altındaki namespace ve cgroup'lara: backend ve DevOps'un altında yatan katman.",
+    "en": "From TCP/UDP, DNS, TLS and HTTP versions to processes, virtual memory, file I/O and the namespaces and cgroups beneath containers: the layer underneath backend and DevOps."
+  },
+  "icon": "cpu",
+  "color": "#0891b2",
+  "group": "infrastructure"
+}
