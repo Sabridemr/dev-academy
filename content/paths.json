@@ -18,7 +18,8 @@
       "f-code-and-infrastructure",
       "h-devops-tools",
       "i-api-sql-testing",
-      "n-auth-security"
+      "n-auth-security",
+      "b-architectures/b-06-hexagonal-clean-architecture"
     ]
   },
   {
@@ -101,6 +102,8 @@
       "d-database-design/d-04-sql-vs-nosql",
       "e-case-studies",
       "c-design-patterns/c-04-distributed-patterns",
+      "b-architectures/b-07-event-sourcing-cqrs",
+      "b-architectures/b-08-saga-distributed-workflows",
       "j-system-design-notes/j-01-must-know-system-design-patterns",
       "j-system-design-notes/j-02-system-design-notes-part-1",
       "h-devops-tools/h-10-mulakat-soru-cevap-ve-ozet",

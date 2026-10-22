@@ -211,6 +211,6 @@ Netflix, 2012 Noel arifesinde us-east-1'deki ELB kesintisiyle saatlerce yayın y
 :::quiz{src="quiz.json"}
 :::
 
-:::next{lesson="c-01-creational-patterns"}
-Mimariler modülü burada bitiyor. Sırada tasarım kalıpları: nesne üretimini soyutlayan creational kalıplar — Singleton'dan Prototype'a UML, animasyon ve üç dilde kod.
+:::next{lesson="b-05-modular-monolith"}
+Sırada sistemin içine dönüyoruz: mikroservise geçmeden sınırları kodda çizen modüler monolit, modül API'leri ve sınır ihlalinin CI'da yakalanması.
 :::
