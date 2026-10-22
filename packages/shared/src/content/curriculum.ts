@@ -495,6 +495,60 @@ export const CURRICULUM: CurriculumModule[] = [
         },
         ['er-diagram'],
       ),
+      lesson(
+        'd',
+        7,
+        'query-planner-explain',
+        {
+          tr: 'Sorgu Planlayıcı ve EXPLAIN Okuma: Tarama, Join Yöntemleri, İstatistikler',
+          en: 'The Query Planner and Reading EXPLAIN: Scans, Join Methods, Statistics',
+        },
+        {
+          tr: 'Planlayıcının maliyet tahminini, tarama ve join seçimlerini EXPLAIN çıktısından okuyun; yavaş sorgu kalıplarını düzeltin.',
+          en: 'Read the planner’s cost estimates, scan and join choices from EXPLAIN output; fix common slow-query patterns.',
+        },
+        ['index-query-plan'],
+      ),
+      lesson(
+        'd',
+        8,
+        'connection-pooling-n-plus-one',
+        {
+          tr: 'Bağlantı Havuzu, N+1 ve ORM Tuzakları',
+          en: 'Connection Pools, N+1 and ORM Pitfalls',
+        },
+        {
+          tr: 'Bağlantının maliyeti, havuz boyutu ve PgBouncer; N+1 sorgunun tespiti ve Prisma ile çözümü.',
+          en: 'The cost of a connection, pool sizing and PgBouncer; detecting N+1 queries and fixing them with Prisma.',
+        },
+      ),
+      lesson(
+        'd',
+        9,
+        'zero-downtime-migrations',
+        {
+          tr: 'Sıfır Kesintiyle Şema Değişiklikleri: Expand/Contract',
+          en: 'Zero-Downtime Schema Changes: Expand/Contract',
+        },
+        {
+          tr: 'Geriye uyumlu migration, CONCURRENTLY indeks, NOT NULL tuzağı, partili backfill ve geri alma planı.',
+          en: 'Backward-compatible migrations, CONCURRENTLY indexes, the NOT NULL trap, batched backfills and rollback plans.',
+        },
+      ),
+      lesson(
+        'd',
+        10,
+        'time-series-graph-document',
+        {
+          tr: 'Zaman Serisi, Graf ve Belge Veritabanları: Veri Düzeni ve Sorgu Şekli',
+          en: 'Time-Series, Graph and Document Databases: Data Layout and Query Shape',
+        },
+        {
+          tr: 'Chunk ve retention, düğüm/kenar gezintisi, gömme ve referans; ilişkisel modelin yetmediği yerler.',
+          en: 'Chunks and retention, node/edge traversal, embedding and referencing; where the relational model falls short.',
+        },
+        ['graph-traversal'],
+      ),
     ],
   },
   {
