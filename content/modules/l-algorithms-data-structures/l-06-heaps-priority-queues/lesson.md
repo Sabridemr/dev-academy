@@ -163,6 +163,10 @@ Aynı desen başka yerlerde de karşına çıkar: k tane sıralı listeyi birle�
 
 Seçim yaparken şu soruyu sor: tüm sıraya mı ihtiyacım var, yoksa yalnızca uçtaki elemana mı? Elemanları sırayla gezmen, aralık sorgusu yapman ya da herhangi bir elemanı silmen gerekiyorsa dengeli ağaç ya da sıralı yapı daha uygundur. Yalnızca "sıradaki en öncelikli iş hangisi?" sorusunu soruyorsan heap hem daha basit hem daha hızlıdır. Tek seferlik bir soru için ise heap kurmaya bile gerek yoktur; `min(liste)` tek geçişte O(n) sürede cevap verir.
 
+:::interactive{type="heap" kind="min" initial="9, 4, 7, 1, 8, 2, 6, 3"}
+Simülatör bu diziyi bir min-heap'e dönüştürmeye hazır bekler: "Adım" ile heapify'ın son iç düğümden köke doğru her düğüm için sift-down yaptığını izle, ya da "Oynat" ile akışı kendi hâline bırak. Ağaç görünümü ile dizi görünümü aynı veridir; bir düğümün üzerine gel ya da sekme tuşuyla odaklan, aynı eleman iki görünümde birlikte vurgulanır ve çocukların 2i+1 ile 2i+2 indekslerinde durduğunu kendin doğrula. Sonra "Değer" alanına 0 yazıp "Ekle" ile sift-up adımlarını, "Çıkar" ile kökün alınıp son elemanın köke taşınmasını ve aşağı kaydırılmasını izle; "Duraklat" ve "Geri" ile istediğin adıma dönebilirsin. Son olarak "Heap türü" menüsünden max-heap'i seç: aynı elemanlardan yeni bir heap kurulur. "Takas" sayacını ve "Heap özelliği" göstergesini iki tür için karşılaştır.
+:::
+
 :::realworld{company="Getir"}
 Getir gibi dakikalar içinde teslimat vaat eden hızlı market uygulamalarında, siparişleri hazırlayan depo personeli ve kuryeler için iş sırası sabit bir "ilk gelen ilk çıkar" kuyruğu değildir. Genel bilgi düzeyinde bakıldığında, bu tür sistemlerde her siparişe vaat edilen teslim süresine kalan zaman, siparişin büyüklüğü ve kuryenin konumu gibi etkenlere göre bir öncelik hesaplanır ve bir sonraki iş, en acil olan seçilerek atanır. Bu, öncelik kuyruğunun klasik kullanımıdır: yeni siparişler sürekli eklenir, en acil olan sürekli çıkarılır ve her iki işlemin de büyük hacimde ucuz olması gerekir. Rota planlamasında ise depo ile adres arasındaki en kısa yolu bulan Dijkstra benzeri algoritmalar yine heap tabanlı bir öncelik kuyruğuna dayanır.
 :::
