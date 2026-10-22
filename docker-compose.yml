@@ -7,12 +7,26 @@
 #
 # Varsayılan kimlik bilgileri yalnızca yerel geliştirme içindir: altyapı portları yalnızca 127.0.0.1'e
 # açılır. Gizli değerler ortamdan ezilebilir (ör. JWT_ACCESS_SECRET=... docker compose --profile app up).
+#
+# Kalıcı servisler (postgres, redis, minio, api, web) `restart: unless-stopped` ile sunucu ya da Docker yeniden
+# başlayınca kendiliğinden ayağa kalkar; elle `docker compose stop` edilenler durdurulmuş kalır. Tek seferlik
+# servisler (migrate, seed, minio-init) yeniden başlatılmaz. Kalıcı servislerin logları json-file sürücüsüyle
+# servis başına 3 x 20 MB ile sınırlıdır (x-logging). Veritabanı yedeği: scripts/backup-db.sh (README → Bakım).
 
 name: devacademy
+
+# Kalıcı servisler için ortak log sınırı (disk dolmasını önler)
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: '20m'
+    max-file: '3'
 
 services:
   postgres:
     image: postgres:16-alpine
+    restart: unless-stopped
+    logging: *default-logging
     environment:
       POSTGRES_USER: devacademy
       POSTGRES_PASSWORD: devacademy
@@ -29,6 +43,8 @@ services:
 
   redis:
     image: redis:7-alpine
+    restart: unless-stopped
+    logging: *default-logging
     command:
       [
         'redis-server',
@@ -55,6 +71,8 @@ services:
   minio:
     profiles: ['media']
     image: ${MINIO_IMAGE:-quay.io/minio/minio:latest}
+    restart: unless-stopped
+    logging: *default-logging
     command: server /data --console-address ':9001'
     environment:
       MINIO_ROOT_USER: minioadmin
@@ -120,6 +138,8 @@ services:
 
   api:
     profiles: ['app']
+    restart: unless-stopped
+    logging: *default-logging
     build:
       context: .
       dockerfile: backend/Dockerfile
@@ -151,6 +171,8 @@ services:
 
   web:
     profiles: ['app']
+    restart: unless-stopped
+    logging: *default-logging
     build:
       context: .
       dockerfile: web/Dockerfile
