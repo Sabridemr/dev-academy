@@ -10,6 +10,7 @@ import { PrismaModule } from './common/prisma/prisma.module';
 import { RedisModule } from './common/redis/redis.module';
 import { RedisService } from './common/redis/redis.service';
 import { RedisThrottlerStorage } from './common/throttler/redis-throttler.storage';
+import { MetricsModule } from './common/metrics/metrics.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { JwtAuthGuard } from './common/auth/jwt-auth.guard';
 import { RolesGuard } from './common/auth/roles.guard';
@@ -69,6 +70,7 @@ import { ExamsModule } from './modules/exams/exams.module';
       }),
     }),
     ScheduleModule.forRoot(),
+    MetricsModule,
     PrismaModule,
     AuthStateModule,
     RedisModule,
