@@ -55,6 +55,13 @@ Heap'i değiştiren her işlem önce şekil kuralını korur, sonra bozulan heap
 
 **Heapify:** Elinde hazır n elemanlı bir dizi varsa, onları tek tek ekleyerek O(n log n) sürede heap kurabilirsin. Ama daha akıllı bir yol var: son iç düğümden başlayıp köke doğru her düğüm için sift-down çalıştırmak. Düğümlerin yarısı yapraktır ve hiç hareket etmez, dörtte biri en fazla bir seviye iner, sekizde biri en fazla iki seviye iner. Bu toplamın matematiksel sonucu O(n)'dir. Python'un `heapq.heapify` fonksiyonu tam olarak bunu yapar; bu yüzden hazır bir listeyi heap'e çevirmek, onu sıralamaktan daha ucuzdur.
 
+Aşağıdaki sahnede bir push ve bir pop işlemini hem ağaç hem dizi görünümünde adım adım izleyebilirsin; her takasın
+dizide hangi iki indeksi değiştirdiğine dikkat et.
+
+:::animation{scene="sift-up-down.scene.json"}
+push sona ekleyip yukarı kaydırır, pop son elemanı köke taşıyıp küçük çocukla aşağı kaydırır.
+:::
+
 :::code{lang="python" title="Elle yazılmış min-heap: sift-up ve sift-down"}
 ```python
 class MinHeap:
@@ -165,6 +172,18 @@ Seçim yaparken şu soruyu sor: tüm sıraya mı ihtiyacım var, yoksa yalnızca
 
 :::realworld{company="Getir"}
 Getir gibi dakikalar içinde teslimat vaat eden hızlı market uygulamalarında, siparişleri hazırlayan depo personeli ve kuryeler için iş sırası sabit bir "ilk gelen ilk çıkar" kuyruğu değildir. Genel bilgi düzeyinde bakıldığında, bu tür sistemlerde her siparişe vaat edilen teslim süresine kalan zaman, siparişin büyüklüğü ve kuryenin konumu gibi etkenlere göre bir öncelik hesaplanır ve bir sonraki iş, en acil olan seçilerek atanır. Bu, öncelik kuyruğunun klasik kullanımıdır: yeni siparişler sürekli eklenir, en acil olan sürekli çıkarılır ve her iki işlemin de büyük hacimde ucuz olması gerekir. Rota planlamasında ise depo ile adres arasındaki en kısa yolu bulan Dijkstra benzeri algoritmalar yine heap tabanlı bir öncelik kuyruğuna dayanır.
+:::
+
+:::realworld{company="OSRM"}
+Açık kaynaklı yönlendirme motoru OSRM (Open Source Routing Machine), OpenStreetMap verisi üzerinde araç, bisiklet ve
+yaya rotası hesaplar ve kıta ölçeğindeki haritalarda bile sorguları çok hızlı yanıtlamak için tasarlanmıştır. Proje
+belgelerinde iki ön işleme yöntemi anlatılır: Contraction Hierarchies (CH) ve Multi-Level Dijkstra (MLD). İkisinde de
+ağır iş sorgudan önce yapılır: yol ağı, sorgu sırasında taranması gereken düğüm sayısını büyük ölçüde azaltan
+kısayollar ya da bölümlerle zenginleştirilir. Sorgu anında çalışan ise bu derste gördüğün mekanizmadır: başlangıçtan
+ve hedeften yayılan Dijkstra tarzı bir arama, sıradaki düğümü bir öncelik kuyruğundan (heap) en küçük mesafeyle çeker
+ve bir komşunun mesafesi kısaldığında onun kuyruktaki önceliğini günceller. Ön işleme aranacak alanı küçültür; heap
+ise kalan aramanın her adımda doğru düğümü O(log n) sürede seçmesini sağlar. Kısacası büyük ölçekli yönlendirme
+sistemlerinin içinde de `heappush` ve `heappop`'un yakın akrabaları çalışır.
 :::
 
 :::callout{tone="tip" title="Mülakat ipucu"}

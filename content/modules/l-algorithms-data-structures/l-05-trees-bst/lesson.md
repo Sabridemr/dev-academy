@@ -45,6 +45,21 @@ BST, ikili ağaca tek bir kural ekler: **her düğüm için sol alt ağaçtaki t
 7'yi ararken her düğümde yalnızca bir yöne gideriz: 8'den sola, 3'ten sağa, 6'dan sağa. Ziyaret edilen düğüm sayısı ağacın yüksekliğiyle sınırlıdır.
 :::
 
+Kuralın arama ve eklemeyi nasıl yönlendirdiğini, ve aynı kuralın sıralı veriyle nasıl kötü bir ağaç üretebileceğini
+aşağıdaki sahnede izleyebilirsin. Önce bir tahminde bulun.
+
+:::predict{id="bst-sirali-ekleme"}
+1, 2, 3, 4, 5 değerlerini bu sırayla boş bir BST'ye eklersen 5'i aramak kaç karşılaştırma sürer? | If you insert 1, 2, 3, 4, 5 in this order into an empty BST, how many comparisons does searching for 5 take?
+- [ ] Yaklaşık log₂ 5, yani 2 ya da 3 | About log₂ 5, so 2 or 3
+- [x] 5, çünkü ağaç bir zincire dönüşür | 5, because the tree becomes a chain
+- [ ] 1, çünkü son eklenen değer köke yakındır | 1, because the last inserted value sits near the root
+Açıklama: Her yeni değer öncekilerin hepsinden büyük olduğu için hep sağa eklenir; ağaç sola hiç dallanmaz ve 5'e ulaşmak için tüm düğümlerden geçmek gerekir. Sahnenin son kısmı tam olarak bunu gösteriyor. | Every new value is larger than all previous ones, so it always goes right; the tree never branches left and reaching 5 means passing every node. The last part of the scene shows exactly this.
+:::
+
+:::animation{scene="bst-ekleme.scene.json"}
+Solda dengeli bir ağaçta her karşılaştırma bir dalı eler; sağda sıralı ekleme ağacı listeye çevirir.
+:::
+
 ### Arama
 
 Kuraldan doğrudan bir arama algoritması çıkar. Kökten başla; aranan değer düğümdeki değere eşitse bulduk. Küçükse sola, büyükse sağa in. Boş bir alt ağaca (`None`) ulaştıysan değer ağaçta yoktur. Her adımda bir alt ağacın tamamını aday listesinden çıkardığımız için bu, sıralı dizideki ikili aramanın ağaç biçimidir. Maliyeti O(h), yani ağacın yüksekliği kadardır.
@@ -159,6 +174,18 @@ Dengesiz bir BST'de yükseklik n'e yaklaşır. Python'un varsayılan özyineleme
 
 :::realworld{company="PostgreSQL"}
 PostgreSQL'de `CREATE INDEX` komutunun varsayılan indeks türü **B-tree**'dir. İndeksin her düğümü bir disk sayfasına (8 KB) karşılık gelir ve içinde yüzlerce anahtar ile çocuk sayfalara giden işaretçiler bulunur. Bu yüksek dallanma sayesinde on milyonlarca satırlık bir tablodaki indeks genellikle yalnızca üç dört seviye derinliğindedir; bir `WHERE id = 42` sorgusu kökten yaprağa birkaç sayfa okuyarak sonuca ulaşır. Yaprak sayfalar birbirine bağlı olduğu için `BETWEEN` ve `ORDER BY` gibi aralık sorguları da yaprak seviyesinde soldan sağa yürüyerek, tıpkı inorder dolaşma gibi, sıralı sonuç üretir. Ekleme sırasında bir sayfa dolarsa ikiye bölünür ve ağaç kendiliğinden dengeli kalır; bu, bu derste gördüğümüz dengesizlik sorununun disk dünyasındaki çözümüdür.
+:::
+
+:::realworld{company="Linux"}
+Linux çekirdeği, dengeli ağaç fikrinin en yoğun kullanıldığı yerlerden biridir. Çekirdeğin kendi kırmızı-siyah ağaç
+kütüphanesi (`lib/rbtree.c`) vardır ve çekirdek belgelerinde yüksek çözünürlüklü zamanlayıcılar, epoll ve bazı dosya
+sistemleri gibi kullanıcıları sayılır. En bilinen örnek süreç zamanlayıcısıdır: uzun yıllar varsayılan zamanlayıcı
+olan CFS (Completely Fair Scheduler), çalışmaya hazır görevleri o ana kadar aldıkları sanal işlemci süresini gösteren
+`vruntime` değerine göre sıralı bir kırmızı-siyah ağaçta tutar ve sıradaki görev olarak ağacın en solundaki, yani en
+az süre almış görevi seçer. En soldaki düğüm ayrıca önbelleğe alındığı için bu seçim sabit sürede yapılır; görev
+ekleme ve çıkarma ise O(log n) sürer. Çekirdek 6.6 ile gelen EEVDF zamanlayıcısı da görevleri yine bir kırmızı-siyah
+ağaç üzerinde düzenler. Düz bir BST burada güvenilir olmazdı: `vruntime` değerleri zamanla hep artma eğiliminde
+olduğundan, sahnede gördüğün sıralı ekleme durumu kolayca oluşur ve ağaç bir zincire dönüşebilirdi.
 :::
 
 :::callout{tone="tip" title="Mülakat ipucu"}
