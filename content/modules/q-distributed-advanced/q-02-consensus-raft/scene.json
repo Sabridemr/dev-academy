@@ -1,0 +1,302 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "q-02-raft-election-replication",
+  "title": { "tr": "Raft: Seçim, Log Replikasyonu ve Eski Liderin Geri Adımı", "en": "Raft: Election, Log Replication and the Old Leader Stepping Down" },
+  "summary": {
+    "tr": "S1 liderken bir yazma çoğunluğa kopyalanıp commit edilir; S1 commit edilmemiş bir girdiyle çöker; S3 aday olup term 3'te seçilir, log'u geride kalan S5 dahil herkese çoğaltır; geri dönen S1 daha yüksek terimi görüp follower olur ve commit edilmemiş girdisi silinir.",
+    "en": "While S1 is leader a write is replicated to a majority and committed; S1 crashes with an uncommitted entry; S3 becomes a candidate and is elected in term 3, then replicates its log to everyone including the lagging S5; the returning S1 sees the higher term, becomes a follower and its uncommitted entry is discarded."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda istemci; ortada lider S1; sağda dört takipçi: üstte S2, sağ üstte S3, sağ altta S4, altta S5. Rozetler her düğümün son log girdisini gösterir. S1 term 2 lideriyken istemci x=7 yazar; S1 #4'ü S2, S3 ve S4'e kopyalar, S5'e giden mesaj gecikir; 5 düğümden 4'ünde olduğu için #4 commit edilir. Sonra S1 #5 z=1 girdisini ekler ama kopyalamadan çöker. Heartbeat kesilir; S3'ün rastgele zaman aşımı ilk dolar, term 3'te aday olur ve RequestVote gönderir. S2 ve S4 oy verir, S3 kendi oyuyla birlikte 3/5 çoğunlukla lider olur. İstemci S3'e y=9 yazar; S3 #5'i term 3 ile ekler ve S2, S4, S5'e kopyalar; S5'e eksik #4 de gönderilir. S1 geri gelir, term 2 heartbeat'i S3 tarafından reddedilir; S1 term 3'ü görüp follower olur ve S3'ün gönderdiği #5 y=9, S1'deki commit edilmemiş #5 z=1'in yerine geçer.",
+      "en": "Client on the left; leader S1 in the middle; four followers on the right: S2 at the top, S3 upper right, S4 lower right, S5 at the bottom. Badges show each node's last log entry. While S1 is the term 2 leader the client writes x=7; S1 replicates #4 to S2, S3 and S4, the message to S5 is delayed; since #4 is on 4 of 5 nodes it is committed. Then S1 appends #5 z=1 but crashes before replicating it. Heartbeats stop; S3's randomized timeout fires first, it becomes a candidate in term 3 and sends RequestVote. S2 and S4 vote for it; with its own vote S3 has a 3/5 majority and becomes leader. The client writes y=9 to S3; S3 appends #5 in term 3 and replicates it to S2, S4 and S5, also sending S5 the missing #4. S1 returns, its term 2 heartbeat is rejected by S3; S1 sees term 3, becomes a follower, and S3's #5 y=9 replaces the uncommitted #5 z=1 on S1."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "client", "kind": "client", "label": { "tr": "İstemci", "en": "Client" }, "x": 90, "y": 300, "w": 120, "h": 70 },
+    { "id": "s1", "kind": "server", "label": "S1", "sublabel": "Leader · term 2", "x": 330, "y": 300, "w": 160, "h": 80 },
+    { "id": "s2", "kind": "server", "label": "S2", "sublabel": "Follower · term 2", "x": 600, "y": 90, "w": 160, "h": 76 },
+    { "id": "s3", "kind": "server", "label": "S3", "sublabel": "Follower · term 2", "x": 860, "y": 220, "w": 160, "h": 76 },
+    { "id": "s4", "kind": "server", "label": "S4", "sublabel": "Follower · term 2", "x": 860, "y": 410, "w": 160, "h": 76 },
+    { "id": "s5", "kind": "server", "label": "S5", "sublabel": "Follower · term 2", "x": 600, "y": 520, "w": 160, "h": 76 }
+  ],
+  "edges": [
+    { "id": "cl-s1", "from": "client", "to": "s1", "kind": "request", "label": "WRITE" },
+    { "id": "s1-s2", "from": "s1", "to": "s2", "kind": "replication", "label": "AppendEntries" },
+    { "id": "s1-s3", "from": "s1", "to": "s3", "kind": "replication" },
+    { "id": "s1-s4", "from": "s1", "to": "s4", "kind": "replication" },
+    { "id": "s1-s5", "from": "s1", "to": "s5", "kind": "replication" },
+    { "id": "s3-s2", "from": "s3", "to": "s2", "kind": "control", "curvature": 0.2 },
+    { "id": "s3-s4", "from": "s3", "to": "s4", "kind": "control", "curvature": -0.3 },
+    { "id": "s3-s5", "from": "s3", "to": "s5", "kind": "control", "curvature": -0.25 },
+    { "id": "cl-s3", "from": "client", "to": "s3", "kind": "request", "style": "dashed", "curvature": -0.45, "label": "WRITE y=9" },
+    { "id": "s3-s1", "from": "s3", "to": "s1", "kind": "control", "style": "dashed", "curvature": 0.25 }
+  ],
+  "steps": [
+    {
+      "id": "steady",
+      "title": { "tr": "Kararlı durum: S1 lider, term 2", "en": "Steady state: S1 is leader, term 2" },
+      "narration": {
+        "tr": "Beş düğümlü kümede S1, term 2'nin lideridir ve takipçilere düzenli heartbeat (boş AppendEntries) gönderir. Herkesin log'u #3'e kadar aynıdır. Heartbeat aldıkça takipçilerin seçim zamanlayıcısı sıfırlanır.",
+        "en": "In the five-node cluster S1 is the leader of term 2 and sends regular heartbeats (empty AppendEntries) to its followers. Everyone's log is identical up to #3. Each heartbeat resets the followers' election timers."
+      },
+      "durationMs": 3000,
+      "inherit": false,
+      "highlight": { "nodes": ["s1"], "edges": ["s1-s2", "s1-s3", "s1-s4", "s1-s5"] },
+      "nodeStates": {
+        "s1": { "status": "active", "badge": "#3 t2" },
+        "s2": { "status": "idle", "badge": "#3 t2" },
+        "s3": { "status": "idle", "badge": "#3 t2" },
+        "s4": { "status": "idle", "badge": "#3 t2" },
+        "s5": { "status": "idle", "badge": "#3 t2" }
+      },
+      "edgeStates": {
+        "s3-s2": { "visible": false },
+        "s3-s4": { "visible": false },
+        "s3-s5": { "visible": false },
+        "cl-s3": { "visible": false },
+        "s3-s1": { "visible": false }
+      },
+      "packets": [
+        { "edge": "s1-s2", "shape": "dot", "label": "♥", "durationMs": 900, "repeat": 2, "repeatGapMs": 400 },
+        { "edge": "s1-s3", "shape": "dot", "label": "♥", "durationMs": 900, "repeat": 2, "repeatGapMs": 400 },
+        { "edge": "s1-s4", "shape": "dot", "label": "♥", "durationMs": 900, "repeat": 2, "repeatGapMs": 400 },
+        { "edge": "s1-s5", "shape": "dot", "label": "♥", "durationMs": 900, "repeat": 2, "repeatGapMs": 400 }
+      ]
+    },
+    {
+      "id": "append",
+      "title": { "tr": "İstemci yazması lidere gelir", "en": "A client write reaches the leader" },
+      "narration": {
+        "tr": "İstemci x=7 yazar. S1 komutu log'una #4 olarak, kendi terimiyle (t2) ekler. Girdi henüz commit edilmedi: istemciye 'tamam' denmez, durum makinesine uygulanmaz.",
+        "en": "The client writes x=7. S1 appends the command to its log as #4 with its own term (t2). The entry is not committed yet: the client gets no 'OK' and it is not applied to the state machine."
+      },
+      "durationMs": 2600,
+      "highlight": { "nodes": ["client", "s1"], "edges": ["cl-s1"] },
+      "nodeStates": { "s1": { "status": "busy", "badge": "#4 x=7 ?" } },
+      "edgeStates": { "cl-s1": { "status": "active", "label": "WRITE x=7" } },
+      "packets": [{ "edge": "cl-s1", "shape": "envelope", "label": "x=7", "durationMs": 1100 }]
+    },
+    {
+      "id": "replicate",
+      "title": { "tr": "Çoğunluğa kopyala, commit et", "en": "Replicate to a majority, commit" },
+      "narration": {
+        "tr": "S1, #4'ü AppendEntries ile herkese gönderir. S2, S3 ve S4 girdiyi diske yazıp onaylar; S5'e giden mesaj gecikir. 5 düğümün 4'ünde (çoğunluk 3) bulunduğu için #4 commit edilir; S1 x=7'yi uygular ve istemciye OK döner. S5'in geride kalması yazmayı durdurmaz.",
+        "en": "S1 sends #4 to everyone with AppendEntries. S2, S3 and S4 persist and acknowledge it; the message to S5 is delayed. Being on 4 of 5 nodes (majority is 3), #4 is committed; S1 applies x=7 and returns OK to the client. S5 lagging does not block the write."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["s1", "s2", "s3", "s4"], "edges": ["s1-s2", "s1-s3", "s1-s4"] },
+      "nodeStates": {
+        "s1": { "status": "success", "badge": "#4 x=7 ✓" },
+        "s2": { "status": "success", "badge": "#4 t2" },
+        "s3": { "status": "success", "badge": "#4 t2" },
+        "s4": { "status": "success", "badge": "#4 t2" },
+        "s5": { "status": "warning", "badge": "#3 t2" }
+      },
+      "edgeStates": {
+        "cl-s1": { "status": "idle" },
+        "s1-s2": { "status": "active", "label": "#4" },
+        "s1-s3": { "status": "active", "label": "#4" },
+        "s1-s4": { "status": "active", "label": "#4" },
+        "s1-s5": { "status": "error", "label": { "tr": "gecikti", "en": "delayed" } }
+      },
+      "packets": [
+        { "edge": "s1-s2", "shape": "square", "label": "#4", "durationMs": 1000 },
+        { "edge": "s1-s3", "shape": "square", "label": "#4", "durationMs": 1000 },
+        { "edge": "s1-s4", "shape": "square", "label": "#4", "durationMs": 1000 },
+        { "edge": "s1-s2", "direction": "backward", "shape": "dot", "label": "ack", "startAt": 1300, "durationMs": 800 },
+        { "edge": "s1-s3", "direction": "backward", "shape": "dot", "label": "ack", "startAt": 1300, "durationMs": 800 },
+        { "edge": "s1-s4", "direction": "backward", "shape": "dot", "label": "ack", "startAt": 1300, "durationMs": 800 },
+        { "edge": "cl-s1", "direction": "backward", "shape": "envelope", "label": "OK", "startAt": 2300, "durationMs": 900 }
+      ],
+      "annotations": [
+        { "id": "maj", "x": 330, "y": 410, "text": { "tr": "4/5 ≥ 3 → commit #4", "en": "4/5 ≥ 3 → commit #4" }, "tone": "success", "target": "s1" }
+      ]
+    },
+    {
+      "id": "crash",
+      "title": { "tr": "Lider commit edilmemiş girdiyle çöker", "en": "The leader crashes with an uncommitted entry" },
+      "narration": {
+        "tr": "S1 yeni bir yazmayı (z=1) #5 olarak ekler, ama kopyalayamadan çöker. Bu girdi yalnızca S1'de vardır ve istemci onay almamıştır. Heartbeat'ler kesilir; takipçilerin seçim zamanlayıcıları dolmaya başlar.",
+        "en": "S1 appends a new write (z=1) as #5 but crashes before replicating it. That entry exists only on S1 and the client never got an acknowledgement. Heartbeats stop; the followers' election timers start running out."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["s1"], "edges": [] },
+      "nodeStates": {
+        "s1": { "status": "down", "badge": "#5 z=1 ?" },
+        "s2": { "status": "warning" },
+        "s3": { "status": "warning" },
+        "s4": { "status": "warning" },
+        "s5": { "status": "warning" }
+      },
+      "edgeStates": {
+        "cl-s1": { "status": "muted" },
+        "s1-s2": { "status": "muted", "label": "" },
+        "s1-s3": { "status": "muted", "label": "" },
+        "s1-s4": { "status": "muted", "label": "" },
+        "s1-s5": { "status": "muted", "label": "" }
+      },
+      "packets": [{ "edge": "cl-s1", "shape": "envelope", "label": "z=1", "durationMs": 1000 }],
+      "annotations": [
+        { "id": "no-hb", "x": 600, "y": 300, "text": { "tr": "heartbeat yok → zamanlayıcılar doluyor", "en": "no heartbeat → timers running out" }, "tone": "warning" }
+      ]
+    },
+    {
+      "id": "candidate",
+      "title": { "tr": "S3 aday olur: term 3", "en": "S3 becomes a candidate: term 3" },
+      "narration": {
+        "tr": "Rastgele seçilen election timeout ilk olarak S3'te dolar. S3 terimini 3'e çıkarır, kendine oy verir ve diğerlerine RequestVote(term 3, son girdi #4 t2) gönderir. Rastgelelik sayesinde genellikle tek bir aday çıkar ve oylar bölünmez.",
+        "en": "The randomized election timeout fires first on S3. S3 bumps its term to 3, votes for itself and sends RequestVote(term 3, last entry #4 t2) to the others. Randomization usually yields a single candidate, so votes are not split."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["s3"], "edges": ["s3-s2", "s3-s4", "s3-s5"] },
+      "nodeStates": {
+        "s3": { "status": "busy", "sublabel": "Candidate · term 3", "counter": 1 }
+      },
+      "edgeStates": {
+        "s3-s2": { "visible": true, "status": "active", "label": "RequestVote t3" },
+        "s3-s4": { "visible": true, "status": "active", "label": "RequestVote t3" },
+        "s3-s5": { "visible": true, "status": "active", "label": "RequestVote t3" }
+      },
+      "packets": [
+        { "edge": "s3-s2", "shape": "diamond", "label": "t3", "durationMs": 1000 },
+        { "edge": "s3-s4", "shape": "diamond", "label": "t3", "durationMs": 1000 },
+        { "edge": "s3-s5", "shape": "diamond", "label": "t3", "durationMs": 1300 }
+      ],
+      "annotations": [
+        { "id": "timeout", "x": 860, "y": 140, "text": { "tr": "ilk dolan timeout: S3", "en": "first timeout to fire: S3" }, "tone": "info", "target": "s3" }
+      ]
+    },
+    {
+      "id": "elected",
+      "title": { "tr": "Çoğunluk oyu: S3 lider", "en": "Majority vote: S3 is leader" },
+      "narration": {
+        "tr": "S2 ve S4, S3'ün log'unun (#4 t2) kendilerininki kadar güncel olduğunu görüp oy verir ve terimlerini 3'e günceller. S3'ün kendi oyuyla 3/5 çoğunluk tamamdır: S3 term 3'ün lideri olur ve hemen heartbeat göndererek seçimi bitirir. #4'ü olmayan bir düğüm aday olsaydı oy alamazdı.",
+        "en": "S2 and S4 see that S3's log (#4 t2) is at least as up to date as theirs, grant their votes and update their term to 3. With its own vote S3 reaches 3/5: it becomes leader of term 3 and immediately sends heartbeats to end the election. A node missing #4 could not have won votes."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["s3", "s2", "s4"], "edges": ["s3-s2", "s3-s4"] },
+      "nodeStates": {
+        "s3": { "status": "success", "sublabel": "Leader · term 3", "counter": 3 },
+        "s2": { "status": "idle", "sublabel": "Follower · term 3" },
+        "s4": { "status": "idle", "sublabel": "Follower · term 3" },
+        "s5": { "status": "idle", "sublabel": "Follower · term 3" }
+      },
+      "edgeStates": {
+        "s3-s2": { "status": "active", "label": { "tr": "oy ✓", "en": "vote ✓" } },
+        "s3-s4": { "status": "active", "label": { "tr": "oy ✓", "en": "vote ✓" } },
+        "s3-s5": { "status": "idle", "label": "" }
+      },
+      "packets": [
+        { "edge": "s3-s2", "direction": "backward", "shape": "dot", "label": "✓", "durationMs": 900 },
+        { "edge": "s3-s4", "direction": "backward", "shape": "dot", "label": "✓", "durationMs": 900 }
+      ],
+      "annotations": [
+        { "id": "votes", "x": 860, "y": 320, "text": { "tr": "3/5 oy → lider", "en": "3/5 votes → leader" }, "tone": "success" }
+      ]
+    },
+    {
+      "id": "new-leader-replicates",
+      "title": { "tr": "Yeni lider log'u çoğaltır", "en": "The new leader replicates its log" },
+      "narration": {
+        "tr": "İstemci S3'e y=9 yazar; S3 bunu #5 olarak term 3 ile ekler ve AppendEntries gönderir. S5'te #4 eksik olduğu için tutarlılık kontrolü başarısız olur; S3 bir adım geri gidip #4 ve #5'i birlikte gönderir. Çoğunluk onaylayınca #5 commit edilir.",
+        "en": "The client writes y=9 to S3; S3 appends it as #5 in term 3 and sends AppendEntries. S5 is missing #4, so its consistency check fails; S3 steps back and sends #4 and #5 together. Once a majority acknowledges, #5 is committed."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["client", "s3", "s2", "s4", "s5"], "edges": ["cl-s3", "s3-s2", "s3-s4", "s3-s5"] },
+      "nodeStates": {
+        "s3": { "status": "success", "badge": "#5 y=9 ✓" },
+        "s2": { "status": "success", "badge": "#5 t3" },
+        "s4": { "status": "success", "badge": "#5 t3" },
+        "s5": { "status": "success", "badge": "#5 t3" }
+      },
+      "edgeStates": {
+        "cl-s3": { "visible": true, "status": "active" },
+        "s3-s2": { "status": "active", "label": "#5" },
+        "s3-s4": { "status": "active", "label": "#5" },
+        "s3-s5": { "status": "active", "label": "#4 + #5" }
+      },
+      "packets": [
+        { "edge": "cl-s3", "shape": "envelope", "label": "y=9", "durationMs": 1000 },
+        { "edge": "s3-s2", "shape": "square", "label": "#5", "startAt": 1100, "durationMs": 900 },
+        { "edge": "s3-s4", "shape": "square", "label": "#5", "startAt": 1100, "durationMs": 900 },
+        { "edge": "s3-s5", "shape": "square", "label": "#4 #5", "startAt": 1100, "durationMs": 1200 }
+      ],
+      "annotations": [
+        { "id": "catchup", "x": 600, "y": 440, "text": { "tr": "S5: eksik #4 geri doldurulur", "en": "S5: missing #4 is backfilled" }, "tone": "info", "target": "s5" }
+      ]
+    },
+    {
+      "id": "old-leader-returns",
+      "title": { "tr": "Eski lider geri döner", "en": "The old leader returns" },
+      "narration": {
+        "tr": "S1 yeniden başlar ve hâlâ term 2'nin lideri olduğunu sanır. S3'e term 2 ile heartbeat gönderir. S3'ün terimi 3'tür: istek reddedilir ve cevapta 'benim terimim 3' bilgisi döner.",
+        "en": "S1 restarts and still believes it is the leader of term 2. It sends a heartbeat with term 2 to S3. S3's term is 3: the request is rejected and the reply carries 'my term is 3'."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["s1", "s3"], "edges": ["s1-s3"] },
+      "nodeStates": {
+        "s1": { "status": "warning", "sublabel": "Leader? · term 2" }
+      },
+      "edgeStates": {
+        "cl-s3": { "status": "muted" },
+        "s3-s2": { "status": "muted", "label": "" },
+        "s3-s4": { "status": "muted", "label": "" },
+        "s3-s5": { "status": "muted", "label": "" },
+        "s1-s3": { "status": "error", "label": "term 2 < 3" }
+      },
+      "packets": [
+        { "edge": "s1-s3", "shape": "dot", "label": "♥ t2", "durationMs": 1000 },
+        { "edge": "s1-s3", "direction": "backward", "shape": "diamond", "label": "✗ t3", "color": "danger", "startAt": 1300, "durationMs": 1000 }
+      ],
+      "annotations": [
+        { "id": "stale", "x": 330, "y": 410, "text": { "tr": "eski terim → reddedildi", "en": "stale term → rejected" }, "tone": "danger", "target": "s1" }
+      ]
+    },
+    {
+      "id": "step-down",
+      "title": { "tr": "Geri adım: S1 follower olur", "en": "Stepping down: S1 becomes a follower" },
+      "narration": {
+        "tr": "Daha yüksek terimi gören S1 terimini 3'e günceller ve follower olur. S3'ün AppendEntries'i #5'te çakışma bulur: S1'deki #5 (t2, z=1) S3'teki #5 (t3, y=9) ile uyuşmaz. Commit edilmemiş z=1 silinir ve y=9 yazılır. İstemci z=1 için hiç onay almadığı için veri kaybı yoktur; istemci isteği yeniden denemelidir.",
+        "en": "Seeing the higher term, S1 updates its term to 3 and becomes a follower. S3's AppendEntries finds a conflict at #5: S1's #5 (t2, z=1) does not match S3's #5 (t3, y=9). The uncommitted z=1 is discarded and y=9 is written. The client never got an ack for z=1, so nothing acknowledged is lost; the client should retry."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["s1", "s3"], "edges": ["s3-s1"] },
+      "nodeStates": {
+        "s1": { "status": "idle", "sublabel": "Follower · term 3", "badge": "#5 y=9" }
+      },
+      "edgeStates": {
+        "s1-s3": { "status": "muted", "label": "" },
+        "s3-s1": { "visible": true, "status": "active", "label": "AppendEntries t3 #5" }
+      },
+      "packets": [{ "edge": "s3-s1", "shape": "square", "label": "#5 y=9", "durationMs": 1200 }],
+      "annotations": [
+        { "id": "overwrite", "x": 330, "y": 410, "text": { "tr": "#5 z=1 (commit edilmemiş) → silindi", "en": "#5 z=1 (uncommitted) → discarded" }, "tone": "warning", "target": "s1" }
+      ]
+    },
+    {
+      "id": "summary",
+      "title": { "tr": "Özet: terim + çoğunluk = tek gerçek", "en": "Summary: term + majority = one truth" },
+      "narration": {
+        "tr": "Beş düğümün hepsinin log'u artık #5 y=9'da aynıdır. Commit edilmiş hiçbir girdi kaybolmadı; yalnızca onaylanmamış girdi silindi. Terim numaraları eski liderin yazmasını engelledi, çoğunluk kuralı iki liderin aynı anda commit etmesini imkânsız kıldı.",
+        "en": "All five logs now agree at #5 y=9. No committed entry was lost; only the unacknowledged one was discarded. Term numbers stopped the old leader from writing, and the majority rule made it impossible for two leaders to commit at the same time."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["s1", "s2", "s3", "s4", "s5"], "edges": [] },
+      "nodeStates": {
+        "s1": { "status": "success" },
+        "s2": { "status": "success" },
+        "s3": { "status": "success" },
+        "s4": { "status": "success" },
+        "s5": { "status": "success" }
+      },
+      "edgeStates": { "s3-s1": { "status": "idle", "label": "" } },
+      "annotations": [
+        { "id": "sum", "x": 600, "y": 300, "text": { "tr": "commit edilen asla kaybolmaz", "en": "committed is never lost" }, "tone": "success" }
+      ]
+    }
+  ],
+  "tags": ["raft", "consensus", "leader-election", "log-replication"]
+}
