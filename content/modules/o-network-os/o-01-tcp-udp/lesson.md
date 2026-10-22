@@ -13,7 +13,7 @@ durationMinutes: 30
 level: intermediate
 tags: [tcp, udp, networking, transport-layer, congestion-control]
 prerequisites: [a-01-client-server-dns-http]
-concepts: [three-way-handshake, sequence-number, retransmission, sliding-window, flow-control, congestion-control, slow-start, udp-datagram]
+concepts: [tcp-handshake, sequence-number, retransmission, tcp-sliding-window, flow-control, congestion-control, slow-start, udp-datagram]
 ---
 
 ## Kavram: güvenilmez bir ağın üstünde güvenilir bir boru

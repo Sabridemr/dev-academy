@@ -22,7 +22,7 @@
         "en": "Each direction must announce its initial number and acknowledge the other's: SYN, SYN-ACK, ACK. Data flows only after that (or together with the ACK), which is why a new connection always starts with at least one RTT of cost."
       },
       "difficulty": "easy",
-      "concepts": ["three-way-handshake", "sequence-number"]
+      "concepts": ["tcp-handshake", "sequence-number"]
     },
     {
       "id": "q2",
@@ -64,7 +64,7 @@
         "en": "rwnd protects the receiver, cwnd protects the network, and data in flight is limited by the smaller of the two, not their sum. Despite its name slow start is exponential: the window roughly doubles every RTT and switches to linear growth after a threshold."
       },
       "difficulty": "medium",
-      "concepts": ["flow-control", "congestion-control", "slow-start", "sliding-window"]
+      "concepts": ["flow-control", "congestion-control", "slow-start", "tcp-sliding-window"]
     },
     {
       "id": "q4",
@@ -104,7 +104,7 @@
         "en": "The side that initiates the close keeps each connection in TIME_WAIT for a while; many short-lived outgoing connections exhaust the ephemeral port range. Reusing connections removes this problem as well as the handshake and slow-start cost paid on every request. TCP_NODELAY and BBR solve different problems."
       },
       "difficulty": "hard",
-      "concepts": ["three-way-handshake", "slow-start"]
+      "concepts": ["tcp-handshake", "slow-start"]
     }
   ]
 }
