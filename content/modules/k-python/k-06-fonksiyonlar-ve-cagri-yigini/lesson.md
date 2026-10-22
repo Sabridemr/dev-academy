@@ -90,6 +90,13 @@ print(en_kucuk, en_buyuk)   # 1 9
 ```
 :::
 
+Şimdiye kadar gördüğün parçaları tek bir resimde toplayalım: tanım bir kez çalışıp fonksiyon nesnesini oluşturur,
+her çağrı ise argümanları parametrelere bağlayan yeni bir çerçeve açar.
+
+:::diagram{src="fonksiyon-anatomisi.svg" alt="def satırındaki ad, parametreler, gövde ve return; çağrıda argümanın parametreye bağlanması ve dönen değer|Name, parameters, body and return in a def; at the call the argument binds to the parameter and the value comes back"}
+Tanım ile çağrı ayrı şeylerdir: tanım fonksiyonu oluşturur, çağrı onu çalıştırır.
+:::
+
 ## Çağrı yığını: her çağrıya bir çerçeve
 
 Bir fonksiyonu çağırdığında Python şunları yapar:
@@ -151,6 +158,12 @@ göreceksin.
 Yığının bir sınırı vardır: CPython varsayılan olarak yaklaşık 1000 iç içe Python çağrısına izin verir
 (`sys.getrecursionlimit()`), aşılırsa `RecursionError` oluşur. Bunu özyineleme dersinde (K-08) ayrıntılı
 göreceğiz.
+
+Simülasyonda yığını satır satır izledin; aşağıdaki animasyon aynı zinciri çerçeve düzeyinde, kuş bakışı gösteriyor.
+
+:::animation{scene="cagri-yigini-cerceveler.scene.json"}
+Argümanların yukarı, `return` değerlerinin aşağı aktığına ve her `return`de en üstteki çerçevenin kaybolduğuna bak. Son adımdaki ikinci çağrı öncekinden hiçbir şey hatırlamaz.
+:::
 
 ## Parametre türleri
 
@@ -315,6 +328,22 @@ ortak = {"Accept": "application/json"}
 print(istek_olustur("GET", "/api", "kullanicilar", "42", **ortak))
 # {'metot': 'GET', 'url': '/api/kullanicilar/42', 'zaman_asimi': 10, 'basliklar': {'Accept': 'application/json'}}
 ```
+:::
+
+:::realworld{company="Dropbox"}
+Dropbox, masaüstü istemcisinden sunucu tarafına kadar büyük ölçüde Python ile yazılmış bir şirket olarak, kod tabanı
+milyonlarca satıra ulaştığında bir sorunla karşılaştı: bir fonksiyonun hangi argümanları beklediğini ve ne
+döndürdüğünü anlamak için çağrı zincirini elle takip etmek gerekiyordu. Şirketin mühendislik blogunda yayımlanan
+"Our journey to type checking 4 million lines of Python" yazısı, bu sorunu fonksiyon imzalarına tip ipuçları ekleyip
+**mypy** ile denetleyerek nasıl çözdüklerini anlatır. mypy'nin yaratıcısı Jukka Lehtosalo da bu süreçte Dropbox'ta
+çalıştı.
+
+Yazıdan bu derse bağlanan ders şu: bir fonksiyonun imzası (adı, parametreleri, varsayılanları ve dönüş değeri)
+onu çağıran herkesle yapılan bir **sözleşmedir**. Dropbox ekibi geçişi kademeli yaptı; önce en çok çağrılan ve en
+çok değişen fonksiyonların imzalarını açıkça yazdılar, böylece yanlış sayıda ya da yanlış türde argüman veren
+çağrılar kod çalışmadan yakalanır hâle geldi. Değiştirilebilir varsayılan argüman, `None` dönen ama değer beklenen
+fonksiyon gibi bu derste gördüğün hatalar da imza düzeyinde görünür olur. Tip ipuçlarını K-15'te ayrıntılı
+göreceksin; şimdilik iyi isimlendirilmiş parametreler ve tek bir açık `return` ile aynı sözleşmeyi kurmaya başla.
 :::
 
 ## Özet

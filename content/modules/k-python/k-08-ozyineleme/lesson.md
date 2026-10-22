@@ -69,6 +69,13 @@ print(faktoriyel(5))   # 120
 Üçüncü soruda bir "inanç sıçraması" yaparsın: alt çağrının doğru çalıştığını varsayarsın. Temel durum doğru
 ve her adım problemi gerçekten küçültüyorsa bu varsayım her zaman tutar (matematikteki tümevarımın aynısı).
 
+Her özyinelemeli çağrının iki evresi vardır: problem temel duruma kadar küçülürken bekleyen işler birikir, temel
+durumdan sonra cevaplar ters sırayla kurulur.
+
+:::diagram{src="inis-cikis.svg" alt="faktoriyel(4) çağrısının temel duruma inişi ve 1, 2, 6, 24 değerleriyle geri çıkışı|faktoriyel(4) descending to the base case and climbing back with the values 1, 2, 6, 24"}
+İnişte çarpmalar bekletilir; çıkışta her çerçeve bekleyen işini tamamlayıp kapanır.
+:::
+
 ## Yığında ne oluyor? Faktöriyel simülasyonu
 
 Şimdi `faktoriyel(4)` çağrısını izle. Her çağrı yığına yeni bir çerçeve ekler ve **her çerçevenin kendi `n`
@@ -202,6 +209,13 @@ sözlük verirsen `TypeError: unhashable type: 'list'` alırsın (yerine tuple v
 **saf fonksiyonlarda** (aynı girdiye hep aynı çıktıyı veren, dışarıyı değiştirmeyen) güvenlidir. Dosya okuyan ya da
 saate bakan bir fonksiyonu önbelleğe alırsan eski sonucu döndürür. `maxsize=None` önbelleği sınırsız büyütür; uzun
 yaşayan süreçlerde bir sınır ver.
+:::
+
+Naif fibonacci ile memoization'lı sürümü yan yana görmek farkı netleştirir. Animasyon önce çağrı ağacının derinlik
+öncelikli açılıp kapanmasını, sonra aynı ağacın sözlükle budanmasını gösteriyor.
+
+:::animation{scene="fib-cagri-agaci.scene.json"}
+Sayaçtaki çağrı sayısını ve sağdaki `fib(2)` düğümünü izle: naif sürümde alt ağaç ikinci kez açılır, memo sürümünde sözlükten tek adımda gelir.
 :::
 
 ## Yığının sınırı: RecursionError
@@ -364,6 +378,23 @@ seviye iç içe liste). Bu ikisi doğruysa tümevarım gereği gerisi de doğrud
 - **Değiştirilebilir varsayılan argümanla biriktirmek:** `def f(x, sonuc=[])` tüm çağrılar arasında aynı listeyi
   paylaşır (K-06). Her çağrıda yeni liste oluştur ya da dönüş değerlerini birleştir.
 - **Pahalı dilimleme:** `liste[1:]` her seviyede kopya üretir. Büyük veride bir indeks parametresi (`i + 1`) geçir.
+
+:::realworld{company="Microsoft"}
+Python'un özyinelemeye yaklaşımı, dili geliştirenlerin kamuya açık tartışmalarında açıkça gerekçelendirilmiştir.
+Guido van Rossum 2009'da kişisel blogunda yayımladığı "Tail Recursion Elimination" yazılarında kuyruk çağrısı
+optimizasyonunu bilerek eklemediğini anlattı: optimizasyon, hata anında traceback'ten çerçeveleri sileceği için
+hata ayıklamayı zorlaştırır ve Python'da döngü yazmak zaten doğal bir alternatiftir.
+
+Yıllar sonra Microsoft'un desteklediği **Faster CPython** projesi (Guido van Rossum ve Mark Shannon'ın da içinde
+olduğu ekip) yığının nasıl kullanıldığını değiştirdi. Python 3.11'in "What's New" belgesine göre bir Python
+fonksiyonu başka bir Python fonksiyonunu çağırdığında yorumlayıcı artık C düzeyinde yeni bir çağrı açmıyor, yeni
+çerçeveyi kurup doğrudan ona "atlıyor". Böylece çoğu Python çağrısı C yığınını tüketmiyor ve faktöriyel ya da
+fibonacci gibi basit özyinelemeli fonksiyonlar belirgin biçimde hızlandı. Python 3.12'de ise `sys.setrecursionlimit`
+sınırı yalnızca Python koduna uygulanır hâle geldi; C yığını ayrı bir mekanizmayla korunuyor.
+
+Bu derse bağlanan sonuç: çerçeveler artık daha ucuz, ama sınır ve kuyruk çağrısı politikası değişmedi. Derinliği
+girdiye bağlı olan özyinelemeyi (uzun bağlı liste, çok derin JSON) yine döngüye ya da açık bir yığına çevirmen gerekir.
+:::
 
 ## Özet
 
