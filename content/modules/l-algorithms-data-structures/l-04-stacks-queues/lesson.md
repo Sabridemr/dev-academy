@@ -102,6 +102,10 @@ Bir diğer pratik nokta da yapıların sınırlarını düşünmektir. Gerçek s
 
 Son olarak, yığın ve kuyruk ihtiyacı için Python'da çoğu zaman yeni bir sınıf yazmana gerek yoktur. Yığın için düz bir liste, kuyruk için `deque` yeterlidir. Kendi sınıfını yazman gereken durum, işlemleri kısıtlamak ve niyetini açıkça göstermek istediğin zamandır: yalnızca `push`, `pop` ve `peek` metodları olan bir `Yigin` sınıfı, kodunu okuyan herkese yapının LIFO olarak kullanıldığını hemen anlatır.
 
+:::interactive{type="stack-queue" mode="brackets" expression="(a + b) * [c - d[i]]"}
+"Adım" ile ifadeyi karakter karakter işle: her açılış parantezi yığına itilir, her kapanış tepedeki açılışla eşleşirse yığından çekilir. Yığın panelinde tepedeki elemanı, "Yığın derinliği" ve "En büyük derinlik" göstergelerini izle; "Geri" ile bir adım geri dönebilirsin. Ardından "İfade" alanına `(a]`, `a)` ya da `([]` gibi hatalı ifadeler yaz: simülatör hatanın konumunu işaretler ve hangi kapanışın beklendiğini söyler. Sonra "Mod" bölümünden "BFS kuyruğu"na geç: A'dan başlayan gezintide yeni keşfedilen komşuların kuyruğun sonuna eklendiğini, sıradaki düğümün baştan alındığını ve ziyaret sırasının katman katman ilerlediğini gözlemle. "Başlangıç düğümü"nü değiştirip "En uzun kuyruk" değerinin nasıl değiştiğine bak.
+:::
+
 :::realworld{company="Google"}
 Google Chrome ve diğer modern tarayıcılar JavaScript'i tek bir ana iş parçacığında çalıştırır ve bunu bir yığın ile bir kuyruğun iş birliğiyle yönetir. Çalışan kod **çağrı yığınında** (call stack) yürür; bir zamanlayıcı dolduğunda, bir ağ yanıtı geldiğinde ya da kullanıcı bir düğmeye tıkladığında ilgili geri çağırma fonksiyonu doğrudan çalıştırılmaz, **görev kuyruğuna** (task queue) eklenir. **Olay döngüsü** (event loop), çağrı yığını boşaldığında kuyruğun başındaki görevi alıp yığına koyar. Promise geri çağırmaları ise ayrı bir mikro görev kuyruğunda bekler ve her görevden sonra önce onlar boşaltılır. Uzun süren senkron bir döngünün sayfayı dondurmasının nedeni budur: yığın boşalmadıkça kuyruktaki tıklama olayları işlenemez.
 :::

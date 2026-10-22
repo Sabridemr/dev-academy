@@ -70,4 +70,7 @@ export const SIMULATORS: Partial<Record<InteractiveType, ComponentType<Simulator
   'jwt-inspector': load(() => import('./JwtInspectorSim')),
   'bruteforce-login': load(() => import('./BruteforceLoginSim')),
   'git-graph': load(() => import('./GitGraphSim')),
+  'dp-table': load(() => import('./DpTableSim')),
+  heap: load(() => import('./HeapSim')),
+  'stack-queue': load(() => import('./StackQueueSim')),
 };
