@@ -231,6 +231,63 @@ export const NextBlockSchema = BaseBlock.extend({
   note: LocalizedStringSchema.optional(),
 });
 
+/** İki dilli zorunlu Türkçe metin (quiz.json'daki `{ tr, en }` yapısı) */
+const BilingualTextSchema = z
+  .object({
+    tr: z.string().min(1),
+    en: z.string().min(1).optional(),
+  })
+  .strict();
+
+/** Tahmin sorusu seçenek sayısı kuralı */
+export const PREDICT_OPTION_RANGE = { min: 2, max: 5 } as const;
+
+/**
+ * Tahmin sorusu (predict-observe-explain): animasyon ya da simülatörden ÖNCE "sence ne olacak?".
+ * Quiz'in aksine puanlanmaz, ilerlemeyi etkilemez; doğru cevap istemciye gider ve seçimden sonra
+ * açıklamayla birlikte gösterilir.
+ */
+export const PredictBlockSchema = BaseBlock.extend({
+  type: z.literal('predict'),
+  /** Soru metni (Markdown) */
+  prompt: BilingualTextSchema,
+  options: z
+    .array(z.object({ id: z.string().min(1), text: BilingualTextSchema }).strict())
+    .min(PREDICT_OPTION_RANGE.min, `En az ${PREDICT_OPTION_RANGE.min} seçenek olmalı`)
+    .max(PREDICT_OPTION_RANGE.max, `En fazla ${PREDICT_OPTION_RANGE.max} seçenek olabilir`),
+  /** Doğru seçeneğin id'si */
+  correct: z.string().min(1),
+  /** Seçimden sonra gösterilen açıklama (Markdown) */
+  explanation: BilingualTextSchema.optional(),
+});
+
+export const RESOURCE_KINDS = ['book', 'article', 'docs', 'video', 'paper', 'repo'] as const;
+export const ResourceKindSchema = z.enum(RESOURCE_KINDS);
+export type ResourceKind = z.infer<typeof ResourceKindSchema>;
+
+/** `--strict` doğrulamada bu sayıdan fazla kaynak uyarı verir (liste odaklı kalsın) */
+export const RESOURCES_SOFT_MAX = 8;
+
+/** Ders sonu kaynakça: dış kaynak listesi */
+export const ResourcesBlockSchema = BaseBlock.extend({
+  type: z.literal('resources'),
+  items: z
+    .array(
+      z
+        .object({
+          title: z.string().min(1),
+          url: z
+            .string()
+            .url('Geçerli bir URL olmalı')
+            .regex(/^https:\/\//, 'Kaynak URL https:// ile başlamalı'),
+          kind: ResourceKindSchema.optional(),
+          note: z.string().min(1).optional(),
+        })
+        .strict(),
+    )
+    .min(1, 'En az bir kaynak olmalı'),
+});
+
 export const LessonBlockSchema = z.discriminatedUnion('type', [
   TextBlockSchema,
   DiagramBlockSchema,
@@ -242,7 +299,19 @@ export const LessonBlockSchema = z.discriminatedUnion('type', [
   QuizBlockSchema,
   TraceBlockSchema,
   NextBlockSchema,
-]);
+  PredictBlockSchema,
+  ResourcesBlockSchema,
+]).superRefine((b, ctx) => {
+  // Birleşim üyeleri düz nesne olmak zorunda; seçenekler arası kurallar burada denetlenir
+  if (b.type !== 'predict') return;
+  const ids = b.options.map((o) => o.id);
+  if (new Set(ids).size !== ids.length) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Seçenek id\'leri benzersiz olmalı', path: ['options'] });
+  }
+  if (!ids.includes(b.correct)) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: `Bilinmeyen doğru seçenek: ${b.correct}`, path: ['correct'] });
+  }
+});
 export type LessonBlock = z.infer<typeof LessonBlockSchema>;
 export type LessonBlockType = LessonBlock['type'];
 
@@ -257,6 +326,8 @@ export const LESSON_BLOCK_TYPES = [
   'quiz',
   'trace',
   'next',
+  'predict',
+  'resources',
 ] as const satisfies readonly LessonBlockType[];
 
 /* ------------------------------ Quiz ------------------------------- */

@@ -3,6 +3,8 @@ import { z } from 'zod';
 import {
   InteractiveTypeSchema,
   LessonFrontmatterSchema,
+  RESOURCE_KINDS,
+  type ResourceKind,
   type LessonBlock,
   type LessonDocument,
 } from './schema';
@@ -49,6 +51,17 @@ import type { LocalizedString } from '../i18n';
  *   :::next{lesson="a-02-latency-throughput"}
  *   :::
  *
+ *   :::predict{id="lb-yeni-sunucu"}
+ *   Soru metni | İsteğe bağlı İngilizce
+ *   - [ ] Seçenek A | Option A
+ *   - [x] Doğru seçenek B | Option B
+ *   Açıklama: Neden B | Why B
+ *   :::
+ *
+ *   :::resources
+ *   - [Kitap adı](https://ornek.org) — kitap — İsteğe bağlı not
+ *   :::
+ *
  * Directive'ler arasında kalan Markdown "text" bloklarına dönüşür.
  */
 
@@ -93,6 +106,131 @@ function toLocalized(value: unknown): LocalizedString | undefined {
     return { tr, en: en || undefined };
   }
   return s;
+}
+
+/** Türkçe/İngilizce ayırıcı: boşlukla çevrili dikey çizgi (`Türkçe | English`) */
+const BILINGUAL_SEPARATOR = /\s\|\s/;
+
+/** `Türkçe | English` metnini `{ tr, en? }` nesnesine çevirir (ayırıcı ilk ` | `) */
+function toBilingual(value: string): { tr: string; en?: string } {
+  const m = BILINGUAL_SEPARATOR.exec(value);
+  if (!m) return { tr: value.trim() };
+  const tr = value.slice(0, m.index).trim();
+  const en = value.slice(m.index + m[0].length).trim();
+  return en ? { tr, en } : { tr };
+}
+
+const PREDICT_OPTION = /^[-*]\s+\[([ xX])\]\s+(.+)$/;
+const PREDICT_EXPLANATION = /^(?:Açıklama|Explanation)\s*:\s*(.*)$/i;
+
+/** `:::predict` gövdesi: soru, `- [ ]`/`- [x]` seçenekleri, `Açıklama:` ile başlayan açıklama */
+function parsePredictBody(body: string, sourcePath?: string, line?: number) {
+  const lines = body.split(/\r?\n/);
+  const promptLines: string[] = [];
+  const explanationLines: string[] = [];
+  const options: { id: string; text: { tr: string; en?: string }; correct: boolean }[] = [];
+  let section: 'prompt' | 'options' | 'explanation' = 'prompt';
+  for (const raw of lines) {
+    const l = raw.trim();
+    const explanation = section !== 'explanation' ? PREDICT_EXPLANATION.exec(l) : null;
+    if (explanation) {
+      section = 'explanation';
+      explanationLines.push(explanation[1]);
+      continue;
+    }
+    if (section === 'explanation') {
+      explanationLines.push(raw);
+      continue;
+    }
+    const option = PREDICT_OPTION.exec(l);
+    if (option) {
+      section = 'options';
+      options.push({
+        // Seçenek id'leri sırayla a, b, c…
+        id: String.fromCharCode(97 + options.length),
+        text: toBilingual(option[2]),
+        correct: option[1] !== ' ',
+      });
+      continue;
+    }
+    if (section === 'options') {
+      if (l === '') continue;
+      throw new LessonParseError(
+        `':::predict' seçeneklerinden sonra yalnızca 'Açıklama:' gelebilir: "${l}"`,
+        sourcePath,
+        line,
+      );
+    }
+    promptLines.push(raw);
+  }
+  const prompt = promptLines.join('\n').trim();
+  if (!prompt) throw new LessonParseError("':::predict' soru metni boş", sourcePath, line);
+  const correct = options.filter((o) => o.correct);
+  if (correct.length !== 1) {
+    throw new LessonParseError(
+      `':::predict' tam olarak bir doğru seçenek ('- [x]') içermeli (şu an ${correct.length})`,
+      sourcePath,
+      line,
+    );
+  }
+  const explanation = explanationLines.join('\n').trim();
+  return {
+    prompt: toBilingual(prompt),
+    options: options.map(({ id, text }) => ({ id, text })),
+    correct: correct[0].id,
+    explanation: explanation ? toBilingual(explanation) : undefined,
+  };
+}
+
+/** Türkçe/İngilizce kaynak türü adları → ResourceKind */
+const RESOURCE_KIND_ALIASES: Record<string, ResourceKind> = {
+  kitap: 'book',
+  makale: 'article',
+  yazı: 'article',
+  blog: 'article',
+  belge: 'docs',
+  doküman: 'docs',
+  dokümantasyon: 'docs',
+  belgeler: 'docs',
+  video: 'video',
+  konuşma: 'video',
+  bildiri: 'paper',
+  'akademik makale': 'paper',
+  depo: 'repo',
+  ...Object.fromEntries(RESOURCE_KINDS.map((k) => [k, k])),
+};
+
+const RESOURCE_ITEM = /^[-*]\s+\[([^\]]+)\]\(([^)\s]+)\)\s*(.*)$/;
+
+/** `:::resources` gövdesi: `- [Başlık](https://…) — tür — not` satırları */
+function parseResourcesBody(body: string, sourcePath?: string, line?: number) {
+  const items: { title: string; url: string; kind?: ResourceKind; note?: string }[] = [];
+  for (const raw of body.split(/\r?\n/)) {
+    const l = raw.trim();
+    if (!l) continue;
+    const m = RESOURCE_ITEM.exec(l);
+    if (!m) {
+      throw new LessonParseError(
+        `':::resources' satırı '- [Başlık](https://…) — tür' biçiminde olmalı: "${l}"`,
+        sourcePath,
+        line,
+      );
+    }
+    // Bağlantıdan sonrası: " — tür — not" (em dash, en dash ya da "--")
+    const rest = m[3]
+      .split(/\s+(?:—|–|--)\s+|^(?:—|–|--)\s+/)
+      .map((p) => p.trim())
+      .filter(Boolean);
+    const kind = rest.length ? RESOURCE_KIND_ALIASES[rest[0].toLocaleLowerCase('tr')] : undefined;
+    const noteParts = kind ? rest.slice(1) : rest;
+    items.push({
+      title: m[1].trim(),
+      url: m[2],
+      kind,
+      note: noteParts.length ? noteParts.join(' — ') : undefined,
+    });
+  }
+  return { items };
 }
 
 export interface ParseLessonOptions {
@@ -351,6 +489,26 @@ export function parseLessonMarkdown(markdown: string, options: ParseLessonOption
           note: seg.body ? toLocalized(seg.body) : undefined,
         });
         break;
+      case 'predict': {
+        const id = requireAttr(attrs, 'id', name, sourcePath, seg.line);
+        if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(id)) {
+          throw new LessonParseError(`':::predict' id kebab-case olmalı: ${id}`, sourcePath, seg.line);
+        }
+        if (seenIds.has(id)) {
+          throw new LessonParseError(`Blok id'si ders içinde benzersiz olmalı: ${id}`, sourcePath, seg.line);
+        }
+        seenIds.add(id);
+        blocks.push({ id, order, type: 'predict', ...parsePredictBody(seg.body, sourcePath, seg.line) });
+        break;
+      }
+      case 'resources':
+        blocks.push({
+          id: nextId('resources'),
+          order,
+          type: 'resources',
+          ...parseResourcesBody(seg.body, sourcePath, seg.line),
+        });
+        break;
       default:
         throw new LessonParseError(`Bilinmeyen directive: ':::${name}'`, sourcePath, seg.line);
     }
@@ -370,6 +528,8 @@ export function lessonPlainText(doc: LessonDocument): string {
           return b.markdown;
         case 'code':
           return b.code;
+        case 'predict':
+          return b.prompt.tr;
         default:
           return '';
       }

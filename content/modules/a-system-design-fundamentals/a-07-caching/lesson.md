@@ -53,6 +53,15 @@ Her katman bir filtredir: miss olan istek bir alt katmana iner. DB'ye ulaşan tr
 
 Aşağıdaki animasyon bu akışı ve bir güncelleme sonrası girdinin silinmesini (invalidation) gösterir.
 
+:::predict{id="cache-guncelleme"}
+Cache-aside kullanan bir uygulamada ürünün fiyatı veritabanında güncellendi. Uygulama cache'teki `product:42` girdisine ne yapmalı? | In an application using cache-aside, a product's price was updated in the database. What should the application do with the cached `product:42` entry?
+- [ ] Yeni fiyatı hemen cache'e yazmalı | Write the new price into the cache right away
+- [x] Girdiyi silmeli; bir sonraki okuma taze değeri DB'den alıp cache'i doldurur | Delete the entry; the next read fetches the fresh value from the DB and repopulates the cache
+- [ ] Hiçbir şey yapmamalı; TTL dolunca girdi zaten yenilenir | Do nothing; the entry refreshes anyway when the TTL expires
+- [ ] Cache'in tamamını boşaltmalı | Flush the entire cache
+Açıklama: Önce veritabanı güncellenir, sonra cache girdisi **silinir**. Yazmak yerine silmek, iki eşzamanlı güncelleme yarıştığında cache'te eski değerin kalma riskini azaltır; TTL'i beklemek ise kullanıcıya dakikalarca bayat fiyat gösterir. Tüm cache'i boşaltmak gereksiz yere bir miss fırtınası yaratır. | First update the database, then **delete** the cache entry. Deleting instead of writing reduces the risk of a stale value surviving two concurrent updates; waiting for the TTL shows a stale price for minutes. Flushing the whole cache causes an unnecessary storm of misses.
+:::
+
 :::animation{scene="scene.json"}
 Cache-aside: miss → DB → cache'i doldur → hit; güncellemede önce DB, sonra cache girdisini sil.
 :::
@@ -196,6 +205,14 @@ Facebook'un *Scaling Memcache at Facebook* makalesi cache-aside'ın dünyadaki e
 :::
 
 :::quiz{src="quiz.json"}
+:::
+
+:::resources
+- [Scaling Memcache at Facebook](https://www.usenix.org/conference/nsdi13/technical-sessions/presentation/nishtala) — bildiri — look-aside cache, lease ve thundering herd (NSDI 2013)
+- [Database Caching Strategies Using Redis](https://docs.aws.amazon.com/whitepapers/latest/database-caching-strategies-using-redis/welcome.html) — belge — AWS teknik raporu: cache-aside, write-through, TTL
+- [Redis: Key eviction](https://redis.io/docs/latest/develop/reference/eviction/) — belge — maxmemory ve LRU/LFU politikaları
+- [MDN: HTTP caching](https://developer.mozilla.org/en-US/docs/Web/HTTP/Caching) — belge — tarayıcı ve paylaşımlı önbellekler, Cache-Control
+- [Designing Data-Intensive Applications](https://dataintensive.net/) — kitap — Martin Kleppmann; türetilmiş veri ve tutarlılık
 :::
 
 :::next{lesson="a-08-cdn-edge"}

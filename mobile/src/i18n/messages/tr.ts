@@ -95,6 +95,27 @@ export const tr = {
     sceneError: 'Animasyon yüklenemedi',
     codeAlternatives: 'Diller',
     callout: { info: 'Bilgi', tip: 'İpucu', warning: 'Dikkat', danger: 'Tehlike' },
+    predict: {
+      label: 'Tahmin et',
+      notScored: 'Puanlanmaz',
+      hint: 'Devam etmeden önce sence ne olacağını seç.',
+      correct: 'Doğru tahmin!',
+      incorrect: 'Tam değil. Doğru cevap: {answer}',
+      correctOption: 'Doğru seçenek',
+      retry: 'Yeniden dene',
+    },
+    resources: {
+      title: 'Kaynakça',
+      opensInBrowser: 'Tarayıcıda açılır',
+      kind: {
+        book: 'Kitap',
+        article: 'Makale',
+        docs: 'Dokümantasyon',
+        video: 'Video',
+        paper: 'Akademik makale',
+        repo: 'Kod deposu',
+      },
+    },
     loginRequired: 'Bu işlem için giriş yapmalısın.',
   },
   trace: {
