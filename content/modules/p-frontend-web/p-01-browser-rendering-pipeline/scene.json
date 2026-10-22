@@ -1,0 +1,194 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "p-01-rendering-pipeline",
+  "title": { "tr": "Baytlardan piksellere: render boru hattı", "en": "From bytes to pixels: the rendering pipeline" },
+  "summary": {
+    "tr": "HTML, CSS ve JavaScript dosyaları sunucudan gelir; ayrıştırıcı DOM'u kurar, CSS render'ı bekletir, senkron script ayrıştırıcıyı durdurur; sonunda render ağacı, layout, paint ve composite ile ilk boyama olur.",
+    "en": "HTML, CSS and JavaScript arrive from the server; the parser builds the DOM, CSS holds back rendering, a synchronous script halts the parser; finally render tree, layout, paint and composite produce the first paint."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda sunucu, ortada HTML ayrıştırıcı, DOM, CSSOM ve app.js script düğümü, sağda render ağacı ile layout, paint ve composite adımları. Önce index.html gelir ve ayrıştırıcı DOM'u kurmaya başlar. CSS dosyası istenir ve CSSOM hazır olana kadar çizim bekler. Ayrıştırıcı defer'siz bir script etiketine gelince durur; script iner, çalışır ve DOM'u değiştirir. Ayrıştırıcı devam eder, DOM ve CSSOM birleşip render ağacını oluşturur; ardından layout, paint ve composite sırayla çalışır ve ilk boyama gerçekleşir. Son adımda defer ile ayrıştırıcının hiç durmayacağı gösterilir.",
+      "en": "Server on the left; HTML parser, DOM, CSSOM and the app.js script node in the middle; render tree and the layout, paint and composite stages on the right. First index.html arrives and the parser starts building the DOM. The CSS file is requested and painting waits until the CSSOM is ready. The parser stops at a script tag without defer; the script downloads, runs and modifies the DOM. The parser continues, DOM and CSSOM merge into the render tree, then layout, paint and composite run in order and the first paint happens. The last step shows that with defer the parser never stops."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "server", "kind": "server", "label": { "tr": "Sunucu", "en": "Server" }, "sublabel": "HTML · CSS · JS", "x": 90, "y": 300, "w": 130, "h": 76 },
+    { "id": "parser", "kind": "worker", "label": { "tr": "HTML ayrıştırıcı", "en": "HTML parser" }, "sublabel": { "tr": "ana iş parçacığı", "en": "main thread" }, "x": 330, "y": 130, "w": 160, "h": 70 },
+    { "id": "dom", "kind": "generic", "label": "DOM", "x": 560, "y": 130, "w": 120, "h": 64 },
+    { "id": "cssom", "kind": "generic", "label": "CSSOM", "sublabel": "app.css", "x": 560, "y": 320, "w": 120, "h": 64 },
+    { "id": "script", "kind": "function", "label": "app.js", "sublabel": { "tr": "defer yok", "en": "no defer" }, "x": 330, "y": 470, "w": 140, "h": 64 },
+    { "id": "render", "kind": "group", "label": { "tr": "Render ağacı", "en": "Render tree" }, "x": 740, "y": 230, "w": 130, "h": 64 },
+    { "id": "layout", "kind": "worker", "label": "Layout", "x": 910, "y": 120, "w": 120, "h": 60 },
+    { "id": "paint", "kind": "worker", "label": "Paint", "x": 910, "y": 300, "w": 120, "h": 60 },
+    { "id": "composite", "kind": "generic", "label": "Composite", "sublabel": "GPU", "x": 910, "y": 480, "w": 120, "h": 64 }
+  ],
+  "edges": [
+    { "id": "srv-parser", "from": "server", "to": "parser", "kind": "response", "label": "index.html" },
+    { "id": "srv-css", "from": "server", "to": "cssom", "kind": "response", "label": "app.css", "curvature": -0.15 },
+    { "id": "srv-js", "from": "server", "to": "script", "kind": "response", "label": "app.js" },
+    { "id": "parser-dom", "from": "parser", "to": "dom", "kind": "data" },
+    { "id": "js-dom", "from": "script", "to": "dom", "kind": "control", "style": "dashed", "label": { "tr": "DOM'u değiştirir", "en": "mutates DOM" }, "curvature": 0.2 },
+    { "id": "dom-render", "from": "dom", "to": "render", "kind": "data" },
+    { "id": "cssom-render", "from": "cssom", "to": "render", "kind": "data" },
+    { "id": "render-layout", "from": "render", "to": "layout", "kind": "data" },
+    { "id": "layout-paint", "from": "layout", "to": "paint", "kind": "data" },
+    { "id": "paint-composite", "from": "paint", "to": "composite", "kind": "data" }
+  ],
+  "steps": [
+    {
+      "id": "html-arrives",
+      "title": { "tr": "HTML gelir", "en": "HTML arrives" },
+      "narration": {
+        "tr": "Sunucudan index.html akmaya başlar. Ayrıştırıcı dosyanın tamamını beklemez; gelen ilk baytları belirteçlere ayırıp DOM'u artımlı olarak kurmaya başlar.",
+        "en": "index.html starts streaming from the server. The parser does not wait for the whole file; it tokenises the first bytes and starts building the DOM incrementally."
+      },
+      "durationMs": 2600,
+      "inherit": false,
+      "highlight": { "nodes": ["server", "parser"], "edges": ["srv-parser"] },
+      "nodeStates": { "parser": { "status": "active" }, "render": { "status": "muted" }, "layout": { "status": "muted" }, "paint": { "status": "muted" }, "composite": { "status": "muted" } },
+      "edgeStates": { "js-dom": { "visible": false } },
+      "packets": [{ "edge": "srv-parser", "shape": "envelope", "label": "<html>", "durationMs": 1200 }]
+    },
+    {
+      "id": "dom-grows",
+      "title": { "tr": "DOM büyür, CSS istenir", "en": "DOM grows, CSS requested" },
+      "narration": {
+        "tr": "Ayrıştırıcı <head> içindeki <link rel=stylesheet> etiketini görür ve app.css'i ister. CSS ayrıştırmayı durdurmaz; DOM düğümleri oluşmaya devam eder.",
+        "en": "The parser sees the <link rel=stylesheet> in <head> and requests app.css. CSS does not stop parsing; DOM nodes keep being created."
+      },
+      "durationMs": 2800,
+      "highlight": { "nodes": ["parser", "dom", "cssom"], "edges": ["parser-dom", "srv-css"] },
+      "nodeStates": { "dom": { "status": "busy", "badge": "…" }, "cssom": { "status": "busy", "badge": "↓ GET" } },
+      "packets": [
+        { "edge": "parser-dom", "label": "<head>", "shape": "square", "durationMs": 800 },
+        { "edge": "srv-css", "label": "app.css", "durationMs": 1600, "startAt": 600 }
+      ]
+    },
+    {
+      "id": "css-blocks-render",
+      "title": { "tr": "CSS render'ı bekletir", "en": "CSS holds back rendering" },
+      "narration": {
+        "tr": "CSSOM hazır olmadan tarayıcı hiçbir şey çizmez; aksi hâlde kullanıcı önce stilsiz sayfa görür. CSS bu yüzden render'ı bloklayan bir kaynaktır.",
+        "en": "Without the CSSOM the browser paints nothing; otherwise the user would first see an unstyled page. That is why CSS is a render-blocking resource."
+      },
+      "durationMs": 2600,
+      "highlight": { "nodes": ["cssom", "render"] },
+      "nodeStates": { "render": { "status": "warning", "badge": "⏸" } },
+      "annotations": [
+        { "id": "css-note", "x": 640, "y": 410, "text": { "tr": "CSS: render-blocking", "en": "CSS: render-blocking" }, "tone": "warning", "target": "cssom" }
+      ]
+    },
+    {
+      "id": "script-blocks",
+      "title": { "tr": "Senkron script: ayrıştırıcı durur", "en": "Synchronous script: parser stops" },
+      "narration": {
+        "tr": "Ayrıştırıcı defer ya da async olmayan bir <script src=app.js> etiketine gelir ve DURUR. Script document.write ile HTML'i değiştirebileceği için tarayıcı önce onu indirip çalıştırmak zorundadır.",
+        "en": "The parser reaches a <script src=app.js> without defer or async and STOPS. Because the script could change the HTML with document.write, the browser must download and run it first."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["parser", "script", "server"], "edges": ["srv-js"] },
+      "nodeStates": { "parser": { "status": "error", "badge": "⏸ STOP" }, "script": { "status": "busy", "badge": "↓ GET" } },
+      "packets": [{ "edge": "srv-js", "label": "app.js", "color": "warning", "durationMs": 2200 }],
+      "annotations": [
+        { "id": "block-note", "x": 330, "y": 300, "text": { "tr": "parser-blocking script", "en": "parser-blocking script" }, "tone": "danger", "target": "parser" }
+      ]
+    },
+    {
+      "id": "script-runs",
+      "title": { "tr": "Script çalışır, DOM'u değiştirir", "en": "Script runs and mutates the DOM" },
+      "narration": {
+        "tr": "Script çalışmadan önce app.css'in bitmesini de bekler, çünkü bir öğenin stilini sorgulayabilir. CSSOM tamamlanınca script çalışır ve DOM'a yeni bir düğüm ekler.",
+        "en": "Before running, the script also waits for app.css, because it might query an element's style. Once the CSSOM is complete the script runs and appends a new node to the DOM."
+      },
+      "durationMs": 2800,
+      "highlight": { "nodes": ["script", "dom", "cssom"], "edges": ["js-dom"] },
+      "nodeStates": { "cssom": { "status": "success", "badge": "✓" }, "script": { "status": "active", "badge": "▶ run" } },
+      "edgeStates": { "js-dom": { "visible": true, "status": "active" } },
+      "packets": [{ "edge": "js-dom", "label": "appendChild", "shape": "diamond", "durationMs": 1200, "startAt": 600 }]
+    },
+    {
+      "id": "parser-resumes",
+      "title": { "tr": "Ayrıştırıcı devam eder", "en": "Parser resumes" },
+      "narration": {
+        "tr": "Script bitti; ayrıştırıcı kaldığı yerden <body>'yi okumaya devam eder ve DOM tamamlanır. Bu bekleme boyunca ekranda hâlâ hiçbir şey yoktu.",
+        "en": "The script is done; the parser continues reading <body> where it left off and the DOM is completed. During this wait there was still nothing on screen."
+      },
+      "durationMs": 2400,
+      "highlight": { "nodes": ["parser", "dom"], "edges": ["parser-dom"] },
+      "nodeStates": { "parser": { "status": "active", "badge": "" }, "script": { "status": "success", "badge": "" }, "dom": { "status": "success", "badge": "✓" } },
+      "edgeStates": { "js-dom": { "status": "idle" } },
+      "packets": [{ "edge": "parser-dom", "label": "<body>", "shape": "square", "durationMs": 1000 }]
+    },
+    {
+      "id": "render-tree",
+      "title": { "tr": "Render ağacı", "en": "Render tree" },
+      "narration": {
+        "tr": "DOM ve CSSOM birleşir. Yalnızca görünecek düğümler render ağacına girer: display:none olan bir menü burada elenir.",
+        "en": "DOM and CSSOM merge. Only nodes that will be visible enter the render tree: a menu with display:none is dropped here."
+      },
+      "durationMs": 2600,
+      "highlight": { "nodes": ["dom", "cssom", "render"], "edges": ["dom-render", "cssom-render"] },
+      "nodeStates": { "render": { "status": "success", "badge": "" }, "parser": { "status": "idle" } },
+      "packets": [
+        { "edge": "dom-render", "label": "DOM", "shape": "square", "durationMs": 1000 },
+        { "edge": "cssom-render", "label": "CSSOM", "shape": "square", "durationMs": 1000 }
+      ]
+    },
+    {
+      "id": "layout",
+      "title": { "tr": "Layout", "en": "Layout" },
+      "narration": {
+        "tr": "Her kutunun konumu ve boyutu hesaplanır: yüzdeler piksele çevrilir, satırlar kırılır. Geometriyi değiştiren her sonraki değişiklik bu adımı yeniden tetikler.",
+        "en": "Each box's position and size are computed: percentages become pixels, lines are wrapped. Any later change to geometry re-triggers this step."
+      },
+      "durationMs": 2400,
+      "highlight": { "nodes": ["render", "layout"], "edges": ["render-layout"] },
+      "nodeStates": { "layout": { "status": "busy", "badge": "x, y, w, h" } },
+      "packets": [{ "edge": "render-layout", "durationMs": 900 }]
+    },
+    {
+      "id": "paint",
+      "title": { "tr": "Paint", "en": "Paint" },
+      "narration": {
+        "tr": "Kutular çizim komutlarına dönüşür: metin, renk, kenarlık, gölge, görsel. Yalnızca rengi değiştirmek layout'u atlar ama paint'i yeniden çalıştırır.",
+        "en": "Boxes become draw commands: text, colour, borders, shadows, images. Changing only a colour skips layout but re-runs paint."
+      },
+      "durationMs": 2400,
+      "highlight": { "nodes": ["layout", "paint"], "edges": ["layout-paint"] },
+      "nodeStates": { "layout": { "status": "success", "badge": "" }, "paint": { "status": "busy" } },
+      "packets": [{ "edge": "layout-paint", "durationMs": 900 }]
+    },
+    {
+      "id": "composite",
+      "title": { "tr": "Composite: ilk boyama", "en": "Composite: first paint" },
+      "narration": {
+        "tr": "Katmanlar GPU'da üst üste konur ve ekrana basılır: ilk içerikli boyama (FCP). transform ve opacity animasyonları çoğu zaman yalnızca bu adımı tetiklediği için ucuzdur.",
+        "en": "Layers are stacked on the GPU and shown on screen: the first contentful paint (FCP). transform and opacity animations are cheap because they often trigger only this step."
+      },
+      "durationMs": 2800,
+      "highlight": { "nodes": ["paint", "composite"], "edges": ["paint-composite"] },
+      "nodeStates": { "paint": { "status": "success" }, "composite": { "status": "success", "badge": "FCP" } },
+      "packets": [{ "edge": "paint-composite", "color": "success", "durationMs": 900 }]
+    },
+    {
+      "id": "defer-fix",
+      "title": { "tr": "Çözüm: defer", "en": "The fix: defer" },
+      "narration": {
+        "tr": "Aynı script'e defer eklenseydi: dosya ayrıştırmayla paralel iner, ayrıştırma bitince çalışır ve ayrıştırıcı hiç durmazdı. Kritik render yolu kısalır, ilk boyama öne gelir.",
+        "en": "Had the same script used defer, it would download in parallel with parsing and run after parsing ends; the parser would never stop. The critical rendering path gets shorter and first paint comes earlier."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["parser", "script"] },
+      "nodeStates": { "parser": { "status": "success", "badge": "✓ defer" }, "script": { "status": "success", "sublabel": "defer", "badge": "" } },
+      "annotations": [
+        { "id": "defer-note", "x": 330, "y": 300, "text": { "tr": "<script defer> → paralel indir, sonra çalıştır", "en": "<script defer> → download in parallel, run later" }, "tone": "success", "target": "script" }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["browser", "rendering", "critical-rendering-path", "defer"]
+}
