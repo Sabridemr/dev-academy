@@ -29,6 +29,10 @@ temel araç vardır:
 Bu derste her ikisini de simülasyonlarla, yeşil okun koddaki satırlar arasında nasıl **zıpladığını** izleyerek
 öğreneceksin.
 
+:::diagram{src="kontrol-akisi.svg" alt="Kontrol akışı: if, elif, else zincirinde ilk doğru koşulun bloğunun çalışması ve while döngüsünde koşul, gövde, continue ve break yolları|Control flow: the first true condition's block running in an if, elif, else chain, and the condition, body, continue and break paths of a while loop"}
+Koşullar akışı dallandırır, döngüler aynı bloğa geri döndürür. `continue` koşula, `break` döngünün dışına gider.
+:::
+
 ## if, elif, else
 
 `if` bir koşulu değerlendirir; koşul truthy ise girintili bloğu çalıştırır. `elif` ("else if") önceki koşullar
@@ -243,6 +247,13 @@ print()
 ```
 :::
 
+`for` başlığı her turda iterator'dan bir sonraki elemanı ister; `continue` bu isteğe erken döner, `break` ise
+döngüyü tamamen terk eder. Animasyonda üç elemanlı bir listede bu yolları ve döngü-`else`'in ne zaman çalıştığını izle.
+
+:::animation{scene="for-dongusu-akisi.scene.json"}
+`continue` turunda `print`'in atlandığına, elemanlar bitince `StopIteration` ile döngünün sessizce sona erip `else`'e girdiğine, `break` senaryosunda ise `else`'in atlandığına dikkat et.
+:::
+
 Döngü-else'in en klasik kullanımı **arama**dır: bir şey bulursan `break` edersin, döngü bulamadan biterse
 `else` "bulunamadı" durumunu işler. Asal sayı kontrolünde bölen bulmak tam olarak budur:
 
@@ -363,6 +374,23 @@ while True:
     else:
         print("Geçersiz seçim")
 ```
+:::
+
+:::realworld{company="Amazon Web Services"}
+Ağ üzerinden bir servisi çağıran her program bir gün geçici bir hatayla karşılaşır: zaman aşımı, kısa süreli
+aşırı yük, "daha sonra tekrar dene" yanıtı. Bunun standart çözümü bu derste öğrendiğin parçalardan kurulan bir
+**yeniden deneme döngüsüdür**: sınırlı sayıda tur atan bir `for`, başarı olunca `break`, bütün denemeler
+tükenince çalışan döngü-`else` (ya da döngüden sonra fırlatılan bir hata).
+
+AWS Architecture Blog'daki "Exponential Backoff And Jitter" yazısı bu döngünün nasıl yazılmaması gerektiğini de
+anlatır: binlerce istemci hatayı aynı anda görüp hemen ve aynı aralıklarla tekrar denerse, toparlanmaya çalışan
+servisi yeniden ezer. Yazının önerisi, her turda bekleme süresini katlanarak artırmak (exponential backoff) ve bu
+süreye rastgelelik eklemektir (jitter); böylece istemcilerin denemeleri zamana yayılır.
+
+AWS'nin Python SDK'sı boto3 (altındaki botocore kütüphanesi), yeniden denemeyi bu ilkelere göre kendisi yapar ve
+deneme sayısı ile modu yapılandırma üzerinden ayarlanabilir. Kendi kodunda böyle bir döngü yazarken üç şeyi
+unutma: üst sınır (sonsuz `while True` değil), başarıda `break` ve denemeler bittiğinde hatayı yutmak yerine
+açıkça bildirmek.
 :::
 
 ## Özet

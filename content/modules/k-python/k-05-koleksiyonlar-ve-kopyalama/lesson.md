@@ -37,6 +37,14 @@ olduğunu** göreceksin. K-02'de öğrendiğin kural burada da geçerli: koleksi
 **içlerinde değerlerin kendisini değil, nesnelere referansları** tutarlar. Kopyalama tuzaklarının hepsi bu tek
 cümleden çıkar.
 
+Bu cümlenin ne demek olduğunu baştan görmek için animasyonda iç içe bir listeyi önce takma adla, sonra sığ, sonra
+derin kopyayla çoğaltıyoruz. Okların hangi nesnelere gittiğini izle; dersin sonundaki kopyalama bölümünde aynı
+durumu kodla ve simülasyonla ayrıntılı inceleyeceksin.
+
+:::animation{scene="sig-derin-kopya.scene.json"}
+`copy.copy` adımında yeni dış listenin oklarının eski iç listelere gittiğine, `sig[0].append("Deniz")` sonrasında değişikliğin `takim` üzerinden de göründüğüne, `derin`in ise hiç etkilenmediğine dikkat et.
+:::
+
 ## list: sıralı ve değiştirilebilir dizi
 
 Liste, köşeli parantezle yazılan, elemanlarını sırayla tutan ve sonradan değiştirilebilen koleksiyondur.
@@ -164,6 +172,10 @@ Bunun bir şartı var: anahtarın hash değeri, sözlükte durduğu sürece **de
 yanlış yerde arardı. Bu yüzden anahtar olarak yalnızca **hashable** nesneler kullanılabilir: `int`, `str`,
 `float`, `bool`, `None`, elemanları da hashable olan `tuple` ve `frozenset`. `list`, `dict`, `set` değiştirilebilir
 olduğu için hashable değildir.
+
+:::diagram{src="sozluk-hash.svg" alt="Listede arama elemanlara tek tek bakar, sözlükte arama ise anahtarın hash değerinden yuvayı hesaplayıp doğrudan oraya gider|Searching a list checks elements one by one, while a dict lookup computes the slot from the key's hash and goes straight there"}
+Liste "ada"yı bulmak için beş elemana bakar; sözlük hash'ten yuvayı hesaplar ve tek seferde bulur.
+:::
 
 :::code{lang="python" title="Hashable anahtarlar"}
 ```python
@@ -331,6 +343,23 @@ for musteri, sehir, tutar in siparisler:   # tuple açma
 print(musteriye_gore)    # {'ada': [120, 45], 'can': [80]}
 print(sorted(sehirler))  # ['Ankara', 'İzmir']
 ```
+:::
+
+:::realworld{company="Instagram (Meta)"}
+Instagram'ın sunucu kodu, tek bir büyük Django uygulamasında çok sayıda mühendisin aynı anda çalıştığı bir Python
+kod tabanıdır. Şirketin mühendislik blogundaki "Python at Scale: Strict Modules" yazısı, bu ölçekte en çok sorun
+çıkaran şeylerden birinin **modül düzeyinde paylaşılan değiştirilebilir durum** olduğunu anlatır: bir modülün en
+üstünde tanımlanmış bir liste ya da sözlük, onu içe aktaran her yerden aynı nesne olarak görülür. Bir kod parçası
+onu "kendi kopyası" sanıp yerinde değiştirdiğinde, değişiklik başka isteklere ve başka modüllere sızar. Bu dersteki
+takma ad ve sığ kopya tuzağının, binlerce dosyaya yayılmış hâlidir.
+
+Instagram'ın çözümü, belirli modüllerin içe aktarılırken yan etki üretmesini ve dışarıdan değiştirilmesini
+kısıtlayan "strict modules" adlı bir mekanizmaydı. Kendi kodunda aynı sorunu daha basit araçlarla azaltabilirsin:
+
+- Paylaşılan sabit veriler için `tuple` ve `frozenset` gibi değiştirilemez koleksiyonlar kullan.
+- Bir fonksiyona ya da başka bir modüle verdiğin listeyi, orada değiştirilmesini istemiyorsan kopyalayarak ver;
+  iç içe yapılarda sığ kopyanın yetmeyeceğini unutma.
+- Değiştirmek yerine yeni bir koleksiyon üret (comprehension ile); böylece kimse başkasının nesnesine dokunmaz.
 :::
 
 ## Özet

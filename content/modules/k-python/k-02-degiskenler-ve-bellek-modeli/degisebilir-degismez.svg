@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 360" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Değiştirilemez ve değiştirilebilir türler</title>
+  <desc id="desc">İki sütun. Solda değiştirilemez türler: int, float, bool, str, tuple, frozenset; bunlarda işlem her zaman yeni nesne üretir ve isim yeni nesneye taşınır. Sağda değiştirilebilir türler: list, dict, set ve kendi sınıfların; bunlarda append, artı eşittir ve atama ile eleman değiştirme aynı nesneyi yerinde değiştirir ve nesneyi gösteren tüm isimler değişikliği görür.</desc>
+
+  <rect x="20" y="20" width="420" height="320" rx="16" fill="var(--da-surface, #f8fafc)" stroke="var(--da-primary, #6366f1)" stroke-width="2"/>
+  <rect x="460" y="20" width="420" height="320" rx="16" fill="var(--da-surface, #f8fafc)" stroke="var(--da-accent, #f59e0b)" stroke-width="2"/>
+
+  <text x="230" y="54" text-anchor="middle" font-size="16" font-weight="600" fill="var(--da-primary, #6366f1)">Değiştirilemez (immutable)</text>
+  <text x="670" y="54" text-anchor="middle" font-size="16" font-weight="600" fill="var(--da-accent, #f59e0b)">Değiştirilebilir (mutable)</text>
+
+  <g font-size="13" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <g stroke="var(--da-border, #cbd5e1)" fill="var(--da-surface, #ffffff)">
+      <rect x="45" y="75" width="80" height="34" rx="8"/>
+      <rect x="135" y="75" width="80" height="34" rx="8"/>
+      <rect x="225" y="75" width="80" height="34" rx="8"/>
+      <rect x="315" y="75" width="100" height="34" rx="8"/>
+      <rect x="45" y="117" width="80" height="34" rx="8"/>
+      <rect x="135" y="117" width="110" height="34" rx="8"/>
+      <rect x="485" y="75" width="80" height="34" rx="8"/>
+      <rect x="575" y="75" width="80" height="34" rx="8"/>
+      <rect x="665" y="75" width="80" height="34" rx="8"/>
+      <rect x="485" y="117" width="180" height="34" rx="8"/>
+    </g>
+    <text x="85" y="97">int</text>
+    <text x="175" y="97">float</text>
+    <text x="265" y="97">bool</text>
+    <text x="365" y="97">str</text>
+    <text x="85" y="139">tuple</text>
+    <text x="190" y="139">frozenset</text>
+    <text x="525" y="97">list</text>
+    <text x="615" y="97">dict</text>
+    <text x="705" y="97">set</text>
+    <text x="575" y="139">kendi sınıfların</text>
+  </g>
+
+  <g font-size="13" fill="var(--da-fg, #0f172a)">
+    <text x="45" y="190">x = 10</text>
+    <text x="45" y="214">x += 1</text>
+    <text x="45" y="248" fill="var(--da-muted, #64748b)">→ yeni 11 nesnesi oluşur,</text>
+    <text x="45" y="270" fill="var(--da-muted, #64748b)">x ona taşınır; 10 değişmez</text>
+    <text x="45" y="310" font-weight="600" fill="var(--da-primary, #6366f1)">Diğer isimler etkilenmez</text>
+
+    <text x="485" y="190">a = [1, 2];  b = a</text>
+    <text x="485" y="214">b += [3]   # ya da b.append(3)</text>
+    <text x="485" y="248" fill="var(--da-muted, #64748b)">→ aynı liste yerinde büyür,</text>
+    <text x="485" y="270" fill="var(--da-muted, #64748b)">id değişmez</text>
+    <text x="485" y="310" font-weight="600" fill="var(--da-accent, #f59e0b)">a da [1, 2, 3] görür</text>
+  </g>
+</svg>
