@@ -53,6 +53,21 @@ Bir üretim isteğinin bağlamı genellikle beş parçadan oluşur: sistem talim
 Bağlam penceresi girdi ve çıktının toplamıdır. Çıktı payını ayırmadan girdiyi doldurmak, cevabın yarıda kesilmesine yol açar.
 :::
 
+Bu bütçenin bir istek boyunca nasıl dolduğunu ve taştığında ne olduğunu adım adım izleyelim: önce bir cümle tokenlara bölünür, sonra pencere bölmeleri dolar, model girdiyi prefill ile işleyip KV cache'i doldurur ve decode aşamasında token token cevap üretir.
+
+:::predict{id="pencere-tasinca-ne-kirpilir"}
+Sohbet her turda uzuyor; sistem talimatı ve çıktı payı sabit. Pencere dolduğunda ilk olarak ne kırpılmalı? | The chat grows every turn; the system prompt and output reserve are fixed. When the window fills up, what should be trimmed first?
+- [ ] En uzun parça olduğu için sistem talimatı | The system prompt, since it is the longest part
+- [ ] Çıktı payı, girdiye yer açmak için | The output reserve, to make room for input
+- [x] Geçmişin en eski turları, gerekirse kısa bir özetle | The oldest turns of the history, summarised if needed
+- [ ] Kullanıcının son mesajı | The user's last message
+Açıklama: Sistem talimatı uygulamanın kurallarını, son mesaj asıl soruyu taşır; çıktı payı kesilirse cevap yarıda kalır. Bütçe önce bunlara ayrılır, kalan yer geçmişin en yeni turlarıyla sondan doldurulur ve eski turlar özetlenir. | The system prompt carries the application's rules and the last message the actual question; cutting the output reserve truncates the answer. The budget is reserved for these first, the remainder is filled with the most recent turns and older turns are summarised.
+:::
+
+:::animation{scene="context-window.scene.json"}
+Metin tokenlara bölünür, bağlam penceresi dolar, prefill KV cache'i doldurur ve decode token token üretir; pencere taşınca geçmiş özetlenip kırpılır.
+:::
+
 Pencere büyüdükçe her şeyi içine atmak cazip gelir. Ancak üç neden bunu kötü bir varsayılan yapar. Birincisi maliyet: her token her istekte yeniden faturalanır. İkincisi gecikme: model ilk tokenı üretmeden önce tüm girdiyi işlemek zorundadır. Üçüncüsü kalite: araştırmalar, uzun bağlamın ortasına gömülen bilginin başta veya sonda duran bilgiye göre daha az kullanıldığını göstermiştir. Bu etki literatürde **"lost in the middle" (ortada kaybolma)** olarak bilinir. Modeller her nesilde bu konuda iyileşse de, "pencere yeterince büyük, her şeyi koyarım" yaklaşımı hem pahalı hem de kırılgandır.
 
 ## Giriş ve çıkış tokenları neden farklı fiyatlanır?
