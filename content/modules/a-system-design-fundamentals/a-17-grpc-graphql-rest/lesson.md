@@ -13,7 +13,7 @@ durationMinutes: 30
 level: intermediate
 tags: [api, rest, graphql, grpc, protobuf, dataloader, bff]
 prerequisites: [a-01-client-server-dns-http, a-06-api-gateway]
-concepts: [rest, graphql, grpc, protobuf, graphql-schema, n-plus-one, dataloader, streaming-rpc, backend-for-frontend, api-federation]
+concepts: [rest, graphql, grpc, protobuf, graphql-schema, n-plus-one, dataloader, streaming-rpc, bff, api-federation]
 ---
 
 ## Kavram: aynı veri, üç farklı sözleşme

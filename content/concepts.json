@@ -581,6 +581,25 @@
       "edge-pop"
     ]
   },
+  "api-federation": {
+    "term": {
+      "tr": "GraphQL federasyonu",
+      "en": "GraphQL federation"
+    },
+    "definition": {
+      "tr": "Her ekibin kendi GraphQL şema parçasını kendi servisinde sunduğu, merkezi bir gateway'in bu parçaları tek bir birleşik grafa birleştirip sorguları ilgili servislere dağıttığı mimari. İstemciler tek şema görürken şema sahipliği ekiplere dağıtılır."
+    },
+    "aliases": [
+      "federation",
+      "supergraph"
+    ],
+    "related": [
+      "graphql-schema",
+      "graphql",
+      "api-gateway",
+      "bounded-context"
+    ]
+  },
   "api-gateway": {
     "term": {
       "tr": "API Gateway (API geçidi)",
@@ -997,6 +1016,25 @@
       "location-ingestion"
     ]
   },
+  "background-jobs": {
+    "term": {
+      "tr": "Arka plan işi (background job)",
+      "en": "Background jobs"
+    },
+    "definition": {
+      "tr": "Yanıt için şart olmayan işin (e-posta, PDF, bildirim) HTTP isteğinden ayrılıp kuyruğa bırakılması ve ayrı işçi süreçlerince yapılması. Kullanıcıya hızlı yanıt, dış servis hatalarında yeniden deneme ve işçileri API'den bağımsız ölçekleme imkânı verir."
+    },
+    "aliases": [
+      "worker",
+      "job queue"
+    ],
+    "related": [
+      "message-queue",
+      "idempotent-jobs",
+      "dead-letter-queue",
+      "at-least-once"
+    ]
+  },
   "backpressure": {
     "term": {
       "tr": "Geri basınç (backpressure)",
@@ -1406,6 +1444,24 @@
       "rolling-deployment",
       "rollback",
       "deployment-strategies"
+    ]
+  },
+  "bm25": {
+    "term": {
+      "tr": "BM25",
+      "en": "BM25 (Okapi BM25)"
+    },
+    "definition": {
+      "tr": "TF-IDF'i terim sıklığı doygunluğu (k1) ve belge uzunluğu normalizasyonu (b) ile geliştiren sıralama fonksiyonu. Aynı kelimeyi tekrar eden belgeleri aşırı ödüllendirmez, kısa belgedeki eşleşmeye daha çok değer verir; Lucene ve Elasticsearch'ün varsayılan skorlamasıdır."
+    },
+    "aliases": [
+      "Okapi BM25"
+    ],
+    "related": [
+      "tf-idf",
+      "inverted-index",
+      "learning-to-rank",
+      "elasticsearch"
     ]
   },
   "bound-method": {
@@ -2857,6 +2913,21 @@
       "multi-region"
     ]
   },
+  "connection-lifecycle": {
+    "term": {
+      "tr": "Bağlantı yaşam döngüsü",
+      "en": "Connection lifecycle"
+    },
+    "definition": {
+      "tr": "Kalıcı bir bağlantının (ör. WebSocket) el sıkışma, açık, canlılık kontrolü ve kapanış evreleri. Kimlik doğrulama el sıkışmada yapılır; ping/pong ile sessizce düşen bağlantılar tespit edilip kapatılır. Bağlantı belirli bir sunucu sürecine bağlı olduğundan stateful'dur."
+    },
+    "related": [
+      "websocket",
+      "presence-heartbeat",
+      "reconnect-backoff",
+      "stateful-service"
+    ]
+  },
   "connection-pooling": {
     "term": {
       "tr": "Bağlantı havuzu (connection pooling)",
@@ -3430,6 +3501,24 @@
       "process-management"
     ]
   },
+  "cron-jobs": {
+    "term": {
+      "tr": "Zamanlanmış görev (cron job)",
+      "en": "Scheduled (cron) jobs"
+    },
+    "definition": {
+      "tr": "Uygulamada belirli bir takvime göre (ör. her saat) tetiklenen görev. Yatay ölçeklenen bir serviste zamanlayıcı her replikada çalıştığından iş birden çok kez tetiklenir; bu yüzden dağıtık kilit ile tek replikanın çalıştırması sağlanır ve iş yine de idempotent tasarlanır."
+    },
+    "aliases": [
+      "scheduled jobs"
+    ],
+    "related": [
+      "cron",
+      "distributed-lock",
+      "idempotent-jobs",
+      "background-jobs"
+    ]
+  },
   "cross-shard-query": {
     "term": {
       "tr": "Shard'lar arası sorgu",
@@ -3806,6 +3895,21 @@
       "class",
       "type-hints",
       "default-arguments"
+    ]
+  },
+  "dataloader": {
+    "term": {
+      "tr": "DataLoader",
+      "en": "DataLoader"
+    },
+    "definition": {
+      "tr": "Aynı olay döngüsü turunda istenen anahtarları toplayıp tek bir toplu çağrıyla getiren ve istek süresince aynı anahtarı tekrar istemeyen yükleme deseni (Facebook'un açık kaynak kütüphanesi). GraphQL resolver'larındaki N+1 çağrıyı 1 + 1'e indirir; önbelleği istek kapsamlı olmalıdır."
+    },
+    "related": [
+      "n-plus-one",
+      "graphql",
+      "batching",
+      "event-loop"
     ]
   },
   "ddd": {
@@ -5342,6 +5446,24 @@
       "api-gateway"
     ]
   },
+  "facets": {
+    "term": {
+      "tr": "Facet (yönlü filtre)",
+      "en": "Facets"
+    },
+    "definition": {
+      "tr": "Arama sonuçlarıyla birlikte eşleşen belgelerdeki alan değerlerinin sayılarını döndürme (\"Marka: Nike (124)\"). Elasticsearch'te aggregation ile, belge → değer yönündeki sütunsal yapılar (doc values) üzerinden hesaplanır; yüksek kardinaliteli alanlarda pahalıdır."
+    },
+    "aliases": [
+      "faceted search",
+      "aggregation"
+    ],
+    "related": [
+      "elasticsearch",
+      "cardinality",
+      "inverted-index"
+    ]
+  },
   "factory-method": {
     "term": {
       "tr": "Factory Method",
@@ -6129,6 +6251,23 @@
       "online-evaluation"
     ]
   },
+  "graceful-shutdown": {
+    "term": {
+      "tr": "Zarif kapanış (graceful shutdown)",
+      "en": "Graceful shutdown"
+    },
+    "definition": {
+      "tr": "Bir sürecin SIGTERM aldığında yeni iş ya da istek kabul etmeyi bırakıp elindeki işi bitirmesi veya ilerlemesini kaydedip işi kuyruğa geri bırakması, ardından kapanması. Deploy ve ölçek küçültme sırasında yarım kalan iş ve kopan istekleri önler."
+    },
+    "aliases": [
+      "SIGTERM"
+    ],
+    "related": [
+      "job-progress",
+      "rolling-deployment",
+      "background-jobs"
+    ]
+  },
   "gradient-descent": {
     "term": {
       "tr": "Gradient descent (gradyan inişi)",
@@ -6193,6 +6332,39 @@
       "bfs",
       "dfs",
       "space-complexity"
+    ]
+  },
+  "graphql": {
+    "term": {
+      "tr": "GraphQL",
+      "en": "GraphQL"
+    },
+    "definition": {
+      "tr": "İstemcinin tek bir uç noktaya tam olarak istediği alanları ve ilişkileri sorgu olarak gönderdiği, sunucunun her alanı resolver'larla doldurup yanıtı sorgunun şeklinde döndürdüğü API sorgu dili. Fazla ve eksik veri çekmeyi azaltır; HTTP önbelleği, sorgu maliyeti sınırlaması ve N+1 ise ek çaba ister."
+    },
+    "related": [
+      "graphql-schema",
+      "rest-vs-graphql",
+      "n-plus-one",
+      "dataloader",
+      "rest"
+    ]
+  },
+  "graphql-schema": {
+    "term": {
+      "tr": "GraphQL şeması (SDL)",
+      "en": "GraphQL schema"
+    },
+    "definition": {
+      "tr": "GraphQL sunucusunun sunduğu tipleri, alanları ve aralarındaki ilişkileri Schema Definition Language ile tanımlayan sözleşme. Hem dokümantasyon hem de sorgu doğrulaması işlevi görür; tek şema evrilirken eski alanlar @deprecated ile işaretlenip kullanım izlenerek kaldırılır."
+    },
+    "aliases": [
+      "SDL"
+    ],
+    "related": [
+      "graphql",
+      "api-versioning",
+      "api-federation"
     ]
   },
   "grep": {
@@ -6267,6 +6439,24 @@
       "time-complexity",
       "upper-bound",
       "worst-case"
+    ]
+  },
+  "grpc": {
+    "term": {
+      "tr": "gRPC",
+      "en": "gRPC"
+    },
+    "definition": {
+      "tr": "Sözleşmesi Protocol Buffers ile yazılan, HTTP/2 üzerinde ikili mesajlarla çalışan uzak yordam çağrısı (RPC) çerçevesi. Kod üretimi, tip güvenliği, akış desteği ve deadline yayılımı sunar; tarayıcıdan doğrudan kullanılamadığı için en çok servisler arası iç trafikte tercih edilir."
+    },
+    "aliases": [
+      "RPC"
+    ],
+    "related": [
+      "protobuf",
+      "streaming-rpc",
+      "rest-vs-grpc",
+      "http-versions"
     ]
   },
   "guardrails": {
@@ -6969,6 +7159,21 @@
       "status-code-assertions"
     ]
   },
+  "idempotent-jobs": {
+    "term": {
+      "tr": "Idempotent iş",
+      "en": "Idempotent jobs"
+    },
+    "definition": {
+      "tr": "Birden fazla kez çalıştırıldığında yan etkiyi yalnızca bir kez üreten arka plan işi. At-least-once teslimde işçi ACK vermeden çökerse iş tekrar çalışır; idempotency anahtarı, koşullu yazma ya da \"değeri şuna ayarla\" biçimindeki işlemlerle çift e-posta veya çift ödeme önlenir."
+    },
+    "related": [
+      "idempotency",
+      "idempotency-key",
+      "at-least-once",
+      "background-jobs"
+    ]
+  },
   "idempotent-producer": {
     "term": {
       "tr": "Idempotent producer (Kafka)",
@@ -7350,6 +7555,25 @@
       "race-condition"
     ]
   },
+  "inverted-index": {
+    "term": {
+      "tr": "Ters indeks (inverted index)",
+      "en": "Inverted index"
+    },
+    "definition": {
+      "tr": "Her terimi, o terimin geçtiği belgelerin listesine (posting list) eşleyen veri yapısı. Belgeler yazılırken oluşturulur; sorgu anında yalnızca aranan terimlerin listeleri okunup kesiştirilir. Tam metin arama motorlarının ve PostgreSQL GIN indeksinin temelidir."
+    },
+    "aliases": [
+      "posting list"
+    ],
+    "related": [
+      "tokenization",
+      "stemming",
+      "bm25",
+      "elasticsearch",
+      "postgres-full-text"
+    ]
+  },
   "ip-hash": {
     "term": {
       "tr": "IP hash",
@@ -7459,6 +7683,23 @@
       "retry-backoff",
       "thundering-herd",
       "retry-backoff-dlq"
+    ]
+  },
+  "job-progress": {
+    "term": {
+      "tr": "İş ilerlemesi ve checkpoint",
+      "en": "Job progress and checkpointing"
+    },
+    "definition": {
+      "tr": "Uzun süren bir işin durumunu (kuyrukta, yüzde 42 çalışıyor, bitti, başarısız) bir kayıtta tutması ve küçük parçalar halinde ilerleyip her parçadan sonra kaldığı yeri (imleç) kaydetmesi. İstemci ilerlemeyi sorgulayabilir; kesintide iş baştan değil son checkpoint'ten devam eder."
+    },
+    "aliases": [
+      "checkpoint"
+    ],
+    "related": [
+      "background-jobs",
+      "graceful-shutdown",
+      "websocket"
     ]
   },
   "json": {
@@ -8348,6 +8589,21 @@
       "structured-logging"
     ]
   },
+  "long-polling": {
+    "term": {
+      "tr": "Long polling (uzun yoklama)",
+      "en": "Long polling"
+    },
+    "definition": {
+      "tr": "Sunucunun yeni olay yoksa isteği hemen yanıtlamayıp olay oluşana ya da zaman aşımı dolana kadar açık tuttuğu yoklama yöntemi. Boş yanıtları ve gecikmeyi azaltır; ancak her olaydan sonra yeni istek açılır ve aradaki olayların kaçmaması için imleç dikkatle yönetilmelidir."
+    },
+    "related": [
+      "polling",
+      "server-sent-events",
+      "websocket",
+      "missed-messages"
+    ]
+  },
   "loop-else": {
     "term": {
       "tr": "Döngü else bloğu",
@@ -8782,6 +9038,21 @@
       "bounded-context"
     ]
   },
+  "missed-messages": {
+    "term": {
+      "tr": "Kaçan mesajların telafisi",
+      "en": "Missed message recovery"
+    },
+    "definition": {
+      "tr": "Bağlantı koptuğu sırada yayınlanan olayların istemciye sonradan ulaştırılması. Olaylar kalıcı bir depoya artan sıra numarasıyla yazılır; istemci yeniden bağlanırken son gördüğü numarayı gönderir ve aradakileri alır. Geçmiş artık tutulmuyorsa durum baştan yüklenir."
+    },
+    "related": [
+      "reconnect-backoff",
+      "redis-adapter",
+      "server-sent-events",
+      "event-stream"
+    ]
+  },
   "mixin": {
     "term": {
       "tr": "Mixin",
@@ -9103,6 +9374,40 @@
       "non-repeatable-read",
       "transaction",
       "serializable"
+    ]
+  },
+  "n-plus-one": {
+    "term": {
+      "tr": "N+1 sorgu problemi",
+      "en": "N+1 query problem"
+    },
+    "definition": {
+      "tr": "Bir listeyi getiren 1 çağrının ardından listedeki her öğe için ayrı bir çağrı yapılması; toplam 1 + N çağrı oluşur. GraphQL'de alan alan çalışan resolver'larda ve ORM'lerde sık görülür; çağrıları toplu (batch) yapmak ya da tek sorguda birleştirmek ile çözülür."
+    },
+    "aliases": [
+      "N+1"
+    ],
+    "related": [
+      "dataloader",
+      "graphql",
+      "batching"
+    ]
+  },
+  "near-real-time-search": {
+    "term": {
+      "tr": "Neredeyse gerçek zamanlı arama",
+      "en": "Near-real-time search"
+    },
+    "definition": {
+      "tr": "Yeni yazılan belgelerin anında değil, bellekteki değişikliklerin periyodik bir refresh ile yeni segment olarak açılmasından sonra (Elasticsearch'te varsayılan ~1 sn) aranabilir olması. Arama indeksi türetilmiş ve hafif gecikmeli bir kopya olduğundan doğruluk kaynağı veritabanı olarak kalmalıdır."
+    },
+    "aliases": [
+      "NRT"
+    ],
+    "related": [
+      "elasticsearch",
+      "search-indexing",
+      "eventual-consistency"
     ]
   },
   "needs": {
@@ -10276,6 +10581,23 @@
       "authentication-vs-authorization"
     ]
   },
+  "polling": {
+    "term": {
+      "tr": "Polling (kısa yoklama)",
+      "en": "Short polling"
+    },
+    "definition": {
+      "tr": "İstemcinin yeni bir şey olup olmadığını sabit aralıklarla (ör. her N saniyede) ayrı HTTP istekleriyle sorması. En basit ve her altyapıyla uyumlu yöntemdir; ama yanıtların çoğu boş döner ve olay ortalama yarım aralık kadar gecikir."
+    },
+    "aliases": [
+      "short polling"
+    ],
+    "related": [
+      "long-polling",
+      "server-sent-events",
+      "websocket"
+    ]
+  },
   "polyglot-persistence": {
     "term": {
       "tr": "Çoklu depolama (polyglot persistence)",
@@ -10370,6 +10692,25 @@
       "embedding"
     ]
   },
+  "postgres-full-text": {
+    "term": {
+      "tr": "PostgreSQL tam metin arama",
+      "en": "PostgreSQL full-text search"
+    },
+    "definition": {
+      "tr": "PostgreSQL'in metni tsvector'a, sorguyu tsquery'ye çevirip GIN indeksiyle ters indeks benzeri arama ve ts_rank ile basit sıralama yapması. Veri tek veritabanına sığıyor ve sıralama ihtiyacı sınırlıysa ayrı bir arama kümesi işletme maliyetinden kurtarır."
+    },
+    "aliases": [
+      "tsvector",
+      "Postgres FTS"
+    ],
+    "related": [
+      "inverted-index",
+      "stemming",
+      "elasticsearch",
+      "hybrid-search"
+    ]
+  },
   "prefill-decode": {
     "term": {
       "tr": "Prefill ve decode aşamaları",
@@ -10383,6 +10724,24 @@
       "input-output-tokens",
       "token-cost",
       "streaming"
+    ]
+  },
+  "presence": {
+    "term": {
+      "tr": "Presence (çevrimiçi durumu)",
+      "en": "Presence"
+    },
+    "definition": {
+      "tr": "Bir kullanıcının o anda çevrimiçi olup olmadığını izleme ve gösterme. Genellikle heartbeat geldikçe yenilenen TTL'li bir anahtarla tutulur ve cihaz bazında değil kullanıcı bazında toplanır; büyük odalarda değişiklikler toplu ya da yalnızca ilgilenenlere yayılır."
+    },
+    "aliases": [
+      "online status"
+    ],
+    "related": [
+      "presence-heartbeat",
+      "ttl",
+      "websocket",
+      "fan-out"
     ]
   },
   "presence-heartbeat": {
@@ -10618,6 +10977,24 @@
       "dataclass"
     ]
   },
+  "protobuf": {
+    "term": {
+      "tr": "Protocol Buffers (protobuf)",
+      "en": "Protocol Buffers"
+    },
+    "definition": {
+      "tr": "Mesaj ve servislerin .proto dosyasında tanımlandığı, alanların adla değil numarayla ikili kodlandığı dil bağımsız serileştirme biçimi. JSON'dan küçük ve hızlı ayrıştırılır; yeni alanlar yeni numarayla eklenip silinenlerin numarası reserved ile kilitlenerek geriye uyumluluk korunur."
+    },
+    "aliases": [
+      "Protocol Buffers",
+      ".proto"
+    ],
+    "related": [
+      "grpc",
+      "streaming-rpc",
+      "api-versioning"
+    ]
+  },
   "protocol": {
     "term": {
       "tr": "Protocol (yapısal tipleme)",
@@ -10701,6 +11078,22 @@
       "websocket",
       "fan-out",
       "message-queue"
+    ]
+  },
+  "pubsub-fanout": {
+    "term": {
+      "tr": "Pub/Sub ile replikalar arası yayılım",
+      "en": "Pub/sub fan-out"
+    },
+    "definition": {
+      "tr": "Birden çok sunucu replikasının bir olayı ortak bir pub/sub kanalına yayınlayıp aynı kanala abone olması; her replika gelen olayı kendi belleğindeki bağlantılara dağıtır. Böylece alıcının soketi hangi replikada açık olursa olsun olay ona ulaşır."
+    },
+    "related": [
+      "pubsub",
+      "pub-sub",
+      "fan-out",
+      "redis-adapter",
+      "websocket"
     ]
   },
   "pull-model": {
@@ -11286,6 +11679,21 @@
       "payment-idempotency"
     ]
   },
+  "reconnect-backoff": {
+    "term": {
+      "tr": "Yeniden bağlanmada geri çekilme",
+      "en": "Reconnect backoff"
+    },
+    "definition": {
+      "tr": "Kopan istemcilerin yeniden bağlanırken bekleme süresini her denemede katlaması (bir üst sınırla) ve rastgele jitter eklemesi. Bir replika düştüğünde on binlerce istemcinin aynı anda geri dönüp kalan sunucuları devirmesini önler."
+    },
+    "related": [
+      "exponential-backoff",
+      "jitter",
+      "thundering-herd",
+      "connection-lifecycle"
+    ]
+  },
   "recursion": {
     "term": {
       "tr": "Özyineleme (recursion)",
@@ -11367,6 +11775,24 @@
       "http-status-codes",
       "cache-control-headers",
       "base62-encoding"
+    ]
+  },
+  "redis-adapter": {
+    "term": {
+      "tr": "Redis adapter (Socket.IO)",
+      "en": "Redis adapter"
+    },
+    "definition": {
+      "tr": "Socket.IO'nun birden çok sunucu replikasında çalışabilmesi için yayınları Redis pub/sub üzerinden diğer replikalara taşıyan eklentisi (@socket.io/redis-adapter). Bir replikada yapılan oda yayını, ilgili soketleri tutan tüm replikalara ulaşır; ancak o an dinlemeyen aboneler için mesaj saklanmaz."
+    },
+    "aliases": [
+      "@socket.io/redis-adapter"
+    ],
+    "related": [
+      "pubsub",
+      "pubsub-fanout",
+      "websocket",
+      "missed-messages"
     ]
   },
   "redis-cluster": {
@@ -12370,6 +12796,22 @@
       "eventual-consistency",
       "change-data-capture",
       "product-catalog"
+    ]
+  },
+  "search-shards": {
+    "term": {
+      "tr": "Arama indeksinde shard ve replica",
+      "en": "Search shards"
+    },
+    "definition": {
+      "tr": "Arama indeksinin, her biri tam bir Lucene indeksi olan primary shard'lara bölünmesi ve bunların replikalarının farklı düğümlerde tutulması. Sorgu scatter-gather ile tüm shard'lara gider; gecikmeyi en yavaş shard belirler ve primary shard sayısını sonradan değiştirmek yeniden indeksleme ister."
+    },
+    "related": [
+      "sharding",
+      "elasticsearch",
+      "tail-latency",
+      "hot-shard",
+      "replication"
     ]
   },
   "secret-management": {
@@ -13580,6 +14022,23 @@
       "response-time-assertions"
     ]
   },
+  "stemming": {
+    "term": {
+      "tr": "Stemming (kök bulma)",
+      "en": "Stemming"
+    },
+    "definition": {
+      "tr": "Arama için kelimeleri eklerinden arındırıp köklerine indirme (\"koşucular\" → \"koşucu\"). Aynı kökün farklı çekimlerinin birbirini bulmasını sağlar; Türkçe gibi eklemeli dillerde arama kalitesini en çok etkileyen adımdır. Sorgu da belgeyle aynı analyzer'dan geçmelidir."
+    },
+    "aliases": [
+      "lemmatization"
+    ],
+    "related": [
+      "tokenization",
+      "inverted-index",
+      "postgres-full-text"
+    ]
+  },
   "sticky-session": {
     "term": {
       "tr": "Sticky session (yapışkan oturum)",
@@ -13691,6 +14150,24 @@
       "server-sent-events",
       "input-output-tokens",
       "prefill-decode"
+    ]
+  },
+  "streaming-rpc": {
+    "term": {
+      "tr": "Akışlı RPC (streaming)",
+      "en": "Streaming RPC"
+    },
+    "definition": {
+      "tr": "gRPC'de tek istek-tek yanıt (unary) dışındaki çağrı biçimleri: sunucu akışı, istemci akışı ve çift yönlü akış. Aynı HTTP/2 bağlantısı üzerinde mesajların hazır oldukça tek tek gönderilmesini sağlar; büyük sonuçlar ve canlı veri için uygundur."
+    },
+    "aliases": [
+      "server streaming",
+      "bidirectional streaming"
+    ],
+    "related": [
+      "grpc",
+      "protobuf",
+      "streaming"
     ]
   },
   "stride": {
@@ -14306,6 +14783,23 @@
       "contract-testing",
       "regression-testing",
       "load-testing"
+    ]
+  },
+  "tf-idf": {
+    "term": {
+      "tr": "TF-IDF",
+      "en": "TF-IDF"
+    },
+    "definition": {
+      "tr": "Bir terimin belgedeki sıklığını (TF) o terimin kaç belgede geçtiğinin tersine (IDF, kabaca log(N/df)) göre ağırlıklandıran klasik alaka skoru. Belgede sık geçen ama koleksiyonda nadir olan terimler en yüksek katkıyı verir."
+    },
+    "aliases": [
+      "term frequency-inverse document frequency"
+    ],
+    "related": [
+      "bm25",
+      "inverted-index",
+      "ranking"
     ]
   },
   "threading": {

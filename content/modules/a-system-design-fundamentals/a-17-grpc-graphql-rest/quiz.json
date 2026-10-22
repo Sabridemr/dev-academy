@@ -22,7 +22,7 @@
         "en": "With a 100 ms mobile RTT, three sequential requests cost 300 ms in network waiting alone; server-side work is usually small by comparison. GraphQL or a BFF moves the aggregation inside the data centre and reduces the client side to one round trip."
       },
       "difficulty": "easy",
-      "concepts": ["rest", "backend-for-frontend"]
+      "concepts": ["rest", "bff"]
     },
     {
       "id": "q2",
@@ -104,7 +104,7 @@
         "en": "The styles are layers, not rivals. Third parties prefer REST for universal tooling and HTTP caching; rich screens on varied clients collapse to one round trip with GraphQL or a BFF; internal services benefit from contract-based, fast, streaming-capable gRPC. Forcing a single style everywhere makes you pay where that style is weak."
       },
       "difficulty": "medium",
-      "concepts": ["rest", "graphql", "grpc", "backend-for-frontend", "api-federation"]
+      "concepts": ["rest", "graphql", "grpc", "bff", "api-federation"]
     }
   ]
 }
