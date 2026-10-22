@@ -1,0 +1,519 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "n-05-csrf-xss",
+  "title": {
+    "tr": "CSRF Akışı ve XSS ile Farkı",
+    "en": "The CSRF Flow and How XSS Differs"
+  },
+  "summary": {
+    "tr": "Oturum açmış kullanıcı kötü niyetli bir siteyi ziyaret eder; gizli form tarayıcıya çerezli bir istek attırır. SameSite ve CSRF token'ı + Origin kontrolü bunu durdurur. XSS ise sitenin kendi kökeninde çalıştığı için bu savunmaları aşar; onu CSP durdurur.",
+    "en": "A logged-in user visits a malicious site; a hidden form makes the browser send a request with cookies. SameSite and a CSRF token + Origin check stop it. XSS, running on the site's own origin, bypasses those defences; CSP stops it."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Ortada kurbanın tarayıcısı, altında çerez kavanozu, sol üstte kötü niyetli site ve sağda uygulama sunucusu bulunur. Kullanıcı uygulamaya giriş yapar ve oturum çerezi kavanoza yazılır. Sonra kötü siteyi ziyaret eder; site gizli bir form döndürür ve tarayıcı uygulamaya çerezi otomatik ekleyerek e-posta değiştirme isteği gönderir. Savunmasız sunucu isteği kabul eder. SameSite=Lax çerezle tarayıcı çerezi göndermez ve istek 401 alır; Origin ve CSRF token kontrolüyle de 403 döner. Son iki adımda uygulamanın kendi sayfasına enjekte edilmiş bir betik aynı kökenden geçerli token'la istek atar; nonce'lu CSP satır içi betiği engeller.",
+      "en": "In the middle is the victim's browser with the cookie jar below it, the malicious site at the top left and the application server on the right. The user logs in to the application and the session cookie is stored in the jar. Then they visit the malicious site; it returns a hidden form and the browser sends an email-change request to the application, attaching the cookie automatically. An undefended server accepts it. With a SameSite=Lax cookie the browser does not send the cookie and the request gets 401; with an Origin and CSRF token check it gets 403. In the last two steps a script injected into the application's own page sends a request from the same origin with a valid token; a nonce-based CSP blocks the inline script."
+    }
+  },
+  "canvas": {
+    "width": 1000,
+    "height": 600
+  },
+  "nodes": [
+    {
+      "id": "evil",
+      "kind": "server",
+      "label": {
+        "tr": "kotu-site.example",
+        "en": "evil-site.example"
+      },
+      "x": 160,
+      "y": 110,
+      "w": 170,
+      "h": 76
+    },
+    {
+      "id": "browser",
+      "kind": "browser",
+      "label": {
+        "tr": "Kurbanın tarayıcısı",
+        "en": "Victim's browser"
+      },
+      "x": 440,
+      "y": 300,
+      "w": 170,
+      "h": 84
+    },
+    {
+      "id": "jar",
+      "kind": "cache",
+      "label": {
+        "tr": "Çerez kavanozu",
+        "en": "Cookie jar"
+      },
+      "sublabel": "sid",
+      "x": 440,
+      "y": 510,
+      "w": 150,
+      "h": 70
+    },
+    {
+      "id": "app",
+      "kind": "server",
+      "label": {
+        "tr": "uygulama.example",
+        "en": "app.example"
+      },
+      "x": 830,
+      "y": 300,
+      "w": 170,
+      "h": 84
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-browser-evil",
+      "from": "browser",
+      "to": "evil",
+      "kind": "request"
+    },
+    {
+      "id": "e-browser-app",
+      "from": "browser",
+      "to": "app",
+      "kind": "request"
+    },
+    {
+      "id": "e-jar-browser",
+      "from": "jar",
+      "to": "browser",
+      "kind": "data",
+      "label": {
+        "tr": "çerezi ekle",
+        "en": "attach cookie"
+      }
+    }
+  ],
+  "steps": [
+    {
+      "id": "login",
+      "title": {
+        "tr": "Giriş ve oturum çerezi",
+        "en": "Login and session cookie"
+      },
+      "narration": {
+        "tr": "Kullanıcı uygulamaya giriş yapar. Sunucu oturum çerezini döndürür ve tarayıcı onu kavanozuna koyar; bundan sonra bu siteye giden her isteğe kendiliğinden ekleyecektir.",
+        "en": "The user logs in to the application. The server returns a session cookie and the browser puts it in its jar; from now on it will attach it automatically to every request to this site."
+      },
+      "durationMs": 3400,
+      "inherit": false,
+      "highlight": {
+        "nodes": [
+          "browser",
+          "app",
+          "jar"
+        ],
+        "edges": [
+          "e-browser-app",
+          "e-jar-browser"
+        ]
+      },
+      "nodeStates": {
+        "app": {
+          "status": "active"
+        },
+        "jar": {
+          "status": "active",
+          "badge": "sid"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-browser-app",
+          "shape": "envelope",
+          "label": "POST /login",
+          "durationMs": 1000
+        },
+        {
+          "edge": "e-browser-app",
+          "direction": "backward",
+          "shape": "envelope",
+          "label": "Set-Cookie: sid",
+          "color": "success",
+          "startAt": 1200,
+          "durationMs": 1000
+        },
+        {
+          "edge": "e-jar-browser",
+          "direction": "backward",
+          "shape": "square",
+          "label": "sid",
+          "startAt": 2300,
+          "durationMs": 800
+        }
+      ]
+    },
+    {
+      "id": "visit",
+      "title": {
+        "tr": "Kötü siteyi ziyaret",
+        "en": "Visiting the malicious site"
+      },
+      "narration": {
+        "tr": "Kullanıcı başka bir sekmede bir bağlantıya tıklar. Sayfa, uygulamaya e-posta değiştirme isteği gönderen gizli bir form ve onu otomatik gönderen bir betik içerir.",
+        "en": "In another tab the user clicks a link. The page contains a hidden form that sends an email-change request to the application and a script that submits it automatically."
+      },
+      "durationMs": 3000,
+      "highlight": {
+        "nodes": [
+          "browser",
+          "evil"
+        ],
+        "edges": [
+          "e-browser-evil"
+        ]
+      },
+      "nodeStates": {
+        "evil": {
+          "status": "warning",
+          "badge": "gizli form"
+        },
+        "app": {
+          "status": "idle"
+        },
+        "jar": {
+          "status": "idle",
+          "badge": "sid"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-browser-evil",
+          "shape": "dot",
+          "label": "GET /",
+          "durationMs": 900
+        },
+        {
+          "edge": "e-browser-evil",
+          "direction": "backward",
+          "shape": "envelope",
+          "label": "<form action=uygulama…>",
+          "color": "danger",
+          "startAt": 1100,
+          "durationMs": 1100
+        }
+      ]
+    },
+    {
+      "id": "forged",
+      "title": {
+        "tr": "Sahte istek, gerçek çerez",
+        "en": "Forged request, real cookie"
+      },
+      "narration": {
+        "tr": "Form gönderilir. Tarayıcı isteği kimin başlattığına bakmaz: hedef uygulama olduğu için çerezi kavanozdan alıp ekler. Sunucu açısından istek oturum açmış kullanıcıdan gelmiş gibidir.",
+        "en": "The form is submitted. The browser does not care who initiated it: the target is the application, so it takes the cookie from the jar and attaches it. To the server the request looks like it came from the logged-in user."
+      },
+      "durationMs": 3600,
+      "highlight": {
+        "nodes": [
+          "browser",
+          "jar",
+          "app"
+        ],
+        "edges": [
+          "e-jar-browser",
+          "e-browser-app"
+        ]
+      },
+      "nodeStates": {
+        "evil": {
+          "status": "idle"
+        },
+        "jar": {
+          "status": "active",
+          "badge": "sid"
+        },
+        "app": {
+          "status": "active",
+          "badge": "çerez ✓"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-jar-browser",
+          "shape": "square",
+          "label": "sid",
+          "durationMs": 800
+        },
+        {
+          "edge": "e-browser-app",
+          "shape": "envelope",
+          "label": "POST /email + sid",
+          "color": "danger",
+          "startAt": 900,
+          "durationMs": 1300
+        }
+      ]
+    },
+    {
+      "id": "no-defence",
+      "title": {
+        "tr": "Savunmasız sunucu kabul eder",
+        "en": "An undefended server accepts"
+      },
+      "narration": {
+        "tr": "Sunucu yalnızca çereze baktığı için e-posta adresini saldırganın adresiyle değiştirir. Saldırgan şimdi şifre sıfırlama bağlantısını kendine yollayabilir.",
+        "en": "Because the server only looks at the cookie, it changes the email to the attacker's address. The attacker can now send the password reset link to themselves."
+      },
+      "durationMs": 2800,
+      "highlight": {
+        "nodes": [
+          "app"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "app": {
+          "status": "error",
+          "badge": "e-posta değişti"
+        }
+      },
+      "annotations": [
+        {
+          "id": "a-legit",
+          "x": 830,
+          "y": 180,
+          "text": {
+            "tr": "sunucu meşru sandı",
+            "en": "server thought it legitimate"
+          },
+          "tone": "danger",
+          "target": "app"
+        }
+      ]
+    },
+    {
+      "id": "samesite",
+      "title": {
+        "tr": "SameSite=Lax",
+        "en": "SameSite=Lax"
+      },
+      "narration": {
+        "tr": "Çerez SameSite=Lax ile verildiyse tarayıcı başka bir siteden başlatılan POST isteğine çerezi eklemez. İstek oturumsuz gelir ve sunucu 401 döndürür. Bu ilk ve en etkili katmandır.",
+        "en": "If the cookie was set with SameSite=Lax, the browser does not attach it to a POST initiated from another site. The request arrives without a session and the server returns 401. This is the first and most effective layer."
+      },
+      "durationMs": 3400,
+      "highlight": {
+        "nodes": [
+          "jar",
+          "browser",
+          "app"
+        ],
+        "edges": [
+          "e-browser-app"
+        ]
+      },
+      "nodeStates": {
+        "jar": {
+          "status": "success",
+          "badge": "SameSite=Lax"
+        },
+        "app": {
+          "status": "success",
+          "badge": "401"
+        }
+      },
+      "edgeStates": {
+        "e-jar-browser": {
+          "status": "muted"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-browser-app",
+          "shape": "envelope",
+          "label": {
+            "tr": "POST /email (çerezsiz)",
+            "en": "POST /email (no cookie)"
+          },
+          "durationMs": 1200
+        },
+        {
+          "edge": "e-browser-app",
+          "direction": "backward",
+          "shape": "dot",
+          "label": "401",
+          "color": "success",
+          "startAt": 1500,
+          "durationMs": 900
+        }
+      ]
+    },
+    {
+      "id": "token-origin",
+      "title": {
+        "tr": "CSRF token'ı ve Origin kontrolü",
+        "en": "CSRF token and Origin check"
+      },
+      "narration": {
+        "tr": "Durum değiştiren uç noktada sunucu ayrıca Origin başlığının kendi kökeni olduğunu ve isteğin sayfaya gömülen, oturuma bağlı CSRF token'ını taşıdığını kontrol eder. Kötü site token'ı bilmez ve Origin'i değiştiremez: 403.",
+        "en": "On a state-changing endpoint the server also checks that the Origin header is its own origin and that the request carries the session-bound CSRF token embedded in the page. The malicious site does not know the token and cannot change Origin: 403."
+      },
+      "durationMs": 3600,
+      "highlight": {
+        "nodes": [
+          "browser",
+          "app"
+        ],
+        "edges": [
+          "e-browser-app"
+        ]
+      },
+      "nodeStates": {
+        "app": {
+          "status": "success",
+          "badge": "Origin ≠ · token yok → 403"
+        }
+      },
+      "edgeStates": {
+        "e-jar-browser": {
+          "status": "idle"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-browser-app",
+          "shape": "envelope",
+          "label": "Origin: kotu-site.example",
+          "color": "danger",
+          "durationMs": 1200
+        },
+        {
+          "edge": "e-browser-app",
+          "direction": "backward",
+          "shape": "dot",
+          "label": "403",
+          "color": "success",
+          "startAt": 1500,
+          "durationMs": 900
+        }
+      ]
+    },
+    {
+      "id": "xss",
+      "title": {
+        "tr": "XSS: saldırı içeriden gelir",
+        "en": "XSS: the attack comes from inside"
+      },
+      "narration": {
+        "tr": "Şimdi uygulamanın kendi sayfasındaki bir yorum kaçışlanmadan HTML olarak gösterilir ve içindeki betik çalışır. Betik uygulamanın kökeninde çalıştığı için CSRF token'ını sayfadan okur ve aynı kökenden istek atar; SameSite ve Origin kontrolü bunu ayırt edemez.",
+        "en": "Now a comment on the application's own page is rendered as unescaped HTML and the script inside it runs. Because it runs on the application's origin, it reads the CSRF token from the page and sends a same-origin request; SameSite and the Origin check cannot tell it apart."
+      },
+      "durationMs": 4000,
+      "highlight": {
+        "nodes": [
+          "browser",
+          "app"
+        ],
+        "edges": [
+          "e-browser-app"
+        ]
+      },
+      "nodeStates": {
+        "browser": {
+          "status": "error",
+          "badge": "<script> çalıştı"
+        },
+        "app": {
+          "status": "error",
+          "badge": "token ✓ · Origin ✓"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-browser-app",
+          "direction": "backward",
+          "shape": "envelope",
+          "label": {
+            "tr": "yorum: <script>…",
+            "en": "comment: <script>…"
+          },
+          "color": "danger",
+          "durationMs": 1200
+        },
+        {
+          "edge": "e-browser-app",
+          "shape": "envelope",
+          "label": "POST /email + token",
+          "color": "danger",
+          "startAt": 1600,
+          "durationMs": 1300
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a-xss",
+          "x": 440,
+          "y": 190,
+          "text": {
+            "tr": "CSRF savunmaları XSS'i durdurmaz",
+            "en": "CSRF defences do not stop XSS"
+          },
+          "tone": "danger",
+          "target": "browser"
+        }
+      ]
+    },
+    {
+      "id": "csp",
+      "title": {
+        "tr": "Kaçışlama ve nonce'lu CSP",
+        "en": "Escaping and a nonce-based CSP"
+      },
+      "narration": {
+        "tr": "Asıl ilaç çıktıyı bağlama uygun kaçışlamaktır. İkinci katman olarak sunucu her yanıtta nonce'lu bir Content-Security-Policy gönderir; enjekte edilmiş satır içi betik nonce'ı bilmediği için tarayıcı onu çalıştırmaz ve sahte istek hiç oluşmaz.",
+        "en": "The real cure is context-aware output escaping. As a second layer the server sends a nonce-based Content-Security-Policy with every response; the injected inline script does not know the nonce, so the browser refuses to run it and the forged request never happens."
+      },
+      "durationMs": 3400,
+      "highlight": {
+        "nodes": [
+          "browser",
+          "app"
+        ],
+        "edges": [
+          "e-browser-app"
+        ]
+      },
+      "nodeStates": {
+        "browser": {
+          "status": "success",
+          "badge": "CSP engelledi"
+        },
+        "app": {
+          "status": "success"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-browser-app",
+          "direction": "backward",
+          "shape": "envelope",
+          "label": "CSP: script-src 'nonce-…'",
+          "color": "success",
+          "durationMs": 1300
+        }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": [
+    "owasp",
+    "csrf",
+    "xss",
+    "samesite",
+    "csp"
+  ]
+}

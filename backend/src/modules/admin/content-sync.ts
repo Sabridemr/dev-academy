@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import type { LessonBlock } from '@devacademy/shared';
+import { interactiveTraceSrc, type LessonBlock } from '@devacademy/shared';
 import type { LoadedLesson } from '@devacademy/shared/node';
 
 /**
@@ -56,7 +56,8 @@ export type StoredAsset = { src: string; width: number; height: number };
 
 /**
  * Ders bloklarını veritabanına yazılabilir hâle getirir: SVG'ler inline, raster görseller API yoluna
- * çevrilmiş (boyutlarıyla), sahne/quiz id'leri çözülmüş, kod izleri gömülü
+ * çevrilmiş (boyutlarıyla), sahne/quiz id'leri çözülmüş, kod izleri ve alıştırmalar (çözüm ayrı alanda)
+ * gömülü
  */
 export function resolveLessonBlocks(
   lesson: LoadedLesson,
@@ -74,6 +75,18 @@ export function resolveLessonBlocks(
         return { ...b, quizId: lesson.quiz?.id };
       case 'trace':
         return { ...b, trace: lesson.traces[b.src] };
+      case 'exercise': {
+        // Çözüm ayrı alanda: ders API'si bloklardan çıkarır, yalnızca çözüm uç noktası döner
+        const ex = lesson.exercises[b.src];
+        if (!ex) return b;
+        const { solution, ...exercise } = ex;
+        return { ...b, exercise, solution };
+      }
+      case 'interactive': {
+        // İz kullanan simülatör (predict-run): :::trace ile aynı iz bloğa gömülür
+        const src = interactiveTraceSrc(b);
+        return src ? { ...b, trace: lesson.traces[src] } : b;
+      }
       default:
         return b;
     }

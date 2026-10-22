@@ -37,6 +37,14 @@ olduğunu** göreceksin. K-02'de öğrendiğin kural burada da geçerli: koleksi
 **içlerinde değerlerin kendisini değil, nesnelere referansları** tutarlar. Kopyalama tuzaklarının hepsi bu tek
 cümleden çıkar.
 
+Bu cümlenin ne demek olduğunu baştan görmek için animasyonda iç içe bir listeyi önce takma adla, sonra sığ, sonra
+derin kopyayla çoğaltıyoruz. Okların hangi nesnelere gittiğini izle; dersin sonundaki kopyalama bölümünde aynı
+durumu kodla ve simülasyonla ayrıntılı inceleyeceksin.
+
+:::animation{scene="sig-derin-kopya.scene.json"}
+`copy.copy` adımında yeni dış listenin oklarının eski iç listelere gittiğine, `sig[0].append("Deniz")` sonrasında değişikliğin `takim` üzerinden de göründüğüne, `derin`in ise hiç etkilenmediğine dikkat et.
+:::
+
 ## list: sıralı ve değiştirilebilir dizi
 
 Liste, köşeli parantezle yazılan, elemanlarını sırayla tutan ve sonradan değiştirilebilen koleksiyondur.
@@ -165,6 +173,10 @@ yanlış yerde arardı. Bu yüzden anahtar olarak yalnızca **hashable** nesnele
 `float`, `bool`, `None`, elemanları da hashable olan `tuple` ve `frozenset`. `list`, `dict`, `set` değiştirilebilir
 olduğu için hashable değildir.
 
+:::diagram{src="sozluk-hash.svg" alt="Listede arama elemanlara tek tek bakar, sözlükte arama ise anahtarın hash değerinden yuvayı hesaplayıp doğrudan oraya gider|Searching a list checks elements one by one, while a dict lookup computes the slot from the key's hash and goes straight there"}
+Liste "ada"yı bulmak için beş elemana bakar; sözlük hash'ten yuvayı hesaplar ve tek seferde bulur.
+:::
+
 :::code{lang="python" title="Hashable anahtarlar"}
 ```python
 konum = {(41, 29): "İstanbul"}      # tuple anahtar: geçerli
@@ -289,6 +301,10 @@ Simülasyonun sonunda üç ayrı dış liste var, ama `takim` ile `sig` iç list
 "Deniz", `takim[0]`'da da görünüyor. `sig`'e yeni bir eleman eklemek ise yalnızca `sig`'i etkiledi, çünkü dış
 listeler ayrı nesneler. `derin` ise tamamen bağımsız: ona eklenen "Zeynep" başka hiçbir yerde görünmüyor.
 
+:::interactive{type="python-memory" scenario="shallow-vs-deep" title="Kendin dene: sığ ve derin kopya|Try it: shallow vs deep copy"}
+"Adım ileri" ile ilerle. `takma_ad` yalnızca yeni bir isimdir, `orijinal` ile aynı #id'yi gösterir. `sig` yeni bir dış listedir ama yuvalarındaki oklar `orijinal`in iç listelerine gider; `derin` için iç listeler de yeniden oluşturulur. `sig[0].append(99)` adımında vurgulanan kartlara ve çıktıdaki iki listeye bak. Sonra "Kodu düzenle" ile `copy.copy(orijinal)` yerine `orijinal[:]` ya da `list(orijinal)` yazıp "Çalıştır"a bas: sonuç aynıysa onlar da sığ kopyadır.
+:::
+
 :::callout{tone="info" title="deepcopy neden her zaman kullanılmıyor?"}
 Derin kopya bütün yapıyı dolaştığı için büyük verilerde yavaştır ve bellek harcar. Çoğu zaman sığ kopya yeterlidir
 ya da veriyi hiç değiştirmeden yeni bir yapı üretmek (örneğin comprehension ile) daha temizdir. `deepcopy`'yi iç
@@ -333,6 +349,23 @@ print(sorted(sehirler))  # ['Ankara', 'İzmir']
 ```
 :::
 
+:::realworld{company="Instagram (Meta)"}
+Instagram'ın sunucu kodu, tek bir büyük Django uygulamasında çok sayıda mühendisin aynı anda çalıştığı bir Python
+kod tabanıdır. Şirketin mühendislik blogundaki "Python at Scale: Strict Modules" yazısı, bu ölçekte en çok sorun
+çıkaran şeylerden birinin **modül düzeyinde paylaşılan değiştirilebilir durum** olduğunu anlatır: bir modülün en
+üstünde tanımlanmış bir liste ya da sözlük, onu içe aktaran her yerden aynı nesne olarak görülür. Bir kod parçası
+onu "kendi kopyası" sanıp yerinde değiştirdiğinde, değişiklik başka isteklere ve başka modüllere sızar. Bu dersteki
+takma ad ve sığ kopya tuzağının, binlerce dosyaya yayılmış hâlidir.
+
+Instagram'ın çözümü, belirli modüllerin içe aktarılırken yan etki üretmesini ve dışarıdan değiştirilmesini
+kısıtlayan "strict modules" adlı bir mekanizmaydı. Kendi kodunda aynı sorunu daha basit araçlarla azaltabilirsin:
+
+- Paylaşılan sabit veriler için `tuple` ve `frozenset` gibi değiştirilemez koleksiyonlar kullan.
+- Bir fonksiyona ya da başka bir modüle verdiğin listeyi, orada değiştirilmesini istemiyorsan kopyalayarak ver;
+  iç içe yapılarda sığ kopyanın yetmeyeceğini unutma.
+- Değiştirmek yerine yeni bir koleksiyon üret (comprehension ile); böylece kimse başkasının nesnesine dokunmaz.
+:::
+
 ## Özet
 
 - `list` sıralı ve değiştirilebilir; `append`, `extend`, `insert`, `pop`, `remove` yerinde çalışır ve çoğu
@@ -345,6 +378,9 @@ print(sorted(sehirler))  # ['Ankara', 'İzmir']
 - `b = a` takma addır. `copy()`, `[:]`, `list()` sığ kopyadır: iç nesneler paylaşılır. Tam bağımsızlık için
   `copy.deepcopy`.
 - İç içe liste oluştururken `*` değil comprehension kullan.
+
+:::exercise{src="tekillestir.exercise.json"}
+:::
 
 :::quiz{src="quiz.json"}
 :::

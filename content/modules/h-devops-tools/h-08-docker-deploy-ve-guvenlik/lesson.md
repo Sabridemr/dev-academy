@@ -46,6 +46,10 @@ CMD ["node", "dist/server.js"]
 ```
 :::
 
+:::interactive{type="docker-layers" example="node-basic"}
+Bu kez bilerek kötü yazılmış bir Dockerfile ile başlıyoruz. "Uyarılar" listesini oku: `ENV API_TOKEN=...` ile imaja gömülen gizli bilgi ve USER olmadığı için root olarak çalışan konteyner kırmızı güvenlik uyarılarıdır; `node:latest` etiketi derlemeyi tekrarlanamaz yapar, ayrı `apt-get` satırları ve `COPY . .`'nın `npm install`'dan önce gelmesi de süreyi ve boyutu büyütür. "src/ değişti"ye basıp kaç katmanın yeniden derlendiğini not et, sonra "Yükle: İyileştirilmiş sürüm" ile yukarıdaki iyi uygulamaların uygulandığı sürüme geç; "Önce / sonra" tablosunda final boyutun, uyarı sayısının ve src/ değişince yeniden derlenen miktarın nasıl düştüğünü karşılaştır. Editörde `USER node` satırını silip root uyarısının geri geldiğini de gör.
+:::
+
 Image'ı build edip **GitHub Container Registry (GHCR)**'ye gönderme:
 
 :::code{lang="yaml"}
@@ -104,6 +108,20 @@ Projenin büyüklüğüne göre farklı deploy hedefleri seçilebilir:
 | VPS + SSH + Docker | Tam kontrol, düşük maliyet (Hetzner, DigitalOcean) | Orta |
 | AWS / GCP / Azure | Büyük ölçek, yönetilen servisler | Zor |
 | Kubernetes | Çok servisli, yüksek trafik | Çok zor |
+
+Hangi hedefi seçerseniz seçin, kesintisiz bir Docker deploy'unun iskeleti aynıdır. İmaj bir kez derlenip registry'ye gönderilir, sunucu onu çeker, yeni konteyner eskisinin yanında başlar ve trafik ancak sağlık kontrolünden sonra çevrilir. Bu dersin ilerleyen bölümlerinde (migration'lar, deployment stratejileri, rollback) ayrıntılarını göreceğiniz akışın tamamını önce izleyin.
+
+:::predict{id="deploy-saglik-kontrolu"}
+Yeni konteyner (green) `/health` kontrolünden geçti ve trafik ona çevrildi. Birkaç dakika sonra 5xx oranı yükseliyor. En hızlı güvenli hamle hangisi? | The new container (green) passed `/health` and traffic was switched to it. A few minutes later the 5xx rate rises. What is the fastest safe move?
+- [ ] Hatayı düzelten yeni bir commit yazıp pipeline'ın baştan çalışmasını beklemek | Write a fixing commit and wait for the pipeline to run from scratch
+- [x] Hâlâ çalışan eski konteynere (blue) trafiği geri çevirmek | Switch traffic back to the old container (blue), which is still running
+- [ ] Veritabanı migration'ını geri almak | Roll back the database migration
+Açıklama: Blue hemen silinmediyse geri dönüş yalnızca vekilin upstream ayarını değiştirip yeniden yüklemektir; derleme ya da indirme gerekmez. Migration genişletici (expand) yazıldıysa eski sürüm yeni şemayla çalışmaya devam eder, bu yüzden şemaya dokunmak gerekmez. Düzeltme commit'i daha sonra, sakin bir şekilde yapılır. | If blue was not deleted right away, going back is just changing and reloading the proxy upstream; no build or download is needed. If the migration was written as an expand step, the old version keeps working with the new schema, so the schema does not need to be touched. The fixing commit comes later, calmly.
+:::
+
+:::animation{scene="zero-downtime-deploy.scene.json"}
+SHA etiketli imajın registry'den sunucuya gelmesi, green'in blue'nun yanında başlaması ve geriye uyumlu migration. Ardından sağlık kontrolü, trafiğin çevrilmesi ve hata oranı artınca blue'ya geri dönüş gösteriliyor.
+:::
 
 ### VPS'e SSH ile Docker deploy
 
@@ -492,8 +510,12 @@ permissions:
 
 ## Dene: deploy aşamasında hata
 
-:::interactive{type="pipeline" stages=7 failureStage=6 retries=0}
-Son aşamada (deploy) hata oluştuğunda önceki aşamaların çıktılarının (artifact) korunduğuna, yalnızca deploy'un tekrarlandığına dikkat et.
+:::interactive{type="pipeline" stages="lint,test,docker-build,push-ghcr,migrate,deploy-staging,deploy-prod" failureStage="deploy-prod" retries=0}
+Önce "Dağıtım stratejisi" listesinden Rolling update, Blue-green ve Canary'yi sırayla seçip pipeline'ı çalıştır. Son aşamada "Üretim filosu" ve "Trafik" göstergelerinin her stratejide nasıl farklı ilerlediğini izle. Ardından Canary'yi seçip "Canary hata oranı"nı %2'nin üstüne çıkar: yeni sürüm trafiğin küçük bir kısmına ulaştığında otomatik geri alma tetiklenir. Son olarak "Hata enjekte et" ile deploy-prod aşamasını boz ve "Yeniden deneme"yi 1 yap. Önceki aşamalar yeniden çalışmaz, yalnızca deploy tekrarlanır, çünkü imaj zaten registry'dedir.
+:::
+
+:::realworld{company="Slack"}
+Slack mühendislik blogunda 2020'de yayımlanan "Deploys at Slack" yazısı, günde birçok kez canlıya çıkan bir ekibin riski nasıl yönettiğini anlatır. Her dağıtım tek seferde tüm sunuculara gitmez. Yeni sürüm önce şirket içi kullanım için ayrılmış ortama, ardından üretim trafiğinin küçük bir kısmına (canary) ve sonra kademeli olarak artan yüzdelere çıkar. Her aşamada hata oranları ve temel metrikler izlenir. Bir sorun görüldüğünde dağıtım durdurulur ve önceki sürüme dönülür. Sürecin bir kişinin elinden çıkmaması için dağıtımları yöneten bir nöbetçi rolü de tanımlanmıştır. Yazının bu dersle örtüşen fikri şudur: güvenli dağıtım hata yapmamak değil, hatanın etki alanını küçük tutmak ve geri dönüşü hızlı kılmaktır. Blue-green, canary ve feature flag bu amaca hizmet eden farklı araçlardır. SHA ile etiketlenmiş imajlar da geri dönüşü tek bir komuta indirir.
 :::
 
 :::callout{tone="info" title="İlgili dersler"}

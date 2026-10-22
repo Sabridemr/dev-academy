@@ -12,6 +12,7 @@ import { InteractiveBlockView } from '@/components/interactive/registry';
 import { QuizView } from '@/components/quiz/QuizView';
 import { CodeBlockView } from './CodeBlockView';
 import { DiagramBlockView } from './DiagramBlockView';
+import { ExerciseBlockView } from './ExerciseBlockView';
 import { MarkdownView } from './MarkdownView';
 import { TraceView } from './TraceView';
 import { PredictBlockView } from './PredictBlockView';
@@ -52,6 +53,8 @@ export const BlockRenderer = memo(function BlockRenderer({ block, lesson, onQuiz
       return <QuizBlockView lessonId={lesson.id} onPassed={onQuizPassed} />;
     case 'trace':
       return <TraceView block={block} />;
+    case 'exercise':
+      return <ExerciseBlockView block={block} lessonId={lesson.id} />;
     case 'predict':
       return <PredictBlockView block={block} />;
     case 'resources':

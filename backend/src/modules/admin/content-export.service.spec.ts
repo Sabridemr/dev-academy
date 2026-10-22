@@ -107,6 +107,8 @@ describe('ContentExportService', () => {
     const service = new ContentExportService(fakePrisma(original));
     out = mkdtempSync(join(tmpdir(), 'da-export-'));
     copyFileSync(join(CONTENT, 'paths.json'), join(out, 'paths.json'));
+    // Sözlük ders dışa aktarımına dahil değil; CLI aynı content/ klasörüne yazdığından dosya yerinde kalır
+    copyFileSync(join(CONTENT, 'concepts.json'), join(out, 'concepts.json'));
     const unexpectedWarnings: string[] = [];
     for (const m of original.modules) {
       mkdirSync(join(out, 'modules', m.manifest.id), { recursive: true });

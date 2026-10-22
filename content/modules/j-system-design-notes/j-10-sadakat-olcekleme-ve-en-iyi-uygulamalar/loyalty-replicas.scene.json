@@ -1,0 +1,175 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "j-10-loyalty-ledger-read-replicas",
+  "title": { "tr": "Sadakat Puanı: Ledger, Tekrar Koruması ve Okuma Replikaları", "en": "Loyalty Points: Ledger, Duplicate Protection and Read Replicas" },
+  "summary": {
+    "tr": "Teslim edilen sipariş olayı puana çevrilip tek transaction'da ledger satırı ve bakiye olarak yazılır; tekrar gelen olay benzersiz kısıtla reddedilir; profil okumaları replikalara dağıtılır, puan harcayan kullanıcı kısa süre primary'den okur.",
+    "en": "A delivered-order event is turned into points and written as a ledger row plus balance in one transaction; a repeated event is rejected by a unique constraint; profile reads are spread across replicas, and a user who just spent points reads from the primary for a short while."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda üstte Kafka, altta müşteri uygulaması, ortada Loyalty Service ve PostgreSQL primary, sağda iki okuma replikası bulunur. order-delivered olayı gelir, 450 TL'lik Gold sipariş için 67 puan hesaplanır; ledger satırı ve bakiye tek transaction'da yazılır ve bakiye 300'den 367'ye çıkar. Aynı olay tekrar gelince benzersiz kısıt ikinci kaydı engeller. Değişiklik replikalara asenkron akar; profil okumaları iki replikaya dağılır. Kullanıcı ödeme adımında 100 puan harcar, bakiye primary'de 267 olur; replika henüz 367 gösterdiği için kullanıcının hemen ardından gelen okuması primary'ye yönlendirilir. Sonunda replikalar yetişir.",
+      "en": "Kafka is at the top left and the customer app at the bottom left, the Loyalty Service and the PostgreSQL primary are in the middle and two read replicas on the right. An order-delivered event arrives and 67 points are computed for a 450 TL Gold order; the ledger row and the balance are written in one transaction and the balance goes from 300 to 367. When the same event arrives again a unique constraint blocks the second entry. The change flows asynchronously to the replicas; profile reads are spread across both. The user spends 100 points at checkout and the balance on the primary becomes 267; because a replica still shows 367, the user's immediate next read is routed to the primary. Finally the replicas catch up."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "kafka", "kind": "queue", "label": "Kafka", "sublabel": "order-delivered", "x": 90, "y": 160, "w": 140, "h": 64 },
+    { "id": "app", "kind": "mobile", "label": { "tr": "Müşteri", "en": "Customer" }, "sublabel": "Gold", "x": 90, "y": 450, "w": 120, "h": 64 },
+    { "id": "loyalty", "kind": "service", "label": "Loyalty Service", "x": 300, "y": 300, "w": 150, "h": 70 },
+    { "id": "primary", "kind": "db", "label": "PostgreSQL primary", "sublabel": "loyalty_transactions + balance", "x": 560, "y": 300, "w": 190, "h": 76 },
+    { "id": "rep1", "kind": "replica", "label": { "tr": "Replika 1", "en": "Replica 1" }, "x": 850, "y": 170, "w": 130, "h": 64 },
+    { "id": "rep2", "kind": "replica", "label": { "tr": "Replika 2", "en": "Replica 2" }, "x": 850, "y": 430, "w": 130, "h": 64 }
+  ],
+  "edges": [
+    { "id": "kafka-loyalty", "from": "kafka", "to": "loyalty", "kind": "event" },
+    { "id": "app-loyalty", "from": "app", "to": "loyalty", "kind": "request" },
+    { "id": "loyalty-primary", "from": "loyalty", "to": "primary", "kind": "data" },
+    { "id": "primary-rep1", "from": "primary", "to": "rep1", "kind": "replication", "style": "dashed" },
+    { "id": "primary-rep2", "from": "primary", "to": "rep2", "kind": "replication", "style": "dashed" },
+    { "id": "loyalty-rep1", "from": "loyalty", "to": "rep1", "kind": "data", "curvature": -0.3 },
+    { "id": "loyalty-rep2", "from": "loyalty", "to": "rep2", "kind": "data", "curvature": 0.3 }
+  ],
+  "steps": [
+    {
+      "id": "event",
+      "title": { "tr": "Sipariş teslim edildi", "en": "Order delivered" },
+      "narration": {
+        "tr": "Kurye siparişi teslim edince order-delivered olayı yayınlanır. Puan siparişin verildiği anda değil teslimde kazanılır; iptal edilen siparişlerden puan geri almak zorunda kalınmaz. Loyalty Service olayı tüketir.",
+        "en": "When the courier delivers the order an order-delivered event is published. Points are earned on delivery, not when the order is placed, so there is no need to claw points back from cancelled orders. The Loyalty Service consumes the event."
+      },
+      "durationMs": 3500,
+      "inherit": false,
+      "highlight": { "nodes": ["kafka", "loyalty"], "edges": ["kafka-loyalty"] },
+      "nodeStates": { "loyalty": { "status": "active" }, "primary": { "badge": "bakiye 300" }, "rep1": { "badge": "300" }, "rep2": { "badge": "300" } },
+      "edgeStates": { "kafka-loyalty": { "status": "active" } },
+      "packets": [{ "edge": "kafka-loyalty", "shape": "envelope", "label": "order#9 · 450 TL", "durationMs": 1100 }]
+    },
+    {
+      "id": "compute",
+      "title": { "tr": "Puan hesaplanır", "en": "Points are computed" },
+      "narration": {
+        "tr": "Kural: her 10 TL için 1 puan, Gold kademede 1,5 kat. 450 / 10 = 45; 45 × 1,5 = 67,5 → aşağı yuvarlanarak 67 puan. Kurallar kodda değil yapılandırmada durur; kampanya dönemlerinde çarpan değişebilir.",
+        "en": "Rule: 1 point per 10 TL, 1.5× at the Gold tier. 450 / 10 = 45; 45 × 1.5 = 67.5 → rounded down to 67 points. The rules live in configuration rather than code; the multiplier can change during campaigns."
+      },
+      "durationMs": 3500,
+      "highlight": { "nodes": ["loyalty"], "edges": [] },
+      "nodeStates": { "loyalty": { "status": "active", "badge": "+67" } },
+      "edgeStates": { "kafka-loyalty": { "status": "idle" } },
+      "annotations": [{ "id": "calc", "x": 300, "y": 410, "text": { "tr": "450/10 × 1,5 = 67", "en": "450/10 × 1.5 = 67" }, "target": "loyalty" }]
+    },
+    {
+      "id": "write",
+      "title": { "tr": "Ledger + bakiye, tek transaction", "en": "Ledger + balance, one transaction" },
+      "narration": {
+        "tr": "Primary'de tek transaction: `loyalty_transactions` tablosuna (+67, ORDER_EARN, order 9) satırı eklenir ve `user_loyalty.points` 300'den 367'ye güncellenir. Ledger \"puanım nereye gitti?\" sorusunun cevabıdır; bakiye ise hızlı okuma için tutulan özettir.",
+        "en": "One transaction on the primary: a (+67, ORDER_EARN, order 9) row is inserted into `loyalty_transactions` and `user_loyalty.points` is updated from 300 to 367. The ledger answers \"where did my points go?\"; the balance is a summary kept for fast reads."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["loyalty", "primary"], "edges": ["loyalty-primary"] },
+      "nodeStates": { "loyalty": { "badge": "" }, "primary": { "status": "success", "badge": "bakiye 367" } },
+      "edgeStates": { "loyalty-primary": { "status": "active" } },
+      "packets": [
+        { "edge": "loyalty-primary", "shape": "square", "label": "INSERT +67", "durationMs": 900 },
+        { "edge": "loyalty-primary", "shape": "square", "label": "UPDATE 367", "startAt": 1000, "durationMs": 900 }
+      ]
+    },
+    {
+      "id": "duplicate",
+      "title": { "tr": "Tekrar gelen olay reddedilir", "en": "A repeated event is rejected" },
+      "narration": {
+        "tr": "Tüketici yeniden başladığı için aynı olay ikinci kez gelir. Ledger'daki `UNIQUE(order_id, reason)` kısıtı ikinci INSERT'i reddeder, transaction geri alınır ve bakiye 367'de kalır. Puan da para gibidir: tekrar korumasını uygulamanın iyi niyetine değil veritabanı kısıtına bırakın.",
+        "en": "Because the consumer restarted, the same event arrives a second time. The `UNIQUE(order_id, reason)` constraint on the ledger rejects the second INSERT, the transaction rolls back and the balance stays at 367. Points are like money: leave duplicate protection to a database constraint, not to the application's good intentions."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["kafka", "loyalty", "primary"], "edges": ["kafka-loyalty", "loyalty-primary"] },
+      "nodeStates": { "primary": { "status": "warning", "badge": "UNIQUE ✕ · 367" }, "loyalty": { "status": "warning" } },
+      "edgeStates": { "kafka-loyalty": { "status": "active" }, "loyalty-primary": { "status": "error" } },
+      "packets": [
+        { "edge": "kafka-loyalty", "shape": "envelope", "label": "order#9", "color": "warning", "durationMs": 900 },
+        { "edge": "loyalty-primary", "shape": "square", "label": "INSERT +67", "color": "danger", "startAt": 1000, "durationMs": 900 }
+      ]
+    },
+    {
+      "id": "replicate",
+      "title": { "tr": "Replikalara asenkron akış", "en": "Asynchronous flow to the replicas" },
+      "narration": {
+        "tr": "Primary değişikliklerini WAL kaydıyla replikalara gönderir. Asenkron replikasyon yazmayı yavaşlatmaz, ama replikalar kısa bir süre geride kalabilir. Profil sayfası, kademe ilerleme çubuğu ve puan geçmişi gibi okumalar yazmalardan çok daha fazladır; bu yüzden replikalara gider.",
+        "en": "The primary ships its changes to the replicas through the WAL. Asynchronous replication does not slow down writes, but replicas may lag briefly. Reads such as the profile page, the tier progress bar and points history far outnumber writes, so they go to the replicas."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["primary", "rep1", "rep2"], "edges": ["primary-rep1", "primary-rep2"] },
+      "nodeStates": { "kafka": { "status": "idle" }, "loyalty": { "status": "idle" }, "primary": { "status": "active", "badge": "bakiye 367" }, "rep1": { "status": "success", "badge": "367" }, "rep2": { "status": "success", "badge": "367" } },
+      "edgeStates": { "kafka-loyalty": { "status": "idle" }, "loyalty-primary": { "status": "idle" }, "primary-rep1": { "status": "active" }, "primary-rep2": { "status": "active" } },
+      "packets": [
+        { "edge": "primary-rep1", "shape": "square", "label": "WAL", "durationMs": 1000 },
+        { "edge": "primary-rep2", "shape": "square", "label": "WAL", "startAt": 300, "durationMs": 1000 }
+      ]
+    },
+    {
+      "id": "reads",
+      "title": { "tr": "Okumalar replikalara dağılır", "en": "Reads are spread over replicas" },
+      "narration": {
+        "tr": "Akşam yoğunluğunda binlerce kullanıcı puanına bakar. Loyalty Service okumaları replikalar arasında dağıtır; primary yalnızca yazmalarla ilgilenir. Okuma kapasitesi gerekirse yeni replika eklenerek büyür, uygulama kodu değişmez.",
+        "en": "At the evening peak thousands of users check their points. The Loyalty Service spreads reads across the replicas; the primary only deals with writes. If more read capacity is needed it grows by adding replicas, without changing application code."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["app", "loyalty", "rep1", "rep2"], "edges": ["app-loyalty", "loyalty-rep1", "loyalty-rep2"] },
+      "nodeStates": { "primary": { "status": "idle" }, "loyalty": { "status": "active" }, "rep1": { "status": "active", "progress": 0.5 }, "rep2": { "status": "active", "progress": 0.5 } },
+      "edgeStates": { "primary-rep1": { "status": "idle" }, "primary-rep2": { "status": "idle" }, "app-loyalty": { "status": "active" }, "loyalty-rep1": { "status": "active" }, "loyalty-rep2": { "status": "active" } },
+      "packets": [
+        { "edge": "app-loyalty", "repeat": 4, "repeatGapMs": 200, "durationMs": 700 },
+        { "edge": "loyalty-rep1", "startAt": 800, "repeat": 2, "repeatGapMs": 400, "durationMs": 700 },
+        { "edge": "loyalty-rep2", "startAt": 1000, "repeat": 2, "repeatGapMs": 400, "durationMs": 700 }
+      ]
+    },
+    {
+      "id": "redeem",
+      "title": { "tr": "Ödemede 100 puan harcanır", "en": "100 points spent at checkout" },
+      "narration": {
+        "tr": "Kullanıcı ödeme adımında 100 puan kullanır. Harcama primary'de koşullu yapılır: `UPDATE … SET points = points - 100 WHERE user_id = … AND points >= 100` ve ledger'a −100 satırı. Bakiye 267 olur. Bakiye kontrolü ve düşümü tek sorguda olduğu için eşzamanlı iki harcama bakiyeyi eksiye düşüremez.",
+        "en": "The user redeems 100 points at checkout. The spend runs conditionally on the primary: `UPDATE … SET points = points - 100 WHERE user_id = … AND points >= 100`, plus a −100 ledger row. The balance becomes 267. Because the check and the deduction are one query, two concurrent spends cannot push the balance below zero."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["app", "loyalty", "primary"], "edges": ["app-loyalty", "loyalty-primary"] },
+      "nodeStates": { "rep1": { "status": "idle", "progress": 0.2 }, "rep2": { "status": "idle", "progress": 0.2 }, "primary": { "status": "success", "badge": "bakiye 267" }, "app": { "status": "active", "badge": "−100" } },
+      "edgeStates": { "loyalty-rep1": { "status": "idle" }, "loyalty-rep2": { "status": "idle" }, "loyalty-primary": { "status": "active" } },
+      "packets": [
+        { "edge": "app-loyalty", "shape": "envelope", "label": "redeem 100", "durationMs": 800 },
+        { "edge": "loyalty-primary", "shape": "square", "label": "points >= 100", "startAt": 900, "durationMs": 900 }
+      ]
+    },
+    {
+      "id": "read-your-writes",
+      "title": { "tr": "Kendi yazdığını oku", "en": "Read your own writes" },
+      "narration": {
+        "tr": "Kullanıcı hemen profiline döner. Replika 2 henüz 367 gösteriyor; oradan okunsa \"puanım geri geldi\" sanılırdı. Bu yüzden son birkaç saniyede yazma yapmış kullanıcının okumaları primary'ye yönlendirilir (ör. oturuma yazılan son yazma zamanına bakılarak). Diğer herkes replikadan okumaya devam eder.",
+        "en": "The user goes straight back to the profile. Replica 2 still shows 367; reading from it would look like \"my points came back\". So reads from a user who wrote in the last few seconds are routed to the primary (e.g. by checking a last-write timestamp stored in the session). Everyone else keeps reading from replicas."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["loyalty", "primary", "rep2"], "edges": ["loyalty-primary", "primary-rep2"] },
+      "nodeStates": { "app": { "status": "success", "badge": "267" }, "rep2": { "status": "warning", "badge": "eski: 367" }, "rep1": { "status": "success", "badge": "267" } },
+      "edgeStates": { "primary-rep2": { "status": "active" }, "app-loyalty": { "status": "active" } },
+      "packets": [
+        { "edge": "app-loyalty", "label": "GET /points", "durationMs": 800 },
+        { "edge": "loyalty-primary", "label": "read", "startAt": 900, "durationMs": 800 },
+        { "edge": "app-loyalty", "direction": "backward", "label": "267", "color": "success", "startAt": 1900, "durationMs": 800 }
+      ],
+      "annotations": [{ "id": "lag", "x": 850, "y": 540, "text": { "tr": "replikasyon gecikmesi", "en": "replication lag" }, "target": "rep2", "tone": "warning" }]
+    },
+    {
+      "id": "caught-up",
+      "title": { "tr": "Replikalar yetişir", "en": "Replicas catch up" },
+      "narration": {
+        "tr": "Birkaç yüz milisaniye sonra replika 2 de 267'ye ulaşır ve kullanıcının okumaları yeniden replikalara döner. Özet: para benzeri veride ledger + benzersiz kısıt + koşullu güncelleme; ölçek için okuma replikaları; tutarlılık beklentisi için read-your-writes.",
+        "en": "A few hundred milliseconds later replica 2 reaches 267 as well and the user's reads go back to the replicas. Summary: for money-like data use a ledger, a unique constraint and conditional updates; read replicas for scale; read-your-writes for the consistency users expect."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["rep1", "rep2", "primary"], "edges": ["primary-rep2"] },
+      "nodeStates": { "rep2": { "status": "success", "badge": "267" }, "primary": { "status": "idle" }, "loyalty": { "status": "idle" }, "app": { "status": "idle" } },
+      "edgeStates": { "app-loyalty": { "status": "idle" }, "loyalty-primary": { "status": "idle" }, "primary-rep2": { "status": "active" } },
+      "packets": [{ "edge": "primary-rep2", "shape": "square", "label": "WAL", "durationMs": 1000 }]
+    }
+  ]
+}

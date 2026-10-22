@@ -170,6 +170,19 @@ kabaca şu aşamalardan geçer:
 | Derleme | AST | Bytecode (kod nesnesi) | Nadiren (ör. bazı `SyntaxError` türleri) |
 | Çalıştırma (PVM) | Bytecode | Programın davranışı, çıktı | `NameError`, `TypeError`, `ValueError`... |
 
+Aşağıdaki şema, aynı üç aşamayı hangi hatanın hangi anda ortaya çıktığıyla birlikte özetliyor:
+
+:::diagram{src="asamalar-ve-hatalar.svg" alt="CPython aşamaları: ayrıştırma, derleme ve çalıştırma; her aşamada çıkabilecek hatalar ve __pycache__ önbelleği|CPython stages: parsing, compiling and running; the errors each stage can raise and the __pycache__ cache"}
+Kesikli çizginin solundaki hatalar program başlamadan, sağındakiler çalışırken ortaya çıkar.
+:::
+
+Animasyonda bir dosyanın bu yolculuğunu adım adım izleyebilirsin: metin token'lara, token'lar ağaca, ağaç bytecode'a
+dönüşür; ardından sanal makine komutları değer yığınını kullanarak tek tek yürütür.
+
+:::animation{scene="kaynaktan-bytecode.scene.json"}
+`.pyc` önbelleğinin ikinci çalıştırmada derlemeyi nasıl atlattığına ve NameError'ın neden derlemede değil çalışma sırasında çıktığına dikkat et.
+:::
+
 ### dis ile bytecode'u görmek
 
 Standart kütüphanedeki `dis` (disassembler) modülü bir fonksiyonun bytecode'unu okunur biçimde gösterir:
@@ -220,8 +233,7 @@ Dosya adındaki `cpython-314`, bytecode'un hangi yorumlayıcı ve sürüm için 
 değişirse `.pyc` otomatik olarak yeniden üretilir. Doğrudan çalıştırdığın ana dosya (`python3 main.py`) ise
 genellikle önbelleğe yazılmaz. `__pycache__` klasörünü git'e eklemezsin; `.gitignore` dosyasına konur.
 
-### CPython, PyPy ve diğerleri
-
+:::callout{tone="info" title="Derinleşme: CPython, PyPy ve diğerleri"}
 "Python" aslında bir dil tanımıdır; onu çalıştıran farklı **uygulamalar** (implementation) vardır:
 
 - **CPython:** Referans uygulama, C ile yazılmıştır. Neredeyse herkesin kullandığı budur ve bu modüldeki
@@ -232,6 +244,7 @@ genellikle önbelleğe yazılmaz. `__pycache__` klasörünü git'e eklemezsin; `
 - Ayrıca MicroPython (mikrodenetleyiciler) gibi özel amaçlı uygulamalar da vardır.
 
 Hangisini kullandığını öğrenmek için: `import sys; print(sys.implementation.name)` → `cpython`.
+:::
 
 ## Program satır satır, yukarıdan aşağı çalışır
 
@@ -369,6 +382,23 @@ gerekenler:
 `ruff format` ya da `black` gibi biçimlendiriciler kodunu kaydettiğin anda PEP 8'e uygun hale getirir;
 `ruff check` ise olası hataları ve stil sorunlarını raporlar. Editörüne bir kez kurarsın, sonra stil
 tartışmalarına zaman harcamazsın.
+:::
+
+:::realworld{company="YouTube (Google)"}
+YouTube, Python'un büyük ölçekte kullanıldığı en bilinen örneklerden biridir. Google'ın açık kaynak blogunda 2017'de
+yayımlanan "Grumpy: Go running Python!" yazısı, YouTube'un ön yüz sunucularının ve API'lerinin ağırlıklı olarak
+Python ile yazıldığını ve CPython 2.7 üzerinde çalıştığını anlatır. Ekibin karşılaştığı sorun eşzamanlılıktı:
+CPython'da aynı anda tek bir thread'in bytecode yürütebilmesi, çok çekirdekli makinelerde istekleri paralel
+işlemeyi zorlaştırıyordu.
+
+Google'ın denediği yol bu dersin tam merkezine dokunur. **Grumpy**, Python kaynağını bytecode'a derleyip bir
+yorumlayıcı döngüsünde çalıştırmak yerine, onu Go kaynak koduna çeviren deneysel bir derleyiciydi; ortaya çıkan
+program Go derleyicisiyle doğrudan makine koduna dönüşüyordu. Yani "kaynak → bytecode → yorumlayıcı döngüsü"
+zinciri tek yol değildir: aynı Python dili farklı uygulamalarla (CPython, PyPy, ya da Grumpy gibi bir çevirici)
+çok farklı biçimlerde çalıştırılabilir. Bunun bedeli de yazıda açıkça belirtilir: C eklenti modülleri ve `exec`,
+`eval` gibi dinamik özellikler desteklenmiyordu. Grumpy deneysel kaldı ve geniş kullanım bulmadı; ama örnek,
+`python3 --version` ile sürümü, `sys.implementation.name` ile hangi uygulamayı kullandığını bilmenin neden önemli
+olduğunu gösterir.
 :::
 
 ## Özet

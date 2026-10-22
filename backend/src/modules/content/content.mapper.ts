@@ -1,5 +1,5 @@
 import type { Lesson, LessonVersion, Module as ModuleRow, LearningPath, AnimationScene as SceneRow, Prisma } from '@prisma/client';
-import { MODULE_GROUPS } from '@devacademy/shared';
+import { MODULE_GROUPS, stripExerciseSolutions } from '@devacademy/shared';
 import type { LessonBlock, LessonDetail, LessonFormat, LessonSummary, ModuleGroup, ModuleSummary, LearningPathSummary, SceneResponse, AnimationScene } from '@devacademy/shared';
 import { asLocalized } from '../../common/utils/localized';
 
@@ -56,7 +56,8 @@ export function toLessonDetail(
     ...toLessonSummary(lesson),
     version: v?.version ?? 0,
     publishedAt: v?.publishedAt?.toISOString() ?? null,
-    blocks: blocksOf(v),
+    // Alıştırma çözümleri istemciye gitmez: ayrı uç noktadan (oturumla) istenir
+    blocks: stripExerciseSolutions(blocksOf(v)),
     prerequisites: v?.prerequisites ?? [],
     concepts: v?.concepts ?? [],
     next: ref(neighbors.next),

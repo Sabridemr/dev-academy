@@ -1,0 +1,247 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "k18-olay-dongusu",
+  "title": { "tr": "Olay Döngüsü: await'te Askıya Al, Hazır Olunca Devam Et", "en": "The Event Loop: Suspend at await, Resume When Ready" },
+  "summary": {
+    "tr": "asyncio.gather ile başlatılan üç görevin olay döngüsünün hazır kuyruğundan sırayla çalıştırılması, await noktasında askıya alınıp kontrolü bırakması ve I/O tamamlanınca yeniden kuyruğa girmesi.",
+    "en": "Three tasks started with asyncio.gather being run in turn from the event loop's ready queue, suspending at await and yielding control, and re-entering the queue when their I/O completes."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda main coroutine'i ve hazır görev kuyruğu, ortada tek thread'de çalışan olay döngüsü, üstte A, B ve C görevleri, sağda I/O seçicisi ve uzak API vardır. main, gather ile üç görev oluşturur ve kuyruğa koyar. Döngü kuyruktan A'yı alır, A ilk await'e gelince askıya alınır ve isteği seçiciye kaydedilir; aynı şey B ve C için tekrarlanır. Kuyruk boşalınca döngü I/O olaylarını bekler. A'nın cevabı gelince seçici A'yı yeniden hazır kuyruğuna koyar, döngü A'yı kaldığı yerden sürdürüp bitirir; sonra C ve B biter. gather sonuçları argüman sırasıyla main'e döndürür.",
+      "en": "On the left are the main coroutine and the ready queue, in the middle the event loop running on a single thread, on top tasks A, B and C, on the right the I/O selector and a remote API. main creates three tasks with gather and puts them in the queue. The loop takes A from the queue; when A reaches its first await it is suspended and its request is registered with the selector; the same happens for B and C. When the queue is empty the loop waits for I/O events. When A's response arrives the selector puts A back in the ready queue and the loop resumes A where it left off and finishes it; then C and B finish. gather returns the results to main in argument order."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "main", "kind": "function", "label": "main()", "sublabel": "await gather(A, B, C)", "x": 150, "y": 90, "w": 190, "h": 64 },
+    { "id": "ready", "kind": "queue", "label": { "tr": "Hazır kuyruğu", "en": "Ready queue" }, "sublabel": "[ ]", "x": 150, "y": 330, "w": 180, "h": 70 },
+    { "id": "loop", "kind": "service", "label": { "tr": "Olay döngüsü", "en": "Event loop" }, "sublabel": { "tr": "tek thread", "en": "single thread" }, "x": 470, "y": 330, "w": 170, "h": 90 },
+    { "id": "ta", "kind": "function", "label": { "tr": "Görev A", "en": "Task A" }, "sublabel": "getir(1 sn)", "x": 400, "y": 90, "w": 140, "h": 64 },
+    { "id": "tb", "kind": "function", "label": { "tr": "Görev B", "en": "Task B" }, "sublabel": "getir(2 sn)", "x": 590, "y": 90, "w": 140, "h": 64 },
+    { "id": "tc", "kind": "function", "label": { "tr": "Görev C", "en": "Task C" }, "sublabel": "getir(1,5 sn)", "x": 780, "y": 90, "w": 140, "h": 64 },
+    { "id": "io", "kind": "worker", "label": { "tr": "I/O seçici", "en": "I/O selector" }, "sublabel": { "tr": "soket + zamanlayıcı", "en": "sockets + timers" }, "x": 820, "y": 330, "w": 170, "h": 80 },
+    { "id": "net", "kind": "server", "label": { "tr": "Uzak API", "en": "Remote API" }, "x": 820, "y": 520, "w": 150, "h": 64 }
+  ],
+  "edges": [
+    { "id": "main-ready", "from": "main", "to": "ready", "kind": "control", "label": "create_task ×3" },
+    { "id": "ready-loop", "from": "ready", "to": "loop", "kind": "control", "label": { "tr": "sıradaki", "en": "next" } },
+    { "id": "loop-a", "from": "loop", "to": "ta", "kind": "control", "bidirectional": true },
+    { "id": "loop-b", "from": "loop", "to": "tb", "kind": "control", "bidirectional": true },
+    { "id": "loop-c", "from": "loop", "to": "tc", "kind": "control", "bidirectional": true, "curvature": 0.1 },
+    { "id": "loop-io", "from": "loop", "to": "io", "kind": "event", "label": { "tr": "kaydet", "en": "register" } },
+    { "id": "io-net", "from": "io", "to": "net", "kind": "request", "bidirectional": true },
+    { "id": "io-ready", "from": "io", "to": "ready", "kind": "event", "style": "dashed", "curvature": 0.45, "label": { "tr": "uyandır", "en": "wake up" } },
+    { "id": "loop-main", "from": "loop", "to": "main", "kind": "response", "style": "dashed", "curvature": 0.25, "label": { "tr": "sonuçlar", "en": "results" } }
+  ],
+  "steps": [
+    {
+      "id": "gather",
+      "title": { "tr": "gather üç görev oluşturur", "en": "gather creates three tasks" },
+      "narration": {
+        "tr": "`await asyncio.gather(getir(1), getir(2), getir(1.5))` her coroutine'i bir **Task**'a sarar ve olay döngüsünün hazır kuyruğuna koyar. `main` sonuçlar gelene kadar kendisi de askıya alınır.",
+        "en": "`await asyncio.gather(getir(1), getir(2), getir(1.5))` wraps each coroutine in a **Task** and puts it in the event loop's ready queue. `main` itself is suspended until the results arrive."
+      },
+      "durationMs": 3200,
+      "inherit": false,
+      "highlight": { "nodes": ["main", "ready"], "edges": ["main-ready"] },
+      "nodeStates": {
+        "main": { "status": "busy", "badge": "await" },
+        "ready": { "status": "active", "sublabel": "[A, B, C]", "counter": 3, "progress": 1 }
+      },
+      "packets": [
+        { "edge": "main-ready", "shape": "square", "label": "A", "durationMs": 800 },
+        { "edge": "main-ready", "shape": "square", "label": "B", "startAt": 600, "durationMs": 800 },
+        { "edge": "main-ready", "shape": "square", "label": "C", "startAt": 1200, "durationMs": 800 }
+      ]
+    },
+    {
+      "id": "run-a",
+      "title": { "tr": "Döngü A'yı çalıştırır", "en": "The loop runs A" },
+      "narration": {
+        "tr": "Döngü kuyruğun başındaki görevi alır ve onu **bir sonraki await'e kadar** çalıştırır. Bu sırada başka hiçbir görev çalışmaz: her şey tek thread'de, sırayla.",
+        "en": "The loop takes the task at the head of the queue and runs it **until its next await**. Meanwhile no other task runs: everything happens on a single thread, in turn."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["loop", "ta"], "edges": ["ready-loop", "loop-a"] },
+      "nodeStates": {
+        "ready": { "sublabel": "[B, C]", "counter": 2, "progress": 0.67 },
+        "loop": { "status": "active", "badge": "A" },
+        "ta": { "status": "active", "badge": "▶" }
+      },
+      "packets": [
+        { "edge": "ready-loop", "shape": "square", "label": "A", "durationMs": 900 },
+        { "edge": "loop-a", "label": "send()", "startAt": 1000, "durationMs": 900 }
+      ]
+    },
+    {
+      "id": "await-a",
+      "title": { "tr": "A await'te askıya alınır", "en": "A suspends at await" },
+      "narration": {
+        "tr": "A `await istemci.get(...)` satırına gelir. İstek gönderilir, soket seçiciye kaydedilir ve A **kontrolü döngüye geri verir**. Yerel değişkenleri ve kaldığı satır coroutine nesnesinde saklı kalır.",
+        "en": "A reaches the line `await client.get(...)`. The request is sent, the socket is registered with the selector and A **hands control back to the loop**. Its local variables and current line stay saved in the coroutine object."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["ta", "io", "net"], "edges": ["loop-io", "io-net"] },
+      "nodeStates": {
+        "ta": { "status": "warning", "badge": "await" },
+        "loop": { "badge": "" },
+        "io": { "status": "busy", "counter": 1, "sublabel": { "tr": "bekleyen: A", "en": "waiting: A" } },
+        "net": { "status": "busy" }
+      },
+      "packets": [
+        { "edge": "loop-a", "direction": "backward", "label": "yield", "durationMs": 800 },
+        { "edge": "loop-io", "label": "A", "startAt": 900, "durationMs": 900 },
+        { "edge": "io-net", "shape": "envelope", "label": "GET", "startAt": 1900, "durationMs": 900 }
+      ]
+    },
+    {
+      "id": "run-b-c",
+      "title": { "tr": "B ve C de aynı yolu izler", "en": "B and C follow the same path" },
+      "narration": {
+        "tr": "Döngü sıradaki B'yi, sonra C'yi alır. Her biri ilk await'e kadar birkaç mikrosaniye çalışır, isteğini gönderir ve askıya alınır. Üç istek artık **aynı anda** yoldadır.",
+        "en": "The loop takes B next, then C. Each runs for a few microseconds until its first await, sends its request and suspends. All three requests are now in flight **at the same time**."
+      },
+      "durationMs": 4200,
+      "highlight": { "nodes": ["tb", "tc", "io"], "edges": ["loop-b", "loop-c", "loop-io"] },
+      "nodeStates": {
+        "ready": { "status": "idle", "sublabel": "[ ]", "counter": 0, "progress": 0 },
+        "tb": { "status": "warning", "badge": "await" },
+        "tc": { "status": "warning", "badge": "await" },
+        "io": { "counter": 3, "sublabel": { "tr": "bekleyen: A, B, C", "en": "waiting: A, B, C" } }
+      },
+      "packets": [
+        { "edge": "ready-loop", "shape": "square", "label": "B", "durationMs": 700 },
+        { "edge": "loop-b", "label": "send()", "startAt": 700, "durationMs": 700 },
+        { "edge": "loop-io", "label": "B", "startAt": 1400, "durationMs": 700 },
+        { "edge": "ready-loop", "shape": "square", "label": "C", "startAt": 2100, "durationMs": 700 },
+        { "edge": "loop-c", "label": "send()", "startAt": 2800, "durationMs": 700 },
+        { "edge": "loop-io", "label": "C", "startAt": 3500, "durationMs": 700 },
+        { "edge": "io-net", "shape": "envelope", "label": "GET", "startAt": 1500, "durationMs": 800, "repeat": 2, "repeatGapMs": 1300 }
+      ]
+    },
+    {
+      "id": "idle",
+      "title": { "tr": "Kuyruk boş: döngü bekler", "en": "Queue empty: the loop waits" },
+      "narration": {
+        "tr": "Çalıştırılacak hazır görev kalmadı. Döngü işletim sistemine \"bu soketlerden biri hazır olunca ya da en yakın zamanlayıcı dolunca beni uyandır\" der (`select`/`epoll`). İşlemci boşa dönmez; thread uyur.",
+        "en": "No ready task is left to run. The loop tells the operating system \"wake me when one of these sockets is ready or the nearest timer fires\" (`select`/`epoll`). The CPU does not spin; the thread sleeps."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["loop", "io"] },
+      "nodeStates": {
+        "loop": { "status": "idle", "sublabel": { "tr": "select() içinde uyuyor", "en": "sleeping in select()" } }
+      },
+      "annotations": [
+        { "id": "idle-note", "x": 470, "y": 450, "text": { "tr": "3 istek uçuşta, 0 thread meşgul", "en": "3 requests in flight, 0 threads busy" }, "target": "loop" }
+      ]
+    },
+    {
+      "id": "wake-a",
+      "title": { "tr": "A'nın cevabı geldi", "en": "A's response arrives" },
+      "narration": {
+        "tr": "1 saniye sonra A'nın soketi okunabilir olur. Seçici bunu bildirir ve döngü A'yı **yeniden hazır kuyruğuna** koyar. A henüz çalışmıyor; sırasını bekliyor.",
+        "en": "After 1 second A's socket becomes readable. The selector reports it and the loop puts A **back in the ready queue**. A is not running yet; it is waiting for its turn."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["net", "io", "ready"], "edges": ["io-net", "io-ready"] },
+      "nodeStates": {
+        "net": { "status": "active" },
+        "io": { "counter": 2, "sublabel": { "tr": "bekleyen: B, C", "en": "waiting: B, C" } },
+        "ready": { "status": "active", "sublabel": "[A]", "counter": 1, "progress": 0.33 },
+        "ta": { "status": "idle", "badge": "hazır" }
+      },
+      "packets": [
+        { "edge": "io-net", "direction": "backward", "shape": "envelope", "label": "200 OK", "durationMs": 900 },
+        { "edge": "io-ready", "label": "A", "startAt": 1000, "durationMs": 1400 }
+      ]
+    },
+    {
+      "id": "resume-a",
+      "title": { "tr": "A kaldığı yerden devam eder", "en": "A resumes where it left off" },
+      "narration": {
+        "tr": "Döngü A'yı alır ve await ifadesi cevabı **döndürür**. A gövdesinin geri kalanını çalıştırır, `return` ile biter. Görevin sonucu saklanır.",
+        "en": "The loop takes A and the await expression **returns** the response. A runs the rest of its body and finishes with `return`. The task's result is stored."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["loop", "ta"], "edges": ["ready-loop", "loop-a"] },
+      "nodeStates": {
+        "ready": { "status": "idle", "sublabel": "[ ]", "counter": 0, "progress": 0 },
+        "loop": { "status": "active", "badge": "A", "sublabel": { "tr": "tek thread", "en": "single thread" } },
+        "ta": { "status": "success", "badge": "✓" }
+      },
+      "packets": [
+        { "edge": "ready-loop", "shape": "square", "label": "A", "durationMs": 800 },
+        { "edge": "loop-a", "label": { "tr": "cevap", "en": "response" }, "startAt": 900, "durationMs": 900 }
+      ]
+    },
+    {
+      "id": "finish-c-b",
+      "title": { "tr": "Önce C, sonra B biter", "en": "C finishes first, then B" },
+      "narration": {
+        "tr": "Görevler **bekleme süreleri bitince** uyanır, başlatılma sırasına göre değil: 1,5 sn'de C, 2 sn'de B hazır kuyruğuna girer ve aynı şekilde tamamlanır.",
+        "en": "Tasks wake up **when their wait ends**, not in the order they were started: C enters the ready queue at 1.5 s, B at 2 s, and each completes the same way."
+      },
+      "durationMs": 4200,
+      "highlight": { "nodes": ["tc", "tb"], "edges": ["io-ready", "loop-c", "loop-b"] },
+      "nodeStates": {
+        "loop": { "badge": "" },
+        "io": { "status": "idle", "counter": 0, "sublabel": { "tr": "bekleyen yok", "en": "nothing waiting" } },
+        "net": { "status": "idle" },
+        "tc": { "status": "success", "badge": "✓" },
+        "tb": { "status": "success", "badge": "✓" }
+      },
+      "packets": [
+        { "edge": "io-ready", "label": "C", "durationMs": 1100 },
+        { "edge": "ready-loop", "shape": "square", "label": "C", "startAt": 1100, "durationMs": 700 },
+        { "edge": "loop-c", "startAt": 1800, "durationMs": 700 },
+        { "edge": "io-ready", "label": "B", "startAt": 2000, "durationMs": 1100 },
+        { "edge": "ready-loop", "shape": "square", "label": "B", "startAt": 3100, "durationMs": 700 },
+        { "edge": "loop-b", "startAt": 3800, "durationMs": 700 }
+      ]
+    },
+    {
+      "id": "results",
+      "title": { "tr": "gather sonuçları döndürür", "en": "gather returns the results" },
+      "narration": {
+        "tr": "Üç görev de bitince `gather` uyanır ve sonuçları **argüman sırasıyla** `[A, B, C]` olarak `main`'e verir. Toplam süre 1 + 2 + 1,5 = 4,5 sn değil, en uzun bekleyiş olan yaklaşık **2 sn**'dir.",
+        "en": "Once all three tasks finish, `gather` wakes up and hands the results to `main` **in argument order** as `[A, B, C]`. The total time is not 1 + 2 + 1.5 = 4.5 s but roughly **2 s**, the longest wait."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["main", "loop"], "edges": ["loop-main"] },
+      "nodeStates": {
+        "main": { "status": "success", "badge": "[A, B, C]" },
+        "loop": { "status": "success" }
+      },
+      "packets": [{ "edge": "loop-main", "shape": "envelope", "label": "[A, B, C]", "durationMs": 1400 }],
+      "annotations": [
+        { "id": "time-note", "x": 150, "y": 190, "text": { "tr": "≈ 2 sn (en uzun bekleyiş)", "en": "≈ 2 s (longest wait)" }, "target": "main", "tone": "success" }
+      ]
+    },
+    {
+      "id": "blocking",
+      "title": { "tr": "Tuzak: bloklayan çağrı", "en": "Trap: a blocking call" },
+      "narration": {
+        "tr": "Bir görev `await asyncio.sleep(1)` yerine `time.sleep(1)` çağırsaydı kontrolü **hiç bırakmazdı**: döngü o saniye boyunca donar, diğer görevler ve gelen cevaplar bekler. asyncio'da her bekleyiş `await` edilebilir olmalıdır.",
+        "en": "Had a task called `time.sleep(1)` instead of `await asyncio.sleep(1)`, it would **never yield** control: the loop freezes for that second and the other tasks and incoming responses wait. In asyncio every wait must be awaitable."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["loop", "tb"], "edges": ["loop-b"] },
+      "nodeStates": {
+        "loop": { "status": "error", "badge": "time.sleep" },
+        "tb": { "status": "error", "badge": "blok" },
+        "ta": { "status": "muted" },
+        "tc": { "status": "muted" },
+        "main": { "status": "muted" }
+      },
+      "edgeStates": { "loop-b": { "status": "error" }, "ready-loop": { "status": "muted" } },
+      "annotations": [
+        { "id": "block-note", "x": 470, "y": 450, "text": { "tr": "döngü donuk: kimse ilerleyemez", "en": "loop frozen: nobody can progress" }, "target": "loop", "tone": "danger" }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["python", "asyncio", "event-loop", "concurrency"]
+}

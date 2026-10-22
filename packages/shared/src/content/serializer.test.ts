@@ -35,14 +35,10 @@ function roundTrip(markdown: string, englishMarkdown?: string) {
 }
 
 /**
- * Bilinen içerik sorunları: başlığında `{}` olan callout, açılış satırı directive deseniyle eşleşmediği için
- * ayrıştırıcıda metin bloğu olarak okunuyor (ders dosyasındaki hata; gidiş-dönüş yine birebir).
+ * Bilinen içerik sorunları (ders dosyası yolu → beklenen serileştirici uyarıları). Örneğin başlığında `}` olan
+ * bir callout directive deseniyle eşleşmez ve metin bloğu olarak okunur. Şu an bilinen sorun yok.
  */
-const KNOWN_WARNINGS: Record<string, string[]> = {
-  'k-python/k-06-fonksiyonlar-ve-cagri-yigini/lesson.md': [
-    "blok 16 (text): gövdede ':::' satırı var; dosya yeniden okunurken blok bölünür",
-  ],
-};
+const KNOWN_WARNINGS: Record<string, string[]> = {};
 
 describe('serializeLesson — gerçek derslerle gidiş-dönüş', () => {
   const files = lessonFiles();
@@ -131,6 +127,44 @@ describe('serializeLesson — zor durumlar', () => {
     });
     expect(doc.blocks).toEqual(blocks);
     // text-2'nin İngilizcesi yok ama sonrasında İngilizce metin bloğu da yok: uyarı gerekmez
+    expect(out.warnings).toEqual([]);
+  });
+
+  it('kod gövdesindeki $ dizileri ($$, $&, $1) birebir korunur', () => {
+    const blocks: LessonBlock[] = [
+      {
+        id: 'code-1',
+        order: 0,
+        type: 'code',
+        language: 'bash',
+        code: 'echo "pid=$$ match=$& grup=$1 fiyat=$\'x\'"\nls /proc/$$/ns\n',
+        alternatives: [],
+        highlightLines: [],
+      },
+    ];
+    const out = serializeLesson({ meta: META, blocks });
+    expect(out.markdown).toContain('/proc/$$/ns');
+    const doc = parseLessonMarkdown(out.markdown);
+    expect(doc.blocks).toEqual(blocks);
+  });
+
+  it('alıştırma: src ve yönerge gövdesi yazılır, seed alanları (exercise/solution) yazılmaz', () => {
+    const block: LessonBlock = {
+      id: 'exercise-1',
+      order: 0,
+      type: 'exercise',
+      src: 'collatz.exercise.json',
+      instructions: { tr: 'Fonksiyonu tamamlayın.', en: 'Complete the function.' },
+    };
+    const out = serializeLesson({
+      meta: { ...META, status: 'published' },
+      blocks: [{ ...block, solution: 'def f():\n    return 1\n' }],
+    });
+    expect(out.markdown).toContain(
+      ':::exercise{src="collatz.exercise.json"}\nFonksiyonu tamamlayın.|Complete the function.\n:::',
+    );
+    expect(out.markdown).not.toContain('return 1');
+    expect(parseLessonMarkdown(out.markdown).blocks).toEqual([block]);
     expect(out.warnings).toEqual([]);
   });
 

@@ -19,6 +19,8 @@ export default tseslint.config(
       '**/playwright-report/**',
       '**/test-results/**',
       'web/next-env.d.ts',
+      // Pyodide çalışma zamanı (build öncesi node_modules'tan kopyalanır)
+      'web/public/pyodide/**',
       'mobile/expo-env.d.ts',
     ],
   },

@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 400" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">@dataclass hangi dunder metotları üretir?</title>
+  <desc id="desc">Solda tip açıklamalı alanları olan Sepet sınıfı tanımı: sahip str, indirim int varsayılan 0, urunler list default_factory ile. Ortada @dataclass dekoratörü alanları okur. Sağda üretilen metotlar: __init__ alanları sırayla parametre alır ve sonunda __post_init__ çağırır, __repr__ alan adlarıyla metin üretir, __eq__ alanları tuple gibi karşılaştırır. Altta isteğe bağlı bayraklar: order=True karşılaştırma metotlarını, frozen=True atamayı engelleyip __hash__ üretir.</desc>
+  <defs>
+    <marker id="ok" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+  </defs>
+
+  <!-- Kaynak sınıf -->
+  <rect x="24" y="60" width="270" height="170" rx="12" fill="var(--da-surface, #f8fafc)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5"/>
+  <text x="40" y="88" font-size="14" fill="var(--da-accent, #f59e0b)">@dataclass</text>
+  <g font-size="14" fill="var(--da-fg, #0f172a)">
+    <text x="40" y="112" font-weight="600">class Sepet:</text>
+    <text x="58" y="140">sahip: str</text>
+    <text x="58" y="166">indirim: int = 0</text>
+    <text x="58" y="192">urunler: list[str] =</text>
+    <text x="74" y="214" font-size="12" fill="var(--da-muted, #64748b)">field(default_factory=list)</text>
+  </g>
+  <text x="159" y="256" text-anchor="middle" font-size="12" fill="var(--da-muted, #64748b)">yazdığın: yalnızca tip açıklamalı alanlar</text>
+
+  <!-- Dekoratör -->
+  <path d="M 294 145 L 360 145" stroke="var(--da-muted, #64748b)" stroke-width="1.8" fill="none" marker-end="url(#ok)"/>
+  <rect x="362" y="105" width="150" height="80" rx="14" fill="var(--da-primary, #6366f1)" fill-opacity="0.12" stroke="var(--da-primary, #6366f1)" stroke-width="2"/>
+  <text x="437" y="138" text-anchor="middle" font-size="15" font-weight="600" fill="var(--da-primary, #6366f1)">@dataclass</text>
+  <text x="437" y="160" text-anchor="middle" font-size="12" fill="var(--da-fg, #0f172a)">alanları sırayla okur</text>
+
+  <g stroke="var(--da-muted, #64748b)" stroke-width="1.8" fill="none" marker-end="url(#ok)">
+    <path d="M 512 130 C 545 110, 550 70, 580 70"/>
+    <path d="M 512 145 L 580 145"/>
+    <path d="M 512 160 C 545 180, 550 220, 580 220"/>
+  </g>
+
+  <!-- Üretilen metotlar -->
+  <g font-size="13">
+    <rect x="582" y="40" width="296" height="60" rx="10" fill="var(--da-success, #10b981)" fill-opacity="0.12" stroke="var(--da-success, #10b981)"/>
+    <text x="596" y="64" font-weight="600" fill="var(--da-fg, #0f172a)">__init__(self, sahip, indirim=0, ...)</text>
+    <text x="596" y="86" fill="var(--da-muted, #64748b)">alanları atar, sonra __post_init__ (varsa)</text>
+
+    <rect x="582" y="115" width="296" height="60" rx="10" fill="var(--da-success, #10b981)" fill-opacity="0.12" stroke="var(--da-success, #10b981)"/>
+    <text x="596" y="139" font-weight="600" fill="var(--da-fg, #0f172a)">__repr__(self)</text>
+    <text x="596" y="161" fill="var(--da-muted, #64748b)">Sepet(sahip='Ayşe', indirim=0, urunler=[])</text>
+
+    <rect x="582" y="190" width="296" height="60" rx="10" fill="var(--da-success, #10b981)" fill-opacity="0.12" stroke="var(--da-success, #10b981)"/>
+    <text x="596" y="214" font-weight="600" fill="var(--da-fg, #0f172a)">__eq__(self, other)</text>
+    <text x="596" y="236" fill="var(--da-muted, #64748b)">alanları karşılaştırır; __hash__ = None</text>
+  </g>
+
+  <!-- Bayraklar -->
+  <line x1="24" y1="290" x2="878" y2="290" stroke="var(--da-border, #cbd5e1)" stroke-dasharray="6 6"/>
+  <text x="24" y="318" font-size="13" fill="var(--da-muted, #64748b)">İsteğe bağlı bayraklar</text>
+  <g font-size="13">
+    <rect x="24" y="332" width="410" height="50" rx="10" fill="var(--da-surface, #f8fafc)" stroke="var(--da-border, #cbd5e1)"/>
+    <text x="40" y="354" font-weight="600" fill="var(--da-fg, #0f172a)">order=True</text>
+    <text x="40" y="373" fill="var(--da-muted, #64748b)">__lt__, __le__, __gt__, __ge__ da üretilir</text>
+    <rect x="468" y="332" width="410" height="50" rx="10" fill="var(--da-surface, #f8fafc)" stroke="var(--da-border, #cbd5e1)"/>
+    <text x="484" y="354" font-weight="600" fill="var(--da-fg, #0f172a)">frozen=True</text>
+    <text x="484" y="373" fill="var(--da-muted, #64748b)">atama FrozenInstanceError verir; __hash__ üretilir</text>
+  </g>
+</svg>

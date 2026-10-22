@@ -104,6 +104,12 @@ Gerçek zamanlı veri kullanıcıya WebSocket veya polling ile gönderilir.
 
 **PubSub (yayınla-abone ol):** Birden fazla WebSocket sunucusu olduğunda, kurye konumu A sunucusuna gelir ama kullanıcı B sunucusuna bağlıdır. Redis PubSub veya Kafka, mesajı tüm sunuculara dağıtır; ilgili kullanıcıya bağlı olan sunucu iletir.
 
+Takip ve bildirim aynı olay akışının iki ucudur. Aşağıdaki animasyonda kurye konumunun Redis ve Pub/Sub üzerinden doğru WebSocket sunucusuna gidişini, PICKED_UP durumunun tekilleştirilmiş bir push'a dönüşmesini ve 13. bölümdeki kampanya bildirimlerinin düşük öncelikle partiler hâlinde dağıtılmasını izleyebilirsin.
+
+:::animation{scene="tracking-fanout.scene.json"}
+Konum → Redis + Pub/Sub → WebSocket; durum değişikliği → tekil push; kampanya → partiler ve öncelikli kuyruk.
+:::
+
 ### Sipariş takip durumları
 
 | Durum | Anlamı |
@@ -380,7 +386,8 @@ RETURNING id;   -- satır dönmezse limit dolmuştur
 ```
 :::
 
-### Kötüye kullanım ve dolandırıcılık önleme
+:::callout{tone="info" title="Derinleşme"}
+**Kötüye kullanım ve dolandırıcılık önleme**
 
 - Kullanıcı başına kullanımı sınırla (ör. 1 kez).
 - Cihaz parmak izi (device fingerprinting).
@@ -389,6 +396,7 @@ RETURNING id;   -- satır dönmezse limit dolmuştur
 - Doğrulama API'sine rate limit uygula (kod deneme saldırılarına karşı).
 - Kötüye kullanım kalıplarını kara listeye al.
 - İleri seviyede makine öğrenmesi / sezgisel kurallarla dolandırıcılık tespiti.
+:::
 
 :::callout{tone="info"}
 Aynı kullanıcı kuponu birden fazla kez kullanamamalı.
@@ -406,6 +414,12 @@ Toptan satışta en etkili kampanyalar kupon kodundan çok kademeli indirimlerdi
 
 :::interactive{type="fan-out" mode="hybrid" avgFollowers=200 celebrityThreshold=5000}
 Kampanya bildiriminin milyonlarca kullanıcıya dağıtımında push (yazarken) ve pull (okurken) modellerini karşılaştır; ünlü hesap eşiğini değiştir.
+:::
+
+:::realworld{company="Uber"}
+Canlı takipte polling'den push'a geçişin gerekçesini Uber, 2020'de mühendislik blogunda yayımladığı "Uber's Real-Time Push Platform" yazısında anlatır. Yolcu ve sürücü uygulamaları uzun süre sunucuya düzenli aralıklarla "yeni bir şey var mı?" diye soruyordu. Yazıya göre bu yaklaşım, cevabı çoğu zaman "hayır" olan çok sayıda istek üretiyor, sunucu yükünü ve mobil cihazın pil ve veri tüketimini artırıyordu.
+
+Uber bunun yerine RAMEN adını verdiği bir push platformu kurdu: sunucu tarafındaki servisler bir değişiklik olduğunda mesajı platforma bırakır, platform da uygulamayla açık tuttuğu kalıcı bağlantı üzerinden mesajı ilgili cihaza iter. Mesajlara öncelik verilir ve cihaz yeniden bağlandığında kaçırdıkları teslim edilir. 2022'de yayımlanan devam yazısında platformun gRPC tabanlı çift yönlü akışa taşındığı anlatılır. Bu dersteki tasarımın üç fikri, kalıcı bağlantı, mesajı doğru bağlantıya yönlendirme ve önceliklendirme, bu yazılarda gerçek ölçekte karşılık bulur.
 :::
 
 :::callout{tone="info" title="İlgili dersler"}

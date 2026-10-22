@@ -64,6 +64,20 @@ Bir biçimi ya da ince bir ayrımı kelimelerle tarif etmek zordur; iki üç ör
 
 Üretimde bunun iki pratik sonucu vardır. Birincisi maliyet ve gecikme: akıl yürütme çıkış tokenıdır ve önceki derste gördüğümüz gibi en pahalı tokenlar bunlardır. Basit sınıflandırma görevlerinde zincirleme düşünme çoğu zaman gereksizdir. İkincisi ayrıştırma: akıl yürütme ile nihai cevabı ayrı etiketlere (`<dusunce>` ve `<cevap>`) ya da ayrı JSON alanlarına koymak, kullanıcıya yalnızca cevabı göstermenizi ve cevabı programatik olarak okumanızı sağlar. Bazı modeller bu akıl yürütmeyi kendi içinde, ayrı bir "düşünme" bütçesiyle yapar; bu durumda bütçeyi parametreyle kontrol edersiniz.
 
+Şimdiye kadarki teknikleri tek bir görev üzerinde art arda uygulayalım: aynı sınıflandırma şablonu yalın bir talimattan başlayıp biçim, örnekler ve zincirleme düşünmeyle sürüm sürüm gelişiyor; her sürüm bir doğrulayıcıdan ve değerlendirme setinden geçiyor.
+
+:::predict{id="few-shot-ne-zaman"}
+Sınıflandırma şablonuna JSON biçimi ve kategori listesi eklendi; çıktı artık şemaya uyuyor ama "hem iade hem şikâyet" içeren mesajlarda model tutarsız. Bir sonraki adım ne olmalı? | The classification template now has a JSON format and a category list; the output matches the schema, but the model is inconsistent on messages that are "both a return and a complaint". What should the next step be?
+- [ ] Temperature'ı yükseltmek | Raise the temperature
+- [x] Bu sınır vakaları gösteren birkaç few-shot örneği eklemek | Add a few few-shot examples that show these edge cases
+- [ ] Sistem mesajını kaldırıp her şeyi kullanıcı mesajına yazmak | Drop the system message and put everything into the user message
+Açıklama: İnce bir ayrımı kelimelerle tarif etmek zordur; zor vakayı doğru çıktısıyla göstermek modelin onu aynı biçimde ayırmasını sağlar. Temperature tutarsızlığı artırır, kuralları kullanıcı mesajına taşımak ise önceliklerini zayıflatır. | A subtle distinction is hard to describe in words; showing the hard case with its correct output makes the model separate it the same way. Temperature increases inconsistency, and moving rules into the user message weakens their priority.
+:::
+
+:::animation{scene="prompt-iterations.scene.json"}
+Aynı görev için şablon v1'den v4'e: zero-shot, biçim ve çıkış yolu, few-shot ve zincirleme düşünme; doğrulayıcı hatalı çıktıyı modele geri verir.
+:::
+
 ## Yapılandırılmış çıktı
 
 Bir LLM'in cevabını başka bir kod okuyacaksa serbest metin bir hata kaynağıdır. Çözüm, çıktıyı bir şemaya bağlamaktır. Bunun için üç katman birlikte kullanılır:

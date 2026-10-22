@@ -1,0 +1,199 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "j-02-capacity-to-scaling",
+  "title": { "tr": "Kapasite Tahmininden Ölçekleme Kararına", "en": "From Capacity Estimate to Scaling Decision" },
+  "summary": {
+    "tr": "Arka-zarf hesabıyla tepe okuma ve yazma QPS'i bulunur, trafik tek veritabanına yığılınca darboğaz görünür, önce önbellek sonra okuma replikaları eklenir; sharding'e gerek olmadığı sayılarla gösterilir.",
+    "en": "A back-of-the-envelope estimate gives peak read and write QPS, traffic piling onto a single database reveals the bottleneck, a cache and then read replicas are added; the numbers show sharding is not needed."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda 10 milyon günlük aktif kullanıcı, ardından yük dengeleyici ve iki durumsuz uygulama sunucusu, sağda PostgreSQL primary bulunur. Önce kapasite varsayımları yazılır: ortalama 2.300, tepede yaklaşık 7.000 okuma/sn ve tepede yaklaşık 700 yazma/sn. Tüm okumalar primary'ye gidince veritabanı doluluğu kırmızıya yaklaşır. Önbellek eklenince okumaların çoğu bellekten karşılanır ve primary rahatlar. Ardından iki okuma replikası eklenir; önbellek ıskaları replikalara, yazmalar primary'ye gider. Son adımda yazma hacmi tek makineye sığdığı için sharding'in gerekmediği vurgulanır.",
+      "en": "On the left are 10 million daily active users, then a load balancer and two stateless app servers, with the PostgreSQL primary on the right. First the capacity assumptions are written: 2,300 reads/s on average, about 7,000 reads/s at peak and about 700 writes/s at peak. With all reads going to the primary the database load approaches red. When a cache is added most reads are served from memory and the primary recovers. Then two read replicas are added; cache misses go to the replicas and writes to the primary. The last step stresses that sharding is not needed because the write volume fits on one machine."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "users", "kind": "user", "label": { "tr": "Kullanıcılar", "en": "Users" }, "sublabel": "10M DAU", "x": 80, "y": 300, "w": 120, "h": 70 },
+    { "id": "lb", "kind": "lb", "label": { "tr": "Yük dengeleyici", "en": "Load balancer" }, "x": 230, "y": 300, "w": 130, "h": 64 },
+    { "id": "app1", "kind": "server", "label": "app-1", "sublabel": { "tr": "durumsuz", "en": "stateless" }, "x": 410, "y": 220, "w": 120, "h": 64 },
+    { "id": "app2", "kind": "server", "label": "app-2", "sublabel": { "tr": "durumsuz", "en": "stateless" }, "x": 410, "y": 380, "w": 120, "h": 64 },
+    { "id": "cache", "kind": "cache", "label": "Redis", "sublabel": { "tr": "sıcak veri", "en": "hot data" }, "x": 620, "y": 110, "w": 120, "h": 64 },
+    { "id": "primary", "kind": "db", "label": { "tr": "PostgreSQL primary", "en": "PostgreSQL primary" }, "x": 640, "y": 330, "w": 160, "h": 70 },
+    { "id": "rep1", "kind": "replica", "label": { "tr": "Okuma replikası 1", "en": "Read replica 1" }, "x": 870, "y": 230, "w": 150, "h": 64 },
+    { "id": "rep2", "kind": "replica", "label": { "tr": "Okuma replikası 2", "en": "Read replica 2" }, "x": 870, "y": 460, "w": 150, "h": 64 }
+  ],
+  "edges": [
+    { "id": "users-lb", "from": "users", "to": "lb", "kind": "request" },
+    { "id": "lb-app1", "from": "lb", "to": "app1", "kind": "request" },
+    { "id": "lb-app2", "from": "lb", "to": "app2", "kind": "request" },
+    { "id": "app1-db", "from": "app1", "to": "primary", "kind": "data" },
+    { "id": "app2-db", "from": "app2", "to": "primary", "kind": "data" },
+    { "id": "app1-cache", "from": "app1", "to": "cache", "kind": "data" },
+    { "id": "app2-cache", "from": "app2", "to": "cache", "kind": "data", "curvature": 0.3 },
+    { "id": "db-rep1", "from": "primary", "to": "rep1", "kind": "replication", "style": "dashed" },
+    { "id": "db-rep2", "from": "primary", "to": "rep2", "kind": "replication", "style": "dashed" },
+    { "id": "app2-rep2", "from": "app2", "to": "rep2", "kind": "data", "curvature": 0.25 }
+  ],
+  "steps": [
+    {
+      "id": "assumptions",
+      "title": { "tr": "Varsayımları sayıya dök", "en": "Turn assumptions into numbers" },
+      "narration": {
+        "tr": "Varsayım: 10 milyon DAU, kişi başı günde 20 okuma ve 2 yazma. 200 milyon okuma ÷ ~86.400 sn ≈ 2.300 okuma/sn, tepe çarpanı 3 ile ≈ 7.000 okuma/sn. Yazmalar 230/sn, tepede ≈ 700/sn. Okuma/yazma oranı 10:1; bu oran sonraki her kararı yönlendirecek.",
+        "en": "Assumption: 10 million DAU, 20 reads and 2 writes per user per day. 200 million reads ÷ ~86,400 s ≈ 2,300 reads/s, about 7,000 reads/s with a peak factor of 3. Writes are 230/s, about 700/s at peak. The read/write ratio is 10:1; this ratio will drive every decision that follows."
+      },
+      "durationMs": 4500,
+      "inherit": false,
+      "highlight": { "nodes": ["users"], "edges": [] },
+      "nodeStates": {
+        "users": { "status": "active" },
+        "cache": { "visible": false },
+        "rep1": { "visible": false },
+        "rep2": { "visible": false }
+      },
+      "edgeStates": {
+        "app1-cache": { "visible": false },
+        "app2-cache": { "visible": false },
+        "db-rep1": { "visible": false },
+        "db-rep2": { "visible": false },
+        "app2-rep2": { "visible": false }
+      },
+      "annotations": [
+        { "id": "calc", "x": 330, "y": 520, "text": { "tr": "okuma ≈ 2.300/sn (tepe ≈ 7.000) · yazma ≈ 230/sn (tepe ≈ 700)", "en": "reads ≈ 2,300/s (peak ≈ 7,000) · writes ≈ 230/s (peak ≈ 700)" } }
+      ]
+    },
+    {
+      "id": "traffic",
+      "title": { "tr": "Trafik iskelete akar", "en": "Traffic flows into the skeleton" },
+      "narration": {
+        "tr": "Basit iskelet: yük dengeleyici istekleri iki durumsuz uygulama sunucusuna dağıtır, her ikisi de aynı PostgreSQL'e gider. Uygulama katmanı rahattır; gerekirse bir sunucu daha eklemek kolaydır, çünkü sunucular durum tutmaz.",
+        "en": "A simple skeleton: the load balancer spreads requests over two stateless app servers, both talking to the same PostgreSQL. The app tier is comfortable; adding another server is easy if needed because the servers keep no state."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["lb", "app1", "app2"], "edges": ["users-lb", "lb-app1", "lb-app2"] },
+      "nodeStates": {
+        "users": { "status": "idle" },
+        "lb": { "status": "active" },
+        "app1": { "status": "active", "progress": 0.4 },
+        "app2": { "status": "active", "progress": 0.4 }
+      },
+      "edgeStates": { "users-lb": { "status": "active" }, "lb-app1": { "status": "active" }, "lb-app2": { "status": "active" } },
+      "packets": [
+        { "edge": "users-lb", "repeat": 4, "repeatGapMs": 200, "durationMs": 700 },
+        { "edge": "lb-app1", "startAt": 700, "repeat": 2, "repeatGapMs": 400, "durationMs": 700 },
+        { "edge": "lb-app2", "startAt": 900, "repeat": 2, "repeatGapMs": 400, "durationMs": 700 }
+      ]
+    },
+    {
+      "id": "bottleneck",
+      "title": { "tr": "Darboğaz: her okuma veritabanında", "en": "Bottleneck: every read hits the database" },
+      "narration": {
+        "tr": "Tepe saatte 7.000 okuma/sn ve 700 yazma/sn aynı primary'ye yığılır. Bağlantı havuzu ve CPU dolar, p99 gecikme yükselir. Uygulama sunucusu eklemek burada işe yaramaz: darboğaz uygulama değil, veri katmanıdır.",
+        "en": "At peak, 7,000 reads/s and 700 writes/s pile onto the same primary. The connection pool and CPU fill up and p99 latency climbs. Adding app servers does not help here: the bottleneck is the data tier, not the application."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["primary"], "edges": ["app1-db", "app2-db"] },
+      "nodeStates": {
+        "primary": { "status": "error", "progress": 0.97, "badge": "7.700 sorgu/sn" },
+        "app1": { "status": "warning" },
+        "app2": { "status": "warning" }
+      },
+      "edgeStates": { "app1-db": { "status": "error" }, "app2-db": { "status": "error" } },
+      "packets": [
+        { "edge": "app1-db", "repeat": 5, "repeatGapMs": 150, "durationMs": 700, "color": "danger" },
+        { "edge": "app2-db", "startAt": 200, "repeat": 5, "repeatGapMs": 150, "durationMs": 700, "color": "danger" }
+      ],
+      "annotations": [{ "id": "bn", "x": 640, "y": 440, "text": { "tr": "darboğaz: okuma yükü", "en": "bottleneck: read load" }, "target": "primary", "tone": "danger" }]
+    },
+    {
+      "id": "which-load",
+      "title": { "tr": "Hangi yük? Oran karar verir", "en": "Which load? The ratio decides" },
+      "narration": {
+        "tr": "Yükün %90'ı okuma. 700 yazma/sn tek bir iyi yapılandırılmış PostgreSQL için kabul edilebilir bir sayıdır; sorun yazma değil. Bu yüzden ilk araç sharding değil, okumaları veritabanından uzaklaştıran önbellek ve replikalardır.",
+        "en": "90% of the load is reads. 700 writes/s is a manageable number for one well-tuned PostgreSQL; writes are not the problem. So the first tool is not sharding but a cache and replicas that move reads away from the database."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["primary"], "edges": [] },
+      "nodeStates": { "primary": { "status": "warning" } },
+      "edgeStates": { "app1-db": { "status": "active" }, "app2-db": { "status": "active" } },
+      "annotations": [{ "id": "ratio", "x": 640, "y": 440, "text": { "tr": "okuma:yazma = 10:1 → okumayı ölçekle", "en": "read:write = 10:1 → scale reads" }, "target": "primary", "tone": "info" }]
+    },
+    {
+      "id": "add-cache",
+      "title": { "tr": "Önbellek eklenir", "en": "A cache is added" },
+      "narration": {
+        "tr": "Redis, sık okunan verileri (profil, popüler gönderiler) bellekte tutar. İsabet oranı %80 olursa 7.000 okumanın yaklaşık 5.600'ü milisaniye altında bellekten döner, primary'ye yalnızca ~1.400 ıska ve yazmalar ulaşır.",
+        "en": "Redis keeps frequently read data (profiles, popular posts) in memory. With an 80% hit rate about 5,600 of the 7,000 reads return from memory in under a millisecond, and only ~1,400 misses plus the writes reach the primary."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["cache", "primary"], "edges": ["app1-cache", "app2-cache"] },
+      "nodeStates": {
+        "cache": { "visible": true, "status": "success", "badge": "hit %80" },
+        "primary": { "status": "warning", "progress": 0.45, "badge": "~2.100 sorgu/sn" },
+        "app1": { "status": "active" },
+        "app2": { "status": "active" }
+      },
+      "edgeStates": { "app1-cache": { "visible": true, "status": "active" }, "app2-cache": { "visible": true, "status": "active" }, "app1-db": { "status": "idle" }, "app2-db": { "status": "idle" } },
+      "packets": [
+        { "edge": "app1-cache", "repeat": 4, "repeatGapMs": 150, "durationMs": 600, "color": "success" },
+        { "edge": "app2-cache", "startAt": 200, "repeat": 4, "repeatGapMs": 150, "durationMs": 600, "color": "success" },
+        { "edge": "app1-db", "startAt": 1500, "durationMs": 800 }
+      ]
+    },
+    {
+      "id": "add-replicas",
+      "title": { "tr": "Okuma replikaları", "en": "Read replicas" },
+      "narration": {
+        "tr": "Iskalar ve önbelleğe alınamayan okumalar için iki okuma replikası eklenir. Primary değişiklikleri asenkron olarak replikalara aktarır. Artık primary neredeyse yalnızca yazmalarla uğraşır; okuma kapasitesi replika ekleyerek doğrusal büyür.",
+        "en": "Two read replicas are added for misses and reads that cannot be cached. The primary ships its changes to the replicas asynchronously. The primary now deals almost only with writes; read capacity grows linearly by adding replicas."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["rep1", "rep2", "primary"], "edges": ["db-rep1", "db-rep2", "app2-rep2"] },
+      "nodeStates": {
+        "rep1": { "visible": true, "status": "active", "progress": 0.3 },
+        "rep2": { "visible": true, "status": "active", "progress": 0.3 },
+        "primary": { "status": "success", "progress": 0.25, "badge": "~700 yazma/sn" }
+      },
+      "edgeStates": { "db-rep1": { "visible": true, "status": "active" }, "db-rep2": { "visible": true, "status": "active" }, "app2-rep2": { "visible": true, "status": "active" } },
+      "packets": [
+        { "edge": "db-rep1", "shape": "square", "label": "WAL", "durationMs": 1000 },
+        { "edge": "db-rep2", "shape": "square", "label": "WAL", "startAt": 300, "durationMs": 1000 },
+        { "edge": "app2-rep2", "startAt": 1300, "repeat": 2, "repeatGapMs": 300, "durationMs": 800 }
+      ]
+    },
+    {
+      "id": "lag",
+      "title": { "tr": "Bedel: replikasyon gecikmesi", "en": "The cost: replication lag" },
+      "narration": {
+        "tr": "Her kararın bedeli söylenmeli. Replikalar birkaç yüz milisaniye geride kalabilir; kullanıcı gönderisini attıktan hemen sonra replikadan okursa onu göremeyebilir. Çözüm: kişinin kendi yazdığı veriyi kısa süre primary'den okumak (read-your-writes).",
+        "en": "Every decision's cost must be stated. Replicas can lag by a few hundred milliseconds; a user reading from a replica right after posting may not see their post. The fix: read a person's own writes from the primary for a short while (read-your-writes)."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["rep2"], "edges": ["db-rep2"] },
+      "nodeStates": { "rep2": { "status": "warning", "badge": "lag 300 ms" } },
+      "edgeStates": { "db-rep1": { "status": "idle" }, "app2-rep2": { "status": "idle" } },
+      "annotations": [{ "id": "ryw", "x": 860, "y": 560, "text": { "tr": "kendi yazdığını primary'den oku", "en": "read your own writes from the primary" }, "target": "rep2", "tone": "warning" }]
+    },
+    {
+      "id": "decision",
+      "title": { "tr": "Karar ve sıradaki eşik", "en": "Decision and the next threshold" },
+      "narration": {
+        "tr": "Sonuç: önbellek + iki replika tepe yükü taşır, sharding gerekmez. Mülakatta bunu bir eşikle kapatın: \"Yazmalar on binlere çıkarsa ya da veri tek diske sığmazsa sharding'e geçerim.\" Sayı olmadan bu cümle kurulamazdı.",
+        "en": "Result: cache plus two replicas carry the peak load and sharding is not needed. Close it with a threshold in the interview: \"If writes grow to tens of thousands per second or the data no longer fits on one disk, I move to sharding.\" Without numbers this sentence could not be said."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["cache", "primary", "rep1", "rep2"], "edges": [] },
+      "nodeStates": {
+        "rep2": { "status": "success", "badge": "" },
+        "rep1": { "status": "success" },
+        "cache": { "status": "success" },
+        "app1": { "status": "success", "progress": 0.4 },
+        "app2": { "status": "success", "progress": 0.4 }
+      },
+      "edgeStates": { "db-rep2": { "status": "idle" }, "app1-cache": { "status": "idle" }, "app2-cache": { "status": "idle" } },
+      "annotations": [{ "id": "next", "x": 330, "y": 520, "text": { "tr": "sharding eşiği: yazma ya da veri hacmi tek makineyi aşınca", "en": "sharding threshold: when writes or data volume exceed one machine" }, "tone": "success" }]
+    }
+  ]
+}

@@ -67,6 +67,12 @@ Java ya da C'den geliyorsan dikkat: Python'da yalnızca **modül, fonksiyon ve s
 erişilebilirdir. (Comprehension'lar ise kendi kapsamına sahiptir; döngü değişkenleri dışarı sızmaz.)
 :::
 
+Dört kapsamı iç içe kutular olarak düşünebilirsin: arama en içteki kutudan başlar ve dışa doğru ilerler.
+
+:::diagram{src="legb-kapsamlar.svg" alt="İç içe Built-in, Global, Enclosing ve Local kapsamları ve içten dışa isim arama sırası|Nested Built-in, Global, Enclosing and Local scopes and the inside-out name lookup order"}
+Bir isim önce Local'de, sonra Enclosing, Global ve Built-in'de aranır; hiçbirinde yoksa NameError.
+:::
+
 ## Atama kuralı: isim nerede atanıyorsa oraya aittir
 
 LEGB **okuma** için geçerlidir. Bir isme **atama** yaptığında (`=`, `+=`, `for x in`, `def x`, `import x`) Python
@@ -337,6 +343,12 @@ Dekoratörler yalnızca fonksiyonlara değil sınıflara da uygulanabilir: `@dat
 `@classmethod` da dekoratördür. Web çatılarındaki `@app.get("/kullanicilar")` gibi satırlar ise fonksiyonu bir
 yönlendirme tablosuna kaydeden parametreli dekoratörlerdir.
 
+Closure ve dekoratör aynı mekanizmanın iki yüzüdür. Aşağıdaki animasyon ikisini art arda, nesneler düzeyinde gösteriyor.
+
+:::animation{scene="closure-ve-dekorator.scene.json"}
+Önce `sayac_olustur` çerçevesi kaybolduğu hâlde `sayi` hücresinin yaşamaya devam ettiğine, sonra `topla` isminin sarmalayıcıya bağlandığına ve çağrının sarmalayıcıdan asıl fonksiyona geçtiğine bak.
+:::
+
 ## Gerçek hayattan bir örnek: yetki kontrolü
 
 Bir yönetim panelinde bazı işlemleri yalnızca belirli roldeki kullanıcıların yapabilmesini istiyorsun. Kontrolü
@@ -373,6 +385,21 @@ except PermissionError as e:
 
 Burada üç dersin birleştiğini görüyorsun: `rol` bir closure değişkeni, roller bir `set` (hızlı `in` sorgusu) ve
 `*args/**kwargs` sarmalayıcının her imzaya uymasını sağlıyor.
+
+:::realworld{company="Netflix"}
+Netflix, veri bilimcilerinin iş akışlarını yazıp üretimde çalıştırması için geliştirdiği **Metaflow** kütüphanesini
+2019'da açık kaynak yaptı ve teknoloji blogunda "insan odaklı bir veri bilimi çerçevesi" olarak tanıttı.
+Metaflow'un kullanıcıya görünen yüzü neredeyse tamamen dekoratörlerden oluşur. Bir iş akışı `FlowSpec`'ten türeyen
+bir sınıftır; her adım sıradan bir metottur ve `@step` ile işaretlenir. Aynı metodun üstüne `@resources` yazarak
+bellek ya da işlemci isteyebilir, `@retry` ile geçici hatalarda adımın yeniden denenmesini sağlayabilir, `@catch` ile hatayı
+kaydedip akışı sürdürebilir, `@batch` gibi dekoratörlerle adımı bulutta çalıştırabilirsin.
+
+Bu derste gördüğün fikir burada büyük ölçekte işliyor: veri bilimcinin yazdığı fonksiyon yalnızca kendi işini
+(veriyi okumak, modeli eğitmek) anlatır. Yeniden deneme, kaynak ayırma ve uzak makinede çalıştırma gibi kesişen
+kaygılar, fonksiyonu saran ya da onu bir kayıt tablosuna ekleyen dekoratörlerde durur. Asıl fonksiyonun koduna tek
+satır eklemeden davranışı değiştirmek, dekoratörün tam olarak vaat ettiği şeydir. Parametreli dekoratörler
+(`@resources(memory=...)`) ise yukarıda yazdığın `@rol_gerekli(...)` gibi bir closure fabrikası katmanı ekler.
+:::
 
 ## Özet
 

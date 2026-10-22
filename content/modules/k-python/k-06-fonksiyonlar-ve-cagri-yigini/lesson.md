@@ -90,6 +90,13 @@ print(en_kucuk, en_buyuk)   # 1 9
 ```
 :::
 
+Şimdiye kadar gördüğün parçaları tek bir resimde toplayalım: tanım bir kez çalışıp fonksiyon nesnesini oluşturur,
+her çağrı ise argümanları parametrelere bağlayan yeni bir çerçeve açar.
+
+:::diagram{src="fonksiyon-anatomisi.svg" alt="def satırındaki ad, parametreler, gövde ve return; çağrıda argümanın parametreye bağlanması ve dönen değer|Name, parameters, body and return in a def; at the call the argument binds to the parameter and the value comes back"}
+Tanım ile çağrı ayrı şeylerdir: tanım fonksiyonu oluşturur, çağrı onu çalıştırır.
+:::
+
 ## Çağrı yığını: her çağrıya bir çerçeve
 
 Bir fonksiyonu çağırdığında Python şunları yapar:
@@ -116,6 +123,10 @@ Simülasyondan çıkarılacak önemli noktalar:
   bekliyorlar. Bu yüzden bir hata olduğunda Python sana bütün zinciri gösteren bir **traceback** basar.
 - Aynı fonksiyonun ikinci çağrısı bir öncekinden hiçbir şey hatırlamaz: `ara`, `toplam`, `sonuc` yeniden oluşur.
   Fonksiyonun "hafızası" yoktur; durum tutmak istiyorsan onu bir nesnede ya da closure'da (K-07) saklarsın.
+
+:::interactive{type="python-memory" scenario="function-args" title="Kendin dene: argümanlar nasıl aktarılır?|Try it: how arguments are passed"}
+"Adım ileri" ile ilerle. `ekle(sayilar, 3)` çağrısında isim tablosuna `ekle()` çerçevesi eklenir ve `liste` parametresi `sayilar` ile aynı #id'yi gösterir (listede `ref=2`); `append` listeyi yerinde değiştirdiği için çağıran da değişikliği görür. `yeniden_bagla` içindeki `liste = [0]` yalnızca yerel ismi yeni bir listeye bağlar, `sayilar` etkilenmez. `artir(x)` çağrısında int değiştirilemez olduğu için `n = n + 1` yeni bir nesne üretir. Her çağrının sonunda çerçevenin kapandığını "Bu adımda olanlar" günlüğünden izle.
+:::
 
 :::callout{tone="info" title="Traceback yığını okur"}
 Bir hata oluştuğunda gördüğün `Traceback (most recent call last):` çıktısı, hata anındaki çağrı yığınının
@@ -152,6 +163,12 @@ Yığının bir sınırı vardır: CPython varsayılan olarak yaklaşık 1000 i�
 (`sys.getrecursionlimit()`), aşılırsa `RecursionError` oluşur. Bunu özyineleme dersinde (K-08) ayrıntılı
 göreceğiz.
 
+Simülasyonda yığını satır satır izledin; aşağıdaki animasyon aynı zinciri çerçeve düzeyinde, kuş bakışı gösteriyor.
+
+:::animation{scene="cagri-yigini-cerceveler.scene.json"}
+Argümanların yukarı, `return` değerlerinin aşağı aktığına ve her `return`de en üstteki çerçevenin kaybolduğuna bak. Son adımdaki ikinci çağrı öncekinden hiçbir şey hatırlamaz.
+:::
+
 ## Parametre türleri
 
 ### Konumsal ve isimli argümanlar
@@ -186,7 +203,7 @@ değiştirilebilir bir nesneyse, her çağrı **aynı nesneyi** kullanır:
 `ekle_hatali` iki kez çağrıldığında 'liste' parametresinin iki seferde de aynı heap nesnesini gösterdiğine, `ekle_dogru`da ise her çağrıda yeni bir liste oluştuğuna bak.
 :::
 
-:::callout{tone="danger" title="Varsayılan değer olarak [] ya da {} verme"}
+:::callout{tone="danger" title="Varsayılan değer olarak boş liste ya da sözlük verme"}
 `def f(x, liste=[])` yazdığında bütün çağrılar tek bir listeyi paylaşır ve veri çağrılar arasında sızar. Bu
 hata özellikle web sunucularında farklı kullanıcıların verisinin karışmasına yol açabilir. Doğru kalıp:
 `def f(x, liste=None):` ve gövdenin başında `if liste is None: liste = []`. Aynı kural `dict`, `set` ve kendi
@@ -317,6 +334,24 @@ print(istek_olustur("GET", "/api", "kullanicilar", "42", **ortak))
 ```
 :::
 
+:::realworld{company="Uber"}
+Uber Engineering, 2016'da yayımladığı "Pyflame: Uber Engineering's Ptracing Profiler for Python" yazısında,
+Python servislerinin nerede zaman harcadığını bulmak için geliştirdiği **Pyflame** aracını açık kaynak olarak
+tanıttı. Aracın çalışma ilkesi doğrudan bu dersteki çağrı yığınına dayanır: Pyflame, çalışan bir Python sürecini
+durdurmadan kısa aralıklarla yoklar ve her yoklamada yorumlayıcının o anki **yığınını**, yani hangi fonksiyonun
+hangi fonksiyonu çağırdığını en dıştaki çerçeveden en içtekine kadar okur.
+
+Binlerce örnek toplandıktan sonra aynı yığınlar birleştirilir ve bir **alev grafiği** (flame graph) çizilir. Bu
+grafikte her kutu bir çerçevedir; altındaki kutu onu çağıran fonksiyondur, genişliği ise o fonksiyonun yığında ne
+kadar sık görüldüğünü, yani ne kadar zaman harcadığını gösterir. Simülasyonda izlediğin "çerçeve itilir, işi bitince
+çekilir" hareketi, bu grafikte üst üste dizilmiş kutulara dönüşür. Uber'in yazısı, kodun içine ölçüm satırları
+eklemeden ve servisi yeniden başlatmadan, üretimdeki bir sürecin yavaşlığını bu yolla incelemenin değerini anlatır.
+
+Pyflame'in geliştirilmesi sonradan durdu; bugün aynı fikir py-spy gibi araçlarla ve Python 3.12'den itibaren
+`perf` profiler desteğiyle sürüyor. Bir traceback'i okurken de, bir alev grafiğine bakarken de okuduğun şey aynıdır:
+çağrı yığını.
+:::
+
 ## Özet
 
 - Fonksiyon tekrarı önler ve soyutlama sağlar; `def` ile tanımlanır, docstring ile belgelenir.
@@ -329,6 +364,9 @@ print(istek_olustur("GET", "/api", "kullanicilar", "42", **ortak))
 - `*args` tuple, `**kwargs` dict olarak gelir; çağrıda `*` ve `**` açar. `/` yalnızca konumsal, tek başına `*`
   yalnızca isimli parametreleri ayırır.
 - Fonksiyonlar nesnedir: isme atanır, argüman olarak verilir, koleksiyonlarda saklanır.
+
+:::exercise{src="varsayilan-arguman.exercise.json"}
+:::
 
 :::quiz{src="quiz.json"}
 :::

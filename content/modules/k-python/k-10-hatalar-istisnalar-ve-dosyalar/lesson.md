@@ -112,6 +112,12 @@ karşılaşacağın türler:
 | `StopIteration` | Iterator bitti (K-11) | `next(iter([]))` |
 | `KeyboardInterrupt` | Kullanıcı Ctrl+C bastı (`Exception` değil!) | — |
 
+Tablodaki türlerin ağaçtaki yerini görmek, hangi `except`'in neyi yakalayacağını tahmin etmeyi kolaylaştırır:
+
+:::diagram{src="istisna-hiyerarsisi.svg" alt="BaseException kökünde SystemExit, KeyboardInterrupt, GeneratorExit ve Exception; Exception altında ArithmeticError, LookupError, ValueError, TypeError ve OSError ile alt sınıfları|BaseException at the root with SystemExit, KeyboardInterrupt, GeneratorExit and Exception; under Exception sit ArithmeticError, LookupError, ValueError, TypeError and OSError with their subclasses"}
+Bir `except` yazdığı sınıfı ve altındaki bütün dalı yakalar; kesikli kutunun dışındakiler `except Exception` ile yakalanmaz.
+:::
+
 ## try / except / else / finally
 
 Hatayı yakalamak için riskli kodu `try` bloğuna koyarsın. Dört parçanın her birinin net bir görevi vardır:
@@ -179,6 +185,13 @@ Burada önemli bir tasarım fikri var: `yas_coz` ve `kayit_olustur` hatayla ne y
 yakalamıyorlar. Hatalı kaydı atlayıp devam etmeye karar verebilecek tek yer, kayıt listesini yöneten `kaydet`
 fonksiyonu. **Hatayı, onunla anlamlı bir şey yapabileceğin yerde yakala.** Her fonksiyona `try` serpiştirmek kodu
 okunmaz yapar.
+
+Aynı senaryoyu bir de çerçeveler ve bloklar arasında hareket eden istisna olarak izle: başarılı kayıtta
+`try → else → finally`, hatalı kayıtta ise `ValueError`'ın yığında yukarı tırmanması.
+
+:::animation{scene="istisna-yayilmasi.scene.json"}
+`ValueError`'ın `yas_coz` ve `kayit_olustur` çerçevelerini kapatarak `kaydet`'e ulaştığına ve `finally`'nin iki yolda da çalıştığına dikkat et.
+:::
 
 ## raise: hatayı kendin fırlatmak
 
@@ -432,13 +445,11 @@ ve testlerde geçici ayar değiştirmek. Kural basit: **"aç, kullan, ne olursa 
 bir context manager adayıdır.
 :::
 
-## json: veriyi metne dönüştürmek
-
+:::callout{tone="info" title="Derinleşme: json ile veriyi metne dönüştürmek"}
 Programın verisini dosyaya kaydetmek ya da bir API'ye göndermek için yaygın biçim JSON'dur. `json` modülünde dört
 temel fonksiyon var: sonu **s** ile bitenler (`dumps`, `loads`) **metin (string)** ile, bitmeyenler (`dump`,
 `load`) **dosya** ile çalışır.
 
-:::code{lang="python" title="dumps/loads ve dump/load"}
 ```python
 import json
 
@@ -456,12 +467,37 @@ with open("kayit.json", encoding="utf-8") as f:
     okunan = json.load(f)
 print(okunan["diller"])              # ['Python', 'C']
 ```
-:::
 
 Dönüşümde Python `True`/`None` değerleri JSON'da `true`/`null` olur. `ensure_ascii=False` vermezsen "İzmir"
 `"İzmir"` olarak yazılır (geçerli ama okunması zor). JSON'da demet yoktur: `(1, 2)` gidip `[1, 2]` olarak
 döner. Bozuk JSON okunursa `json.JSONDecodeError` (bir `ValueError` alt türü) fırlar; dışarıdan gelen veriyi okurken
 onu yakalamayı unutma.
+:::
+
+:::realworld{company="Sentry"}
+Sentry, uygulamalarda oluşan hataları toplayıp gruplayan açık kaynaklı bir hata izleme platformudur ve kendi
+sunucu tarafı da büyük ölçüde Python ve Django ile yazılmıştır. Python SDK'sı, bu derste gördüğün mekanizmaların
+üzerine kuruludur: yakalanmayan bir istisna yığının tepesine ulaştığında SDK onu yakalar, istisnanın türünü,
+mesajını ve **traceback'ini** çerçeve çerçeve kaydeder; yapılandırmaya göre her çerçevedeki yerel değişkenleri de
+ekleyebilir. Böylece geliştirici, `yas_coz` içinde doğup `kaydet`'e kadar yayılan bir `ValueError`'ı sunucuya
+bağlanmadan, hangi değerle oluştuğunu görerek inceleyebilir.
+
+Sentry'nin belgelerinden iki ayrım derse doğrudan bağlanır. Birincisi, `except` bloğunda yuttuğun bir hata
+kendiliğinden raporlanmaz; onu görmek istiyorsan `capture_exception` ile ya da loglayarak açıkça bildirmen gerekir.
+Bu, derste anlatılan "hatayı anlamlı bir şey yapabileceğin yerde yakala, sessizce yutma" ilkesinin araç
+tarafındaki karşılığıdır. İkincisi, aynı yerde aynı türde oluşan hatalar tek bir "sorun" altında gruplanır;
+gruplama büyük ölçüde istisna türüne ve traceback'teki çerçevelere dayanır. `raise ... from` ile kurulan istisna
+zincirleri de raporda ayrı ayrı gösterilir, bu yüzden düşük seviyeli bir hatayı kendi istisnana sararken asıl
+nedeni `from` ile korumak hata ayıklamayı doğrudan kolaylaştırır.
+:::
+
+## Ek: log satırlarını düzenli ifadeyle ayrıştırmak
+
+Dosyayı satır satır okumayı öğrendin; gerçek hayatta okunan satırların çoğu log kaydıdır ve içlerinden tarih, seviye ve mesajı ayıklamak gerekir. Python'da bunun aracı `re` modülüdür: `re.match(desen, satir)` eşleşirse `m.group("seviye")` ile adlandırılmış bir grubu okursun, eşleşmezse `None` döner ve o satırı atlarsın. Desenler ilk bakışta karmaşık görünür; aşağıdaki oyun alanı her parçayı tek tek açıklar.
+
+:::interactive{type="regex-playground" preset="log"}
+Hazır **Log satırı** deseninde dört satırdan üçü eşleşir; tarih, saat, seviye ve mesaj grupları farklı renklerle vurgulanır, yan paneldeki açıklama her parçayı Türkçe anlatır. **m** bayrağını kapatın: `^` ve `$` artık her satırın değil metnin tamamının başı ve sonu olduğu için eşleşme kalmaz. Ardından deseni `(\w+\s?)+$` gibi iç içe tekrar içeren bir desenle değiştirin ve ReDoS uyarısını okuyun. Deseni Python'a taşırken farklar kutusuna bakın: JS'teki `(?<seviye>...)` Python'da `(?P<seviye>...)` olarak yazılır.
+:::
 
 ## Özet
 

@@ -94,6 +94,10 @@ Docker, uygulamayı ve tüm bağımlılıklarını **konteyner** adı verilen ya
 
 Sanal makine tam bir işletim sistemi çalıştırır (GB boyutunda, dakikalar içinde açılır). Konteyner ana makinenin çekirdeğini paylaşır (MB boyutunda, saniyeler içinde açılır).
 
+:::diagram{src="diagram.svg" alt="Sanal makine ile konteyner karşılaştırması: solda hipervizör üstünde her biri kendi misafir işletim sistemi çekirdeğini taşıyan üç sanal makine, sağda tek bir paylaşılan Linux çekirdeği ve Docker motoru üstünde yalnızca kütüphane ve uygulama taşıyan üç konteyner|Virtual machines versus containers: on the left three virtual machines on a hypervisor, each carrying its own guest OS kernel; on the right three containers on a single shared Linux kernel and the Docker engine, carrying only libraries and the application"}
+Fark, çekirdeğin kopyalanıp kopyalanmamasındadır. Konteynerler tek çekirdeği paylaşır ve namespace ile cgroup sayesinde birbirinden yalıtılır.
+:::
+
 ## 5. Docker Kurulumu
 
 **macOS / Windows:** Docker Desktop indirilip kurulur (docker.com).
@@ -219,6 +223,20 @@ CMD ["node", "dist/server.js"]
 ```
 :::
 
+Bu Dockerfile'daki talimatların sırası rastgele değildir: her talimat imajda bir katmana karşılık gelir ve Docker katmanları önbellekte saklar. Aşağıdaki soru bu sıranın neden önemli olduğunu soruyor.
+
+:::predict{id="docker-katman-onbellek"}
+Yukarıdaki derleme aşamasında yalnızca `src/server.ts` dosyasında bir satırı değiştirip `docker build` çalıştırıyorsunuz. Hangi adımlar yeniden çalışır? | In the build stage above you change one line in `src/server.ts` and run `docker build`. Which steps run again?
+- [ ] Tüm adımlar; Docker her derlemede imajı sıfırdan üretir | Every step; Docker builds the image from scratch every time
+- [x] `COPY . .` ve sonrasındaki adımlar; `npm ci` önbellekten gelir | `COPY . .` and the steps after it; `npm ci` comes from cache
+- [ ] Yalnızca `RUN npm run build` | Only `RUN npm run build`
+Açıklama: Docker talimatları sırayla önbellekle karşılaştırır. `package*.json` değişmediği için `npm ci` katmanı önbellekten gelir. `COPY . .` farklı içerik gördüğü için o katman ve üstündeki her şey yeniden üretilir. Kod, bağımlılık listesinden önce kopyalansaydı her değişiklikte `npm ci` de yeniden çalışırdı. | Docker checks each instruction against its cache in order. `package*.json` is unchanged, so the `npm ci` layer comes from cache. `COPY . .` sees new content, so that layer and everything above it is rebuilt. Had the code been copied before the dependency list, `npm ci` would rerun on every change.
+:::
+
+:::animation{scene="docker-layers.scene.json"}
+Talimatların salt okunur katmanlara dönüşmesi ve iki konteynerin aynı katmanları paylaşması. Copy-on-write, kod değişikliğinde önbelleğin devreye girmesi ve push/pull sırasında yalnızca yeni katmanların taşınması da gösteriliyor.
+:::
+
 ### .dockerignore
 
 :::code{lang="text" title=".dockerignore"}
@@ -240,6 +258,10 @@ dist
 - Sabit sürüm etiketi kullanın (`node:20-alpine`, `latest` değil).
 - Şifreleri imaja gömmeyin; ortam değişkeni veya secret kullanın.
 - Her konteyner tek bir iş yapsın.
+
+:::interactive{type="docker-layers" example="node-multistage"}
+Yukarıdaki çok aşamalı Dockerfile editörde açık. Katman yığınında RUN/COPY satırlarının dosya sistemi katmanı ürettiğini, WORKDIR/ENV/EXPOSE/CMD gibi talimatların ise yalnızca "metadata" olduğunu gör; "build" aşamasındaki "final imaja girmez" etiketine dikkat et. "Build cache simülasyonu" kutusunda "src/ değişti"ye bas: `npm ci` cache'ten gelirken `COPY . .` ve sonrası kırmızıya döner, ikinci aşamada da yalnızca `COPY --from=build` yeniden kopyalanır. Aynısını "package.json değişti" ile karşılaştır. Son olarak "Yükle: Tek aşamalı sürüm" düğmesine bas ve "Önce / sonra" tablosunda final imaj boyutunun nasıl büyüdüğünü oku; "Build context boyutu" kaydırıcısı `COPY . .` katmanının büyüklüğünü değiştirir.
+:::
 
 ## 8. Volume ve Ağ Yönetimi
 
@@ -597,6 +619,10 @@ docker system prune -a           # Temizlik
 git add . && git commit -m "" && git push
 kubectl get pods -A              # Tüm pod'lar
 ```
+:::
+
+:::realworld{company="Google"}
+Google, konteyner fikrini Docker'dan çok önce iç altyapısında kullanmaya başladı. Şirketin 2015'te yayımladığı "Large-scale cluster management at Google with Borg" makalesi, uygulamaların Linux çekirdeğinin cgroup ve namespace özellikleriyle yalıtılmış görevler olarak binlerce makineye nasıl dağıtıldığını anlatır. Bu, derste gördüğünüz "konteyner çekirdeği paylaşır" fikrinin büyük ölçekli bir örneğidir. Google'ın açık kaynak "distroless" imajları ise bu dersteki en iyi uygulamalar listesinin doğrudan karşılığıdır. Bu imajlarda yalnızca uygulama ve çalışma zamanı bağımlılıkları bulunur: kabuk, paket yöneticisi ya da gereksiz araç yoktur. Projenin belgelerinde savunulan gerekçe ikilidir. Konteynerin içinde ne kadar az şey varsa saldırganın kullanabileceği yüzey o kadar küçük olur. Güvenlik tarayıcılarının raporları da hiç kullanılmayan paketlerdeki açıklarla dolmaz. Çok aşamalı derleme bu yaklaşımı mümkün kılar: derleme araçları ilk aşamada kalır, son imaja yalnızca çıktı kopyalanır.
 :::
 
 :::quiz{src="quiz.json"}

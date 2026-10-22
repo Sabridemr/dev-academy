@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { LocalizedString } from '../i18n';
+import { SUPPORTED_LOCALES, type LocalizedString } from '../i18n';
 import type { LessonBlock, LessonLevel, ModuleGroup, QuestionType } from '../content/schema';
 import type { AnimationScene } from '../scene/schema';
 
@@ -514,6 +514,40 @@ export interface SearchResponse {
   query: string;
   results: SearchResult[];
   tookMs: number;
+}
+
+/* ------------------------- Kavram sözlüğü -------------------------- */
+export const ConceptListQuerySchema = z.object({
+  /** Terim, eş ad, id ya da tanımda arama (Türkçe karakter duyarsız) */
+  q: z.string().trim().max(100).optional(),
+  /** Eşit puanlı sonuçların hangi dildeki terime göre sıralanacağı */
+  locale: z.enum(SUPPORTED_LOCALES).default('tr'),
+});
+export type ConceptListQuery = z.infer<typeof ConceptListQuerySchema>;
+
+export interface ConceptSummary {
+  id: string;
+  term: { tr: string; en: string };
+  definition: { tr: string; en?: string };
+  aliases: string[];
+  /** Kavramın geçtiği yayınlanmış ders sayısı */
+  lessonCount: number;
+}
+
+export interface ConceptLessonRef {
+  id: string;
+  slug: string;
+  moduleId: string;
+  moduleCode: string;
+  title: LocalizedString;
+}
+
+export interface ConceptDetail extends ConceptSummary {
+  /** Kavramın frontmatter'ında ya da quiz sorusunda geçtiği dersler (müfredat sırasıyla) */
+  lessons: ConceptLessonRef[];
+  /** Kavramı taşıyan quiz sorusu sayısı */
+  questionCount: number;
+  related: { id: string; term: { tr: string; en: string } }[];
 }
 
 /* ----------------------------- Admin ------------------------------- */
