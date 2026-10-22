@@ -330,20 +330,22 @@ print(istek_olustur("GET", "/api", "kullanicilar", "42", **ortak))
 ```
 :::
 
-:::realworld{company="Dropbox"}
-Dropbox, masaüstü istemcisinden sunucu tarafına kadar büyük ölçüde Python ile yazılmış bir şirket olarak, kod tabanı
-milyonlarca satıra ulaştığında bir sorunla karşılaştı: bir fonksiyonun hangi argümanları beklediğini ve ne
-döndürdüğünü anlamak için çağrı zincirini elle takip etmek gerekiyordu. Şirketin mühendislik blogunda yayımlanan
-"Our journey to type checking 4 million lines of Python" yazısı, bu sorunu fonksiyon imzalarına tip ipuçları ekleyip
-**mypy** ile denetleyerek nasıl çözdüklerini anlatır. mypy'nin yaratıcısı Jukka Lehtosalo da bu süreçte Dropbox'ta
-çalıştı.
+:::realworld{company="Uber"}
+Uber Engineering, 2016'da yayımladığı "Pyflame: Uber Engineering's Ptracing Profiler for Python" yazısında,
+Python servislerinin nerede zaman harcadığını bulmak için geliştirdiği **Pyflame** aracını açık kaynak olarak
+tanıttı. Aracın çalışma ilkesi doğrudan bu dersteki çağrı yığınına dayanır: Pyflame, çalışan bir Python sürecini
+durdurmadan kısa aralıklarla yoklar ve her yoklamada yorumlayıcının o anki **yığınını**, yani hangi fonksiyonun
+hangi fonksiyonu çağırdığını en dıştaki çerçeveden en içtekine kadar okur.
 
-Yazıdan bu derse bağlanan ders şu: bir fonksiyonun imzası (adı, parametreleri, varsayılanları ve dönüş değeri)
-onu çağıran herkesle yapılan bir **sözleşmedir**. Dropbox ekibi geçişi kademeli yaptı; önce en çok çağrılan ve en
-çok değişen fonksiyonların imzalarını açıkça yazdılar, böylece yanlış sayıda ya da yanlış türde argüman veren
-çağrılar kod çalışmadan yakalanır hâle geldi. Değiştirilebilir varsayılan argüman, `None` dönen ama değer beklenen
-fonksiyon gibi bu derste gördüğün hatalar da imza düzeyinde görünür olur. Tip ipuçlarını K-15'te ayrıntılı
-göreceksin; şimdilik iyi isimlendirilmiş parametreler ve tek bir açık `return` ile aynı sözleşmeyi kurmaya başla.
+Binlerce örnek toplandıktan sonra aynı yığınlar birleştirilir ve bir **alev grafiği** (flame graph) çizilir. Bu
+grafikte her kutu bir çerçevedir; altındaki kutu onu çağıran fonksiyondur, genişliği ise o fonksiyonun yığında ne
+kadar sık görüldüğünü, yani ne kadar zaman harcadığını gösterir. Simülasyonda izlediğin "çerçeve itilir, işi bitince
+çekilir" hareketi, bu grafikte üst üste dizilmiş kutulara dönüşür. Uber'in yazısı, kodun içine ölçüm satırları
+eklemeden ve servisi yeniden başlatmadan, üretimdeki bir sürecin yavaşlığını bu yolla incelemenin değerini anlatır.
+
+Pyflame'in geliştirilmesi sonradan durdu; bugün aynı fikir py-spy gibi araçlarla ve Python 3.12'den itibaren
+`perf` profiler desteğiyle sürüyor. Bir traceback'i okurken de, bir alev grafiğine bakarken de okuduğun şey aynıdır:
+çağrı yığını.
 :::
 
 ## Özet

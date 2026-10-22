@@ -384,21 +384,21 @@ gerekenler:
 tartışmalarına zaman harcamazsın.
 :::
 
-:::realworld{company="Instagram (Meta)"}
-Instagram'ın sunucu tarafı, Django ile yazılmış ve CPython üzerinde çalışan çok büyük bir Python uygulamasıdır.
-Bu ölçekte "yorumlayıcı döngüsü komutları tek tek yürütür" cümlesi soyut bir bilgi olmaktan çıkar: her istekte
-milyonlarca bytecode komutu çalışır ve yorumlayıcının hızı doğrudan sunucu maliyetine yansır.
+:::realworld{company="YouTube (Google)"}
+YouTube, Python'un büyük ölçekte kullanıldığı en bilinen örneklerden biridir. Google'ın açık kaynak blogunda 2017'de
+yayımlanan "Grumpy: Go running Python!" yazısı, YouTube'un ön yüz sunucularının ve API'lerinin ağırlıklı olarak
+Python ile yazıldığını ve CPython 2.7 üzerinde çalıştığını anlatır. Ekibin karşılaştığı sorun eşzamanlılıktı:
+CPython'da aynı anda tek bir thread'in bytecode yürütebilmesi, çok çekirdekli makinelerde istekleri paralel
+işlemeyi zorlaştırıyordu.
 
-Meta bu yüzden **Cinder** adını verdiği, performansa odaklı bir CPython çatalı geliştirdi ve 2021'de GitHub'da
-açık kaynak olarak yayımladı. Cinder'ın anlatılan başlıca fikirleri bu dersteki aşamalara oturur: sık çalışan
-fonksiyonların bytecode'unu çalışma sırasında makine koduna çeviren bir **JIT** derleyici, tür bilgisinden
-yararlanarak daha hızlı bytecode üreten "Static Python" ve yorumlayıcının iç yapısındaki çeşitli
-iyileştirmeler. Ekip, bu çalışmaların bir kısmını ana CPython'a da öneri olarak taşıdı.
-
-Buradan çıkarılacak ders şudur: Python kodun önce bytecode'a derlenir, sonra bir sanal makinede yürütülür; bu
-iki aşamanın her biri iyileştirilebilir. Günlük işte bunu sen yapmazsın, ama `python3 --version` ile hangi
-sürümü, `sys.implementation.name` ile hangi uygulamayı kullandığını bilmek, performans tartışmalarında neyin
-konuşulduğunu anlamanı sağlar.
+Google'ın denediği yol bu dersin tam merkezine dokunur. **Grumpy**, Python kaynağını bytecode'a derleyip bir
+yorumlayıcı döngüsünde çalıştırmak yerine, onu Go kaynak koduna çeviren deneysel bir derleyiciydi; ortaya çıkan
+program Go derleyicisiyle doğrudan makine koduna dönüşüyordu. Yani "kaynak → bytecode → yorumlayıcı döngüsü"
+zinciri tek yol değildir: aynı Python dili farklı uygulamalarla (CPython, PyPy, ya da Grumpy gibi bir çevirici)
+çok farklı biçimlerde çalıştırılabilir. Bunun bedeli de yazıda açıkça belirtilir: C eklenti modülleri ve `exec`,
+`eval` gibi dinamik özellikler desteklenmiyordu. Grumpy deneysel kaldı ve geniş kullanım bulmadı; ama örnek,
+`python3 --version` ile sürümü, `sys.implementation.name` ile hangi uygulamayı kullandığını bilmenin neden önemli
+olduğunu gösterir.
 :::
 
 ## Özet
