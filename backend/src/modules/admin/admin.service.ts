@@ -146,6 +146,9 @@ export class AdminService {
         concepts: dto.concepts,
         blocks: jsonInput(blocks),
         authorId,
+        // Panelde düzenlenen sürüm: seed, content/ değişmedikçe bunu ezmez
+        source: 'admin' as const,
+        contentHash: null,
       };
       let version;
       if (draft) version = await tx.lessonVersion.update({ where: { id: draft.id }, data });

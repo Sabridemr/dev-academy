@@ -30,8 +30,10 @@ import { ApiZodBody } from '../../common/swagger/zod-openapi';
 import { AdminService } from './admin.service';
 import { clampInt } from '../../common/utils/query';
 import { MediaService } from './media.service';
+import { ContentExportService, type LessonExport } from './content-export.service';
 
 const PublishSchema = z.object({ versionId: z.string().optional() });
+const ExportSchema = z.object({ versionId: z.string().optional() });
 const PresignSchema = z.object({ contentType: z.string().min(3), folder: z.string().optional() });
 const ModuleSchema = z.object({
   id: z.string().min(1),
@@ -54,6 +56,7 @@ export class AdminController {
   constructor(
     private readonly admin: AdminService,
     private readonly media: MediaService,
+    private readonly exporter: ContentExportService,
   ) {}
 
   @Get('stats')
@@ -122,6 +125,21 @@ export class AdminController {
   @ApiOperation({ summary: 'Dersi yayından kaldır' })
   unpublish(@Param('lessonId') lessonId: string) {
     return this.admin.unpublish(lessonId);
+  }
+
+  @Post('lessons/:lessonId/export')
+  @HttpCode(HttpStatus.OK)
+  @Roles('admin')
+  @ApiOperation({
+    summary:
+      'Dersi content/ biçiminde dışa aktar (lesson.md, svg, sahne, quiz); dosyalar yanıtta döner, sunucuya yazılmaz',
+  })
+  @ApiZodBody(ExportSchema)
+  exportLesson(
+    @Param('lessonId') lessonId: string,
+    @Body(zodBody(ExportSchema)) dto: z.infer<typeof ExportSchema>,
+  ): Promise<LessonExport> {
+    return this.exporter.exportLesson(lessonId, { versionId: dto.versionId });
   }
 
   /* Modüller */

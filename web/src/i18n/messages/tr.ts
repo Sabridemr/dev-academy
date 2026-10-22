@@ -621,6 +621,15 @@ export const tr = {
     descTr: 'Açıklama (TR)',
     descEn: 'Açıklama (EN)',
     lessonCount: '{count} ders',
+    exportContent: 'content/ formatında dışa aktar',
+    exportTitle: 'content/ dışa aktarımı',
+    exportHint:
+      'v{version} ({status}) · {count} dosya. Dosyaları depodaki yollarına koyup pnpm content:validate --strict çalıştırın.',
+    exportWarnings: 'Birebir taşınamayanlar',
+    exportCopy: 'Kopyala',
+    exportCopied: 'Kopyalandı',
+    exportDownload: 'İndir',
+    exportFailed: 'Dışa aktarılamadı',
   },
   xp: {
     toast: '+{delta} XP',
