@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 440" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">HTTP/1.1, HTTP/2 ve HTTP/3'te aynı dört isteğin zaman çizelgesi</title>
+  <desc id="desc">Üç zaman çizelgesi. HTTP/1.1: A, B, C, D yanıtları tek bağlantıda art arda gelir; büyük C bitene kadar D başlamaz. HTTP/2: dört stream'in çerçeveleri tek TCP bağlantısında iç içe gelir; bir segment kaybolunca yeniden iletime kadar dört stream de bekler. HTTP/3: dört stream QUIC üzerinde iç içe gelir; kayıp yalnızca C stream'ini bekletir, A, B ve D devam eder.</desc>
+
+  <text x="480" y="28" text-anchor="middle" font-size="15" font-weight="600" fill="var(--da-fg, #0f172a)">Aynı dört yanıt, üç taşıma: bir kayıp neyi bekletir?</text>
+
+  <!-- zaman ekseni -->
+  <g stroke="var(--da-border, #cbd5e1)" stroke-width="1">
+    <line x1="170" y1="50" x2="170" y2="400"/>
+    <line x1="170" y1="400" x2="920" y2="400"/>
+  </g>
+  <text x="920" y="420" text-anchor="end" font-size="11" fill="var(--da-muted, #64748b)">zaman →</text>
+
+  <!-- Lejant -->
+  <g font-size="11">
+    <rect x="170" y="40" width="14" height="10" rx="2" fill="var(--da-primary, #6366f1)"/>
+    <text x="190" y="49" fill="var(--da-fg, #0f172a)">A</text>
+    <rect x="215" y="40" width="14" height="10" rx="2" fill="var(--da-success, #10b981)"/>
+    <text x="235" y="49" fill="var(--da-fg, #0f172a)">B</text>
+    <rect x="260" y="40" width="14" height="10" rx="2" fill="var(--da-accent, #f59e0b)"/>
+    <text x="280" y="49" fill="var(--da-fg, #0f172a)">C (büyük)</text>
+    <rect x="345" y="40" width="14" height="10" rx="2" fill="var(--da-muted, #64748b)"/>
+    <text x="365" y="49" fill="var(--da-fg, #0f172a)">D</text>
+    <rect x="400" y="40" width="14" height="10" rx="2" fill="var(--da-danger, #ef4444)" opacity="0.18"/>
+    <text x="420" y="49" fill="var(--da-fg, #0f172a)">kayıp yüzünden bekleme</text>
+  </g>
+
+  <!-- HTTP/1.1 -->
+  <text x="30" y="100" font-size="14" font-weight="600" fill="var(--da-fg, #0f172a)">HTTP/1.1</text>
+  <text x="30" y="118" font-size="11" fill="var(--da-muted, #64748b)">1 bağlantı, seri</text>
+  <g>
+    <rect x="180" y="86" width="70" height="28" rx="4" fill="var(--da-primary, #6366f1)"/>
+    <rect x="260" y="86" width="70" height="28" rx="4" fill="var(--da-success, #10b981)"/>
+    <rect x="340" y="86" width="320" height="28" rx="4" fill="var(--da-accent, #f59e0b)"/>
+    <rect x="670" y="86" width="60" height="28" rx="4" fill="var(--da-muted, #64748b)"/>
+  </g>
+  <text x="500" y="135" text-anchor="middle" font-size="11" fill="var(--da-accent, #f59e0b)">D küçük olsa da C bitene kadar başlayamaz (uygulama katmanı HOL)</text>
+
+  <!-- HTTP/2 -->
+  <text x="30" y="200" font-size="14" font-weight="600" fill="var(--da-fg, #0f172a)">HTTP/2</text>
+  <text x="30" y="218" font-size="11" fill="var(--da-muted, #64748b)">1 TCP, çoğullama</text>
+  <rect x="420" y="168" width="150" height="66" rx="4" fill="var(--da-danger, #ef4444)" opacity="0.14"/>
+  <g>
+    <rect x="180" y="172" width="40" height="12" rx="2" fill="var(--da-primary, #6366f1)"/>
+    <rect x="224" y="186" width="40" height="12" rx="2" fill="var(--da-success, #10b981)"/>
+    <rect x="268" y="200" width="40" height="12" rx="2" fill="var(--da-accent, #f59e0b)"/>
+    <rect x="312" y="214" width="40" height="12" rx="2" fill="var(--da-muted, #64748b)"/>
+    <rect x="356" y="200" width="40" height="12" rx="2" fill="var(--da-accent, #f59e0b)"/>
+    <rect x="580" y="172" width="40" height="12" rx="2" fill="var(--da-primary, #6366f1)"/>
+    <rect x="580" y="186" width="40" height="12" rx="2" fill="var(--da-success, #10b981)"/>
+    <rect x="580" y="200" width="40" height="12" rx="2" fill="var(--da-accent, #f59e0b)"/>
+    <rect x="580" y="214" width="40" height="12" rx="2" fill="var(--da-muted, #64748b)"/>
+    <rect x="624" y="200" width="120" height="12" rx="2" fill="var(--da-accent, #f59e0b)"/>
+  </g>
+  <g stroke="var(--da-danger, #ef4444)" stroke-width="2.5">
+    <line x1="403" y1="196" x2="415" y2="208"/>
+    <line x1="415" y1="196" x2="403" y2="208"/>
+  </g>
+  <text x="495" y="250" text-anchor="middle" font-size="11" fill="var(--da-danger, #ef4444)">C'nin segmenti kayboldu → A, B, D de bekler (TCP HOL)</text>
+
+  <!-- HTTP/3 -->
+  <text x="30" y="310" font-size="14" font-weight="600" fill="var(--da-fg, #0f172a)">HTTP/3</text>
+  <text x="30" y="328" font-size="11" fill="var(--da-muted, #64748b)">QUIC, bağımsız stream</text>
+  <rect x="420" y="306" width="150" height="14" rx="3" fill="var(--da-danger, #ef4444)" opacity="0.14"/>
+  <g>
+    <rect x="180" y="278" width="40" height="12" rx="2" fill="var(--da-primary, #6366f1)"/>
+    <rect x="224" y="292" width="40" height="12" rx="2" fill="var(--da-success, #10b981)"/>
+    <rect x="268" y="306" width="40" height="12" rx="2" fill="var(--da-accent, #f59e0b)"/>
+    <rect x="312" y="320" width="40" height="12" rx="2" fill="var(--da-muted, #64748b)"/>
+    <rect x="356" y="306" width="40" height="12" rx="2" fill="var(--da-accent, #f59e0b)"/>
+    <rect x="420" y="278" width="40" height="12" rx="2" fill="var(--da-primary, #6366f1)"/>
+    <rect x="420" y="292" width="40" height="12" rx="2" fill="var(--da-success, #10b981)"/>
+    <rect x="420" y="320" width="40" height="12" rx="2" fill="var(--da-muted, #64748b)"/>
+    <rect x="580" y="306" width="120" height="12" rx="2" fill="var(--da-accent, #f59e0b)"/>
+  </g>
+  <g stroke="var(--da-danger, #ef4444)" stroke-width="2.5">
+    <line x1="403" y1="306" x2="415" y2="318"/>
+    <line x1="415" y1="306" x2="403" y2="318"/>
+  </g>
+  <text x="495" y="356" text-anchor="middle" font-size="11" fill="var(--da-success, #10b981)">Aynı kayıp yalnızca C'yi bekletir; A, B, D erken biter</text>
+
+  <text x="545" y="385" text-anchor="middle" font-size="11" fill="var(--da-muted, #64748b)">Bağlantı kurulumu: HTTP/1.1 ve HTTP/2 → TCP (1 RTT) + TLS 1.3 (1 RTT) · HTTP/3 → QUIC + TLS birlikte (1 RTT, tekrar ziyarette 0-RTT)</text>
+</svg>

@@ -1,0 +1,110 @@
+{
+  "id": "o-04-http-versions-quiz",
+  "title": { "tr": "HTTP Sürümleri Quiz", "en": "HTTP Versions Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "HTTP/1.1'de keep-alive açıkken bir sayfa aynı bağlantı üzerinden dört dosya istiyor. Hangisi doğrudur?",
+        "en": "With keep-alive enabled in HTTP/1.1, a page requests four files over the same connection. Which is true?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Dört istek aynı anda gider ve yanıtlar hazır olan sırayla döner", "en": "All four requests go at once and responses return in whatever order they are ready" } },
+        { "id": "b", "text": { "tr": "Bağlantı yeniden kullanılır, ama aynı anda yalnızca bir istek-yanıt yolda olabilir; yavaş yanıt arkasındakileri bekletir", "en": "The connection is reused, but only one request-response can be in flight at a time; a slow response holds up those behind it" } },
+        { "id": "c", "text": { "tr": "Her dosya için yeni bir TCP ve TLS el sıkışması yapılır", "en": "A new TCP and TLS handshake is performed for each file" } },
+        { "id": "d", "text": { "tr": "Başlıklar HPACK ile sıkıştırılır", "en": "Headers are compressed with HPACK" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Keep-alive bağlantıyı yeniden kullanır ve el sıkışma maliyetini bir kez öder (c HTTP/1.0 davranışıdır). Ancak HTTP/1.1 yanıtları sınır işaretsiz art arda yazıldığı için bir bağlantıda aynı anda tek istek-yanıt olur; bu da uygulama katmanında head-of-line blocking yaratır. Çoğullama (a) ve HPACK (d) HTTP/2 ile gelir.",
+        "en": "Keep-alive reuses the connection and pays the handshake cost once (c is HTTP/1.0 behaviour). But because HTTP/1.1 responses are written back to back without framing, only one request-response is in flight per connection, which causes application-layer head-of-line blocking. Multiplexing (a) and HPACK (d) arrive with HTTP/2."
+      },
+      "difficulty": "easy",
+      "concepts": ["keep-alive", "head-of-line-blocking"]
+    },
+    {
+      "id": "q2",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "HTTP/2, head-of-line blocking sorununu tamamen ortadan kaldırır.",
+        "en": "HTTP/2 completely eliminates head-of-line blocking."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "Yanlış. HTTP/2 uygulama katmanındaki HOL blocking'i çoğullama ile çözer, ancak tüm stream'ler tek TCP bağlantısında akar. TCP baytları sıralı teslim ettiği için tek bir kayıp segment, yeniden iletilene kadar bütün stream'lerin verisini bekletir. Bu TCP seviyesindeki HOL blocking'i HTTP/3 (QUIC) çözer.",
+        "en": "False. HTTP/2 solves application-layer HOL blocking with multiplexing, but all streams share one TCP connection. Because TCP delivers bytes in order, a single lost segment holds back every stream's data until it is retransmitted. HTTP/3 (QUIC) solves this TCP-level HOL blocking."
+      },
+      "difficulty": "medium",
+      "concepts": ["head-of-line-blocking", "http2-multiplexing"]
+    },
+    {
+      "id": "q3",
+      "type": "multiple",
+      "prompt": {
+        "tr": "QUIC/HTTP3'ün TCP üzerindeki HTTP/2'ye göre getirdikleri hangileridir? (Birden fazla seçin)",
+        "en": "Which of these does QUIC/HTTP3 bring compared with HTTP/2 over TCP? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Kayıp bir paket yalnızca ait olduğu stream'i bekletir", "en": "A lost packet stalls only the stream it belongs to" } },
+        { "id": "b", "text": { "tr": "Taşıma ve TLS 1.3 el sıkışması birleşik yapılır", "en": "The transport and TLS 1.3 handshakes are combined" } },
+        { "id": "c", "text": { "tr": "İstemcinin IP adresi değişse de connection ID sayesinde bağlantı sürebilir", "en": "The connection can survive a change of the client's IP address thanks to its connection ID" } },
+        { "id": "d", "text": { "tr": "HTTP metodları ve durum kodları değişir, uygulama kodu yeniden yazılmalıdır", "en": "HTTP methods and status codes change, so application code must be rewritten" } }
+      ],
+      "correct": ["a", "b", "c"],
+      "explanation": {
+        "tr": "QUIC güvenilirliği stream başına yürütür (a), TLS 1.3'ü kendi el sıkışmasına gömer (b) ve bağlantıyı IP/port dörtlüsü yerine connection ID ile tanımlar (c). HTTP'nin semantiği — metodlar, başlıklar, durum kodları — üç sürümde de aynıdır; değişen yalnızca kabloya diziliştir.",
+        "en": "QUIC handles reliability per stream (a), embeds TLS 1.3 in its own handshake (b) and identifies connections by a connection ID instead of the IP/port four-tuple (c). HTTP semantics — methods, headers, status codes — are the same in all three versions; only the wire layout changes."
+      },
+      "difficulty": "medium",
+      "concepts": ["quic", "connection-migration"]
+    },
+    {
+      "id": "q4",
+      "type": "order",
+      "prompt": {
+        "tr": "Bir tarayıcının bir siteye ilk kez bağlanıp HTTP/3'e geçmesinin tipik sırasını kurun.",
+        "en": "Arrange the typical sequence in which a browser first connects to a site and then switches to HTTP/3."
+      },
+      "options": [
+        { "id": "quic", "text": { "tr": "Sonraki isteklerde UDP 443 üzerinden QUIC bağlantısı kurar", "en": "For later requests it opens a QUIC connection over UDP 443" } },
+        { "id": "tcp", "text": { "tr": "TCP + TLS ile bağlanır ve HTTP/2 konuşur", "en": "Connects over TCP + TLS and speaks HTTP/2" } },
+        { "id": "altsvc", "text": { "tr": "Yanıttaki Alt-Svc: h3 başlığından HTTP/3 desteğini öğrenir", "en": "Learns about HTTP/3 support from the Alt-Svc: h3 response header" } },
+        { "id": "fallback", "text": { "tr": "UDP engelliyse sessizce TCP bağlantısına geri döner", "en": "If UDP is blocked it silently falls back to the TCP connection" } }
+      ],
+      "correct": ["tcp", "altsvc", "quic", "fallback"],
+      "explanation": {
+        "tr": "İstemci sunucunun QUIC desteklediğini önceden bilmez; önce TCP üzerinden bağlanır, sunucu `Alt-Svc` başlığıyla HTTP/3'ü duyurur, istemci sonraki isteklerde QUIC'i dener. Kurumsal ağlarda UDP engelli olabildiği için TCP'ye geri dönüş yolu her zaman açık tutulur.",
+        "en": "The client does not know in advance that the server speaks QUIC; it connects over TCP first, the server advertises HTTP/3 with an `Alt-Svc` header, and the client tries QUIC for later requests. Because UDP may be blocked on corporate networks, the TCP fallback path is always kept."
+      },
+      "difficulty": "hard",
+      "concepts": ["quic"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "HTTP/1.1 döneminden kalma domain sharding (içeriği birden fazla alan adına bölmek) HTTP/2'ye geçince neden genellikle zararlıdır?",
+        "en": "Why is domain sharding (splitting content over several host names) from the HTTP/1.1 era usually harmful after moving to HTTP/2?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "HTTP/2 birden fazla alan adını desteklemez", "en": "HTTP/2 does not support multiple host names" } },
+        { "id": "b", "text": { "tr": "Her ek alan adı ayrı DNS, TCP ve TLS maliyeti getirir ve tek bağlantıda çoğullamanın, HPACK tablosunun ve tıkanıklık penceresinin avantajını böler", "en": "Each extra host name adds separate DNS, TCP and TLS cost and splits the advantage of multiplexing, the HPACK table and the congestion window on one connection" } },
+        { "id": "c", "text": { "tr": "Tarayıcılar HTTP/2'de alan adı başına tek istek sınırı uygular", "en": "Browsers enforce a limit of one request per host name in HTTP/2" } },
+        { "id": "d", "text": { "tr": "Sertifikalar en fazla bir alan adını kapsayabilir", "en": "Certificates can cover at most one host name" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Sharding, HTTP/1.1'in alan adı başına yaklaşık altı bağlantı sınırını aşmak için yapılırdı. HTTP/2'de tek bağlantı zaten yüzlerce stream taşıyabilir; ek alan adları yalnızca fazladan el sıkışma ekler ve sıkıştırma tablosunu ile büyümüş tıkanıklık penceresini paylaşmayan ayrı bağlantılar yaratır. Sertifikalar SAN ile birçok adı kapsayabilir.",
+        "en": "Sharding was done to get around HTTP/1.1's roughly six connections per host. In HTTP/2 one connection can already carry hundreds of streams; extra host names only add handshakes and create separate connections that do not share the compression table or the grown congestion window. Certificates can cover many names via SAN."
+      },
+      "difficulty": "medium",
+      "concepts": ["http2-multiplexing", "hpack", "http2-streams"]
+    }
+  ]
+}
