@@ -208,6 +208,53 @@ export const CURRICULUM: CurriculumModule[] = [
           en: 'Logging, metrics, tracing; twelve principles for production.',
         },
       ),
+      lesson(
+        'a',
+        14,
+        'websocket-realtime',
+        { tr: 'WebSocket ve Gerçek Zamanlı Sistemler', en: 'WebSockets and Real-Time Systems' },
+        {
+          tr: 'Polling → long polling → SSE → WebSocket; Redis pub/sub ile ölçekleme, yeniden bağlanma ve presence.',
+          en: 'Polling → long polling → SSE → WebSocket; scaling with Redis pub/sub, reconnection and presence.',
+        },
+        ['request-journey'],
+      ),
+      lesson(
+        'a',
+        15,
+        'search-systems',
+        { tr: 'Arama Sistemleri', en: 'Search Systems' },
+        {
+          tr: 'Ters indeks, tokenizasyon, BM25, facet, Elasticsearch shard/replica ve PostgreSQL full-text.',
+          en: 'Inverted index, tokenization, BM25, facets, Elasticsearch shards/replicas and PostgreSQL full-text.',
+        },
+        ['request-journey'],
+      ),
+      lesson(
+        'a',
+        16,
+        'background-jobs-scheduling',
+        {
+          tr: 'Arka Plan İşleri ve Zamanlanmış Görevler',
+          en: 'Background Jobs and Scheduled Tasks',
+        },
+        {
+          tr: 'Kuyruk işçileri, idempotent işler, retry/backoff/DLQ, cron ve dağıtık kilit.',
+          en: 'Queue workers, idempotent jobs, retry/backoff/DLQ, cron and distributed locks.',
+        },
+        ['message-queue'],
+      ),
+      lesson(
+        'a',
+        17,
+        'grpc-graphql-rest',
+        { tr: 'gRPC, GraphQL ve REST Karşılaştırması', en: 'gRPC, GraphQL and REST Compared' },
+        {
+          tr: 'Sözleşme, streaming, N+1 ve DataLoader, BFF; hangi durumda hangisi.',
+          en: 'Contracts, streaming, N+1 and DataLoader, BFF; which one when.',
+        },
+        ['request-journey'],
+      ),
     ],
   },
   {

@@ -98,6 +98,8 @@
       "a-system-design-fundamentals/a-10-rate-limiting",
       "a-system-design-fundamentals/a-11-consistent-hashing-sharding",
       "a-system-design-fundamentals/a-12-replication",
+      "a-system-design-fundamentals/a-14-websocket-realtime",
+      "a-system-design-fundamentals/a-15-search-systems",
       "d-database-design/d-04-sql-vs-nosql",
       "e-case-studies",
       "c-design-patterns/c-04-distributed-patterns",
