@@ -130,7 +130,7 @@ Dersin sonunda (quiz'den sonra) öğrencinin konuyu derinleştirebileceği dış
 
 ### Interaktif türleri
 
-`load-balancer`, `cache`, `rate-limiter`, `consistent-hashing`, `gradient-descent`, `attention`, `neural-network-playground`, `capacity-estimator`, `er-diagram`, `cap-theorem`, `scaling`, `message-queue`, `replication-quorum`, `index-query-plan`, `isolation-levels`, `k-means`, `decision-tree`, `convolution`, `tokenizer`, `embedding-space`, `pipeline`, `kubernetes-hpa`, `request-journey`, `traffic-wave`, `fan-out`, `geo-index`, `sorting-visualizer`, `graph-traversal`, `hash-table`, `big-o-plotter`, `rag-pipeline`, `prompt-playground`, `token-cost`, `oauth-flow`, `jwt-inspector`, `bruteforce-login`, `git-graph`, `dp-table`, `heap`, `stack-queue`, `python-memory`, `predict-run`
+`load-balancer`, `cache`, `rate-limiter`, `consistent-hashing`, `gradient-descent`, `attention`, `neural-network-playground`, `capacity-estimator`, `er-diagram`, `cap-theorem`, `scaling`, `message-queue`, `replication-quorum`, `index-query-plan`, `isolation-levels`, `k-means`, `decision-tree`, `convolution`, `tokenizer`, `embedding-space`, `pipeline`, `kubernetes-hpa`, `request-journey`, `traffic-wave`, `fan-out`, `geo-index`, `sorting-visualizer`, `graph-traversal`, `hash-table`, `big-o-plotter`, `rag-pipeline`, `prompt-playground`, `token-cost`, `oauth-flow`, `jwt-inspector`, `bruteforce-login`, `git-graph`, `dp-table`, `heap`, `stack-queue`, `python-memory`, `predict-run`, `sql-playground`, `docker-layers`
 
 Her türün web ve mobilde bir bileşeni vardır; ek öznitelikler `params` olarak bileşene geçirilir.
 

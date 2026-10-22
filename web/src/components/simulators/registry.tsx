@@ -75,4 +75,6 @@ export const SIMULATORS: Partial<Record<InteractiveType, ComponentType<Simulator
   'stack-queue': load(() => import('./StackQueueSim')),
   'python-memory': load(() => import('./PythonMemorySim')),
   'predict-run': load(() => import('./PredictRunSim')),
+  'sql-playground': load(() => import('./SqlPlaygroundSim')),
+  'docker-layers': load(() => import('./DockerLayersSim')),
 };

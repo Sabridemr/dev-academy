@@ -46,6 +46,10 @@ CMD ["node", "dist/server.js"]
 ```
 :::
 
+:::interactive{type="docker-layers" example="node-basic"}
+Bu kez bilerek kötü yazılmış bir Dockerfile ile başlıyoruz. "Uyarılar" listesini oku: `ENV API_TOKEN=...` ile imaja gömülen gizli bilgi ve USER olmadığı için root olarak çalışan konteyner kırmızı güvenlik uyarılarıdır; `node:latest` etiketi derlemeyi tekrarlanamaz yapar, ayrı `apt-get` satırları ve `COPY . .`'nın `npm install`'dan önce gelmesi de süreyi ve boyutu büyütür. "src/ değişti"ye basıp kaç katmanın yeniden derlendiğini not et, sonra "Yükle: İyileştirilmiş sürüm" ile yukarıdaki iyi uygulamaların uygulandığı sürüme geç; "Önce / sonra" tablosunda final boyutun, uyarı sayısının ve src/ değişince yeniden derlenen miktarın nasıl düştüğünü karşılaştır. Editörde `USER node` satırını silip root uyarısının geri geldiğini de gör.
+:::
+
 Image'ı build edip **GitHub Container Registry (GHCR)**'ye gönderme:
 
 :::code{lang="yaml"}

@@ -120,6 +120,8 @@ export const InteractiveTypeSchema = z.enum([
   'stack-queue',
   'python-memory',
   'predict-run',
+  'sql-playground',
+  'docker-layers',
 ]);
 export type InteractiveType = z.infer<typeof InteractiveTypeSchema>;
 
@@ -172,6 +174,8 @@ export const INTERACTIVE_PARAMS = {
   'stack-queue': ['expression', 'mode'],
   'python-memory': ['scenario'],
   'predict-run': ['src'],
+  'sql-playground': ['dataset', 'query'],
+  'docker-layers': ['contextMb', 'example'],
 } as const satisfies Record<InteractiveType, readonly string[]>;
 
 /** Kod izini (`*.trace.json`) girdi olarak alan interaktif türler: iz, `src` parametresinden çözülür */
