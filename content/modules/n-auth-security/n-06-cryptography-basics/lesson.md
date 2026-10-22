@@ -206,6 +206,10 @@ Kendi şifreleme algoritmanızı, kendi "karıştırma" fonksiyonunuzu ya da has
 
 Bu platformda şifreler argon2id ile hash'lenir; refresh token'lar yüksek entropili rastgele değerler olduğu için veritabanında SHA-256 özetiyle saklanır; access token'lar HMAC-SHA256 ile imzalanır ve sırrı ortam değişkeninden okunur; Google ve Apple ID token'ları ise sağlayıcıların asimetrik açık anahtarlarıyla doğrulanır. Tek bir uygulamada tablodaki araçların dördü, her biri kendi doğru yerinde kullanılır.
 
+:::interactive{type="hash-salt" algorithm="sha256" showAttack=true}
+Şifre kutusundaki örnek şifreyle başlayın: **Salt yok** sütununda iki kullanıcının hash'i birebir aynıdır, kullanıcıya özel salt sütununda ise tamamen farklı. **Yeni salt üret** düğmesine basın: şifre aynı kalırken tuzlu hash'ler değişir. Saldırgan panelinde örnek şifrenin 1000 kelimelik sözlükte olduğuna dikkat edin; sızan hesap sayısını artırınca tuzsuz SHA-256 satırının neden değişmediğini, tuzlu satırın ise hesap sayısıyla birlikte uzadığını karşılaştırın. Sonra algoritmayı **PBKDF2** yapın ve iterasyon kaydırıcısını yükseltin: ölçülen süre tarayıcınızda gerçekten artar, saldırganın PBKDF2 satırı da aynı oranda uzar. Yan paneldeki yavaş hash tahmininde bcrypt cost değerini bir artırmanın süreyi neden iki katına çıkardığını görün. Şifre hiçbir yere gönderilmez; tüm hesaplama tarayıcınızda yapılır.
+:::
+
 :::realworld{company="LinkedIn"}
 2012'de LinkedIn'den yaklaşık 6,5 milyon şifre hash'i bir forumda yayımlandı ve kısa sürede büyük kısmı kırıldı. Sebep, şifrelerin **tuzsuz SHA-1** ile saklanmasıydı: hızlı bir hash olduğu için sözlük denemeleri ekran kartlarında çok hızlı ilerledi ve tuz olmadığı için aynı şifreyi kullanan herkesin hash'i aynıydı, tek bir kırılma binlerce hesabı birden açtı. Dört yıl sonra aynı ihlalin aslında 100 milyonu aşkın hesabı kapsadığı ortaya çıktı. Şirket o dönemde tuzlu ve daha güçlü bir hash'e geçmişti, ama eski hash'ler zaten sızmıştı ve birçok kullanıcı aynı şifreyi başka sitelerde de kullandığı için etki LinkedIn'in ötesine geçti. Olay, "hash'liyoruz" demenin yeterli olmadığının, hash'in **türünün** belirleyici olduğunun klasik örneğidir.
 :::

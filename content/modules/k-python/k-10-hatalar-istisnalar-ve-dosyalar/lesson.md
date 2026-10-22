@@ -463,6 +463,14 @@ Dönüşümde Python `True`/`None` değerleri JSON'da `true`/`null` olur. `ensur
 döner. Bozuk JSON okunursa `json.JSONDecodeError` (bir `ValueError` alt türü) fırlar; dışarıdan gelen veriyi okurken
 onu yakalamayı unutma.
 
+## Ek: log satırlarını düzenli ifadeyle ayrıştırmak
+
+Dosyayı satır satır okumayı öğrendin; gerçek hayatta okunan satırların çoğu log kaydıdır ve içlerinden tarih, seviye ve mesajı ayıklamak gerekir. Python'da bunun aracı `re` modülüdür: `re.match(desen, satir)` eşleşirse `m.group("seviye")` ile adlandırılmış bir grubu okursun, eşleşmezse `None` döner ve o satırı atlarsın. Desenler ilk bakışta karmaşık görünür; aşağıdaki oyun alanı her parçayı tek tek açıklar.
+
+:::interactive{type="regex-playground" preset="log"}
+Hazır **Log satırı** deseninde dört satırdan üçü eşleşir; tarih, saat, seviye ve mesaj grupları farklı renklerle vurgulanır, yan paneldeki açıklama her parçayı Türkçe anlatır. **m** bayrağını kapatın: `^` ve `$` artık her satırın değil metnin tamamının başı ve sonu olduğu için eşleşme kalmaz. Ardından deseni `(\w+\s?)+$` gibi iç içe tekrar içeren bir desenle değiştirin ve ReDoS uyarısını okuyun. Deseni Python'a taşırken farklar kutusuna bakın: JS'teki `(?<seviye>...)` Python'da `(?P<seviye>...)` olarak yazılır.
+:::
+
 ## Özet
 
 - İstisna, hata bilgisini taşıyan bir nesnedir; yakalanana kadar çağrı yığınında yukarı yayılır ve geçtiği
