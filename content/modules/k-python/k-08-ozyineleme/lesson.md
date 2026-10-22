@@ -132,6 +132,10 @@ Fibonacci dizisi: `fib(0) = 0`, `fib(1) = 1`, sonrası `fib(n) = fib(n-1) + fib(
 Dikkat: yığın aynı anda bu ağacın **yalnızca bir dalını** tutar. `fib(3)` bütün alt ağacıyla bitip dönmeden
 `fib(2)` (sağ kol) başlamaz. Simülasyonda bir global sayaç ile kaç çağrı yapıldığını da sayıyoruz.
 
+:::interactive{type="predict-run" src="fibonacci-agaci.trace.json" title="Önce tahmin et: kaç çağrı?|Predict first: how many calls?"}
+Simülasyonu izlemeden önce kodu oku: `fib(4)` için `fib` toplam kaç kez çağrılır ve program ne yazdırır? Her soruda bir seçenek işaretle. Sorulardaki satır numaraları soldaki kod listesine göredir. "Çalıştır ve karşılaştır" ile cevapların işaretlenir, doğru ve yanlış sayısı görünür ve iz oynamaya başlar; her sorunun altındaki adım numarasına izin kaydırıcısıyla gidip değeri kendin doğrula. Puan sunucuya gönderilmez; "Yeniden dene" ile tekrar cevaplayabilirsin.
+:::
+
 :::trace{src="fibonacci-agaci.trace.json" title="Naif fibonacci: çağrı ağacı|Naive fibonacci: the call tree"}
 Yığının en fazla 4 çerçeve derinliğe indiğine ama toplam 9 çağrı yapıldığına dikkat et; fib(2)'nin iki kez baştan hesaplandığını yakala.
 :::

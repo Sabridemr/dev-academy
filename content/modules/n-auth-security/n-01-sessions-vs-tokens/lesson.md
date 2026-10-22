@@ -76,9 +76,11 @@ Token'ın zayıf yanı iptaldir. İmzalı bir token, süresi dolana kadar matema
 
 **Access token** kısa ömürlüdür (tipik olarak 5–15 dakika) ve her API isteğinde taşınır. Çalınırsa saldırganın kullanabileceği pencere dakikalarla sınırlıdır. **Refresh token** uzun ömürlüdür (günler ya da haftalar) ama yalnızca tek bir uç noktaya, yeni access token almak için gönderilir. En önemli fark şudur: refresh token **sunucuda kayıtlıdır**. Yani refresh adımı aslında küçük bir oturum aramasıdır ve iptal burada yapılır. Kullanıcı çıkış yaptığında refresh token kaydı iptal edilir; elde kalan access token en geç birkaç dakika içinde ölür.
 
+:::callout{tone="info" title="Derinleşme"}
 Bu düzeni bir adım ileri taşıyan teknik **refresh token rotasyonudur**: her yenilemede eski refresh token iptal edilir ve yenisi verilir. Aynı aileden iptal edilmiş bir token yeniden kullanılmaya çalışılırsa bu, iki tarafın (gerçek kullanıcı ve saldırgan) aynı token'ı tuttuğunun kanıtıdır; sunucu o ailenin tüm token'larını iptal eder ve kullanıcıdan yeniden giriş ister. Böylece çalıntı bir refresh token en fazla bir kez işe yarar ve hırsızlık fark edilir.
 
 Refresh token veritabanında düz metin olarak değil, **hash'i** ile saklanmalıdır. Veritabanı yedeği sızarsa saldırgan elinde kullanılabilir token değil, yalnızca özetler bulur. Rastgele ve yüksek entropili bir token için yavaş şifre hash'lerine gerek yoktur; SHA-256 yeterlidir, çünkü tahmin edilecek bir sözlük yoktur.
+:::
 
 ## Token tarayıcıda nerede durmalı?
 

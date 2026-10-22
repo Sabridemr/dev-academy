@@ -1,0 +1,173 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "j-06-order-request-journey",
+  "title": { "tr": "Bir Yemek Siparişinin Yolculuğu: CDN'den Kafka'ya", "en": "The Journey of a Food Order: From CDN to Kafka" },
+  "summary": {
+    "tr": "Menü görselleri CDN'den gelir; sipariş isteği yük dengeleyici ve API gateway'den geçip sipariş servisine ulaşır; ödeme senkron, restoran, kurye ve bildirim asenkron işlenir; bildirim servisi çökse de sipariş akışı durmaz.",
+    "en": "Menu images come from the CDN; the order request passes the load balancer and API gateway to reach the order service; payment is synchronous while restaurant, courier and notification are asynchronous; even if the notification service crashes the order flow keeps going."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda müşteri uygulaması bulunur; üstte CDN, altta yük dengeleyici ve API gateway yer alır. Ortada sipariş servisi, üstünde ödeme servisi, altında sipariş veritabanı vardır. Sağda Kafka ve onu dinleyen restoran, teslimat ve bildirim servisleri bulunur. Menü görselleri CDN önbelleğinden gelir. Sipariş isteği gateway'de kimlik ve hız sınırı kontrolünden geçer, sipariş servisi ödemeyi senkron alır, siparişi veritabanına yazar ve kullanıcıya hemen yanıt verir. order-created olayı Kafka üzerinden üç servise dağılır. Bildirim servisi çöktüğünde olaylar Kafka'da bekler, sipariş akışı etkilenmez ve servis geri gelince kaldığı yerden okur.",
+      "en": "The customer app is on the left, with the CDN above and the load balancer and API gateway below. The order service is in the middle with the payment service above and the orders database below. Kafka is on the right, with the restaurant, delivery and notification services listening to it. Menu images come from the CDN cache. The order request passes identity and rate limit checks at the gateway, the order service takes the payment synchronously, writes the order to the database and answers the user immediately. The order-created event is spread to three services through Kafka. When the notification service crashes the events wait in Kafka, the order flow is unaffected and the service resumes from where it left off once it is back."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "app", "kind": "mobile", "label": { "tr": "Müşteri uygulaması", "en": "Customer app" }, "x": 75, "y": 330, "w": 130, "h": 70 },
+    { "id": "cdn", "kind": "cdn", "label": "CDN", "sublabel": { "tr": "menü görselleri", "en": "menu images" }, "x": 230, "y": 120, "w": 120, "h": 64 },
+    { "id": "lb", "kind": "lb", "label": { "tr": "Yük dengeleyici", "en": "Load balancer" }, "x": 230, "y": 330, "w": 130, "h": 64 },
+    { "id": "gw", "kind": "gateway", "label": "API Gateway", "sublabel": { "tr": "JWT, rate limit", "en": "JWT, rate limit" }, "x": 390, "y": 330, "w": 130, "h": 70 },
+    { "id": "pay", "kind": "service", "label": "Payment Service", "x": 570, "y": 150, "w": 140, "h": 64 },
+    { "id": "order", "kind": "service", "label": "Order Service", "x": 570, "y": 330, "w": 140, "h": 70 },
+    { "id": "db", "kind": "db", "label": { "tr": "Sipariş DB", "en": "Orders DB" }, "sublabel": "PostgreSQL", "x": 570, "y": 500, "w": 140, "h": 64 },
+    { "id": "kafka", "kind": "queue", "label": "Kafka", "sublabel": "order-created", "x": 750, "y": 330, "w": 120, "h": 64 },
+    { "id": "rest", "kind": "service", "label": "Restaurant", "x": 910, "y": 170, "w": 120, "h": 60 },
+    { "id": "deliv", "kind": "service", "label": "Delivery", "x": 910, "y": 330, "w": 120, "h": 60 },
+    { "id": "notif", "kind": "service", "label": "Notification", "x": 910, "y": 490, "w": 120, "h": 60 }
+  ],
+  "edges": [
+    { "id": "app-cdn", "from": "app", "to": "cdn", "kind": "request" },
+    { "id": "app-lb", "from": "app", "to": "lb", "kind": "request" },
+    { "id": "lb-gw", "from": "lb", "to": "gw", "kind": "request" },
+    { "id": "gw-order", "from": "gw", "to": "order", "kind": "request" },
+    { "id": "order-pay", "from": "order", "to": "pay", "kind": "request", "label": "gRPC" },
+    { "id": "order-db", "from": "order", "to": "db", "kind": "data" },
+    { "id": "order-kafka", "from": "order", "to": "kafka", "kind": "event" },
+    { "id": "kafka-rest", "from": "kafka", "to": "rest", "kind": "event" },
+    { "id": "kafka-deliv", "from": "kafka", "to": "deliv", "kind": "event" },
+    { "id": "kafka-notif", "from": "kafka", "to": "notif", "kind": "event" }
+  ],
+  "steps": [
+    {
+      "id": "cdn",
+      "title": { "tr": "Menü görselleri CDN'den", "en": "Menu images from the CDN" },
+      "narration": {
+        "tr": "Kullanıcı restoran menüsüne bakarken yemek fotoğrafları en yakın CDN noktasından iner. Bu istekler arka uca hiç ulaşmaz; akşam yoğunluğunda sunucuların yükünün büyük bir kısmını CDN üstlenir.",
+        "en": "While the user browses the restaurant menu, food photos download from the nearest CDN point. These requests never reach the backend; at the evening peak the CDN takes a large share of the load off the servers."
+      },
+      "durationMs": 3500,
+      "inherit": false,
+      "highlight": { "nodes": ["app", "cdn"], "edges": ["app-cdn"] },
+      "nodeStates": { "cdn": { "status": "success", "badge": "HIT" } },
+      "edgeStates": { "app-cdn": { "status": "active" } },
+      "packets": [
+        { "edge": "app-cdn", "shape": "square", "repeat": 3, "repeatGapMs": 250, "durationMs": 600 },
+        { "edge": "app-cdn", "direction": "backward", "shape": "square", "label": "jpg", "color": "success", "startAt": 1300, "repeat": 3, "repeatGapMs": 250, "durationMs": 600 }
+      ]
+    },
+    {
+      "id": "post-order",
+      "title": { "tr": "POST /orders yola çıkar", "en": "POST /orders sets off" },
+      "narration": {
+        "tr": "Kullanıcı \"Sipariş ver\"e basar. İstek, idempotency anahtarı taşıyarak yük dengeleyiciye gelir; yük dengeleyici onu sağlıklı gateway kopyalarından birine iletir.",
+        "en": "The user taps \"Place order\". The request, carrying an idempotency key, reaches the load balancer, which forwards it to one of the healthy gateway instances."
+      },
+      "durationMs": 3500,
+      "highlight": { "nodes": ["app", "lb", "gw"], "edges": ["app-lb", "lb-gw"] },
+      "nodeStates": { "cdn": { "status": "idle", "badge": "" }, "lb": { "status": "active" } },
+      "edgeStates": { "app-cdn": { "status": "idle" }, "app-lb": { "status": "active" }, "lb-gw": { "status": "active" } },
+      "packets": [
+        { "edge": "app-lb", "shape": "envelope", "label": "POST /orders", "durationMs": 900 },
+        { "edge": "lb-gw", "shape": "envelope", "startAt": 1000, "durationMs": 800 }
+      ]
+    },
+    {
+      "id": "gateway",
+      "title": { "tr": "Gateway: kimlik, sınır, yönlendirme", "en": "Gateway: identity, limits, routing" },
+      "narration": {
+        "tr": "API gateway JWT imzasını doğrular, kullanıcının istek kotasını (rate limit) kontrol eder ve `/orders` yolunu Order Service'e yönlendirir. Bu ortak işler tek yerde yapıldığı için servisler yalnızca kendi iş mantığıyla ilgilenir.",
+        "en": "The API gateway verifies the JWT signature, checks the user's request quota (rate limit) and routes the `/orders` path to the Order Service. Because these shared concerns live in one place, the services only deal with their own business logic."
+      },
+      "durationMs": 3500,
+      "highlight": { "nodes": ["gw", "order"], "edges": ["gw-order"] },
+      "nodeStates": { "lb": { "status": "idle" }, "gw": { "status": "success", "badge": "JWT ✓" }, "order": { "status": "active" } },
+      "edgeStates": { "app-lb": { "status": "idle" }, "lb-gw": { "status": "idle" }, "gw-order": { "status": "active" } },
+      "packets": [{ "edge": "gw-order", "shape": "envelope", "label": "user=U123", "durationMs": 1000 }]
+    },
+    {
+      "id": "payment",
+      "title": { "tr": "Ödeme: senkron çağrı", "en": "Payment: a synchronous call" },
+      "narration": {
+        "tr": "Kullanıcı ödemenin sonucunu ekranda beklediği için Order Service, Payment Service'i senkron (gRPC) çağırır. Bu, akıştaki az sayıdaki beklemeli adımdan biridir; zaman aşımı ve devre kesiciyle korunur.",
+        "en": "Because the user waits on screen for the payment result, the Order Service calls the Payment Service synchronously (gRPC). This is one of the few blocking steps in the flow; it is guarded by a timeout and a circuit breaker."
+      },
+      "durationMs": 3500,
+      "highlight": { "nodes": ["order", "pay"], "edges": ["order-pay"] },
+      "nodeStates": { "gw": { "status": "idle", "badge": "" }, "pay": { "status": "success", "badge": "OK" } },
+      "edgeStates": { "gw-order": { "status": "idle" }, "order-pay": { "status": "active" } },
+      "packets": [
+        { "edge": "order-pay", "shape": "diamond", "label": "charge", "durationMs": 900 },
+        { "edge": "order-pay", "direction": "backward", "label": "OK", "color": "success", "startAt": 1300, "durationMs": 900 }
+      ]
+    },
+    {
+      "id": "persist",
+      "title": { "tr": "Kayıt ve hızlı yanıt", "en": "Persist and answer fast" },
+      "narration": {
+        "tr": "Sipariş CONFIRMED olarak veritabanına, order-created olayı da aynı transaction'da outbox'a yazılır. Kullanıcıya hemen 201 döner; restoranın kabulünü ya da kurye atamasını beklemez.",
+        "en": "The order is written to the database as CONFIRMED and the order-created event goes to the outbox in the same transaction. The user gets a 201 at once; it does not wait for the restaurant to accept or a courier to be assigned."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["order", "db", "app"], "edges": ["order-db", "gw-order", "lb-gw", "app-lb"] },
+      "nodeStates": { "pay": { "status": "idle", "badge": "" }, "db": { "status": "success", "badge": "CONFIRMED" }, "app": { "status": "success", "badge": "201" } },
+      "edgeStates": { "order-pay": { "status": "idle" }, "order-db": { "status": "active" }, "gw-order": { "status": "active" }, "lb-gw": { "status": "active" }, "app-lb": { "status": "active" } },
+      "packets": [
+        { "edge": "order-db", "shape": "square", "label": "INSERT", "durationMs": 800 },
+        { "edge": "gw-order", "direction": "backward", "label": "201", "color": "success", "startAt": 900, "durationMs": 700 },
+        { "edge": "lb-gw", "direction": "backward", "color": "success", "startAt": 1650, "durationMs": 600 },
+        { "edge": "app-lb", "direction": "backward", "color": "success", "startAt": 2300, "durationMs": 700 }
+      ]
+    },
+    {
+      "id": "fan-out",
+      "title": { "tr": "Olay üç servise dağılır", "en": "The event spreads to three services" },
+      "narration": {
+        "tr": "order-created Kafka'ya düşer. Restaurant servisi siparişi restoran tabletine iletir, Delivery servisi kurye arayışına hazırlanır, Notification servisi \"Siparişiniz alındı\" push'unu gönderir. Order Service bu üç servisi tanımaz bile; yalnızca olayı yayınlar.",
+        "en": "order-created lands in Kafka. The Restaurant service forwards the order to the restaurant tablet, Delivery prepares to look for a courier and Notification sends the \"Order received\" push. The Order Service does not even know these three services; it just publishes the event."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["kafka", "rest", "deliv", "notif"], "edges": ["order-kafka", "kafka-rest", "kafka-deliv", "kafka-notif"] },
+      "nodeStates": { "app": { "status": "idle", "badge": "" }, "db": { "status": "idle", "badge": "" }, "kafka": { "status": "active" }, "rest": { "status": "active" }, "deliv": { "status": "active" }, "notif": { "status": "active", "badge": "push" } },
+      "edgeStates": { "order-db": { "status": "idle" }, "gw-order": { "status": "idle" }, "lb-gw": { "status": "idle" }, "app-lb": { "status": "idle" }, "order-kafka": { "status": "active" }, "kafka-rest": { "status": "active" }, "kafka-deliv": { "status": "active" }, "kafka-notif": { "status": "active" } },
+      "packets": [
+        { "edge": "order-kafka", "shape": "envelope", "label": "order-created", "durationMs": 900 },
+        { "edge": "kafka-rest", "shape": "envelope", "startAt": 1100, "durationMs": 800 },
+        { "edge": "kafka-deliv", "shape": "envelope", "startAt": 1100, "durationMs": 800 },
+        { "edge": "kafka-notif", "shape": "envelope", "startAt": 1100, "durationMs": 800 }
+      ]
+    },
+    {
+      "id": "isolation",
+      "title": { "tr": "Bildirim servisi çöker", "en": "The notification service crashes" },
+      "narration": {
+        "tr": "Bir sonraki siparişte Notification servisi çökmüş olsun. Sipariş yine alınır, restoran ve kurye yine haberdar olur. Bildirime ait olaylar Kafka'da birikir (consumer lag artar) ama kaybolmaz. Hata izolasyonu tam olarak budur.",
+        "en": "On the next order, let the Notification service be down. The order is still taken and the restaurant and courier are still informed. The notification events pile up in Kafka (consumer lag grows) but are not lost. This is exactly what fault isolation means."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["notif", "kafka"], "edges": ["kafka-notif"] },
+      "nodeStates": { "notif": { "status": "down", "badge": "" }, "kafka": { "status": "warning", "badge": "lag 120", "progress": 0.5 }, "rest": { "status": "success" }, "deliv": { "status": "success" } },
+      "edgeStates": { "kafka-notif": { "status": "error" } },
+      "packets": [
+        { "edge": "order-kafka", "shape": "envelope", "repeat": 3, "repeatGapMs": 300, "durationMs": 700 },
+        { "edge": "kafka-rest", "shape": "envelope", "startAt": 900, "repeat": 3, "repeatGapMs": 300, "durationMs": 600 },
+        { "edge": "kafka-deliv", "shape": "envelope", "startAt": 900, "repeat": 3, "repeatGapMs": 300, "durationMs": 600 }
+      ],
+      "annotations": [{ "id": "iso", "x": 750, "y": 450, "text": { "tr": "olaylar bekler, sipariş akışı sürer", "en": "events wait, the order flow continues" }, "target": "kafka", "tone": "warning" }]
+    },
+    {
+      "id": "catch-up",
+      "title": { "tr": "Geri gelir, kaldığı yerden okur", "en": "It comes back and resumes" },
+      "narration": {
+        "tr": "Notification servisi yeniden başlar ve son commit ettiği offset'ten okumaya devam eder; biriken bildirimler sırayla gönderilir. Aynı bildirimi iki kez göndermemek için `order_id + status + channel` anahtarıyla tekilleştirme yapılır.",
+        "en": "The Notification service restarts and continues reading from its last committed offset; the backlog of notifications is sent in order. To avoid sending the same notification twice it deduplicates with an `order_id + status + channel` key."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["notif", "kafka"], "edges": ["kafka-notif"] },
+      "nodeStates": { "notif": { "status": "success", "badge": "push x3" }, "kafka": { "status": "idle", "badge": "lag 0", "progress": 0.1 } },
+      "edgeStates": { "kafka-notif": { "status": "active" }, "order-kafka": { "status": "idle" }, "kafka-rest": { "status": "idle" }, "kafka-deliv": { "status": "idle" } },
+      "packets": [{ "edge": "kafka-notif", "shape": "envelope", "color": "success", "repeat": 3, "repeatGapMs": 300, "durationMs": 700 }]
+    }
+  ]
+}

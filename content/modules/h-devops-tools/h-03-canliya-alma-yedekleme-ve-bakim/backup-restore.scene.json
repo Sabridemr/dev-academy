@@ -1,0 +1,182 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "vps-backup-verify-restore",
+  "title": { "tr": "Yedek Döngüsü: Al, Dışarı Taşı, Doğrula, Geri Yükle", "en": "Backup Cycle: Take, Ship Off-site, Verify, Restore" },
+  "summary": {
+    "tr": "cron gece yedek betiğini çalıştırır; pg_dump çıktısı sıkıştırılıp sunucu dışına kopyalanır, düzenli geri yükleme provasıyla doğrulanır ve felakette son yedekten geri dönülür.",
+    "en": "cron runs the backup script at night; the pg_dump output is compressed and copied off the server, verified with regular restore drills, and the last backup is restored after a disaster."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda uygulama ve cron, ortada PostgreSQL ve yedek betiği, sağ üstte sunucudaki /yedek klasörü, sağda uzak depo, sağ altta test veritabanı bulunur. Adımlarda cron betiği tetikler, pg_dump tutarlı bir döküm alır, dosya sıkıştırılıp eski yedekler silinir, rclone dosyayı uzak depoya kopyalar, haftalık provada test veritabanına geri yüklenip doğrulanır; ardından sunucu diski bozulur, yerel yedek de kaybolur ve uzak depodaki son yedekten geri yükleme yapılır.",
+      "en": "The application and cron are on the left, PostgreSQL and the backup script in the middle, the /yedek folder on the server at the top right, the off-site store on the right and a test database at the bottom right. Over the steps cron triggers the script, pg_dump takes a consistent dump, the file is compressed and old backups are pruned, rclone copies it off-site, a weekly drill restores it into the test database and checks it; then the server disk fails, the local backup is lost too, and the latest off-site backup is restored."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "app", "kind": "server", "label": { "tr": "Uygulama", "en": "Application" }, "sublabel": "magaza-api", "x": 120, "y": 330, "w": 160, "h": 64 },
+    { "id": "cron", "kind": "worker", "label": "cron", "sublabel": "0 3 * * *", "x": 120, "y": 120, "w": 150, "h": 60 },
+    { "id": "script", "kind": "function", "label": "yedek.sh", "sublabel": "pg_dump | gzip", "x": 390, "y": 120, "w": 170, "h": 64 },
+    { "id": "db", "kind": "db", "label": "PostgreSQL", "sublabel": { "tr": "canlı veritabanı", "en": "live database" }, "x": 390, "y": 330, "w": 170, "h": 70, "color": "primary" },
+    { "id": "local", "kind": "storage", "label": "/yedek", "sublabel": { "tr": "aynı VPS diski", "en": "same VPS disk" }, "x": 660, "y": 120, "w": 170, "h": 64 },
+    { "id": "offsite", "kind": "storage", "label": { "tr": "Uzak depo", "en": "Off-site store" }, "sublabel": "S3 / B2 (rclone)", "x": 880, "y": 330, "w": 170, "h": 70, "color": "success" },
+    { "id": "drill", "kind": "db", "label": { "tr": "Test veritabanı", "en": "Test database" }, "sublabel": { "tr": "geri yükleme provası", "en": "restore drill" }, "x": 660, "y": 510, "w": 190, "h": 64 }
+  ],
+  "edges": [
+    { "id": "app-db", "from": "app", "to": "db", "kind": "request", "bidirectional": true },
+    { "id": "cron-script", "from": "cron", "to": "script", "kind": "control", "label": { "tr": "tetikler", "en": "triggers" } },
+    { "id": "script-db", "from": "script", "to": "db", "kind": "request", "label": "pg_dump" },
+    { "id": "script-local", "from": "script", "to": "local", "kind": "data", "label": ".sql.gz" },
+    { "id": "local-offsite", "from": "local", "to": "offsite", "kind": "replication", "label": "rclone copy" },
+    { "id": "offsite-drill", "from": "offsite", "to": "drill", "kind": "data", "label": { "tr": "prova", "en": "drill" } },
+    { "id": "offsite-db", "from": "offsite", "to": "db", "kind": "data", "label": "gunzip | psql", "style": "dashed" }
+  ],
+  "steps": [
+    {
+      "id": "normal",
+      "title": { "tr": "Gündüz: uygulama veriyi yazar", "en": "Daytime: the application writes data" },
+      "narration": {
+        "tr": "Uygulama gün boyu siparişleri PostgreSQL'e yazar. Veritabanının tek kopyası VPS diskindedir. Bu disk bozulursa ya da biri yanlışlıkla bir tabloyu silerse veriyi geri getirecek tek şey yedektir.",
+        "en": "The application writes orders to PostgreSQL all day. The only copy of the database lives on the VPS disk. If that disk fails or someone drops a table by mistake, the only thing that can bring the data back is a backup."
+      },
+      "durationMs": 3600,
+      "inherit": false,
+      "highlight": { "nodes": ["app", "db"], "edges": ["app-db"] },
+      "nodeStates": { "app": { "status": "active" }, "db": { "status": "active", "counter": 18240 }, "drill": { "status": "muted" }, "cron": { "status": "idle" } },
+      "edgeStates": { "app-db": { "status": "active" }, "offsite-db": { "visible": false } },
+      "packets": [{ "edge": "app-db", "shape": "dot", "durationMs": 700, "repeat": 3, "repeatGapMs": 300 }]
+    },
+    {
+      "id": "cron-fires",
+      "title": { "tr": "03:00: cron betiği tetikler", "en": "03:00: cron triggers the script" },
+      "narration": {
+        "tr": "crontab'daki 0 3 * * * satırı her gece 03:00'te yedek.sh'ı çalıştırır. Trafiğin en düşük olduğu saat seçilir. Betiğin çıktısı /var/log/yedek.log'a yönlendirilir; sessizce başarısız olan bir yedek, hiç olmayan yedekten daha tehlikelidir.",
+        "en": "The 0 3 * * * line in the crontab runs yedek.sh every night at 03:00, the hour with the least traffic. The script's output is redirected to /var/log/yedek.log; a backup that fails silently is more dangerous than no backup at all."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["cron", "script"], "edges": ["cron-script"] },
+      "nodeStates": { "app": { "status": "idle" }, "db": { "status": "idle" }, "cron": { "status": "active", "badge": "03:00" }, "script": { "status": "busy" } },
+      "edgeStates": { "app-db": { "status": "idle" }, "cron-script": { "status": "active" } },
+      "packets": [{ "edge": "cron-script", "shape": "square", "label": "yedek.sh", "durationMs": 1200 }]
+    },
+    {
+      "id": "dump",
+      "title": { "tr": "pg_dump tutarlı bir döküm alır", "en": "pg_dump takes a consistent dump" },
+      "narration": {
+        "tr": "pg_dump veritabanını tek bir işlem anlık görüntüsü (snapshot) içinden okur. Döküm, başladığı anın tutarlı bir kopyasıdır ve uygulama bu sırada yazmaya devam edebilir. Dosya kopyalamak yerine pg_dump kullanılmasının nedeni budur: çalışan bir veritabanının dosyalarını kopyalamak yarım bir kopya üretebilir.",
+        "en": "pg_dump reads the database from inside a single transaction snapshot. The dump is a consistent copy of the moment it started, and the application can keep writing meanwhile. That is why pg_dump is used instead of copying files: copying a running database's files can produce a half-written copy."
+      },
+      "durationMs": 4200,
+      "highlight": { "nodes": ["script", "db"], "edges": ["script-db", "app-db"] },
+      "nodeStates": { "db": { "status": "busy", "badge": "snapshot" }, "app": { "status": "active" } },
+      "edgeStates": { "cron-script": { "status": "idle" }, "script-db": { "status": "active" }, "app-db": { "status": "active" } },
+      "packets": [
+        { "edge": "script-db", "shape": "dot", "label": "pg_dump", "durationMs": 900 },
+        { "edge": "script-db", "shape": "square", "direction": "backward", "durationMs": 700, "startAt": 900, "repeat": 4, "repeatGapMs": 150 },
+        { "edge": "app-db", "shape": "dot", "durationMs": 700, "startAt": 600, "repeat": 2, "repeatGapMs": 500 }
+      ]
+    },
+    {
+      "id": "compress",
+      "title": { "tr": "Sıkıştır ve eskileri sil", "en": "Compress and prune old ones" },
+      "narration": {
+        "tr": "Döküm gzip ile sıkıştırılıp tarihli bir adla /yedek klasörüne yazılır. find -mtime +14 -delete satırı 14 günden eski dosyaları siler. Saklama süresi açıkça tanımlanmazsa disk bir gün yedeklerle dolar ve bu kez uygulama yazamaz hâle gelir.",
+        "en": "The dump is compressed with gzip and written to the /yedek folder under a dated name. The find -mtime +14 -delete line removes files older than 14 days. Without an explicit retention period the disk eventually fills with backups and then the application cannot write."
+      },
+      "durationMs": 3800,
+      "highlight": { "nodes": ["script", "local"], "edges": ["script-local"] },
+      "nodeStates": { "db": { "status": "idle", "badge": "" }, "app": { "status": "idle" }, "script": { "status": "success" }, "local": { "status": "active", "counter": 14, "badge": "db_2026-10-21_0300.sql.gz" } },
+      "edgeStates": { "script-db": { "status": "idle" }, "app-db": { "status": "idle" }, "script-local": { "status": "active" } },
+      "packets": [{ "edge": "script-local", "shape": "square", "label": ".sql.gz", "durationMs": 1100 }],
+      "annotations": [{ "id": "retention", "x": 660, "y": 210, "text": { "tr": "14 günden eskiler silinir", "en": "older than 14 days are deleted" }, "target": "local" }]
+    },
+    {
+      "id": "offsite",
+      "title": { "tr": "Sunucu dışına kopya", "en": "A copy off the server" },
+      "narration": {
+        "tr": "Aynı diskteki yedek, disk bozulduğunda onunla birlikte gider. rclone copy dosyayı başka bir sağlayıcıdaki nesne deposuna taşır. Yaygın kural 3-2-1'dir: verinin 3 kopyası, 2 farklı ortamda, en az 1'i başka bir konumda tutulur.",
+        "en": "A backup on the same disk dies with that disk. rclone copy moves the file to object storage at another provider. The common rule is 3-2-1: keep 3 copies of the data, on 2 different media, with at least 1 in another location."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["local", "offsite"], "edges": ["local-offsite"] },
+      "nodeStates": { "script": { "status": "idle" }, "local": { "status": "idle" }, "offsite": { "status": "success", "counter": 14 } },
+      "edgeStates": { "script-local": { "status": "idle" }, "local-offsite": { "status": "active" } },
+      "packets": [{ "edge": "local-offsite", "shape": "square", "label": ".sql.gz", "color": "success", "durationMs": 1400 }],
+      "annotations": [{ "id": "rule", "x": 880, "y": 230, "text": "3-2-1", "target": "offsite", "tone": "success" }]
+    },
+    {
+      "id": "drill",
+      "title": { "tr": "Doğrula: geri yükleme provası", "en": "Verify: the restore drill" },
+      "narration": {
+        "tr": "Haftalık bakım listesindeki \"yedeklerin açılabildiğini doğrulayın\" maddesi burada uygulanır. Son yedek uzak depodan indirilip ayrı bir test veritabanına geri yüklenir. Ardından tablo sayıları ve son siparişin tarihi kontrol edilir. Doğrulanmamış yedek, yedek sayılmaz.",
+        "en": "This is where the weekly checklist item \"verify that backups can be opened\" happens. The latest backup is downloaded from the off-site store and restored into a separate test database. Then the table counts and the date of the latest order are checked. An unverified backup does not count as a backup."
+      },
+      "durationMs": 4400,
+      "highlight": { "nodes": ["offsite", "drill"], "edges": ["offsite-drill"] },
+      "nodeStates": { "offsite": { "status": "idle" }, "drill": { "status": "success", "badge": "18.240 satır ✓" } },
+      "edgeStates": { "local-offsite": { "status": "idle" }, "offsite-drill": { "status": "active" } },
+      "packets": [{ "edge": "offsite-drill", "shape": "square", "label": "restore", "durationMs": 1300 }],
+      "annotations": [{ "id": "check", "x": 660, "y": 420, "text": "SELECT count(*) FROM siparisler;", "target": "drill", "tone": "success" }]
+    },
+    {
+      "id": "disaster",
+      "title": { "tr": "Felaket: disk bozuldu", "en": "Disaster: the disk failed" },
+      "narration": {
+        "tr": "Bir öğleden sonra VPS'in diski bozulur. Canlı veritabanı da aynı diskteki /yedek klasörü de kullanılamaz hâle gelir. Uygulama 500 hatası döner. Yalnızca sunucu dışına taşınan kopya etkilenmemiştir.",
+        "en": "One afternoon the VPS disk fails. Both the live database and the /yedek folder on the same disk become unusable. The application returns 500 errors. Only the copy that was moved off the server is unaffected."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["db", "local", "app"], "edges": [] },
+      "nodeStates": {
+        "drill": { "status": "muted", "badge": "" },
+        "app": { "status": "error", "badge": "500" },
+        "db": { "status": "down", "badge": "disk hatası" },
+        "local": { "status": "down", "badge": "" },
+        "script": { "status": "muted" },
+        "cron": { "status": "muted" },
+        "offsite": { "status": "success" }
+      },
+      "edgeStates": { "offsite-drill": { "status": "idle" }, "app-db": { "status": "error" }, "script-local": { "status": "muted" }, "local-offsite": { "status": "muted" } },
+      "annotations": [{ "id": "same-disk", "x": 660, "y": 210, "text": { "tr": "aynı diskteki yedek de gitti", "en": "the same-disk backup is gone too" }, "target": "local", "tone": "danger" }]
+    },
+    {
+      "id": "restore",
+      "title": { "tr": "Uzak depodan geri yükle", "en": "Restore from off-site" },
+      "narration": {
+        "tr": "Yeni bir disk ya da sunucu hazırlanır ve en son yedek gunzip -c ... | psql ile yüklenir. Bu adımları provada zaten denediğiniz için komutlar ve süre bellidir. Bir felaketin ortasında ilk kez geri yükleme denemek, ikinci bir felakete yol açabilir.",
+        "en": "A new disk or server is prepared and the latest backup is loaded with gunzip -c ... | psql. Because you already practised these steps in the drill, the commands and the duration are known. Trying a restore for the first time in the middle of a disaster can cause a second one."
+      },
+      "durationMs": 4200,
+      "highlight": { "nodes": ["offsite", "db"], "edges": ["offsite-db"] },
+      "nodeStates": { "db": { "status": "busy", "badge": "restore", "progress": 0.6 }, "local": { "status": "muted" } },
+      "edgeStates": { "offsite-db": { "visible": true, "status": "active" } },
+      "packets": [{ "edge": "offsite-db", "shape": "square", "label": "db_…_0300.sql.gz", "color": "success", "durationMs": 1600 }]
+    },
+    {
+      "id": "recovered",
+      "title": { "tr": "Geri döndük: RPO ve RTO", "en": "Back online: RPO and RTO" },
+      "narration": {
+        "tr": "Uygulama yeniden bağlanır ve sistem çalışır. Kaybedilen veri, son yedekten disk bozulana kadar yazılanlardır; buna RPO (göze alınan veri kaybı) denir. Hizmetin geri gelmesi için geçen süreye de RTO denir. Günde bir yedek alıyorsanız RPO'nuz bir güne kadar çıkabilir. Bu kayıp kabul edilemiyorsa daha sık yedek ya da sürekli WAL arşivleme gerekir.",
+        "en": "The application reconnects and the system is up. The data lost is whatever was written between the last backup and the disk failure; this is the RPO (the data loss you accept). The time it took to bring the service back is the RTO. With one backup a day, your RPO can reach a full day. If that loss is unacceptable, you need more frequent backups or continuous WAL archiving."
+      },
+      "durationMs": 4800,
+      "highlight": { "nodes": ["app", "db"], "edges": ["app-db"] },
+      "nodeStates": {
+        "db": { "status": "success", "badge": "03:00", "progress": 1, "counter": 18240 },
+        "app": { "status": "success", "badge": "200" },
+        "cron": { "status": "idle" },
+        "script": { "status": "idle" }
+      },
+      "edgeStates": { "offsite-db": { "status": "idle" }, "app-db": { "status": "active" } },
+      "packets": [{ "edge": "app-db", "shape": "dot", "durationMs": 700, "repeat": 3, "repeatGapMs": 300 }],
+      "annotations": [
+        { "id": "rpo", "x": 390, "y": 440, "text": { "tr": "RPO: 03:00'ten sonraki yazımlar kayıp", "en": "RPO: writes after 03:00 are lost" }, "target": "db", "tone": "warning" },
+        { "id": "rto", "x": 120, "y": 440, "text": { "tr": "RTO: geri dönüş süresi", "en": "RTO: time to recover" }, "target": "app", "tone": "info" }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["backup", "restore", "postgresql", "cron", "disaster-recovery"]
+}

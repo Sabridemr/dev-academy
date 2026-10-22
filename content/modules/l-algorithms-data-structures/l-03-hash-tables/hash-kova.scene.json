@@ -1,0 +1,755 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "l-03-hash-kova",
+  "title": {
+    "tr": "Hash, kova, çakışma ve yeniden boyutlama",
+    "en": "Hash, bucket, collision and resize"
+  },
+  "summary": {
+    "tr": "Dört anahtarın 4 kovalı tabloya yerleşmesi, bir çakışmanın zincirlemeyle çözülmesi, yük faktörü aşılınca tablonun 8 kovaya büyüyüp anahtarları yeniden dağıtması.",
+    "en": "Four keys placed into a 4-bucket table, a collision resolved by chaining, and the table growing to 8 buckets and redistributing the keys once the load factor is exceeded."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda anahtar kutusu, ortada hash fonksiyonu ve yük faktörü göstergesi, sağda alt alta kovalar vardır. Başta 4 kova görünür. elma kova 1'e, armut kova 2'ye gider. kiraz da kova 1'e düşer; bu çakışmadır ve kova 1 iki elemanlı zincir olarak sarıya döner. Ara adımda açık adreslemenin kiraz için 1, 2 ve 3 numaralı kovaları sırayla yokladığı gösterilir. muz kova 0'a eklenince yük faktörü 1,0 olur ve eşik 0,75 aşılır. Tablo 8 kovaya büyür, dört alt kova görünür olur ve anahtarlar yeniden hash'lenerek 1, 4, 5 ve 6 numaralı kovalara dağılır; çakışma ortadan kalkar. Son adımda kiraz tek karşılaştırmayla bulunur.",
+      "en": "A key box on the left, the hash function and a load-factor gauge in the middle, and buckets stacked on the right. Initially 4 buckets are visible. elma goes to bucket 1 and armut to bucket 2. kiraz also lands in bucket 1; this is a collision and bucket 1 turns yellow as a two-element chain. An intermediate step shows open addressing probing buckets 1, 2 and 3 for kiraz. When muz is added to bucket 0 the load factor reaches 1.0, above the 0.75 threshold. The table grows to 8 buckets, four more buckets appear, and the keys are rehashed into buckets 1, 4, 5 and 6, removing the collision. In the last step kiraz is found with a single comparison."
+    }
+  },
+  "canvas": {
+    "width": 1000,
+    "height": 600
+  },
+  "nodes": [
+    {
+      "id": "key",
+      "kind": "client",
+      "label": {
+        "tr": "anahtar",
+        "en": "key"
+      },
+      "x": 100,
+      "y": 300,
+      "w": 120,
+      "h": 70
+    },
+    {
+      "id": "hash",
+      "kind": "function",
+      "label": "hash(k) % m",
+      "x": 330,
+      "y": 300,
+      "w": 210,
+      "h": 80,
+      "sublabel": {
+        "tr": "m = 4 kova",
+        "en": "m = 4 buckets"
+      }
+    },
+    {
+      "id": "load",
+      "kind": "generic",
+      "label": {
+        "tr": "yük faktörü",
+        "en": "load factor"
+      },
+      "x": 330,
+      "y": 480,
+      "w": 210,
+      "h": 60,
+      "sublabel": {
+        "tr": "0 / 4 = 0",
+        "en": "0 / 4 = 0"
+      }
+    },
+    {
+      "id": "b0",
+      "kind": "storage",
+      "label": {
+        "tr": "kova 0",
+        "en": "bucket 0"
+      },
+      "x": 740,
+      "y": 50,
+      "w": 270,
+      "h": 56,
+      "sublabel": {
+        "tr": "boş",
+        "en": "empty"
+      }
+    },
+    {
+      "id": "b1",
+      "kind": "storage",
+      "label": {
+        "tr": "kova 1",
+        "en": "bucket 1"
+      },
+      "x": 740,
+      "y": 120,
+      "w": 270,
+      "h": 56,
+      "sublabel": {
+        "tr": "boş",
+        "en": "empty"
+      }
+    },
+    {
+      "id": "b2",
+      "kind": "storage",
+      "label": {
+        "tr": "kova 2",
+        "en": "bucket 2"
+      },
+      "x": 740,
+      "y": 190,
+      "w": 270,
+      "h": 56,
+      "sublabel": {
+        "tr": "boş",
+        "en": "empty"
+      }
+    },
+    {
+      "id": "b3",
+      "kind": "storage",
+      "label": {
+        "tr": "kova 3",
+        "en": "bucket 3"
+      },
+      "x": 740,
+      "y": 260,
+      "w": 270,
+      "h": 56,
+      "sublabel": {
+        "tr": "boş",
+        "en": "empty"
+      }
+    },
+    {
+      "id": "b4",
+      "kind": "storage",
+      "label": {
+        "tr": "kova 4",
+        "en": "bucket 4"
+      },
+      "x": 740,
+      "y": 330,
+      "w": 270,
+      "h": 56,
+      "sublabel": {
+        "tr": "boş",
+        "en": "empty"
+      }
+    },
+    {
+      "id": "b5",
+      "kind": "storage",
+      "label": {
+        "tr": "kova 5",
+        "en": "bucket 5"
+      },
+      "x": 740,
+      "y": 400,
+      "w": 270,
+      "h": 56,
+      "sublabel": {
+        "tr": "boş",
+        "en": "empty"
+      }
+    },
+    {
+      "id": "b6",
+      "kind": "storage",
+      "label": {
+        "tr": "kova 6",
+        "en": "bucket 6"
+      },
+      "x": 740,
+      "y": 470,
+      "w": 270,
+      "h": 56,
+      "sublabel": {
+        "tr": "boş",
+        "en": "empty"
+      }
+    },
+    {
+      "id": "b7",
+      "kind": "storage",
+      "label": {
+        "tr": "kova 7",
+        "en": "bucket 7"
+      },
+      "x": 740,
+      "y": 540,
+      "w": 270,
+      "h": 56,
+      "sublabel": {
+        "tr": "boş",
+        "en": "empty"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "ek",
+      "from": "key",
+      "to": "hash",
+      "kind": "request"
+    },
+    {
+      "id": "h0",
+      "from": "hash",
+      "to": "b0",
+      "kind": "data"
+    },
+    {
+      "id": "h1",
+      "from": "hash",
+      "to": "b1",
+      "kind": "data"
+    },
+    {
+      "id": "h2",
+      "from": "hash",
+      "to": "b2",
+      "kind": "data"
+    },
+    {
+      "id": "h3",
+      "from": "hash",
+      "to": "b3",
+      "kind": "data"
+    },
+    {
+      "id": "h4",
+      "from": "hash",
+      "to": "b4",
+      "kind": "data"
+    },
+    {
+      "id": "h5",
+      "from": "hash",
+      "to": "b5",
+      "kind": "data"
+    },
+    {
+      "id": "h6",
+      "from": "hash",
+      "to": "b6",
+      "kind": "data"
+    },
+    {
+      "id": "h7",
+      "from": "hash",
+      "to": "b7",
+      "kind": "data"
+    }
+  ],
+  "steps": [
+    {
+      "id": "intro",
+      "title": {
+        "tr": "4 kovalı bir tablo",
+        "en": "A table with 4 buckets"
+      },
+      "narration": {
+        "tr": "Tablo 4 kovalı bir diziyle başlıyor. Bir anahtarı yazmak için önce hash fonksiyonu anahtarı bir sayıya çevirir, sonra `% m` ile kova indeksini bulur. (Hash değerleri anlatım için seçilmiş örnek sayılardır.)",
+        "en": "The table starts as an array of 4 buckets. To store a key the hash function first turns it into a number, then `% m` gives the bucket index. (The hash values are example numbers chosen for the explanation.)"
+      },
+      "durationMs": 3200,
+      "inherit": false,
+      "highlight": {
+        "nodes": [
+          "hash",
+          "b0",
+          "b1",
+          "b2",
+          "b3"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "b4": {
+          "visible": false
+        },
+        "b5": {
+          "visible": false
+        },
+        "b6": {
+          "visible": false
+        },
+        "b7": {
+          "visible": false
+        }
+      },
+      "edgeStates": {
+        "h4": {
+          "visible": false
+        },
+        "h5": {
+          "visible": false
+        },
+        "h6": {
+          "visible": false
+        },
+        "h7": {
+          "visible": false
+        }
+      }
+    },
+    {
+      "id": "elma",
+      "title": {
+        "tr": "\"elma\" → kova 1",
+        "en": "\"elma\" → bucket 1"
+      },
+      "narration": {
+        "tr": "hash(\"elma\") = 13 ve 13 % 4 = 1. Değer doğrudan kova 1'e yazılır; diğer kovalara hiç bakılmaz. Yük faktörü 1/4 = 0,25.",
+        "en": "hash(\"elma\") = 13 and 13 % 4 = 1. The value goes straight into bucket 1; no other bucket is inspected. Load factor 1/4 = 0.25."
+      },
+      "durationMs": 3200,
+      "highlight": {
+        "nodes": [
+          "key",
+          "hash",
+          "b1"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "b1": {
+          "sublabel": "elma",
+          "status": "active",
+          "badge": "1"
+        },
+        "load": {
+          "sublabel": "1 / 4 = 0,25",
+          "progress": 0.25
+        }
+      },
+      "packets": [
+        {
+          "edge": "ek",
+          "label": "elma",
+          "shape": "envelope",
+          "durationMs": 800
+        },
+        {
+          "edge": "h1",
+          "label": "13 % 4 = 1",
+          "startAt": 800,
+          "durationMs": 1000
+        }
+      ]
+    },
+    {
+      "id": "armut",
+      "title": {
+        "tr": "\"armut\" → kova 2",
+        "en": "\"armut\" → bucket 2"
+      },
+      "narration": {
+        "tr": "hash(\"armut\") = 6 ve 6 % 4 = 2. Farklı bir kova; yük faktörü 0,5.",
+        "en": "hash(\"armut\") = 6 and 6 % 4 = 2. A different bucket; load factor 0.5."
+      },
+      "durationMs": 3000,
+      "highlight": {
+        "nodes": [
+          "b2"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "b1": {
+          "status": "idle"
+        },
+        "b2": {
+          "sublabel": "armut",
+          "status": "active",
+          "badge": "1"
+        },
+        "load": {
+          "sublabel": "2 / 4 = 0,5",
+          "progress": 0.5
+        }
+      },
+      "packets": [
+        {
+          "edge": "ek",
+          "label": "armut",
+          "shape": "envelope",
+          "durationMs": 800
+        },
+        {
+          "edge": "h2",
+          "label": "6 % 4 = 2",
+          "startAt": 800,
+          "durationMs": 1000
+        }
+      ]
+    },
+    {
+      "id": "kiraz",
+      "title": {
+        "tr": "\"kiraz\" → kova 1: çakışma",
+        "en": "\"kiraz\" → bucket 1: collision"
+      },
+      "narration": {
+        "tr": "hash(\"kiraz\") = 9 ve 9 % 4 = 1: kova 1 dolu! Farklı anahtarların aynı kovaya düşmesine **çakışma** denir. Zincirleme yönteminde kova küçük bir liste tutar ve \"kiraz\" listenin sonuna eklenir. Arama artık bu kovada iki anahtarı karşılaştırır.",
+        "en": "hash(\"kiraz\") = 9 and 9 % 4 = 1: bucket 1 is taken! Different keys landing in the same bucket is a **collision**. With chaining the bucket keeps a small list and \"kiraz\" is appended to it. A lookup in this bucket now compares two keys."
+      },
+      "durationMs": 3500,
+      "highlight": {
+        "nodes": [
+          "b1"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "b2": {
+          "status": "idle"
+        },
+        "b1": {
+          "sublabel": "elma → kiraz",
+          "status": "warning",
+          "badge": "2"
+        },
+        "load": {
+          "sublabel": "3 / 4 = 0,75",
+          "progress": 0.75
+        }
+      },
+      "packets": [
+        {
+          "edge": "ek",
+          "label": "kiraz",
+          "shape": "envelope",
+          "durationMs": 800
+        },
+        {
+          "edge": "h1",
+          "label": "9 % 4 = 1",
+          "startAt": 800,
+          "durationMs": 1000
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a-cak",
+          "x": 480,
+          "y": 110,
+          "text": {
+            "tr": "çakışma: zincire eklendi",
+            "en": "collision: appended to the chain"
+          },
+          "target": "b1",
+          "tone": "warning"
+        }
+      ]
+    },
+    {
+      "id": "acik",
+      "title": {
+        "tr": "Alternatif: açık adresleme",
+        "en": "Alternative: open addressing"
+      },
+      "narration": {
+        "tr": "Zincirleme tek yol değil. **Açık adresleme** kullanan bir tablo (Python'un dict'i gibi) her kovada tek anahtar tutar: kova 1 doluysa sıradaki kovalara bakar. Doğrusal yoklamada \"kiraz\" önce 1'e, sonra 2'ye çarpar ve boş olan 3'e yerleşirdi.",
+        "en": "Chaining is not the only way. A table with **open addressing** (like Python's dict) keeps one key per bucket: if bucket 1 is taken it probes the next ones. With linear probing \"kiraz\" would hit 1, then 2, and settle in the empty bucket 3."
+      },
+      "durationMs": 3500,
+      "highlight": {
+        "nodes": [
+          "b1",
+          "b2",
+          "b3"
+        ],
+        "edges": []
+      },
+      "packets": [
+        {
+          "edge": "h1",
+          "label": {
+            "tr": "dolu",
+            "en": "taken"
+          },
+          "durationMs": 700
+        },
+        {
+          "edge": "h2",
+          "label": {
+            "tr": "dolu",
+            "en": "taken"
+          },
+          "startAt": 800,
+          "durationMs": 700
+        },
+        {
+          "edge": "h3",
+          "label": {
+            "tr": "boş",
+            "en": "free"
+          },
+          "startAt": 1600,
+          "durationMs": 700
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a-acik",
+          "x": 500,
+          "y": 160,
+          "text": {
+            "tr": "yoklama: 1 → 2 → 3",
+            "en": "probing: 1 → 2 → 3"
+          }
+        }
+      ]
+    },
+    {
+      "id": "muz",
+      "title": {
+        "tr": "\"muz\" eklenince yük 1,0",
+        "en": "Adding \"muz\" pushes the load to 1.0"
+      },
+      "narration": {
+        "tr": "hash(\"muz\") = 20 ve 20 % 4 = 0. Artık 4 kovada 4 anahtar var: yük faktörü 1,0, eşik olan 0,75'i aştı. Kovalar doldukça zincirler uzar ve O(1) vaadi aşınır; tablo büyümeye karar verir.",
+        "en": "hash(\"muz\") = 20 and 20 % 4 = 0. Now 4 buckets hold 4 keys: the load factor is 1.0, above the 0.75 threshold. As buckets fill up the chains grow and the O(1) promise erodes; the table decides to grow."
+      },
+      "durationMs": 3500,
+      "highlight": {
+        "nodes": [
+          "b0",
+          "load"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "b1": {
+          "status": "idle"
+        },
+        "b0": {
+          "sublabel": "muz",
+          "status": "active",
+          "badge": "1"
+        },
+        "load": {
+          "sublabel": "4 / 4 = 1,0 > 0,75",
+          "progress": 1,
+          "status": "error"
+        }
+      },
+      "packets": [
+        {
+          "edge": "ek",
+          "label": "muz",
+          "shape": "envelope",
+          "durationMs": 800
+        },
+        {
+          "edge": "h0",
+          "label": "20 % 4 = 0",
+          "startAt": 800,
+          "durationMs": 1000
+        }
+      ]
+    },
+    {
+      "id": "resize",
+      "title": {
+        "tr": "Yeniden boyutlama: m = 8",
+        "en": "Resize: m = 8"
+      },
+      "narration": {
+        "tr": "Tablo iki katına (8 kova) büyür ve **her anahtar yeni m ile yeniden hash'lenir**: 13 % 8 = 5, 6 % 8 = 6, 9 % 8 = 1, 20 % 8 = 4. Çakışma kendiliğinden çözüldü, yük 0,5'e indi. Bu taşıma O(n) sürer ama seyrek yaşandığı için ekleme başına maliyet amortize O(1) kalır.",
+        "en": "The table doubles to 8 buckets and **every key is rehashed with the new m**: 13 % 8 = 5, 6 % 8 = 6, 9 % 8 = 1, 20 % 8 = 4. The collision disappears and the load drops to 0.5. The move costs O(n), but because it is rare the cost per insert stays amortised O(1)."
+      },
+      "durationMs": 4200,
+      "highlight": {
+        "nodes": [
+          "hash",
+          "b1",
+          "b4",
+          "b5",
+          "b6"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "hash": {
+          "sublabel": {
+            "tr": "m = 8 kova",
+            "en": "m = 8 buckets"
+          },
+          "status": "busy"
+        },
+        "b0": {
+          "sublabel": {
+            "tr": "boş",
+            "en": "empty"
+          },
+          "status": "idle",
+          "badge": ""
+        },
+        "b1": {
+          "sublabel": "kiraz",
+          "status": "success",
+          "badge": "1"
+        },
+        "b2": {
+          "sublabel": {
+            "tr": "boş",
+            "en": "empty"
+          },
+          "status": "idle",
+          "badge": ""
+        },
+        "b3": {
+          "sublabel": {
+            "tr": "boş",
+            "en": "empty"
+          },
+          "status": "idle"
+        },
+        "b4": {
+          "visible": true,
+          "sublabel": "muz",
+          "status": "success",
+          "badge": "1"
+        },
+        "b5": {
+          "visible": true,
+          "sublabel": "elma",
+          "status": "success",
+          "badge": "1"
+        },
+        "b6": {
+          "visible": true,
+          "sublabel": "armut",
+          "status": "success",
+          "badge": "1"
+        },
+        "b7": {
+          "visible": true
+        },
+        "load": {
+          "sublabel": "4 / 8 = 0,5",
+          "progress": 0.5,
+          "status": "success"
+        }
+      },
+      "edgeStates": {
+        "h4": {
+          "visible": true
+        },
+        "h5": {
+          "visible": true
+        },
+        "h6": {
+          "visible": true
+        },
+        "h7": {
+          "visible": true
+        }
+      },
+      "packets": [
+        {
+          "edge": "h5",
+          "label": "elma",
+          "durationMs": 900
+        },
+        {
+          "edge": "h6",
+          "label": "armut",
+          "startAt": 300,
+          "durationMs": 900
+        },
+        {
+          "edge": "h1",
+          "label": "kiraz",
+          "startAt": 600,
+          "durationMs": 900
+        },
+        {
+          "edge": "h4",
+          "label": "muz",
+          "startAt": 900,
+          "durationMs": 900
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a-amort",
+          "x": 330,
+          "y": 580,
+          "text": {
+            "tr": "O(n) taşıma, amortize O(1)",
+            "en": "O(n) move, amortised O(1)"
+          },
+          "tone": "success"
+        }
+      ]
+    },
+    {
+      "id": "get",
+      "title": {
+        "tr": "Arama: get(\"kiraz\")",
+        "en": "Lookup: get(\"kiraz\")"
+      },
+      "narration": {
+        "tr": "Okuma da aynı yolu izler: hash(\"kiraz\") = 9, 9 % 8 = 1. Doğrudan kova 1'e gidilir ve tek karşılaştırmayla değer bulunur. Tablo kaç anahtar tutarsa tutsun, yük faktörü sınırda tutulduğu sürece ortalama maliyet O(1)'dir.",
+        "en": "Reading follows the same path: hash(\"kiraz\") = 9, 9 % 8 = 1. We jump straight to bucket 1 and find the value with a single comparison. However many keys the table holds, the average cost is O(1) as long as the load factor stays bounded."
+      },
+      "durationMs": 3200,
+      "highlight": {
+        "nodes": [
+          "key",
+          "hash",
+          "b1"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "hash": {
+          "status": "active"
+        },
+        "b4": {
+          "status": "idle"
+        },
+        "b5": {
+          "status": "idle"
+        },
+        "b6": {
+          "status": "idle"
+        },
+        "b1": {
+          "status": "success",
+          "badge": "✓"
+        },
+        "load": {
+          "status": "idle"
+        }
+      },
+      "packets": [
+        {
+          "edge": "ek",
+          "label": "kiraz",
+          "shape": "envelope",
+          "durationMs": 800
+        },
+        {
+          "edge": "h1",
+          "label": "9 % 8 = 1",
+          "startAt": 800,
+          "durationMs": 1000
+        }
+      ]
+    }
+  ],
+  "tags": [
+    "hash-tablosu",
+    "cakisma"
+  ]
+}

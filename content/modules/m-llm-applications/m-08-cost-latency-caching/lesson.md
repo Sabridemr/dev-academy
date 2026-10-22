@@ -55,6 +55,20 @@ Bu teknik güçlüdür ama klasik önbellekten daha tehlikelidir, çünkü anaht
 
 Önbellek kapasitesi sınırlıysa hangi girdinin atılacağına bir tahliye politikası karar verir. Sık sorulan soruların çoğu az sayıda kalıba toplandığı için LRU ya da LFU gibi klasik politikalar burada da iyi çalışır.
 
+Semantik önbelleği, yönlendirmeyi ve toplu işlemeyi tek bir istek yolunda birlikte görelim; sağdaki sayaç her model çağrısının faturaya ve gecikmeye etkisini topluyor.
+
+:::predict{id="semantik-onbellek-isabet"}
+Kiracı A'nın önbelleğinde "İade süresi kaç gün?" sorusunun cevabı var. Aynı kiracıda başka bir kullanıcı "Ürünü kaç gün içinde geri gönderebilirim?" diye soruyor. Ne olur? | Tenant A's cache holds the answer to "How many days is the return window?". Another user in the same tenant asks "Within how many days can I send the product back?". What happens?
+- [ ] Metin farklı olduğu için model yeniden çağrılır | The model is called again because the text differs
+- [x] Gömmelerin benzerliği eşiği aşarsa kayıtlı cevap modeli çağırmadan döner | If the embedding similarity exceeds the threshold, the stored answer returns without calling the model
+- [ ] İstek doğrudan büyük modele yükseltilir | The request is escalated straight to the large model
+Açıklama: Semantik önbellek anahtar eşitliğine değil anlam benzerliğine bakar; eşik aşılırsa model hiç çağrılmaz ve sayaç değişmez. Bu yüzden eşik, değerlendirme setiyle ayarlanmalı ve önbellek kiracıya göre ayrılmalıdır. | A semantic cache looks at similarity of meaning, not key equality; above the threshold no model is called and the meter does not move. That is why the threshold must be tuned on the evaluation set and the cache scoped per tenant.
+:::
+
+:::animation{scene="semantic-cache.scene.json"}
+Iskalayan soru küçük modele gider ve önbelleğe yazılır; anlamca aynı soru önbellekten döner; karmaşık soru büyük modele yükseltilir, gece işleri toplu kuyruktan indirimli işlenir.
+:::
+
 :::interactive{type="cache" capacity=6 policy="lru"}
 Altı slotlu önbelleği bir semantik önbellek gibi düşünün: her anahtar (A–H) bir soru kalıbını, veritabanı ise pahalı LLM çağrısını temsil ediyor. Önbellek boşken birkaç anahtar okuyun; her "miss" bir model çağrısı demektir. "Rastgele 10 okuma" ile isabet oranının nasıl yükseldiğini izleyin ve DB okuma sayacını model çağrısı faturası olarak okuyun. Kapasiteyi küçültüp LRU'nun hangi soruyu attığını görün, sonra politikayı LFU'ya çevirip sık sorulan soruların slotta kalıp kalmadığını karşılaştırın.
 :::

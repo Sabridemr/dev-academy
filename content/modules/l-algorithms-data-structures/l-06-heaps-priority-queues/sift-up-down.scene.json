@@ -1,0 +1,657 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "l-06-sift-up-down",
+  "title": {
+    "tr": "Heap'te sift-up ve sift-down",
+    "en": "Sift-up and sift-down in a heap"
+  },
+  "summary": {
+    "tr": "Bir min-heap'e 2 eklenince sift-up ile köke çıkması; pop sonrası son elemanın köke taşınıp sift-down ile yerine inmesi, ağaç ve dizi görünümünde birlikte.",
+    "en": "Pushing 2 onto a min-heap and sifting it up to the root; after a pop, moving the last element to the root and sifting it down, shown in both tree and array form."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Üstte yedi konumlu bir ikili ağaç, altta aynı elemanları tutan bir dizi vardır; başta heap 3, 5, 4, 9, 6, 8 değerlerini tutar. push(2) ile 2 dizinin sonuna, 4'ün çocuğu olarak eklenir. 2, 4 ile, sonra 3 ile yer değiştirir ve köke çıkar; her takasta ağaçtaki ve dizideki değerler birlikte güncellenir. pop() kökteki 2'yi döndürür, son eleman 4 köke taşınır. 4, iki çocuğundan küçük olan 3 ile yer değiştirir; ardından tek çocuğu 8'den küçük olduğu için durur. Son adım, iki işlemin de tek bir yol boyunca çalıştığını ve O(log n) sürdüğünü özetler.",
+      "en": "Above is a seven-position binary tree and below an array holding the same elements; the heap starts with 3, 5, 4, 9, 6, 8. push(2) appends 2 at the end of the array as a child of 4. 2 swaps with 4 and then with 3 and reaches the root; every swap updates the tree and the array together. pop() returns the 2 at the root and the last element 4 moves to the root. 4 swaps with 3, the smaller of its two children, then stops because it is smaller than its only child 8. The last step notes that both operations walk a single path and take O(log n)."
+    }
+  },
+  "canvas": {
+    "width": 1000,
+    "height": 600
+  },
+  "nodes": [
+    {
+      "id": "t0",
+      "kind": "generic",
+      "label": "3",
+      "x": 330,
+      "y": 80,
+      "w": 80,
+      "h": 50,
+      "sublabel": "i=0"
+    },
+    {
+      "id": "t1",
+      "kind": "generic",
+      "label": "5",
+      "x": 180,
+      "y": 200,
+      "w": 80,
+      "h": 50,
+      "sublabel": "i=1"
+    },
+    {
+      "id": "t2",
+      "kind": "generic",
+      "label": "4",
+      "x": 480,
+      "y": 200,
+      "w": 80,
+      "h": 50,
+      "sublabel": "i=2"
+    },
+    {
+      "id": "t3",
+      "kind": "generic",
+      "label": "9",
+      "x": 100,
+      "y": 320,
+      "w": 80,
+      "h": 50,
+      "sublabel": "i=3"
+    },
+    {
+      "id": "t4",
+      "kind": "generic",
+      "label": "6",
+      "x": 260,
+      "y": 320,
+      "w": 80,
+      "h": 50,
+      "sublabel": "i=4"
+    },
+    {
+      "id": "t5",
+      "kind": "generic",
+      "label": "8",
+      "x": 400,
+      "y": 320,
+      "w": 80,
+      "h": 50,
+      "sublabel": "i=5"
+    },
+    {
+      "id": "t6",
+      "kind": "generic",
+      "label": "2",
+      "x": 560,
+      "y": 320,
+      "w": 80,
+      "h": 50,
+      "sublabel": "i=6"
+    },
+    {
+      "id": "a0",
+      "kind": "generic",
+      "label": "3",
+      "x": 90,
+      "y": 490,
+      "w": 92,
+      "h": 52,
+      "sublabel": "[0]"
+    },
+    {
+      "id": "a1",
+      "kind": "generic",
+      "label": "5",
+      "x": 205,
+      "y": 490,
+      "w": 92,
+      "h": 52,
+      "sublabel": "[1]"
+    },
+    {
+      "id": "a2",
+      "kind": "generic",
+      "label": "4",
+      "x": 320,
+      "y": 490,
+      "w": 92,
+      "h": 52,
+      "sublabel": "[2]"
+    },
+    {
+      "id": "a3",
+      "kind": "generic",
+      "label": "9",
+      "x": 435,
+      "y": 490,
+      "w": 92,
+      "h": 52,
+      "sublabel": "[3]"
+    },
+    {
+      "id": "a4",
+      "kind": "generic",
+      "label": "6",
+      "x": 550,
+      "y": 490,
+      "w": 92,
+      "h": 52,
+      "sublabel": "[4]"
+    },
+    {
+      "id": "a5",
+      "kind": "generic",
+      "label": "8",
+      "x": 665,
+      "y": 490,
+      "w": 92,
+      "h": 52,
+      "sublabel": "[5]"
+    },
+    {
+      "id": "a6",
+      "kind": "generic",
+      "label": "2",
+      "x": 780,
+      "y": 490,
+      "w": 92,
+      "h": 52,
+      "sublabel": "[6]"
+    },
+    {
+      "id": "yeni",
+      "kind": "client",
+      "label": "push(2)",
+      "x": 850,
+      "y": 320,
+      "w": 130,
+      "h": 60
+    },
+    {
+      "id": "cikan",
+      "kind": "client",
+      "label": "pop()",
+      "x": 850,
+      "y": 80,
+      "w": 130,
+      "h": 60,
+      "sublabel": {
+        "tr": "henüz yok",
+        "en": "nothing yet"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e01",
+      "from": "t0",
+      "to": "t1",
+      "kind": "generic"
+    },
+    {
+      "id": "e02",
+      "from": "t0",
+      "to": "t2",
+      "kind": "generic"
+    },
+    {
+      "id": "e13",
+      "from": "t1",
+      "to": "t3",
+      "kind": "generic"
+    },
+    {
+      "id": "e14",
+      "from": "t1",
+      "to": "t4",
+      "kind": "generic"
+    },
+    {
+      "id": "e25",
+      "from": "t2",
+      "to": "t5",
+      "kind": "generic"
+    },
+    {
+      "id": "e26",
+      "from": "t2",
+      "to": "t6",
+      "kind": "generic"
+    },
+    {
+      "id": "enew",
+      "from": "yeni",
+      "to": "t6",
+      "kind": "request"
+    },
+    {
+      "id": "eout",
+      "from": "t0",
+      "to": "cikan",
+      "kind": "response"
+    },
+    {
+      "id": "elast",
+      "from": "t6",
+      "to": "t0",
+      "kind": "control",
+      "style": "dashed",
+      "curvature": -0.45
+    }
+  ],
+  "steps": [
+    {
+      "id": "intro",
+      "title": {
+        "tr": "Min-heap: ağaç ve dizi",
+        "en": "Min-heap: tree and array"
+      },
+      "narration": {
+        "tr": "Altı elemanlı bir min-heap: her ebeveyn çocuklarından küçük, en küçük eleman kökte. Altta aynı heap'in bellekteki hâli var: ağaç seviyeleri dizide yan yana durur, `i` indeksli düğümün çocukları `2i+1` ve `2i+2`'dedir.",
+        "en": "A six-element min-heap: every parent is smaller than its children and the smallest element sits at the root. Below is the same heap in memory: tree levels lie side by side in an array, and node `i` has children at `2i+1` and `2i+2`."
+      },
+      "durationMs": 3500,
+      "inherit": false,
+      "highlight": {
+        "nodes": [
+          "t0",
+          "a0"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "t6": {
+          "visible": false
+        },
+        "a6": {
+          "visible": false
+        }
+      },
+      "edgeStates": {
+        "elast": {
+          "visible": false
+        }
+      },
+      "annotations": [
+        {
+          "id": "a-kok",
+          "x": 330,
+          "y": 25,
+          "text": {
+            "tr": "kök = en küçük",
+            "en": "root = smallest"
+          },
+          "target": "t0",
+          "tone": "success"
+        }
+      ]
+    },
+    {
+      "id": "push",
+      "title": {
+        "tr": "push(2): sona ekle",
+        "en": "push(2): append at the end"
+      },
+      "narration": {
+        "tr": "Yeni eleman önce dizinin **sonuna** (indeks 6) eklenir; böylece ağaç tam kalır. Ama 2, ebeveyni 4'ten küçük: heap kuralı bozuldu.",
+        "en": "The new element is first appended at the **end** of the array (index 6), so the tree stays complete. But 2 is smaller than its parent 4: the heap rule is broken."
+      },
+      "durationMs": 3000,
+      "highlight": {
+        "nodes": [
+          "t6",
+          "a6",
+          "t2"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "t6": {
+          "visible": true,
+          "label": "2",
+          "status": "warning"
+        },
+        "a6": {
+          "visible": true,
+          "label": "2",
+          "status": "warning"
+        }
+      },
+      "packets": [
+        {
+          "edge": "enew",
+          "label": "2",
+          "shape": "diamond",
+          "durationMs": 900
+        }
+      ]
+    },
+    {
+      "id": "up1",
+      "title": {
+        "tr": "Sift-up: 2 ↔ 4",
+        "en": "Sift-up: 2 ↔ 4"
+      },
+      "narration": {
+        "tr": "2 ebeveyniyle karşılaştırılır: 2 < 4, yer değiştirirler. Dizide indeks 6 ve 2 takas edilir. Eleman bir seviye yukarı çıktı.",
+        "en": "2 is compared with its parent: 2 < 4, so they swap. In the array indices 6 and 2 are exchanged. The element moved up one level."
+      },
+      "durationMs": 3000,
+      "highlight": {
+        "nodes": [
+          "t2",
+          "t6",
+          "a2",
+          "a6"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "t2": {
+          "label": "2",
+          "status": "warning"
+        },
+        "a2": {
+          "label": "2",
+          "status": "warning"
+        },
+        "t6": {
+          "label": "4",
+          "status": "idle"
+        },
+        "a6": {
+          "label": "4",
+          "status": "idle"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e26",
+          "label": "4",
+          "shape": "diamond",
+          "durationMs": 900
+        },
+        {
+          "edge": "e26",
+          "direction": "backward",
+          "label": "2",
+          "shape": "diamond",
+          "durationMs": 900
+        }
+      ]
+    },
+    {
+      "id": "up2",
+      "title": {
+        "tr": "Sift-up: 2 ↔ 3",
+        "en": "Sift-up: 2 ↔ 3"
+      },
+      "narration": {
+        "tr": "Yeni ebeveyn kök: 2 < 3, bir kez daha yer değiştirirler. 2 köke ulaştı ve durur. Eleman en fazla ağacın yüksekliği kadar çıkabilir: **O(log n)**.",
+        "en": "The new parent is the root: 2 < 3, so they swap once more. 2 reached the root and stops. An element can rise at most the height of the tree: **O(log n)**."
+      },
+      "durationMs": 3000,
+      "highlight": {
+        "nodes": [
+          "t0",
+          "t2",
+          "a0",
+          "a2"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "t0": {
+          "label": "2",
+          "status": "success"
+        },
+        "a0": {
+          "label": "2",
+          "status": "success"
+        },
+        "t2": {
+          "label": "3",
+          "status": "idle"
+        },
+        "a2": {
+          "label": "3",
+          "status": "idle"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e02",
+          "label": "3",
+          "shape": "diamond",
+          "durationMs": 900
+        },
+        {
+          "edge": "e02",
+          "direction": "backward",
+          "label": "2",
+          "shape": "diamond",
+          "durationMs": 900
+        }
+      ]
+    },
+    {
+      "id": "pop",
+      "title": {
+        "tr": "pop(): kökü al, sonu köke taşı",
+        "en": "pop(): take the root, move the last to the root"
+      },
+      "narration": {
+        "tr": "`pop` en küçük elemanı, yani kökteki 2'yi döndürür. Boşluğu doldurmak için dizinin **son** elemanı (4) köke taşınır ve dizi bir kısalır. Şekil korundu ama 4 kökte fazla büyük.",
+        "en": "`pop` returns the smallest element, the 2 at the root. To fill the hole the **last** element of the array (4) moves to the root and the array shrinks by one. The shape is intact, but 4 is too large for the root."
+      },
+      "durationMs": 3500,
+      "highlight": {
+        "nodes": [
+          "t0",
+          "cikan"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "t0": {
+          "label": "4",
+          "status": "warning"
+        },
+        "a0": {
+          "label": "4",
+          "status": "warning"
+        },
+        "t6": {
+          "visible": false
+        },
+        "a6": {
+          "visible": false
+        },
+        "cikan": {
+          "sublabel": {
+            "tr": "2 döndü",
+            "en": "returned 2"
+          },
+          "status": "success"
+        }
+      },
+      "edgeStates": {
+        "elast": {
+          "visible": true,
+          "status": "active"
+        }
+      },
+      "packets": [
+        {
+          "edge": "eout",
+          "label": "2",
+          "shape": "diamond",
+          "durationMs": 900
+        },
+        {
+          "edge": "elast",
+          "label": "4",
+          "shape": "diamond",
+          "startAt": 1000,
+          "durationMs": 1100
+        }
+      ]
+    },
+    {
+      "id": "down1",
+      "title": {
+        "tr": "Sift-down: küçük çocukla yer değiştir",
+        "en": "Sift-down: swap with the smaller child"
+      },
+      "narration": {
+        "tr": "4'ün çocukları 5 ve 3. **Küçük olan** 3 seçilir (5 seçilseydi 5, kardeşi 3'ün üstüne çıkar ve kural bozulurdu). 4 > 3 olduğu için yer değiştirirler.",
+        "en": "The children of 4 are 5 and 3. The **smaller** one, 3, is chosen (choosing 5 would put 5 above its sibling 3 and break the rule). Since 4 > 3 they swap."
+      },
+      "durationMs": 3200,
+      "highlight": {
+        "nodes": [
+          "t0",
+          "t1",
+          "t2"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "t0": {
+          "label": "3",
+          "status": "success"
+        },
+        "a0": {
+          "label": "3",
+          "status": "success"
+        },
+        "t2": {
+          "label": "4",
+          "status": "warning"
+        },
+        "a2": {
+          "label": "4",
+          "status": "warning"
+        },
+        "t1": {
+          "badge": "5"
+        },
+        "cikan": {
+          "status": "idle"
+        }
+      },
+      "edgeStates": {
+        "elast": {
+          "visible": false
+        }
+      },
+      "packets": [
+        {
+          "edge": "e02",
+          "label": "4",
+          "shape": "diamond",
+          "durationMs": 900
+        },
+        {
+          "edge": "e02",
+          "direction": "backward",
+          "label": "3",
+          "shape": "diamond",
+          "durationMs": 900
+        }
+      ]
+    },
+    {
+      "id": "down2",
+      "title": {
+        "tr": "4 < 8: dur",
+        "en": "4 < 8: stop"
+      },
+      "narration": {
+        "tr": "4 artık indeks 2'de; tek çocuğu indeks 5'teki 8. 4 < 8 olduğu için heap kuralı sağlandı ve sift-down durur. Dizi yine geçerli bir heap: [3, 5, 4, 9, 6, 8].",
+        "en": "4 now sits at index 2; its only child is the 8 at index 5. Since 4 < 8 the heap rule holds and sift-down stops. The array is a valid heap again: [3, 5, 4, 9, 6, 8]."
+      },
+      "durationMs": 3000,
+      "highlight": {
+        "nodes": [
+          "t2",
+          "t5"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "t1": {
+          "badge": ""
+        },
+        "t2": {
+          "status": "success",
+          "badge": "4 < 8"
+        },
+        "a2": {
+          "status": "success"
+        },
+        "t5": {
+          "status": "active"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e25",
+          "direction": "backward",
+          "label": "8",
+          "shape": "diamond",
+          "durationMs": 900
+        }
+      ]
+    },
+    {
+      "id": "ozet",
+      "title": {
+        "tr": "Tek yol boyunca onarım",
+        "en": "Repair along a single path"
+      },
+      "narration": {
+        "tr": "Hem push hem pop, heap kuralını kökten yaprağa giden **tek bir yol** boyunca onarır; yol uzunluğu log₂ n olduğu için ikisi de O(log n)'dir. En küçüğe bakmak (`heap[0]`) ise O(1). Python'un `heapq` modülü tam olarak bu dizi düzenini kullanır.",
+        "en": "Both push and pop repair the heap rule along **a single path** between root and leaf; that path has length log₂ n, so both are O(log n). Peeking at the minimum (`heap[0]`) is O(1). Python's `heapq` module uses exactly this array layout."
+      },
+      "durationMs": 3500,
+      "highlight": {
+        "nodes": [
+          "t0",
+          "a0"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "t2": {
+          "status": "idle",
+          "badge": ""
+        },
+        "a2": {
+          "status": "idle"
+        },
+        "t5": {
+          "status": "idle"
+        }
+      },
+      "annotations": [
+        {
+          "id": "a-index",
+          "x": 450,
+          "y": 575,
+          "text": {
+            "tr": "çocuklar: 2i+1, 2i+2 · ebeveyn: (i−1)//2",
+            "en": "children: 2i+1, 2i+2 · parent: (i−1)//2"
+          }
+        }
+      ]
+    }
+  ],
+  "tags": [
+    "heap",
+    "oncelik-kuyrugu"
+  ]
+}

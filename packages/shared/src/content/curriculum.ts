@@ -1,5 +1,5 @@
 import type { LocalizedString } from '../i18n';
-import type { LearningPathManifest, ModuleManifest } from './schema';
+import type { ModuleManifest } from './schema';
 
 /**
  * MÜFREDAT
@@ -1225,13 +1225,13 @@ export const CURRICULUM: CurriculumModule[] = [
       lesson('l', 1, 'big-o-complexity', { tr: 'Big-O: Algoritma Karmaşıklığı', en: 'Big-O: Algorithmic Complexity' }, { tr: 'Zaman ve bellek karmaşıklığını sezgisel ve grafikle öğren; O(1), O(log n), O(n), O(n log n), O(n²) ve O(2ⁿ) karşılaştırması.', en: 'Learn time and space complexity intuitively and with graphs; compare O(1), O(log n), O(n), O(n log n), O(n²) and O(2ⁿ).' }, ['big-o-plotter']),
       lesson('l', 2, 'arrays-strings-two-pointers', { tr: 'Diziler, Stringler ve İki İşaretçi', en: 'Arrays, Strings and Two Pointers' }, { tr: 'Bellekte ardışık dizi, dinamik diziler, kayan pencere ve iki işaretçi teknikleri; satır satır Python izleriyle.', en: 'Contiguous arrays in memory, dynamic arrays, sliding window and two-pointer techniques with line-by-line Python traces.' }),
       lesson('l', 3, 'hash-tables', { tr: 'Hash Tabloları', en: 'Hash Tables' }, { tr: 'Hash fonksiyonu, kova, çakışma çözümü (zincirleme, açık adresleme), yük faktörü ve yeniden boyutlama; interaktif hash tablosu.', en: 'Hash functions, buckets, collision resolution (chaining, open addressing), load factor and resizing; interactive hash table.' }, ['hash-table']),
-      lesson('l', 4, 'stacks-queues', { tr: 'Yığın ve Kuyruk', en: 'Stacks and Queues' }, { tr: 'LIFO ve FIFO yapıları, parantez eşleme, çağrı yığını, deque ve monotonik yığın; Python izleriyle.', en: 'LIFO and FIFO structures, bracket matching, the call stack, deque and monotonic stack; with Python traces.' }),
+      lesson('l', 4, 'stacks-queues', { tr: 'Yığın ve Kuyruk', en: 'Stacks and Queues' }, { tr: 'LIFO ve FIFO yapıları, parantez eşleme, çağrı yığını, deque ve monotonik yığın; Python izleriyle.', en: 'LIFO and FIFO structures, bracket matching, the call stack, deque and monotonic stack; with Python traces.' }, ['stack-queue']),
       lesson('l', 5, 'trees-bst', { tr: 'Ağaçlar ve İkili Arama Ağacı', en: 'Trees and Binary Search Trees' }, { tr: 'Ağaç terminolojisi, dolaşma sıraları, BST ekleme/arama/silme ve dengeli ağaçlara giriş.', en: 'Tree terminology, traversal orders, BST insert/search/delete and an introduction to balanced trees.' }, ['graph-traversal']),
-      lesson('l', 6, 'heaps-priority-queues', { tr: 'Heap ve Öncelik Kuyruğu', en: 'Heaps and Priority Queues' }, { tr: 'İkili heap, sift-up/sift-down, heapq ve en büyük k eleman, Dijkstra ile ilişkisi.', en: 'Binary heap, sift-up/sift-down, heapq and top-k, relation to Dijkstra.' }),
+      lesson('l', 6, 'heaps-priority-queues', { tr: 'Heap ve Öncelik Kuyruğu', en: 'Heaps and Priority Queues' }, { tr: 'İkili heap, sift-up/sift-down, heapq ve en büyük k eleman, Dijkstra ile ilişkisi.', en: 'Binary heap, sift-up/sift-down, heapq and top-k, relation to Dijkstra.' }, ['heap']),
       lesson('l', 7, 'graphs-bfs-dfs', { tr: 'Graflar: BFS, DFS ve En Kısa Yol', en: 'Graphs: BFS, DFS and Shortest Paths' }, { tr: 'Komşuluk listesi, BFS/DFS, topolojik sıralama ve Dijkstra; interaktif graf gezintisi.', en: 'Adjacency lists, BFS/DFS, topological sort and Dijkstra; interactive graph traversal.' }, ['graph-traversal']),
       lesson('l', 8, 'sorting', { tr: 'Sıralama Algoritmaları', en: 'Sorting Algorithms' }, { tr: 'Bubble, insertion, selection, merge ve quick sort; kararlılık, yerinde sıralama ve karşılaştırma; görsel sıralayıcı.', en: 'Bubble, insertion, selection, merge and quick sort; stability, in-place sorting and comparison; visual sorter.' }, ['sorting-visualizer']),
       lesson('l', 9, 'binary-search', { tr: 'İkili Arama ve Varyantları', en: 'Binary Search and Its Variants' }, { tr: 'Sıralı veride O(log n) arama, alt/üst sınır, cevap üzerinde ikili arama ve sık hatalar.', en: 'O(log n) search on sorted data, lower/upper bound, binary search on the answer and common bugs.' }, ['big-o-plotter']),
-      lesson('l', 10, 'dynamic-programming', { tr: 'Dinamik Programlama', en: 'Dynamic Programming' }, { tr: 'Örtüşen alt problemler, memoization ve tabulation; Fibonacci, sırt çantası ve en uzun ortak alt dizi; Python izleriyle.', en: 'Overlapping subproblems, memoization and tabulation; Fibonacci, knapsack and longest common subsequence; with Python traces.' }),
+      lesson('l', 10, 'dynamic-programming', { tr: 'Dinamik Programlama', en: 'Dynamic Programming' }, { tr: 'Örtüşen alt problemler, memoization ve tabulation; Fibonacci, sırt çantası ve en uzun ortak alt dizi; Python izleriyle.', en: 'Overlapping subproblems, memoization and tabulation; Fibonacci, knapsack and longest common subsequence; with Python traces.' }, ['dp-table']),
     ],
   },
   {
@@ -1283,76 +1283,6 @@ export const CURRICULUM: CurriculumModule[] = [
   },
 ];
 
-export const LEARNING_PATHS: LearningPathManifest[] = [
-  {
-    id: 'backend',
-    slug: 'backend',
-    title: { tr: 'Backend Geliştirici', en: 'Backend Developer' },
-    description: {
-      tr: 'API’ler, veritabanları, kuyruklar ve altyapı.',
-      en: 'APIs, databases, queues and infrastructure.',
-    },
-    icon: 'terminal',
-    items: [
-      'a-system-design-fundamentals',
-      'd-database-design',
-      'c-design-patterns',
-      'f-code-and-infrastructure',
-    ],
-  },
-  {
-    id: 'system-design',
-    slug: 'system-design',
-    title: { tr: 'Sistem Tasarımı', en: 'System Design' },
-    description: {
-      tr: 'Ölçeklenebilir sistemlerin tasarımı ve vaka çalışmaları.',
-      en: 'Designing scalable systems with case studies.',
-    },
-    icon: 'network',
-    items: [
-      'a-system-design-fundamentals',
-      'b-architectures',
-      'e-case-studies',
-      'f-code-and-infrastructure',
-    ],
-  },
-  {
-    id: 'ai',
-    slug: 'ai',
-    title: { tr: 'Yapay Zekâ', en: 'Artificial Intelligence' },
-    description: {
-      tr: 'ML temellerinden LLM ve MLOps’a.',
-      en: 'From ML foundations to LLMs and MLOps.',
-    },
-    icon: 'brain',
-    items: [
-      'g-artificial-intelligence',
-      'a-system-design-fundamentals/a-07-caching',
-      'a-system-design-fundamentals/a-09-message-queues-event-driven',
-    ],
-  },
-  {
-    id: 'interview-prep',
-    slug: 'interview-prep',
-    title: { tr: 'Mülakat Hazırlığı', en: 'Interview Preparation' },
-    description: {
-      tr: 'Sistem tasarımı mülakatları için hızlandırılmış rota.',
-      en: 'An accelerated route for system design interviews.',
-    },
-    icon: 'briefcase',
-    items: [
-      'a-system-design-fundamentals/a-02-latency-throughput-cap',
-      'a-system-design-fundamentals/a-05-load-balancing',
-      'a-system-design-fundamentals/a-07-caching',
-      'a-system-design-fundamentals/a-10-rate-limiting',
-      'a-system-design-fundamentals/a-11-consistent-hashing-sharding',
-      'a-system-design-fundamentals/a-12-replication',
-      'd-database-design/d-04-sql-vs-nosql',
-      'e-case-studies',
-      'c-design-patterns/c-04-distributed-patterns',
-    ],
-  },
-];
 
 export function findModule(moduleId: string): CurriculumModule | undefined {
   return CURRICULUM.find((m) => m.id === moduleId || m.slug === moduleId);

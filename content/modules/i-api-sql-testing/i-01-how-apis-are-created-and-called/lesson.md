@@ -38,6 +38,21 @@ HTTP, **istemci-sunucu** modelinde çalışır ve her etkileşim aynı döngüy�
 
 Bu döngünün iki önemli özelliği vardır. Birincisi **durumsuzluk** (stateless): sunucu, iki istek arasında istemciyi hatırlamak zorunda değildir; "kim olduğunuz" bilgisi her istekte yeniden (genellikle bir başlıkla) taşınır. İkincisi, döngünün **ağ üzerinden** gerçekleşmesidir: istek bir yük dengeleyiciden, bir API gateway'den, belki bir önbellekten geçer ve her katman gecikme ekler. İleride bir simülatörle bu yolu adım adım izleyeceğiz.
 
+Aşağıdaki animasyon tek bir `GET /v1/users/42` çağrısını DNS'ten veritabanına kadar izler ve aynı yolda farklı durum kodlarının hangi katmanda doğduğunu gösterir. İzlemeden önce tahmininizi yapın.
+
+:::predict{id="sure-dolmus-token"}
+Süresi dolmuş bir token'la `GET /v1/users/42` gönderildi. Kimlik kontrolü handler'dan önce gateway'de yapılıyor. Veritabanına kaç sorgu gider ve istemci hangi kodu alır? | A `GET /v1/users/42` was sent with an expired token. Identity is checked at the gateway, before the handler. How many queries reach the database and which code does the client get?
+- [ ] Bir sorgu gider, kullanıcı bulunur ama yanıt 403 olur | One query runs, the user is found, but the response is 403
+- [x] Hiç sorgu gitmez; gateway 401 döner | No query runs; the gateway returns 401
+- [ ] Bir sorgu gider ve handler 404 döner | One query runs and the handler returns 404
+- [ ] Hiç sorgu gitmez; gateway 500 döner | No query runs; the gateway returns 500
+Açıklama: Token doğrulanamadığında istek gateway'de 401 Unauthorized ile durur; API sunucusu ve veritabanı hiç çalışmaz. 403 kimliği bilinen ama yetkisi olmayan kullanıcı içindir, 404 ise kaynağın yokluğunu ancak handler sorguyu çalıştırdıktan sonra söyleyebilir. | When the token cannot be verified the request stops at the gateway with 401 Unauthorized; the API server and database never run. 403 is for a known user without permission, and 404 can only be reported by the handler after it has run the query.
+:::
+
+:::animation{scene="api-call-lifecycle.scene.json"}
+İstemci → DNS → TLS → gateway → handler → veritabanı ve geri: 200, 404, 401 ve 503'ün doğduğu yerler.
+:::
+
 ## HTTP metodları: isteğin fiili
 
 Metod, "bu kaynağa ne yapmak istiyorum" sorusunun cevabıdır. REST tarzı API'lerde bu fiiller kaynak adlarıyla (isimler) birleşir: `GET /users`, `POST /orders`.

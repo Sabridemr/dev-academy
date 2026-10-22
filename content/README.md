@@ -130,9 +130,13 @@ Dersin sonunda (quiz'den sonra) öğrencinin konuyu derinleştirebileceği dış
 
 ### Interaktif türleri
 
-`load-balancer`, `cache`, `rate-limiter`, `consistent-hashing`, `gradient-descent`, `attention`, `neural-network-playground`, `capacity-estimator`, `er-diagram`, `cap-theorem`, `scaling`, `message-queue`, `replication-quorum`, `index-query-plan`, `isolation-levels`, `k-means`, `decision-tree`, `convolution`, `tokenizer`, `embedding-space`, `pipeline`, `kubernetes-hpa`, `request-journey`, `traffic-wave`, `fan-out`, `geo-index`, `sorting-visualizer`, `graph-traversal`, `hash-table`, `big-o-plotter`, `rag-pipeline`, `prompt-playground`, `token-cost`, `oauth-flow`, `jwt-inspector`, `bruteforce-login`, `git-graph`, `rbac-abac`, `threat-model`, `hash-salt`, `regex-playground`
+`load-balancer`, `cache`, `rate-limiter`, `consistent-hashing`, `gradient-descent`, `attention`, `neural-network-playground`, `capacity-estimator`, `er-diagram`, `cap-theorem`, `scaling`, `message-queue`, `replication-quorum`, `index-query-plan`, `isolation-levels`, `k-means`, `decision-tree`, `convolution`, `tokenizer`, `embedding-space`, `pipeline`, `kubernetes-hpa`, `request-journey`, `traffic-wave`, `fan-out`, `geo-index`, `sorting-visualizer`, `graph-traversal`, `hash-table`, `big-o-plotter`, `rag-pipeline`, `prompt-playground`, `token-cost`, `oauth-flow`, `jwt-inspector`, `bruteforce-login`, `git-graph`, `dp-table`, `heap`, `stack-queue`, `python-memory`, `predict-run`, `sql-playground`, `docker-layers`, `rbac-abac`, `threat-model`, `hash-salt`, `regex-playground`
 
 Her türün web ve mobilde bir bileşeni vardır; ek öznitelikler `params` olarak bileşene geçirilir.
+
+- `python-memory`: isim → nesne → referans modelini adım adım gösteren mini Python yorumlayıcısı; `scenario` = `aliasing` | `shallow-vs-deep` | `immutable-rebind` | `function-args` | `refcount-gc` (kullanıcı kodu da düzenleyebilir).
+- `predict-run`: `src` aynı ders klasöründeki bir `*.trace.json` dosyasıdır (ör. `:::interactive{type="predict-run" src="faktoriyel.trace.json"}`). İz, `:::trace` ile aynı yoldan doğrulanır ve seed sırasında bloğa gömülür; sorular izden otomatik üretilir.
+- Mobilde bileşeni olmayan türler (ör. bu ikisi) için başlık ve yönergeyle birlikte "Web'de aç" kartı gösterilir.
 
 ## Animasyon sahnesi (`*.scene.json`)
 

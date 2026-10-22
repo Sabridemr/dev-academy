@@ -35,6 +35,13 @@ Temel işlemlerin isimleri de bu benzetmeden gelir:
 Yığında tek bir uç (tepe) vardır; kuyrukta giriş ve çıkış farklı uçlardadır.
 :::
 
+İki yapıyı iş başında görmek için aşağıdaki sahnede fonksiyon çağrılarını bir yığına, yazdırma işlerini bir kuyruğa
+koyuyoruz.
+
+:::animation{scene="yigin-kuyruk.scene.json"}
+Yığında çerçeveler giriş sırasının tersine çıkar; kuyrukta işler geldikleri sırayla yazdırılır.
+:::
+
 ## Yığın: geri dönmenin veri yapısı
 
 Yığının öne çıktığı her problemde ortak bir desen vardır: bir şeyi **yarıda bırakıp** daha yeni bir şeyle uğraşırsın, o bitince de yarıda bıraktığına **geri dönersin**. En yeni iş, ilk bitirilmesi gereken iştir. Metin düzenleyicideki "geri al" (undo) özelliği böyle çalışır: yaptığın her değişiklik yığına konur, Ctrl+Z en son değişikliği çıkarıp geri alır. Tarayıcının geri tuşu, ziyaret ettiğin sayfaları bir yığında tutar. Derleyiciler ifadeleri ayrıştırırken, labirent çözen bir program çıkmaz sokaktan geri dönerken ve derinlik öncelikli arama (DFS) bir dalı bitirip bir önceki düğüme dönerken hep yığın kullanır.
@@ -101,6 +108,10 @@ Bir problemle karşılaştığında kendine şu soruyu sor: "İşlenmeyi bekleye
 Bir diğer pratik nokta da yapıların sınırlarını düşünmektir. Gerçek sistemlerdeki kuyruklar sonsuz büyüyemez. Tüketici yavaşlarsa kuyruk şişer, bellek tükenir ve sistem çöker. Bu yüzden üretim ortamındaki kuyruklara bir üst sınır konur; sınır dolunca ya yeni işler reddedilir ya da üreticiye "yavaşla" sinyali gönderilir. Bu mekanizmaya **geri basınç** (backpressure) denir. Aynı şekilde, kontrolsüz derinleşen bir yığın da `RecursionError` ya da işletim sistemi seviyesinde stack overflow demektir.
 
 Son olarak, yığın ve kuyruk ihtiyacı için Python'da çoğu zaman yeni bir sınıf yazmana gerek yoktur. Yığın için düz bir liste, kuyruk için `deque` yeterlidir. Kendi sınıfını yazman gereken durum, işlemleri kısıtlamak ve niyetini açıkça göstermek istediğin zamandır: yalnızca `push`, `pop` ve `peek` metodları olan bir `Yigin` sınıfı, kodunu okuyan herkese yapının LIFO olarak kullanıldığını hemen anlatır.
+
+:::interactive{type="stack-queue" mode="brackets" expression="(a + b) * [c - d[i]]"}
+"Adım" ile ifadeyi karakter karakter işle: her açılış parantezi yığına itilir, her kapanış tepedeki açılışla eşleşirse yığından çekilir. Yığın panelinde tepedeki elemanı, "Yığın derinliği" ve "En büyük derinlik" göstergelerini izle; "Geri" ile bir adım geri dönebilirsin. Ardından "İfade" alanına `(a]`, `a)` ya da `([]` gibi hatalı ifadeler yaz: simülatör hatanın konumunu işaretler ve hangi kapanışın beklendiğini söyler. Sonra "Mod" bölümünden "BFS kuyruğu"na geç: A'dan başlayan gezintide yeni keşfedilen komşuların kuyruğun sonuna eklendiğini, sıradaki düğümün baştan alındığını ve ziyaret sırasının katman katman ilerlediğini gözlemle. "Başlangıç düğümü"nü değiştirip "En uzun kuyruk" değerinin nasıl değiştiğine bak.
+:::
 
 :::realworld{company="Google"}
 Google Chrome ve diğer modern tarayıcılar JavaScript'i tek bir ana iş parçacığında çalıştırır ve bunu bir yığın ile bir kuyruğun iş birliğiyle yönetir. Çalışan kod **çağrı yığınında** (call stack) yürür; bir zamanlayıcı dolduğunda, bir ağ yanıtı geldiğinde ya da kullanıcı bir düğmeye tıkladığında ilgili geri çağırma fonksiyonu doğrudan çalıştırılmaz, **görev kuyruğuna** (task queue) eklenir. **Olay döngüsü** (event loop), çağrı yığını boşaldığında kuyruğun başındaki görevi alıp yığına koyar. Promise geri çağırmaları ise ayrı bir mikro görev kuyruğunda bekler ve her görevden sonra önce onlar boşaltılır. Uzun süren senkron bir döngünün sayfayı dondurmasının nedeni budur: yığın boşalmadıkça kuyruktaki tıklama olayları işlenemez.

@@ -1,0 +1,650 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "m-08-semantic-cache",
+  "title": {
+    "tr": "Semantik Önbellek, Yönlendirme ve Maliyet Sayacı",
+    "en": "Semantic Cache, Routing and the Cost Meter"
+  },
+  "summary": {
+    "tr": "İlk soru önbellekte ıskalar ve küçük modele gider; cevap önbelleğe yazılır. Anlamca aynı ikinci soru modeli hiç çağırmadan döner. Karmaşık soru büyük modele yükseltilir, gece işleri toplu kuyruktan indirimli işlenir ve her çağrı maliyet sayacına yazılır.",
+    "en": "The first question misses the cache and goes to the small model; the answer is written to the cache. A second question with the same meaning returns without calling any model. A complex question is escalated to the large model, nightly jobs run discounted from a batch queue and every call is recorded in the cost meter."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda kullanıcı, yanında kiracıya ayrılmış semantik önbellek, ortada yönlendirici, sağ üstte küçük model, sağ altta büyük model, altta toplu iş kuyruğu ve en sağda maliyet ve gecikme sayacı bulunur. İlk soru önbellekte ıskalar, yönlendirici onu küçük modele gönderir, cevap kullanıcıya döner ve önbelleğe yazılır. Farklı kelimelerle sorulan aynı soru benzerlik eşiğini aşar ve önbellekten anında döner; sayaç artmaz. Karmaşık bir soruda küçük model düşük güven bildirir ve istek büyük modele yükseltilir; sayaç belirgin biçimde artar. Gece işleri toplu kuyruktan indirimli fiyatla işlenir. Son adımda sayaç özellik ve kiracı başına kotayla karşılaştırılır.",
+      "en": "On the left the user, next to it a tenant-scoped semantic cache, in the middle the router, the small model at the top right, the large model at the bottom right, a batch queue at the bottom and the cost and latency meter at the far right. The first question misses the cache, the router sends it to the small model, the answer returns to the user and is written to the cache. The same question in different words exceeds the similarity threshold and returns instantly from the cache; the meter does not move. On a complex question the small model reports low confidence and the request is escalated to the large model; the meter jumps. Nightly jobs are processed from the batch queue at a discount. In the last step the meter is compared with per-feature and per-tenant quotas."
+    }
+  },
+  "canvas": {
+    "width": 1000,
+    "height": 600
+  },
+  "nodes": [
+    {
+      "id": "user",
+      "kind": "user",
+      "label": {
+        "tr": "Kullanıcı",
+        "en": "User"
+      },
+      "x": 80,
+      "y": 300,
+      "w": 110,
+      "h": 76
+    },
+    {
+      "id": "cache",
+      "kind": "cache",
+      "label": {
+        "tr": "Semantik önbellek",
+        "en": "Semantic cache"
+      },
+      "sublabel": {
+        "tr": "kiracı A · eşik",
+        "en": "tenant A · threshold"
+      },
+      "x": 270,
+      "y": 300,
+      "w": 160,
+      "h": 84
+    },
+    {
+      "id": "router",
+      "kind": "gateway",
+      "label": {
+        "tr": "Yönlendirici",
+        "en": "Router"
+      },
+      "x": 500,
+      "y": 300,
+      "w": 130,
+      "h": 80
+    },
+    {
+      "id": "small",
+      "kind": "model",
+      "label": {
+        "tr": "Küçük model",
+        "en": "Small model"
+      },
+      "x": 720,
+      "y": 150,
+      "w": 140,
+      "h": 76
+    },
+    {
+      "id": "large",
+      "kind": "model",
+      "label": {
+        "tr": "Büyük model",
+        "en": "Large model"
+      },
+      "x": 720,
+      "y": 440,
+      "w": 140,
+      "h": 76
+    },
+    {
+      "id": "batch",
+      "kind": "queue",
+      "label": {
+        "tr": "Toplu iş kuyruğu",
+        "en": "Batch queue"
+      },
+      "x": 470,
+      "y": 520,
+      "w": 160,
+      "h": 66
+    },
+    {
+      "id": "meter",
+      "kind": "generic",
+      "label": {
+        "tr": "Maliyet / gecikme",
+        "en": "Cost / latency"
+      },
+      "sublabel": {
+        "tr": "sayaç",
+        "en": "meter"
+      },
+      "x": 920,
+      "y": 300,
+      "w": 130,
+      "h": 84
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-user-cache",
+      "from": "user",
+      "to": "cache",
+      "kind": "request"
+    },
+    {
+      "id": "e-cache-router",
+      "from": "cache",
+      "to": "router",
+      "kind": "request",
+      "label": {
+        "tr": "ıskalama",
+        "en": "miss"
+      }
+    },
+    {
+      "id": "e-router-small",
+      "from": "router",
+      "to": "small",
+      "kind": "request"
+    },
+    {
+      "id": "e-router-large",
+      "from": "router",
+      "to": "large",
+      "kind": "request"
+    },
+    {
+      "id": "e-small-cache",
+      "from": "small",
+      "to": "cache",
+      "kind": "data",
+      "label": {
+        "tr": "kaydet",
+        "en": "store"
+      },
+      "style": "dashed",
+      "curvature": 0.3
+    },
+    {
+      "id": "e-small-meter",
+      "from": "small",
+      "to": "meter",
+      "kind": "event"
+    },
+    {
+      "id": "e-large-meter",
+      "from": "large",
+      "to": "meter",
+      "kind": "event"
+    },
+    {
+      "id": "e-batch-large",
+      "from": "batch",
+      "to": "large",
+      "kind": "request",
+      "label": {
+        "tr": "indirimli",
+        "en": "discounted"
+      },
+      "style": "dashed"
+    }
+  ],
+  "steps": [
+    {
+      "id": "miss",
+      "title": {
+        "tr": "İlk soru: ıskalama",
+        "en": "First question: a miss"
+      },
+      "narration": {
+        "tr": "Kullanıcı iade süresini sorar. Önbellek sorunun gömmesini kiracının kayıtlı sorularıyla karşılaştırır; eşiği aşan bir benzerlik yoktur. İstek yönlendiriciye geçer.",
+        "en": "The user asks about the return window. The cache compares the question embedding with the tenant's stored questions; nothing exceeds the threshold. The request moves on to the router."
+      },
+      "durationMs": 3200,
+      "inherit": false,
+      "highlight": {
+        "nodes": [
+          "user",
+          "cache",
+          "router"
+        ],
+        "edges": [
+          "e-user-cache",
+          "e-cache-router"
+        ]
+      },
+      "nodeStates": {
+        "cache": {
+          "status": "warning",
+          "badge": "ıskalama"
+        },
+        "router": {
+          "status": "active"
+        }
+      },
+      "edgeStates": {
+        "e-batch-large": {
+          "status": "muted"
+        },
+        "e-small-cache": {
+          "status": "muted"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-user-cache",
+          "shape": "envelope",
+          "label": "\"İade süresi kaç gün?\"",
+          "durationMs": 1200
+        },
+        {
+          "edge": "e-cache-router",
+          "shape": "dot",
+          "label": "soru",
+          "startAt": 1400,
+          "durationMs": 900
+        }
+      ]
+    },
+    {
+      "id": "route-small",
+      "title": {
+        "tr": "Basit soru küçük modele",
+        "en": "A simple question goes to the small model"
+      },
+      "narration": {
+        "tr": "Yönlendirici soruyu ucuz bir kuralla değerlendirir: kısa, tek konulu bir soru. Dar görevlerde küçük model çoğu zaman yeterlidir ve hem ucuz hem hızlıdır.",
+        "en": "The router assesses the question with a cheap rule: short, single-topic. For narrow tasks the small model is usually enough, and it is both cheap and fast."
+      },
+      "durationMs": 2800,
+      "highlight": {
+        "nodes": [
+          "router",
+          "small"
+        ],
+        "edges": [
+          "e-router-small"
+        ]
+      },
+      "nodeStates": {
+        "router": {
+          "status": "active",
+          "badge": "basit"
+        },
+        "small": {
+          "status": "busy"
+        },
+        "cache": {
+          "status": "idle"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-router-small",
+          "shape": "dot",
+          "label": "soru",
+          "durationMs": 1000
+        }
+      ]
+    },
+    {
+      "id": "store",
+      "title": {
+        "tr": "Cevap döner ve önbelleğe yazılır",
+        "en": "The answer returns and is cached"
+      },
+      "narration": {
+        "tr": "Küçük modelin cevabı kullanıcıya akar ve kiracıya ayrılmış önbelleğe TTL ile yazılır. Çağrının giriş ve çıkış token sayıları sayaca eklenir.",
+        "en": "The small model's answer streams to the user and is written to the tenant-scoped cache with a TTL. The call's input and output token counts are added to the meter."
+      },
+      "durationMs": 3600,
+      "highlight": {
+        "nodes": [
+          "small",
+          "cache",
+          "meter",
+          "user"
+        ],
+        "edges": [
+          "e-small-cache",
+          "e-small-meter",
+          "e-user-cache"
+        ]
+      },
+      "nodeStates": {
+        "small": {
+          "status": "success"
+        },
+        "cache": {
+          "status": "active",
+          "badge": "+1 kayıt"
+        },
+        "meter": {
+          "status": "active",
+          "badge": "+1 çağrı"
+        },
+        "user": {
+          "status": "success"
+        }
+      },
+      "edgeStates": {
+        "e-small-cache": {
+          "status": "active"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-small-cache",
+          "shape": "square",
+          "label": "cevap + TTL",
+          "durationMs": 1100
+        },
+        {
+          "edge": "e-small-meter",
+          "shape": "dot",
+          "label": "token",
+          "durationMs": 900
+        },
+        {
+          "edge": "e-user-cache",
+          "direction": "backward",
+          "shape": "envelope",
+          "label": "\"14 gün\"",
+          "color": "success",
+          "startAt": 1300,
+          "durationMs": 1100
+        }
+      ]
+    },
+    {
+      "id": "hit",
+      "title": {
+        "tr": "Anlamca aynı soru: isabet",
+        "en": "Same meaning: a hit"
+      },
+      "narration": {
+        "tr": "Başka bir kullanıcı aynı kiracıda soruyu farklı kelimelerle sorar. Gömmeler benzerlik eşiğini aşar ve kayıtlı cevap modeli hiç çağırmadan döner. Sayaç değişmez; en ucuz LLM çağrısı hiç yapılmayandır.",
+        "en": "Another user in the same tenant asks the question in different words. The embeddings exceed the similarity threshold and the stored answer returns without calling any model. The meter does not move; the cheapest LLM call is the one never made."
+      },
+      "durationMs": 3200,
+      "highlight": {
+        "nodes": [
+          "user",
+          "cache"
+        ],
+        "edges": [
+          "e-user-cache"
+        ]
+      },
+      "nodeStates": {
+        "cache": {
+          "status": "success",
+          "badge": "isabet ≥ eşik"
+        },
+        "router": {
+          "status": "muted"
+        },
+        "small": {
+          "status": "idle"
+        },
+        "meter": {
+          "status": "idle",
+          "badge": "0 token"
+        }
+      },
+      "edgeStates": {
+        "e-small-cache": {
+          "status": "muted"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-user-cache",
+          "shape": "envelope",
+          "label": "\"Kaç gün içinde iade edebilirim?\"",
+          "durationMs": 1100
+        },
+        {
+          "edge": "e-user-cache",
+          "direction": "backward",
+          "shape": "envelope",
+          "label": "önbellekten",
+          "color": "success",
+          "startAt": 1300,
+          "durationMs": 700
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a-tenant",
+          "x": 270,
+          "y": 180,
+          "text": {
+            "tr": "yalnızca aynı kiracı içinde",
+            "en": "only within the same tenant"
+          },
+          "tone": "warning",
+          "target": "cache"
+        }
+      ]
+    },
+    {
+      "id": "cascade",
+      "title": {
+        "tr": "Karmaşık soru: kademeli yükseltme",
+        "en": "Complex question: cascade escalation"
+      },
+      "narration": {
+        "tr": "Uzun bir sözleşme karşılaştırması önbellekte ıskalar. Yönlendirici önce küçük modeli dener; model düşük güven bildirir ve cevap doğrulamadan geçemez. İstek büyük modele yükseltilir.",
+        "en": "A long contract comparison misses the cache. The router tries the small model first; it reports low confidence and the answer fails validation. The request is escalated to the large model."
+      },
+      "durationMs": 4000,
+      "highlight": {
+        "nodes": [
+          "cache",
+          "router",
+          "small",
+          "large"
+        ],
+        "edges": [
+          "e-cache-router",
+          "e-router-small",
+          "e-router-large"
+        ]
+      },
+      "nodeStates": {
+        "cache": {
+          "status": "warning",
+          "badge": "ıskalama"
+        },
+        "router": {
+          "status": "active",
+          "badge": "karmaşık"
+        },
+        "small": {
+          "status": "warning",
+          "badge": "düşük güven"
+        },
+        "large": {
+          "status": "busy"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-cache-router",
+          "shape": "dot",
+          "label": "soru",
+          "durationMs": 800
+        },
+        {
+          "edge": "e-router-small",
+          "shape": "dot",
+          "label": "dene",
+          "startAt": 900,
+          "durationMs": 800
+        },
+        {
+          "edge": "e-router-small",
+          "direction": "backward",
+          "shape": "dot",
+          "label": "düşük güven",
+          "color": "danger",
+          "startAt": 1800,
+          "durationMs": 800
+        },
+        {
+          "edge": "e-router-large",
+          "shape": "dot",
+          "label": "yükselt",
+          "startAt": 2700,
+          "durationMs": 900
+        }
+      ]
+    },
+    {
+      "id": "large-cost",
+      "title": {
+        "tr": "Büyük model pahalıdır",
+        "en": "The large model is expensive"
+      },
+      "narration": {
+        "tr": "Büyük model cevabı üretir; token fiyatı küçük modelden belirgin biçimde yüksektir ve decode daha uzun sürer. Trafiğin çoğu basit sorulardan oluşuyorsa kademeli yaklaşım ortalama maliyeti düşük tutar.",
+        "en": "The large model produces the answer; its token price is markedly higher than the small model's and decoding takes longer. If most traffic is simple, the cascade keeps the average cost low."
+      },
+      "durationMs": 3000,
+      "highlight": {
+        "nodes": [
+          "large",
+          "meter"
+        ],
+        "edges": [
+          "e-large-meter"
+        ]
+      },
+      "nodeStates": {
+        "large": {
+          "status": "success"
+        },
+        "small": {
+          "status": "idle"
+        },
+        "meter": {
+          "status": "warning",
+          "badge": "$$ ↑"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-large-meter",
+          "shape": "dot",
+          "label": "çok token",
+          "color": "danger",
+          "durationMs": 1100
+        }
+      ]
+    },
+    {
+      "id": "batch",
+      "title": {
+        "tr": "Toplu işler ayrı kuyrukta",
+        "en": "Batch jobs in a separate queue"
+      },
+      "narration": {
+        "tr": "Gece çalışan belge sınıflandırması gerçek zamanlı değildir. İstekler toplu iş kuyruğundan sağlayıcının indirimli batch arayüzüne gönderilir; gerçek zamanlı trafiğin hız sınırları da korunur.",
+        "en": "Nightly document classification is not real time. Requests go from the batch queue to the provider's discounted batch interface, which also protects the rate limits of real-time traffic."
+      },
+      "durationMs": 3400,
+      "highlight": {
+        "nodes": [
+          "batch",
+          "large"
+        ],
+        "edges": [
+          "e-batch-large",
+          "e-large-meter"
+        ]
+      },
+      "nodeStates": {
+        "batch": {
+          "status": "active",
+          "badge": "gece"
+        },
+        "large": {
+          "status": "busy",
+          "badge": "batch"
+        },
+        "router": {
+          "status": "idle"
+        },
+        "cache": {
+          "status": "idle"
+        }
+      },
+      "edgeStates": {
+        "e-batch-large": {
+          "status": "active"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-batch-large",
+          "shape": "square",
+          "label": "iş",
+          "durationMs": 700,
+          "repeat": 4,
+          "repeatGapMs": 150
+        },
+        {
+          "edge": "e-large-meter",
+          "shape": "dot",
+          "label": "indirimli",
+          "startAt": 1600,
+          "durationMs": 1000
+        }
+      ]
+    },
+    {
+      "id": "budget",
+      "title": {
+        "tr": "Sayaç ve kotalar",
+        "en": "Meter and quotas"
+      },
+      "narration": {
+        "tr": "Her çağrı model, prompt sürümü, özellik ve kiracı bilgisiyle sayaca yazılır. Sayaç kiracı başına kotayla karşılaştırılır; döngüye giren tek bir ajan bütçeyi tüketmeden önce alarm üretilir.",
+        "en": "Every call is written to the meter with its model, prompt version, feature and tenant. The meter is compared with per-tenant quotas; an alarm fires before a single runaway agent can drain the budget."
+      },
+      "durationMs": 3000,
+      "highlight": {
+        "nodes": [
+          "meter"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "meter": {
+          "status": "active",
+          "badge": "kiracı başına"
+        },
+        "batch": {
+          "status": "idle"
+        },
+        "large": {
+          "status": "idle"
+        }
+      },
+      "annotations": [
+        {
+          "id": "a-quota",
+          "x": 900,
+          "y": 420,
+          "text": {
+            "tr": "kota aşımı → alarm",
+            "en": "quota exceeded → alarm"
+          },
+          "tone": "danger",
+          "target": "meter"
+        }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": [
+    "llm",
+    "cost",
+    "latency",
+    "semantic-cache",
+    "model-routing",
+    "batching"
+  ]
+}

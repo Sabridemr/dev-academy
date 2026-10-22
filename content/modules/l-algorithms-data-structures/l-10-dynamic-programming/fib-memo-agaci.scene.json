@@ -1,0 +1,802 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "l-10-fib-memo-agaci",
+  "title": {
+    "tr": "Örtüşen alt problemler ve memoization",
+    "en": "Overlapping subproblems and memoization"
+  },
+  "summary": {
+    "tr": "fib(5)'in 15 düğümlü çağrı ağacında tekrar eden alt problemler; memo tablosuyla her birinin bir kez çözülmesi ve dalların budanması.",
+    "en": "Repeated subproblems in the 15-node call tree of fib(5); solving each once with a memo table and pruning whole branches."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda fib(5)'in 15 düğümlü çağrı ağacı, sağda memo adlı bir önbellek kutusu vardır. İlk adımda tekrar eden fib(3) ve fib(2) düğümleri sarıyla işaretlenir. Memo kullanılan hesapta çağrılar en sol dal boyunca fib(1)'e kadar iner. fib(2) = 1 ve fib(3) = 2 hesaplanıp memo'ya yazılır. fib(4) ikinci kez fib(2) istediğinde değer memo'dan gelir ve altındaki iki çağrı soluklaşır. fib(5) ikinci kez fib(3) istediğinde de değer memo'dan gelir ve sağdaki dört çağrılık alt ağaç soluklaşır. fib(5) = 5 olur. Son adım, 15 yerine 9 çağrı yapıldığını ve sürenin O(n)'e indiğini özetler.",
+      "en": "On the left is the 15-node call tree of fib(5), on the right a cache box named memo. The first step marks the repeated fib(3) and fib(2) nodes in yellow. In the memoised run the calls go down the leftmost branch to fib(1). fib(2) = 1 and fib(3) = 2 are computed and written to the memo. When fib(4) asks for fib(2) a second time the value comes from the memo and the two calls below it fade. When fib(5) asks for fib(3) again the value also comes from the memo and the four-call subtree on the right fades. fib(5) = 5. The last step notes that 9 calls were made instead of 15 and the time drops to O(n)."
+    }
+  },
+  "canvas": {
+    "width": 1000,
+    "height": 600
+  },
+  "nodes": [
+    {
+      "id": "f5",
+      "kind": "function",
+      "label": "fib(5)",
+      "x": 420,
+      "y": 70,
+      "w": 80,
+      "h": 46
+    },
+    {
+      "id": "f4",
+      "kind": "function",
+      "label": "fib(4)",
+      "x": 240,
+      "y": 170,
+      "w": 80,
+      "h": 46
+    },
+    {
+      "id": "f3r",
+      "kind": "function",
+      "label": "fib(3)",
+      "x": 620,
+      "y": 170,
+      "w": 80,
+      "h": 46
+    },
+    {
+      "id": "f3",
+      "kind": "function",
+      "label": "fib(3)",
+      "x": 130,
+      "y": 280,
+      "w": 80,
+      "h": 46
+    },
+    {
+      "id": "f2r",
+      "kind": "function",
+      "label": "fib(2)",
+      "x": 340,
+      "y": 280,
+      "w": 80,
+      "h": 46
+    },
+    {
+      "id": "f2rr",
+      "kind": "function",
+      "label": "fib(2)",
+      "x": 560,
+      "y": 280,
+      "w": 80,
+      "h": 46
+    },
+    {
+      "id": "f1rr",
+      "kind": "function",
+      "label": "fib(1)",
+      "x": 720,
+      "y": 280,
+      "w": 80,
+      "h": 46
+    },
+    {
+      "id": "f2",
+      "kind": "function",
+      "label": "fib(2)",
+      "x": 80,
+      "y": 390,
+      "w": 80,
+      "h": 46
+    },
+    {
+      "id": "f1a",
+      "kind": "function",
+      "label": "fib(1)",
+      "x": 185,
+      "y": 390,
+      "w": 80,
+      "h": 46
+    },
+    {
+      "id": "f1b",
+      "kind": "function",
+      "label": "fib(1)",
+      "x": 290,
+      "y": 390,
+      "w": 80,
+      "h": 46
+    },
+    {
+      "id": "f0b",
+      "kind": "function",
+      "label": "fib(0)",
+      "x": 390,
+      "y": 390,
+      "w": 80,
+      "h": 46
+    },
+    {
+      "id": "f1c",
+      "kind": "function",
+      "label": "fib(1)",
+      "x": 490,
+      "y": 390,
+      "w": 80,
+      "h": 46
+    },
+    {
+      "id": "f0c",
+      "kind": "function",
+      "label": "fib(0)",
+      "x": 590,
+      "y": 390,
+      "w": 80,
+      "h": 46
+    },
+    {
+      "id": "f1",
+      "kind": "function",
+      "label": "fib(1)",
+      "x": 50,
+      "y": 500,
+      "w": 80,
+      "h": 46
+    },
+    {
+      "id": "f0",
+      "kind": "function",
+      "label": "fib(0)",
+      "x": 130,
+      "y": 500,
+      "w": 80,
+      "h": 46
+    },
+    {
+      "id": "memo",
+      "kind": "cache",
+      "label": "memo",
+      "x": 870,
+      "y": 300,
+      "w": 190,
+      "h": 90,
+      "sublabel": "{ }"
+    }
+  ],
+  "edges": [
+    {
+      "id": "e_f5_f4",
+      "from": "f5",
+      "to": "f4",
+      "kind": "request"
+    },
+    {
+      "id": "e_f5_f3r",
+      "from": "f5",
+      "to": "f3r",
+      "kind": "request"
+    },
+    {
+      "id": "e_f4_f3",
+      "from": "f4",
+      "to": "f3",
+      "kind": "request"
+    },
+    {
+      "id": "e_f4_f2r",
+      "from": "f4",
+      "to": "f2r",
+      "kind": "request"
+    },
+    {
+      "id": "e_f3r_f2rr",
+      "from": "f3r",
+      "to": "f2rr",
+      "kind": "request"
+    },
+    {
+      "id": "e_f3r_f1rr",
+      "from": "f3r",
+      "to": "f1rr",
+      "kind": "request"
+    },
+    {
+      "id": "e_f3_f2",
+      "from": "f3",
+      "to": "f2",
+      "kind": "request"
+    },
+    {
+      "id": "e_f3_f1a",
+      "from": "f3",
+      "to": "f1a",
+      "kind": "request"
+    },
+    {
+      "id": "e_f2r_f1b",
+      "from": "f2r",
+      "to": "f1b",
+      "kind": "request"
+    },
+    {
+      "id": "e_f2r_f0b",
+      "from": "f2r",
+      "to": "f0b",
+      "kind": "request"
+    },
+    {
+      "id": "e_f2rr_f1c",
+      "from": "f2rr",
+      "to": "f1c",
+      "kind": "request"
+    },
+    {
+      "id": "e_f2rr_f0c",
+      "from": "f2rr",
+      "to": "f0c",
+      "kind": "request"
+    },
+    {
+      "id": "e_f2_f1",
+      "from": "f2",
+      "to": "f1",
+      "kind": "request"
+    },
+    {
+      "id": "e_f2_f0",
+      "from": "f2",
+      "to": "f0",
+      "kind": "request"
+    },
+    {
+      "id": "w_f2",
+      "from": "f2",
+      "to": "memo",
+      "kind": "data",
+      "style": "dashed"
+    },
+    {
+      "id": "w_f3",
+      "from": "f3",
+      "to": "memo",
+      "kind": "data",
+      "style": "dashed"
+    },
+    {
+      "id": "w_f4",
+      "from": "f4",
+      "to": "memo",
+      "kind": "data",
+      "style": "dashed"
+    },
+    {
+      "id": "w_f5",
+      "from": "f5",
+      "to": "memo",
+      "kind": "data",
+      "style": "dashed"
+    },
+    {
+      "id": "h_f2r",
+      "from": "memo",
+      "to": "f2r",
+      "kind": "response",
+      "style": "dotted",
+      "curvature": 0.2
+    },
+    {
+      "id": "h_f3r",
+      "from": "memo",
+      "to": "f3r",
+      "kind": "response",
+      "style": "dotted",
+      "curvature": -0.2
+    }
+  ],
+  "steps": [
+    {
+      "id": "naive",
+      "title": {
+        "tr": "Saf özyineleme: 15 çağrı",
+        "en": "Plain recursion: 15 calls"
+      },
+      "narration": {
+        "tr": "`fib(5)`'in saf özyinelemeli çağrı ağacı 15 düğümlüdür. Sarı düğümler daha önce başka bir dalda hesaplanmış alt problemlerdir: `fib(3)` iki kez, `fib(2)` üç kez çözülüyor. n büyüdükçe bu tekrarlar üstel (yaklaşık O(2ⁿ)) büyür.",
+        "en": "The plain recursive call tree of `fib(5)` has 15 nodes. The yellow nodes are subproblems already computed on another branch: `fib(3)` is solved twice and `fib(2)` three times. As n grows these repeats grow exponentially (roughly O(2ⁿ))."
+      },
+      "durationMs": 3800,
+      "inherit": false,
+      "highlight": {
+        "nodes": [
+          "f3r",
+          "f2r",
+          "f2rr"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "f3r": {
+          "status": "warning"
+        },
+        "f2r": {
+          "status": "warning"
+        },
+        "f2rr": {
+          "status": "warning"
+        },
+        "f5": {
+          "badge": "15"
+        }
+      },
+      "edgeStates": {
+        "w_f2": {
+          "visible": false
+        },
+        "w_f3": {
+          "visible": false
+        },
+        "w_f4": {
+          "visible": false
+        },
+        "w_f5": {
+          "visible": false
+        },
+        "h_f2r": {
+          "visible": false
+        },
+        "h_f3r": {
+          "visible": false
+        }
+      },
+      "annotations": [
+        {
+          "id": "a-tekrar",
+          "x": 620,
+          "y": 560,
+          "text": {
+            "tr": "fib(3) ×2, fib(2) ×3",
+            "en": "fib(3) ×2, fib(2) ×3"
+          },
+          "tone": "warning"
+        }
+      ]
+    },
+    {
+      "id": "inis",
+      "title": {
+        "tr": "Memo ile: en sola in",
+        "en": "With memo: go down the left"
+      },
+      "narration": {
+        "tr": "Şimdi aynı hesap, bir **memo** sözlüğüyle. Çağrılar önce en sol dal boyunca iner: fib(5) → fib(4) → fib(3) → fib(2) → fib(1). Memo henüz boş; hiçbir sonuç bilinmiyor.",
+        "en": "Now the same computation with a **memo** dictionary. The calls first go down the leftmost branch: fib(5) → fib(4) → fib(3) → fib(2) → fib(1). The memo is still empty; no result is known yet."
+      },
+      "durationMs": 3800,
+      "inherit": false,
+      "highlight": {
+        "nodes": [
+          "f5",
+          "f4",
+          "f3",
+          "f2",
+          "f1",
+          "memo"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "f5": {
+          "status": "busy"
+        },
+        "f4": {
+          "status": "busy"
+        },
+        "f3": {
+          "status": "busy"
+        },
+        "f2": {
+          "status": "busy"
+        },
+        "f1": {
+          "status": "active"
+        }
+      },
+      "edgeStates": {
+        "w_f2": {
+          "visible": false
+        },
+        "w_f3": {
+          "visible": false
+        },
+        "w_f4": {
+          "visible": false
+        },
+        "w_f5": {
+          "visible": false
+        },
+        "h_f2r": {
+          "visible": false
+        },
+        "h_f3r": {
+          "visible": false
+        }
+      },
+      "packets": [
+        {
+          "edge": "e_f5_f4",
+          "durationMs": 700
+        },
+        {
+          "edge": "e_f4_f3",
+          "startAt": 750,
+          "durationMs": 700
+        },
+        {
+          "edge": "e_f3_f2",
+          "startAt": 1500,
+          "durationMs": 700
+        },
+        {
+          "edge": "e_f2_f1",
+          "startAt": 2250,
+          "durationMs": 700
+        }
+      ]
+    },
+    {
+      "id": "f2",
+      "title": {
+        "tr": "fib(2) = 1 → memo",
+        "en": "fib(2) = 1 → memo"
+      },
+      "narration": {
+        "tr": "Taban durumlar fib(1) = 1 ve fib(0) = 0 döner. fib(2) = 1 hesaplanır ve **memo'ya yazılır**. Bu alt problem bir daha hesaplanmayacak.",
+        "en": "The base cases return fib(1) = 1 and fib(0) = 0. fib(2) = 1 is computed and **written to the memo**. This subproblem will never be computed again."
+      },
+      "durationMs": 3200,
+      "highlight": {
+        "nodes": [
+          "f2",
+          "memo"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "f1": {
+          "status": "success",
+          "badge": "1"
+        },
+        "f0": {
+          "status": "success",
+          "badge": "0"
+        },
+        "f2": {
+          "status": "success",
+          "badge": "=1"
+        },
+        "memo": {
+          "sublabel": "{2: 1}",
+          "status": "active"
+        }
+      },
+      "edgeStates": {
+        "w_f2": {
+          "visible": true,
+          "status": "active"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e_f2_f0",
+          "durationMs": 600
+        },
+        {
+          "edge": "e_f2_f1",
+          "direction": "backward",
+          "label": "1",
+          "startAt": 650,
+          "durationMs": 600
+        },
+        {
+          "edge": "e_f2_f0",
+          "direction": "backward",
+          "label": "0",
+          "startAt": 650,
+          "durationMs": 600
+        },
+        {
+          "edge": "w_f2",
+          "label": "2: 1",
+          "shape": "square",
+          "startAt": 1350,
+          "durationMs": 1000
+        }
+      ]
+    },
+    {
+      "id": "f3",
+      "title": {
+        "tr": "fib(3) = 2 → memo",
+        "en": "fib(3) = 2 → memo"
+      },
+      "narration": {
+        "tr": "fib(3) ikinci çocuğu fib(1)'i çağırır (taban durum, 1). fib(3) = 1 + 1 = 2 olur ve memo'ya yazılır.",
+        "en": "fib(3) calls its second child fib(1) (a base case, 1). fib(3) = 1 + 1 = 2 and is written to the memo."
+      },
+      "durationMs": 3000,
+      "highlight": {
+        "nodes": [
+          "f3",
+          "f1a",
+          "memo"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "f1a": {
+          "status": "success",
+          "badge": "1"
+        },
+        "f3": {
+          "status": "success",
+          "badge": "=2"
+        },
+        "memo": {
+          "sublabel": "{2: 1, 3: 2}"
+        }
+      },
+      "edgeStates": {
+        "w_f2": {
+          "visible": false
+        },
+        "w_f3": {
+          "visible": true,
+          "status": "active"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e_f3_f1a",
+          "durationMs": 600
+        },
+        {
+          "edge": "e_f3_f1a",
+          "direction": "backward",
+          "label": "1",
+          "startAt": 650,
+          "durationMs": 600
+        },
+        {
+          "edge": "w_f3",
+          "label": "3: 2",
+          "shape": "square",
+          "startAt": 1350,
+          "durationMs": 1000
+        }
+      ]
+    },
+    {
+      "id": "hit2",
+      "title": {
+        "tr": "fib(2) tekrar istendi: memo'dan",
+        "en": "fib(2) requested again: from the memo"
+      },
+      "narration": {
+        "tr": "fib(4) ikinci çocuğu fib(2)'yi çağırır. Fonksiyon ilk satırda memo'ya bakar, 1'i bulur ve **hemen döner**. Saf özyinelemede açılacak fib(1) ve fib(0) çağrıları hiç yapılmaz (soluk düğümler). fib(4) = 2 + 1 = 3.",
+        "en": "fib(4) calls its second child fib(2). The function checks the memo on its first line, finds 1 and **returns at once**. The fib(1) and fib(0) calls plain recursion would make are never made (faded nodes). fib(4) = 2 + 1 = 3."
+      },
+      "durationMs": 3600,
+      "highlight": {
+        "nodes": [
+          "f2r",
+          "f4",
+          "memo"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "f2r": {
+          "status": "success",
+          "badge": "memo"
+        },
+        "f1b": {
+          "status": "muted"
+        },
+        "f0b": {
+          "status": "muted"
+        },
+        "f4": {
+          "status": "success",
+          "badge": "=3"
+        },
+        "memo": {
+          "sublabel": "{2: 1, 3: 2, 4: 3}"
+        }
+      },
+      "edgeStates": {
+        "w_f3": {
+          "visible": false
+        },
+        "h_f2r": {
+          "visible": true,
+          "status": "active"
+        },
+        "w_f4": {
+          "visible": true,
+          "status": "active"
+        },
+        "e_f2r_f1b": {
+          "status": "muted"
+        },
+        "e_f2r_f0b": {
+          "status": "muted"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e_f4_f2r",
+          "durationMs": 600
+        },
+        {
+          "edge": "h_f2r",
+          "label": "1",
+          "shape": "square",
+          "startAt": 650,
+          "durationMs": 900
+        },
+        {
+          "edge": "w_f4",
+          "label": "4: 3",
+          "shape": "square",
+          "startAt": 1650,
+          "durationMs": 1000
+        }
+      ]
+    },
+    {
+      "id": "hit3",
+      "title": {
+        "tr": "fib(3) tekrar istendi: tüm dal budandı",
+        "en": "fib(3) requested again: whole branch pruned"
+      },
+      "narration": {
+        "tr": "fib(5) sağ çocuğu fib(3)'ü çağırır; memo 2 der. Sağdaki **dört çağrılık alt ağacın tamamı** budandı. fib(5) = 3 + 2 = 5.",
+        "en": "fib(5) calls its right child fib(3); the memo answers 2. The **entire four-call subtree** on the right is pruned. fib(5) = 3 + 2 = 5."
+      },
+      "durationMs": 3600,
+      "highlight": {
+        "nodes": [
+          "f3r",
+          "f5",
+          "memo"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "f3r": {
+          "status": "success",
+          "badge": "memo"
+        },
+        "f2rr": {
+          "status": "muted"
+        },
+        "f1rr": {
+          "status": "muted"
+        },
+        "f1c": {
+          "status": "muted"
+        },
+        "f0c": {
+          "status": "muted"
+        },
+        "f5": {
+          "status": "success",
+          "badge": "=5"
+        },
+        "memo": {
+          "sublabel": "{2: 1, 3: 2, 4: 3, 5: 5}"
+        }
+      },
+      "edgeStates": {
+        "h_f2r": {
+          "visible": false
+        },
+        "w_f4": {
+          "visible": false
+        },
+        "h_f3r": {
+          "visible": true,
+          "status": "active"
+        },
+        "w_f5": {
+          "visible": true,
+          "status": "active"
+        },
+        "e_f3r_f2rr": {
+          "status": "muted"
+        },
+        "e_f3r_f1rr": {
+          "status": "muted"
+        },
+        "e_f2rr_f1c": {
+          "status": "muted"
+        },
+        "e_f2rr_f0c": {
+          "status": "muted"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e_f5_f3r",
+          "durationMs": 600
+        },
+        {
+          "edge": "h_f3r",
+          "label": "2",
+          "shape": "square",
+          "startAt": 650,
+          "durationMs": 900
+        },
+        {
+          "edge": "w_f5",
+          "label": "5: 5",
+          "shape": "square",
+          "startAt": 1650,
+          "durationMs": 1000
+        }
+      ]
+    },
+    {
+      "id": "ozet",
+      "title": {
+        "tr": "15 çağrı yerine 9, her alt problem bir kez",
+        "en": "9 calls instead of 15, each subproblem once"
+      },
+      "narration": {
+        "tr": "Memo ile 9 çağrı yapıldı ve fib(0)'dan fib(5)'e kadar 6 farklı alt problemin her biri **yalnızca bir kez** hesaplandı. Genel durumda n + 1 alt problem ve her birinde sabit iş: üstel süre **O(n)**'e iner, karşılığında O(n) bellek harcanır. DP'nin özü budur: örtüşen alt problemleri bir kez çöz, sonucu sakla.",
+        "en": "With the memo 9 calls were made and each of the 6 distinct subproblems from fib(0) to fib(5) was computed **only once**. In general there are n + 1 subproblems with constant work each: exponential time drops to **O(n)** at the cost of O(n) memory. That is the essence of DP: solve overlapping subproblems once and store the result."
+      },
+      "durationMs": 3800,
+      "highlight": {
+        "nodes": [
+          "memo",
+          "f5"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "memo": {
+          "status": "success"
+        }
+      },
+      "edgeStates": {
+        "h_f3r": {
+          "visible": false
+        },
+        "w_f5": {
+          "visible": false
+        }
+      },
+      "annotations": [
+        {
+          "id": "a-sonuc",
+          "x": 620,
+          "y": 560,
+          "text": {
+            "tr": "saf: 15 çağrı · memo: 9 çağrı",
+            "en": "plain: 15 calls · memo: 9 calls"
+          },
+          "tone": "success"
+        }
+      ]
+    }
+  ],
+  "tags": [
+    "dinamik-programlama",
+    "memoization"
+  ]
+}

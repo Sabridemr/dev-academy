@@ -49,6 +49,8 @@ pnpm-debug.log*
 
 # Next.js
 web/next-env.d.ts
+# sql.js wasm ikilisi (web/scripts/copy-sqljs.mjs ile node_modules'tan kopyalanır)
+web/public/sql.js/
 
 # Redis yerel dump
 *.rdb

@@ -225,6 +225,10 @@ fonksiyonun içinde değil, **çağıranın** elinde. Sonsuz bir generator'ı `l
 Generator'ların asıl gücü **zincirlendiklerinde** ortaya çıkar. Her aşama bir öncekinden değer ister, işler ve bir
 sonrakine verir. Unix'teki `cat log | grep 500 | head` boru hattının Python karşılığıdır.
 
+:::interactive{type="predict-run" src="boru-hatti.trace.json" title="Önce tahmin et: boru hattının çıktısı|Predict first: the pipeline's output"}
+Simülasyonu izlemeden önce kodu oku: `oku:` ve `sonuç:` satırları hangi sırayla basılır, döngü ilk turda `x`e hangi değeri verir? Her soruda bir seçenek işaretle. Sorulardaki satır numaraları soldaki kod listesine göredir. "Çalıştır ve karşılaştır" ile cevapların işaretlenir, doğru ve yanlış sayısı görünür ve iz oynamaya başlar; her sorunun altındaki adım numarasına izin kaydırıcısıyla gidip değeri kendin doğrula. Puan sunucuya gönderilmez; "Yeniden dene" ile tekrar cevaplayabilirsin.
+:::
+
 :::trace{src="boru-hatti.trace.json" title="Generator boru hattı|A generator pipeline"}
 Yığında ciftler, sayiya ve oku çerçevelerinin üst üste bindiğini ve çıktıda oku ile sonuç satırlarının iç içe geçtiğini izle: veri toptan değil, tek tek akıyor.
 :::

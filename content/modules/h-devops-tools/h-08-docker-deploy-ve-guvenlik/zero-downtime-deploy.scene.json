@@ -1,0 +1,191 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "docker-blue-green-deploy",
+  "title": { "tr": "Kesintisiz Docker Deploy: Build, Registry, Blue-Green ve Geri Alma", "en": "Zero-Downtime Docker Deploy: Build, Registry, Blue-Green and Rollback" },
+  "summary": {
+    "tr": "CI imajı SHA etiketiyle registry'ye gönderir; sunucu yeni konteyneri eskisinin yanında başlatır, geriye uyumlu migration ve sağlık kontrolünden sonra trafik çevrilir; sorun çıkınca trafik eski konteynere geri döner.",
+    "en": "CI pushes the image to the registry with a SHA tag; the server starts the new container next to the old one, traffic is switched after a backward-compatible migration and health check, and when trouble appears traffic returns to the old container."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Sol üstte GitHub Actions ve GHCR registry, solda kullanıcılar, ortada ters vekil, sağda canlı blue (v1.4) ve yeni green (v1.5) konteynerleri, altta PostgreSQL bulunur. Adımlarda kullanıcılar blue'ya gider, CI imajı registry'ye gönderir, sunucu green'i çekip başlatır, geriye uyumlu migration uygulanır, green sağlık kontrollerini geçer, vekil trafiği green'e çevirir, hata oranı artınca trafik blue'ya geri döner ve green durdurulur.",
+      "en": "GitHub Actions and the GHCR registry are at the top left, users on the left, the reverse proxy in the middle, the live blue (v1.4) and new green (v1.5) containers on the right and PostgreSQL at the bottom. Over the steps users go to blue, CI pushes the image to the registry, the server pulls and starts green, a backward-compatible migration is applied, green passes health checks, the proxy switches traffic to green, error rates rise and traffic goes back to blue, and green is stopped."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "ci", "kind": "worker", "label": "GitHub Actions", "sublabel": "docker build", "x": 120, "y": 90, "w": 170, "h": 64 },
+    { "id": "registry", "kind": "storage", "label": "GHCR", "sublabel": "ghcr.io/magaza/api", "x": 420, "y": 90, "w": 190, "h": 64, "color": "primary" },
+    { "id": "users", "kind": "user", "label": { "tr": "Kullanıcılar", "en": "Users" }, "x": 120, "y": 330, "w": 150, "h": 64 },
+    { "id": "proxy", "kind": "proxy", "label": "Caddy / Nginx", "sublabel": "upstream", "x": 420, "y": 330, "w": 170, "h": 70 },
+    { "id": "blue", "kind": "container", "label": "api-blue", "sublabel": "v1.4 · sha-7c1e", "x": 790, "y": 220, "w": 190, "h": 70, "color": "primary" },
+    { "id": "green", "kind": "container", "label": "api-green", "sublabel": "v1.5 · sha-a91f", "x": 790, "y": 440, "w": 190, "h": 70, "color": "success" },
+    { "id": "db", "kind": "db", "label": "PostgreSQL", "x": 420, "y": 530, "w": 170, "h": 60 }
+  ],
+  "edges": [
+    { "id": "ci-reg", "from": "ci", "to": "registry", "kind": "data", "label": "docker push" },
+    { "id": "reg-green", "from": "registry", "to": "green", "kind": "data", "label": "docker pull", "curvature": 0.25, "style": "dashed" },
+    { "id": "users-proxy", "from": "users", "to": "proxy", "kind": "request", "label": "HTTPS" },
+    { "id": "proxy-blue", "from": "proxy", "to": "blue", "kind": "request" },
+    { "id": "proxy-green", "from": "proxy", "to": "green", "kind": "request" },
+    { "id": "blue-db", "from": "blue", "to": "db", "kind": "data", "curvature": 0.25 },
+    { "id": "green-db", "from": "green", "to": "db", "kind": "data" }
+  ],
+  "steps": [
+    {
+      "id": "live",
+      "title": { "tr": "Canlı: v1.4 (blue)", "en": "Live: v1.4 (blue)" },
+      "narration": {
+        "tr": "Kullanıcı istekleri ters vekile, oradan v1.4'ü çalıştıran api-blue konteynerine gider. İmaj, commit SHA'sıyla etiketlenmiştir. Hangi kodun çalıştığı her an kesin olarak bilinir ve önceki sürüme dönmek için bu etiket yeterlidir.",
+        "en": "User requests go to the reverse proxy and from there to the api-blue container running v1.4. The image is tagged with its commit SHA. You always know exactly which code is running, and that tag is all you need to go back to the previous version."
+      },
+      "durationMs": 3600,
+      "inherit": false,
+      "highlight": { "nodes": ["users", "proxy", "blue"], "edges": ["users-proxy", "proxy-blue"] },
+      "nodeStates": {
+        "users": { "status": "active" },
+        "proxy": { "status": "active", "badge": "→ blue" },
+        "blue": { "status": "success", "badge": "live" },
+        "green": { "visible": false },
+        "ci": { "status": "idle" },
+        "registry": { "status": "idle" },
+        "db": { "status": "active" }
+      },
+      "edgeStates": { "users-proxy": { "status": "active" }, "proxy-blue": { "status": "active" }, "proxy-green": { "visible": false }, "reg-green": { "visible": false }, "green-db": { "visible": false }, "blue-db": { "status": "active" } },
+      "packets": [
+        { "edge": "users-proxy", "shape": "dot", "durationMs": 800, "repeat": 3, "repeatGapMs": 300 },
+        { "edge": "proxy-blue", "shape": "dot", "startAt": 600, "durationMs": 800, "repeat": 3, "repeatGapMs": 300 }
+      ]
+    },
+    {
+      "id": "build-push",
+      "title": { "tr": "CI: build ve push", "en": "CI: build and push" },
+      "narration": {
+        "tr": "main'e merge sonrası workflow imajı derler, ghcr.io/magaza/api:sha-a91f olarak etiketler ve GITHUB_TOKEN ile GHCR'ye gönderir. İmaj bir kez üretilir; staging ve production aynı etiketi kullanır.",
+        "en": "After the merge to main the workflow builds the image, tags it ghcr.io/magaza/api:sha-a91f and pushes it to GHCR with GITHUB_TOKEN. The image is built once; staging and production use the same tag."
+      },
+      "durationMs": 3800,
+      "highlight": { "nodes": ["ci", "registry"], "edges": ["ci-reg"] },
+      "nodeStates": { "users": { "status": "idle" }, "ci": { "status": "busy", "badge": "build ✓" }, "registry": { "status": "active", "badge": "sha-a91f" } },
+      "edgeStates": { "ci-reg": { "status": "active" }, "users-proxy": { "status": "idle" } },
+      "packets": [{ "edge": "ci-reg", "shape": "square", "label": "sha-a91f", "durationMs": 1300 }]
+    },
+    {
+      "id": "pull-start",
+      "title": { "tr": "Sunucu green'i çeker ve başlatır", "en": "The server pulls and starts green" },
+      "narration": {
+        "tr": "Deploy job'u SSH ile sunucuya bağlanır, docker pull ile yeni imajı indirir ve api-green konteynerini blue'nun yanında başlatır. Yeni konteyner henüz trafik almıyor. Kullanıcılar hâlâ v1.4 ile konuşuyor ve hiçbir şey fark etmiyor.",
+        "en": "The deploy job connects to the server over SSH, downloads the new image with docker pull and starts the api-green container next to blue. The new container is not receiving traffic yet. Users are still talking to v1.4 and notice nothing."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["registry", "green"], "edges": ["reg-green"] },
+      "nodeStates": { "ci": { "status": "idle" }, "registry": { "status": "idle" }, "green": { "visible": true, "status": "busy", "badge": "starting" } },
+      "edgeStates": { "ci-reg": { "status": "idle" }, "reg-green": { "visible": true, "status": "active" }, "proxy-green": { "visible": true, "status": "muted" } },
+      "packets": [
+        { "edge": "reg-green", "shape": "square", "label": "docker pull", "durationMs": 1300 },
+        { "edge": "proxy-blue", "shape": "dot", "durationMs": 800, "repeat": 2, "repeatGapMs": 400 }
+      ]
+    },
+    {
+      "id": "migrate",
+      "title": { "tr": "Geriye uyumlu migration", "en": "Backward-compatible migration" },
+      "narration": {
+        "tr": "Veritabanı iki sürüm tarafından aynı anda kullanılacağı için migration yalnızca genişletir: yeni bir sütun eklenir, eski sütun silinmez (expand-contract). Böylece v1.4 çalışmaya devam eder. Eski sütun, birkaç sürüm sonra ayrı bir adımda kaldırılır.",
+        "en": "Because both versions will use the database at the same time, the migration only expands: a new column is added and the old one is not dropped (expand-contract). That way v1.4 keeps working. The old column is removed in a separate step a few releases later."
+      },
+      "durationMs": 4200,
+      "highlight": { "nodes": ["green", "db"], "edges": ["green-db"] },
+      "nodeStates": { "db": { "status": "warning", "badge": "+ teslimat_notu" }, "green": { "status": "busy", "badge": "migrate" } },
+      "edgeStates": { "reg-green": { "status": "idle" }, "green-db": { "visible": true, "status": "active" } },
+      "packets": [{ "edge": "green-db", "shape": "diamond", "label": "ALTER … ADD", "color": "warning", "durationMs": 1200 }],
+      "annotations": [{ "id": "expand", "x": 640, "y": 560, "text": { "tr": "expand: ekle, silme", "en": "expand: add, don't drop" }, "target": "db", "tone": "warning" }]
+    },
+    {
+      "id": "health",
+      "title": { "tr": "Sağlık kontrolü", "en": "Health check" },
+      "narration": {
+        "tr": "Vekil ya da deploy betiği green'in /health uç noktasını yoklar. Uç nokta, uygulama ve veritabanı bağlantısı hazırsa 200 döner. Birkaç ardışık başarılı yanıt gelmeden trafik çevrilmez. Kontrol başarısız olursa deploy burada durur ve kullanıcılar hiç etkilenmez.",
+        "en": "The proxy or the deploy script polls green's /health endpoint. It returns 200 when the application and its database connection are ready. Traffic is not switched until several consecutive successful responses arrive. If the check fails, the deploy stops here and users are never affected."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["proxy", "green"], "edges": ["proxy-green"] },
+      "nodeStates": { "db": { "status": "active", "badge": "" }, "green": { "status": "success", "badge": "200 ×3" } },
+      "edgeStates": { "green-db": { "status": "idle" }, "proxy-green": { "status": "active" } },
+      "packets": [
+        { "edge": "proxy-green", "shape": "dot", "label": "/health", "durationMs": 700, "repeat": 3, "repeatGapMs": 300 },
+        { "edge": "proxy-green", "shape": "dot", "label": "200", "color": "success", "direction": "backward", "startAt": 700, "durationMs": 700, "repeat": 3, "repeatGapMs": 300 }
+      ]
+    },
+    {
+      "id": "switch",
+      "title": { "tr": "Trafik green'e çevrilir", "en": "Traffic switches to green" },
+      "narration": {
+        "tr": "Vekilin upstream ayarı green'i gösterecek şekilde değiştirilir ve yapılandırma yeniden yüklenir (reload). Bunun için süreç yeniden başlatılmaz. Yeni istekler v1.5'e gider, blue üzerindeki yarım istekler tamamlanır. Kullanıcı tarafında kesinti olmaz.",
+        "en": "The proxy's upstream is changed to point at green and the configuration is reloaded; the process is not restarted. New requests go to v1.5 while the requests in flight on blue finish. Users see no interruption."
+      },
+      "durationMs": 4200,
+      "highlight": { "nodes": ["proxy", "green", "users"], "edges": ["users-proxy", "proxy-green"] },
+      "nodeStates": {
+        "users": { "status": "active" },
+        "proxy": { "status": "active", "badge": "→ green" },
+        "green": { "status": "success", "badge": "live" },
+        "blue": { "status": "idle", "badge": "draining" }
+      },
+      "edgeStates": { "users-proxy": { "status": "active" }, "proxy-blue": { "status": "idle" }, "blue-db": { "status": "idle" }, "green-db": { "status": "active" } },
+      "packets": [
+        { "edge": "users-proxy", "shape": "dot", "durationMs": 800, "repeat": 3, "repeatGapMs": 300 },
+        { "edge": "proxy-green", "shape": "dot", "startAt": 600, "durationMs": 800, "repeat": 3, "repeatGapMs": 300 }
+      ]
+    },
+    {
+      "id": "errors",
+      "title": { "tr": "Hata oranı yükseliyor", "en": "Error rate climbing" },
+      "narration": {
+        "tr": "Deploy sonrası izleme panelinde 5xx oranı artar. Sağlık kontrolü yalnızca uygulamanın ayakta olduğunu söyler, her özelliğin doğru çalıştığını garanti etmez. Bu sırada blue hâlâ çalışır durumda bekliyor. Eski sürümü hemen silmemenin nedeni budur.",
+        "en": "After the deploy the 5xx rate rises on the monitoring panel. A health check only says the application is up; it does not guarantee that every feature works. Meanwhile blue is still running on standby. This is why you do not delete the old version right away."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["green"], "edges": ["proxy-green"] },
+      "nodeStates": { "green": { "status": "warning", "badge": "5xx %4" }, "blue": { "status": "idle", "badge": "standby" } },
+      "edgeStates": { "proxy-green": { "status": "error" } },
+      "packets": [
+        { "edge": "proxy-green", "shape": "dot", "durationMs": 800, "repeat": 2, "repeatGapMs": 300 },
+        { "edge": "proxy-green", "shape": "dot", "label": "500", "color": "danger", "direction": "backward", "startAt": 800, "durationMs": 800, "repeat": 2, "repeatGapMs": 300 }
+      ],
+      "annotations": [{ "id": "monitor", "x": 790, "y": 540, "text": { "tr": "health ≠ doğruluk", "en": "health ≠ correctness" }, "target": "green", "tone": "danger" }]
+    },
+    {
+      "id": "rollback",
+      "title": { "tr": "Geri alma: trafik blue'ya", "en": "Rollback: traffic back to blue" },
+      "narration": {
+        "tr": "Upstream yeniden blue'yu gösterir ve yapılandırma tekrar yüklenir. Geri dönüş birkaç saniye sürer, çünkü yeni bir derleme ya da imaj indirme gerekmez. Migration genişletici olduğu için v1.4 yeni şemayla sorunsuz çalışır.",
+        "en": "The upstream points at blue again and the configuration is reloaded. Going back takes seconds, because no new build or image download is needed. The migration was additive, so v1.4 works fine with the new schema."
+      },
+      "durationMs": 4200,
+      "highlight": { "nodes": ["proxy", "blue"], "edges": ["proxy-blue", "users-proxy"] },
+      "nodeStates": { "proxy": { "status": "warning", "badge": "→ blue" }, "blue": { "status": "success", "badge": "live" }, "green": { "status": "error", "badge": "rollback" } },
+      "edgeStates": { "proxy-blue": { "status": "active" }, "proxy-green": { "status": "muted" }, "blue-db": { "status": "active" }, "green-db": { "status": "idle" } },
+      "packets": [
+        { "edge": "users-proxy", "shape": "dot", "durationMs": 800, "repeat": 3, "repeatGapMs": 300 },
+        { "edge": "proxy-blue", "shape": "dot", "color": "success", "startAt": 600, "durationMs": 800, "repeat": 3, "repeatGapMs": 300 }
+      ]
+    },
+    {
+      "id": "cleanup",
+      "title": { "tr": "green durdurulur, inceleme başlar", "en": "Green is stopped, investigation begins" },
+      "narration": {
+        "tr": "api-green durdurulur, ama imajı registry'de durur ve logları incelenir. Hata düzeltildiğinde yeni bir SHA ile aynı döngü tekrar çalışır. Kesintisiz deploy tek bir hamle değildir. Önceki sürümü hazır tutmak, geriye uyumlu şema, sağlık kontrolü, izleme ve hızlı geri dönüş birlikte çalışmalıdır.",
+        "en": "api-green is stopped, but its image stays in the registry and its logs are examined. When the bug is fixed, the same cycle runs again with a new SHA. A zero-downtime deploy is not a single move. Keeping the previous version ready, a backward-compatible schema, health checks, monitoring and a fast way back all have to work together."
+      },
+      "durationMs": 4400,
+      "highlight": { "nodes": ["green", "registry"], "edges": [] },
+      "nodeStates": { "green": { "status": "muted", "badge": "stopped" }, "proxy": { "status": "active" }, "registry": { "status": "active", "badge": "sha-a91f saklı" } },
+      "edgeStates": { "proxy-green": { "visible": false } },
+      "packets": [{ "edge": "proxy-blue", "shape": "dot", "durationMs": 800, "repeat": 2, "repeatGapMs": 300 }]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["docker", "deploy", "blue-green", "rollback", "zero-downtime"]
+}

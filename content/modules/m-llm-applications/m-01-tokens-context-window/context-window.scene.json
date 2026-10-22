@@ -1,0 +1,615 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "m-01-context-window",
+  "title": {
+    "tr": "Token'dan Bağlam Penceresine",
+    "en": "From Tokens to the Context Window"
+  },
+  "summary": {
+    "tr": "Metin tokenlara bölünür, bağlam penceresi sistem talimatı, geçmiş ve son mesajla dolar; prefill KV cache'i doldurur, decode token token üretir. Geçmiş büyüyünce pencere taşar ve kesme stratejisi devreye girer.",
+    "en": "Text is split into tokens and the context window fills with the system prompt, history and the last message; prefill fills the KV cache and decode emits one token at a time. As history grows the window overflows and a truncation strategy kicks in."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda kullanıcı metni ve tokenizer, ortada alt alta dizilmiş bağlam penceresi bölmeleri (sistem talimatı, sohbet geçmişi, son mesaj, çıktı payı), sağda LLM, altında KV cache ve en sağda yanıt bulunur. Metin tokenizer'da parçalara ayrılır ve son mesaj bölmesine yerleşir. Çıktı payı ayrılır. Prefill aşamasında tüm girdi tokenları modele paralel akar ve KV cache dolar; decode aşamasında model her adımda bir token üretir ve önbelleği yeniden kullanır. Sonraki turlarda sohbet geçmişi büyür, pencere taşar ve geçmiş özetlenip kırpılarak sistem talimatı ile çıktı payı korunur.",
+      "en": "On the left the user text and the tokenizer, in the middle the stacked context window segments (system prompt, chat history, last message, output reserve), on the right the LLM with the KV cache below it and the reply at the far right. The text is split by the tokenizer and placed in the last-message segment. The output reserve is set aside. During prefill all input tokens flow into the model in parallel and fill the KV cache; during decode the model emits one token per step, reusing the cache. In later turns the history grows, the window overflows and the history is summarised and trimmed while the system prompt and output reserve are preserved."
+    }
+  },
+  "canvas": {
+    "width": 1000,
+    "height": 600
+  },
+  "nodes": [
+    {
+      "id": "text",
+      "kind": "client",
+      "label": {
+        "tr": "Kullanıcı metni",
+        "en": "User text"
+      },
+      "x": 100,
+      "y": 300,
+      "w": 140,
+      "h": 76
+    },
+    {
+      "id": "tok",
+      "kind": "function",
+      "label": "Tokenizer",
+      "sublabel": "BPE",
+      "x": 280,
+      "y": 300,
+      "w": 130,
+      "h": 76
+    },
+    {
+      "id": "sys",
+      "kind": "generic",
+      "label": {
+        "tr": "Sistem talimatı",
+        "en": "System prompt"
+      },
+      "sublabel": {
+        "tr": "sabit ön ek",
+        "en": "static prefix"
+      },
+      "x": 500,
+      "y": 100,
+      "w": 170,
+      "h": 64
+    },
+    {
+      "id": "hist",
+      "kind": "generic",
+      "label": {
+        "tr": "Sohbet geçmişi",
+        "en": "Chat history"
+      },
+      "x": 500,
+      "y": 225,
+      "w": 170,
+      "h": 64
+    },
+    {
+      "id": "user",
+      "kind": "generic",
+      "label": {
+        "tr": "Son mesaj",
+        "en": "Last message"
+      },
+      "x": 500,
+      "y": 350,
+      "w": 170,
+      "h": 64
+    },
+    {
+      "id": "reserve",
+      "kind": "generic",
+      "label": {
+        "tr": "Çıktı payı",
+        "en": "Output reserve"
+      },
+      "sublabel": "max_tokens",
+      "x": 500,
+      "y": 475,
+      "w": 170,
+      "h": 64
+    },
+    {
+      "id": "model",
+      "kind": "model",
+      "label": "LLM",
+      "sublabel": {
+        "tr": "prefill → decode",
+        "en": "prefill → decode"
+      },
+      "x": 740,
+      "y": 290,
+      "w": 130,
+      "h": 90
+    },
+    {
+      "id": "kv",
+      "kind": "cache",
+      "label": "KV cache",
+      "x": 740,
+      "y": 480,
+      "w": 130,
+      "h": 70
+    },
+    {
+      "id": "out",
+      "kind": "client",
+      "label": {
+        "tr": "Yanıt",
+        "en": "Reply"
+      },
+      "x": 920,
+      "y": 290,
+      "w": 110,
+      "h": 70
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-text-tok",
+      "from": "text",
+      "to": "tok",
+      "kind": "data"
+    },
+    {
+      "id": "e-tok-user",
+      "from": "tok",
+      "to": "user",
+      "kind": "data",
+      "label": {
+        "tr": "token kimlikleri",
+        "en": "token ids"
+      }
+    },
+    {
+      "id": "e-sys-model",
+      "from": "sys",
+      "to": "model",
+      "kind": "data",
+      "curvature": 0.1
+    },
+    {
+      "id": "e-hist-model",
+      "from": "hist",
+      "to": "model",
+      "kind": "data"
+    },
+    {
+      "id": "e-user-model",
+      "from": "user",
+      "to": "model",
+      "kind": "data"
+    },
+    {
+      "id": "e-model-kv",
+      "from": "model",
+      "to": "kv",
+      "kind": "data",
+      "bidirectional": true
+    },
+    {
+      "id": "e-model-out",
+      "from": "model",
+      "to": "out",
+      "kind": "response"
+    }
+  ],
+  "steps": [
+    {
+      "id": "tokenize",
+      "title": {
+        "tr": "Metin tokenlara bölünür",
+        "en": "Text is split into tokens"
+      },
+      "narration": {
+        "tr": "Kullanıcının cümlesi tokenizer'a gider. Sık geçen parçalar tek token olur; uzun Türkçe bir kelime ya da uzun bir sayı birkaç parçaya bölünür. Model harfleri değil, bu kimlik numaralarını görür.",
+        "en": "The user's sentence goes to the tokenizer. Frequent fragments become single tokens; a long Turkish word or a long number is split into several pieces. The model never sees letters, only these ids."
+      },
+      "durationMs": 3200,
+      "inherit": false,
+      "highlight": {
+        "nodes": [
+          "text",
+          "tok"
+        ],
+        "edges": [
+          "e-text-tok"
+        ]
+      },
+      "nodeStates": {
+        "text": {
+          "status": "active"
+        },
+        "tok": {
+          "status": "busy",
+          "badge": "BPE"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-text-tok",
+          "shape": "envelope",
+          "label": "Yapılandırılamayanlardan…",
+          "durationMs": 1400
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a-split",
+          "x": 280,
+          "y": 410,
+          "text": {
+            "tr": "1 kelime → birkaç token",
+            "en": "1 word → several tokens"
+          },
+          "tone": "warning",
+          "target": "tok"
+        }
+      ]
+    },
+    {
+      "id": "fill",
+      "title": {
+        "tr": "Pencere bölmeleri dolar",
+        "en": "The window segments fill up"
+      },
+      "narration": {
+        "tr": "Token kimlikleri son mesaj bölmesine yerleşir. Pencerede ondan önce sabit sistem talimatı ve önceki turların geçmişi durur; model önceki çağrıları hatırlamaz, uygulama hepsini her istekte yeniden gönderir.",
+        "en": "The token ids land in the last-message segment. Before it the window holds the static system prompt and the history of earlier turns; the model remembers nothing, the application resends everything on every request."
+      },
+      "durationMs": 3200,
+      "highlight": {
+        "nodes": [
+          "sys",
+          "hist",
+          "user"
+        ],
+        "edges": [
+          "e-tok-user"
+        ]
+      },
+      "nodeStates": {
+        "tok": {
+          "status": "success"
+        },
+        "sys": {
+          "status": "active",
+          "badge": "sabit"
+        },
+        "hist": {
+          "status": "active",
+          "badge": "3 tur"
+        },
+        "user": {
+          "status": "active",
+          "badge": "yeni"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-tok-user",
+          "shape": "square",
+          "label": "[ids]",
+          "durationMs": 1200
+        }
+      ]
+    },
+    {
+      "id": "reserve",
+      "title": {
+        "tr": "Çıktı payı ayrılır",
+        "en": "The output reserve is set aside"
+      },
+      "narration": {
+        "tr": "Bağlam penceresi girdi ile çıktının toplamıdır. max_tokens ile verilen üst sınır pencereden önceden düşülür; girdiyi bu payı hesaba katmadan doldurmak cevabın yarıda kesilmesine yol açar.",
+        "en": "The context window is input plus output. The cap given with max_tokens is subtracted up front; filling the input without accounting for it cuts the answer short."
+      },
+      "durationMs": 2800,
+      "highlight": {
+        "nodes": [
+          "reserve"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "reserve": {
+          "status": "warning",
+          "badge": "max_tokens"
+        }
+      },
+      "annotations": [
+        {
+          "id": "a-budget",
+          "x": 300,
+          "y": 560,
+          "text": {
+            "tr": "girdi + çıktı ≤ pencere",
+            "en": "input + output ≤ window"
+          },
+          "tone": "info",
+          "target": "reserve"
+        }
+      ]
+    },
+    {
+      "id": "prefill",
+      "title": {
+        "tr": "Prefill: girdi paralel işlenir",
+        "en": "Prefill: input processed in parallel"
+      },
+      "narration": {
+        "tr": "Tüm girdi tokenları aynı anda modele akar. Model her token için dikkat hesabında gereken anahtar ve değer vektörlerini çıkarıp KV cache'e yazar. Bu iş paralel olduğu için token başına ucuzdur, ama ilk tokenın gecikmesi girdi uzunluğuyla büyür.",
+        "en": "All input tokens flow into the model at once. For every token the model computes the key and value vectors attention needs and writes them to the KV cache. Because this is parallel it is cheap per token, but time to first token grows with input length."
+      },
+      "durationMs": 3800,
+      "highlight": {
+        "nodes": [
+          "sys",
+          "hist",
+          "user",
+          "model",
+          "kv"
+        ],
+        "edges": [
+          "e-sys-model",
+          "e-hist-model",
+          "e-user-model",
+          "e-model-kv"
+        ]
+      },
+      "nodeStates": {
+        "model": {
+          "status": "busy",
+          "badge": "prefill"
+        },
+        "kv": {
+          "status": "active",
+          "badge": "K,V"
+        },
+        "reserve": {
+          "status": "idle"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-sys-model",
+          "shape": "dot",
+          "label": "sys",
+          "durationMs": 1100
+        },
+        {
+          "edge": "e-hist-model",
+          "shape": "dot",
+          "label": "geçmiş",
+          "durationMs": 1100
+        },
+        {
+          "edge": "e-user-model",
+          "shape": "dot",
+          "label": "mesaj",
+          "durationMs": 1100
+        },
+        {
+          "edge": "e-model-kv",
+          "shape": "square",
+          "label": "K,V",
+          "startAt": 1400,
+          "durationMs": 1000
+        }
+      ]
+    },
+    {
+      "id": "decode",
+      "title": {
+        "tr": "Decode: her adımda bir token",
+        "en": "Decode: one token per step"
+      },
+      "narration": {
+        "tr": "Model şimdi yalnızca bir sonraki tokenı üretir, onu girdiye ekler ve tekrarlar. Her adımda geçmiş tokenların K,V değerleri önbellekten okunur, yeniden hesaplanmaz. Bu sıralı iş yüzünden çıkış tokenları daha yavaş ve daha pahalıdır; üretilen her token çıktı payından düşer.",
+        "en": "The model now produces only the next token, appends it and repeats. At each step the K,V of earlier tokens are read from the cache instead of being recomputed. This sequential work makes output tokens slower and pricier; every generated token consumes the output reserve."
+      },
+      "durationMs": 4200,
+      "highlight": {
+        "nodes": [
+          "model",
+          "kv",
+          "out",
+          "reserve"
+        ],
+        "edges": [
+          "e-model-out",
+          "e-model-kv"
+        ]
+      },
+      "nodeStates": {
+        "model": {
+          "status": "active",
+          "badge": "decode"
+        },
+        "out": {
+          "status": "active"
+        },
+        "reserve": {
+          "status": "busy",
+          "badge": "doluyor"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-model-out",
+          "shape": "dot",
+          "label": "token",
+          "durationMs": 600,
+          "repeat": 5,
+          "repeatGapMs": 150
+        },
+        {
+          "edge": "e-model-kv",
+          "direction": "backward",
+          "shape": "dot",
+          "label": "K,V oku",
+          "durationMs": 600,
+          "repeat": 4,
+          "repeatGapMs": 300
+        }
+      ]
+    },
+    {
+      "id": "grow",
+      "title": {
+        "tr": "Geçmiş her turda büyür",
+        "en": "History grows every turn"
+      },
+      "narration": {
+        "tr": "Yanıt geçmişe eklenir ve sonraki turda tamamı yeniden gönderilir. Sistem talimatı aynı kaldığı için sağlayıcı bu sabit ön ekin işlenmiş hâlini bir süre saklayıp yeniden kullanabilir; geçmiş ise her turda uzar, maliyet ve gecikme onunla birlikte artar.",
+        "en": "The reply is appended to the history and the whole thing is resent next turn. Because the system prompt stays the same, the provider can keep its processed prefix for a while and reuse it; the history, however, grows every turn and cost and latency grow with it."
+      },
+      "durationMs": 3400,
+      "highlight": {
+        "nodes": [
+          "hist",
+          "sys"
+        ],
+        "edges": [
+          "e-hist-model"
+        ]
+      },
+      "nodeStates": {
+        "hist": {
+          "status": "warning",
+          "badge": "9 tur"
+        },
+        "out": {
+          "status": "idle"
+        },
+        "model": {
+          "status": "idle"
+        },
+        "reserve": {
+          "status": "idle"
+        },
+        "sys": {
+          "status": "success",
+          "badge": "önbellekte"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-model-out",
+          "direction": "backward",
+          "shape": "dot",
+          "label": "yanıt → geçmiş",
+          "durationMs": 1100
+        },
+        {
+          "edge": "e-hist-model",
+          "shape": "dot",
+          "label": "geçmiş",
+          "startAt": 1300,
+          "durationMs": 1100
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a-prefix",
+          "x": 690,
+          "y": 110,
+          "text": {
+            "tr": "sabit ön ek yeniden kullanılır",
+            "en": "static prefix is reused"
+          },
+          "tone": "success",
+          "target": "sys"
+        }
+      ]
+    },
+    {
+      "id": "overflow",
+      "title": {
+        "tr": "Pencere taşar",
+        "en": "The window overflows"
+      },
+      "narration": {
+        "tr": "Uzun bir sohbetten sonra sistem talimatı, geçmiş ve son mesaj çıktı payıyla birlikte pencereye sığmaz. Ya istek reddedilir ya da cevaba yer kalmaz. Üstelik uzun bağlamın ortasına gömülen bilgi daha az kullanılır.",
+        "en": "After a long conversation the system prompt, history and last message no longer fit together with the output reserve. Either the request is rejected or no room is left for the answer. On top of that, information buried in the middle of a long context is used less."
+      },
+      "durationMs": 3200,
+      "highlight": {
+        "nodes": [
+          "hist",
+          "reserve"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "hist": {
+          "status": "error",
+          "badge": "taşma"
+        },
+        "reserve": {
+          "status": "error",
+          "badge": "sığmıyor"
+        }
+      },
+      "annotations": [
+        {
+          "id": "a-overflow",
+          "x": 300,
+          "y": 225,
+          "text": {
+            "tr": "pencere doldu",
+            "en": "window is full"
+          },
+          "tone": "danger",
+          "target": "hist"
+        }
+      ]
+    },
+    {
+      "id": "truncate",
+      "title": {
+        "tr": "Kesme stratejisi",
+        "en": "Truncation strategy"
+      },
+      "narration": {
+        "tr": "Uygulama önce çıktı payını ve sistem talimatını ayırır, son mesajı korur, kalan bütçeyi geçmişin en yeni turlarıyla sondan doldurur; eski turlar kısa bir özete dönüşür. Model yeniden çalışabilir ve cevaba yer kalır.",
+        "en": "The application first reserves the output budget and the system prompt, keeps the last message and fills the remaining budget with the most recent turns from the end; older turns become a short summary. The model can run again with room left for the answer."
+      },
+      "durationMs": 3600,
+      "highlight": {
+        "nodes": [
+          "hist",
+          "reserve",
+          "model"
+        ],
+        "edges": [
+          "e-hist-model",
+          "e-user-model"
+        ]
+      },
+      "nodeStates": {
+        "hist": {
+          "status": "success",
+          "badge": "özet + son 3 tur"
+        },
+        "reserve": {
+          "status": "success",
+          "badge": "korundu"
+        },
+        "model": {
+          "status": "active"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-hist-model",
+          "shape": "dot",
+          "label": "özet",
+          "durationMs": 1000
+        },
+        {
+          "edge": "e-user-model",
+          "shape": "dot",
+          "label": "mesaj",
+          "durationMs": 1000
+        }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": [
+    "llm",
+    "tokens",
+    "context-window",
+    "kv-cache",
+    "truncation"
+  ]
+}
