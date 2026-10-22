@@ -162,7 +162,7 @@ services:
       dockerfile: backend/Dockerfile
       target: tools
     environment: *api-env
-    command: ['sh', '-c', 'pnpm exec tsx prisma/seed.ts']
+    command: ['tsx', 'prisma/seed.ts']
     depends_on:
       migrate:
         condition: service_completed_successfully
