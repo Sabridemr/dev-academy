@@ -1,0 +1,193 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "import-sistemi",
+  "title": { "tr": "import ayarlar: bul, yükle, önbelleğe al", "en": "import ayarlar: find, load, cache" },
+  "summary": {
+    "tr": "import'un önce sys.modules önbelleğine bakması, bulamazsa sys.path'te bulucuyla dosyayı araması, yükleyicinin modül nesnesini oluşturup önbelleğe koyması ve kodu bir kez çalıştırması; ikinci import'un önbellekten gelmesi.",
+    "en": "import checking the sys.modules cache first, otherwise searching sys.path with a finder, the loader creating the module object, putting it in the cache and running the code once; the second import coming from the cache."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda import satırını çalıştıran main.py, üstte sys.modules önbelleği, ortada bulucu, sağda sys.path klasörleri, altta yükleyici ve sağ altta ayarlar modül nesnesi bulunur. İlk import'ta önbellekte ayarlar yoktur. Bulucu sys.path'teki klasörleri sırayla tarar ve ayarlar.py dosyasını bulur. Yükleyici boş bir modül nesnesi oluşturur, onu kodu çalıştırmadan önce sys.modules'e kaydeder, ardından dosyanın kodunu yukarıdan aşağıya bir kez çalıştırır; ekrana ayarlar yükleniyor yazılır ve DEBUG niteliği oluşur. main.py'deki ayarlar adı modül nesnesine bağlanır. İkinci import'ta önbellekte bulunur ve hiçbir kod çalışmaz. from ayarlar import DEBUG da aynı önbellekteki modülü kullanır, yalnızca DEBUG adını bağlar.",
+      "en": "On the left main.py running the import line, at the top the sys.modules cache, in the middle the finder, on the right the sys.path folders, at the bottom the loader and at the bottom right the ayarlar module object. On the first import ayarlar is not in the cache. The finder scans the sys.path folders in order and finds ayarlar.py. The loader creates an empty module object, registers it in sys.modules before running the code, then runs the file top to bottom once; 'ayarlar yükleniyor' is printed and the DEBUG attribute appears. The name ayarlar in main.py is bound to the module object. On the second import it is found in the cache and no code runs. from ayarlar import DEBUG also uses the same cached module and only binds the name DEBUG."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "main", "kind": "client", "label": "main.py", "sublabel": "import ayarlar", "x": 130, "y": 300, "w": 180, "h": 80 },
+    { "id": "cache", "kind": "cache", "label": "sys.modules", "sublabel": { "tr": "önbellek: ad → modül", "en": "cache: name → module" }, "x": 450, "y": 100, "w": 210, "h": 80 },
+    { "id": "finder", "kind": "service", "label": { "tr": "Bulucu (finder)", "en": "Finder" }, "sublabel": "find_spec", "x": 450, "y": 300, "w": 190, "h": 70 },
+    { "id": "path", "kind": "storage", "label": "sys.path", "sublabel": "./  stdlib  site-packages", "x": 820, "y": 300, "w": 230, "h": 80 },
+    { "id": "loader", "kind": "worker", "label": { "tr": "Yükleyici (loader)", "en": "Loader" }, "sublabel": "exec_module", "x": 450, "y": 500, "w": 190, "h": 70 },
+    { "id": "mod", "kind": "function", "label": { "tr": "ayarlar modülü", "en": "ayarlar module" }, "sublabel": { "tr": "modül nesnesi", "en": "module object" }, "x": 820, "y": 500, "w": 210, "h": 80 }
+  ],
+  "edges": [
+    { "id": "e-check", "from": "main", "to": "cache", "kind": "request", "curvature": -0.15, "label": { "tr": "var mı?", "en": "present?" } },
+    { "id": "e-find", "from": "main", "to": "finder", "kind": "request" },
+    { "id": "e-scan", "from": "finder", "to": "path", "kind": "control", "label": { "tr": "klasörleri tara", "en": "scan folders" } },
+    { "id": "e-spec", "from": "finder", "to": "loader", "kind": "control", "label": "spec" },
+    { "id": "e-create", "from": "loader", "to": "mod", "kind": "data", "label": { "tr": "oluştur + çalıştır", "en": "create + run" } },
+    { "id": "e-register", "from": "mod", "to": "cache", "kind": "data", "style": "dashed", "curvature": 0.35, "label": { "tr": "kaydet", "en": "register" } },
+    { "id": "e-bind", "from": "main", "to": "mod", "kind": "generic", "style": "dashed", "curvature": 0.2, "label": { "tr": "ad bağlanır", "en": "name bound" } }
+  ],
+  "steps": [
+    {
+      "id": "check-miss",
+      "title": { "tr": "Önce önbellek: sys.modules", "en": "Cache first: sys.modules" },
+      "narration": {
+        "tr": "`import ayarlar` ilk iş olarak `sys.modules` sözlüğüne bakar: `\"ayarlar\"` anahtarı var mı? Programda bu modül ilk kez içe aktarıldığı için yok: **MISS**.",
+        "en": "`import ayarlar` first looks into the `sys.modules` dictionary: is there an `\"ayarlar\"` key? This is the first import of the module in the program, so there isn't: **MISS**."
+      },
+      "durationMs": 3200,
+      "inherit": false,
+      "highlight": { "nodes": ["main", "cache"], "edges": ["e-check"] },
+      "nodeStates": {
+        "main": { "status": "active" },
+        "cache": { "status": "warning", "badge": "MISS" },
+        "mod": { "visible": false },
+        "loader": { "status": "muted" }
+      },
+      "edgeStates": { "e-register": { "visible": false }, "e-bind": { "visible": false }, "e-create": { "visible": false } },
+      "packets": [
+        { "edge": "e-check", "label": "ayarlar?", "durationMs": 1000 },
+        { "edge": "e-check", "direction": "backward", "shape": "square", "color": "warning", "label": "yok", "startAt": 1200, "durationMs": 900 }
+      ]
+    },
+    {
+      "id": "scan",
+      "title": { "tr": "Bulucu sys.path'i tarar", "en": "The finder scans sys.path" },
+      "narration": {
+        "tr": "Önbellekte olmayan modül için bulucu devreye girer. `sys.path` listesindeki klasörlere **sırayla** bakar: betiğin klasörü, standart kütüphane, `site-packages`. İlk eşleşen `ayarlar.py` dosyası ya da `ayarlar/` paketi kazanır.",
+        "en": "For a module not in the cache the finder steps in. It checks the folders in the `sys.path` list **in order**: the script's folder, the standard library, `site-packages`. The first matching `ayarlar.py` file or `ayarlar/` package wins."
+      },
+      "durationMs": 3800,
+      "highlight": { "nodes": ["main", "finder", "path"], "edges": ["e-find", "e-scan"] },
+      "nodeStates": {
+        "cache": { "status": "idle", "badge": "" },
+        "finder": { "status": "active" },
+        "path": { "status": "success", "badge": "./ayarlar.py" }
+      },
+      "packets": [
+        { "edge": "e-find", "label": "import ayarlar", "durationMs": 900 },
+        { "edge": "e-scan", "shape": "diamond", "label": "ara", "startAt": 1000, "durationMs": 700, "repeat": 3, "repeatGapMs": 200 }
+      ],
+      "annotations": [
+        { "id": "a-order", "x": 820, "y": 200, "text": { "tr": "ilk eşleşme kazanır", "en": "first match wins" }, "tone": "warning", "target": "path" }
+      ]
+    },
+    {
+      "id": "spec",
+      "title": { "tr": "Bulundu: spec yükleyiciye", "en": "Found: the spec goes to the loader" },
+      "narration": {
+        "tr": "Bulucu dosyayı bulunca bir **spec** (modülün adı, dosya yolu, hangi yükleyicinin kullanılacağı) döndürür. Kaynak `.py` dosyası için bu, dosyayı okuyup bytecode'a derleyen yükleyicidir.",
+        "en": "When the finder locates the file it returns a **spec** (the module name, file path and which loader to use). For a `.py` source file this is the loader that reads the file and compiles it to bytecode."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["finder", "loader"], "edges": ["e-spec"] },
+      "nodeStates": { "finder": { "status": "success" }, "loader": { "status": "active" } },
+      "packets": [{ "edge": "e-spec", "shape": "envelope", "label": "spec", "durationMs": 1200 }]
+    },
+    {
+      "id": "create-register",
+      "title": { "tr": "Boş modül oluşur ve hemen önbelleğe girer", "en": "An empty module is created and cached right away" },
+      "narration": {
+        "tr": "Yükleyici boş bir **modül nesnesi** oluşturur ve onu kod çalışmadan **önce** `sys.modules`'e kaydeder. Bu sıra, döngüsel import'ta neden \"yarı yüklenmiş\" bir modül görebildiğini de açıklar.",
+        "en": "The loader creates an empty **module object** and registers it in `sys.modules` **before** any code runs. This order also explains why you can see a \"half-loaded\" module in a circular import."
+      },
+      "durationMs": 3800,
+      "highlight": { "nodes": ["loader", "mod", "cache"], "edges": ["e-create", "e-register"] },
+      "nodeStates": {
+        "mod": { "visible": true, "status": "warning", "badge": "NEW", "sublabel": { "tr": "boş isim alanı", "en": "empty namespace" }, "progress": 0 },
+        "cache": { "status": "active", "badge": "+ayarlar" }
+      },
+      "edgeStates": { "e-create": { "visible": true, "status": "active" }, "e-register": { "visible": true, "status": "active" } },
+      "packets": [
+        { "edge": "e-create", "shape": "square", "label": { "tr": "oluştur", "en": "create" }, "durationMs": 1000 },
+        { "edge": "e-register", "shape": "diamond", "label": "sys.modules['ayarlar']", "startAt": 1200, "durationMs": 1300 }
+      ]
+    },
+    {
+      "id": "exec",
+      "title": { "tr": "Kod yukarıdan aşağı bir kez çalışır", "en": "The code runs top to bottom once" },
+      "narration": {
+        "tr": "Yükleyici dosyanın kodunu modülün isim alanında **bir kez** çalıştırır. `print(\"ayarlar yükleniyor...\")` ekrana yazar, `DEBUG = True` modül nesnesinin bir niteliği olur. Her `def` ve `class` da aynı şekilde modülün niteliğine dönüşür.",
+        "en": "The loader runs the file's code **once** in the module's namespace. `print(\"ayarlar yükleniyor...\")` writes to the screen and `DEBUG = True` becomes an attribute of the module object. Every `def` and `class` likewise becomes an attribute of the module."
+      },
+      "durationMs": 3800,
+      "highlight": { "nodes": ["loader", "mod"], "edges": ["e-create"] },
+      "nodeStates": {
+        "loader": { "status": "busy" },
+        "mod": { "status": "active", "badge": "", "sublabel": "DEBUG = True", "progress": 1 },
+        "cache": { "status": "idle", "badge": "" }
+      },
+      "edgeStates": { "e-register": { "status": "idle" } },
+      "packets": [{ "edge": "e-create", "label": "exec", "durationMs": 900, "repeat": 3, "repeatGapMs": 250 }],
+      "annotations": [
+        { "id": "a-print", "x": 820, "y": 410, "text": { "tr": "çıktı: ayarlar yükleniyor...", "en": "output: ayarlar yükleniyor..." }, "target": "mod" }
+      ]
+    },
+    {
+      "id": "bind",
+      "title": { "tr": "ayarlar adı bağlanır", "en": "The name ayarlar is bound" },
+      "narration": {
+        "tr": "Son olarak `main.py`'nin isim alanında `ayarlar` adı bu modül nesnesine bağlanır. Artık `ayarlar.DEBUG` bir nitelik okumasıdır.",
+        "en": "Finally the name `ayarlar` in `main.py`'s namespace is bound to this module object. `ayarlar.DEBUG` is now just an attribute read."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["main", "mod"], "edges": ["e-bind"] },
+      "nodeStates": {
+        "loader": { "status": "muted" },
+        "finder": { "status": "muted" },
+        "mod": { "status": "success" },
+        "main": { "status": "success", "sublabel": { "tr": "ayarlar → modül", "en": "ayarlar → module" } }
+      },
+      "edgeStates": { "e-bind": { "visible": true, "status": "active" }, "e-create": { "status": "muted" } },
+      "packets": [{ "edge": "e-bind", "direction": "backward", "shape": "diamond", "label": "ayarlar", "durationMs": 1200 }]
+    },
+    {
+      "id": "second-import",
+      "title": { "tr": "İkinci import: önbellekten", "en": "Second import: from the cache" },
+      "narration": {
+        "tr": "Aynı programda yeniden `import ayarlar` yazıldığında (başka bir dosyada bile) `sys.modules`'te **HIT** olur. Bulucu ve yükleyici hiç çalışmaz, kod tekrar yürütülmez, ekrana bir şey yazılmaz; herkes **aynı** modül nesnesini alır.",
+        "en": "When `import ayarlar` appears again in the same program (even in another file) it is a **HIT** in `sys.modules`. The finder and loader do not run at all, the code is not executed again and nothing is printed; everyone gets **the same** module object."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["main", "cache"], "edges": ["e-check"] },
+      "nodeStates": {
+        "main": { "status": "active", "sublabel": "import ayarlar (2)" },
+        "cache": { "status": "success", "badge": "HIT" }
+      },
+      "edgeStates": { "e-find": { "status": "muted" }, "e-scan": { "status": "muted" }, "e-spec": { "status": "muted" } },
+      "packets": [
+        { "edge": "e-check", "label": "ayarlar?", "durationMs": 900 },
+        { "edge": "e-check", "direction": "backward", "shape": "diamond", "label": { "tr": "modül nesnesi", "en": "module object" }, "startAt": 1000, "durationMs": 1000 }
+      ],
+      "annotations": [
+        { "id": "a-same", "x": 160, "y": 140, "text": "sys.modules['ayarlar'] is ayarlar → True", "tone": "success", "target": "main" }
+      ]
+    },
+    {
+      "id": "from-import",
+      "title": { "tr": "from ayarlar import DEBUG", "en": "from ayarlar import DEBUG" },
+      "narration": {
+        "tr": "`from ayarlar import DEBUG` da modülün **tamamını** kullanır: önbellekte varsa oradan alır, yoksa yukarıdaki yolun aynısıyla yükler. Tek fark, isim alanına modülün adı yerine yalnızca `DEBUG` adının bağlanmasıdır.",
+        "en": "`from ayarlar import DEBUG` also uses the **whole** module: it takes it from the cache if present, otherwise loads it along the same path as above. The only difference is that only the name `DEBUG`, not the module name, is bound in the namespace."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["main", "cache", "mod"], "edges": ["e-check", "e-bind"] },
+      "nodeStates": {
+        "main": { "status": "success", "sublabel": "DEBUG → True" },
+        "cache": { "status": "success", "badge": "HIT" },
+        "mod": { "status": "active", "badge": "DEBUG" }
+      },
+      "packets": [
+        { "edge": "e-check", "label": "ayarlar?", "durationMs": 900 },
+        { "edge": "e-bind", "direction": "backward", "shape": "diamond", "label": "DEBUG", "startAt": 1100, "durationMs": 1200 }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["python", "import", "sys-modules", "module"]
+}

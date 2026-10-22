@@ -63,6 +63,20 @@ Bu kuralları bir arada uygulayan algoritmalar **argon2id** (güncel varsayılan
 
 Bazı sistemler ek olarak bir **biber (pepper)** kullanır: tüm şifrelere katılan ama veritabanında değil, ayrı bir gizli bilgi yöneticisinde tutulan bir sır. Yalnızca veritabanı sızarsa, biber olmadan hash'ler denenemez.
 
+Tuzun ve bilerek yavaş bir hash'in birlikte ne kazandırdığını, kayıttan girişe ve bir yedek sızıntısına kadar izleyelim.
+
+:::predict{id="ayni-sifre-farkli-tuz"}
+İki kullanıcı aynı şifreyi seçiyor; şifreler argon2id ile, her kullanıcı için ayrı tuzla saklanıyor. Tablodaki iki hash dizesi için ne söylenebilir? | Two users pick the same password; passwords are stored with argon2id and a separate salt per user. What can be said about the two hash strings in the table?
+- [ ] Aynıdır, çünkü şifre aynıdır | They are identical because the password is the same
+- [x] Tamamen farklıdır, çünkü her birinin tuzu farklıdır | They are completely different because each has a different salt
+- [ ] Yalnızca parametre kısmı farklıdır | Only the parameter part differs
+Açıklama: Tuz hash'e katıldığı için aynı şifre farklı özetler üretir. Böylece bir hash'i kırmak, aynı şifreyi kullanan diğer hesapları otomatik olarak açmaz ve önceden hesaplanmış tablolar işe yaramaz. | Because the salt is mixed into the hash, the same password yields different digests. Cracking one hash therefore does not unlock other accounts with the same password, and precomputed tables are useless.
+:::
+
+:::animation{scene="password-hash.scene.json"}
+Kayıtta rastgele tuz ve argon2id; aynı şifre farklı dize üretir, girişte aynı parametrelerle yeniden hesaplanır, sızan yedekte her tahmin ayrı ve pahalıdır.
+:::
+
 :::code{lang="ts" title="Şifre saklama: argon2id ile hash, doğrulama ve parametre yükseltme"}
 ```ts
 import * as argon2 from 'argon2';
@@ -124,7 +138,9 @@ Simetrik şifrelemede aynı anahtar şifreler ve çözer. Hızlıdır ve büyük
 
 AES-GCM'nin tek ama acımasız kuralı vardır: aynı anahtarla **aynı nonce asla iki kez kullanılmamalıdır**. 96 bitlik nonce her şifrelemede rastgele üretilir ve şifreli metnin yanında saklanır (gizli değildir). Nonce tekrarlanırsa saldırgan iki mesajın düz metinleri arasındaki ilişkiyi çıkarabilir ve doğrulama anahtarını ele geçirip sahte mesaj üretebilir. Çok yüksek hacimde şifreleme yapan sistemler bu yüzden anahtarı belirli bir mesaj sayısından sonra döndürür.
 
+:::callout{tone="info" title="Derinleşme"}
 Eski bir hata kalıbını da bilmek gerekir: blokları birbirinden bağımsız şifreleyen **ECB modu**, aynı düz metin bloklarını aynı şifreli bloklara çevirir ve verinin desenini açığa çıkarır. Doğrulama etiketi olmayan **CBC** gibi modlar ise ek bir MAC olmadan değiştirilmeye açıktır. Kütüphanenizin size mod seçtirdiği her yerde GCM'i seçin.
+:::
 
 :::callout{tone="warning" title="Nonce tekrar etmez, anahtar kodda durmaz"}
 AES-GCM'de sabit bir nonce kullanmak ("hep sıfır") ya da sayaç tabanlı nonce'u yeniden başlatmalarda sıfırlamak, şifrelemenin bütün garantisini çöpe atar. Anahtarı kaynak koduna ya da yapılandırma dosyasına gömmek ise şifrelemeyi bir formaliteye çevirir: kodu gören herkes veriyi çözer. Nonce her seferinde kriptografik rastgele üreticiden gelsin, anahtar bir anahtar yönetim servisinden.
@@ -190,6 +206,12 @@ Tarayıcınızın adres çubuğundaki kilit simgesi, tablodaki araçların nered
 
 TLS 1.3, eski sürümlerdeki zayıf seçenekleri (statik RSA anahtar değişimi, CBC modları, RC4) tamamen kaldırmış ve el sıkışmayı tek gidiş-dönüşe indirmiştir. Sizin işiniz büyük ölçüde doğru yapılandırmadır: TLS 1.2 altını kapatmak, sertifikaları otomatik yenilemek ve tarayıcıya siteye yalnızca HTTPS ile bağlanmasını söyleyen **HSTS** başlığını göndermek.
 
+El sıkışmanın beş adımını, asimetrik anahtar değişiminden simetrik oturum anahtarına geçişi ve ileri gizliliği sahnede izleyin.
+
+:::animation{scene="tls-handshake.scene.json"}
+ClientHello ve ServerHello ile ECDHE payları değişir, iki taraf aynı sırrı hesaplar; sertifika ve imza doğrulanır, Finished mesajlarından sonra veri AES-GCM ile akar.
+:::
+
 ## Anahtar yönetimi: kriptografinin zor kısmı
 
 Algoritmalar çoğu zaman sorun değildir; anahtarlar sorundur. Sağlam bir anahtar yönetimi birkaç ilkeye dayanır:
@@ -205,6 +227,10 @@ Kendi şifreleme algoritmanızı, kendi "karıştırma" fonksiyonunuzu ya da has
 :::
 
 Bu platformda şifreler argon2id ile hash'lenir; refresh token'lar yüksek entropili rastgele değerler olduğu için veritabanında SHA-256 özetiyle saklanır; access token'lar HMAC-SHA256 ile imzalanır ve sırrı ortam değişkeninden okunur; Google ve Apple ID token'ları ise sağlayıcıların asimetrik açık anahtarlarıyla doğrulanır. Tek bir uygulamada tablodaki araçların dördü, her biri kendi doğru yerinde kullanılır.
+
+:::interactive{type="hash-salt" algorithm="sha256" showAttack=true}
+Şifre kutusundaki örnek şifreyle başlayın: **Salt yok** sütununda iki kullanıcının hash'i birebir aynıdır, kullanıcıya özel salt sütununda ise tamamen farklı. **Yeni salt üret** düğmesine basın: şifre aynı kalırken tuzlu hash'ler değişir. Saldırgan panelinde örnek şifrenin 1000 kelimelik sözlükte olduğuna dikkat edin; sızan hesap sayısını artırınca tuzsuz SHA-256 satırının neden değişmediğini, tuzlu satırın ise hesap sayısıyla birlikte uzadığını karşılaştırın. Sonra algoritmayı **PBKDF2** yapın ve iterasyon kaydırıcısını yükseltin: ölçülen süre tarayıcınızda gerçekten artar, saldırganın PBKDF2 satırı da aynı oranda uzar. Yan paneldeki yavaş hash tahmininde bcrypt cost değerini bir artırmanın süreyi neden iki katına çıkardığını görün. Şifre hiçbir yere gönderilmez; tüm hesaplama tarayıcınızda yapılır.
+:::
 
 :::realworld{company="LinkedIn"}
 2012'de LinkedIn'den yaklaşık 6,5 milyon şifre hash'i bir forumda yayımlandı ve kısa sürede büyük kısmı kırıldı. Sebep, şifrelerin **tuzsuz SHA-1** ile saklanmasıydı: hızlı bir hash olduğu için sözlük denemeleri ekran kartlarında çok hızlı ilerledi ve tuz olmadığı için aynı şifreyi kullanan herkesin hash'i aynıydı, tek bir kırılma binlerce hesabı birden açtı. Dört yıl sonra aynı ihlalin aslında 100 milyonu aşkın hesabı kapsadığı ortaya çıktı. Şirket o dönemde tuzlu ve daha güçlü bir hash'e geçmişti, ama eski hash'ler zaten sızmıştı ve birçok kullanıcı aynı şifreyi başka sitelerde de kullandığı için etki LinkedIn'in ötesine geçti. Olay, "hash'liyoruz" demenin yeterli olmadığının, hash'in **türünün** belirleyici olduğunun klasik örneğidir.

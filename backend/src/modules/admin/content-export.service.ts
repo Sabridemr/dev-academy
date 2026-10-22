@@ -55,7 +55,7 @@ function json(value: unknown): string {
  * -----------------------------------
  * Panelde düzenlenip yayınlanan bir dersi seed'in okuduğu dosya biçimine geri çevirir: `lesson.md`
  * (frontmatter + Markdown + directive'ler), gömülü SVG'ler `.svg`, sahneler `*.scene.json`, quiz
- * `quiz.json`, kod izleri `*.trace.json`, raster görseller (base64). Seed'in dönüşümünün
+ * `quiz.json`, kod izleri `*.trace.json`, alıştırmalar `*.exercise.json`, raster görseller (base64). Seed'in dönüşümünün
  * (`resolveLessonBlocks`) tersidir: çıktı seed ile tekrar yüklendiğinde aynı blokları üretir.
  * Dosya sistemine yazmaz; CLI (`scripts/export-content.ts`) ve admin API'si dosya listesini kullanır.
  */
@@ -144,7 +144,7 @@ export class ContentExportService {
     };
   }
 
-  /** Bloğu dosya biçimine indirger, başvurduğu dosyayı (svg, sahne, quiz, iz, görsel) ekler */
+  /** Bloğu dosya biçimine indirger, başvurduğu dosyayı (svg, sahne, quiz, iz, alıştırma, görsel) ekler */
   private async exportBlock(
     block: LessonBlock,
     lessonId: string,
@@ -207,6 +207,18 @@ export class ContentExportService {
             `${block.src}: kaynak '${block.src.replace(/\.json$/, '.py')}' veritabanında tutulmaz; content/ içindeki mevcut kaynak korunmalı`,
           );
         } else warnings.push(`Kod izi veritabanında yok: ${block.src}`);
+        return rest;
+      }
+      case 'exercise': {
+        const { exercise, solution, ...rest } = block;
+        if (exercise && solution !== undefined) {
+          // Alan sırası ExerciseSchema ile aynı (elle yazılan dosyalar gibi)
+          const { id, title, language, prompt, starter, tests, hints, timeoutMs } = exercise;
+          addFile(
+            block.src,
+            json({ id, title, language, prompt, starter, solution, tests, hints, timeoutMs }),
+          );
+        } else warnings.push(`Alıştırma veritabanında yok ya da çözümü eksik: ${block.src}`);
         return rest;
       }
       default:

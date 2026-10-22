@@ -1,0 +1,170 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "j-09-tracking-and-notifications",
+  "title": { "tr": "Canlı Takip, Durum Bildirimi ve Kampanya Fan-out'u", "en": "Live Tracking, Status Notifications and Campaign Fan-out" },
+  "summary": {
+    "tr": "Kurye konumu ingestion servisinden Redis'e ve Pub/Sub kanalına gider, doğru WebSocket sunucusu müşteriye iletir; durum değişikliği tekilleştirilmiş push bildirimi üretir; kampanya bildirimi ise düşük öncelikle partiler hâlinde dağıtılır.",
+    "en": "The courier location goes from the ingestion service to Redis and a Pub/Sub channel, and the right WebSocket server forwards it to the customer; a status change produces a deduplicated push notification; a campaign notification is spread in batches at low priority."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Sol üstte kurye uygulaması ve Location Ingestion servisi, ortada Redis son konum deposu ve Pub/Sub kanalı, sağda iki WebSocket sunucusu ve müşteri uygulaması bulunur. Altta sipariş servisi, kampanya servisi, bildirim servisi ve FCM/APNs vardır. Kurye 5 saniyede bir konum gönderir; konum Redis'e yazılır ve Pub/Sub ile iki WebSocket sunucusuna yayılır, yalnızca müşterinin bağlı olduğu B sunucusu iletir. Sipariş PICKED_UP olunca bildirim servisi tekil anahtarla push gönderir, aynı olay tekrar gelince atlar. Akşam kampanyası iki milyon kullanıcıya partiler hâlinde, sipariş bildirimlerinden düşük öncelikle gönderilir.",
+      "en": "The courier app and the Location Ingestion service are at the top left, the Redis last-location store and the Pub/Sub channel in the middle, and two WebSocket servers and the customer app on the right. Below are the order service, the campaign service, the notification service and FCM/APNs. The courier sends a location every 5 seconds; it is written to Redis and spread to both WebSocket servers via Pub/Sub, and only server B, which the customer is connected to, forwards it. When the order becomes PICKED_UP the notification service sends a push with a unique key and skips the same event when it arrives again. An evening campaign is sent to two million users in batches, at lower priority than order notifications."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "courier", "kind": "mobile", "label": { "tr": "Kurye uygulaması", "en": "Courier app" }, "x": 75, "y": 130, "w": 130, "h": 64 },
+    { "id": "ingest", "kind": "service", "label": "Location Ingestion", "x": 250, "y": 130, "w": 150, "h": 64 },
+    { "id": "redis", "kind": "cache", "label": "Redis GEO", "sublabel": { "tr": "yalnızca son konum", "en": "last location only" }, "x": 460, "y": 50, "w": 150, "h": 56 },
+    { "id": "pubsub", "kind": "queue", "label": "Pub/Sub", "sublabel": "order:9", "x": 460, "y": 220, "w": 130, "h": 60 },
+    { "id": "wsA", "kind": "server", "label": { "tr": "WS sunucu A", "en": "WS server A" }, "x": 680, "y": 130, "w": 130, "h": 60 },
+    { "id": "wsB", "kind": "server", "label": { "tr": "WS sunucu B", "en": "WS server B" }, "x": 680, "y": 300, "w": 130, "h": 60 },
+    { "id": "user", "kind": "mobile", "label": { "tr": "Müşteri", "en": "Customer" }, "sublabel": { "tr": "B'ye bağlı", "en": "connected to B" }, "x": 910, "y": 300, "w": 120, "h": 64 },
+    { "id": "order", "kind": "service", "label": "Order Service", "x": 250, "y": 380, "w": 140, "h": 60 },
+    { "id": "campaign", "kind": "service", "label": { "tr": "Kampanya servisi", "en": "Campaign service" }, "x": 250, "y": 530, "w": 150, "h": 60 },
+    { "id": "notif", "kind": "service", "label": "Notification", "sublabel": { "tr": "öncelikli kuyruklar", "en": "priority queues" }, "x": 480, "y": 455, "w": 150, "h": 64 },
+    { "id": "push", "kind": "generic", "label": "FCM / APNs", "x": 710, "y": 500, "w": 130, "h": 60 }
+  ],
+  "edges": [
+    { "id": "courier-ingest", "from": "courier", "to": "ingest", "kind": "request" },
+    { "id": "ingest-redis", "from": "ingest", "to": "redis", "kind": "data" },
+    { "id": "ingest-pubsub", "from": "ingest", "to": "pubsub", "kind": "event" },
+    { "id": "pubsub-wsA", "from": "pubsub", "to": "wsA", "kind": "event" },
+    { "id": "pubsub-wsB", "from": "pubsub", "to": "wsB", "kind": "event" },
+    { "id": "wsB-user", "from": "wsB", "to": "user", "kind": "data", "label": "WebSocket" },
+    { "id": "order-notif", "from": "order", "to": "notif", "kind": "event" },
+    { "id": "campaign-notif", "from": "campaign", "to": "notif", "kind": "event" },
+    { "id": "notif-push", "from": "notif", "to": "push", "kind": "request" },
+    { "id": "push-user", "from": "push", "to": "user", "kind": "data", "curvature": 0.25 }
+  ],
+  "steps": [
+    {
+      "id": "location",
+      "title": { "tr": "Kurye konum gönderir", "en": "The courier sends a location" },
+      "narration": {
+        "tr": "Kurye uygulaması hareket hâlindeyken 5 saniyede bir `{lat, lon, speed, ts}` gönderir. Ingestion servisi kimliği ve zaman damgasını doğrular, GPS gürültüsünü (ör. bir saniyede 2 km sıçrama) eler. Yazma yolu, okuma yolundan ayrı ölçeklenir.",
+        "en": "While moving, the courier app sends `{lat, lon, speed, ts}` every 5 seconds. The ingestion service validates identity and timestamp and drops GPS noise (e.g. a 2 km jump within one second). The write path scales separately from the read path."
+      },
+      "durationMs": 3500,
+      "inherit": false,
+      "highlight": { "nodes": ["courier", "ingest"], "edges": ["courier-ingest"] },
+      "nodeStates": { "ingest": { "status": "active" } },
+      "edgeStates": { "courier-ingest": { "status": "active" } },
+      "packets": [{ "edge": "courier-ingest", "shape": "dot", "label": "41.01, 28.97", "repeat": 2, "repeatGapMs": 1200, "durationMs": 800 }]
+    },
+    {
+      "id": "store-publish",
+      "title": { "tr": "Son konum + yayın", "en": "Last location + publish" },
+      "narration": {
+        "tr": "Konum Redis'e `GEOADD` ile yazılır; eski değerin üzerine yazar, çünkü canlı takip için yalnızca son konum gerekir. Aynı anda siparişin kanalına (`order:9`) yayınlanır. Geçmiş konumlar asenkron ve toplu olarak kalıcı depoya gider.",
+        "en": "The location is written to Redis with `GEOADD`, overwriting the old value, because live tracking only needs the latest position. At the same time it is published to the order's channel (`order:9`). Historical positions go to durable storage asynchronously and in batches."
+      },
+      "durationMs": 3500,
+      "highlight": { "nodes": ["ingest", "redis", "pubsub"], "edges": ["ingest-redis", "ingest-pubsub"] },
+      "nodeStates": { "redis": { "status": "success", "badge": "GEOADD" }, "pubsub": { "status": "active" } },
+      "edgeStates": { "courier-ingest": { "status": "idle" }, "ingest-redis": { "status": "active" }, "ingest-pubsub": { "status": "active" } },
+      "packets": [
+        { "edge": "ingest-redis", "shape": "square", "durationMs": 800 },
+        { "edge": "ingest-pubsub", "shape": "envelope", "label": "PUBLISH order:9", "durationMs": 900 }
+      ]
+    },
+    {
+      "id": "route-ws",
+      "title": { "tr": "Doğru WebSocket sunucusuna", "en": "To the right WebSocket server" },
+      "narration": {
+        "tr": "Müşterinin kalıcı bağlantısı B sunucusundadır, konum ise ingestion'a gelmiştir. Pub/Sub mesajı `order:9` kanalına abone olan sunuculara iletir; o siparişi izleyen bağlantısı olmayan A iletmez, B mesajı WebSocket üzerinden müşteriye iter. Polling olsaydı milyonlarca istemci her birkaç saniyede bir \"yeni bir şey var mı?\" diye soracaktı.",
+        "en": "The customer's persistent connection lives on server B, while the location arrived at ingestion. Pub/Sub delivers the message to servers subscribed to `order:9`; A, which has no connection watching that order, forwards nothing, and B pushes the message to the customer over WebSocket. With polling, millions of clients would ask \"anything new?\" every few seconds."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["pubsub", "wsB", "user"], "edges": ["pubsub-wsB", "wsB-user"] },
+      "nodeStates": { "redis": { "status": "idle", "badge": "" }, "wsA": { "status": "muted" }, "wsB": { "status": "active", "counter": 1 }, "user": { "status": "success", "badge": "ETA 12 dk" } },
+      "edgeStates": { "ingest-redis": { "status": "idle" }, "ingest-pubsub": { "status": "idle" }, "pubsub-wsA": { "status": "muted" }, "pubsub-wsB": { "status": "active" }, "wsB-user": { "status": "active" } },
+      "packets": [
+        { "edge": "pubsub-wsB", "shape": "envelope", "durationMs": 800 },
+        { "edge": "wsB-user", "shape": "dot", "label": { "tr": "konum + ETA", "en": "location + ETA" }, "startAt": 900, "durationMs": 800 }
+      ]
+    },
+    {
+      "id": "picked-up",
+      "title": { "tr": "Durum değişir: PICKED_UP", "en": "Status changes: PICKED_UP" },
+      "narration": {
+        "tr": "Kurye siparişi alınca Order Service durumu PICKED_UP yapar ve olay yayınlar. Notification servisi kullanıcının tercihlerine bakar, anahtarı `order9:PICKED_UP:push` olarak kaydeder ve \"Siparişiniz yolda\" push'unu FCM/APNs'e iletir.",
+        "en": "When the courier picks up the order, the Order Service sets the status to PICKED_UP and publishes an event. The Notification service checks the user's preferences, records the key `order9:PICKED_UP:push` and hands the \"Your order is on its way\" push to FCM/APNs."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["order", "notif", "push", "user"], "edges": ["order-notif", "notif-push", "push-user"] },
+      "nodeStates": { "wsA": { "status": "idle" }, "wsB": { "status": "idle" }, "order": { "status": "active", "badge": "PICKED_UP" }, "notif": { "status": "active" }, "push": { "status": "active" }, "user": { "status": "success", "badge": "push" } },
+      "edgeStates": { "pubsub-wsA": { "status": "idle" }, "pubsub-wsB": { "status": "idle" }, "wsB-user": { "status": "idle" }, "order-notif": { "status": "active" }, "notif-push": { "status": "active" }, "push-user": { "status": "active" } },
+      "packets": [
+        { "edge": "order-notif", "shape": "envelope", "label": "PICKED_UP", "durationMs": 800 },
+        { "edge": "notif-push", "shape": "envelope", "startAt": 900, "durationMs": 800 },
+        { "edge": "push-user", "shape": "envelope", "startAt": 1800, "durationMs": 900 }
+      ]
+    },
+    {
+      "id": "dedupe",
+      "title": { "tr": "Aynı olay tekrar gelir", "en": "The same event arrives again" },
+      "narration": {
+        "tr": "En az bir kez teslimat nedeniyle PICKED_UP olayı ikinci kez gelir. Notification servisi `order9:PICKED_UP:push` anahtarını zaten görmüştür ve gönderimi atlar. Kullanıcıya aynı \"yolda\" mesajının üç kez düşmesi, güveni zedeleyen küçük ama gerçek bir hatadır.",
+        "en": "Because of at-least-once delivery, the PICKED_UP event arrives a second time. The Notification service has already seen `order9:PICKED_UP:push` and skips sending. The same \"on its way\" message landing three times is a small but real bug that erodes trust."
+      },
+      "durationMs": 3500,
+      "highlight": { "nodes": ["notif"], "edges": ["order-notif"] },
+      "nodeStates": { "order": { "status": "idle" }, "notif": { "status": "warning", "badge": "tekrar, atlandı" }, "push": { "status": "idle" }, "user": { "status": "idle", "badge": "" } },
+      "edgeStates": { "notif-push": { "status": "muted" }, "push-user": { "status": "idle" } },
+      "packets": [{ "edge": "order-notif", "shape": "envelope", "label": "PICKED_UP", "color": "warning", "durationMs": 900 }]
+    },
+    {
+      "id": "campaign",
+      "title": { "tr": "Akşam kampanyası: fan-out", "en": "Evening campaign: fan-out" },
+      "narration": {
+        "tr": "Pazarlama \"akşam %20\" kampanyasını İstanbul'daki 2 milyon kullanıcıya gönderir. Kampanya servisi hedef kitleyi tek tek değil, binlik partiler hâlinde bildirim servisine bırakır. Bildirim servisi bunları düşük öncelikli kuyruğa koyar ve sağlayıcı limitlerine uygun hızda gönderir.",
+        "en": "Marketing sends the \"evening 20% off\" campaign to 2 million users in Istanbul. The campaign service hands the audience to the notification service in batches of a thousand, not one by one. The notification service puts them in a low-priority queue and sends at a rate that fits provider limits."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["campaign", "notif", "push"], "edges": ["campaign-notif", "notif-push"] },
+      "nodeStates": { "campaign": { "status": "active", "badge": "2M" }, "notif": { "status": "busy", "progress": 0.6, "badge": "" }, "push": { "status": "busy" } },
+      "edgeStates": { "order-notif": { "status": "idle" }, "campaign-notif": { "status": "active" }, "notif-push": { "status": "active" } },
+      "packets": [
+        { "edge": "campaign-notif", "shape": "square", "label": "1.000", "repeat": 4, "repeatGapMs": 250, "durationMs": 700 },
+        { "edge": "notif-push", "shape": "dot", "startAt": 800, "repeat": 8, "repeatGapMs": 150, "durationMs": 500 }
+      ]
+    },
+    {
+      "id": "priority",
+      "title": { "tr": "Sipariş bildirimi önce gider", "en": "Order notifications go first" },
+      "narration": {
+        "tr": "Kampanya gönderimi sürerken başka bir sipariş DELIVERED olur. Bu işlemsel bildirim yüksek öncelikli kuyruğa girer ve kampanya partilerinin önüne geçer. Kampanyanın birkaç dakika gecikmesi sorun değildir; \"siparişiniz teslim edildi\" mesajının gecikmesi ise destek talebi demektir.",
+        "en": "While the campaign is being sent, another order becomes DELIVERED. This transactional notification enters the high-priority queue and jumps ahead of the campaign batches. A campaign arriving a few minutes late is fine; a late \"your order was delivered\" message means a support ticket."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["order", "notif", "push"], "edges": ["order-notif", "notif-push"] },
+      "nodeStates": { "order": { "status": "active", "badge": "DELIVERED" }, "notif": { "status": "active", "badge": "öncelik: yüksek" } },
+      "edgeStates": { "order-notif": { "status": "active" } },
+      "packets": [
+        { "edge": "order-notif", "shape": "envelope", "label": "DELIVERED", "color": "success", "durationMs": 800 },
+        { "edge": "notif-push", "shape": "envelope", "color": "success", "startAt": 900, "durationMs": 700 },
+        { "edge": "campaign-notif", "shape": "square", "startAt": 300, "repeat": 3, "repeatGapMs": 400, "durationMs": 700 }
+      ],
+      "annotations": [{ "id": "prio", "x": 480, "y": 360, "text": { "tr": "işlemsel > kampanya", "en": "transactional > campaign" }, "target": "notif", "tone": "info" }]
+    },
+    {
+      "id": "failure",
+      "title": { "tr": "Push başarısız: geri çekil, kanal değiştir", "en": "Push fails: back off, switch channel" },
+      "narration": {
+        "tr": "Sağlayıcı bazı push'lara geçici hata döndürür. Bildirim servisi üstel geri çekilmeyle yeniden dener; kalıcı hata alanları (geçersiz cihaz token'ı) DLQ'ya ayırır, kritik bildirimlerde SMS'e düşer. Kampanyada ise başarısız gönderimler sessizce atlanabilir: her bildirimin değeri aynı değildir.",
+        "en": "The provider returns transient errors for some pushes. The notification service retries with exponential backoff; it moves permanent failures (invalid device tokens) to a DLQ and falls back to SMS for critical notifications. For the campaign, failed sends may simply be dropped: not every notification is worth the same."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["push", "notif"], "edges": ["notif-push"] },
+      "nodeStates": { "order": { "status": "idle", "badge": "" }, "campaign": { "status": "idle" }, "push": { "status": "warning", "badge": "503" }, "notif": { "status": "warning", "badge": "retry 2 sn" } },
+      "edgeStates": { "order-notif": { "status": "idle" }, "campaign-notif": { "status": "idle" }, "notif-push": { "status": "error" } },
+      "packets": [
+        { "edge": "notif-push", "shape": "envelope", "color": "danger", "durationMs": 700 },
+        { "edge": "notif-push", "shape": "envelope", "color": "success", "startAt": 2000, "durationMs": 700 }
+      ]
+    }
+  ]
+}

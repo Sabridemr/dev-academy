@@ -15,6 +15,7 @@ export const tr = {
     register: 'Kayıt ol',
     logout: 'Çıkış',
     profile: 'Profil',
+    glossary: 'Sözlük',
   },
   theme: { light: 'Açık', dark: 'Koyu', system: 'Sistem' },
   home: {
@@ -117,6 +118,14 @@ export const tr = {
       },
     },
     loginRequired: 'Bu işlem için giriş yapmalısın.',
+  },
+  exercise: {
+    role: 'Kodlama alıştırması',
+    starter: 'Başlangıç kodu',
+    webOnly:
+      'Kodu çalıştırmak ve testleri geçmek için alıştırmayı web’de aç: Python tarayıcıda çalışır, mobilde henüz yok.',
+    openOnWeb: 'Web’de çöz',
+    hints: '{count} ipucu web’de',
   },
   trace: {
     role: 'Kod simülasyonu',
@@ -384,6 +393,18 @@ export const tr = {
     server: 'Sunucuda bir sorun oluştu. Biraz sonra tekrar dene.',
     notFound: 'İçerik bulunamadı.',
     unknown: 'Beklenmeyen bir hata oluştu.',
+  },
+  glossary: {
+    title: 'Kavram sözlüğü',
+    searchPlaceholder: 'Kavram, kısaltma ya da tanımda ara…',
+    resultCount: '{count} kavram',
+    empty: 'Aramana uyan kavram yok.',
+    lessonCount: '{count} derste',
+    aliases: 'Diğer adlar',
+    lessonsTitle: 'Geçtiği dersler',
+    noLessons: 'Bu kavram henüz yayındaki bir derste geçmiyor.',
+    relatedTitle: 'İlgili kavramlar',
+    lessonConcepts: 'Bu dersteki kavramlar',
   },
   common: {
     loading: 'Yükleniyor…',

@@ -1,0 +1,187 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "dunder-dagitimi",
+  "title": { "tr": "Operatörler dunder metotlara nasıl dağıtılır?", "en": "How operators are dispatched to dunder methods" },
+  "summary": {
+    "tr": "v1 + v2'nin Vektor.__add__'e, 3 * v'nin önce int.__mul__'a sonra NotImplemented üzerine Vektor.__rmul__'a gitmesi, iki tarafın da reddettiği durumda TypeError ve print/== çağrılarının __repr__/__eq__'ye yönlenmesi.",
+    "en": "v1 + v2 going to Vektor.__add__, 3 * v going first to int.__mul__ and then, on NotImplemented, to Vektor.__rmul__, a TypeError when both sides refuse, and print/== being routed to __repr__/__eq__."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda ifadeyi yazan kod, ortada Python yorumlayıcısı, sağ üstte int sınıfı, sağ altta Vektor sınıfı, ortanın altında sonuç kutusu bulunur. v1 + v2 ifadesi yorumlayıcı tarafından Vektor.__add__(v1, v2) çağrısına çevrilir ve yeni bir Vektor döner. 3 * v ifadesinde yorumlayıcı önce sol işlenenin metodu int.__mul__'ı dener; int bu türü tanımadığı için NotImplemented döner. Yorumlayıcı bunun üzerine sağ işlenenin ters metodu Vektor.__rmul__(v, 3)'ü çağırır ve sonuç alır. v + 'a' gibi iki tarafın da NotImplemented döndürdüğü durumda yorumlayıcı TypeError fırlatır. Son adımda print(v) __str__ olmadığı için __repr__'a, v1 == v2 ise __eq__'ye yönlenir.",
+      "en": "On the left the code writing the expression, in the middle the Python interpreter, at the top right the int class, at the bottom right the Vektor class, and below the middle a result box. The interpreter turns v1 + v2 into a Vektor.__add__(v1, v2) call and a new Vektor comes back. For 3 * v the interpreter first tries the left operand's method int.__mul__; int does not know this type and returns NotImplemented. The interpreter then calls the right operand's reflected method Vektor.__rmul__(v, 3) and gets a result. When both sides return NotImplemented, as in v + 'a', the interpreter raises TypeError. In the last step print(v) is routed to __repr__ because there is no __str__, and v1 == v2 goes to __eq__."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "code", "kind": "client", "label": { "tr": "Kod", "en": "Code" }, "sublabel": "v1 + v2", "x": 130, "y": 300, "w": 170, "h": 80 },
+    { "id": "interp", "kind": "service", "label": { "tr": "Yorumlayıcı", "en": "Interpreter" }, "sublabel": { "tr": "operatörü çözer", "en": "resolves the operator" }, "x": 430, "y": 300, "w": 190, "h": 80 },
+    { "id": "int", "kind": "service", "label": { "tr": "int sınıfı", "en": "int class" }, "sublabel": "__mul__, __add__", "x": 790, "y": 130, "w": 190, "h": 70 },
+    { "id": "vek", "kind": "service", "label": { "tr": "Vektor sınıfı", "en": "Vektor class" }, "sublabel": "__add__ __mul__ __rmul__ __repr__ __eq__", "x": 790, "y": 360, "w": 260, "h": 80 },
+    { "id": "res", "kind": "storage", "label": { "tr": "Sonuç", "en": "Result" }, "sublabel": "—", "x": 430, "y": 510, "w": 200, "h": 70 }
+  ],
+  "edges": [
+    { "id": "e-expr", "from": "code", "to": "interp", "kind": "request" },
+    { "id": "e-int", "from": "interp", "to": "int", "kind": "control", "label": { "tr": "sol işlenen", "en": "left operand" } },
+    { "id": "e-vek", "from": "interp", "to": "vek", "kind": "control", "label": { "tr": "metot çağrısı", "en": "method call" } },
+    { "id": "e-new", "from": "vek", "to": "res", "kind": "data", "curvature": 0.2 },
+    { "id": "e-err", "from": "interp", "to": "res", "kind": "data", "style": "dashed" }
+  ],
+  "steps": [
+    {
+      "id": "add-expr",
+      "title": { "tr": "v1 + v2 yazıldı", "en": "v1 + v2 is written" },
+      "narration": {
+        "tr": "`+` işaretinin kendisi hiçbir şey hesaplamaz. Yorumlayıcı ifadeyi görür ve sol işlenenin türüne bakar: `v1` bir `Vektor`.",
+        "en": "The `+` sign computes nothing by itself. The interpreter sees the expression and looks at the type of the left operand: `v1` is a `Vektor`."
+      },
+      "durationMs": 2800,
+      "inherit": false,
+      "highlight": { "nodes": ["code", "interp"], "edges": ["e-expr"] },
+      "nodeStates": { "code": { "status": "active" }, "interp": { "status": "active" } },
+      "packets": [{ "edge": "e-expr", "shape": "envelope", "label": "v1 + v2", "durationMs": 1100 }]
+    },
+    {
+      "id": "add-call",
+      "title": { "tr": "Vektor.__add__(v1, v2)", "en": "Vektor.__add__(v1, v2)" },
+      "narration": {
+        "tr": "`v1 + v2`, `type(v1).__add__(v1, v2)` çağrısına dönüşür: `self` sol işlenen, `diger` sağ işlenendir. Metot işlenenleri değiştirmez, **yeni** bir `Vektor` oluşturup döndürür.",
+        "en": "`v1 + v2` becomes the call `type(v1).__add__(v1, v2)`: `self` is the left operand, `diger` the right one. The method does not modify the operands; it creates and returns a **new** `Vektor`."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["interp", "vek", "res"], "edges": ["e-vek", "e-new"] },
+      "nodeStates": {
+        "vek": { "status": "success", "badge": "__add__" },
+        "res": { "status": "success", "sublabel": "Vektor(4, 6)" }
+      },
+      "packets": [
+        { "edge": "e-vek", "label": "__add__(v1, v2)", "durationMs": 1200 },
+        { "edge": "e-new", "shape": "diamond", "label": { "tr": "yeni nesne", "en": "new object" }, "startAt": 1300, "durationMs": 1100 }
+      ]
+    },
+    {
+      "id": "mul-expr",
+      "title": { "tr": "3 * v: sol işlenen int", "en": "3 * v: the left operand is an int" },
+      "narration": {
+        "tr": "Şimdi `3 * v`. Kural yine aynı: önce **sol işlenenin** metodu denenir. Sol işlenen `3`, yani yorumlayıcı `int.__mul__(3, v)` çağırır.",
+        "en": "Now `3 * v`. The rule is the same: the **left operand's** method is tried first. The left operand is `3`, so the interpreter calls `int.__mul__(3, v)`."
+      },
+      "durationMs": 3200,
+      "inherit": false,
+      "highlight": { "nodes": ["code", "interp", "int"], "edges": ["e-expr", "e-int"] },
+      "nodeStates": {
+        "code": { "status": "active", "sublabel": "3 * v" },
+        "interp": { "status": "active" },
+        "int": { "status": "active", "badge": "__mul__" }
+      },
+      "packets": [
+        { "edge": "e-expr", "shape": "envelope", "label": "3 * v", "durationMs": 1000 },
+        { "edge": "e-int", "label": "__mul__(3, v)", "startAt": 1100, "durationMs": 1100 }
+      ]
+    },
+    {
+      "id": "not-implemented",
+      "title": { "tr": "int: NotImplemented", "en": "int: NotImplemented" },
+      "narration": {
+        "tr": "`int` bir `Vektor` ile nasıl çarpılacağını bilmez. Hata fırlatmaz; özel bir değer olan `NotImplemented` döndürür. Bu \"ben yapamıyorum, karşı taraf denesin\" demektir.",
+        "en": "`int` does not know how to multiply with a `Vektor`. It does not raise an error; it returns the special value `NotImplemented`. That means \"I can't do it, let the other side try\"."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["int", "interp"], "edges": ["e-int"] },
+      "nodeStates": { "int": { "status": "warning", "badge": "NotImplemented" } },
+      "edgeStates": { "e-int": { "status": "error" } },
+      "packets": [{ "edge": "e-int", "direction": "backward", "shape": "square", "color": "warning", "label": "NotImplemented", "durationMs": 1200 }]
+    },
+    {
+      "id": "rmul",
+      "title": { "tr": "Ters metot: Vektor.__rmul__(v, 3)", "en": "Reflected method: Vektor.__rmul__(v, 3)" },
+      "narration": {
+        "tr": "`NotImplemented`'ı gören yorumlayıcı **sağ işlenenin ters metodunu** dener: `Vektor.__rmul__(v, 3)`. Bu kez `self` sağdaki vektördür. Metot sonucu döndürür ve ifade başarıyla tamamlanır.",
+        "en": "Seeing `NotImplemented`, the interpreter tries the **right operand's reflected method**: `Vektor.__rmul__(v, 3)`. This time `self` is the vector on the right. The method returns the result and the expression completes successfully."
+      },
+      "durationMs": 3800,
+      "highlight": { "nodes": ["interp", "vek", "res"], "edges": ["e-vek", "e-new"] },
+      "nodeStates": {
+        "int": { "status": "muted" },
+        "vek": { "status": "success", "badge": "__rmul__" },
+        "res": { "status": "success", "sublabel": "Vektor(3, 6)" }
+      },
+      "edgeStates": { "e-int": { "status": "muted" } },
+      "packets": [
+        { "edge": "e-vek", "label": "__rmul__(v, 3)", "durationMs": 1200 },
+        { "edge": "e-new", "shape": "diamond", "label": { "tr": "yeni nesne", "en": "new object" }, "startAt": 1300, "durationMs": 1100 }
+      ],
+      "annotations": [
+        { "id": "a-sum", "x": 160, "y": 470, "text": { "tr": "sum() da 0 + v ile başlar → __radd__", "en": "sum() also starts with 0 + v → __radd__" }, "target": "code" }
+      ]
+    },
+    {
+      "id": "both-refuse",
+      "title": { "tr": "İki taraf da reddederse: TypeError", "en": "If both sides refuse: TypeError" },
+      "narration": {
+        "tr": "`v + \"a\"` ifadesinde `Vektor.__add__` bir metinle ne yapacağını bilmediği için `NotImplemented` döner; `str`'nin de `__radd__` metodu yoktur. İki taraf da reddettiğinde yorumlayıcı `TypeError: unsupported operand type(s)` fırlatır. Bu yüzden `__add__` içinde kendin hata fırlatma, `NotImplemented` döndür.",
+        "en": "In `v + \"a\"` `Vektor.__add__` does not know what to do with a string and returns `NotImplemented`; `str` has no `__radd__` either. When both sides refuse, the interpreter raises `TypeError: unsupported operand type(s)`. That is why you should return `NotImplemented` from `__add__` instead of raising yourself."
+      },
+      "durationMs": 4200,
+      "inherit": false,
+      "highlight": { "nodes": ["interp", "vek", "res"], "edges": ["e-vek", "e-err"] },
+      "nodeStates": {
+        "code": { "status": "active", "sublabel": "v + \"a\"" },
+        "vek": { "status": "warning", "badge": "NotImplemented" },
+        "interp": { "status": "error" },
+        "res": { "status": "error", "sublabel": "TypeError" }
+      },
+      "edgeStates": { "e-err": { "status": "error" } },
+      "packets": [
+        { "edge": "e-vek", "label": "__add__(v, 'a')", "durationMs": 1000 },
+        { "edge": "e-vek", "direction": "backward", "shape": "square", "color": "warning", "label": "NotImplemented", "startAt": 1100, "durationMs": 1000 },
+        { "edge": "e-err", "shape": "square", "color": "danger", "label": "TypeError", "startAt": 2300, "durationMs": 1000 }
+      ]
+    },
+    {
+      "id": "repr",
+      "title": { "tr": "print(v): __str__ yoksa __repr__", "en": "print(v): __repr__ if there is no __str__" },
+      "narration": {
+        "tr": "Operatörler gibi yerleşik fonksiyonlar da dunder metotlara yönlenir. `print(v)` önce `__str__` arar; sınıfta yalnızca `__repr__` tanımlı olduğu için onu kullanır ve `Vektor(1, 2)` yazdırır.",
+        "en": "Built-in functions are routed to dunder methods just like operators. `print(v)` looks for `__str__` first; since the class defines only `__repr__`, it uses that and prints `Vektor(1, 2)`."
+      },
+      "durationMs": 3400,
+      "inherit": false,
+      "highlight": { "nodes": ["code", "interp", "vek"], "edges": ["e-expr", "e-vek"] },
+      "nodeStates": {
+        "code": { "status": "active", "sublabel": "print(v)" },
+        "vek": { "status": "success", "badge": "__repr__" },
+        "res": { "status": "success", "sublabel": "'Vektor(1, 2)'" }
+      },
+      "packets": [
+        { "edge": "e-expr", "shape": "envelope", "label": "print(v)", "durationMs": 900 },
+        { "edge": "e-vek", "label": "__str__? → __repr__", "startAt": 1000, "durationMs": 1100 },
+        { "edge": "e-new", "shape": "diamond", "label": "str", "startAt": 2200, "durationMs": 900 }
+      ]
+    },
+    {
+      "id": "eq",
+      "title": { "tr": "v1 == v2 → __eq__", "en": "v1 == v2 → __eq__" },
+      "narration": {
+        "tr": "`v1 == v2` de `v1.__eq__(v2)` çağrısıdır. Sınıf `__eq__` tanımlamasaydı `object`'ten gelen sürüm kimliği karşılaştırırdı (`is` gibi). Kendi `__eq__`'ni yazdığında Python `__hash__`'i `None` yapar; kümede kullanmak istiyorsan `__hash__`'i de birlikte düşün.",
+        "en": "`v1 == v2` is also a call: `v1.__eq__(v2)`. If the class did not define `__eq__`, the version from `object` would compare identities (like `is`). When you write your own `__eq__`, Python sets `__hash__` to `None`; if you want to use it in a set, think about `__hash__` too."
+      },
+      "durationMs": 3800,
+      "highlight": { "nodes": ["code", "interp", "vek", "res"], "edges": ["e-expr", "e-vek", "e-new"] },
+      "nodeStates": {
+        "code": { "status": "success", "sublabel": "v1 == v2" },
+        "vek": { "status": "success", "badge": "__eq__" },
+        "res": { "status": "success", "sublabel": "True" }
+      },
+      "packets": [
+        { "edge": "e-expr", "shape": "envelope", "label": "v1 == v2", "durationMs": 900 },
+        { "edge": "e-vek", "label": "__eq__(v1, v2)", "startAt": 1000, "durationMs": 1100 },
+        { "edge": "e-new", "shape": "diamond", "label": "True", "startAt": 2200, "durationMs": 900 }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["python", "dunder", "operator-overloading", "not-implemented"]
+}

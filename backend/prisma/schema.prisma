@@ -603,3 +603,20 @@ model ContentAsset {
   size      Int
   createdAt DateTime @default(now())
 }
+
+/* ============================ Kavram sözlüğü ============================ */
+
+/// content/concepts.json'dan seed ile gelir. Dersler ve quiz soruları kavramlara id ile işaret eder
+/// (`LessonVersion.concepts`, `Question.concepts`); kavramın geçtiği dersler sorgu anında hesaplanır.
+model Concept {
+  id         String   @id
+  /// { tr, en }
+  term       Json
+  /// { tr, en? }
+  definition Json
+  aliases    String[] @default([])
+  /// İlgili kavram id'leri
+  related    String[] @default([])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}

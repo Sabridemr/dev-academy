@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 450" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Python istisna hiyerarşisi</title>
+  <desc id="desc">Kökte BaseException var. Altında SystemExit, KeyboardInterrupt ve GeneratorExit ile Exception bulunur; ilk üçü Exception değildir, bu yüzden except Exception onları yakalamaz. Exception altında ArithmeticError (altında ZeroDivisionError), LookupError (altında IndexError ve KeyError), ValueError, TypeError ve OSError (altında FileNotFoundError ve PermissionError) yer alır. Bir except bloğu yazdığı sınıfı ve onun altındaki tüm sınıfları yakalar.</desc>
+  <rect x="20" y="200" width="975" height="190" rx="16" fill="var(--da-surface, #ffffff)" stroke="var(--da-primary, #6366f1)" stroke-dasharray="6 6"/>
+  <text x="35" y="222" font-size="13" fill="var(--da-primary, #6366f1)">except Exception: bu kutudaki her sınıfı yakalar</text>
+  <g stroke="var(--da-muted, #64748b)" stroke-width="1.6" fill="none">
+    <path d="M 500 70 L 500 95 L 110 95 L 110 120"/>
+    <path d="M 500 70 L 500 95 L 270 95 L 270 120"/>
+    <path d="M 500 70 L 500 95 L 430 95 L 430 120"/>
+    <path d="M 500 70 L 500 95 L 740 95 L 740 120"/>
+    <path d="M 740 160 L 740 195 L 110 195 L 110 230"/>
+    <path d="M 740 160 L 740 195 L 310 195 L 310 230"/>
+    <path d="M 740 160 L 740 195 L 490 195 L 490 230"/>
+    <path d="M 740 160 L 740 195 L 640 195 L 640 230"/>
+    <path d="M 740 160 L 740 195 L 840 195 L 840 230"/>
+    <path d="M 110 270 L 110 300 L 110 300 L 110 330"/>
+    <path d="M 310 270 L 310 300 L 255 300 L 255 330"/>
+    <path d="M 310 270 L 310 300 L 370 300 L 370 330"/>
+    <path d="M 840 270 L 840 300 L 760 300 L 760 330"/>
+    <path d="M 840 270 L 840 300 L 920 300 L 920 330"/>
+  </g>
+  <rect x="415" y="30" width="170" height="40" rx="9" fill="var(--da-surface, #ffffff)" stroke="var(--da-muted, #64748b)" stroke-width="1.5"/>
+  <text x="500" y="55" text-anchor="middle" font-size="14" fill="var(--da-fg, #0f172a)" font-weight="600">BaseException</text>
+  <rect x="45" y="120" width="130" height="40" rx="9" fill="var(--da-surface, #ffffff)" stroke="var(--da-accent, #f59e0b)" stroke-width="1.5"/>
+  <text x="110" y="145" text-anchor="middle" font-size="14" fill="var(--da-fg, #0f172a)">SystemExit</text>
+  <rect x="190" y="120" width="160" height="40" rx="9" fill="var(--da-surface, #ffffff)" stroke="var(--da-accent, #f59e0b)" stroke-width="1.5"/>
+  <text x="270" y="145" text-anchor="middle" font-size="14" fill="var(--da-fg, #0f172a)">KeyboardInterrupt</text>
+  <rect x="360" y="120" width="140" height="40" rx="9" fill="var(--da-surface, #ffffff)" stroke="var(--da-accent, #f59e0b)" stroke-width="1.5"/>
+  <text x="430" y="145" text-anchor="middle" font-size="14" fill="var(--da-fg, #0f172a)">GeneratorExit</text>
+  <rect x="670" y="120" width="140" height="40" rx="9" fill="var(--da-surface, #ffffff)" stroke="var(--da-primary, #6366f1)" stroke-width="2.4"/>
+  <text x="740" y="145" text-anchor="middle" font-size="14" fill="var(--da-fg, #0f172a)" font-weight="600">Exception</text>
+  <rect x="35" y="230" width="150" height="40" rx="9" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5"/>
+  <text x="110" y="255" text-anchor="middle" font-size="14" fill="var(--da-fg, #0f172a)">ArithmeticError</text>
+  <rect x="245" y="230" width="130" height="40" rx="9" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5"/>
+  <text x="310" y="255" text-anchor="middle" font-size="14" fill="var(--da-fg, #0f172a)">LookupError</text>
+  <rect x="430" y="230" width="120" height="40" rx="9" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5"/>
+  <text x="490" y="255" text-anchor="middle" font-size="14" fill="var(--da-fg, #0f172a)">ValueError</text>
+  <rect x="580" y="230" width="120" height="40" rx="9" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5"/>
+  <text x="640" y="255" text-anchor="middle" font-size="14" fill="var(--da-fg, #0f172a)">TypeError</text>
+  <rect x="785" y="230" width="110" height="40" rx="9" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5"/>
+  <text x="840" y="255" text-anchor="middle" font-size="14" fill="var(--da-fg, #0f172a)">OSError</text>
+  <rect x="25" y="330" width="170" height="40" rx="9" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5"/>
+  <text x="110" y="355" text-anchor="middle" font-size="14" fill="var(--da-fg, #0f172a)">ZeroDivisionError</text>
+  <rect x="200" y="330" width="110" height="40" rx="9" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5"/>
+  <text x="255" y="355" text-anchor="middle" font-size="14" fill="var(--da-fg, #0f172a)">IndexError</text>
+  <rect x="320" y="330" width="100" height="40" rx="9" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5"/>
+  <text x="370" y="355" text-anchor="middle" font-size="14" fill="var(--da-fg, #0f172a)">KeyError</text>
+  <rect x="680" y="330" width="160" height="40" rx="9" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5"/>
+  <text x="760" y="355" text-anchor="middle" font-size="14" fill="var(--da-fg, #0f172a)">FileNotFoundError</text>
+  <rect x="850" y="330" width="140" height="40" rx="9" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5"/>
+  <text x="920" y="355" text-anchor="middle" font-size="14" fill="var(--da-fg, #0f172a)">PermissionError</text>
+  <text x="270" y="185" text-anchor="middle" font-size="12" fill="var(--da-accent, #f59e0b)">sys.exit(), Ctrl+C, generator kapanışı: Exception değildir</text>
+  <g font-size="12" fill="var(--da-muted, #64748b)">
+    <text x="35" y="420">except LookupError: hem IndexError hem KeyError yakalanır</text>
+    <text x="35" y="440">Bozuk JSON: json.JSONDecodeError bir ValueError alt sınıfıdır</text>
+    <text x="600" y="420">except OSError: dosya ve izin hatalarını birlikte yakalar</text>
+  </g>
+</svg>

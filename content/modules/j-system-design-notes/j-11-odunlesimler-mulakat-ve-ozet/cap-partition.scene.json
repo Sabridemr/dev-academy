@@ -1,0 +1,161 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "j-11-cap-partition",
+  "title": { "tr": "Ağ Bölünmesinde İki Seçim: Ödeme CP, Restoran Listesi AP", "en": "Two Choices Under a Partition: Payments CP, Restaurant List AP" },
+  "summary": {
+    "tr": "İki bölge arasında ağ kopunca ödeme veritabanı yazmayı reddederek tutarlılığı, restoran listesi bayat da olsa yanıt vererek erişilebilirliği seçer; ödeme adımındaki yeniden kontrol bayatlığın zararını sınırlar, bölünme onarılınca kopyalar uzlaşır.",
+    "en": "When the network between two zones breaks, the payment database chooses consistency by rejecting writes while the restaurant list chooses availability by answering even if stale; the re-check at checkout limits the harm of staleness, and the copies reconcile once the partition heals."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda A bölgesi, sağda B bölgesi bulunur. A'da ödeme veritabanı lideri ve restoran listesinin A kopyası, B'de ödeme takipçisi ve restoran listesinin B kopyası vardır. Sol üstte restoran tableti A'ya, sağ üstte müşteri B'ye bağlıdır. Normalde B'ye gelen ödeme yazması lidere iletilir ve kopyalar senkronlanır. Ağ bölününce B'deki ödeme takipçisi lidere ulaşamadığı için ödemeyi reddeder, restoran listesi ise B'deki kopyadan yanıt vermeye devam eder. Restoran bir ürünü tükendi yapınca bu yalnızca A'ya yazılır, B bayat kalır. Bölünme onarılınca kopyalar eşitlenir.",
+      "en": "Zone A is on the left and zone B on the right. Zone A holds the payment database leader and copy A of the restaurant list; zone B holds the payment follower and copy B of the restaurant list. The restaurant tablet at the top left talks to A and the customer at the top right talks to B. Normally a payment write arriving at B is forwarded to the leader and the copies stay in sync. When the network partitions, the payment follower in B cannot reach the leader and rejects the payment, while the restaurant list keeps answering from copy B. When the restaurant marks an item sold out it is written only to A and B stays stale. When the partition heals the copies converge."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "rest", "kind": "mobile", "label": { "tr": "Restoran tableti", "en": "Restaurant tablet" }, "x": 120, "y": 70, "w": 150, "h": 60 },
+    { "id": "user", "kind": "mobile", "label": { "tr": "Müşteri", "en": "Customer" }, "x": 880, "y": 70, "w": 130, "h": 60 },
+    { "id": "za", "kind": "zone", "label": { "tr": "Bölge A", "en": "Zone A" }, "x": 270, "y": 365, "w": 360, "h": 390 },
+    { "id": "zb", "kind": "zone", "label": { "tr": "Bölge B", "en": "Zone B" }, "x": 730, "y": 365, "w": 360, "h": 390 },
+    { "id": "payL", "kind": "db", "label": { "tr": "Ödeme DB lideri", "en": "Payment DB leader" }, "sublabel": "CP", "x": 270, "y": 260, "w": 170, "h": 64, "parent": "za" },
+    { "id": "catA", "kind": "db", "label": { "tr": "Restoran listesi A", "en": "Restaurant list A" }, "sublabel": "AP", "x": 270, "y": 460, "w": 170, "h": 64, "parent": "za" },
+    { "id": "payF", "kind": "replica", "label": { "tr": "Ödeme DB takipçisi", "en": "Payment DB follower" }, "sublabel": "CP", "x": 730, "y": 260, "w": 170, "h": 64, "parent": "zb" },
+    { "id": "catB", "kind": "db", "label": { "tr": "Restoran listesi B", "en": "Restaurant list B" }, "sublabel": "AP", "x": 730, "y": 460, "w": 170, "h": 64, "parent": "zb" }
+  ],
+  "edges": [
+    { "id": "rest-catA", "from": "rest", "to": "catA", "kind": "request", "curvature": -0.2 },
+    { "id": "user-payF", "from": "user", "to": "payF", "kind": "request" },
+    { "id": "user-catB", "from": "user", "to": "catB", "kind": "request", "curvature": 0.2 },
+    { "id": "payL-payF", "from": "payL", "to": "payF", "kind": "replication", "bidirectional": true },
+    { "id": "catA-catB", "from": "catA", "to": "catB", "kind": "replication", "style": "dashed", "bidirectional": true }
+  ],
+  "steps": [
+    {
+      "id": "normal",
+      "title": { "tr": "Normal durum", "en": "Normal state" },
+      "narration": {
+        "tr": "Müşteri B bölgesine bağlıdır. Ödeme yazması B'deki takipçiye gelir, takipçi onu A'daki lidere iletir; lider commit edip değişikliği geri kopyalar. Restoran listesinin iki kopyası da birbirini asenkron günceller. Ağ sağlamken tutarlılık ile erişilebilirlik arasında seçim yapmak gerekmez.",
+        "en": "The customer is connected to zone B. A payment write arrives at the follower in B, which forwards it to the leader in A; the leader commits and replicates the change back. The two copies of the restaurant list update each other asynchronously. While the network is healthy there is no need to choose between consistency and availability."
+      },
+      "durationMs": 4000,
+      "inherit": false,
+      "highlight": { "nodes": ["user", "payF", "payL"], "edges": ["user-payF", "payL-payF", "catA-catB"] },
+      "nodeStates": { "payL": { "status": "active" }, "payF": { "status": "active" }, "catA": { "status": "success", "badge": "v12" }, "catB": { "status": "success", "badge": "v12" } },
+      "edgeStates": { "user-payF": { "status": "active" }, "payL-payF": { "status": "active" }, "catA-catB": { "status": "active" } },
+      "packets": [
+        { "edge": "user-payF", "shape": "envelope", "label": "pay 546 TL", "durationMs": 800 },
+        { "edge": "payL-payF", "direction": "backward", "shape": "envelope", "label": "forward", "startAt": 900, "durationMs": 900 },
+        { "edge": "payL-payF", "shape": "square", "label": "commit", "color": "success", "startAt": 1900, "durationMs": 900 }
+      ]
+    },
+    {
+      "id": "partition",
+      "title": { "tr": "Ağ bölünür", "en": "The network partitions" },
+      "narration": {
+        "tr": "İki bölge arasındaki bağlantı kopar. Her iki taraf da çalışıyor ama birbirini göremiyor. CAP'in sorusu tam burada başlar: bu süre boyunca gelen isteklere ya güncel olduğu kesin olmayan bir yanıt verilir (A), ya da yanıt reddedilir (C).",
+        "en": "The link between the two zones breaks. Both sides are running but cannot see each other. This is exactly where CAP's question begins: for requests arriving now you either answer with data that may not be current (A) or refuse to answer (C)."
+      },
+      "durationMs": 3500,
+      "highlight": { "nodes": ["za", "zb"], "edges": ["payL-payF", "catA-catB"] },
+      "nodeStates": { "payL": { "status": "idle" }, "payF": { "status": "warning", "badge": "lider yok" }, "catA": { "status": "idle" }, "catB": { "status": "idle" } },
+      "edgeStates": { "user-payF": { "status": "idle" }, "payL-payF": { "status": "error" }, "catA-catB": { "status": "error" } },
+      "annotations": [{ "id": "split", "x": 500, "y": 560, "text": { "tr": "ağ bölünmesi (P)", "en": "network partition (P)" }, "tone": "danger" }]
+    },
+    {
+      "id": "cp",
+      "title": { "tr": "Ödeme: tutarlılık seçilir (CP)", "en": "Payments: consistency is chosen (CP)" },
+      "narration": {
+        "tr": "Müşteri ödeme yapmaya çalışır. B'deki takipçi lidere ulaşamaz; yazmayı kendisi kabul ederse iki tarafta farklı bakiyeler oluşabilir. Bu yüzden isteği 503 ile reddeder ve uygulama \"biraz sonra tekrar deneyin\" der. Yanlış bir ödeme kaydındansa geçici bir hata daha ucuzdur.",
+        "en": "The customer tries to pay. The follower in B cannot reach the leader; if it accepted the write on its own, the two sides could end up with different balances. So it rejects the request with a 503 and the app says \"please try again shortly\". A temporary error is cheaper than a wrong payment record."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["user", "payF"], "edges": ["user-payF"] },
+      "nodeStates": { "payF": { "status": "error", "badge": "503" }, "user": { "status": "warning", "badge": "tekrar dene" } },
+      "edgeStates": { "user-payF": { "status": "error" } },
+      "packets": [
+        { "edge": "user-payF", "shape": "envelope", "label": "pay", "durationMs": 800 },
+        { "edge": "user-payF", "direction": "backward", "label": "503", "color": "danger", "startAt": 1100, "durationMs": 800 }
+      ]
+    },
+    {
+      "id": "ap",
+      "title": { "tr": "Restoran listesi: erişilebilirlik seçilir (AP)", "en": "Restaurant list: availability is chosen (AP)" },
+      "narration": {
+        "tr": "Aynı müşteri restoran listesini açar. B'deki kopya A'ya ulaşamasa da elindeki veriyle yanıt verir. Liste birkaç saniye eski olabilir, ama kullanıcı boş ekran yerine restoranları görür. Bu verinin bayatlığı para kaybettirmez.",
+        "en": "The same customer opens the restaurant list. Copy B answers with the data it has even though it cannot reach A. The list may be a few seconds old, but the user sees restaurants instead of an empty screen. Staleness in this data does not lose money."
+      },
+      "durationMs": 3500,
+      "highlight": { "nodes": ["user", "catB"], "edges": ["user-catB"] },
+      "nodeStates": { "user": { "status": "active", "badge": "" }, "catB": { "status": "success", "badge": "v12" } },
+      "edgeStates": { "user-payF": { "status": "idle" }, "user-catB": { "status": "active" } },
+      "packets": [
+        { "edge": "user-catB", "label": "GET /restaurants", "durationMs": 800 },
+        { "edge": "user-catB", "direction": "backward", "label": "200", "color": "success", "startAt": 1000, "durationMs": 800 }
+      ]
+    },
+    {
+      "id": "stale",
+      "title": { "tr": "Bayatlık oluşur", "en": "Staleness appears" },
+      "narration": {
+        "tr": "Bu sırada restoran lahmacunu \"tükendi\" yapar. Değişiklik A'daki kopyaya yazılır ama bölünme yüzünden B'ye ulaşamaz. B'ye bağlı müşteri lahmacunu hâlâ satılıyor görür: iki kopya ayrışmıştır.",
+        "en": "Meanwhile the restaurant marks lahmacun as \"sold out\". The change is written to copy A but cannot reach B because of the partition. The customer connected to B still sees lahmacun for sale: the two copies have diverged."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["rest", "catA", "catB"], "edges": ["rest-catA"] },
+      "nodeStates": { "catA": { "status": "success", "badge": "v13 tükendi" }, "catB": { "status": "warning", "badge": "v12 bayat" } },
+      "edgeStates": { "user-catB": { "status": "idle" }, "rest-catA": { "status": "active" } },
+      "packets": [{ "edge": "rest-catA", "shape": "envelope", "label": { "tr": "tükendi", "en": "sold out" }, "durationMs": 1000 }],
+      "annotations": [{ "id": "div", "x": 730, "y": 545, "text": { "tr": "kopyalar ayrıştı", "en": "copies diverged" }, "target": "catB", "tone": "warning" }]
+    },
+    {
+      "id": "recheck",
+      "title": { "tr": "Zarar kritik adımda kesilir", "en": "Harm is cut at the critical step" },
+      "narration": {
+        "tr": "Müşteri bayat listeden lahmacunu sepete ekleyebilir; bu kabul edilebilir. Ama sipariş ve ödeme adımı stok ve ürün durumunu asıl kaynaktan yeniden kontrol eder ve bu adım CP tarafta olduğu için bölünme sürerken zaten tamamlanamaz. Bayat okumaya izin vermek, bayat veriye göre para almak demek değildir.",
+        "en": "The customer may add lahmacun to the cart from the stale list; that is acceptable. But the order and payment step re-checks stock and item status against the source of truth, and since that step is on the CP side it cannot complete during the partition anyway. Allowing stale reads does not mean taking money based on stale data."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["user", "payF"], "edges": ["user-payF"] },
+      "nodeStates": { "rest": { "status": "idle" }, "user": { "status": "warning", "badge": "sepet ≠ sipariş" } },
+      "edgeStates": { "rest-catA": { "status": "idle" }, "user-payF": { "status": "error" } },
+      "packets": [
+        { "edge": "user-payF", "shape": "envelope", "label": "checkout", "durationMs": 800 },
+        { "edge": "user-payF", "direction": "backward", "label": "503", "color": "danger", "startAt": 1000, "durationMs": 800 }
+      ]
+    },
+    {
+      "id": "heal",
+      "title": { "tr": "Bölünme onarılır", "en": "The partition heals" },
+      "narration": {
+        "tr": "Bağlantı geri gelir. Ödeme takipçisi liderden eksik kayıtları çeker ve yeniden yazma kabul etmeye başlar. Restoran listesi kopyaları sürüm numarasına göre uzlaşır: B, v13'ü alır ve lahmacun tükendi görünür. Nihai tutarlılık, \"sonunda aynı\" demektir.",
+        "en": "The link comes back. The payment follower pulls missing records from the leader and starts accepting writes again. The restaurant list copies reconcile by version number: B takes v13 and lahmacun shows as sold out. Eventual consistency means \"the same in the end\"."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["payL", "payF", "catA", "catB"], "edges": ["payL-payF", "catA-catB"] },
+      "nodeStates": { "user": { "status": "idle", "badge": "" }, "payF": { "status": "success", "badge": "" }, "payL": { "status": "success" }, "catB": { "status": "success", "badge": "v13 tükendi" } },
+      "edgeStates": { "user-payF": { "status": "idle" }, "payL-payF": { "status": "active" }, "catA-catB": { "status": "active" } },
+      "packets": [
+        { "edge": "payL-payF", "shape": "square", "label": "sync", "durationMs": 1000 },
+        { "edge": "catA-catB", "shape": "square", "label": "v13", "startAt": 400, "durationMs": 1000 }
+      ]
+    },
+    {
+      "id": "lesson",
+      "title": { "tr": "Seçim veri türüne göre", "en": "The choice depends on the data" },
+      "narration": {
+        "tr": "Aynı sistemde iki farklı seçim yapıldı: para ve stok için CP, liste ve kurye konumu gibi verilerde AP. Mülakatta \"sistemim CP\" demek yerine \"ödeme yolu CP, keşif yolu AP; bayatlığı ödeme adımındaki yeniden kontrolle sınırlıyorum\" demek, ödünleşimi anladığınızı gösterir.",
+        "en": "Two different choices were made in the same system: CP for money and stock, AP for data such as listings and courier location. In an interview, instead of \"my system is CP\", saying \"the payment path is CP, the discovery path is AP, and I bound staleness with a re-check at checkout\" shows that you understand the trade-off."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["payL", "payF", "catA", "catB"], "edges": [] },
+      "nodeStates": { "payL": { "status": "idle" }, "payF": { "status": "idle" }, "catA": { "status": "idle", "badge": "" }, "catB": { "status": "idle", "badge": "" } },
+      "edgeStates": { "payL-payF": { "status": "idle" }, "catA-catB": { "status": "idle" } },
+      "annotations": [
+        { "id": "cp-note", "x": 500, "y": 200, "text": { "tr": "para, stok → CP", "en": "money, stock → CP" }, "tone": "info" },
+        { "id": "ap-note", "x": 500, "y": 520, "text": { "tr": "liste, konum → AP", "en": "listings, location → AP" }, "tone": "success" }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,209 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "j-04-order-saga",
+  "title": { "tr": "Sipariş Akışı: Stok Ayırma, Ödeme ve Telafi", "en": "Order Flow: Stock Reservation, Payment and Compensation" },
+  "summary": {
+    "tr": "Orkestratör sipariş servisi önce stoğu atomik koşullu UPDATE ile ayırır, sonra ödemeyi authorize eder ve OrderPlaced olayını yayınlar; ikinci siparişte ödeme reddedilince stok serbest bırakılıp sipariş iptal edilir.",
+    "en": "The orchestrating order service first reserves stock with an atomic conditional UPDATE, then authorizes payment and publishes OrderPlaced; on a second order the payment is declined, so the stock is released and the order cancelled."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda tarayıcı ve API gateway, ortada orkestratör rolündeki sipariş servisi bulunur. Sağda üç kol vardır: üstte stok servisi ve inventory veritabanı, ortada ödeme servisi ve ödeme sağlayıcısı, altta Kafka ve kargo servisi. İlk siparişte stok tek bir koşullu UPDATE ile ayrılır, kart bloke edilir, sipariş onaylanır ve OrderPlaced olayı Kafka üzerinden kargoya ulaşır. İkinci siparişte stok ayrılır ama ödeme sağlayıcısı kartı reddeder; sipariş servisi telafi adımı olarak stoğu geri bırakır ve siparişi iptal eder.",
+      "en": "The browser and the API gateway are on the left and the order service acting as orchestrator is in the middle. There are three branches on the right: the inventory service and the inventory database at the top, the payment service and the payment provider in the middle, and Kafka with the shipping service at the bottom. On the first order the stock is reserved with a single conditional UPDATE, the card is authorized, the order is confirmed and the OrderPlaced event reaches shipping through Kafka. On the second order stock is reserved but the provider declines the card; as a compensation the order service releases the stock and cancels the order."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "client", "kind": "browser", "label": { "tr": "Tarayıcı", "en": "Browser" }, "x": 80, "y": 300, "w": 110, "h": 64 },
+    { "id": "gw", "kind": "gateway", "label": "API Gateway", "x": 220, "y": 300, "w": 120, "h": 64 },
+    { "id": "order", "kind": "service", "label": { "tr": "Sipariş servisi", "en": "Order service" }, "sublabel": { "tr": "saga orkestratörü", "en": "saga orchestrator" }, "x": 400, "y": 300, "w": 150, "h": 76 },
+    { "id": "inv", "kind": "service", "label": { "tr": "Stok servisi", "en": "Inventory service" }, "x": 630, "y": 130, "w": 140, "h": 64 },
+    { "id": "invdb", "kind": "db", "label": "inventory", "sublabel": "available / reserved", "x": 860, "y": 130, "w": 150, "h": 64 },
+    { "id": "pay", "kind": "service", "label": { "tr": "Ödeme servisi", "en": "Payment service" }, "x": 630, "y": 300, "w": 140, "h": 64 },
+    { "id": "psp", "kind": "generic", "label": { "tr": "Ödeme sağlayıcı", "en": "Payment provider" }, "sublabel": "Stripe / iyzico", "x": 860, "y": 300, "w": 150, "h": 64 },
+    { "id": "kafka", "kind": "queue", "label": "Kafka", "sublabel": "orders", "x": 630, "y": 470, "w": 130, "h": 64 },
+    { "id": "ship", "kind": "service", "label": { "tr": "Kargo servisi", "en": "Shipping service" }, "x": 860, "y": 470, "w": 150, "h": 64 }
+  ],
+  "edges": [
+    { "id": "client-gw", "from": "client", "to": "gw", "kind": "request" },
+    { "id": "gw-order", "from": "gw", "to": "order", "kind": "request", "label": "POST /checkout" },
+    { "id": "order-inv", "from": "order", "to": "inv", "kind": "request", "curvature": -0.15 },
+    { "id": "inv-invdb", "from": "inv", "to": "invdb", "kind": "data" },
+    { "id": "order-pay", "from": "order", "to": "pay", "kind": "request" },
+    { "id": "pay-psp", "from": "pay", "to": "psp", "kind": "request" },
+    { "id": "order-kafka", "from": "order", "to": "kafka", "kind": "event", "curvature": 0.15 },
+    { "id": "kafka-ship", "from": "kafka", "to": "ship", "kind": "event" }
+  ],
+  "steps": [
+    {
+      "id": "checkout",
+      "title": { "tr": "Ödeme adımı başlar", "en": "Checkout starts" },
+      "narration": {
+        "tr": "Ali sepetteki son çam fıstığı paketini almak için ödeme adımına geçer. İstek gateway'den sipariş servisine bir idempotency anahtarıyla gelir. Sipariş PENDING durumunda oluşturulur; servisler arasında tek bir transaction olmadığından akışı adım adım sipariş servisi yönetecek.",
+        "en": "Ali proceeds to checkout to buy the last pack of pine nuts in his cart. The request reaches the order service through the gateway with an idempotency key. The order is created as PENDING; since there is no single transaction across services, the order service will drive the flow step by step."
+      },
+      "durationMs": 4000,
+      "inherit": false,
+      "highlight": { "nodes": ["client", "gw", "order"], "edges": ["client-gw", "gw-order"] },
+      "nodeStates": { "order": { "status": "active", "badge": "PENDING" }, "invdb": { "badge": "available 1" } },
+      "edgeStates": { "client-gw": { "status": "active" }, "gw-order": { "status": "active" } },
+      "packets": [
+        { "edge": "client-gw", "shape": "envelope", "label": "order#A", "durationMs": 900 },
+        { "edge": "gw-order", "shape": "envelope", "label": "order#A", "startAt": 1000, "durationMs": 900 }
+      ]
+    },
+    {
+      "id": "reserve",
+      "title": { "tr": "Stok atomik olarak ayrılır", "en": "Stock is reserved atomically" },
+      "narration": {
+        "tr": "Stok servisi tek sorgu çalıştırır: `UPDATE inventory SET available = available - 1, reserved = reserved + 1 WHERE sku = … AND available >= 1`. Bir satır güncellendi: rezervasyon 15 dakikalık süreyle yazılır. Aynı anda gelen ikinci alıcı 0 satır alır ve \"tükendi\" yanıtı görür; çift satış olmaz.",
+        "en": "The inventory service runs a single query: `UPDATE inventory SET available = available - 1, reserved = reserved + 1 WHERE sku = … AND available >= 1`. One row updated: the reservation is written with a 15-minute expiry. A second buyer arriving at the same time gets 0 rows and sees \"sold out\"; no double selling."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["inv", "invdb"], "edges": ["order-inv", "inv-invdb"] },
+      "nodeStates": {
+        "inv": { "status": "active" },
+        "invdb": { "status": "success", "badge": "RESERVED 15 dk" }
+      },
+      "edgeStates": { "client-gw": { "status": "idle" }, "gw-order": { "status": "idle" }, "order-inv": { "status": "active" }, "inv-invdb": { "status": "active" } },
+      "packets": [
+        { "edge": "order-inv", "shape": "envelope", "label": "reserve", "durationMs": 900 },
+        { "edge": "inv-invdb", "shape": "square", "label": "UPDATE … >= 1", "startAt": 1000, "durationMs": 900 },
+        { "edge": "inv-invdb", "direction": "backward", "label": "1 row", "color": "success", "startAt": 2100, "durationMs": 800 }
+      ],
+      "annotations": [{ "id": "last", "x": 860, "y": 40, "text": { "tr": "kontrol + yazma tek sorguda", "en": "check + write in one query" }, "target": "invdb" }]
+    },
+    {
+      "id": "authorize",
+      "title": { "tr": "Ödeme authorize edilir", "en": "Payment is authorized" },
+      "narration": {
+        "tr": "Sipariş servisi ödeme servisini aynı idempotency anahtarıyla çağırır. Kart verisi sisteme hiç girmez; ödeme sağlayıcısının verdiği token kullanılır. Para henüz çekilmez, yalnızca bloke edilir (authorize); çekim (capture) kargoya verilince yapılacak.",
+        "en": "The order service calls the payment service with the same idempotency key. Card data never enters the system; the token issued by the provider is used. Money is not taken yet, only held (authorize); the capture happens when the parcel ships."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["pay", "psp"], "edges": ["order-pay", "pay-psp"] },
+      "nodeStates": {
+        "inv": { "status": "idle" },
+        "pay": { "status": "active" },
+        "psp": { "status": "success", "badge": "auth OK" }
+      },
+      "edgeStates": { "order-inv": { "status": "idle" }, "inv-invdb": { "status": "idle" }, "order-pay": { "status": "active" }, "pay-psp": { "status": "active" } },
+      "packets": [
+        { "edge": "order-pay", "shape": "envelope", "label": "authorize", "durationMs": 900 },
+        { "edge": "pay-psp", "shape": "diamond", "label": "token", "startAt": 1000, "durationMs": 900 },
+        { "edge": "pay-psp", "direction": "backward", "label": "OK", "color": "success", "startAt": 2100, "durationMs": 800 }
+      ]
+    },
+    {
+      "id": "confirm",
+      "title": { "tr": "Onay ve OrderPlaced olayı", "en": "Confirmation and the OrderPlaced event" },
+      "narration": {
+        "tr": "Sipariş CONFIRMED olur ve aynı transaction'da outbox'a OrderPlaced yazılır; relay olayı Kafka'ya taşır. Kargo servisi olayı kendi hızında tüketip paketlemeyi planlar. Kullanıcı kargonun planlanmasını beklemez: yanıt hemen döner.",
+        "en": "The order becomes CONFIRMED and OrderPlaced is written to the outbox in the same transaction; the relay carries it to Kafka. The shipping service consumes the event at its own pace and plans packing. The user does not wait for shipping to be planned: the response returns at once."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["order", "kafka", "ship"], "edges": ["order-kafka", "kafka-ship", "gw-order"] },
+      "nodeStates": {
+        "pay": { "status": "idle" },
+        "order": { "status": "success", "badge": "CONFIRMED" },
+        "kafka": { "status": "active" },
+        "ship": { "status": "active", "badge": "paketle" },
+        "client": { "status": "success", "badge": "200" }
+      },
+      "edgeStates": { "order-pay": { "status": "idle" }, "pay-psp": { "status": "idle" }, "order-kafka": { "status": "active" }, "kafka-ship": { "status": "active" }, "gw-order": { "status": "active" } },
+      "packets": [
+        { "edge": "gw-order", "direction": "backward", "label": "200", "color": "success", "durationMs": 900 },
+        { "edge": "order-kafka", "shape": "envelope", "label": "OrderPlaced", "startAt": 300, "durationMs": 1000 },
+        { "edge": "kafka-ship", "shape": "envelope", "label": "OrderPlaced", "startAt": 1500, "durationMs": 1000 }
+      ]
+    },
+    {
+      "id": "second-order",
+      "title": { "tr": "İkinci sipariş: stok yine ayrılır", "en": "Second order: stock is reserved again" },
+      "narration": {
+        "tr": "Şimdi başka bir müşteri, stoğu bol bir ürün için sipariş verir. İlk iki adım aynıdır: sipariş PENDING olarak açılır, stok servisi koşullu UPDATE ile bir adet ayırır.",
+        "en": "Now another customer orders an item with plenty of stock. The first two steps are the same: the order opens as PENDING and the inventory service reserves one unit with the conditional UPDATE."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["order", "inv", "invdb"], "edges": ["order-inv", "inv-invdb"] },
+      "nodeStates": {
+        "client": { "status": "idle", "badge": "" },
+        "kafka": { "status": "idle" },
+        "ship": { "status": "idle", "badge": "" },
+        "psp": { "status": "idle", "badge": "" },
+        "order": { "status": "active", "badge": "PENDING #B" },
+        "inv": { "status": "active" },
+        "invdb": { "status": "success", "badge": "RESERVED #B" }
+      },
+      "edgeStates": { "order-kafka": { "status": "idle" }, "kafka-ship": { "status": "idle" }, "gw-order": { "status": "idle" }, "order-inv": { "status": "active" }, "inv-invdb": { "status": "active" } },
+      "packets": [
+        { "edge": "order-inv", "shape": "envelope", "label": "reserve", "durationMs": 900 },
+        { "edge": "inv-invdb", "shape": "square", "label": "1 row", "startAt": 1000, "durationMs": 900 }
+      ]
+    },
+    {
+      "id": "declined",
+      "title": { "tr": "Ödeme reddedilir", "en": "Payment is declined" },
+      "narration": {
+        "tr": "Ödeme sağlayıcısı kartı yetersiz bakiye nedeniyle reddeder. Stok servisi kendi yerel transaction'ını çoktan commit etti; geri almak için bir \"rollback\" yok. Saga burada ileri gitmeyi bırakır ve tamamlanmış adımları ters sırayla telafi etmeye başlar.",
+        "en": "The provider declines the card for insufficient funds. The inventory service has already committed its local transaction; there is no \"rollback\" to undo it. Here the saga stops moving forward and starts compensating the completed steps in reverse order."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["pay", "psp"], "edges": ["order-pay", "pay-psp"] },
+      "nodeStates": {
+        "inv": { "status": "idle" },
+        "pay": { "status": "error" },
+        "psp": { "status": "error", "badge": "DECLINED" }
+      },
+      "edgeStates": { "order-inv": { "status": "idle" }, "inv-invdb": { "status": "idle" }, "order-pay": { "status": "error" }, "pay-psp": { "status": "error" } },
+      "packets": [
+        { "edge": "pay-psp", "shape": "diamond", "label": "authorize", "durationMs": 900 },
+        { "edge": "pay-psp", "direction": "backward", "label": "DECLINED", "color": "danger", "startAt": 1000, "durationMs": 900 },
+        { "edge": "order-pay", "direction": "backward", "label": "failed", "color": "danger", "startAt": 2000, "durationMs": 900 }
+      ]
+    },
+    {
+      "id": "compensate",
+      "title": { "tr": "Telafi: stok serbest bırakılır", "en": "Compensation: stock is released" },
+      "narration": {
+        "tr": "Sipariş servisi telafi komutunu gönderir: stok servisi rezervasyonu siler ve `available` sayısını geri artırır. Telafi de idempotent olmalıdır; komut iki kez gelirse stok iki kez artmamalıdır. Rezervasyonun 15 dakikalık süresi, telafi hiç gelmese bile stoğu kurtaran ikinci emniyettir.",
+        "en": "The order service sends the compensating command: the inventory service deletes the reservation and increments `available` back. The compensation must be idempotent too; if the command arrives twice stock must not grow twice. The 15-minute reservation expiry is a second safety net that frees the stock even if the compensation never arrives."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["order", "inv", "invdb"], "edges": ["order-inv", "inv-invdb"] },
+      "nodeStates": {
+        "pay": { "status": "idle" },
+        "psp": { "status": "idle", "badge": "" },
+        "inv": { "status": "warning", "badge": "release" },
+        "invdb": { "status": "idle", "badge": "AVAILABLE" }
+      },
+      "edgeStates": { "order-pay": { "status": "idle" }, "pay-psp": { "status": "idle" }, "order-inv": { "status": "active" }, "inv-invdb": { "status": "active" } },
+      "packets": [
+        { "edge": "order-inv", "shape": "envelope", "label": "release #B", "color": "warning", "durationMs": 1000 },
+        { "edge": "inv-invdb", "shape": "square", "label": "available + 1", "color": "warning", "startAt": 1100, "durationMs": 1000 }
+      ]
+    },
+    {
+      "id": "cancel",
+      "title": { "tr": "Sipariş iptal, olay yayınlanır", "en": "Order cancelled, event published" },
+      "narration": {
+        "tr": "Son telafi adımı siparişin kendisidir: durum CANCELLED olur ve OrderCancelled olayı yayınlanır; kargo bu olayı görür ama yapacak işi yoktur, bildirim servisi kullanıcıyı bilgilendirir. Her adımın yerel transaction'ı ve bir telafisi olduğu için sistem tutarlı bir son duruma ulaştı.",
+        "en": "The last compensation is the order itself: its status becomes CANCELLED and an OrderCancelled event is published; shipping sees it but has nothing to do, and the notification service informs the user. Because every step has a local transaction and a compensation, the system reached a consistent final state."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["order", "kafka"], "edges": ["order-kafka", "gw-order"] },
+      "nodeStates": {
+        "inv": { "status": "idle", "badge": "" },
+        "order": { "status": "warning", "badge": "CANCELLED" },
+        "kafka": { "status": "active" },
+        "client": { "status": "warning", "badge": "402" }
+      },
+      "edgeStates": { "order-inv": { "status": "idle" }, "inv-invdb": { "status": "idle" }, "order-kafka": { "status": "active" }, "gw-order": { "status": "active" } },
+      "packets": [
+        { "edge": "order-kafka", "shape": "envelope", "label": "OrderCancelled", "durationMs": 1000 },
+        { "edge": "gw-order", "direction": "backward", "label": "402", "color": "warning", "startAt": 400, "durationMs": 900 }
+      ]
+    }
+  ]
+}

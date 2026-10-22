@@ -46,6 +46,13 @@ algoritma, n = 1.000 iken n² işlem yapan bir algoritmadan on kat hızlıdır; 
 n yalnızca 16 iken bile üstel ve karesel eğriler grafiğin dışına taşıyor; logaritmik eğri neredeyse yatay.
 :::
 
+Eğrilerin ardındaki sayıları somutlaştırmak için aşağıdaki sahnede aynı girdiyi adım adım büyütüp dört farklı
+algoritmanın yaptığı işlem sayısını yan yana sayıyoruz.
+
+:::animation{scene="buyume-siniflari.scene.json"}
+n her ikiye katlandığında O(log n) yalnızca bir adım ekler, O(n) iki katına, O(n²) dört katına çıkar.
+:::
+
 ## Altı temel büyüme sınıfı
 
 Günlük mühendislikte karşılaşacağın algoritmaların büyük çoğunluğu aşağıdaki altı sınıftan birine düşer. Her birini

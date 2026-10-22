@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 440" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">LEGB: iç içe dört kapsam</title>
+  <desc id="desc">İç içe dört dikdörtgen: en dışta Built-in, içinde Global (modül), onun içinde Enclosing (dış fonksiyon), en içte Local (çalışan fonksiyon). Bir isim içten dışa doğru aranır ve ilk bulunduğu yerde durulur; hiçbirinde yoksa NameError oluşur.</desc>
+  <defs>
+    <marker id="k07-ok" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-primary, #6366f1)"/>
+    </marker>
+  </defs>
+
+  <!-- B -->
+  <rect x="20" y="20" width="560" height="400" rx="18" fill="var(--da-surface, #f8fafc)" stroke="var(--da-border, #cbd5e1)" stroke-width="1.5"/>
+  <text x="40" y="50" font-size="15" font-weight="700" fill="var(--da-muted, #64748b)">B · Built-in</text>
+  <text x="40" y="70" font-size="12" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" fill="var(--da-muted, #64748b)">print  len  range  ValueError</text>
+
+  <!-- G -->
+  <rect x="50" y="85" width="500" height="320" rx="16" fill="var(--da-accent, #f59e0b)" fill-opacity="0.08" stroke="var(--da-accent, #f59e0b)" stroke-width="1.5"/>
+  <text x="70" y="113" font-size="15" font-weight="700" fill="var(--da-accent, #f59e0b)">G · Global (modül)</text>
+  <text x="70" y="133" font-size="12" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" fill="var(--da-fg, #0f172a)">x = "global"   def dis(): ...</text>
+
+  <!-- E -->
+  <rect x="80" y="150" width="440" height="235" rx="14" fill="var(--da-success, #10b981)" fill-opacity="0.08" stroke="var(--da-success, #10b981)" stroke-width="1.5"/>
+  <text x="100" y="178" font-size="15" font-weight="700" fill="var(--da-success, #10b981)">E · Enclosing (dis fonksiyonu)</text>
+  <text x="100" y="198" font-size="12" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" fill="var(--da-fg, #0f172a)">x = "dis"   def ic(): ...</text>
+
+  <!-- L -->
+  <rect x="110" y="215" width="380" height="150" rx="12" fill="var(--da-primary, #6366f1)" fill-opacity="0.1" stroke="var(--da-primary, #6366f1)" stroke-width="2"/>
+  <text x="130" y="243" font-size="15" font-weight="700" fill="var(--da-primary, #6366f1)">L · Local (ic fonksiyonu)</text>
+  <text x="130" y="270" font-size="13" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" fill="var(--da-fg, #0f172a)">print(x)   # x nerede?</text>
+  <text x="130" y="296" font-size="12" fill="var(--da-muted, #64748b)">parametreler ve burada atanan isimler</text>
+  <text x="130" y="340" font-size="12" fill="var(--da-muted, #64748b)">Atama varsa isim burada yerel sayılır;</text>
+  <text x="130" y="356" font-size="12" fill="var(--da-muted, #64748b)">dışarıyı değiştirmek için nonlocal / global.</text>
+
+  <!-- Arama sırası -->
+  <text x="620" y="45" font-size="15" font-weight="700" fill="var(--da-fg, #0f172a)">İsim arama sırası</text>
+  <g font-size="14" fill="var(--da-fg, #0f172a)">
+    <rect x="620" y="80" width="250" height="44" rx="10" fill="var(--da-primary, #6366f1)" fill-opacity="0.1" stroke="var(--da-primary, #6366f1)"/>
+    <text x="640" y="107">1. Local</text>
+    <rect x="620" y="150" width="250" height="44" rx="10" fill="var(--da-success, #10b981)" fill-opacity="0.1" stroke="var(--da-success, #10b981)"/>
+    <text x="640" y="177">2. Enclosing (closure hücreleri)</text>
+    <rect x="620" y="220" width="250" height="44" rx="10" fill="var(--da-accent, #f59e0b)" fill-opacity="0.1" stroke="var(--da-accent, #f59e0b)"/>
+    <text x="640" y="247">3. Global</text>
+    <rect x="620" y="290" width="250" height="44" rx="10" fill="var(--da-surface, #f8fafc)" stroke="var(--da-border, #cbd5e1)"/>
+    <text x="640" y="317">4. Built-in</text>
+    <rect x="620" y="360" width="250" height="44" rx="10" fill="var(--da-danger, #ef4444)" fill-opacity="0.1" stroke="var(--da-danger, #ef4444)"/>
+    <text x="640" y="387" fill="var(--da-danger, #ef4444)">Hiçbiri: NameError</text>
+  </g>
+  <g stroke="var(--da-primary, #6366f1)" stroke-width="1.8" fill="none" marker-end="url(#k07-ok)">
+    <path d="M 745 124 L 745 148"/>
+    <path d="M 745 194 L 745 218"/>
+    <path d="M 745 264 L 745 288"/>
+    <path d="M 745 334 L 745 358"/>
+  </g>
+  <text x="620" y="68" font-size="12" fill="var(--da-muted, #64748b)">ilk bulunduğu yerde durur</text>
+</svg>

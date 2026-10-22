@@ -65,6 +65,23 @@ describe('içerik doğrulayıcı', () => {
     expect(errors()).toEqual([]);
   });
 
+  it('öznitelik değerinde } olan directive satırını hata sayar', () => {
+    const dir = fixture();
+    const md = join(dir, 'lesson.md');
+    const src = readFileSync(md, 'utf8');
+    writeFileSync(
+      md,
+      src.replace(
+        /:::diagram\{[^}]*\}/,
+        ':::diagram{src="diagram.svg" alt="Sayaç {A:6, B:2}|Counter"}',
+      ),
+    );
+    const errs = errors();
+    expect(errs.some((e) => e.message.includes('directive açılış satırı ayrıştırılamadı'))).toBe(
+      true,
+    );
+  });
+
   it('simülatörün okumadığı interaktif parametreyi hata sayar', () => {
     const dir = fixture();
     const md = join(dir, 'lesson.md');
@@ -78,6 +95,30 @@ describe('içerik doğrulayıcı', () => {
     expect(errors().map((e) => e.message)).toEqual([
       expect.stringContaining('bilinmeyen parametre: healthChecks'),
     ]);
+  });
+
+  it('predict-run iz dosyası yoksa ya da src verilmemişse hata verir', () => {
+    const dir = fixture();
+    const md = join(dir, 'lesson.md');
+    const original = readFileSync(md, 'utf8');
+    writeFileSync(
+      md,
+      original.replace(
+        ':::quiz{',
+        ':::interactive{type="predict-run" src="yok.trace.json"}\nTahmin et.\n:::\n\n:::quiz{',
+      ),
+    );
+    expect(errors().map((e) => e.message)).toEqual([
+      expect.stringContaining('iz dosyası bulunamadı ya da geçersiz: yok.trace.json'),
+    ]);
+    writeFileSync(
+      md,
+      original.replace(
+        ':::quiz{',
+        ':::interactive{type="predict-run"}\nTahmin et.\n:::\n\n:::quiz{',
+      ),
+    );
+    expect(errors().map((e) => e.message)).toEqual([expect.stringContaining('src parametresi')]);
   });
 
   it('3 sorudan az quiz hata verir', () => {
@@ -238,5 +279,76 @@ describe('içerik doğrulayıcı: ders görselleri', () => {
     expect(messages).toContainEqual(
       expect.stringContaining('Diyagram dosyası bulunamadı: yok.jpg'),
     );
+  });
+});
+
+describe('kavram sözlüğü', () => {
+  const entry = (related: string[] = []) => ({
+    term: { tr: 'Terim', en: 'Term' },
+    definition: { tr: 'Tanım.' },
+    related,
+  });
+  const lessonConcepts = (): string[] => {
+    const md = readFileSync(join(REAL, 'modules', MODULE, LESSON, 'lesson.md'), 'utf8');
+    const quiz = JSON.parse(
+      readFileSync(join(REAL, 'modules', MODULE, LESSON, 'quiz.json'), 'utf8'),
+    ) as { questions: { concepts?: string[] }[] };
+    const fm = md.match(/^concepts:\s*\[(.*)\]/m)?.[1] ?? '';
+    return [
+      ...new Set([
+        ...fm
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean),
+        ...quiz.questions.flatMap((q) => q.concepts ?? []),
+      ]),
+    ];
+  };
+  const writeGlossary = (glossary: unknown) =>
+    writeFileSync(join(root, 'concepts.json'), JSON.stringify(glossary));
+
+  it('derste geçen tüm kavramlar tanımlıysa sözlük sorunu yok', () => {
+    fixture();
+    writeGlossary(Object.fromEntries(lessonConcepts().map((c) => [c, entry()])));
+    const content = loadContent(root);
+    expect(content.issues.filter((i) => i.file === 'concepts.json')).toEqual([]);
+    expect(Object.keys(content.glossary ?? {})).toHaveLength(lessonConcepts().length);
+  });
+
+  it('sözlükte olmayan kavram hata, hiçbir derste geçmeyen kavram uyarı', () => {
+    fixture();
+    const [missing, ...rest] = lessonConcepts();
+    writeGlossary({
+      ...Object.fromEntries(rest.map((c) => [c, entry()])),
+      'kullanilmayan-kavram': entry(),
+    });
+    const issues = loadContent(root).issues;
+    expect(issues.filter((i) => i.severity === 'error').map((i) => i.message)).toEqual([
+      `Kavram sözlükte yok: ${missing} (modules/${MODULE}/${LESSON}/lesson.md)`,
+    ]);
+    expect(issues).toContainEqual({
+      severity: 'warning',
+      file: 'concepts.json',
+      message: 'Kavram hiçbir derste ya da quizde geçmiyor: kullanilmayan-kavram',
+    });
+  });
+
+  it('bilinmeyen ya da kendine işaret eden related hata verir', () => {
+    fixture();
+    const [first = '', ...rest] = lessonConcepts();
+    writeGlossary({
+      [first]: entry(['yok-boyle-kavram', first]),
+      ...Object.fromEntries(rest.map((c) => [c, entry()])),
+    });
+    expect(errors().map((e) => e.message)).toEqual([
+      expect.stringContaining('bilinmeyen kavrama işaret ediyor: yok-boyle-kavram'),
+      expect.stringContaining('kendisine işaret ediyor'),
+    ]);
+  });
+
+  it('şemaya uymayan sözlük hata verir', () => {
+    fixture();
+    writeGlossary({ ttl: { term: { tr: 'TTL' }, definition: { tr: 'x' } } });
+    expect(errors().map((e) => e.message)).toEqual([expect.stringContaining('term.en')]);
   });
 });

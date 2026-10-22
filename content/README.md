@@ -5,6 +5,7 @@ Tüm dersler bu klasörde **Markdown + JSON** olarak tutulur. Backend seed scrip
 ```
 content/
   paths.json                                  → öğrenme yolları
+  concepts.json                               → kavram sözlüğü
   modules/<module-id>/module.json             → modül bilgisi
   modules/<module-id>/<lesson-id>/
       lesson.md                               → ders (frontmatter + Markdown + directive blokları)
@@ -13,6 +14,7 @@ content/
       quiz.json                               → quiz
       *.svg                                   → diyagramlar
       <ad>.trace.py → <ad>.trace.json         → kod simülasyonu (kaynak + üretilmiş iz)
+      <ad>.exercise.json                      → kodlama alıştırması (görev, starter, testler, çözüm)
 ```
 
 Modül ve ders kimlikleri `packages/shared/src/content/curriculum.ts` içindeki müfredattan gelir. Klasör adı = `lesson id` olmalıdır (ör. `a-05-load-balancing`).
@@ -74,6 +76,10 @@ info | tip | warning | danger
 İsteğe bağlı yönerge
 :::
 
+:::exercise{src="ornek.exercise.json"}
+İsteğe bağlı yönerge (görev metninin üstünde gösterilir)
+:::
+
 :::quiz{src="quiz.json"}
 :::
 
@@ -130,9 +136,13 @@ Dersin sonunda (quiz'den sonra) öğrencinin konuyu derinleştirebileceği dış
 
 ### Interaktif türleri
 
-`load-balancer`, `cache`, `rate-limiter`, `consistent-hashing`, `gradient-descent`, `attention`, `neural-network-playground`, `capacity-estimator`, `er-diagram`, `cap-theorem`, `scaling`, `message-queue`, `replication-quorum`, `index-query-plan`, `isolation-levels`, `k-means`, `decision-tree`, `convolution`, `tokenizer`, `embedding-space`, `pipeline`, `kubernetes-hpa`, `request-journey`, `traffic-wave`, `fan-out`, `geo-index`, `sorting-visualizer`, `graph-traversal`, `hash-table`, `big-o-plotter`, `rag-pipeline`, `prompt-playground`, `token-cost`, `oauth-flow`, `jwt-inspector`, `bruteforce-login`, `git-graph`
+`load-balancer`, `cache`, `rate-limiter`, `consistent-hashing`, `gradient-descent`, `attention`, `neural-network-playground`, `capacity-estimator`, `er-diagram`, `cap-theorem`, `scaling`, `message-queue`, `replication-quorum`, `index-query-plan`, `isolation-levels`, `k-means`, `decision-tree`, `convolution`, `tokenizer`, `embedding-space`, `pipeline`, `kubernetes-hpa`, `request-journey`, `traffic-wave`, `fan-out`, `geo-index`, `sorting-visualizer`, `graph-traversal`, `hash-table`, `big-o-plotter`, `rag-pipeline`, `prompt-playground`, `token-cost`, `oauth-flow`, `jwt-inspector`, `bruteforce-login`, `git-graph`, `dp-table`, `heap`, `stack-queue`, `python-memory`, `predict-run`, `sql-playground`, `docker-layers`, `rbac-abac`, `threat-model`, `hash-salt`, `regex-playground`
 
 Her türün web ve mobilde bir bileşeni vardır; ek öznitelikler `params` olarak bileşene geçirilir.
+
+- `python-memory`: isim → nesne → referans modelini adım adım gösteren mini Python yorumlayıcısı; `scenario` = `aliasing` | `shallow-vs-deep` | `immutable-rebind` | `function-args` | `refcount-gc` (kullanıcı kodu da düzenleyebilir).
+- `predict-run`: `src` aynı ders klasöründeki bir `*.trace.json` dosyasıdır (ör. `:::interactive{type="predict-run" src="faktoriyel.trace.json"}`). İz, `:::trace` ile aynı yoldan doğrulanır ve seed sırasında bloğa gömülür; sorular izden otomatik üretilir.
+- Mobilde bileşeni olmayan türler (ör. bu ikisi) için başlık ve yönergeyle birlikte "Web'de aç" kartı gösterilir.
 
 ## Animasyon sahnesi (`*.scene.json`)
 
@@ -171,6 +181,38 @@ Her türün web ve mobilde bir bileşeni vardır; ek öznitelikler `params` olar
 
 Soru tipleri: `single`, `multiple`, `truefalse`, `order`. Her derste 3–6 soru bulunmalıdır (genellikle 5); doğrulayıcı bu aralığın dışını hata sayar. `concepts` alanı yanlış cevaplarda tekrar listesine (spaced repetition) eklenecek kavramı belirler.
 
+## Sözlük (`concepts.json`)
+
+Frontmatter'daki `concepts` listesi ve quiz sorularındaki `concepts` alanı, `content/concepts.json` sözlüğündeki
+kimliklere işaret eder. Sözlük web'de `/glossary` sayfasında, ders başlığının altındaki "Bu dersteki kavramlar"
+çiplerinde ve mobilde sözlük ekranında gösterilir; API `GET /concepts?q=` ve `GET /concepts/:id` ile sunar.
+
+```json
+{
+  "round-robin": {
+    "term": { "tr": "Round-robin (sırayla dağıtım)", "en": "Round-robin" },
+    "definition": { "tr": "Gelen istekleri sunucu listesinde sırayla dolaşarak dağıtan yük dengeleme algoritması. …" },
+    "aliases": ["RR"],
+    "related": ["weighted-round-robin", "least-connections", "load-balancer"]
+  }
+}
+```
+
+- Anahtar kebab-case kavram id'sidir (frontmatter'da yazıldığı gibi). Dosya anahtar sırasına göre alfabetik tutulur.
+- `term.tr` ve `term.en` zorunludur. Sektörde İngilizce terim yerleşmişse `term.tr` onu kullanır, gerekirse parantezde
+  Türkçe karşılık verir ("Cache-aside (tembel yükleme)").
+- `definition.tr` 1–3 cümlelik özgün, doğru bir tanımdır: kavramın ne olduğu ve neden/ne zaman önemli olduğu.
+  Kavram birden çok anlamda kullanılabiliyorsa (ör. `panel`, `state`, `needs`) geçtiği dersteki anlam yazılır.
+  `definition.en` opsiyoneldir; yoksa İngilizce arayüzde Türkçe tanım gösterilir.
+- `aliases` (opsiyonel): kısaltmalar ve eş anlamlılar; aramada kullanılır.
+- `related` (opsiyonel): ilgili kavram id'leri. Yakın eş kimlikler (ör. `pubsub` / `pub-sub`) birbirini göstermelidir.
+- Kavramın geçtiği dersler dosyada tutulmaz; yayındaki derslerden hesaplanır (`buildConceptIndex`).
+
+Doğrulayıcı kuralları: derste ya da quizde geçip sözlükte olmayan kavram **hata**, sözlükte olup hiçbir derste
+geçmeyen kavram **uyarı** (`--strict` ile hata), `related` içinde bilinmeyen ya da kendine işaret eden id **hata**.
+Yeni bir kavram kullanan dersi eklerken tanımını da sözlüğe ekleyin. JSON şeması:
+`packages/shared/schema/concepts.schema.json`.
+
 ## SVG diyagramlar
 
 - `viewBox` zorunlu, sabit `width/height` kullanmayın (responsive).
@@ -197,6 +239,46 @@ pnpm content:traces   # tüm <ad>.trace.py dosyalarından <ad>.trace.json üreti
 - Üretilen iz kaynağın SHA-256 özetini taşır; kaynak değişip iz yeniden üretilmediyse doğrulayıcı hata verir.
 - Kod kısa olsun (≤ 25 satır, en fazla 300 adım). `input()`, rastgelelik, thread ve gerçek dosya yazma kullanmayın.
 - Üretici: `packages/shared/scripts/python-trace/tracer.py` (testleri: `python3 -m unittest discover -s packages/shared/scripts/python-trace`).
+
+## Kodlama alıştırmaları (`*.exercise.json`)
+
+"Şu fonksiyonu tamamla, testler geçsin" türü alıştırma. Web'de kod **tarayıcıda** çalışır: Python, Pyodide
+(WebAssembly CPython) ile bir Web Worker içinde yürütülür; **sunucuya kod gönderilmez**. Mobilde Pyodide yoktur:
+görev ve başlangıç kodu gösterilir, "Web'de çöz" dersi web'de açar.
+
+```json
+{
+  "id": "k-06-varsayilan-arguman-hatasi",
+  "title": { "tr": "Türkçe başlık", "en": "English title" },
+  "language": "python",
+  "prompt": { "tr": "Markdown görev açıklaması", "en": "Markdown task" },
+  "starter": "def toplam(xs):\n    ...\n",
+  "solution": "def toplam(xs):\n    return sum(xs)\n",
+  "tests": "assert toplam([1, 2, 3]) == 6\nassert toplam([]) == 0\n",
+  "hints": [{ "tr": "İpucu", "en": "Hint" }],
+  "timeoutMs": 5000
+}
+```
+
+- `id` kebab-case ve **tüm içerikte benzersiz** olmalı (`<ders-kodu>-<ad>` önerilir). Şema:
+  `packages/shared/schema/exercise.schema.json`.
+- **Testler** kullanıcı kodundan sonra aynı ad alanında çalışır; hata fırlatmadan biterse alıştırma geçilmiş sayılır.
+  3–6 `assert` yazın; mesajlı assert (`assert x == 1, "neden"`) kullanıcıya hangi kuralın bozulduğunu söyler.
+  Başarısız test satırı çıktı panelinde gösterilir.
+- **starter** derlenebilir olmalı ama testleri **geçmemeli**; **solution** testleri 5 sn içinde geçmeli. Bunu
+  `pnpm content:exercises` gerçekten çalıştırarak sınar (`python3 -I -c "<solution>\n<tests>"`, CI'da da çalışır).
+  `pnpm content:validate` yalnızca yapıyı doğrular (şema, starter ≠ solution, assert varlığı, İngilizce metin,
+  benzersiz id, bloktan referans).
+- `timeoutMs` (500–30000, varsayılan 5000) aşılırsa tarayıcıdaki worker sonlandırılır (sonsuz döngüye karşı).
+- Yalnızca standart kütüphane kullanın; `input()`, ağ ve dosya erişimi tarayıcı çalıştırıcısında yoktur. Pyodide
+  sürümü (şu an Python 3.14) yerel `python3` sürümünden farklı olabilir: sürüme özgü davranışa dayanmayın.
+- **Çözüm istemciye gitmez.** Seed çözümü bloğun ayrı bir alanına yazar, ders API'si (`GET /lessons/:id`, offline
+  paket) onu çıkarır. "Çözümü göster" düğmesi **3 başarısız test denemesinden sonra** (ya da testler geçince)
+  açılır ve oturum gerektiren `GET /lessons/:lessonId/exercises/:exerciseId/solution` uç noktasını çağırır.
+  Çözüme bakıldıktan sonra geçilen alıştırma ilerlemeye kaydedilmez.
+- Testleri geçen oturum `POST /progress/interactive` ile `code-exercise` türünde kaydedilir (interaktif rozet
+  sayacına katılır).
+- Blok genelde quiz'den önce, dersin konusunu pekiştiren yere konur.
 
 ## Raster görseller (png, jpg, webp)
 

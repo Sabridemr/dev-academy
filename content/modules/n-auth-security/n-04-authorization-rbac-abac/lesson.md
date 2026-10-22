@@ -73,6 +73,20 @@ Yaygın araçlar farklı noktalara odaklanır. **Casbin**, bir model dosyası (i
 
 Politika motoru seçmekten daha önemli olan ilke, politikaların **kod gibi** ele alınmasıdır: sürüm kontrolünde durur, kod incelemesinden geçer ve birim testleriyle korunur. "Stajyer rolü fatura silememeli" bir test olarak yazıldığında, birinin yanlışlıkla rolü genişletmesi CI'da yakalanır.
 
+PEP ile PDP arasındaki konuşmayı aynı belgeye istek atan iki editör üzerinden izleyelim. Sahne, RBAC'ın tek başına yetmediği yeri, ABAC koşulunun devreye girişini, varsayılan reddi ve açık reddin önceliğini sırayla gösteriyor.
+
+:::predict{id="ayni-rol-farkli-ekip"}
+Ayşe ve Mehmet ikisi de editör. Belge 42 ekip A'ya ait ve politika "editör VE özne.ekip = kaynak.ekip ise düzenle" diyor. Ekip B'deki Mehmet belgeyi düzenlemek isterse ne olur? | Ayşe and Mehmet are both editors. Document 42 belongs to team A and the policy says "edit if editor AND subject.team = resource.team". What happens when Mehmet from team B tries to edit it?
+- [ ] Editör rolü yettiği için izin verilir | Allowed, because the editor role is enough
+- [x] ABAC koşulu tutmadığı için 403 alır | He gets 403 because the ABAC condition fails
+- [ ] PDP karar veremez ve istek geçer | The PDP cannot decide and the request goes through
+Açıklama: Rol koşulu sağlanır ama öznitelik koşulu sağlanmaz; iki koşul VE ile bağlı olduğu için karar rettir. PDP'nin karar veremediği durumda bile varsayılan ret uygulanır, istek asla kendiliğinden geçmez. | The role condition holds but the attribute condition does not; since they are joined with AND, the decision is deny. Even when the PDP cannot decide, default deny applies; a request never passes by default.
+:::
+
+:::animation{scene="policy-decision.scene.json"}
+PEP dört parçalı soruyu PDP'ye iletir; aynı rol, farklı ekip izin ve ret kararlarına ayrılır; eşleşen kural yoksa varsayılan ret, bağlam kuralı ise açık ret uygular.
+:::
+
 :::code{lang="ini" title="Casbin modeli ve politikası: RBAC + sahiplik koşulu"}
 ```ini
 # model.conf — istek, politika, rol tanımı ve eşleştirici
@@ -189,6 +203,10 @@ Paylaşımlı tablo modelinde "her sorguya `tenant_id` filtresi eklemeyi unutmam
 :::
 
 Bu platformun API'si yetkilendirmede bilinçli olarak basit bir RBAC modeli kullanır: kullanıcıların `user`, `editor` ve `admin` rollerinden biri vardır, yönetim uç noktaları `@Roles('admin', 'editor')` gibi bir işaretle korunur ve bir rol koruyucusu (guard) isteği işleyiciye ulaşmadan önce kontrol eder. Yönetici rolü her yere girebilir. Rol bilgisi access token'a güvenilerek değil, kullanıcının güncel durumundan okunur; böylece bir editörün rolü kaldırıldığında eski token'ı birkaç dakika boyunca editör yetkisi taşımaya devam etmez. Kullanıcıya ait veriler (ilerleme, quiz geçmişi, ayarlar) ise her zaman token'daki kullanıcı kimliğiyle sorgulanır, URL'den gelen bir kullanıcı kimliğiyle değil.
+
+:::interactive{type="rbac-abac" mode="rbac" scenario="baseline"}
+RBAC modunda başlayın: soldan **Mehmet**'i, ortadan **Satış teklifi**'ni ve **yazma** eylemini seçin. Değerlendirme adımları yalnızca rol × eylem hücresine bakıldığını, kaynağın sahibinin ve departmanının hiç sorulmadığını gösterir. Şimdi **Ayrıcalık yükseltme senaryosu** düğmesine basın: viewer rolüne "geçici" silme izni verilir ve stajyer Can, Fatura #1043'ü silebilir hale gelir; sağdaki kutu temel politikaya göre fazladan verilen tüm izinleri listeler. **Temel politikaya dön** ile geri alın ve üst çubuktan **ABAC** moduna geçin. Can → okuma → Fatura #1043 üçlüsünde #2 kuralı izin verir, ama #5 (gizli veri) açık ret olduğu için sonuç RET'tir. Birleştirme seçimini **İlk eşleşen** yapın: #2 daha önce geldiği için karar İZİN'e döner; #5'i ok düğmeleriyle en üste taşıyınca yeniden RET olur. Son olarak ABAC modunda senaryo düğmesine basın ve tek bir AND'in OR'a dönmesinin Zeynep'e başka departmanın raporuna yazma yetkisi verdiğini görün.
+:::
 
 :::realworld{company="AWS"}
 AWS IAM, büyük ölçekte ABAC'ın nasıl işletildiğinin bilinen bir örneğidir. Değerlendirme mantığı **varsayılan ret** üzerine kuruludur: hiçbir politika bir eyleme izin vermiyorsa istek reddedilir ve herhangi bir politikadaki **açık ret** her izni ezer. Organizasyon düzeyindeki hizmet kontrol politikaları, hesaplardaki izinlerin üst sınırını çizer; bir hesap yöneticisi bile bu sınırın ötesine yetki veremez. ABAC tarafında kaynaklara ve kimliklere etiket (tag) verilir ve politika koşullarında karşılaştırılır: "Bir geliştirici yalnızca `project` etiketi kendi `project` etiketiyle aynı olan sunucuları yeniden başlatabilir" kuralı tek bir politikayla yazılır. Yeni bir proje eklendiğinde politika değişmez, yalnızca etiketler eklenir; bu, rol patlamasını önlemenin tam olarak ABAC'ın vaat ettiği yoludur.

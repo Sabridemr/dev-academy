@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 370" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">CPython aşamaları ve her aşamada çıkabilecek hatalar</title>
+  <desc id="desc">Üç aşama soldan sağa: ayrıştırma, derleme ve çalıştırma. Ayrıştırmada SyntaxError ve IndentationError çıkar ve hiçbir satır çalışmaz. Derleme AST'yi bytecode'a çevirir; içe aktarılan modüllerin bytecode'u __pycache__ içine .pyc olarak yazılır. Çalıştırma aşamasında Python sanal makinesi komutları tek tek yürütür; NameError, TypeError ve ValueError burada, sorunlu satıra gelindiğinde çıkar ve önceki satırların çıktısı yazılmış kalır.</desc>
+  <defs>
+    <marker id="k01-ok" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+  </defs>
+
+  <text x="450" y="30" text-anchor="middle" font-size="15" font-weight="600" fill="var(--da-fg, #0f172a)">python3 merhaba.py</text>
+  <text x="300" y="58" text-anchor="middle" font-size="12" fill="var(--da-muted, #64748b)">program başlamadan önce</text>
+  <text x="740" y="58" text-anchor="middle" font-size="12" fill="var(--da-muted, #64748b)">program çalışırken</text>
+  <line x1="580" y1="70" x2="580" y2="350" stroke="var(--da-border, #cbd5e1)" stroke-width="1.5" stroke-dasharray="6 6"/>
+
+  <g stroke-width="2">
+    <rect x="30" y="80" width="250" height="110" rx="14" fill="var(--da-surface, #f8fafc)" stroke="var(--da-primary, #6366f1)"/>
+    <rect x="320" y="80" width="230" height="110" rx="14" fill="var(--da-surface, #f8fafc)" stroke="var(--da-primary, #6366f1)"/>
+    <rect x="610" y="80" width="260" height="110" rx="14" fill="var(--da-surface, #f8fafc)" stroke="var(--da-accent, #f59e0b)"/>
+  </g>
+  <g font-size="15" font-weight="600" text-anchor="middle" fill="var(--da-fg, #0f172a)">
+    <text x="155" y="110">1. Ayrıştırma</text>
+    <text x="435" y="110">2. Derleme</text>
+    <text x="740" y="110">3. Çalıştırma (PVM)</text>
+  </g>
+  <g font-size="12" text-anchor="middle" fill="var(--da-muted, #64748b)">
+    <text x="155" y="138">kaynak metin → token → AST</text>
+    <text x="155" y="160">sözdizimi kontrolü</text>
+    <text x="435" y="138">AST → bytecode</text>
+    <text x="435" y="160">kod nesnesi</text>
+    <text x="740" y="138">komutları tek tek yürüt</text>
+    <text x="740" y="160">yukarıdan aşağıya, satır satır</text>
+  </g>
+
+  <g stroke="var(--da-muted, #64748b)" stroke-width="1.8" fill="none" marker-end="url(#k01-ok)">
+    <path d="M 282 135 L 316 135"/>
+    <path d="M 552 135 L 606 135"/>
+  </g>
+
+  <rect x="30" y="220" width="250" height="110" rx="12" fill="var(--da-surface, #f8fafc)" stroke="var(--da-danger, #ef4444)" stroke-width="1.5"/>
+  <text x="155" y="248" text-anchor="middle" font-size="13" font-weight="600" fill="var(--da-danger, #ef4444)">SyntaxError, IndentationError</text>
+  <text x="155" y="274" text-anchor="middle" font-size="12" fill="var(--da-fg, #0f172a)">hiçbir satır çalışmaz</text>
+  <text x="155" y="296" text-anchor="middle" font-size="12" fill="var(--da-fg, #0f172a)">ilk print bile yazdırılmaz</text>
+
+  <rect x="320" y="220" width="230" height="110" rx="12" fill="var(--da-surface, #f8fafc)" stroke="var(--da-success, #10b981)" stroke-width="1.5"/>
+  <text x="435" y="248" text-anchor="middle" font-size="13" font-weight="600" fill="var(--da-success, #10b981)">__pycache__/*.pyc</text>
+  <text x="435" y="274" text-anchor="middle" font-size="12" fill="var(--da-fg, #0f172a)">import edilen modülün</text>
+  <text x="435" y="296" text-anchor="middle" font-size="12" fill="var(--da-fg, #0f172a)">bytecode'u diske yazılır</text>
+
+  <rect x="610" y="220" width="260" height="110" rx="12" fill="var(--da-surface, #f8fafc)" stroke="var(--da-danger, #ef4444)" stroke-width="1.5"/>
+  <text x="740" y="248" text-anchor="middle" font-size="13" font-weight="600" fill="var(--da-danger, #ef4444)">NameError, TypeError, ValueError</text>
+  <text x="740" y="274" text-anchor="middle" font-size="12" fill="var(--da-fg, #0f172a)">sorunlu satıra gelince çıkar</text>
+  <text x="740" y="296" text-anchor="middle" font-size="12" fill="var(--da-fg, #0f172a)">önceki çıktı yazılmış kalır</text>
+
+  <g stroke="var(--da-border, #cbd5e1)" stroke-width="1.5" stroke-dasharray="4 4">
+    <line x1="155" y1="190" x2="155" y2="220"/>
+    <line x1="435" y1="190" x2="435" y2="220"/>
+    <line x1="740" y1="190" x2="740" y2="220"/>
+  </g>
+</svg>

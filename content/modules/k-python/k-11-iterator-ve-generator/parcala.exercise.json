@@ -1,0 +1,26 @@
+{
+  "id": "k-11-tembel-parcalama",
+  "title": {
+    "tr": "Tembel parçalama generator'ı",
+    "en": "A lazy chunking generator"
+  },
+  "language": "python",
+  "prompt": {
+    "tr": "`parcala(iterable, boyut)` bir **generator fonksiyonu** olsun ve elemanları `boyut` uzunluğunda listeler hâlinde `yield` etsin; son parça daha kısa olabilir.\n\n- Herhangi bir iterable ile çalışmalı, **sonsuz** bir iterator ile bile: tüm girdiyi önce listeye çevirme.\n- `boyut` 1'den küçükse `ValueError` fırlat (generator'ın ilk `next` çağrısında fırlatması yeterli).\n\n`list(parcala(range(5), 2))` → `[[0, 1], [2, 3], [4]]`",
+    "en": "`parcala(iterable, boyut)` should be a **generator function** that `yield`s the elements as lists of length `boyut`; the last chunk may be shorter.\n\n- It must work with any iterable, even an **infinite** iterator: do not turn the whole input into a list first.\n- Raise `ValueError` if `boyut` is less than 1 (raising on the generator's first `next` call is enough).\n\n`list(parcala(range(5), 2))` → `[[0, 1], [2, 3], [4]]`"
+  },
+  "starter": "def parcala(iterable, boyut):\n    xs = list(iterable)\n    return [xs[i:i + boyut] for i in range(0, len(xs), boyut)]\n",
+  "solution": "def parcala(iterable, boyut):\n    if boyut < 1:\n        raise ValueError(\"boyut en az 1 olmalı\")\n    parca = []\n    for x in iterable:\n        parca.append(x)\n        if len(parca) == boyut:\n            yield parca\n            parca = []\n    if parca:\n        yield parca\n",
+  "tests": "import itertools\nimport types\nassert list(parcala(range(5), 2)) == [[0, 1], [2, 3], [4]]\nassert list(parcala([], 3)) == []\nassert isinstance(parcala([1], 1), types.GeneratorType), \"generator fonksiyonu olmalı\"\nassert next(parcala(itertools.count(), 3)) == [0, 1, 2], \"sonsuz iterator ile de çalışmalı\"\ntry:\n    next(parcala([1, 2], 0))\n    assert False, \"boyut 0 için ValueError bekleniyordu\"\nexcept ValueError:\n    pass\n",
+  "hints": [
+    {
+      "tr": "Bir `parca` listesi tut; her elemanı ekle, uzunluğu `boyut`'a ulaşınca `yield parca` yap ve yeni bir boş liste başlat.",
+      "en": "Keep a `parca` list; append each element, and when its length reaches `boyut` do `yield parca` and start a new empty list."
+    },
+    {
+      "tr": "Döngü bitince elinde kalan eksik parçayı unutma: `if parca: yield parca`. `list(iterable)` sonsuz girdide hiç bitmez.",
+      "en": "Don't forget the leftover chunk after the loop: `if parca: yield parca`. `list(iterable)` never finishes on infinite input."
+    }
+  ],
+  "timeoutMs": 5000
+}

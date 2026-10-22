@@ -1,0 +1,890 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "l-08-merge-sort-agaci",
+  "title": {
+    "tr": "Merge sort: böl ve birleştir",
+    "en": "Merge sort: split and merge"
+  },
+  "summary": {
+    "tr": "Sekiz elemanlı dizinin tek elemanlara kadar bölünmesi ve sıralı parçaların seviye seviye birleştirilmesi.",
+    "en": "An eight-element array split down to single elements and the sorted pieces merged back level by level."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Üstte 5 2 8 1 7 3 6 4 dizisi vardır. Dizi önce iki dörtlü parçaya, sonra dört ikili parçaya, en sonda sekiz tek elemana bölünür; her bölme aşağı inen oklarla gösterilir. Tek elemanlar yeşile döner çünkü zaten sıralıdır. Ardından birleştirme yukarı doğru ilerler: çiftler 2 5, 1 8, 3 7 ve 4 6 olur; dörtlüler 1 2 5 8 ve 3 4 6 7 olur; en üstte 1 2 3 4 5 6 7 8 elde edilir. Bir adımda birleştirmede yalnızca parçaların baştaki elemanlarının karşılaştırıldığı anlatılır. Son adım, 3 seviyenin her birinde 8 elemanın taşındığını ve toplam maliyetin O(n log n) olduğunu özetler.",
+      "en": "At the top is the array 5 2 8 1 7 3 6 4. It is split into two halves of four, then four pairs, and finally eight single elements; each split is shown with arrows going down. The single elements turn green because they are already sorted. Then merging proceeds upwards: the pairs become 2 5, 1 8, 3 7 and 4 6; the halves become 1 2 5 8 and 3 4 6 7; the top becomes 1 2 3 4 5 6 7 8. One step explains that merging compares only the front elements of the runs. The last step notes that on each of 3 levels all 8 elements move, giving O(n log n) in total."
+    }
+  },
+  "canvas": {
+    "width": 1000,
+    "height": 600
+  },
+  "nodes": [
+    {
+      "id": "r",
+      "kind": "generic",
+      "label": "5 2 8 1 7 3 6 4",
+      "x": 500,
+      "y": 70,
+      "w": 300,
+      "h": 50
+    },
+    {
+      "id": "a",
+      "kind": "generic",
+      "label": "5 2 8 1",
+      "x": 260,
+      "y": 190,
+      "w": 180,
+      "h": 50
+    },
+    {
+      "id": "b",
+      "kind": "generic",
+      "label": "7 3 6 4",
+      "x": 740,
+      "y": 190,
+      "w": 180,
+      "h": 50
+    },
+    {
+      "id": "aa",
+      "kind": "generic",
+      "label": "5 2",
+      "x": 140,
+      "y": 310,
+      "w": 110,
+      "h": 50
+    },
+    {
+      "id": "ab",
+      "kind": "generic",
+      "label": "8 1",
+      "x": 380,
+      "y": 310,
+      "w": 110,
+      "h": 50
+    },
+    {
+      "id": "ba",
+      "kind": "generic",
+      "label": "7 3",
+      "x": 620,
+      "y": 310,
+      "w": 110,
+      "h": 50
+    },
+    {
+      "id": "bb",
+      "kind": "generic",
+      "label": "6 4",
+      "x": 860,
+      "y": 310,
+      "w": 110,
+      "h": 50
+    },
+    {
+      "id": "l0",
+      "kind": "generic",
+      "label": "5",
+      "x": 80,
+      "y": 430,
+      "w": 80,
+      "h": 46
+    },
+    {
+      "id": "l1",
+      "kind": "generic",
+      "label": "2",
+      "x": 200,
+      "y": 430,
+      "w": 80,
+      "h": 46
+    },
+    {
+      "id": "l2",
+      "kind": "generic",
+      "label": "8",
+      "x": 320,
+      "y": 430,
+      "w": 80,
+      "h": 46
+    },
+    {
+      "id": "l3",
+      "kind": "generic",
+      "label": "1",
+      "x": 440,
+      "y": 430,
+      "w": 80,
+      "h": 46
+    },
+    {
+      "id": "l4",
+      "kind": "generic",
+      "label": "7",
+      "x": 560,
+      "y": 430,
+      "w": 80,
+      "h": 46
+    },
+    {
+      "id": "l5",
+      "kind": "generic",
+      "label": "3",
+      "x": 680,
+      "y": 430,
+      "w": 80,
+      "h": 46
+    },
+    {
+      "id": "l6",
+      "kind": "generic",
+      "label": "6",
+      "x": 800,
+      "y": 430,
+      "w": 80,
+      "h": 46
+    },
+    {
+      "id": "l7",
+      "kind": "generic",
+      "label": "4",
+      "x": 920,
+      "y": 430,
+      "w": 80,
+      "h": 46
+    }
+  ],
+  "edges": [
+    {
+      "id": "e_r_a",
+      "from": "r",
+      "to": "a",
+      "kind": "data"
+    },
+    {
+      "id": "e_r_b",
+      "from": "r",
+      "to": "b",
+      "kind": "data"
+    },
+    {
+      "id": "e_a_aa",
+      "from": "a",
+      "to": "aa",
+      "kind": "data"
+    },
+    {
+      "id": "e_a_ab",
+      "from": "a",
+      "to": "ab",
+      "kind": "data"
+    },
+    {
+      "id": "e_b_ba",
+      "from": "b",
+      "to": "ba",
+      "kind": "data"
+    },
+    {
+      "id": "e_b_bb",
+      "from": "b",
+      "to": "bb",
+      "kind": "data"
+    },
+    {
+      "id": "e_aa_l0",
+      "from": "aa",
+      "to": "l0",
+      "kind": "data"
+    },
+    {
+      "id": "e_aa_l1",
+      "from": "aa",
+      "to": "l1",
+      "kind": "data"
+    },
+    {
+      "id": "e_ab_l2",
+      "from": "ab",
+      "to": "l2",
+      "kind": "data"
+    },
+    {
+      "id": "e_ab_l3",
+      "from": "ab",
+      "to": "l3",
+      "kind": "data"
+    },
+    {
+      "id": "e_ba_l4",
+      "from": "ba",
+      "to": "l4",
+      "kind": "data"
+    },
+    {
+      "id": "e_ba_l5",
+      "from": "ba",
+      "to": "l5",
+      "kind": "data"
+    },
+    {
+      "id": "e_bb_l6",
+      "from": "bb",
+      "to": "l6",
+      "kind": "data"
+    },
+    {
+      "id": "e_bb_l7",
+      "from": "bb",
+      "to": "l7",
+      "kind": "data"
+    }
+  ],
+  "steps": [
+    {
+      "id": "intro",
+      "title": {
+        "tr": "Sıralanmamış 8 eleman",
+        "en": "8 unsorted elements"
+      },
+      "narration": {
+        "tr": "Merge sort iki fikre dayanır: **böl** (diziyi ortadan ikiye ayır) ve **birleştir** (iki sıralı parçayı tek sıralı diziye kaynaştır). Sıralama işinin tamamı birleştirme aşamasında yapılır.",
+        "en": "Merge sort rests on two ideas: **split** (cut the array in half) and **merge** (fuse two sorted halves into one sorted array). All the actual sorting happens during the merge."
+      },
+      "durationMs": 3000,
+      "inherit": false,
+      "highlight": {
+        "nodes": [
+          "r"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "a": {
+          "visible": false
+        },
+        "b": {
+          "visible": false
+        },
+        "aa": {
+          "visible": false
+        },
+        "ab": {
+          "visible": false
+        },
+        "ba": {
+          "visible": false
+        },
+        "bb": {
+          "visible": false
+        },
+        "l0": {
+          "visible": false
+        },
+        "l1": {
+          "visible": false
+        },
+        "l2": {
+          "visible": false
+        },
+        "l3": {
+          "visible": false
+        },
+        "l4": {
+          "visible": false
+        },
+        "l5": {
+          "visible": false
+        },
+        "l6": {
+          "visible": false
+        },
+        "l7": {
+          "visible": false
+        }
+      },
+      "edgeStates": {
+        "e_r_a": {
+          "visible": false
+        },
+        "e_r_b": {
+          "visible": false
+        },
+        "e_a_aa": {
+          "visible": false
+        },
+        "e_a_ab": {
+          "visible": false
+        },
+        "e_b_ba": {
+          "visible": false
+        },
+        "e_b_bb": {
+          "visible": false
+        },
+        "e_aa_l0": {
+          "visible": false
+        },
+        "e_aa_l1": {
+          "visible": false
+        },
+        "e_ab_l2": {
+          "visible": false
+        },
+        "e_ab_l3": {
+          "visible": false
+        },
+        "e_ba_l4": {
+          "visible": false
+        },
+        "e_ba_l5": {
+          "visible": false
+        },
+        "e_bb_l6": {
+          "visible": false
+        },
+        "e_bb_l7": {
+          "visible": false
+        }
+      }
+    },
+    {
+      "id": "s1",
+      "title": {
+        "tr": "Böl: 4 + 4",
+        "en": "Split: 4 + 4"
+      },
+      "narration": {
+        "tr": "Dizi ortadan ikiye bölünür. Bölmek yalnızca bir indeks hesabıdır; hiçbir karşılaştırma yapılmaz.",
+        "en": "The array is cut in half. Splitting is just an index calculation; no comparisons are made."
+      },
+      "durationMs": 2800,
+      "highlight": {
+        "nodes": [
+          "a",
+          "b"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "a": {
+          "visible": true
+        },
+        "b": {
+          "visible": true
+        }
+      },
+      "edgeStates": {
+        "e_r_a": {
+          "visible": true
+        },
+        "e_r_b": {
+          "visible": true
+        }
+      },
+      "packets": [
+        {
+          "edge": "e_r_a",
+          "label": "5 2 8 1",
+          "shape": "square",
+          "durationMs": 900
+        },
+        {
+          "edge": "e_r_b",
+          "label": "7 3 6 4",
+          "shape": "square",
+          "durationMs": 900
+        }
+      ]
+    },
+    {
+      "id": "s2",
+      "title": {
+        "tr": "Böl: 2 + 2",
+        "en": "Split: 2 + 2"
+      },
+      "narration": {
+        "tr": "Her yarı yeniden ikiye bölünür. Her seviyede parça boyutu yarıya iniyor.",
+        "en": "Each half is split again. At every level the piece size halves."
+      },
+      "durationMs": 2800,
+      "highlight": {
+        "nodes": [
+          "aa",
+          "ab",
+          "ba",
+          "bb"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "aa": {
+          "visible": true
+        },
+        "ab": {
+          "visible": true
+        },
+        "ba": {
+          "visible": true
+        },
+        "bb": {
+          "visible": true
+        }
+      },
+      "edgeStates": {
+        "e_a_aa": {
+          "visible": true
+        },
+        "e_a_ab": {
+          "visible": true
+        },
+        "e_b_ba": {
+          "visible": true
+        },
+        "e_b_bb": {
+          "visible": true
+        }
+      },
+      "packets": [
+        {
+          "edge": "e_a_aa",
+          "shape": "square",
+          "durationMs": 900
+        },
+        {
+          "edge": "e_a_ab",
+          "shape": "square",
+          "durationMs": 900
+        },
+        {
+          "edge": "e_b_ba",
+          "shape": "square",
+          "durationMs": 900
+        },
+        {
+          "edge": "e_b_bb",
+          "shape": "square",
+          "durationMs": 900
+        }
+      ]
+    },
+    {
+      "id": "s3",
+      "title": {
+        "tr": "Böl: tek elemanlar",
+        "en": "Split: single elements"
+      },
+      "narration": {
+        "tr": "Tek elemanlı parçalara ulaştık. Tek elemanlı bir dizi **zaten sıralıdır**; özyineleme burada durur. 8 elemanı tek elemana indirmek log₂ 8 = 3 seviye sürdü.",
+        "en": "We reached single-element pieces. A one-element array is **already sorted**; the recursion stops here. Getting from 8 elements down to one took log₂ 8 = 3 levels."
+      },
+      "durationMs": 3000,
+      "highlight": {
+        "nodes": [
+          "l0",
+          "l1",
+          "l2",
+          "l3",
+          "l4",
+          "l5",
+          "l6",
+          "l7"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "l0": {
+          "visible": true,
+          "status": "success"
+        },
+        "l1": {
+          "visible": true,
+          "status": "success"
+        },
+        "l2": {
+          "visible": true,
+          "status": "success"
+        },
+        "l3": {
+          "visible": true,
+          "status": "success"
+        },
+        "l4": {
+          "visible": true,
+          "status": "success"
+        },
+        "l5": {
+          "visible": true,
+          "status": "success"
+        },
+        "l6": {
+          "visible": true,
+          "status": "success"
+        },
+        "l7": {
+          "visible": true,
+          "status": "success"
+        }
+      },
+      "edgeStates": {
+        "e_aa_l0": {
+          "visible": true
+        },
+        "e_aa_l1": {
+          "visible": true
+        },
+        "e_ab_l2": {
+          "visible": true
+        },
+        "e_ab_l3": {
+          "visible": true
+        },
+        "e_ba_l4": {
+          "visible": true
+        },
+        "e_ba_l5": {
+          "visible": true
+        },
+        "e_bb_l6": {
+          "visible": true
+        },
+        "e_bb_l7": {
+          "visible": true
+        }
+      },
+      "packets": [
+        {
+          "edge": "e_aa_l0",
+          "durationMs": 700
+        },
+        {
+          "edge": "e_aa_l1",
+          "durationMs": 700
+        },
+        {
+          "edge": "e_ab_l2",
+          "durationMs": 700
+        },
+        {
+          "edge": "e_ab_l3",
+          "durationMs": 700
+        },
+        {
+          "edge": "e_ba_l4",
+          "durationMs": 700
+        },
+        {
+          "edge": "e_ba_l5",
+          "durationMs": 700
+        },
+        {
+          "edge": "e_bb_l6",
+          "durationMs": 700
+        },
+        {
+          "edge": "e_bb_l7",
+          "durationMs": 700
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a-tek",
+          "x": 500,
+          "y": 500,
+          "text": {
+            "tr": "tek eleman = sıralı",
+            "en": "single element = sorted"
+          },
+          "tone": "success"
+        }
+      ]
+    },
+    {
+      "id": "m1",
+      "title": {
+        "tr": "Birleştir: çiftler",
+        "en": "Merge: pairs"
+      },
+      "narration": {
+        "tr": "Şimdi yukarı doğru birleştiriyoruz. Her çift tek karşılaştırmayla sıralanır: [5, 2] → [2, 5], [8, 1] → [1, 8], [7, 3] → [3, 7], [6, 4] → [4, 6].",
+        "en": "Now we merge upwards. Each pair is sorted with one comparison: [5, 2] → [2, 5], [8, 1] → [1, 8], [7, 3] → [3, 7], [6, 4] → [4, 6]."
+      },
+      "durationMs": 3200,
+      "highlight": {
+        "nodes": [
+          "aa",
+          "ab",
+          "ba",
+          "bb"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "aa": {
+          "label": "2 5",
+          "status": "success"
+        },
+        "ab": {
+          "label": "1 8",
+          "status": "success"
+        },
+        "ba": {
+          "label": "3 7",
+          "status": "success"
+        },
+        "bb": {
+          "label": "4 6",
+          "status": "success"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e_aa_l0",
+          "direction": "backward",
+          "label": "5",
+          "durationMs": 800
+        },
+        {
+          "edge": "e_aa_l1",
+          "direction": "backward",
+          "label": "2",
+          "durationMs": 800
+        },
+        {
+          "edge": "e_ab_l2",
+          "direction": "backward",
+          "label": "8",
+          "durationMs": 800
+        },
+        {
+          "edge": "e_ab_l3",
+          "direction": "backward",
+          "label": "1",
+          "durationMs": 800
+        },
+        {
+          "edge": "e_ba_l4",
+          "direction": "backward",
+          "label": "7",
+          "durationMs": 800
+        },
+        {
+          "edge": "e_ba_l5",
+          "direction": "backward",
+          "label": "3",
+          "durationMs": 800
+        },
+        {
+          "edge": "e_bb_l6",
+          "direction": "backward",
+          "label": "6",
+          "durationMs": 800
+        },
+        {
+          "edge": "e_bb_l7",
+          "direction": "backward",
+          "label": "4",
+          "durationMs": 800
+        }
+      ]
+    },
+    {
+      "id": "m2",
+      "title": {
+        "tr": "Birleştir: iki sıralı parçanın başları",
+        "en": "Merge: heads of two sorted runs"
+      },
+      "narration": {
+        "tr": "[2, 5] ile [1, 8] birleşirken yalnızca iki parçanın **en öndeki** elemanları karşılaştırılır: 1 < 2 → 1, 2 < 8 → 2, 5 < 8 → 5, kalan 8. Sonuç [1, 2, 5, 8]. Aynı anda sağda [3, 4, 6, 7] oluşur. Her eleman bir kez taşındığı için bu seviye O(n) sürer.",
+        "en": "Merging [2, 5] and [1, 8] compares only the **front** elements of the two runs: 1 < 2 → 1, 2 < 8 → 2, 5 < 8 → 5, then the remaining 8. The result is [1, 2, 5, 8]. Meanwhile [3, 4, 6, 7] forms on the right. Every element moves once, so this level costs O(n)."
+      },
+      "durationMs": 3800,
+      "highlight": {
+        "nodes": [
+          "a",
+          "b"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "a": {
+          "label": "1 2 5 8",
+          "status": "success"
+        },
+        "b": {
+          "label": "3 4 6 7",
+          "status": "success"
+        },
+        "l0": {
+          "status": "idle"
+        },
+        "l1": {
+          "status": "idle"
+        },
+        "l2": {
+          "status": "idle"
+        },
+        "l3": {
+          "status": "idle"
+        },
+        "l4": {
+          "status": "idle"
+        },
+        "l5": {
+          "status": "idle"
+        },
+        "l6": {
+          "status": "idle"
+        },
+        "l7": {
+          "status": "idle"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e_a_aa",
+          "direction": "backward",
+          "label": "2 5",
+          "shape": "square",
+          "durationMs": 900
+        },
+        {
+          "edge": "e_a_ab",
+          "direction": "backward",
+          "label": "1 8",
+          "shape": "square",
+          "durationMs": 900
+        },
+        {
+          "edge": "e_b_ba",
+          "direction": "backward",
+          "label": "3 7",
+          "shape": "square",
+          "durationMs": 900
+        },
+        {
+          "edge": "e_b_bb",
+          "direction": "backward",
+          "label": "4 6",
+          "shape": "square",
+          "durationMs": 900
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a-bas",
+          "x": 260,
+          "y": 250,
+          "text": {
+            "tr": "yalnızca başlar karşılaştırılır",
+            "en": "only the heads are compared"
+          },
+          "target": "a"
+        }
+      ]
+    },
+    {
+      "id": "m3",
+      "title": {
+        "tr": "Son birleştirme",
+        "en": "Final merge"
+      },
+      "narration": {
+        "tr": "[1, 2, 5, 8] ve [3, 4, 6, 7] aynı yöntemle birleşir: 1, 2, 3, 4, 5, 6, 7, 8. Dizi sıralandı. Eşit elemanlarda soldaki parçadan almayı seçersek eşitlerin sırası korunur: merge sort **kararlıdır**.",
+        "en": "[1, 2, 5, 8] and [3, 4, 6, 7] merge the same way: 1, 2, 3, 4, 5, 6, 7, 8. The array is sorted. If we take from the left run on ties, equal elements keep their order: merge sort is **stable**."
+      },
+      "durationMs": 3200,
+      "highlight": {
+        "nodes": [
+          "r"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "r": {
+          "label": "1 2 3 4 5 6 7 8",
+          "status": "success"
+        },
+        "aa": {
+          "status": "idle"
+        },
+        "ab": {
+          "status": "idle"
+        },
+        "ba": {
+          "status": "idle"
+        },
+        "bb": {
+          "status": "idle"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e_r_a",
+          "direction": "backward",
+          "label": "1 2 5 8",
+          "shape": "square",
+          "durationMs": 900
+        },
+        {
+          "edge": "e_r_b",
+          "direction": "backward",
+          "label": "3 4 6 7",
+          "shape": "square",
+          "durationMs": 900
+        }
+      ]
+    },
+    {
+      "id": "ozet",
+      "title": {
+        "tr": "log n seviye × n iş",
+        "en": "log n levels × n work"
+      },
+      "narration": {
+        "tr": "Ağacın log₂ n seviyesi var ve her seviyede tüm n eleman bir kez birleştiriliyor: toplam **O(n log n)**, girdi ne olursa olsun. Bedeli, birleştirme için O(n) ek bellektir. 8 eleman için 3 seviye, bir milyon eleman için yaklaşık 20 seviye.",
+        "en": "The tree has log₂ n levels and on every level all n elements are merged once: **O(n log n)** in total, whatever the input. The price is O(n) extra memory for merging. 3 levels for 8 elements, about 20 levels for a million."
+      },
+      "durationMs": 3500,
+      "highlight": {
+        "nodes": [
+          "r",
+          "a",
+          "b",
+          "aa",
+          "ab",
+          "ba",
+          "bb"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "a": {
+          "status": "idle"
+        },
+        "b": {
+          "status": "idle"
+        }
+      },
+      "annotations": [
+        {
+          "id": "a-seviye",
+          "x": 500,
+          "y": 560,
+          "text": {
+            "tr": "3 seviye × 8 eleman = O(n log n)",
+            "en": "3 levels × 8 elements = O(n log n)"
+          },
+          "tone": "success"
+        }
+      ]
+    }
+  ],
+  "tags": [
+    "merge-sort",
+    "siralama"
+  ]
+}
