@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 440" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Linux'ta yazma yolu ve inode yapısı</title>
+  <desc id="desc">Sol tarafta yukarıdan aşağıya: uygulama, sistem çağrısı, VFS, page cache, blok katmanı ve disk. write() page cache'te durur, fsync() ve arka plan writeback veriyi diske indirir. Sağ tarafta bir dizin girdisinin ad ile inode numarasını eşlediği, inode'un izinleri, boyutu ve veri bloklarının adreslerini tuttuğu gösterilir.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+    <marker id="arrow-p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-primary, #6366f1)"/>
+    </marker>
+  </defs>
+
+  <text x="480" y="28" text-anchor="middle" font-size="14" font-weight="600" fill="var(--da-fg, #0f172a)">write() RAM'de biter, fsync() diske indirir</text>
+
+  <!-- Çekirdek alanı arka planı -->
+  <rect x="40" y="118" width="420" height="232" rx="14" fill="var(--da-primary, #6366f1)" opacity="0.07"/>
+  <text x="56" y="138" font-size="11" fill="var(--da-primary, #6366f1)">çekirdek alanı</text>
+
+  <!-- Katmanlar -->
+  <g fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)" stroke-width="1.5">
+    <rect x="150" y="56" width="200" height="44" rx="10"/>
+    <rect x="150" y="148" width="200" height="44" rx="10"/>
+    <rect x="150" y="292" width="200" height="44" rx="10"/>
+  </g>
+  <rect x="150" y="220" width="200" height="50" rx="10" fill="var(--da-accent, #f59e0b)" opacity="0.15" stroke="var(--da-accent, #f59e0b)" stroke-width="1.5"/>
+  <rect x="150" y="372" width="200" height="48" rx="10" fill="var(--da-success, #10b981)" opacity="0.14" stroke="var(--da-success, #10b981)" stroke-width="1.5"/>
+
+  <g font-size="13" font-weight="600" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="250" y="83">Uygulama (kullanıcı alanı)</text>
+    <text x="250" y="175">VFS</text>
+    <text x="250" y="242">Page cache</text>
+    <text x="250" y="319">Blok katmanı + sürücü</text>
+    <text x="250" y="394">Disk (SSD / NVMe)</text>
+  </g>
+  <g font-size="10.5" fill="var(--da-muted, #64748b)" text-anchor="middle">
+    <text x="250" y="259">kirli (dirty) sayfalar burada bekler</text>
+    <text x="250" y="410">kalıcı ortam</text>
+  </g>
+
+  <!-- Oklar -->
+  <g stroke="var(--da-muted, #64748b)" stroke-width="1.8" fill="none" marker-end="url(#arrow)">
+    <path d="M 250 100 L 250 146"/>
+    <path d="M 250 192 L 250 218"/>
+    <path d="M 250 336 L 250 370"/>
+  </g>
+  <path d="M 250 270 L 250 290" stroke="var(--da-primary, #6366f1)" stroke-width="2.2" fill="none" marker-end="url(#arrow-p)"/>
+  <g font-size="11" fill="var(--da-muted, #64748b)">
+    <text x="262" y="126">read() / write()</text>
+  </g>
+  <g font-size="11" fill="var(--da-primary, #6366f1)">
+    <text x="120" y="285" text-anchor="end">fsync() /</text>
+    <text x="120" y="299" text-anchor="end">writeback</text>
+  </g>
+  <!-- write() dönüş oku -->
+  <path d="M 148 240 C 80 220, 80 100, 148 82" stroke="var(--da-success, #10b981)" stroke-width="1.4" stroke-dasharray="4 4" fill="none" marker-end="url(#arrow)"/>
+  <text x="70" y="165" font-size="10.5" fill="var(--da-success, #10b981)" text-anchor="middle">write()</text>
+  <text x="70" y="179" font-size="10.5" fill="var(--da-success, #10b981)" text-anchor="middle">hemen döner</text>
+
+  <!-- Sağ: inode yapısı -->
+  <text x="720" y="70" text-anchor="middle" font-size="13" font-weight="600" fill="var(--da-fg, #0f172a)">Ad nerede, veri nerede?</text>
+
+  <rect x="530" y="96" width="170" height="96" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)" stroke-width="1.5"/>
+  <text x="615" y="116" text-anchor="middle" font-size="12" font-weight="600" fill="var(--da-fg, #0f172a)">Dizin /var/log</text>
+  <g font-size="11" fill="var(--da-muted, #64748b)" font-family="inherit">
+    <text x="545" y="140">app.log → 1842</text>
+    <text x="545" y="158">db.log  → 2210</text>
+    <text x="545" y="176">eski.log → 1842</text>
+  </g>
+
+  <rect x="750" y="96" width="180" height="150" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-primary, #6366f1)" stroke-width="1.6"/>
+  <text x="840" y="116" text-anchor="middle" font-size="12" font-weight="600" fill="var(--da-primary, #6366f1)">inode 1842</text>
+  <g font-size="11" fill="var(--da-muted, #64748b)">
+    <text x="764" y="140">sahip: app (uid 1000)</text>
+    <text x="764" y="158">izin: rw-r-----</text>
+    <text x="764" y="176">boyut: 12 KB</text>
+    <text x="764" y="194">bağlantı sayısı: 2</text>
+    <text x="764" y="212">bloklar: 9001, 9002, 9003</text>
+    <text x="764" y="232" fill="var(--da-danger, #ef4444)">ad YOK</text>
+  </g>
+  <g stroke="var(--da-muted, #64748b)" stroke-width="1.5" fill="none" marker-end="url(#arrow)">
+    <path d="M 700 136 L 748 136"/>
+    <path d="M 700 172 C 724 172, 724 150, 748 146"/>
+  </g>
+
+  <g fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)" stroke-width="1.4">
+    <rect x="720" y="290" width="60" height="36" rx="6"/>
+    <rect x="790" y="290" width="60" height="36" rx="6"/>
+    <rect x="860" y="290" width="60" height="36" rx="6"/>
+  </g>
+  <g font-size="11" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="750" y="313">9001</text>
+    <text x="820" y="313">9002</text>
+    <text x="890" y="313">9003</text>
+  </g>
+  <path d="M 840 246 L 840 288" stroke="var(--da-muted, #64748b)" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
+  <text x="820" y="348" text-anchor="middle" font-size="11" fill="var(--da-muted, #64748b)">veri blokları</text>
+
+  <text x="720" y="392" text-anchor="middle" font-size="11.5" fill="var(--da-muted, #64748b)">İki ad aynı inode'u gösterir (hard link): veri ancak</text>
+  <text x="720" y="408" text-anchor="middle" font-size="11.5" fill="var(--da-muted, #64748b)">bağlantı sayısı 0 olup dosyayı açık tutan süreç kalmayınca silinir.</text>
+</svg>

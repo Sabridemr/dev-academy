@@ -159,6 +159,24 @@
       "relational-database"
     ]
   },
+  "acme-protocol": {
+    "term": {
+      "tr": "ACME protokolü",
+      "en": "ACME protocol"
+    },
+    "definition": {
+      "tr": "Sertifika alma ve yenilemeyi otomatikleştiren standart (RFC 8555). İstemci (certbot, Caddy, cert-manager) CA'dan sertifika ister; CA alan adının kontrolünü HTTP-01 ya da DNS-01 gibi bir challenge ile doğrular. Let's Encrypt'in kısa ömürlü sertifikaları bu otomasyon sayesinde pratiktir."
+    },
+    "aliases": [
+      "RFC 8555",
+      "Automatic Certificate Management Environment"
+    ],
+    "related": [
+      "lets-encrypt",
+      "x509-certificate",
+      "certificate-validation"
+    ]
+  },
   "activation-function": {
     "term": {
       "tr": "Aktivasyon fonksiyonu",
@@ -1479,6 +1497,21 @@
       "single-point-of-failure"
     ]
   },
+  "blocking-io": {
+    "term": {
+      "tr": "Bloklayan I/O (blocking I/O)",
+      "en": "Blocking I/O"
+    },
+    "definition": {
+      "tr": "Verinin hazır olmasını bekleyene kadar çağıran thread'i durduran okuma/yazma modeli. Thread blocked durumuna geçer ve CPU harcamaz, ama bekleyen her bağlantı için ayrı bir thread gerekir; binlerce bağlantıda bellek ve bağlam değişimi maliyeti büyür."
+    },
+    "related": [
+      "non-blocking-io",
+      "epoll",
+      "process-states",
+      "thread"
+    ]
+  },
   "blue-green": {
     "term": {
       "tr": "Blue-green dağıtım",
@@ -2290,6 +2323,59 @@
       "session-state"
     ]
   },
+  "certificate-chain": {
+    "term": {
+      "tr": "Sertifika zinciri",
+      "en": "Certificate chain"
+    },
+    "definition": {
+      "tr": "Sunucunun yaprak sertifikasından ara CA sertifikalarına ve oradan güven deposundaki kök CA'ya uzanan imza zinciri. Her halka bir üsttekinin anahtarıyla imzalanmıştır; sunucu ara sertifikaları da göndermezse bazı istemcilerde doğrulama başarısız olur."
+    },
+    "aliases": [
+      "chain of trust",
+      "intermediate CA",
+      "root CA"
+    ],
+    "related": [
+      "x509-certificate",
+      "certificate-validation",
+      "tls-handshake"
+    ]
+  },
+  "certificate-validation": {
+    "term": {
+      "tr": "Sertifika doğrulama",
+      "en": "Certificate validation"
+    },
+    "definition": {
+      "tr": "İstemcinin sunucu sertifikasını kabul etmeden önce yaptığı denetim: zincirin güvenilen bir köke kadar imzalarla bağlanması, geçerlilik tarihleri, kullanım kısıtları ve istenen alan adının SAN listesinde olması. Herhangi bir adım başarısız olursa el sıkışma kesilir; doğrulamayı kapatmak (`verify=False`) TLS'i kimliksiz şifrelemeye indirger."
+    },
+    "related": [
+      "certificate-chain",
+      "x509-certificate",
+      "tls-handshake",
+      "mutual-tls"
+    ]
+  },
+  "cgroups": {
+    "term": {
+      "tr": "cgroup (control group)",
+      "en": "Control groups (cgroups)"
+    },
+    "definition": {
+      "tr": "Süreçleri gruplayıp grubun CPU, bellek, disk I/O ve süreç sayısı kullanımını ölçen ve sınırlayan Linux çekirdeği mekanizması. cgroup v2'de limitler `/sys/fs/cgroup` altındaki `memory.max`, `cpu.max`, `pids.max` gibi dosyalardır; Docker'ın `--memory` ve Kubernetes'in `limits` ayarları bunlara dönüşür."
+    },
+    "aliases": [
+      "cgroup v2",
+      "control group"
+    ],
+    "related": [
+      "memory-limit",
+      "linux-namespaces",
+      "oom-killer",
+      "resource-requests-limits"
+    ]
+  },
   "chain-of-responsibility": {
     "term": {
       "tr": "Chain of Responsibility (sorumluluk zinciri)",
@@ -2483,6 +2569,24 @@
       "test-pyramid",
       "contract-testing",
       "pipeline"
+    ]
+  },
+  "cidr": {
+    "term": {
+      "tr": "CIDR gösterimi",
+      "en": "CIDR notation"
+    },
+    "definition": {
+      "tr": "IP adres bloklarını adres ve önek uzunluğuyla yazma yöntemi: `10.0.0.0/16`, ilk 16 bitin ağı, kalan bitlerin cihazları gösterdiğini belirtir. Önek ne kadar kısa olursa blok o kadar büyüktür (/24 IPv4'te 256 adres); alt ağlar, güvenlik grupları ve yönlendirme tabloları bu gösterimle tanımlanır."
+    },
+    "aliases": [
+      "Classless Inter-Domain Routing",
+      "subnet mask"
+    ],
+    "related": [
+      "private-address-space",
+      "nat",
+      "network-segmentation"
     ]
   },
   "circuit-breaker": {
@@ -2978,6 +3082,26 @@
       "multi-region"
     ]
   },
+  "congestion-control": {
+    "term": {
+      "tr": "Tıkanıklık kontrolü (congestion control)",
+      "en": "Congestion control"
+    },
+    "definition": {
+      "tr": "TCP göndericisinin ağın kapasitesini aşmamak için tuttuğu tıkanıklık penceresi (cwnd) ile hızını ayarlaması. Kayıp ya da gecikme artışı tıkanıklık sinyali sayılır ve pencere küçültülür; Linux'un varsayılan algoritması CUBIC'tir, BBR gibi alternatifler de vardır."
+    },
+    "aliases": [
+      "cwnd",
+      "CUBIC",
+      "BBR"
+    ],
+    "related": [
+      "slow-start",
+      "flow-control",
+      "tcp-sliding-window",
+      "retransmission"
+    ]
+  },
   "connection-cost": {
     "term": {
       "tr": "Bağlantı kurma maliyeti",
@@ -3006,6 +3130,23 @@
       "presence-heartbeat",
       "reconnect-backoff",
       "stateful-service"
+    ]
+  },
+  "connection-migration": {
+    "term": {
+      "tr": "Bağlantı göçü (connection migration)",
+      "en": "Connection migration"
+    },
+    "definition": {
+      "tr": "QUIC bağlantısının istemcinin IP adresi ya da portu değiştiğinde (ör. Wi-Fi'dan mobil veriye geçişte) kopmadan sürmesi. TCP bağlantısı kaynak/hedef IP ve port dörtlüsüyle tanımlandığı için kopar; QUIC ise bağlantıyı connection ID ile tanır."
+    },
+    "aliases": [
+      "connection ID"
+    ],
+    "related": [
+      "quic",
+      "nat",
+      "http-versions"
     ]
   },
   "connection-pooling": {
@@ -3152,6 +3293,44 @@
       "bare-metal"
     ]
   },
+  "container-is-a-process": {
+    "term": {
+      "tr": "Konteyner bir süreçtir",
+      "en": "A container is a process"
+    },
+    "definition": {
+      "tr": "Linux çekirdeğinde \"konteyner\" diye bir nesne yoktur; konteyner, namespace'lerle görünümü daraltılmış, cgroup'larla kaynakları sınırlanmış ve kök dizini overlay dosya sistemiyle kurulmuş sıradan bir süreçtir. Bu yüzden ana makinede `ps` ile görünür ve ana makinenin çekirdeğini paylaşır."
+    },
+    "related": [
+      "container",
+      "linux-namespaces",
+      "cgroups",
+      "overlayfs",
+      "process"
+    ]
+  },
+  "container-runtime": {
+    "term": {
+      "tr": "Konteyner çalışma zamanı (container runtime)",
+      "en": "Container runtime"
+    },
+    "definition": {
+      "tr": "Konteyneri gerçekten oluşturan yazılım katmanı. containerd ya da CRI-O gibi üst seviye çalışma zamanları imajı indirip katmanları hazırlar; runc gibi düşük seviyeli OCI çalışma zamanı namespace'leri açar, cgroup'u yazar, kök dosya sistemini bağlar ve komutu exec eder."
+    },
+    "aliases": [
+      "containerd",
+      "runc",
+      "CRI-O",
+      "OCI"
+    ],
+    "related": [
+      "linux-namespaces",
+      "cgroups",
+      "overlayfs",
+      "docker-image",
+      "pod"
+    ]
+  },
   "content-pipeline": {
     "term": {
       "tr": "İçerik hattı (content pipeline)",
@@ -3230,6 +3409,21 @@
       "answer-correctness",
       "retrieval",
       "golden-dataset"
+    ]
+  },
+  "context-switch": {
+    "term": {
+      "tr": "Bağlam değişimi (context switch)",
+      "en": "Context switch"
+    },
+    "definition": {
+      "tr": "Çekirdeğin bir CPU'da çalışan süreç ya da thread'i durdurup yazmaçlarını kaydetmesi ve başka birinin durumunu yükleyerek onu çalıştırması. Mikrosaniyeler sürer ama önbellek ve TLB'nin soğuması gibi dolaylı maliyetleri vardır; çok sık olması verimi düşürür."
+    },
+    "related": [
+      "cpu-scheduler",
+      "process-states",
+      "thread",
+      "tlb"
     ]
   },
   "context-window": {
@@ -3561,6 +3755,25 @@
       "network-partition",
       "eventual-consistency",
       "consistency-models"
+    ]
+  },
+  "cpu-scheduler": {
+    "term": {
+      "tr": "CPU zamanlayıcısı (scheduler)",
+      "en": "CPU scheduler"
+    },
+    "definition": {
+      "tr": "Çalıştırılabilir süreç ve thread'ler arasından hangisinin hangi CPU'da ne kadar çalışacağına karar veren çekirdek bileşeni. Linux uzun yıllar CFS'yi kullandı, 6.6 sürümüyle EEVDF'ye geçti; amaç her göreve adil pay vermek ve hiçbirini sonsuza dek bekletmemektir."
+    },
+    "aliases": [
+      "CFS",
+      "EEVDF"
+    ],
+    "related": [
+      "context-switch",
+      "process-states",
+      "process",
+      "kernel"
     ]
   },
   "cqrs": {
@@ -4525,6 +4738,20 @@
       "single-point-of-failure"
     ]
   },
+  "dirty-page": {
+    "term": {
+      "tr": "Kirli sayfa (dirty page)",
+      "en": "Dirty page"
+    },
+    "definition": {
+      "tr": "Page cache'te değiştirilmiş ama henüz diske yazılmamış sayfa. Çekirdek kirli sayfaları arka planda belirli aralıklarla diske boşaltır; o ana kadar bir elektrik kesintisi ya da çökme bu veriyi kaybettirebilir."
+    },
+    "related": [
+      "page-cache",
+      "fsync",
+      "write-back"
+    ]
+  },
   "dirty-read": {
     "term": {
       "tr": "Dirty read (kirli okuma)",
@@ -4654,6 +4881,23 @@
       "select-where-order"
     ]
   },
+  "dns-delegation": {
+    "term": {
+      "tr": "DNS delegasyonu",
+      "en": "DNS delegation"
+    },
+    "definition": {
+      "tr": "DNS ad alanının bir bölümünün sorumluluğunun NS kayıtlarıyla başka ad sunucularına devredilmesi: root `.com`'u, `.com` da `example.com`'u kendi yetkili sunucularına yönlendirir. Her seviye yalnızca altındakini bildiği için sistem merkezi bir veritabanı olmadan ölçeklenir."
+    },
+    "aliases": [
+      "NS kaydı"
+    ],
+    "related": [
+      "recursive-resolver",
+      "dns-resolution",
+      "dns-kaydi"
+    ]
+  },
   "dns-failover": {
     "term": {
       "tr": "DNS failover",
@@ -4705,6 +4949,21 @@
       "tcp-vs-udp",
       "tcp-handshake",
       "tls-handshake"
+    ]
+  },
+  "dns-ttl": {
+    "term": {
+      "tr": "DNS TTL",
+      "en": "DNS TTL"
+    },
+    "definition": {
+      "tr": "Bir DNS kaydının çözümleyicilerde ve istemcilerde ne kadar süre önbellekte tutulacağını saniye cinsinden belirten değer. Uzun TTL sorgu yükünü ve gecikmeyi azaltır ama değişikliklerin yayılmasını geciktirir; taşıma öncesi TTL'i düşürmek yaygın bir uygulamadır."
+    },
+    "related": [
+      "ttl",
+      "recursive-resolver",
+      "negative-caching",
+      "dns-failover"
     ]
   },
   "docker-compose": {
@@ -5135,6 +5394,26 @@
       "dataloader"
     ]
   },
+  "ecdhe-key-exchange": {
+    "term": {
+      "tr": "ECDHE anahtar değişimi",
+      "en": "ECDHE key exchange"
+    },
+    "definition": {
+      "tr": "İki tarafın her bağlantı için geçici eliptik eğri anahtar çiftleri üretip yalnızca açık kısımlarını paylaşarak ortak bir sır hesapladığı Diffie-Hellman yöntemi. Sır ağda hiç taşınmaz; TLS 1.3'te tek anahtar değişimi biçimi (EC)DHE'dir ve forward secrecy sağlar."
+    },
+    "aliases": [
+      "ECDHE",
+      "Diffie-Hellman",
+      "key share"
+    ],
+    "related": [
+      "session-key",
+      "forward-secrecy",
+      "tls-handshake",
+      "asymmetric-cryptography"
+    ]
+  },
   "edge-authentication": {
     "term": {
       "tr": "Uçta kimlik doğrulama",
@@ -5346,6 +5625,25 @@
       "gradient-descent",
       "learning-rate",
       "train-validation-test"
+    ]
+  },
+  "epoll": {
+    "term": {
+      "tr": "epoll",
+      "en": "epoll"
+    },
+    "definition": {
+      "tr": "Linux'ta çok sayıda dosya tanımlayıcısını izleyip hangilerinin okumaya ya da yazmaya hazır olduğunu bildiren sistem çağrısı ailesi. select/poll'un aksine maliyeti izlenen değil hazır olan tanımlayıcı sayısıyla orantılıdır; nginx, Node.js (libuv) ve Python asyncio gibi olay döngüleri bunu kullanır."
+    },
+    "aliases": [
+      "kqueue",
+      "select",
+      "poll"
+    ],
+    "related": [
+      "non-blocking-io",
+      "file-descriptor",
+      "event-loop"
     ]
   },
   "eq-and-hash": {
@@ -6084,6 +6382,25 @@
       "message-queue"
     ]
   },
+  "file-descriptor": {
+    "term": {
+      "tr": "Dosya tanımlayıcısı (file descriptor)",
+      "en": "File descriptor"
+    },
+    "definition": {
+      "tr": "Çekirdeğin bir süreç için açtığı dosya, soket, pipe gibi kaynakları gösteren küçük tamsayı (0: stdin, 1: stdout, 2: stderr). Unix'te \"her şey dosyadır\" yaklaşımıyla okuma/yazma aynı çağrılarla yapılır; süreç başına sınır (`ulimit -n`) dolarsa yeni bağlantı kabul edilemez (EMFILE)."
+    },
+    "aliases": [
+      "fd",
+      "ulimit"
+    ],
+    "related": [
+      "inode",
+      "epoll",
+      "blocking-io",
+      "process"
+    ]
+  },
   "file-io": {
     "term": {
       "tr": "Dosya okuma/yazma",
@@ -6210,6 +6527,24 @@
       "operator-precedence"
     ]
   },
+  "flow-control": {
+    "term": {
+      "tr": "Akış kontrolü (flow control)",
+      "en": "Flow control"
+    },
+    "definition": {
+      "tr": "Hızlı göndericinin yavaş alıcıyı boğmasını önleyen TCP mekanizması: alıcı her ACK'te tamponunda ne kadar boş yer kaldığını (rwnd) ilan eder, gönderici bundan fazlasını uçuşa çıkarmaz. Alıcıyı korur; ağı korumak tıkanıklık kontrolünün işidir."
+    },
+    "aliases": [
+      "rwnd",
+      "receive window"
+    ],
+    "related": [
+      "tcp-sliding-window",
+      "congestion-control",
+      "backpressure"
+    ]
+  },
   "for-loop": {
     "term": {
       "tr": "for döngüsü",
@@ -6245,6 +6580,24 @@
       "cardinality"
     ]
   },
+  "fork-exec": {
+    "term": {
+      "tr": "fork ve exec",
+      "en": "fork and exec"
+    },
+    "definition": {
+      "tr": "Unix'te yeni program başlatmanın iki adımı: `fork()` çağıran sürecin bir kopyasını (çocuk) oluşturur, çocuk da `exec()` ile kendi bellek görüntüsünü yeni programla değiştirir. Kopya copy-on-write ile yapıldığı için fork ucuzdur; kabuk her komutu bu yolla çalıştırır."
+    },
+    "aliases": [
+      "fork()",
+      "exec()"
+    ],
+    "related": [
+      "process",
+      "process-states",
+      "virtual-memory"
+    ]
+  },
   "forward-propagation": {
     "term": {
       "tr": "İleri yayılım (forward propagation)",
@@ -6261,6 +6614,24 @@
       "chain-rule"
     ]
   },
+  "forward-secrecy": {
+    "term": {
+      "tr": "İleriye dönük gizlilik (forward secrecy)",
+      "en": "Forward secrecy"
+    },
+    "definition": {
+      "tr": "Sunucunun uzun ömürlü özel anahtarı ileride çalınsa bile geçmişte kaydedilmiş trafiğin çözülememesi özelliği. Her bağlantıda geçici (ephemeral) anahtarlarla yapılan anahtar değişimiyle sağlanır; TLS 1.3'te zorunludur."
+    },
+    "aliases": [
+      "perfect forward secrecy",
+      "PFS"
+    ],
+    "related": [
+      "ecdhe-key-exchange",
+      "session-key",
+      "key-management"
+    ]
+  },
   "fraud-scoring": {
     "term": {
       "tr": "Dolandırıcılık skorlama",
@@ -6275,6 +6646,24 @@
       "latency-budget",
       "human-review",
       "fallback"
+    ]
+  },
+  "fsync": {
+    "term": {
+      "tr": "fsync",
+      "en": "fsync"
+    },
+    "definition": {
+      "tr": "Bir dosyanın page cache'teki kirli sayfalarının diske gerçekten yazılmasını bekleyen sistem çağrısı. `write()` döndüğünde veri yalnızca bellektedir; veritabanları bir işlemi onaylamadan önce günlüklerini fsync ile kalıcı hâle getirir. Pahalı olduğu için yazmalar genellikle gruplanır."
+    },
+    "aliases": [
+      "fdatasync"
+    ],
+    "related": [
+      "dirty-page",
+      "page-cache",
+      "transaction",
+      "acid"
     ]
   },
   "full-pipeline": {
@@ -6987,6 +7376,24 @@
       "eq-and-hash"
     ]
   },
+  "head-of-line-blocking": {
+    "term": {
+      "tr": "Head-of-line blocking (sıra başı tıkanması)",
+      "en": "Head-of-line blocking"
+    },
+    "definition": {
+      "tr": "Sıradaki ilk öğe takıldığında arkasındakilerin hazır olsa bile beklemesi. HTTP/1.1'de yavaş bir yanıt aynı bağlantıdaki sonraki istekleri, HTTP/2'de kaybolan tek bir TCP segmenti tüm stream'leri bekletir; HTTP/3 (QUIC) sıralamayı stream başına yaparak bunu taşıma katmanında da çözer."
+    },
+    "aliases": [
+      "HOL blocking"
+    ],
+    "related": [
+      "http2-multiplexing",
+      "quic",
+      "retransmission",
+      "http-versions"
+    ]
+  },
   "health-check": {
     "term": {
       "tr": "Health check (sağlık kontrolü)",
@@ -7031,6 +7438,25 @@
       "sift-up",
       "sift-down",
       "contiguous-array"
+    ]
+  },
+  "heap-stack": {
+    "term": {
+      "tr": "Heap ve stack bellek bölgeleri",
+      "en": "Heap and stack"
+    },
+    "definition": {
+      "tr": "Bir sürecin sanal adres alanındaki iki dinamik bölge. Stack her thread'e ayrıdır, fonksiyon çağrılarının yerel değişkenlerini ve dönüş adreslerini tutar, çağrı bitince otomatik geri alınır ve boyutu sınırlıdır (aşılırsa stack overflow). Heap `malloc`, `new` ya da dil nesneleri için açıkça ayrılıp serbest bırakılan ya da çöp toplayıcıyla geri kazanılan alandır."
+    },
+    "aliases": [
+      "stack overflow"
+    ],
+    "related": [
+      "heap",
+      "call-stack",
+      "stack-frame",
+      "memory-leak",
+      "virtual-memory"
     ]
   },
   "heapify": {
@@ -7247,6 +7673,23 @@
       "pod"
     ]
   },
+  "hpack": {
+    "term": {
+      "tr": "HPACK başlık sıkıştırması",
+      "en": "HPACK header compression"
+    },
+    "definition": {
+      "tr": "HTTP/2'nin başlık sıkıştırma biçimi: iki taraf ortak bir başlık tablosu tutar, tekrar eden `cookie`, `user-agent` gibi başlıklar tablodaki bir referansla birkaç byte'a iner. HTTP/3'te aynı fikrin QUIC'e uyarlanmış hâli QPACK'tir."
+    },
+    "aliases": [
+      "QPACK"
+    ],
+    "related": [
+      "http2-streams",
+      "http2-multiplexing",
+      "http-headers"
+    ]
+  },
   "hs256-vs-rs256": {
     "term": {
       "tr": "HS256 ve RS256",
@@ -7354,6 +7797,41 @@
       "tcp-vs-udp",
       "tls-handshake",
       "http-request-response"
+    ]
+  },
+  "http2-multiplexing": {
+    "term": {
+      "tr": "HTTP/2 çoğullama (multiplexing)",
+      "en": "HTTP/2 multiplexing"
+    },
+    "definition": {
+      "tr": "Birden çok istek ve yanıtın çerçevelere bölünüp tek bir TCP bağlantısı üzerinde iç içe geçerek eşzamanlı taşınması. Uygulama düzeyindeki head-of-line blocking'i ve çok sayıda bağlantı açma ihtiyacını ortadan kaldırır; TCP düzeyindeki tıkanma ise sürer."
+    },
+    "aliases": [
+      "multiplexing"
+    ],
+    "related": [
+      "http2-streams",
+      "head-of-line-blocking",
+      "hpack",
+      "http-versions"
+    ]
+  },
+  "http2-streams": {
+    "term": {
+      "tr": "HTTP/2 stream'leri",
+      "en": "HTTP/2 streams"
+    },
+    "definition": {
+      "tr": "HTTP/2 bağlantısı içindeki, her biri bir istek-yanıt çiftini taşıyan bağımsız ve çift yönlü mantıksal kanallar. Her çerçeve ait olduğu stream'in kimliğini taşır; böylece farklı stream'lerin çerçeveleri aynı bağlantıda karışık gönderilip karşıda yeniden birleştirilebilir."
+    },
+    "aliases": [
+      "stream ID"
+    ],
+    "related": [
+      "http2-multiplexing",
+      "quic",
+      "hpack"
     ]
   },
   "human-in-the-loop": {
@@ -7814,6 +8292,20 @@
       "instance-attribute",
       "class",
       "dunder-methods"
+    ]
+  },
+  "inode": {
+    "term": {
+      "tr": "inode",
+      "en": "Inode"
+    },
+    "definition": {
+      "tr": "Unix dosya sistemlerinde bir dosyanın meta verisini (boyut, sahip, izinler, zaman damgaları, veri bloklarının yeri) tutan yapı; dosya adı inode'da değil dizin girdisindedir. Bu yüzden hard link'ler aynı inode'u paylaşır ve disk boşken bile inode'lar tükenirse yeni dosya oluşturulamaz."
+    },
+    "related": [
+      "file-descriptor",
+      "dosya-sistemi",
+      "page-cache"
     ]
   },
   "inorder-traversal": {
@@ -8306,6 +8798,24 @@
       "log-compaction"
     ]
   },
+  "keep-alive": {
+    "term": {
+      "tr": "Kalıcı bağlantı (keep-alive)",
+      "en": "Persistent connection (keep-alive)"
+    },
+    "definition": {
+      "tr": "HTTP/1.1'de bir yanıttan sonra TCP bağlantısının kapatılmayıp sonraki istekler için kullanılması. Her istekte yeniden TCP ve TLS el sıkışması yapma maliyetini ortadan kaldırır; ancak HTTP/1.1'de bir bağlantıda aynı anda yalnızca bir istek işlenir."
+    },
+    "aliases": [
+      "persistent connection"
+    ],
+    "related": [
+      "connection-pooling",
+      "tcp-handshake",
+      "head-of-line-blocking",
+      "http-versions"
+    ]
+  },
   "kernel": {
     "term": {
       "tr": "Çekirdek (kernel)",
@@ -8776,6 +9286,24 @@
       "supervised-learning",
       "regularization",
       "feature-scaling"
+    ]
+  },
+  "linux-namespaces": {
+    "term": {
+      "tr": "Linux namespace'leri",
+      "en": "Linux namespaces"
+    },
+    "definition": {
+      "tr": "Çekirdekteki küresel bir kaynağı (PID'ler, bağlama noktaları, ağ, host adı, IPC, kullanıcı kimlikleri) sarmalayıp içindeki süreçlere kendilerine ait bir kopya varmış gibi gösteren yalıtım mekanizması. `clone()`, `unshare()` ve `setns()` ile kullanılır; konteynerin neyi görebileceğini belirler."
+    },
+    "aliases": [
+      "namespace"
+    ],
+    "related": [
+      "pid-namespace",
+      "cgroups",
+      "container-is-a-process",
+      "container-runtime"
     ]
   },
   "liskov-substitution": {
@@ -9328,6 +9856,41 @@
       "overlapping-subproblems",
       "recursion",
       "pure-function"
+    ]
+  },
+  "memory-leak": {
+    "term": {
+      "tr": "Bellek sızıntısı (memory leak)",
+      "en": "Memory leak"
+    },
+    "definition": {
+      "tr": "Artık kullanılmayan belleğin geri verilmemesi. C'de unutulan `free`, çöp toplayıcılı dillerde ise hâlâ referans tutan büyüyen bir global sözlük, temizlenmeyen önbellek ya da silinmeyen dinleyici yüzünden olur; belirtisi yük sabitken RSS'in sürekli artmasıdır ve sonu genellikle OOM killer'dır."
+    },
+    "related": [
+      "rss",
+      "oom-killer",
+      "heap-stack",
+      "garbage-collection",
+      "memory-profiling"
+    ]
+  },
+  "memory-limit": {
+    "term": {
+      "tr": "Bellek limiti (cgroup memory.max)",
+      "en": "Memory limit"
+    },
+    "definition": {
+      "tr": "Bir konteynerin ya da cgroup'un kullanabileceği en fazla bellek. Aşıldığında çekirdek önce sayfaları geri kazanmayı dener, yetmezse grup içinde OOM killer bir süreci öldürür. CPU limitinin aksine bekletilerek (throttle) uygulanamaz."
+    },
+    "aliases": [
+      "memory.max",
+      "--memory"
+    ],
+    "related": [
+      "cgroups",
+      "oom-killer",
+      "resource-requests-limits",
+      "rss"
     ]
   },
   "memory-profiling": {
@@ -9898,6 +10461,25 @@
       "hashable-keys"
     ]
   },
+  "mutex": {
+    "term": {
+      "tr": "Mutex (karşılıklı dışlama kilidi)",
+      "en": "Mutex"
+    },
+    "definition": {
+      "tr": "Kritik bölgeye aynı anda yalnızca bir thread'in girmesini sağlayan kilit: thread girişte kilidi alır, çıkışta bırakır; diğerleri bekler. Yarış koşullarını önler, ancak gereğinden geniş tutulduğunda paralelliği öldürür, farklı sırayla alındığında deadlock'a yol açar."
+    },
+    "aliases": [
+      "mutual exclusion",
+      "threading.Lock"
+    ],
+    "related": [
+      "lock",
+      "race-condition",
+      "deadlock",
+      "thread"
+    ]
+  },
   "mutual-tls": {
     "term": {
       "tr": "mTLS (karşılıklı TLS)",
@@ -9954,6 +10536,24 @@
       "query-anti-patterns"
     ]
   },
+  "nat": {
+    "term": {
+      "tr": "NAT (ağ adresi çevirisi)",
+      "en": "Network Address Translation (NAT)"
+    },
+    "definition": {
+      "tr": "Özel adresli cihazların trafiğini tek ya da birkaç genel IP adresine çevirerek internete çıkaran mekanizma; yönlendirici hangi bağlantının hangi iç cihaza ait olduğunu port eşlemeleriyle izler. IPv4 adres kıtlığını hafifletir ama dışarıdan içeriye doğrudan bağlantı kurmayı zorlaştırır."
+    },
+    "aliases": [
+      "NAT gateway",
+      "PAT"
+    ],
+    "related": [
+      "private-address-space",
+      "cidr",
+      "connection-migration"
+    ]
+  },
   "near-real-time-search": {
     "term": {
       "tr": "Neredeyse gerçek zamanlı arama",
@@ -9984,6 +10584,23 @@
       "workflow",
       "pipeline",
       "matrix-strategy"
+    ]
+  },
+  "negative-caching": {
+    "term": {
+      "tr": "Negatif önbellekleme (negative caching)",
+      "en": "Negative caching"
+    },
+    "definition": {
+      "tr": "Var olmayan bir ad için dönen NXDOMAIN (\"yok\") cevabının da önbelleğe alınması; süre bölgenin SOA kaydından gelir. Kaydı oluşturmadan önce sorgulanan bir alt alan adı, kayıt eklendikten sonra da bir süre \"yok\" görünebilir."
+    },
+    "aliases": [
+      "NXDOMAIN"
+    ],
+    "related": [
+      "dns-ttl",
+      "recursive-resolver",
+      "dns-resolution"
     ]
   },
   "negative-testing": {
@@ -10081,6 +10698,24 @@
       "forward-propagation",
       "backpropagation",
       "relu"
+    ]
+  },
+  "non-blocking-io": {
+    "term": {
+      "tr": "Bloklamayan I/O (non-blocking I/O)",
+      "en": "Non-blocking I/O"
+    },
+    "definition": {
+      "tr": "Veri hazır değilse beklemek yerine hemen dönen (EAGAIN) okuma/yazma modeli. Tek bir thread birçok soketi epoll gibi bir hazırlık bildirimi mekanizmasıyla izleyip yalnızca hazır olanlara işlem yaparak çok sayıda bağlantıyı yönetebilir; olay döngülerinin temelidir."
+    },
+    "aliases": [
+      "O_NONBLOCK"
+    ],
+    "related": [
+      "blocking-io",
+      "epoll",
+      "event-loop",
+      "asyncio"
     ]
   },
   "non-functional-requirements": {
@@ -10409,6 +11044,25 @@
       "human-review"
     ]
   },
+  "oom-killer": {
+    "term": {
+      "tr": "OOM killer",
+      "en": "OOM killer"
+    },
+    "definition": {
+      "tr": "Bellek tükendiğinde ve geri kazanılacak sayfa kalmadığında Linux çekirdeğinin seçtiği bir süreci öldürerek sistemi kurtaran mekanizması. Konteynerlerde cgroup bellek limiti aşıldığında grup içinde çalışır; Docker'da çıkış kodu 137 ve `OOMKilled: true` olarak görünür."
+    },
+    "aliases": [
+      "Out-of-memory killer",
+      "OOMKilled"
+    ],
+    "related": [
+      "memory-limit",
+      "memory-leak",
+      "cgroups",
+      "swap"
+    ]
+  },
   "open-addressing": {
     "term": {
       "tr": "Açık adresleme",
@@ -10721,6 +11375,24 @@
       "recursion"
     ]
   },
+  "overlayfs": {
+    "term": {
+      "tr": "OverlayFS",
+      "en": "OverlayFS"
+    },
+    "definition": {
+      "tr": "Salt okunur alt katmanları (lowerdir) ve yazılabilir bir üst katmanı (upperdir) tek bir birleşik görünümde (merged) üst üste bindiren Linux dosya sistemi. Konteyner imaj katmanları bununla birleştirilir; ilk değişiklikte dosya üst katmana kopyalanır (copy-up), bu yüzden yoğun yazılan veri volume'da tutulur."
+    },
+    "aliases": [
+      "union file system",
+      "copy-up"
+    ],
+    "related": [
+      "docker-image",
+      "container-is-a-process",
+      "container-runtime"
+    ]
+  },
   "owasp-top-10": {
     "term": {
       "tr": "OWASP Top 10",
@@ -10807,6 +11479,57 @@
       "kernel",
       "shell",
       "supply-chain-security"
+    ]
+  },
+  "page-cache": {
+    "term": {
+      "tr": "Page cache (sayfa önbelleği)",
+      "en": "Page cache"
+    },
+    "definition": {
+      "tr": "Linux çekirdeğinin dosyalardan okunan ve dosyalara yazılan veriyi boş RAM'de tuttuğu önbellek. Tekrar okumalar diske gitmez, yazmalar önce buraya yapılır; `free` çıktısındaki buff/cache bu alandır ve bellek gerektiğinde geri kazanılır."
+    },
+    "aliases": [
+      "buff/cache"
+    ],
+    "related": [
+      "dirty-page",
+      "fsync",
+      "page-fault",
+      "inode"
+    ]
+  },
+  "page-fault": {
+    "term": {
+      "tr": "Sayfa hatası (page fault)",
+      "en": "Page fault"
+    },
+    "definition": {
+      "tr": "Sürecin erişmek istediği sanal sayfanın sayfa tablosunda geçerli bir eşlemesi olmadığında oluşan ve çekirdeğe devredilen kesme. Minor fault'ta sayfa zaten RAM'dedir ve yalnızca eşleme kurulur; major fault'ta sayfa diskten (dosya ya da swap) okunur ve milisaniyeler sürebilir."
+    },
+    "aliases": [
+      "minor fault",
+      "major fault"
+    ],
+    "related": [
+      "page-table",
+      "virtual-memory",
+      "swap",
+      "page-cache"
+    ]
+  },
+  "page-table": {
+    "term": {
+      "tr": "Sayfa tablosu (page table)",
+      "en": "Page table"
+    },
+    "definition": {
+      "tr": "Bir sürecin sanal sayfalarını fiziksel bellek çerçevelerine eşleyen, çekirdeğin tuttuğu ve donanımın adres çevirisinde okuduğu veri yapısı. Her girdi sayfanın RAM'de olup olmadığını ve okuma/yazma izinlerini de taşır; eksik girdi page fault'a yol açar."
+    },
+    "related": [
+      "virtual-memory",
+      "tlb",
+      "page-fault"
     ]
   },
   "pagination": {
@@ -11060,6 +11783,20 @@
       "dirty-read",
       "serializable",
       "mvcc"
+    ]
+  },
+  "pid-namespace": {
+    "term": {
+      "tr": "PID namespace",
+      "en": "PID namespace"
+    },
+    "definition": {
+      "tr": "Süreç numaralarını yalıtan namespace: içindeki ilk süreç kendini PID 1 görür ve dışarıdaki süreçleri göremez, ana makinede ise farklı bir PID ile görünür. PID 1 olarak çalışan uygulama sinyalleri ele almalı ve zombie süreçleri toplamalıdır; aksi hâlde `tini` gibi küçük bir init kullanılır."
+    },
+    "related": [
+      "linux-namespaces",
+      "process-states",
+      "container-is-a-process"
     ]
   },
   "pipeline": {
@@ -11487,6 +12224,43 @@
       "top-k"
     ]
   },
+  "private-address-space": {
+    "term": {
+      "tr": "Özel IP adres aralıkları",
+      "en": "Private address space"
+    },
+    "definition": {
+      "tr": "RFC 1918'in iç ağlara ayırdığı, internette yönlendirilmeyen IPv4 blokları: 10.0.0.0/8, 172.16.0.0/12 ve 192.168.0.0/16. Ev ağları ve bulut VPC'leri bu aralıkları kullanır; internete çıkış NAT üzerinden olur."
+    },
+    "aliases": [
+      "RFC 1918",
+      "özel ağ"
+    ],
+    "related": [
+      "cidr",
+      "nat",
+      "network-segmentation"
+    ]
+  },
+  "process": {
+    "term": {
+      "tr": "Süreç (process)",
+      "en": "Process"
+    },
+    "definition": {
+      "tr": "Çalışmakta olan bir programın işletim sistemindeki örneği: kendi sanal adres alanı, açık dosya tanımlayıcıları, PID'i ve en az bir thread'i vardır. Süreçlerin belleği birbirinden yalıtılmıştır; birinin çökmesi diğerini doğrudan bozmaz."
+    },
+    "aliases": [
+      "PID"
+    ],
+    "related": [
+      "process-states",
+      "thread",
+      "fork-exec",
+      "virtual-memory",
+      "process-management"
+    ]
+  },
   "process-management": {
     "term": {
       "tr": "Süreç yönetimi",
@@ -11500,6 +12274,25 @@
       "systemd-servisi",
       "shell",
       "kernel"
+    ]
+  },
+  "process-states": {
+    "term": {
+      "tr": "Süreç durumları",
+      "en": "Process states"
+    },
+    "definition": {
+      "tr": "Bir sürecin ömrü boyunca geçtiği durumlar: new, ready (CPU bekliyor), running, blocked (I/O, kilit ya da sleep bekliyor) ve terminated. `top`'taki R, S, D ve Z harfleri bunların Linux karşılıklarıdır; ebeveyn `wait()` çağırana kadar biten süreç zombie olarak kalır."
+    },
+    "aliases": [
+      "zombie",
+      "runnable"
+    ],
+    "related": [
+      "process",
+      "cpu-scheduler",
+      "context-switch",
+      "blocking-io"
     ]
   },
   "product-catalog": {
@@ -12007,6 +12800,25 @@
       "message-queue"
     ]
   },
+  "quic": {
+    "term": {
+      "tr": "QUIC",
+      "en": "QUIC"
+    },
+    "definition": {
+      "tr": "UDP üzerinde çalışan, TLS 1.3'ü içine gömen ve HTTP/3'ün temelini oluşturan taşıma protokolü. Güvenilirlik ve sıralamayı stream başına yapar, bağlantıyı 1-RTT (tekrar bağlanmada 0-RTT) ile kurar ve connection ID sayesinde IP değişiminde bağlantıyı koruyabilir."
+    },
+    "aliases": [
+      "HTTP/3"
+    ],
+    "related": [
+      "http-versions",
+      "udp-datagram",
+      "head-of-line-blocking",
+      "connection-migration",
+      "zero-rtt"
+    ]
+  },
   "quick-sort": {
     "term": {
       "tr": "Quick sort (hızlı sıralama)",
@@ -12497,6 +13309,24 @@
       "tree-terminology",
       "tree-traversal",
       "json"
+    ]
+  },
+  "recursive-resolver": {
+    "term": {
+      "tr": "Özyinelemeli çözümleyici (recursive resolver)",
+      "en": "Recursive resolver"
+    },
+    "definition": {
+      "tr": "İstemci adına bir alan adını sonuna kadar çözen DNS sunucusu: root, TLD ve yetkili ad sunucularına sırayla (iteratif) sorar ve her cevabı TTL'i boyunca önbelleğe alır. İSS'nin çözümleyicisi ya da 1.1.1.1, 8.8.8.8 gibi genel çözümleyiciler örnektir."
+    },
+    "aliases": [
+      "recursive DNS"
+    ],
+    "related": [
+      "dns-resolution",
+      "dns-delegation",
+      "dns-ttl",
+      "negative-caching"
     ]
   },
   "red-method": {
@@ -13170,6 +14000,24 @@
       "online-evaluation"
     ]
   },
+  "retransmission": {
+    "term": {
+      "tr": "Yeniden iletim (retransmission)",
+      "en": "Retransmission"
+    },
+    "definition": {
+      "tr": "Onayı gelmeyen TCP segmentinin yeniden gönderilmesi. Ya zaman aşımı (RTO) dolunca ya da üç yinelenen ACK görülünce (hızlı yeniden iletim) tetiklenir; her kayıp gecikme ekler ve tıkanıklık penceresini küçültür."
+    },
+    "aliases": [
+      "RTO",
+      "fast retransmit"
+    ],
+    "related": [
+      "sequence-number",
+      "congestion-control",
+      "head-of-line-blocking"
+    ]
+  },
   "retrieval": {
     "term": {
       "tr": "Getirme (retrieval)",
@@ -13418,6 +14266,25 @@
       "replication-lag",
       "sync-vs-async-replication",
       "failover"
+    ]
+  },
+  "rss": {
+    "term": {
+      "tr": "RSS (resident set size)",
+      "en": "Resident set size (RSS)"
+    },
+    "definition": {
+      "tr": "Bir sürecin sanal belleğinden o anda fiziksel RAM'de duran kısmı. Ayrılmış ama dokunulmamış sayfaları da sayan sanal boyuttan (VIRT/VmSize) farklı olarak gerçek RAM kullanımını gösterir; kapasite planlamasında ve sızıntı takibinde bakılacak değerdir."
+    },
+    "aliases": [
+      "VmRSS",
+      "RES"
+    ],
+    "related": [
+      "memory-leak",
+      "virtual-memory",
+      "swap",
+      "memory-limit"
     ]
   },
   "rto": {
@@ -13846,6 +14713,23 @@
       "cost-model"
     ]
   },
+  "sequence-number": {
+    "term": {
+      "tr": "Sıra numarası (sequence number)",
+      "en": "Sequence number"
+    },
+    "definition": {
+      "tr": "TCP'nin akıştaki her byte'a verdiği numara; segment başlığı, taşıdığı ilk byte'ın numarasını içerir. Alıcı bu numaralarla segmentleri doğru sıraya dizer, tekrarları ayıklar ve ACK ile bir sonraki beklediği byte'ı bildirir."
+    },
+    "aliases": [
+      "SEQ"
+    ],
+    "related": [
+      "tcp-handshake",
+      "retransmission",
+      "tcp-sliding-window"
+    ]
+  },
   "serializable": {
     "term": {
       "tr": "Serializable (seri hâle getirilebilir izolasyon)",
@@ -14054,6 +14938,21 @@
       "samesite",
       "csrf",
       "xss"
+    ]
+  },
+  "session-key": {
+    "term": {
+      "tr": "Oturum anahtarı",
+      "en": "Session key"
+    },
+    "definition": {
+      "tr": "TLS el sıkışmasında asimetrik anahtar değişiminden türetilen ve yalnızca o bağlantıdaki veriyi simetrik olarak (ör. AES-GCM) şifrelemek için kullanılan anahtar. Pahalı asimetrik iş bağlantı başına bir kez yapılır, veri hızlı simetrik şifreyle akar."
+    },
+    "related": [
+      "ecdhe-key-exchange",
+      "symmetric-encryption",
+      "forward-secrecy",
+      "tls-handshake"
     ]
   },
   "session-state": {
@@ -14485,6 +15384,20 @@
       "dataclass"
     ]
   },
+  "slow-start": {
+    "term": {
+      "tr": "Slow start (yavaş başlangıç)",
+      "en": "Slow start"
+    },
+    "definition": {
+      "tr": "Yeni bir TCP bağlantısının küçük bir tıkanıklık penceresiyle başlayıp her RTT'de pencereyi kabaca ikiye katlaması. Adına rağmen üstel büyür; yine de kısa ömürlü bağlantılar tam hıza ulaşamadan biter, bu yüzden bağlantıları yeniden kullanmak önemlidir."
+    },
+    "related": [
+      "congestion-control",
+      "keep-alive",
+      "connection-pooling"
+    ]
+  },
   "snapshot": {
     "term": {
       "tr": "Snapshot (anlık durum kaydı)",
@@ -14498,6 +15411,20 @@
       "event-store",
       "replay",
       "aggregate"
+    ]
+  },
+  "sni": {
+    "term": {
+      "tr": "SNI (Server Name Indication)",
+      "en": "Server Name Indication (SNI)"
+    },
+    "definition": {
+      "tr": "İstemcinin TLS ClientHello mesajında bağlanmak istediği alan adını bildirdiği uzantı. Aynı IP adresinde çok sayıda sitenin barındırılmasını ve sunucunun doğru sertifikayı seçmesini sağlar; varsayılan olarak şifresiz gönderilir."
+    },
+    "related": [
+      "tls-handshake",
+      "x509-certificate",
+      "tls-termination"
     ]
   },
   "social-graph": {
@@ -15273,6 +16200,25 @@
       "supervised-learning"
     ]
   },
+  "swap": {
+    "term": {
+      "tr": "Swap (takas alanı)",
+      "en": "Swap"
+    },
+    "definition": {
+      "tr": "RAM yetmediğinde değiştirilmiş anonim bellek sayfalarının (ör. heap verisi) yazıldığı disk alanı. Belleği esnetir ama swap'tan geri okunan her sayfa disk gecikmesi demektir; sürekli swap'a yazıp okuyan bir sistem ciddi biçimde yavaşlar (thrashing)."
+    },
+    "aliases": [
+      "swapping",
+      "thrashing"
+    ],
+    "related": [
+      "virtual-memory",
+      "page-fault",
+      "oom-killer",
+      "rss"
+    ]
+  },
   "symmetric-encryption": {
     "term": {
       "tr": "Simetrik şifreleme",
@@ -15471,6 +16417,24 @@
       "tls-handshake",
       "tcp-vs-udp",
       "connection-pooling"
+    ]
+  },
+  "tcp-sliding-window": {
+    "term": {
+      "tr": "TCP kayan penceresi (sliding window)",
+      "en": "TCP sliding window"
+    },
+    "definition": {
+      "tr": "TCP göndericisinin onay beklemeden \"uçuşta\" tutabileceği byte aralığı; ACK geldikçe pencere ileri kayar. Böylece her segment için bir RTT beklenmez; uçuştaki veri alıcı penceresi (rwnd) ile tıkanıklık penceresinin (cwnd) küçüğüyle sınırlıdır. Dizi algoritmalarındaki kayan pencere tekniğiyle karıştırılmamalıdır."
+    },
+    "aliases": [
+      "send window"
+    ],
+    "related": [
+      "flow-control",
+      "congestion-control",
+      "sequence-number",
+      "sliding-window"
     ]
   },
   "tcp-vs-udp": {
@@ -15746,6 +16710,22 @@
       "ranking"
     ]
   },
+  "thread": {
+    "term": {
+      "tr": "Thread (iş parçacığı)",
+      "en": "Thread"
+    },
+    "definition": {
+      "tr": "Bir süreç içindeki bağımsız yürütme akışı. Aynı süreçteki thread'ler adres alanını, heap'i ve açık dosyaları paylaşır; her birinin yalnızca kendi stack'i ve yazmaçları vardır. Paylaşım iletişimi ucuzlatır ama paylaşılan veride yarış koşullarına yol açar."
+    },
+    "related": [
+      "process",
+      "threading",
+      "race-condition",
+      "mutex",
+      "context-switch"
+    ]
+  },
   "threading": {
     "term": {
       "tr": "Threading (iş parçacıkları)",
@@ -15898,6 +16878,20 @@
       "hybrid-fan-out",
       "redis-data-structures",
       "celebrity-problem"
+    ]
+  },
+  "tlb": {
+    "term": {
+      "tr": "TLB (Translation Lookaside Buffer)",
+      "en": "Translation Lookaside Buffer (TLB)"
+    },
+    "definition": {
+      "tr": "CPU içinde son yapılan sanal → fiziksel adres çevirilerini tutan küçük ve hızlı önbellek. İsabet ederse sayfa tablosunda yürümeye gerek kalmaz; bağlam değişimleri ve dağınık bellek erişimi TLB isabet oranını düşürerek performansı etkiler."
+    },
+    "related": [
+      "page-table",
+      "virtual-memory",
+      "context-switch"
     ]
   },
   "tls-handshake": {
@@ -16559,6 +17553,20 @@
       "aggregate"
     ]
   },
+  "udp-datagram": {
+    "term": {
+      "tr": "UDP datagramı",
+      "en": "UDP datagram"
+    },
+    "definition": {
+      "tr": "UDP'nin bağımsız gönderilen tek mesaj birimi: 8 byte'lık başlık (portlar, uzunluk, sağlama toplamı) ve veri. Bağlantı, sıralama, onay ve yeniden iletim yoktur; kaybolabilir ya da sırasız gelebilir. DNS, canlı ses/görüntü ve QUIC gibi gecikmeye duyarlı işler bu yüzden tercih eder."
+    },
+    "related": [
+      "tcp-vs-udp",
+      "quic",
+      "dns-resolution"
+    ]
+  },
   "ufw": {
     "term": {
       "tr": "UFW (Uncomplicated Firewall)",
@@ -16861,6 +17869,25 @@
       "bare-metal",
       "kernel",
       "konteyner"
+    ]
+  },
+  "virtual-memory": {
+    "term": {
+      "tr": "Sanal bellek",
+      "en": "Virtual memory"
+    },
+    "definition": {
+      "tr": "Her sürece fiziksel RAM'den bağımsız, kendine ait bir adres alanı veren mekanizma; sanal adresler sayfa tabloları ve donanım (MMU) yardımıyla fiziksel sayfalara çevrilir. Süreçleri birbirinden yalıtır ve RAM'den büyük adres alanlarını, paylaşımlı kütüphaneleri ve swap'i mümkün kılar."
+    },
+    "aliases": [
+      "sanal adres alanı"
+    ],
+    "related": [
+      "page-table",
+      "page-fault",
+      "tlb",
+      "swap",
+      "process"
     ]
   },
   "virtual-nodes": {
@@ -17204,6 +18231,25 @@
       "cache-invalidation"
     ]
   },
+  "x509-certificate": {
+    "term": {
+      "tr": "X.509 sertifikası",
+      "en": "X.509 certificate"
+    },
+    "definition": {
+      "tr": "Bir açık anahtarı bir kimliğe (alan adı) bağlayan ve bir sertifika otoritesince imzalanan standart belge. Konu, SAN listesindeki alan adları, geçerlilik tarihleri, açık anahtar ve imzalayanın (issuer) imzasını içerir; TLS'te sunucu kimliğini kanıtlamak için sunulur."
+    },
+    "aliases": [
+      "TLS sertifikası",
+      "SSL sertifikası"
+    ],
+    "related": [
+      "certificate-chain",
+      "certificate-validation",
+      "tls-handshake",
+      "asymmetric-cryptography"
+    ]
+  },
   "xor-problem": {
     "term": {
       "tr": "XOR problemi",
@@ -17286,6 +18332,24 @@
       "generator",
       "iterable",
       "iterator-protocol"
+    ]
+  },
+  "zero-rtt": {
+    "term": {
+      "tr": "0-RTT",
+      "en": "0-RTT (early data)"
+    },
+    "definition": {
+      "tr": "Daha önce bağlanmış bir istemcinin sakladığı oturum bileti sayesinde ilk isteğini el sıkışma mesajıyla birlikte, ek gidiş-dönüş beklemeden göndermesi (TLS 1.3 ve QUIC). Bu erken veri yeniden oynatılabilir (replay), bu yüzden yalnızca idempotent istekler için kullanılmalıdır."
+    },
+    "aliases": [
+      "early data",
+      "session resumption"
+    ],
+    "related": [
+      "quic",
+      "tls-handshake",
+      "idempotency"
     ]
   },
   "zero-trust": {

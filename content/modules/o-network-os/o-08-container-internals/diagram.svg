@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 440" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Konteyneri oluşturan üç çekirdek mekanizması</title>
+  <desc id="desc">Ortada tek bir uygulama süreci. Etrafında namespace halkası (PID, mount, network, UTS, IPC, user) sürecin neyi gördüğünü belirler. Sağda cgroup kutusu bellek, CPU ve süreç sayısı sınırlarını gösterir. Altta overlay dosya sistemi: salt okunur imaj katmanlarının üzerinde yazılabilir bir katman ve sürecin kök dizin olarak gördüğü birleşik görünüm. En altta tüm konteynerlerin paylaştığı ana makine çekirdeği.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+  </defs>
+
+  <text x="480" y="28" text-anchor="middle" font-size="14" font-weight="600" fill="var(--da-fg, #0f172a)">Konteyner = süreç + namespace (görünüm) + cgroup (kaynak) + overlay (dosya sistemi)</text>
+
+  <!-- Namespace halkası -->
+  <rect x="60" y="56" width="440" height="200" rx="18" fill="var(--da-primary, #6366f1)" opacity="0.08" stroke="var(--da-primary, #6366f1)" stroke-width="1.5" stroke-dasharray="6 4"/>
+  <text x="80" y="78" font-size="12" font-weight="600" fill="var(--da-primary, #6366f1)">Namespace'ler: neyi görebilir?</text>
+  <g font-size="11" fill="var(--da-primary, #6366f1)" text-anchor="middle">
+    <rect x="80" y="92" width="90" height="26" rx="13" fill="var(--da-surface, #ffffff)" stroke="var(--da-primary, #6366f1)"/>
+    <text x="125" y="109">PID</text>
+    <rect x="390" y="92" width="90" height="26" rx="13" fill="var(--da-surface, #ffffff)" stroke="var(--da-primary, #6366f1)"/>
+    <text x="435" y="109">mount</text>
+    <rect x="80" y="214" width="90" height="26" rx="13" fill="var(--da-surface, #ffffff)" stroke="var(--da-primary, #6366f1)"/>
+    <text x="125" y="231">network</text>
+    <rect x="390" y="214" width="90" height="26" rx="13" fill="var(--da-surface, #ffffff)" stroke="var(--da-primary, #6366f1)"/>
+    <text x="435" y="231">UTS</text>
+    <rect x="80" y="153" width="90" height="26" rx="13" fill="var(--da-surface, #ffffff)" stroke="var(--da-primary, #6366f1)"/>
+    <text x="125" y="170">IPC</text>
+    <rect x="390" y="153" width="90" height="26" rx="13" fill="var(--da-surface, #ffffff)" stroke="var(--da-primary, #6366f1)"/>
+    <text x="435" y="170">user</text>
+  </g>
+
+  <!-- Süreç -->
+  <rect x="195" y="120" width="170" height="90" rx="12" fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.8"/>
+  <text x="280" y="148" text-anchor="middle" font-size="14" font-weight="600" fill="var(--da-fg, #0f172a)">Uygulama süreci</text>
+  <text x="280" y="170" text-anchor="middle" font-size="11" fill="var(--da-muted, #64748b)">içeride: PID 1</text>
+  <text x="280" y="188" text-anchor="middle" font-size="11" fill="var(--da-muted, #64748b)">ana makinede: PID 4123</text>
+
+  <!-- cgroup -->
+  <rect x="560" y="56" width="350" height="200" rx="16" fill="var(--da-accent, #f59e0b)" opacity="0.12" stroke="var(--da-accent, #f59e0b)" stroke-width="1.5"/>
+  <text x="580" y="80" font-size="12" font-weight="600" fill="var(--da-fg, #0f172a)">cgroup v2: ne kadar kullanabilir?</text>
+  <g font-size="11" fill="var(--da-fg, #0f172a)">
+    <text x="580" y="108">memory.max = 256M</text>
+    <text x="580" y="160">cpu.max = 50000 100000</text>
+    <text x="580" y="212">pids.max = 512</text>
+  </g>
+  <g font-size="10.5" fill="var(--da-muted, #64748b)">
+    <text x="580" y="126">aşılırsa: geri kazanma, sonra OOM killer (çıkış 137)</text>
+    <text x="580" y="178">aşılırsa: kısılma (throttle), süreç ölmez</text>
+    <text x="580" y="230">aşılırsa: fork() başarısız (fork bombası koruması)</text>
+  </g>
+  <!-- Bellek çubuğu -->
+  <rect x="770" y="98" width="120" height="12" rx="6" fill="var(--da-border, #cbd5e1)"/>
+  <rect x="770" y="98" width="96" height="12" rx="6" fill="var(--da-danger, #ef4444)" opacity="0.75"/>
+  <path d="M 367 165 L 556 165" stroke="var(--da-muted, #64748b)" stroke-width="1.6" fill="none" stroke-dasharray="4 4" marker-end="url(#arrow)"/>
+
+  <!-- Overlay -->
+  <text x="280" y="284" text-anchor="middle" font-size="12" font-weight="600" fill="var(--da-fg, #0f172a)">overlayfs: sürecin / dizini</text>
+  <g font-size="11" text-anchor="middle">
+    <rect x="120" y="294" width="320" height="24" rx="6" fill="var(--da-success, #10b981)" opacity="0.18" stroke="var(--da-success, #10b981)"/>
+    <text x="280" y="310" fill="var(--da-fg, #0f172a)">merged — sürecin gördüğü birleşik görünüm</text>
+    <rect x="120" y="322" width="320" height="24" rx="6" fill="var(--da-surface, #ffffff)" stroke="var(--da-accent, #f59e0b)"/>
+    <text x="280" y="338" fill="var(--da-fg, #0f172a)">upperdir (rw) — konteynere özel, copy-up burada</text>
+    <rect x="120" y="350" width="320" height="22" rx="6" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+    <text x="280" y="365" fill="var(--da-muted, #64748b)">lowerdir (ro) — COPY . /app katmanı</text>
+    <rect x="120" y="376" width="320" height="22" rx="6" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+    <text x="280" y="391" fill="var(--da-muted, #64748b)">lowerdir (ro) — temel imaj (ör. debian-slim)</text>
+  </g>
+  <path d="M 280 212 L 280 290" stroke="var(--da-muted, #64748b)" stroke-width="1.6" fill="none" marker-end="url(#arrow)"/>
+
+  <!-- Çekirdek -->
+  <rect x="560" y="300" width="350" height="98" rx="14" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)" stroke-width="1.5"/>
+  <text x="735" y="328" text-anchor="middle" font-size="13" font-weight="600" fill="var(--da-fg, #0f172a)">Ana makine çekirdeği (tek)</text>
+  <text x="735" y="350" text-anchor="middle" font-size="11" fill="var(--da-muted, #64748b)">Tüm konteynerler aynı çekirdeği paylaşır:</text>
+  <text x="735" y="368" text-anchor="middle" font-size="11" fill="var(--da-muted, #64748b)">hızlı başlangıç, ama çekirdek açığı herkesi etkiler.</text>
+  <text x="735" y="386" text-anchor="middle" font-size="11" fill="var(--da-muted, #64748b)">Sanal makine ise kendi çekirdeğini çalıştırır.</text>
+
+  <text x="480" y="428" text-anchor="middle" font-size="12" fill="var(--da-muted, #64748b)">Çekirdekte "konteyner" adlı bir nesne yoktur; bu üç mekanizma bir sürece birlikte uygulanır.</text>
+</svg>

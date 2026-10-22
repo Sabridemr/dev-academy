@@ -1,0 +1,199 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "o-06-virtual-memory-page-fault",
+  "title": {
+    "tr": "Adres çevirisi ve page fault",
+    "en": "Address translation and a page fault"
+  },
+  "summary": {
+    "tr": "Bir okuma talimatının sanal adresi MMU tarafından çevrilir: TLB ıskalar, sayfa tablosu yürünür, sayfa bellekte değildir; page fault ile çekirdek sayfayı diskten boş bir çerçeveye yükler, tabloyu ve TLB'yi günceller, talimat yeniden çalışır ve ikinci erişim TLB'den isabet eder.",
+    "en": "A load instruction's virtual address is translated by the MMU: the TLB misses, the page table is walked, the page is not resident; on a page fault the kernel loads the page from disk into a free frame, updates the page table and TLB, the instruction re-runs and a second access hits in the TLB."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda CPU çekirdeği, yanında MMU ve TLB, ortada sayfa tablosu, sağda fiziksel RAM, altta çekirdek ve disk. CPU bir sanal adresi okumak ister; MMU önce TLB'ye bakar ve ıskalar, sonra sayfa tablosunu yürür. Girdinin present biti sıfırdır, MMU page fault üretir ve kontrol çekirdeğe geçer. Çekirdek boş çerçeve bulur, sayfayı diskten okur, süreç bu sırada bloklu bekler. Sayfa RAM'e yüklenir, tablo ve TLB güncellenir, talimat yeniden çalışır ve veri döner. Aynı sayfaya ikinci erişim doğrudan TLB'den çevrilir.",
+      "en": "CPU core on the left, MMU and TLB beside it, the page table in the middle, physical RAM on the right, the kernel and disk below. The CPU wants to read a virtual address; the MMU checks the TLB and misses, then walks the page table. The entry's present bit is zero, the MMU raises a page fault and control passes to the kernel. The kernel finds a free frame and reads the page from disk while the process blocks. The page lands in RAM, the table and TLB are updated, the instruction re-runs and the data returns. A second access to the same page is translated straight from the TLB."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "cpu", "kind": "server", "label": { "tr": "CPU çekirdeği", "en": "CPU core" }, "sublabel": "mov rax, [0x7f3a…]", "x": 110, "y": 160, "w": 170, "h": 76 },
+    { "id": "tlb", "kind": "cache", "label": "MMU + TLB", "sublabel": { "tr": "çeviri önbelleği", "en": "translation cache" }, "x": 380, "y": 160, "w": 160, "h": 76 },
+    { "id": "pt", "kind": "generic", "label": { "tr": "Sayfa tablosu", "en": "Page table" }, "sublabel": { "tr": "4 seviyeli ağaç", "en": "4-level tree" }, "x": 650, "y": 160, "w": 160, "h": 76 },
+    { "id": "ram", "kind": "db", "label": { "tr": "Fiziksel RAM", "en": "Physical RAM" }, "sublabel": { "tr": "4 KiB çerçeveler", "en": "4 KiB frames" }, "x": 890, "y": 330, "w": 150, "h": 80 },
+    { "id": "kernel", "kind": "generic", "label": { "tr": "Çekirdek", "en": "Kernel" }, "sublabel": { "tr": "page fault işleyicisi", "en": "page fault handler" }, "x": 380, "y": 450, "w": 180, "h": 76 },
+    { "id": "disk", "kind": "storage", "label": { "tr": "Disk", "en": "Disk" }, "sublabel": { "tr": "swap / dosya", "en": "swap / file" }, "x": 700, "y": 500, "w": 150, "h": 76 }
+  ],
+  "edges": [
+    { "id": "cpu-tlb", "from": "cpu", "to": "tlb", "kind": "request", "label": { "tr": "sanal adres", "en": "virtual address" } },
+    { "id": "tlb-pt", "from": "tlb", "to": "pt", "kind": "request", "label": "page walk" },
+    { "id": "tlb-ram", "from": "tlb", "to": "ram", "kind": "data", "label": { "tr": "fiziksel adres", "en": "physical address" }, "curvature": -0.2 },
+    { "id": "tlb-kernel", "from": "tlb", "to": "kernel", "kind": "event", "label": "#PF", "style": "dashed" },
+    { "id": "kernel-disk", "from": "kernel", "to": "disk", "kind": "request", "label": { "tr": "sayfayı oku", "en": "read page" } },
+    { "id": "disk-ram", "from": "disk", "to": "ram", "kind": "data", "label": "DMA", "curvature": 0.2 },
+    { "id": "kernel-pt", "from": "kernel", "to": "pt", "kind": "control", "label": { "tr": "P=1, çerçeve 5", "en": "P=1, frame 5" }, "curvature": 0.25 }
+  ],
+  "steps": [
+    {
+      "id": "load",
+      "title": { "tr": "Talimat bir sanal adres okur", "en": "An instruction reads a virtual address" },
+      "narration": {
+        "tr": "Süreç bir heap değişkenini okuyor. CPU'nun elinde yalnızca sanal adres vardır; RAM'in neresine gidileceğini bilmez. Adres, sayfa numarası ve sayfa içi konum olarak ikiye ayrılıp MMU'ya verilir.",
+        "en": "The process reads a heap variable. The CPU only has a virtual address; it does not know where in RAM to go. The address is split into a page number and an offset and handed to the MMU."
+      },
+      "durationMs": 2800,
+      "inherit": false,
+      "highlight": { "nodes": ["cpu", "tlb"], "edges": ["cpu-tlb"] },
+      "nodeStates": {
+        "cpu": { "status": "active", "badge": "load" },
+        "tlb": { "status": "idle" },
+        "pt": { "status": "idle" },
+        "ram": { "status": "idle" },
+        "kernel": { "status": "muted" },
+        "disk": { "status": "muted" }
+      },
+      "edgeStates": { "tlb-kernel": { "visible": false }, "kernel-pt": { "visible": false } },
+      "packets": [{ "edge": "cpu-tlb", "shape": "envelope", "label": "VPN 0x7f3a5", "durationMs": 1200 }]
+    },
+    {
+      "id": "tlb-miss",
+      "title": { "tr": "TLB ıskası", "en": "TLB miss" },
+      "narration": {
+        "tr": "MMU önce TLB'ye bakar. Bu sayfa yakın zamanda kullanılmadığı için çevirisi TLB'de yoktur. TLB isabet etseydi çeviri neredeyse bedava olurdu; ıskalayınca bellekteki sayfa tablosu yürünmelidir.",
+        "en": "The MMU checks the TLB first. This page was not used recently, so its translation is not cached. A TLB hit would make translation nearly free; on a miss the in-memory page table must be walked."
+      },
+      "durationMs": 2800,
+      "highlight": { "nodes": ["tlb"] },
+      "nodeStates": { "tlb": { "status": "warning", "badge": "MISS" } },
+      "annotations": [
+        { "id": "tlb-note", "x": 380, "y": 60, "text": { "tr": "context switch sonrası TLB soğuktur", "en": "the TLB is cold after a context switch" }, "tone": "warning", "target": "tlb" }
+      ]
+    },
+    {
+      "id": "walk",
+      "title": { "tr": "Sayfa tablosu yürünür", "en": "Page table walk" },
+      "narration": {
+        "tr": "Donanım dört seviyeli sayfa tablosu ağacını iner ve girdiyi bulur. Girdinin present biti 0: sayfa sanal alanda geçerli ama şu an fiziksel bellekte değil, swap'a gönderilmiş.",
+        "en": "The hardware descends the four-level page table tree and finds the entry. Its present bit is 0: the page is valid in the virtual space but not in physical memory right now; it was swapped out."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["tlb", "pt"], "edges": ["tlb-pt"] },
+      "nodeStates": { "pt": { "status": "warning", "badge": "P=0" } },
+      "packets": [
+        { "edge": "tlb-pt", "shape": "dot", "label": "walk", "durationMs": 1000 },
+        { "edge": "tlb-pt", "direction": "backward", "shape": "square", "label": "P=0", "color": "warning", "startAt": 1200, "durationMs": 1000 }
+      ]
+    },
+    {
+      "id": "fault",
+      "title": { "tr": "Page fault: kontrol çekirdekte", "en": "Page fault: control to the kernel" },
+      "narration": {
+        "tr": "MMU bir page fault istisnası üretir. CPU talimatı yarıda bırakır ve çekirdeğin page fault işleyicisine atlar. Adres geçersiz olsaydı süreç SIGSEGV ile ölürdü; burada adres geçerli, sayfa yalnızca diskte.",
+        "en": "The MMU raises a page fault exception. The CPU abandons the instruction and jumps to the kernel's page fault handler. If the address were invalid the process would die with SIGSEGV; here it is valid, the page is just on disk."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["tlb", "kernel", "cpu"], "edges": ["tlb-kernel"] },
+      "nodeStates": {
+        "cpu": { "status": "error", "badge": "#PF" },
+        "kernel": { "status": "active", "badge": "handler" }
+      },
+      "edgeStates": { "tlb-kernel": { "visible": true, "status": "error" } },
+      "packets": [{ "edge": "tlb-kernel", "shape": "diamond", "label": "#PF", "color": "danger", "durationMs": 1200 }]
+    },
+    {
+      "id": "disk-read",
+      "title": { "tr": "Major fault: diskten oku", "en": "Major fault: read from disk" },
+      "narration": {
+        "tr": "Çekirdek boş bir çerçeve ayırır (gerekirse başka bir sayfayı tahliye eder) ve sayfayı swap alanından okumak için disk isteği gönderir. Bu bir major fault'tur: milisaniyeler sürer ve süreç bu sürede bloklu bekler, CPU başka süreçlere geçer.",
+        "en": "The kernel allocates a free frame (evicting another page if needed) and issues a disk request to read the page from swap. This is a major fault: it takes milliseconds, the process blocks meanwhile and the CPU switches to other processes."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["kernel", "disk"], "edges": ["kernel-disk"] },
+      "nodeStates": {
+        "cpu": { "status": "muted", "badge": "blocked" },
+        "disk": { "status": "busy", "badge": "~ms" },
+        "ram": { "status": "active", "badge": "frame 5" }
+      },
+      "packets": [{ "edge": "kernel-disk", "shape": "envelope", "label": { "tr": "oku", "en": "read" }, "durationMs": 1400 }],
+      "annotations": [
+        { "id": "major-note", "x": 700, "y": 410, "text": { "tr": "major fault: disk; minor fault: disk yok", "en": "major fault: disk; minor fault: no disk" }, "tone": "warning", "target": "disk" }
+      ]
+    },
+    {
+      "id": "dma",
+      "title": { "tr": "Sayfa RAM'e iner", "en": "The page lands in RAM" },
+      "narration": {
+        "tr": "Disk 4 KiB'lık sayfayı DMA ile doğrudan RAM'deki 5 numaralı çerçeveye aktarır ve bir kesme üretir. Sayfanın içeriği artık fiziksel bellekte.",
+        "en": "The disk transfers the 4 KiB page via DMA straight into frame 5 in RAM and raises an interrupt. The page's contents are now in physical memory."
+      },
+      "durationMs": 2800,
+      "highlight": { "nodes": ["disk", "ram"], "edges": ["disk-ram"] },
+      "nodeStates": {
+        "disk": { "status": "success", "badge": "" },
+        "ram": { "status": "success", "badge": "frame 5" }
+      },
+      "packets": [{ "edge": "disk-ram", "shape": "square", "label": "4 KiB", "color": "success", "durationMs": 1500 }]
+    },
+    {
+      "id": "update",
+      "title": { "tr": "Tablo güncellenir", "en": "The table is updated" },
+      "narration": {
+        "tr": "Çekirdek sayfa tablosu girdisini günceller: present biti 1, çerçeve 5. Süreç yeniden hazır kuyruğuna alınır. Çekirdek talimatı atlamaz; aynı talimat baştan çalıştırılacaktır.",
+        "en": "The kernel updates the page table entry: present bit 1, frame 5. The process goes back on the ready queue. The kernel does not skip the instruction; the same instruction will run again from the start."
+      },
+      "durationMs": 2800,
+      "highlight": { "nodes": ["kernel", "pt"], "edges": ["kernel-pt"] },
+      "nodeStates": {
+        "pt": { "status": "success", "badge": "P=1" },
+        "kernel": { "status": "idle", "badge": "" },
+        "disk": { "status": "muted" }
+      },
+      "edgeStates": { "kernel-pt": { "visible": true, "status": "active" }, "tlb-kernel": { "status": "muted" } },
+      "packets": [{ "edge": "kernel-pt", "shape": "square", "label": "P=1", "color": "success", "durationMs": 1300 }]
+    },
+    {
+      "id": "retry",
+      "title": { "tr": "Talimat yeniden çalışır", "en": "The instruction re-runs" },
+      "narration": {
+        "tr": "Süreç CPU'ya döner ve aynı okuma talimatı tekrar çalışır. Bu kez page walk geçerli bir çerçeve bulur, çeviri TLB'ye yazılır ve veri RAM'den okunur. Program hiçbir şey fark etmedi; yalnızca bu satır milisaniyeler sürdü.",
+        "en": "The process gets the CPU back and the same load instruction runs again. This time the walk finds a valid frame, the translation is written to the TLB and the data is read from RAM. The program noticed nothing; this one line just took milliseconds."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["cpu", "tlb", "pt", "ram"], "edges": ["cpu-tlb", "tlb-pt", "tlb-ram"] },
+      "nodeStates": {
+        "cpu": { "status": "active", "badge": "retry" },
+        "tlb": { "status": "success", "badge": "→ frame 5" }
+      },
+      "edgeStates": { "kernel-pt": { "status": "idle" } },
+      "packets": [
+        { "edge": "cpu-tlb", "shape": "envelope", "label": "VPN 0x7f3a5", "durationMs": 800 },
+        { "edge": "tlb-pt", "shape": "dot", "label": "walk", "startAt": 900, "durationMs": 700 },
+        { "edge": "tlb-ram", "shape": "square", "label": "frame 5", "color": "success", "startAt": 1800, "durationMs": 900 }
+      ]
+    },
+    {
+      "id": "hit",
+      "title": { "tr": "İkinci erişim: TLB isabeti", "en": "Second access: TLB hit" },
+      "narration": {
+        "tr": "Aynı sayfaya bir sonraki erişimde çeviri TLB'den gelir; sayfa tablosuna ve çekirdeğe hiç gidilmez, erişim nanosaniyeler sürer. Yerellik (locality) bu yüzden önemlidir: aynı sayfalara tekrar tekrar dokunan kod hem TLB'den hem önbellekten yararlanır.",
+        "en": "On the next access to the same page the translation comes from the TLB; neither the page table nor the kernel is involved and the access takes nanoseconds. That is why locality matters: code that keeps touching the same pages benefits from both the TLB and the caches."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["cpu", "tlb", "ram"], "edges": ["cpu-tlb", "tlb-ram"] },
+      "nodeStates": {
+        "cpu": { "status": "success", "badge": "ns" },
+        "tlb": { "status": "success", "badge": "HIT" },
+        "pt": { "status": "muted", "badge": "" },
+        "kernel": { "status": "muted" }
+      },
+      "packets": [
+        { "edge": "cpu-tlb", "shape": "envelope", "label": "VPN 0x7f3a5", "durationMs": 800 },
+        { "edge": "tlb-ram", "shape": "square", "label": "frame 5", "color": "success", "startAt": 900, "durationMs": 900 }
+      ],
+      "annotations": [
+        { "id": "hit-note", "x": 650, "y": 70, "text": { "tr": "sayfa tablosuna gidilmedi", "en": "page table not touched" }, "tone": "success", "target": "pt" }
+      ]
+    }
+  ]
+}
