@@ -1,0 +1,157 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "llm-ci-log-triage",
+  "title": { "tr": "LLM ile CI Log Analizi ve İnsan Onayı", "en": "CI Log Triage with an LLM and Human Approval" },
+  "summary": {
+    "tr": "Başarısız job'un logu maskelenip modele gider; model PR'a taslak bir açıklama yazar; geliştirici öneriyi logla doğrular, yanlış kısmı reddeder, düzeltmeyi kendisi yapar ve pipeline yeniden çalışır.",
+    "en": "The failed job's log is masked and sent to the model; the model writes a draft explanation on the PR; the developer checks the suggestion against the log, rejects the wrong part, makes the fix and the pipeline runs again."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Sol üstte CI test job'u, yanında job logu, maskeleme adımı ve sağ üstte LLM bulunur. Sağ altta PR yorumu, alt ortada geliştirici, sol altta düzeltme commit'i yer alır. Adımlarda test düşer, başarısız adımların logu çekilir, gizli değerler maskelenir, kısaltılmış log modele gider, model PR'a taslak özet yazar, geliştirici iki öneriden birini kabul edip uydurma olanı reddeder, düzeltmeyi commit'ler ve CI yeniden çalışıp geçer.",
+      "en": "The CI test job is at the top left, followed by the job log, the masking step and the LLM at the top right. The PR comment is at the bottom right, the developer at the bottom centre and the fix commit at the bottom left. Over the steps the test fails, the log of the failed steps is fetched, secrets are masked, the trimmed log goes to the model, the model writes a draft summary on the PR, the developer accepts one of two suggestions and rejects the made-up one, commits the fix and CI runs again and passes."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "ci", "kind": "worker", "label": "CI · test", "sublabel": "ubuntu-latest", "x": 110, "y": 140, "w": 150, "h": 64 },
+    { "id": "log", "kind": "storage", "label": { "tr": "Job logu", "en": "Job log" }, "sublabel": "gh run view --log-failed", "x": 330, "y": 140, "w": 200, "h": 64 },
+    { "id": "mask", "kind": "function", "label": { "tr": "Maskeleme", "en": "Masking" }, "sublabel": "token · e-posta · IP", "x": 560, "y": 140, "w": 170, "h": 64 },
+    { "id": "llm", "kind": "model", "label": "LLM", "sublabel": { "tr": "güven sınırının dışı", "en": "outside trust boundary" }, "x": 820, "y": 140, "w": 170, "h": 70, "color": "accent" },
+    { "id": "comment", "kind": "service", "label": { "tr": "PR yorumu", "en": "PR comment" }, "sublabel": { "tr": "taslak — doğrulayın", "en": "draft — verify" }, "x": 820, "y": 420, "w": 190, "h": 70 },
+    { "id": "dev", "kind": "user", "label": { "tr": "Geliştirici", "en": "Developer" }, "x": 500, "y": 470, "w": 150, "h": 64 },
+    { "id": "fix", "kind": "generic", "label": { "tr": "Düzeltme commit'i", "en": "Fix commit" }, "sublabel": "services: postgres", "x": 170, "y": 420, "w": 190, "h": 64 }
+  ],
+  "edges": [
+    { "id": "ci-log", "from": "ci", "to": "log", "kind": "data" },
+    { "id": "log-mask", "from": "log", "to": "mask", "kind": "data" },
+    { "id": "mask-llm", "from": "mask", "to": "llm", "kind": "request" },
+    { "id": "llm-comment", "from": "llm", "to": "comment", "kind": "response", "label": { "tr": "özet + öneri", "en": "summary + suggestion" } },
+    { "id": "comment-dev", "from": "comment", "to": "dev", "kind": "event" },
+    { "id": "dev-fix", "from": "dev", "to": "fix", "kind": "control", "label": { "tr": "onay + düzeltme", "en": "approve + fix" } },
+    { "id": "fix-ci", "from": "fix", "to": "ci", "kind": "control", "label": { "tr": "yeniden çalıştır", "en": "re-run" } }
+  ],
+  "steps": [
+    {
+      "id": "fail",
+      "title": { "tr": "Test job'u düşer", "en": "The test job fails" },
+      "narration": {
+        "tr": "PR'daki test job'u kırmızıya döner. Log binlerce satırdır ve gerçek hata, ortalarda bir yerde, uzun bir stack trace'in arasında kaybolmuştur. Bu noktada if: failure() koşullu ikinci bir job devreye girer.",
+        "en": "The test job on the PR turns red. The log is thousands of lines long and the real error is lost somewhere in the middle, inside a long stack trace. At this point a second job with an if: failure() condition kicks in."
+      },
+      "durationMs": 3600,
+      "inherit": false,
+      "highlight": { "nodes": ["ci"], "edges": [] },
+      "nodeStates": {
+        "ci": { "status": "error", "badge": "failed" },
+        "log": { "status": "idle" },
+        "mask": { "status": "idle" },
+        "llm": { "status": "idle" },
+        "comment": { "visible": false },
+        "dev": { "status": "idle" },
+        "fix": { "visible": false }
+      },
+      "edgeStates": { "llm-comment": { "visible": false }, "comment-dev": { "visible": false }, "dev-fix": { "visible": false }, "fix-ci": { "visible": false } },
+      "annotations": [{ "id": "cond", "x": 110, "y": 240, "text": "if: failure()", "target": "ci", "tone": "danger" }]
+    },
+    {
+      "id": "fetch",
+      "title": { "tr": "Başarısız adımların logu çekilir", "en": "The failed steps' log is fetched" },
+      "narration": {
+        "tr": "explain-failure job'u yalnızca başarısız adımların çıktısını alır ve son birkaç yüz satıra kırpar. Modele tüm logu göndermek hem pahalıdır hem de hatayı gürültüye gömer. Bağlamı seçmek, modelin cevap kalitesini doğrudan belirler.",
+        "en": "The explain-failure job takes only the output of the failed steps and trims it to the last few hundred lines. Sending the whole log is expensive and buries the error in noise. Choosing the context directly decides the quality of the model's answer."
+      },
+      "durationMs": 3800,
+      "highlight": { "nodes": ["ci", "log"], "edges": ["ci-log"] },
+      "nodeStates": { "log": { "status": "active", "badge": "tail -n 300" } },
+      "edgeStates": { "ci-log": { "status": "active" } },
+      "packets": [{ "edge": "ci-log", "shape": "square", "label": "log", "durationMs": 1200 }]
+    },
+    {
+      "id": "mask",
+      "title": { "tr": "Gizli değerler maskelenir", "en": "Secrets are masked" },
+      "narration": {
+        "tr": "Log, kuruluşun dışındaki bir API'ye gitmeden önce token, parola, bağlantı dizesi, e-posta ve IP adresleri gibi değerler *** ile değiştirilir. Maskeleme modelden önce çalışır. Modele bir kez giden veri geri alınamaz.",
+        "en": "Before the log goes to an API outside the organisation, values such as tokens, passwords, connection strings, e-mail and IP addresses are replaced with ***. Masking runs before the model; data that has reached the model cannot be taken back."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["log", "mask"], "edges": ["log-mask"] },
+      "nodeStates": { "ci": { "status": "idle" }, "log": { "status": "idle" }, "mask": { "status": "success", "badge": "*** ×4", "counter": 4 } },
+      "edgeStates": { "ci-log": { "status": "idle" }, "log-mask": { "status": "active" } },
+      "packets": [{ "edge": "log-mask", "shape": "square", "durationMs": 1100 }],
+      "annotations": [{ "id": "redact", "x": 560, "y": 240, "text": "DATABASE_URL=***", "target": "mask", "tone": "success" }]
+    },
+    {
+      "id": "send",
+      "title": { "tr": "Kısaltılmış log modele gider", "en": "The trimmed log goes to the model" },
+      "narration": {
+        "tr": "Maskelenmiş log, \"hangi adım düştü, muhtemel neden ne, ilk bakılacak dosya hangisi\" diye soran bir istemle birlikte modele gönderilir. Job'un yetkileri dardır: kodu okuyabilir, PR'a yorum yazabilir, ama koda ya da ortama yazamaz.",
+        "en": "The masked log is sent to the model with a prompt asking which step failed, what the likely cause is and which file to check first. The job's permissions are narrow: it can read the code and write a PR comment, but it cannot write to the code or the environment."
+      },
+      "durationMs": 3800,
+      "highlight": { "nodes": ["mask", "llm"], "edges": ["mask-llm"] },
+      "nodeStates": { "mask": { "status": "idle" }, "llm": { "status": "busy" } },
+      "edgeStates": { "log-mask": { "status": "idle" }, "mask-llm": { "status": "active" } },
+      "packets": [{ "edge": "mask-llm", "shape": "envelope", "label": "prompt", "durationMs": 1200 }],
+      "annotations": [{ "id": "perm", "x": 820, "y": 60, "text": "permissions: contents: read, pull-requests: write", "target": "llm", "tone": "info" }]
+    },
+    {
+      "id": "draft",
+      "title": { "tr": "Model taslak yorum yazar", "en": "The model writes a draft comment" },
+      "narration": {
+        "tr": "Model, PR'a üç cümlelik bir özet bırakır: \"Test aşaması ECONNREFUSED 127.0.0.1:5432 ile düştü; workflow'da Postgres servis konteyneri tanımlı değil.\" İkinci bir öneri olarak var olmayan bir npm bayrağını da önerir. Yorum açıkça \"taslak\" olarak işaretlidir.",
+        "en": "The model leaves a three-sentence summary on the PR: \"The test stage failed with ECONNREFUSED 127.0.0.1:5432; no Postgres service container is defined in the workflow.\" As a second suggestion it also proposes an npm flag that does not exist. The comment is clearly marked as a draft."
+      },
+      "durationMs": 4400,
+      "highlight": { "nodes": ["llm", "comment"], "edges": ["llm-comment"] },
+      "nodeStates": { "llm": { "status": "active" }, "comment": { "visible": true, "status": "warning", "badge": "2 öneri" } },
+      "edgeStates": { "mask-llm": { "status": "idle" }, "llm-comment": { "visible": true, "status": "active" } },
+      "packets": [{ "edge": "llm-comment", "shape": "envelope", "label": "draft", "color": "warning", "durationMs": 1300 }]
+    },
+    {
+      "id": "review",
+      "title": { "tr": "İnsan doğrular: biri doğru, biri uydurma", "en": "A human verifies: one right, one made up" },
+      "narration": {
+        "tr": "Geliştirici yorumu okur ve logdaki gerçek satırı açıp birinci öneriyi doğrular. İkinci öneriyi belgelere bakarak denetler ve böyle bir bayrağın olmadığını görür; bu bir halüsinasyondur ve reddedilir. Model ipucu verir, kararı insan verir.",
+        "en": "The developer reads the comment, opens the actual log line and confirms the first suggestion. They check the second one against the documentation and find that no such flag exists; it is a hallucination and is rejected. The model gives a hint; the human makes the call."
+      },
+      "durationMs": 4600,
+      "highlight": { "nodes": ["comment", "dev"], "edges": ["comment-dev"] },
+      "nodeStates": { "llm": { "status": "idle" }, "comment": { "status": "active", "badge": "1 ✓ · 1 ✗" }, "dev": { "status": "active", "badge": "inceliyor" } },
+      "edgeStates": { "llm-comment": { "status": "idle" }, "comment-dev": { "visible": true, "status": "active" } },
+      "packets": [{ "edge": "comment-dev", "shape": "envelope", "durationMs": 1100 }],
+      "annotations": [{ "id": "halluc", "x": 820, "y": 520, "text": { "tr": "uydurma bayrak → reddedildi", "en": "made-up flag → rejected" }, "target": "comment", "tone": "danger" }]
+    },
+    {
+      "id": "fix",
+      "title": { "tr": "Düzeltmeyi insan yapar", "en": "The human makes the fix" },
+      "narration": {
+        "tr": "Geliştirici workflow'a services: postgres bloğunu ve DATABASE_URL'i ekler, değişikliği kendisi commit'ler. Model hiçbir zaman doğrudan koda ya da üretime yazmadı. Önerinin işe yarayıp yaramadığı da 👍/👎 ile kaydedilir; bu oran izlenmezse modele duyulan güven kör güven olur.",
+        "en": "The developer adds the services: postgres block and DATABASE_URL to the workflow and commits the change themselves. The model never wrote to the code or production directly. Whether the suggestion helped is recorded with 👍/👎; if that ratio is not tracked, trust in the model is blind trust."
+      },
+      "durationMs": 4400,
+      "highlight": { "nodes": ["dev", "fix"], "edges": ["dev-fix"] },
+      "nodeStates": { "comment": { "status": "idle" }, "dev": { "status": "success", "badge": "👍 1 · 👎 1" }, "fix": { "visible": true, "status": "active" } },
+      "edgeStates": { "comment-dev": { "status": "idle" }, "dev-fix": { "visible": true, "status": "active" } },
+      "packets": [{ "edge": "dev-fix", "shape": "square", "label": "git commit", "durationMs": 1200 }]
+    },
+    {
+      "id": "green",
+      "title": { "tr": "CI yeniden çalışır ve geçer", "en": "CI runs again and passes" },
+      "narration": {
+        "tr": "Yeni commit pipeline'ı yeniden tetikler; Postgres servis konteyneri ayağa kalkar ve testler geçer. Döngü kapanır: veri modele maskelenerek gitti, model taslak üretti, insan doğruladı ve uyguladı. Bu, human-in-the-loop ilkesinin küçük ama eksiksiz bir örneğidir.",
+        "en": "The new commit triggers the pipeline again; the Postgres service container starts and the tests pass. The loop closes: the data reached the model masked, the model produced a draft, a human verified and applied it. This is a small but complete example of the human-in-the-loop principle."
+      },
+      "durationMs": 4200,
+      "highlight": { "nodes": ["fix", "ci"], "edges": ["fix-ci"] },
+      "nodeStates": { "dev": { "status": "idle" }, "fix": { "status": "success" }, "ci": { "status": "success", "badge": "passed" } },
+      "edgeStates": { "dev-fix": { "status": "idle" }, "fix-ci": { "visible": true, "status": "active" } },
+      "packets": [{ "edge": "fix-ci", "shape": "dot", "label": "push", "color": "success", "durationMs": 1200 }],
+      "annotations": [{ "id": "hitl", "x": 330, "y": 300, "text": "human-in-the-loop", "tone": "success" }]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["aiops", "llm", "ci-cd", "human-in-the-loop"]
+}
