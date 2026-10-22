@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { parseLessonMarkdown, parseDirectiveAttributes, lessonPlainText } from './parser';
-import { QuizSchema } from './schema';
+import { ExerciseSchema, QuizSchema, stripExerciseSolutions, type LessonBlock } from './schema';
 import { CURRICULUM, allLessons, findLesson, nextLessonOf, TOTAL_LESSON_COUNT } from './curriculum';
 
 const SAMPLE = `---
@@ -111,6 +111,18 @@ describe('Ders Markdown ayrıştırıcı', () => {
     });
   });
 
+  it('exercise directive kaynağını ve yönergesini çıkarır', () => {
+    const doc = parseLessonMarkdown(
+      SAMPLE.replace('## Kavram', ':::exercise{src="toplam.exercise.json"}\nFonksiyonu tamamla|Complete the function\n:::\n\n## Kavram'),
+    );
+    const ex = doc.blocks.find((b) => b.type === 'exercise');
+    expect(ex).toMatchObject({
+      type: 'exercise',
+      src: 'toplam.exercise.json',
+      instructions: { tr: 'Fonksiyonu tamamla', en: 'Complete the function' },
+    });
+  });
+
   it('kapatılmamış directive hata verir', () => {
     expect(() => parseLessonMarkdown(SAMPLE.replace(':::next{lesson="a-06-api-gateway"}\n:::', ':::next{lesson="x"}'))).toThrow(/kapatılmamış/);
   });
@@ -160,6 +172,37 @@ describe('Quiz şeması', () => {
   it('single tipinde birden fazla doğru reddedilir', () => {
     const bad = { ...base, questions: [{ ...base.questions[0], correct: ['a', 'b'] }] };
     expect(QuizSchema.safeParse(bad).success).toBe(false);
+  });
+});
+
+describe('Alıştırma şeması', () => {
+  const base = {
+    id: 'k-06-toplam',
+    title: { tr: 'Toplam', en: 'Sum' },
+    prompt: { tr: 'Topla', en: 'Sum it' },
+    starter: 'def toplam(xs):\n    ...\n',
+    solution: 'def toplam(xs):\n    return sum(xs)\n',
+    tests: 'assert toplam([1, 2]) == 3\n',
+  };
+  it('varsayılanları doldurur', () => {
+    const ex = ExerciseSchema.parse(base);
+    expect(ex.language).toBe('python');
+    expect(ex.timeoutMs).toBe(5000);
+    expect(ex.hints).toEqual([]);
+  });
+  it('boş testleri ve bilinmeyen alanı reddeder', () => {
+    expect(ExerciseSchema.safeParse({ ...base, tests: '  \n' }).success).toBe(false);
+    expect(ExerciseSchema.safeParse({ ...base, extra: 1 }).success).toBe(false);
+  });
+  it('stripExerciseSolutions çözümü bloklardan çıkarır', () => {
+    const blocks: LessonBlock[] = [
+      { id: 'exercise-1', order: 0, type: 'exercise', src: 'x.exercise.json', solution: 'gizli' },
+      { id: 'text-1', order: 1, type: 'text', markdown: 'merhaba' },
+    ];
+    const out = stripExerciseSolutions(blocks);
+    expect(out[0]).not.toHaveProperty('solution');
+    expect(out[1]).toBe(blocks[1]);
+    expect(blocks[0]).toHaveProperty('solution', 'gizli');
   });
 });
 

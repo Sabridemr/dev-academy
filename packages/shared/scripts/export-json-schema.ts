@@ -12,6 +12,7 @@ import {
   ModuleManifestSchema,
   QuizSchema,
   LearningPathManifestSchema,
+  ExerciseSchema,
 } from '../src/content/schema';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -24,6 +25,7 @@ const targets: [string, Parameters<typeof zodToJsonSchema>[0]][] = [
   ['lesson-frontmatter.schema.json', LessonFrontmatterSchema],
   ['module.schema.json', ModuleManifestSchema],
   ['learning-path.schema.json', LearningPathManifestSchema],
+  ['exercise.schema.json', ExerciseSchema],
 ];
 
 for (const [file, schema] of targets) {

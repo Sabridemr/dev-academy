@@ -30,6 +30,9 @@ export function buildSearchText(
           return `${loc(b.alt)} ${loc(b.caption)}`;
         case 'trace':
           return `${loc(b.title)} ${loc(b.caption)} ${b.trace?.code ?? ''}`;
+        case 'exercise':
+          // Çözüm aranabilir metne girmez (arama özeti istemciye döner)
+          return `${loc(b.exercise?.title)} ${loc(b.exercise?.prompt)} ${loc(b.instructions)}`;
         case 'interactive':
           return `${b.interactive} ${loc(b.title)} ${loc(b.instructions)}`;
         default:
