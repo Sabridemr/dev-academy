@@ -1,0 +1,109 @@
+{
+  "id": "q-03-distributed-locks-leases-quiz",
+  "title": { "tr": "Dağıtık Kilit ve Lease Quiz", "en": "Distributed Locks and Leases Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Dağıtık kilitlerde düz kilit yerine süreli lease kullanılmasının asıl nedeni nedir?",
+        "en": "What is the main reason for using a time-bounded lease instead of a plain lock in distributed locking?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Kilidi alan süreç çökerse kilidin sonsuza kadar tutulu kalmasını önlemek", "en": "To stop the lock being held forever if the holder crashes" } },
+        { "id": "b", "text": { "tr": "Kilit servisine yapılan istek sayısını azaltmak", "en": "To reduce the number of requests to the lock service" } },
+        { "id": "c", "text": { "tr": "İki istemcinin aynı anda kilidi tutmasını kesin olarak imkânsız kılmak", "en": "To make it strictly impossible for two clients to hold the lock at once" } },
+        { "id": "d", "text": { "tr": "Saat kaymasını ortadan kaldırmak", "en": "To eliminate clock skew" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "Lease, çöken sahibin kilidi kendiliğinden bırakmasını sağlar. Ama (c) tam tersine bir risk yaratır: duraklayan bir süreç lease'i bittiği hâlde kilidi tuttuğunu sanabilir. Bu yüzden lease tek başına doğruluk sağlamaz, fencing token gerekir.",
+        "en": "A lease makes a crashed holder release the lock automatically. But it actually creates the risk in (c): a paused process can believe it holds the lock after its lease has expired. That is why a lease alone does not guarantee correctness; a fencing token is needed."
+      },
+      "difficulty": "easy",
+      "concepts": ["lease", "distributed-lock"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "Depo en son 41 numaralı fencing token ile yazma kabul etti. Şimdi token 39 ile bir yazma geliyor. Depo ne yapmalı?",
+        "en": "Storage last accepted a write with fencing token 41. Now a write arrives with token 39. What should storage do?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Kabul etmeli, çünkü daha sonra geldi", "en": "Accept it, since it arrived later" } },
+        { "id": "b", "text": { "tr": "Reddetmeli, çünkü 39 < 41", "en": "Reject it, since 39 < 41" } },
+        { "id": "c", "text": { "tr": "Kilit servisine sorup karar vermeli", "en": "Ask the lock service and then decide" } },
+        { "id": "d", "text": { "tr": "İki sürümü birleştirmeli", "en": "Merge the two versions" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Daha küçük token, sahibinin kilidi daha önce aldığını ve aradan başka bir sahibin geçtiğini gösterir; bu yazma süresi dolmuş bir lease'e dayanır. Varış zamanı önemli değildir. Kilit servisine sormak da yarış koşulu yaratır; karar deponun koşullu yazmasıyla verilmelidir.",
+        "en": "A smaller token shows its holder took the lock earlier and another holder has since come along; this write is based on an expired lease. Arrival time is irrelevant. Asking the lock service would also create a race; the decision must be made by storage's conditional write."
+      },
+      "difficulty": "easy",
+      "concepts": ["fencing-token"]
+    },
+    {
+      "id": "q3",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Bir istemcinin süresi dolmuş lease ile yazma yapmasına hangileri yol açabilir? (Birden fazla seçin)",
+        "en": "Which of these can cause a client to write with an expired lease? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Stop-the-world çöp toplama duraklaması", "en": "A stop-the-world garbage collection pause" } },
+        { "id": "b", "text": { "tr": "Sanal makinenin duraklatılması ya da canlı taşınması", "en": "The virtual machine being paused or live-migrated" } },
+        { "id": "c", "text": { "tr": "İstemci saatinin kilit servisinin saatinden yavaş ilerlemesi", "en": "The client's clock running slower than the lock service's clock" } },
+        { "id": "d", "text": { "tr": "Kilit servisinin Raft kullanması", "en": "The lock service using Raft" } }
+      ],
+      "correct": ["a", "b", "c"],
+      "explanation": {
+        "tr": "Süreç duraklamaları ve saat kayması, istemcinin lease'in bittiğini fark etmemesine yol açar. Raft ise kilit servisinin kendi kararlarını güvenli kılar; istemci tarafındaki bu sorunları ne yaratır ne de çözer.",
+        "en": "Process pauses and clock drift make the client miss that its lease has expired. Raft makes the lock service's own decisions safe; it neither causes nor fixes these client-side problems."
+      },
+      "difficulty": "medium",
+      "concepts": ["process-pause", "lease"]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Kleppmann'a göre kilit yalnızca aynı işin iki kez yapılmasını önlemek (verimlilik) içinse, tek bir Redis sunucusunda SET NX PX ile alınan kilit genellikle yeterlidir.",
+        "en": "According to Kleppmann, if a lock is only meant to avoid doing the same work twice (efficiency), a lock taken with SET NX PX on a single Redis server is usually enough."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["t"],
+      "explanation": {
+        "tr": "Doğru. Verimlilik kilidinde ara sıra yaşanan bir hata yalnızca fazladan iş demektir. Doğruluk gerektiğinde ise konsensüs tabanlı bir sistem (ZooKeeper, etcd) ve fencing token önerilir.",
+        "en": "True. With an efficiency lock, an occasional failure only means extra work. When correctness is required, a consensus-based system (ZooKeeper, etcd) plus fencing tokens is recommended."
+      },
+      "difficulty": "medium",
+      "concepts": ["redlock", "distributed-lock"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "ZooKeeper kilit tarifinde her istemci neden yalnızca kendisinden hemen önceki sıralı düğümü izler (watch)?",
+        "en": "In the ZooKeeper lock recipe, why does each client only watch the sequential node immediately before its own?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Kilit bırakıldığında tüm bekleyenlerin aynı anda uyanmasını (herd effect) önlemek için", "en": "To avoid all waiters waking up at once when the lock is released (the herd effect)" } },
+        { "id": "b", "text": { "tr": "ZooKeeper aynı anda yalnızca bir watch'a izin verdiği için", "en": "Because ZooKeeper only allows one watch at a time" } },
+        { "id": "c", "text": { "tr": "Fencing token'ı önceki düğümden almak için", "en": "To obtain the fencing token from the previous node" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "Herkes kilit düğümünü izleseydi, her bırakmada tüm istemciler uyanıp ZooKeeper'a aynı anda sorardı. Zincir biçiminde izleme ile yalnızca sırası gelen istemci uyanır.",
+        "en": "If everyone watched the lock node, every release would wake all clients and they would query ZooKeeper at the same time. With a chain of watches only the client whose turn it is wakes up."
+      },
+      "difficulty": "hard",
+      "concepts": ["ephemeral-node", "leader-election"]
+    }
+  ]
+}
