@@ -9760,16 +9760,22 @@
   },
   "lazy-loading": {
     "term": {
-      "tr": "Lazy loading (ORM'de tembel yükleme)",
+      "tr": "Lazy loading (tembel yükleme)",
       "en": "Lazy loading"
     },
     "definition": {
-      "tr": "ORM'lerde ilişkili verinin ancak koda erişildiği anda, arka planda ayrı bir sorguyla yüklenmesi (ör. Hibernate, ActiveRecord'da order.customer). Erişim bir döngü, şablon ya da serileştirici içinde görünmez biçimde tekrarlandığında N+1'in en yaygın kaynağıdır."
+      "tr": "Bir kaynağı ya da veriyi baştan değil, gerçekten gerektiği anda yükleme stratejisi. Web'de ekran dışındaki görsellerin, bileşenlerin ve kod parçalarının (code splitting) kullanıcı o noktaya gelince indirilmesi anlamına gelir ve ilk yükleme süresini kısaltır. ORM'lerde ise ilişkili verinin koda erişildiği anda ayrı bir sorguyla çekilmesidir; bu erişim bir döngü içinde olursa N+1 sorgu sorununa yol açar."
     },
     "related": [
       "n-plus-one",
       "eager-loading",
-      "lazy-evaluation"
+      "lazy-evaluation",
+      "code-splitting",
+      "core-web-vitals"
+    ],
+    "aliases": [
+      "deferred loading",
+      "tembel yükleme"
     ]
   },
   "lcs": {
