@@ -371,6 +371,9 @@ satırdır: `sorted({s["email"] for s in siparisler if s["durum"] == "aktif"})`.
 - `zip` ve `enumerate` indeks hesabını ortadan kaldırır. `zip` en kısada durur, bu yüzden gerekirse `strict=True`
   kullan. Saf fonksiyonlar test etmesi ve akıl yürütmesi en kolay kodu oluşturur.
 
+:::exercise{src="transpoz.exercise.json"}
+:::
+
 :::quiz{src="quiz.json"}
 :::
 

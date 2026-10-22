@@ -1,0 +1,26 @@
+{
+  "id": "k-05-sirayi-koruyarak-tekillestir",
+  "title": {
+    "tr": "Sırayı koruyarak tekilleştir",
+    "en": "De-duplicate, keeping order"
+  },
+  "language": "python",
+  "prompt": {
+    "tr": "`tekillestir(xs)` her elemanın **ilk** görülüşünü tutan, sırası korunmuş **yeni** bir liste döndürsün.\n\n- Girdi listesi değişmemeli (yerinde silme yok).\n- `set(xs)` tek başına yetmez: küme sırayı korumaz. Görülenleri hızlıca kontrol etmek için bir küme, sonucu biriktirmek için bir liste kullan.",
+    "en": "`tekillestir(xs)` should return a **new** list that keeps the **first** occurrence of each element, in order.\n\n- The input list must not change (no in-place deletion).\n- `set(xs)` alone is not enough: a set does not keep order. Use a set to check what you have seen quickly and a list to collect the result."
+  },
+  "starter": "def tekillestir(xs):\n    gorulen = set()\n    sonuc = []\n    # xs'i dolaş; daha önce görülmeyen elemanı sonuca ekle\n    return xs\n",
+  "solution": "def tekillestir(xs):\n    gorulen = set()\n    sonuc = []\n    for x in xs:\n        if x not in gorulen:\n            gorulen.add(x)\n            sonuc.append(x)\n    return sonuc\n",
+  "tests": "assert tekillestir([3, 1, 3, 2, 1]) == [3, 1, 2]\nassert tekillestir([]) == []\nassert tekillestir([\"elma\", \"armut\", \"elma\"]) == [\"elma\", \"armut\"]\ngirdi = [1, 1, 2]\nsonuc = tekillestir(girdi)\nassert girdi == [1, 1, 2], \"girdi listesi değişmemeli\"\nassert sonuc is not girdi, \"yeni bir liste döndürülmeli\"\n",
+  "hints": [
+    {
+      "tr": "`for x in xs:` ile dolaş; `if x not in gorulen:` kontrolü kümede ortalama O(1)'dir.",
+      "en": "Loop with `for x in xs:`; the `if x not in gorulen:` check is O(1) on average for a set."
+    },
+    {
+      "tr": "Yeni elemanı hem `gorulen.add(x)` ile kümeye hem `sonuc.append(x)` ile listeye ekle; sonunda `xs` değil `sonuc` döndür.",
+      "en": "Add a new element both to the set with `gorulen.add(x)` and to the list with `sonuc.append(x)`; return `sonuc`, not `xs`."
+    }
+  ],
+  "timeoutMs": 5000
+}

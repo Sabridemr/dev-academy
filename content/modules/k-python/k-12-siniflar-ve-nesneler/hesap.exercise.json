@@ -1,0 +1,26 @@
+{
+  "id": "k-12-hesap-sinifi",
+  "title": {
+    "tr": "Kurallı bir Hesap sınıfı",
+    "en": "A Hesap class with rules"
+  },
+  "language": "python",
+  "prompt": {
+    "tr": "`Hesap` sınıfını tamamla:\n\n- `Hesap(sahip, bakiye=0)` nesnesi `sahip`, `bakiye` ve boş bir `hareketler` listesi tutar.\n- `yatir(tutar)` bakiyeyi artırır, `cek(tutar)` azaltır; ikisi de yeni bakiyeyi döndürür ve `hareketler` listesine `(\"yatir\", tutar)` ya da `(\"cek\", tutar)` ekler.\n- Tutar 0 ya da negatifse, ya da bakiye yetmiyorsa `ValueError` fırlat (bakiye ve hareketler değişmez).\n- Her hesabın `hareketler` listesi **kendine ait** olmalı.",
+    "en": "Complete the `Hesap` (account) class:\n\n- A `Hesap(sahip, bakiye=0)` object holds `sahip` (owner), `bakiye` (balance) and an empty `hareketler` (transactions) list.\n- `yatir(tutar)` (deposit) increases the balance, `cek(tutar)` (withdraw) decreases it; both return the new balance and append `(\"yatir\", tutar)` or `(\"cek\", tutar)` to `hareketler`.\n- Raise `ValueError` if the amount is 0 or negative, or the balance is insufficient (balance and transactions stay unchanged).\n- Each account's `hareketler` list must be **its own**."
+  },
+  "starter": "class Hesap:\n    hareketler = []\n\n    def __init__(self, sahip, bakiye=0):\n        self.sahip = sahip\n        self.bakiye = bakiye\n\n    def yatir(self, tutar):\n        self.bakiye += tutar\n        return self.bakiye\n\n    def cek(self, tutar):\n        ...\n",
+  "solution": "class Hesap:\n    def __init__(self, sahip, bakiye=0):\n        self.sahip = sahip\n        self.bakiye = bakiye\n        self.hareketler = []\n\n    def yatir(self, tutar):\n        if tutar <= 0:\n            raise ValueError(\"tutar pozitif olmalı\")\n        self.bakiye += tutar\n        self.hareketler.append((\"yatir\", tutar))\n        return self.bakiye\n\n    def cek(self, tutar):\n        if tutar <= 0:\n            raise ValueError(\"tutar pozitif olmalı\")\n        if tutar > self.bakiye:\n            raise ValueError(\"yetersiz bakiye\")\n        self.bakiye -= tutar\n        self.hareketler.append((\"cek\", tutar))\n        return self.bakiye\n",
+  "tests": "ada = Hesap(\"Ada\", 100)\nassert ada.yatir(50) == 150\nassert ada.cek(30) == 120\nassert ada.hareketler == [(\"yatir\", 50), (\"cek\", 30)]\nfor hatali in (lambda: ada.cek(500), lambda: ada.yatir(-5), lambda: ada.cek(0)):\n    try:\n        hatali()\n        assert False, \"ValueError bekleniyordu\"\n    except ValueError:\n        pass\nassert ada.bakiye == 120 and len(ada.hareketler) == 2, \"hatalı işlem bakiyeyi değiştirmemeli\"\nalan = Hesap(\"Alan\")\nassert alan.bakiye == 0 and alan.hareketler == [], \"hareketler hesaplar arasında paylaşılmamalı\"\n",
+  "hints": [
+    {
+      "tr": "Sınıf gövdesindeki `hareketler = []` tüm örneklerin paylaştığı **sınıf niteliğidir**. Listeyi `__init__` içinde `self.hareketler = []` ile oluştur.",
+      "en": "`hareketler = []` in the class body is a **class attribute** shared by every instance. Create the list in `__init__` with `self.hareketler = []`."
+    },
+    {
+      "tr": "Kontrolleri bakiyeyi değiştirmeden **önce** yap: `if tutar <= 0: raise ValueError(...)`, `cek` içinde ayrıca `if tutar > self.bakiye`.",
+      "en": "Do the checks **before** changing the balance: `if tutar <= 0: raise ValueError(...)`, and in `cek` also `if tutar > self.bakiye`."
+    }
+  ],
+  "timeoutMs": 5000
+}

@@ -378,6 +378,9 @@ seviye iç içe liste). Bu ikisi doğruysa tümevarım gereği gerisi de doğrud
 - Python kuyruk çağrısını optimize etmez. Derin özyinelemeyi döngüye ya da elle yönetilen bir yığına çevir.
 - İç içe listeler, klasör ağaçları ve JSON gibi **özyinelemeli verilerde** özyineleme en doğal ve okunur çözümdür.
 
+:::exercise{src="ic-ice-derinlik.exercise.json"}
+:::
+
 :::quiz{src="quiz.json"}
 :::
 

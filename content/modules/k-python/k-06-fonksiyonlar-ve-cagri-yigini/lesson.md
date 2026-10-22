@@ -330,6 +330,9 @@ print(istek_olustur("GET", "/api", "kullanicilar", "42", **ortak))
   yalnızca isimli parametreleri ayırır.
 - Fonksiyonlar nesnedir: isme atanır, argüman olarak verilir, koleksiyonlarda saklanır.
 
+:::exercise{src="varsayilan-arguman.exercise.json"}
+:::
+
 :::quiz{src="quiz.json"}
 :::
 

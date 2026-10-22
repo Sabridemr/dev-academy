@@ -131,6 +131,9 @@ Trendyol gibi milyonlarca ürün ve satıcıyı barındıran bir e-ticaret platf
 - Anahtar olarak liste kullanman gerekiyorsa `tuple`'a çevir; anagram gruplamada `tuple(sorted(kelime))` klasik bir anahtardır.
 :::
 
+:::exercise{src="anagram-gruplari.exercise.json"}
+:::
+
 :::quiz{src="quiz.json"}
 :::
 
