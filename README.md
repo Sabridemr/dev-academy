@@ -10,7 +10,7 @@ Her ders aynı akışı izler: kısa kavram açıklaması → statik SVG diyagra
 | Backend     | `backend/`        | NestJS, Prisma, PostgreSQL, Redis, S3, socket.io                                        |
 | Web         | `web/`            | Next.js (App Router), Tailwind, Framer Motion, Shiki, React Flow, TensorFlow.js         |
 | Mobil       | `mobile/`         | Expo (React Native), Reanimated, react-native-svg, Lottie, expo-sqlite + kv-store       |
-| İçerik      | `content/`        | Markdown + JSON + SVG (14 modül, 130 ders)                                              |
+| İçerik      | `content/`        | Markdown + JSON + SVG (14 modül, 134 ders)                                              |
 
 Mimari ayrıntıları için [docs/architecture.md](docs/architecture.md). Projenin kendi mimarisi uygulamada da bir ders olarak anlatılır: **F-08 DevAcademy’nin Kendi Mimarisi**.
 

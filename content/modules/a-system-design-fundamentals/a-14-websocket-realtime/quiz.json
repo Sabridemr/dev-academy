@@ -1,0 +1,111 @@
+{
+  "id": "a-14-websocket-realtime-quiz",
+  "title": { "tr": "WebSocket ve Gerçek Zamanlı Sistemler Quiz", "en": "WebSockets and Real-Time Systems Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Bir haber sitesi, yalnızca sunucudan tarayıcıya akan canlı skor güncellemeleri göstermek istiyor; istemci hiç mesaj göndermiyor ve kurumsal proxy'lerden geçmek önemli. En uygun ilk tercih hangisidir?",
+        "en": "A news site wants to show live score updates that flow only from server to browser; the client never sends messages and passing through corporate proxies matters. What is the best first choice?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Her istemciyle çift yönlü WebSocket açmak", "en": "Open a two-way WebSocket with every client" } },
+        { "id": "b", "text": { "tr": "Server-Sent Events (SSE): tek HTTP yanıtı üzerinden olay akışı", "en": "Server-Sent Events (SSE): an event stream over a single HTTP response" } },
+        { "id": "c", "text": { "tr": "Her saniye kısa polling", "en": "Short polling every second" } },
+        { "id": "d", "text": { "tr": "Tarayıcının sunucuya her olay için webhook çağrısı yapması", "en": "Have the browser call a webhook on the server for each event" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Akış tek yönlü olduğunda SSE yeterlidir: düz HTTP olduğu için proxy ve load balancer'larla doğal çalışır, EventSource kopunca kendiliğinden yeniden bağlanır ve Last-Event-ID ile kaçanları isteyebilir. WebSocket çalışır ama gereksiz çift yönlülük ve daha karmaşık altyapı getirir. Saniyelik polling sunucuyu boş yanıtlarla yorar. Webhook sunucudan sunucuya bir desendir, tarayıcıya itme yapmaz.",
+        "en": "When the flow is one-way SSE is enough: being plain HTTP it works naturally with proxies and load balancers, EventSource reconnects on its own and can request missed events via Last-Event-ID. WebSocket works but adds unneeded bidirectionality and more complex infrastructure. Polling every second burns the server on empty responses. Webhooks are a server-to-server pattern and do not push to a browser."
+      },
+      "difficulty": "easy",
+      "concepts": ["server-sent-events", "websocket", "polling"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "Kullanıcı A'nın soketi replika 1'de, B'nin soketi replika 2'de. A'nın B'ye mesajı replika 1'e geliyor. B'nin mesajı alabilmesi için ne gerekir?",
+        "en": "User A's socket is on replica 1, B's on replica 2. A's message to B arrives at replica 1. What is needed for B to receive it?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Load balancer'da sticky session açmak yeterlidir", "en": "Enabling sticky sessions on the load balancer is enough" } },
+        { "id": "b", "text": { "tr": "Replikalar arasında bir pub/sub omurgası (ör. Redis adapter): replika 1 yayınlar, replika 2 abone olduğu için B'ye iletir", "en": "A pub/sub backbone between replicas (e.g. Redis adapter): replica 1 publishes, replica 2 is subscribed and forwards to B" } },
+        { "id": "c", "text": { "tr": "B'nin her saniye replika 1'e HTTP isteği atması", "en": "B sending an HTTP request to replica 1 every second" } },
+        { "id": "d", "text": { "tr": "Tüm replikaların aynı süreç içinde çalışması", "en": "Running all replicas inside the same process" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Her replika yalnızca kendi belleğindeki soketleri tanır. Pub/sub, olayı tüm replikalara taşır; soketi tutan replika teslimatı yapar. Sticky session yalnızca bir istemcinin hep aynı replikaya gitmesini sağlar, iki farklı istemcinin farklı replikalarda olmasını çözmez. Polling'e dönmek gerçek zamanlılığı bozar; tek süreç ise yatay ölçeklemeden vazgeçmektir.",
+        "en": "Each replica knows only the sockets in its own memory. Pub/sub carries the event to every replica and the one holding the socket delivers it. Sticky sessions only keep one client on the same replica; they do not solve two clients being on different replicas. Falling back to polling breaks real-time delivery, and a single process means giving up horizontal scaling."
+      },
+      "difficulty": "medium",
+      "concepts": ["pubsub-fanout", "redis-adapter", "connection-lifecycle"]
+    },
+    {
+      "id": "q3",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Redis pub/sub, o an abone olmayan bir replikaya gönderilen mesajları saklar ve replika yeniden abone olduğunda teslim eder.",
+        "en": "Redis pub/sub stores messages for a replica that is not subscribed at that moment and delivers them when it resubscribes."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "Yanlış. Redis pub/sub \"ateşle ve unut\" çalışır; o anda dinlemeyen aboneye mesaj kalmaz. Kaçan mesajların telafisi için olaylar kalıcı bir depoya (veritabanı, Redis Streams, Kafka) sıra numarasıyla yazılmalı ve istemci yeniden bağlanırken son gördüğü numaradan sonrasını istemelidir.",
+        "en": "False. Redis pub/sub is fire-and-forget; nothing is kept for a subscriber that is not listening. To recover missed messages, events must be written to a durable store (database, Redis Streams, Kafka) with a sequence number and the client must request everything after the last number it saw when reconnecting."
+      },
+      "difficulty": "medium",
+      "concepts": ["missed-messages", "pubsub-fanout"]
+    },
+    {
+      "id": "q4",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Bir replika düştüğünde on binlerce istemcinin aynı anda yeniden bağlanması kalan replikaları devirebilir. Sağlıklı bir yeniden bağlanma tasarımında hangileri bulunur? (Birden fazla seçin)",
+        "en": "When a replica dies, tens of thousands of clients reconnecting at once can topple the remaining replicas. Which belong in a healthy reconnection design? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Üstel geri çekilme ve rastgele jitter", "en": "Exponential backoff with random jitter" } },
+        { "id": "b", "text": { "tr": "Son görülen sıra numarasını göndererek aradaki olayları istemek", "en": "Sending the last seen sequence number to request the gap" } },
+        { "id": "c", "text": { "tr": "Kopukluk anında sabit 100 ms aralıkla sonsuz deneme", "en": "Retrying forever at a fixed 100 ms interval right after the drop" } },
+        { "id": "d", "text": { "tr": "Deploy'da replikayı drain etmek: yeni bağlantı almamak ve istemcilere yeniden bağlan sinyali göndermek", "en": "Draining a replica on deploy: refusing new connections and signalling clients to reconnect" } }
+      ],
+      "correct": ["a", "b", "d"],
+      "explanation": {
+        "tr": "Backoff ve jitter yeniden bağlanma dalgasını zamana yayar, sıra numarası kayıpsız telafi sağlar, drain ise kopmaları ani değil kademeli yapar. Sabit ve kısa aralıklı denemeler tam da kaçınılması gereken eşzamanlı saldırıyı (thundering herd) üretir.",
+        "en": "Backoff and jitter spread the reconnection wave over time, sequence numbers give lossless recovery and draining makes disconnects gradual rather than sudden. Fixed, short-interval retries produce exactly the synchronized stampede (thundering herd) to avoid."
+      },
+      "difficulty": "medium",
+      "concepts": ["reconnect-backoff", "missed-messages", "connection-lifecycle"]
+    },
+    {
+      "id": "q5",
+      "type": "order",
+      "prompt": {
+        "tr": "Bir WebSocket bağlantısının yaşam döngüsündeki evreleri sıralayın.",
+        "en": "Order the phases in a WebSocket connection's lifecycle."
+      },
+      "options": [
+        { "id": "upgrade", "text": { "tr": "HTTP isteği Upgrade: websocket başlığı ve token ile gelir", "en": "HTTP request arrives with Upgrade: websocket and a token" } },
+        { "id": "switch", "text": { "tr": "Sunucu 101 Switching Protocols döner", "en": "Server answers 101 Switching Protocols" } },
+        { "id": "messages", "text": { "tr": "İki yönlü mesaj çerçeveleri akar", "en": "Two-way message frames flow" } },
+        { "id": "heartbeat", "text": { "tr": "Ping/pong cevapsız kalır ve bağlantı ölü sayılır", "en": "Ping/pong goes unanswered and the connection is deemed dead" } },
+        { "id": "close", "text": { "tr": "Bağlantı kapatılır, istemci backoff ile yeniden bağlanır", "en": "Connection closes and the client reconnects with backoff" } }
+      ],
+      "correct": ["upgrade", "switch", "messages", "heartbeat", "close"],
+      "explanation": {
+        "tr": "Bağlantı bir HTTP upgrade isteğiyle başlar (kimlik doğrulama burada yapılır), 101 yanıtıyla protokol değişir, ardından çerçeveler iki yönde akar. Heartbeat sessizce kopmuş bağlantıları yakalar; kapanıştan sonra istemci backoff ile yeniden bağlanır.",
+        "en": "The connection begins with an HTTP upgrade request (authentication happens here), the protocol switches with a 101 response and frames then flow both ways. Heartbeats catch silently dropped connections; after closing, the client reconnects with backoff."
+      },
+      "difficulty": "easy",
+      "concepts": ["connection-lifecycle", "websocket", "presence"]
+    }
+  ]
+}

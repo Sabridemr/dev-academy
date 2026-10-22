@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 460" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">REST, GraphQL ve gRPC karşılaştırması</title>
+  <desc id="desc">Üç sütunlu karşılaştırma. REST: sözleşme OpenAPI (isteğe bağlı), HTTP/1.1 veya HTTP/2 üzerinde JSON, kaynak başına URL, HTTP önbelleği doğal çalışır, streaming için SSE veya WebSocket, en iyi kullanım herkese açık API'ler. GraphQL: sözleşme SDL şeması, tek uç noktaya POST ile JSON, istemci alanları seçer, önbellek için persisted query gerekir, subscription ile akış, en iyi kullanım çok istemcili zengin ekranlar; N+1 riski DataLoader ile çözülür. gRPC: sözleşme .proto dosyası ve kod üretimi, HTTP/2 üzerinde ikili protobuf, unary ve üç streaming biçimi, deadline yayılımı, tarayıcı için gRPC-Web gerekir, en iyi kullanım servisler arası iletişim.</desc>
+
+  <text x="480" y="28" text-anchor="middle" font-size="14" font-weight="600" fill="var(--da-fg, #0f172a)">Aynı veri, üç sözleşme</text>
+
+  <!-- Satır başlıkları -->
+  <g font-size="11" font-weight="600" fill="var(--da-muted, #64748b)">
+    <text x="20" y="118">Sözleşme</text>
+    <text x="20" y="168">Taşıma / biçim</text>
+    <text x="20" y="218">Veri seçimi</text>
+    <text x="20" y="268">Streaming</text>
+    <text x="20" y="318">Önbellek</text>
+    <text x="20" y="368">Dikkat</text>
+    <text x="20" y="418">En iyi yer</text>
+  </g>
+
+  <!-- Sütun kutuları -->
+  <rect x="140" y="50" width="260" height="395" rx="14" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)" stroke-width="1.5"/>
+  <rect x="420" y="50" width="260" height="395" rx="14" fill="var(--da-primary, #6366f1)" fill-opacity="0.06" stroke="var(--da-primary, #6366f1)" stroke-width="1.5"/>
+  <rect x="700" y="50" width="240" height="395" rx="14" fill="var(--da-success, #10b981)" fill-opacity="0.06" stroke="var(--da-success, #10b981)" stroke-width="1.5"/>
+
+  <g font-size="15" font-weight="700" text-anchor="middle">
+    <text x="270" y="80" fill="var(--da-fg, #0f172a)">REST</text>
+    <text x="550" y="80" fill="var(--da-primary, #6366f1)">GraphQL</text>
+    <text x="820" y="80" fill="var(--da-success, #10b981)">gRPC</text>
+  </g>
+
+  <!-- Ayırıcı çizgiler -->
+  <g stroke="var(--da-border, #cbd5e1)" stroke-width="1" opacity="0.7">
+    <line x1="150" y1="93" x2="930" y2="93"/>
+    <line x1="150" y1="143" x2="930" y2="143"/>
+    <line x1="150" y1="193" x2="930" y2="193"/>
+    <line x1="150" y1="243" x2="930" y2="243"/>
+    <line x1="150" y1="293" x2="930" y2="293"/>
+    <line x1="150" y1="343" x2="930" y2="343"/>
+    <line x1="150" y1="393" x2="930" y2="393"/>
+  </g>
+
+  <g font-size="11" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <!-- REST -->
+    <text x="270" y="118">OpenAPI (isteğe bağlı)</text>
+    <text x="270" y="162">HTTP/1.1–2 · JSON</text>
+    <text x="270" y="177" fill="var(--da-muted, #64748b)">kaynak başına URL</text>
+    <text x="270" y="212">sunucu belirler</text>
+    <text x="270" y="227" fill="var(--da-muted, #64748b)">over/under-fetching</text>
+    <text x="270" y="268">SSE / WebSocket (ayrı)</text>
+    <text x="270" y="312" fill="var(--da-success, #10b981)">HTTP önbelleği doğal</text>
+    <text x="270" y="327" fill="var(--da-muted, #64748b)">Cache-Control, ETag, CDN</text>
+    <text x="270" y="368">sıralı istekler, sürümleme</text>
+    <text x="270" y="418" font-weight="600">Herkese açık API</text>
+
+    <!-- GraphQL -->
+    <text x="550" y="118">SDL şeması (zorunlu)</text>
+    <text x="550" y="162">tek uç nokta · POST · JSON</text>
+    <text x="550" y="177" fill="var(--da-muted, #64748b)">resolver ağacı</text>
+    <text x="550" y="212">istemci seçer</text>
+    <text x="550" y="227" fill="var(--da-muted, #64748b)">tek gidiş-dönüş</text>
+    <text x="550" y="268">subscription</text>
+    <text x="550" y="312" fill="var(--da-danger, #ef4444)">doğal değil</text>
+    <text x="550" y="327" fill="var(--da-muted, #64748b)">persisted query gerekir</text>
+    <text x="550" y="362" fill="var(--da-danger, #ef4444)">N+1 → DataLoader</text>
+    <text x="550" y="377" fill="var(--da-muted, #64748b)">derinlik / maliyet sınırı</text>
+    <text x="550" y="418" font-weight="600">Çok istemcili zengin ekranlar</text>
+
+    <!-- gRPC -->
+    <text x="820" y="112">.proto + kod üretimi</text>
+    <text x="820" y="127" fill="var(--da-muted, #64748b)">tip güvenli istemci</text>
+    <text x="820" y="162">HTTP/2 · ikili protobuf</text>
+    <text x="820" y="177" fill="var(--da-muted, #64748b)">multiplexing</text>
+    <text x="820" y="212">mesaj tipi belirler</text>
+    <text x="820" y="227" fill="var(--da-muted, #64748b)">alanlar numarayla</text>
+    <text x="820" y="262">unary + server / client /</text>
+    <text x="820" y="277">çift yönlü stream</text>
+    <text x="820" y="312" fill="var(--da-danger, #ef4444)">HTTP önbelleği yok</text>
+    <text x="820" y="327" fill="var(--da-muted, #64748b)">deadline yayılımı var</text>
+    <text x="820" y="368">tarayıcı için gRPC-Web</text>
+    <text x="820" y="418" font-weight="600">Servisler arası iç trafik</text>
+  </g>
+</svg>
