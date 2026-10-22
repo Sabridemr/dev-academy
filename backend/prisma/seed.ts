@@ -1,7 +1,7 @@
 /**
  * SEED
  * ----
- * content/ klasöründeki müfredatı (modüller, dersler, sahneler, quizler, öğrenme yolları) ve
+ * content/ klasöründeki müfredatı (modüller, dersler, sahneler, quizler, öğrenme yolları, kavram sözlüğü) ve
  * rozet tanımlarını veritabanına yükler. İdempotenttir: tekrar çalıştırıldığında mevcut kayıtları günceller,
  * yayındaki ders sürümünü yalnızca içerik değiştiyse yeni sürüm olarak yayınlar.
  *
@@ -29,7 +29,12 @@ import {
   LEARNING_PATHS,
   type LocalizedString,
 } from '@devacademy/shared';
-import { coverageReport, loadContent, type LoadedLesson } from '@devacademy/shared/node';
+import {
+  coverageReport,
+  loadContent,
+  type LoadedContent,
+  type LoadedLesson,
+} from '@devacademy/shared/node';
 import {
   decideSeedAction,
   hash,
@@ -122,6 +127,33 @@ async function seedAdmin(): Promise<string | null> {
   });
   console.log(`✓ admin kullanıcı oluşturuldu: ${email}`);
   return admin.id;
+}
+
+/**
+ * Kavram sözlüğünü (content/concepts.json) yükler. İdempotent: her kavram upsert edilir,
+ * sözlükten çıkarılan kavramlar silinir (kavramlara yabancı anahtarla bağlı kayıt yoktur).
+ */
+async function seedConcepts(glossary: LoadedContent['glossary']): Promise<void> {
+  if (!glossary) {
+    console.warn('⚠ Kavram sözlüğü yüklenemedi; Concept tablosu değiştirilmedi');
+    return;
+  }
+  const entries = Object.entries(glossary);
+  for (const [id, c] of entries) {
+    const data = {
+      term: json(c.term),
+      definition: json(c.definition),
+      aliases: c.aliases,
+      related: c.related,
+    };
+    await prisma.concept.upsert({ where: { id }, update: data, create: { id, ...data } });
+  }
+  const removed = await prisma.concept.deleteMany({
+    where: { id: { notIn: entries.map(([id]) => id) } },
+  });
+  console.log(
+    `✓ ${entries.length} kavram${removed.count ? `, ${removed.count} eski kavram silindi` : ''}`,
+  );
 }
 
 /** API'nin Redis içerik ve arama cache'ini temizler; aksi hâlde yeni içerik TTL dolana kadar görünmez */
@@ -512,6 +544,7 @@ async function main(): Promise<void> {
     `✓ ${publishedCount} ders sürümü yazıldı, ${unchangedCount} değişmedi, ${skippedAdminCount} panel düzenlemesi korundu, ${placeholders} taslak yer tutucu`,
   );
   console.log(`✓ ${sceneCount} sahne, ${quizCount} quiz, ${assetCount} yeni görsel`);
+  await seedConcepts(content.glossary);
   await clearApiCache();
 }
 
