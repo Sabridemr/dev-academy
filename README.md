@@ -9,7 +9,7 @@ Her ders aynı akışı izler: kısa kavram açıklaması → statik SVG diyagra
 | Ortak paket | `packages/shared` | TypeScript, zod — sahne şeması, oynatıcı durum makinesi, API tipleri, simülatör mantığı |
 | Backend     | `backend/`        | NestJS, Prisma, PostgreSQL, Redis, S3, socket.io                                        |
 | Web         | `web/`            | Next.js (App Router), Tailwind, Framer Motion, Shiki, React Flow, TensorFlow.js         |
-| Mobil       | `mobile/`         | Expo (React Native), Reanimated, react-native-svg, Lottie, SQLite + MMKV                |
+| Mobil       | `mobile/`         | Expo (React Native), Reanimated, react-native-svg, Lottie, expo-sqlite + kv-store       |
 | İçerik      | `content/`        | Markdown + JSON + SVG (14 modül, 122 ders)                                              |
 
 Mimari ayrıntıları için [docs/architecture.md](docs/architecture.md). Projenin kendi mimarisi uygulamada da bir ders olarak anlatılır: **F-08 DevAcademy’nin Kendi Mimarisi**.
