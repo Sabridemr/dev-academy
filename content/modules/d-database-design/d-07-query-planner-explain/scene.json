@@ -1,0 +1,177 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "planner-seq-vs-bitmap",
+  "title": { "tr": "Aynı Sorgu, İki Plan: Seq Scan ve Bitmap Taraması", "en": "One Query, Two Plans: Seq Scan and Bitmap Scan" },
+  "summary": {
+    "tr": "Planlayıcı istatistiklerden satır sayısını tahmin eder, iki planı fiyatlar; indekssiz plan tüm sayfaları okur, GIN indeksli plan yalnızca eşleşen sayfalara gider.",
+    "en": "The planner estimates row counts from statistics and prices two plans; the plan without an index reads every page, the GIN-indexed plan visits only matching pages."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda API, ortada üstte planlayıcı ve altında istatistik kataloğu, ortada yürütücü, sağda GIN indeksi, bit eşlemi ve tablo sayfaları (heap) bulunur. API tam metin arama sorgusunu planlayıcıya gönderir. Planlayıcı istatistiklerden kaç satır döneceğini tahmin eder ve iki planın maliyetini hesaplar. İlk yürütmede indeks yoktur: yürütücü heap'in tüm sayfalarını sırayla okur, her satırda tsvector hesaplar ve neredeyse hepsini filtreyle atar. İkinci yürütmede yürütücü GIN indeksinden eşleşen satır adreslerini alır, bunları sayfa sırasına dizen bir bit eşlemi kurar ve heap'te yalnızca o sayfaları fiziksel sırayla okur. Son adımda tahmini ve gerçek satır sayısı karşılaştırılır.",
+      "en": "On the left is the API; in the middle the planner above with the statistics catalog below, and the executor; on the right the GIN index, a bitmap and the table pages (heap). The API sends a full-text search query to the planner. The planner estimates how many rows will match from statistics and costs two plans. In the first run there is no index: the executor reads every heap page in order, computes a tsvector per row and filters almost all of them out. In the second run the executor gets matching row addresses from the GIN index, builds a bitmap sorted by page and reads only those heap pages in physical order. The last step compares estimated and actual row counts."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "api", "kind": "service", "label": "API", "sublabel": { "tr": "SearchService", "en": "SearchService" }, "x": 100, "y": 300, "w": 130, "h": 70 },
+    { "id": "planner", "kind": "service", "label": { "tr": "Planlayıcı", "en": "Planner" }, "sublabel": { "tr": "maliyet modeli", "en": "cost model" }, "x": 330, "y": 140, "w": 150, "h": 70 },
+    { "id": "stats", "kind": "db", "label": "pg_statistic", "sublabel": { "tr": "satır, sayfa, sık değerler", "en": "rows, pages, common values" }, "x": 330, "y": 470, "w": 160, "h": 70 },
+    { "id": "executor", "kind": "worker", "label": { "tr": "Yürütücü", "en": "Executor" }, "x": 540, "y": 300, "w": 140, "h": 70 },
+    { "id": "gin", "kind": "db", "label": { "tr": "GIN indeksi", "en": "GIN index" }, "sublabel": { "tr": "kelime → satır adresleri", "en": "term → row addresses" }, "x": 820, "y": 110, "w": 170, "h": 70 },
+    { "id": "bitmap", "kind": "generic", "label": { "tr": "Bit eşlemi", "en": "Bitmap" }, "sublabel": { "tr": "sayfa sırasına dizili", "en": "sorted by page" }, "x": 820, "y": 290, "w": 170, "h": 64 },
+    { "id": "heap", "kind": "storage", "label": { "tr": "Heap (tablo sayfaları)", "en": "Heap (table pages)" }, "sublabel": "\"Lesson\"", "x": 820, "y": 480, "w": 190, "h": 80 }
+  ],
+  "edges": [
+    { "id": "api-planner", "from": "api", "to": "planner", "kind": "request", "curvature": -0.2, "label": "SQL" },
+    { "id": "planner-stats", "from": "planner", "to": "stats", "kind": "data", "style": "dashed" },
+    { "id": "planner-exec", "from": "planner", "to": "executor", "kind": "control", "label": { "tr": "seçilen plan", "en": "chosen plan" } },
+    { "id": "exec-heap", "from": "executor", "to": "heap", "kind": "data", "curvature": 0.15 },
+    { "id": "exec-gin", "from": "executor", "to": "gin", "kind": "request", "curvature": -0.15 },
+    { "id": "gin-bitmap", "from": "gin", "to": "bitmap", "kind": "data" },
+    { "id": "bitmap-heap", "from": "bitmap", "to": "heap", "kind": "data" },
+    { "id": "exec-api", "from": "executor", "to": "api", "kind": "response", "curvature": 0.2, "label": { "tr": "sonuç", "en": "result" } }
+  ],
+  "steps": [
+    {
+      "id": "query",
+      "title": { "tr": "Sorgu planlayıcıya gelir", "en": "The query reaches the planner" },
+      "narration": {
+        "tr": "API, `to_tsvector('simple', \"searchText\") @@ plainto_tsquery('simple', 'index')` koşullu arama sorgusunu gönderir. SQL yalnızca hangi satırları istediğimizi söyler; nasıl bulunacağına planlayıcı karar verir.",
+        "en": "The API sends a search query with the condition `to_tsvector('simple', \"searchText\") @@ plainto_tsquery('simple', 'index')`. SQL only says which rows we want; the planner decides how to find them."
+      },
+      "durationMs": 3000,
+      "inherit": false,
+      "highlight": { "nodes": ["api", "planner"], "edges": ["api-planner"] },
+      "nodeStates": { "api": { "status": "active" }, "planner": { "status": "busy" } },
+      "packets": [{ "edge": "api-planner", "shape": "envelope", "label": "SELECT", "durationMs": 1200 }]
+    },
+    {
+      "id": "stats",
+      "title": { "tr": "İstatistiklerden tahmin", "en": "Estimating from statistics" },
+      "narration": {
+        "tr": "Planlayıcı tablonun kaç sayfa ve kaç satır olduğunu, kelimelerin ne sıklıkla geçtiğini `pg_statistic`'ten okur. Bu özetleri `ANALYZE` üretir; bayatsa buradaki tahmin, dolayısıyla tüm plan yanlış olur.",
+        "en": "The planner reads how many pages and rows the table has and how often terms occur from `pg_statistic`. `ANALYZE` produces these summaries; if they are stale, this estimate and therefore the whole plan will be wrong."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["planner", "stats"], "edges": ["planner-stats"] },
+      "nodeStates": { "stats": { "status": "active", "badge": "rows≈?" } },
+      "packets": [
+        { "edge": "planner-stats", "shape": "dot", "durationMs": 900 },
+        { "edge": "planner-stats", "direction": "backward", "shape": "square", "label": { "tr": "tahmin", "en": "estimate" }, "startAt": 1000, "durationMs": 1000 }
+      ]
+    },
+    {
+      "id": "costing",
+      "title": { "tr": "İki plan, iki maliyet", "en": "Two plans, two costs" },
+      "narration": {
+        "tr": "Plan A: tüm sayfaları sırayla oku (sayfa × 1.0 + satır × 0.01 + her satırda tsvector hesabı). Plan B: GIN indeksinden adresleri al, yalnızca ilgili sayfaları oku. Seçici bir kelime için B çok daha ucuz çıkar.",
+        "en": "Plan A: read every page in order (pages × 1.0 + rows × 0.01 + a tsvector per row). Plan B: get addresses from the GIN index and read only the relevant pages. For a selective term, B comes out much cheaper."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["planner"], "edges": [] },
+      "nodeStates": { "planner": { "status": "busy", "badge": "A > B" }, "stats": { "status": "idle", "badge": "" } },
+      "annotations": [
+        { "id": "cost-a", "x": 330, "y": 40, "text": { "tr": "A: Seq Scan — yüksek toplam maliyet", "en": "A: Seq Scan — high total cost" }, "tone": "warning", "target": "planner" },
+        { "id": "cost-b", "x": 600, "y": 40, "text": { "tr": "B: Bitmap Index + Heap Scan — düşük maliyet", "en": "B: Bitmap Index + Heap Scan — low cost" }, "tone": "success" }
+      ]
+    },
+    {
+      "id": "seq-run",
+      "title": { "tr": "İndeks yokken: Seq Scan", "en": "Without the index: Seq Scan" },
+      "narration": {
+        "tr": "Önce indeksin silindiğini varsayalım: tek seçenek A'dır. Yürütücü heap'in her sayfasını baştan sona okur ve her satır için `to_tsvector` hesaplar. CPU ve I/O tablo boyutuyla doğrusal büyür.",
+        "en": "First assume the index has been dropped: A is the only option. The executor reads every heap page from start to end and computes `to_tsvector` for each row. CPU and I/O grow linearly with table size."
+      },
+      "durationMs": 3600,
+      "inherit": false,
+      "highlight": { "nodes": ["executor", "heap"], "edges": ["planner-exec", "exec-heap"] },
+      "nodeStates": {
+        "gin": { "status": "muted", "badge": "DROP" },
+        "bitmap": { "status": "muted" },
+        "executor": { "status": "busy", "label": "Seq Scan" },
+        "heap": { "status": "busy", "progress": 1, "badge": "100%" }
+      },
+      "edgeStates": { "exec-gin": { "status": "muted" }, "gin-bitmap": { "status": "muted" }, "bitmap-heap": { "status": "muted" } },
+      "packets": [
+        { "edge": "planner-exec", "shape": "diamond", "label": "A", "durationMs": 700 },
+        { "edge": "exec-heap", "direction": "backward", "shape": "square", "startAt": 700, "durationMs": 500, "repeat": 6, "repeatGapMs": 120 }
+      ]
+    },
+    {
+      "id": "seq-filter",
+      "title": { "tr": "Filtre neredeyse her şeyi atar", "en": "The filter throws almost everything away" },
+      "narration": {
+        "tr": "Okunan satırların çok küçük bir kısmı koşulu sağlar; planda `Rows Removed by Filter` bu israfı gösterir. Sonuç doğru ama tüm tablo okunarak bulundu.",
+        "en": "Only a tiny fraction of the rows read satisfies the condition; `Rows Removed by Filter` in the plan shows this waste. The result is correct, but it was found by reading the whole table."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["executor", "api"], "edges": ["exec-api"] },
+      "nodeStates": { "executor": { "status": "warning", "badge": "Rows Removed by Filter" }, "heap": { "status": "idle" } },
+      "packets": [{ "edge": "exec-api", "shape": "envelope", "label": { "tr": "yavaş", "en": "slow" }, "durationMs": 1400 }]
+    },
+    {
+      "id": "gin-lookup",
+      "title": { "tr": "İndeksle: Bitmap Index Scan", "en": "With the index: Bitmap Index Scan" },
+      "narration": {
+        "tr": "İndeks geri geldi ve planlayıcı B'yi seçti. Yürütücü GIN indeksinde 'index' kelimesinin girdisini bulur; bu girdi kelimenin geçtiği satırların adreslerini (TID) listeler. GIN indeksleri PostgreSQL'de yalnızca bitmap yoluyla kullanılır.",
+        "en": "The index is back and the planner chose B. The executor finds the entry for the term 'index' in the GIN index; it lists the addresses (TIDs) of rows containing the term. In PostgreSQL GIN indexes are only used through bitmaps."
+      },
+      "durationMs": 3200,
+      "inherit": false,
+      "highlight": { "nodes": ["executor", "gin"], "edges": ["exec-gin"] },
+      "nodeStates": {
+        "executor": { "status": "busy", "label": "Bitmap Heap Scan" },
+        "gin": { "status": "active", "badge": "'index'" },
+        "heap": { "status": "idle", "progress": 0 }
+      },
+      "packets": [
+        { "edge": "planner-exec", "shape": "diamond", "label": "B", "durationMs": 700 },
+        { "edge": "exec-gin", "shape": "dot", "startAt": 700, "durationMs": 900 }
+      ]
+    },
+    {
+      "id": "bitmap-build",
+      "title": { "tr": "Bit eşlemi kurulur", "en": "The bitmap is built" },
+      "narration": {
+        "tr": "Satır adresleri, hangi sayfaların okunacağını gösteren bir bit eşlemine yazılır ve sayfa sırasına dizilir. Böylece heap rastgele değil, fiziksel sırayla gezilir. Bit eşlemi `work_mem`'e sığmazsa sayfa düzeyine iner ve satırlar yeniden kontrol edilir (`Recheck Cond`).",
+        "en": "Row addresses are written into a bitmap of which pages to read, sorted by page. The heap is then visited in physical order rather than randomly. If the bitmap does not fit in `work_mem` it degrades to page level and rows are rechecked (`Recheck Cond`)."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["gin", "bitmap"], "edges": ["gin-bitmap"] },
+      "nodeStates": { "gin": { "status": "success" }, "bitmap": { "status": "active", "progress": 0.3, "badge": "p3 p17 p42" } },
+      "packets": [{ "edge": "gin-bitmap", "shape": "square", "label": "TID", "durationMs": 700, "repeat": 3, "repeatGapMs": 150 }]
+    },
+    {
+      "id": "heap-visit",
+      "title": { "tr": "Yalnızca gereken sayfalar", "en": "Only the pages needed" },
+      "narration": {
+        "tr": "Bitmap Heap Scan, bit eşlemindeki sayfaları sırayla okur: üç sayfa, tüm tablo değil. Okunan her satır yeniden kontrol edilip yürütücüye gider.",
+        "en": "The Bitmap Heap Scan reads the pages in the bitmap in order: three pages, not the whole table. Each row read is rechecked and passed to the executor."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["bitmap", "heap", "executor"], "edges": ["bitmap-heap", "exec-heap"] },
+      "nodeStates": { "bitmap": { "status": "success" }, "heap": { "status": "active", "progress": 0.1, "badge": "3 / N" } },
+      "packets": [
+        { "edge": "bitmap-heap", "shape": "dot", "durationMs": 700 },
+        { "edge": "exec-heap", "direction": "backward", "shape": "square", "startAt": 800, "durationMs": 700, "repeat": 3, "repeatGapMs": 150 }
+      ]
+    },
+    {
+      "id": "compare",
+      "title": { "tr": "Tahmin ile gerçeği karşılaştır", "en": "Compare estimate with reality" },
+      "narration": {
+        "tr": "Sonuç API'ye döner. `EXPLAIN ANALYZE` her düğümde tahmini `rows` ile `actual rows`'u yan yana verir. Aralarında 10 kattan büyük fark varsa önce `ANALYZE` çalıştırın; yanlış tahmin, yanlış join yöntemi ve yanlış join sırası demektir.",
+        "en": "The result returns to the API. `EXPLAIN ANALYZE` shows estimated `rows` and `actual rows` side by side for every node. If they differ by more than 10x, run `ANALYZE` first; a bad estimate means the wrong join method and the wrong join order."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["executor", "api", "stats"], "edges": ["exec-api"] },
+      "nodeStates": { "executor": { "status": "success", "badge": "rows 12 / actual 11" }, "api": { "status": "success" }, "heap": { "status": "idle" } },
+      "packets": [{ "edge": "exec-api", "shape": "envelope", "label": { "tr": "hızlı", "en": "fast" }, "durationMs": 900 }],
+      "annotations": [
+        { "id": "rule", "x": 330, "y": 570, "text": { "tr": "tahmin ≈ gerçek → istatistik sağlıklı", "en": "estimate ≈ actual → healthy statistics" }, "tone": "success", "target": "stats" }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,111 @@
+{
+  "id": "o-03-tls-https-quiz",
+  "title": { "tr": "TLS ve HTTPS Quiz", "en": "TLS and HTTPS Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "TLS neden el sıkışmada asimetrik, veri aktarımında simetrik kriptografi kullanır?",
+        "en": "Why does TLS use asymmetric cryptography in the handshake but symmetric cryptography for data transfer?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Simetrik şifreleme daha güvensizdir, bu yüzden yalnızca önemsiz veri için kullanılır", "en": "Symmetric encryption is less secure, so it is only used for unimportant data" } },
+        { "id": "b", "text": { "tr": "Asimetrik yöntemler önceden paylaşılmış sır olmadan anlaşmayı ve imzayı sağlar ama pahalıdır; anlaşılan anahtarla simetrik şifre veriyi hızlıca korur", "en": "Asymmetric methods allow agreement and signatures without a pre-shared secret but are expensive; the agreed key lets fast symmetric ciphers protect the data" } },
+        { "id": "c", "text": { "tr": "Tarayıcılar asimetrik şifrelemeyi yalnızca HTTP başlıklarında destekler", "en": "Browsers only support asymmetric encryption for HTTP headers" } },
+        { "id": "d", "text": { "tr": "Simetrik anahtar sertifikanın içinde açıkça yazılıdır", "en": "The symmetric key is written in the certificate in plain text" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Asimetrik kriptografi iki tarafın daha önce buluşmadan ortak bir sır türetmesini (ECDHE) ve kimlik kanıtlamasını (imza) sağlar, fakat işlem başına maliyetlidir. Bu pahalı iş bağlantı başına bir kez yapılır; türetilen simetrik oturum anahtarıyla AES-GCM veya ChaCha20 büyük veriyi donanım hızında şifreler. Simetrik şifre zayıf değildir ve oturum anahtarı sertifikada asla bulunmaz.",
+        "en": "Asymmetric crypto lets two parties who never met derive a shared secret (ECDHE) and prove identity (signatures), but it is costly per operation. That expensive work happens once per connection; the derived symmetric session key lets AES-GCM or ChaCha20 encrypt bulk data at hardware speed. Symmetric ciphers are not weak, and the session key is never in the certificate."
+      },
+      "difficulty": "easy",
+      "concepts": ["session-key", "ecdhe-key-exchange"]
+    },
+    {
+      "id": "q2",
+      "type": "multiple",
+      "prompt": {
+        "tr": "İstemci bir sunucu sertifikasını doğrularken hangilerini kontrol eder? (Birden fazla seçin)",
+        "en": "Which of these does a client check when validating a server certificate? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "İstenen alan adının sertifikanın SAN listesinde olması", "en": "The requested host name is in the certificate's SAN list" } },
+        { "id": "b", "text": { "tr": "Zincirin güven deposundaki bir kök CA'ya varması", "en": "The chain leads to a root CA in the trust store" } },
+        { "id": "c", "text": { "tr": "Sertifikanın geçerlilik tarihleri içinde olunması", "en": "The current time is within the certificate's validity dates" } },
+        { "id": "d", "text": { "tr": "Sunucunun IP adresinin Türkiye'de olması", "en": "The server's IP address is located in Turkey" } }
+      ],
+      "correct": ["a", "b", "c"],
+      "explanation": {
+        "tr": "Doğrulama üç temel soruya dayanır: imza zinciri güvenilen bir köke varıyor mu, sertifika şu an geçerli mi ve sertifika gerçekten istenen ada mı ait (SAN)? Bunlara ek olarak CertificateVerify imzası sunucunun özel anahtara sahip olduğunu kanıtlar. IP adresinin coğrafi konumu sertifika doğrulamasının bir parçası değildir.",
+        "en": "Validation rests on three questions: does the signature chain reach a trusted root, is the certificate valid right now, and does it really belong to the requested name (SAN)? On top of that, the CertificateVerify signature proves the server holds the private key. The IP address's geographic location is not part of certificate validation."
+      },
+      "difficulty": "medium",
+      "concepts": ["certificate-validation", "certificate-chain", "x509-certificate"]
+    },
+    {
+      "id": "q3",
+      "type": "order",
+      "prompt": {
+        "tr": "TLS 1.3 el sıkışmasının adımlarını doğru sıraya koyun.",
+        "en": "Put the steps of the TLS 1.3 handshake in the correct order."
+      },
+      "options": [
+        { "id": "verify", "text": { "tr": "İstemci sertifika zincirini ve CertificateVerify imzasını doğrular", "en": "The client validates the certificate chain and the CertificateVerify signature" } },
+        { "id": "hello", "text": { "tr": "İstemci ClientHello'yu SNI ve key share ile gönderir", "en": "The client sends ClientHello with SNI and a key share" } },
+        { "id": "data", "text": { "tr": "HTTP isteği simetrik oturum anahtarıyla şifreli gider", "en": "The HTTP request goes out encrypted with the symmetric session key" } },
+        { "id": "server", "text": { "tr": "Sunucu ServerHello, key share, sertifika, imza ve Finished gönderir", "en": "The server sends ServerHello, key share, certificate, signature and Finished" } },
+        { "id": "fin", "text": { "tr": "İstemci Finished mesajını gönderir", "en": "The client sends its Finished message" } }
+      ],
+      "correct": ["hello", "server", "verify", "fin", "data"],
+      "explanation": {
+        "tr": "TLS 1.3'te istemci key share'i ilk mesajda gönderir; sunucu tek uçuşta kendi payını, sertifika zincirini, imzayı ve Finished'ı döner. İstemci doğrular, Finished gönderir ve uygulama verisi hemen ardından akar. Böylece el sıkışma tek RTT'de biter.",
+        "en": "In TLS 1.3 the client sends its key share in the first message; the server returns its share, certificate chain, signature and Finished in a single flight. The client validates, sends Finished and application data follows immediately. The handshake therefore completes in one RTT."
+      },
+      "difficulty": "medium",
+      "concepts": ["tls-handshake"]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "TLS 1.3 ile şifrelenmiş eski bir trafik kaydı, sunucunun sertifika özel anahtarı yıllar sonra çalınırsa çözülebilir.",
+        "en": "A recording of old traffic encrypted with TLS 1.3 can be decrypted if the server's certificate private key is stolen years later."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "Yanlış. TLS 1.3 anahtar anlaşmasını her zaman geçici (ephemeral) ECDHE ile yapar; sertifikanın uzun ömürlü anahtarı yalnızca imza atar. Geçici paylar bağlantı bitince silindiği için oturum anahtarları yeniden üretilemez. Bu özelliğe forward secrecy denir; TLS 1.2'deki RSA anahtar taşıma yönteminde bu garanti yoktu.",
+        "en": "False. TLS 1.3 always performs key agreement with ephemeral ECDHE; the certificate's long-lived key only signs. Because the ephemeral shares are deleted after the connection, the session keys cannot be recreated. This property is called forward secrecy; TLS 1.2's RSA key transport did not offer it."
+      },
+      "difficulty": "medium",
+      "concepts": ["forward-secrecy", "ecdhe-key-exchange"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "Bir ekip `*.example.com` joker sertifikasını Let's Encrypt'ten otomatik almak istiyor. Hangi ACME doğrulama yöntemini kullanmak zorundadır?",
+        "en": "A team wants to obtain a `*.example.com` wildcard certificate from Let's Encrypt automatically. Which ACME challenge must it use?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "HTTP-01: /.well-known/acme-challenge altında bir dosya sunmak", "en": "HTTP-01: serving a file under /.well-known/acme-challenge" } },
+        { "id": "b", "text": { "tr": "DNS-01: alan adına belirli bir TXT kaydı eklemek", "en": "DNS-01: adding a specific TXT record to the domain" } },
+        { "id": "c", "text": { "tr": "E-posta ile onay bağlantısına tıklamak", "en": "Clicking a confirmation link sent by email" } },
+        { "id": "d", "text": { "tr": "Hiçbiri; joker sertifika verilmez", "en": "None; wildcard certificates are not issued" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Joker sertifika, alan adının tüm alt adları üzerinde kontrol iddiasıdır; bunu tek bir web sunucusunda dosya sunarak kanıtlamak mümkün değildir. Let's Encrypt joker sertifikaları yalnızca DNS-01 ile verir: ACME istemcisi DNS sağlayıcının API'siyle `_acme-challenge` TXT kaydını ekler. E-posta onayı ACME'nin parçası değildir.",
+        "en": "A wildcard certificate claims control over every subdomain; serving a file on a single web server cannot prove that. Let's Encrypt issues wildcards only via DNS-01: the ACME client adds the `_acme-challenge` TXT record through the DNS provider's API. Email confirmation is not part of ACME."
+      },
+      "difficulty": "hard",
+      "concepts": ["acme-protocol"]
+    }
+  ]
+}

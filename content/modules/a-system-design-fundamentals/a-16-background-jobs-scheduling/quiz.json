@@ -1,0 +1,111 @@
+{
+  "id": "a-16-background-jobs-scheduling-quiz",
+  "title": { "tr": "Arka Plan İşleri ve Zamanlanmış Görevler Quiz", "en": "Background Jobs and Scheduled Tasks Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "At-least-once teslim eden bir kuyrukta ödeme iadesi işinin müşteriye iki kez iade yapmasını en güvenilir biçimde ne önler?",
+        "en": "In a queue with at-least-once delivery, what most reliably prevents a refund job from refunding the customer twice?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "İşçi sayısını bire düşürmek", "en": "Reducing the number of workers to one" } },
+        { "id": "b", "text": { "tr": "İşi idempotent yapmak: iade kimliğiyle bir anahtar kontrol etmek ve sağlayıcıya idempotency anahtarı göndermek", "en": "Making the job idempotent: checking a key derived from the refund id and passing an idempotency key to the provider" } },
+        { "id": "c", "text": { "tr": "Retry'ı tamamen kapatmak", "en": "Disabling retries entirely" } },
+        { "id": "d", "text": { "tr": "Rezervasyon (visibility) süresini çok uzun tutmak", "en": "Making the reservation (visibility) timeout very long" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Tekrar teslim, ACK kaybı gibi nedenlerle tek işçiyle de olur (a). Retry'ı kapatmak geçici hatalarda iadenin hiç yapılmamasına yol açar (c). Uzun visibility süresi tekrarı geciktirir ama önlemez (d). Doğru güvence, işin kaç kez çalışırsa çalışsın aynı etkiyi üretmesidir.",
+        "en": "Redelivery happens even with a single worker, e.g. after a lost ACK (a). Disabling retries means transient errors leave the refund undone (c). A long visibility timeout delays the repeat but does not prevent it (d). The real guarantee is a job that produces the same effect however many times it runs."
+      },
+      "difficulty": "easy",
+      "concepts": ["at-least-once", "idempotent-jobs"]
+    },
+    {
+      "id": "q2",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Sağlıklı bir retry politikasında hangileri bulunur? (Birden fazla seçin)",
+        "en": "Which belong in a healthy retry policy? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Üstel artan bekleme süresi", "en": "Exponentially growing wait times" } },
+        { "id": "b", "text": { "tr": "Bekleme süresine rastgele jitter eklemek", "en": "Adding random jitter to the wait time" } },
+        { "id": "c", "text": { "tr": "Bir deneme sınırı ve sınır aşılınca DLQ", "en": "A retry limit and a DLQ once it is exceeded" } },
+        { "id": "d", "text": { "tr": "Geçersiz e-posta adresi gibi kalıcı hataları da sınır dolana kadar denemek", "en": "Retrying permanent errors such as an invalid email address until the limit is reached" } }
+      ],
+      "correct": ["a", "b", "c"],
+      "explanation": {
+        "tr": "Üstel backoff kısa aksaklıkları atlatıp uzun kesintide yükü azaltır, jitter senkron tekrar dalgasını dağıtır, sınır ve DLQ ise sonsuz döngüyü engelleyip insan incelemesine yer açar. Kalıcı hatalar tekrar denemeyle düzelmez; doğrudan DLQ'ya ya da hata kaydına gönderilmelidir.",
+        "en": "Exponential backoff rides out short blips and eases load in long outages, jitter breaks up synchronized retry waves, and a limit plus DLQ prevents infinite loops and makes room for human review. Permanent errors are not fixed by retrying; send them straight to the DLQ or an error log."
+      },
+      "difficulty": "medium",
+      "concepts": ["exponential-backoff", "dead-letter-queue"]
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": {
+        "tr": "Saatlik hatırlatma işi `@Cron(EVERY_HOUR)` ile üç API replikasında aynı anda tetikleniyor ve ilk satırında `SET lock:reminders:<saat> <pid> PX 3300000 NX` çalıştırıyor. Ne olur?",
+        "en": "An hourly reminder job fires on three API replicas at once via `@Cron(EVERY_HOUR)` and first runs `SET lock:reminders:<hour> <pid> PX 3300000 NX`. What happens?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Üç replika da OK alır ve kullanıcılar üç hatırlatma alır", "en": "All three replicas get OK and users receive three reminders" } },
+        { "id": "b", "text": { "tr": "Yalnızca bir replika OK alıp işi çalıştırır; diğerleri null alıp çıkar; kilit 55 dakika sonra kendiliğinden düşer", "en": "Only one replica gets OK and runs the job; the others get null and exit; the lock expires on its own after 55 minutes" } },
+        { "id": "c", "text": { "tr": "Replikalar sırayla bekleyip işi art arda üç kez çalıştırır", "en": "The replicas wait in line and run the job three times in a row" } },
+        { "id": "d", "text": { "tr": "Kilit hiç düşmez; bir sonraki saatin işi de engellenir", "en": "The lock never expires; the next hour's job is blocked too" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "NX 'yalnızca anahtar yoksa yaz' demektir ve Redis komutları tek tek işlediği için yalnızca ilk gelen OK alır. NX beklemez, hemen null döner (c yanlış). PX ile verilen ömür kilidin kendiliğinden düşmesini sağlar; ayrıca anahtardaki saat damgası her saatin ayrı bir kilit olmasını garanti eder (d yanlış).",
+        "en": "NX means 'write only if the key does not exist' and since Redis processes commands one at a time only the first caller gets OK. NX does not wait; it returns null immediately (c is wrong). The PX lifetime makes the lock expire by itself, and the hour stamp in the key makes every hour a separate lock (d is wrong)."
+      },
+      "difficulty": "medium",
+      "concepts": ["cron-jobs", "distributed-lock"]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Dağıtık bir kilit kullanıldığında işin iki kez çalışması imkânsız hâle gelir; bu yüzden işin ayrıca idempotent olmasına gerek yoktur.",
+        "en": "With a distributed lock it becomes impossible for a job to run twice, so the job no longer needs to be idempotent."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "Yanlış. Kilidin süresi, sahibi uzun bir GC duraklamasındayken dolabilir ve ikinci bir süreç kilidi alabilir; Redis yeniden başlayabilir ya da failover sırasında kilit kaybolabilir. Kilit kopya çalışmayı büyük ölçüde azaltan bir optimizasyondur; yan etkili işlerde asıl güvence idempotency ve gerekirse fencing token'dır.",
+        "en": "False. The lock can expire while its holder sits in a long GC pause and a second process can take it; Redis may restart or lose the lock during failover. A lock is an optimisation that greatly reduces duplicate runs; for jobs with side effects the real guarantee is idempotency and, where needed, a fencing token."
+      },
+      "difficulty": "medium",
+      "concepts": ["distributed-lock", "idempotent-jobs"]
+    },
+    {
+      "id": "q5",
+      "type": "order",
+      "prompt": {
+        "tr": "Bir işin başarısız olup DLQ'ya düştüğü ve sonra kurtarıldığı akışı sıralayın.",
+        "en": "Order the flow in which a job fails, lands in the DLQ and is later recovered."
+      },
+      "options": [
+        { "id": "enqueue", "text": { "tr": "İş, commit sonrası idempotency anahtarıyla kuyruğa alınır", "en": "The job is enqueued after commit with an idempotency key" } },
+        { "id": "reserve", "text": { "tr": "İşçi işi rezerve eder ve dış servisten 503 alır", "en": "A worker reserves the job and gets 503 from the external service" } },
+        { "id": "backoff", "text": { "tr": "İş üstel backoff ve jitter ile tekrar denenir", "en": "The job is retried with exponential backoff and jitter" } },
+        { "id": "dlq", "text": { "tr": "Deneme sınırı aşılır, iş DLQ'ya taşınır ve alarm çalar", "en": "The retry limit is exceeded, the job moves to the DLQ and an alert fires" } },
+        { "id": "replay", "text": { "tr": "Sorun giderilir ve iş DLQ'dan yeniden oynatılır", "en": "The issue is fixed and the job is replayed from the DLQ" } }
+      ],
+      "correct": ["enqueue", "reserve", "backoff", "dlq", "replay"],
+      "explanation": {
+        "tr": "İş commit'ten sonra kuyruğa girer, işçi alır ve geçici bir hata görür; backoff ile denenir, sınır dolunca DLQ'ya gider ve alarm üretir. Neden giderildikten sonra yapılan replay, işler idempotent olduğu için güvenlidir.",
+        "en": "The job enters the queue after commit, a worker takes it and hits a transient error; it is retried with backoff and, once the limit is reached, goes to the DLQ and raises an alert. Replaying after the cause is fixed is safe because jobs are idempotent."
+      },
+      "difficulty": "easy",
+      "concepts": ["dead-letter-queue", "exponential-backoff", "background-jobs"]
+    }
+  ]
+}

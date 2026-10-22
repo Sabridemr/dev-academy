@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 420" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Core Web Vitals ve iyileştirme teknikleri</title>
+  <desc id="desc">Üç sütun: LCP (yükleniyor mu, iyi eşik 2,5 saniye), INP (tepki veriyor mu, iyi eşik 200 milisaniye) ve CLS (yerinde duruyor mu, iyi eşik 0,1). Her sütunun altında başlıca düşmanı ve onu iyileştiren teknikler listelenir. Altta tüm ölçülerin gerçek kullanıcı verisinin 75. yüzdeliğinde değerlendirildiği not edilir.</desc>
+
+  <text x="480" y="30" text-anchor="middle" font-size="15" font-weight="600" fill="var(--da-fg, #0f172a)">Core Web Vitals: üç soru, üç düşman</text>
+
+  <!-- Sütun kutuları -->
+  <g stroke-width="1.5">
+    <rect x="40" y="56" width="270" height="310" rx="12" fill="var(--da-primary, #2563eb)" fill-opacity="0.07" stroke="var(--da-primary, #2563eb)"/>
+    <rect x="345" y="56" width="270" height="310" rx="12" fill="var(--da-warning, #d97706)" fill-opacity="0.07" stroke="var(--da-warning, #d97706)"/>
+    <rect x="650" y="56" width="270" height="310" rx="12" fill="var(--da-accent, #0891b2)" fill-opacity="0.07" stroke="var(--da-accent, #0891b2)"/>
+  </g>
+
+  <!-- Başlıklar -->
+  <g font-size="22" font-weight="700" text-anchor="middle">
+    <text x="175" y="94" fill="var(--da-primary, #2563eb)">LCP</text>
+    <text x="480" y="94" fill="var(--da-warning, #d97706)">INP</text>
+    <text x="785" y="94" fill="var(--da-accent, #0891b2)">CLS</text>
+  </g>
+  <g font-size="12" text-anchor="middle" fill="var(--da-fg, #0f172a)">
+    <text x="175" y="116">Yükleniyor mu?</text>
+    <text x="480" y="116">Tepki veriyor mu?</text>
+    <text x="785" y="116">Yerinde duruyor mu?</text>
+  </g>
+  <g font-size="12" font-weight="600" text-anchor="middle" fill="var(--da-success, #059669)">
+    <text x="175" y="140">iyi: ≤ 2,5 s</text>
+    <text x="480" y="140">iyi: ≤ 200 ms</text>
+    <text x="785" y="140">iyi: ≤ 0,1</text>
+  </g>
+
+  <!-- Düşmanlar -->
+  <g font-size="12" font-weight="600" fill="var(--da-danger, #dc2626)">
+    <text x="60" y="176">Düşman: geç keşfedilen görsel,</text>
+    <text x="60" y="192">yavaş sunucu, bloklayan kaynak</text>
+    <text x="365" y="176">Düşman: ana iş parçacığını</text>
+    <text x="365" y="192">işgal eden uzun JS görevleri</text>
+    <text x="670" y="176">Düşman: boyutu belirsiz görsel,</text>
+    <text x="670" y="192">reklam, geç gelen yazı tipi</text>
+  </g>
+
+  <!-- Teknikler -->
+  <g font-size="12" fill="var(--da-fg, #0f172a)">
+    <text x="60" y="226">• Görseli HTML'de ver, fetchpriority=high</text>
+    <text x="60" y="250">• AVIF/WebP + srcset</text>
+    <text x="60" y="274">• Kritik CSS küçük, script'ler defer</text>
+    <text x="60" y="298">• CDN + immutable önbellek</text>
+    <text x="60" y="322">• SSR/SSG ile dolu HTML</text>
+
+    <text x="365" y="226">• Code splitting (rota başına)</text>
+    <text x="365" y="250">• Ağır bileşen: dinamik import()</text>
+    <text x="365" y="274">• Uzun görevi böl / Web Worker</text>
+    <text x="365" y="298">• Gereksiz hydration'dan kaçın</text>
+    <text x="365" y="322">• Üçüncü taraf script'leri denetle</text>
+
+    <text x="670" y="226">• width/height ya da aspect-ratio</text>
+    <text x="670" y="250">• Dinamik içeriğe sabit kap</text>
+    <text x="670" y="274">• font-display + uyumlu yedek</text>
+    <text x="670" y="298">• Mevcut içeriğin üstüne ekleme yapma</text>
+    <text x="670" y="322">• Animasyonda transform kullan</text>
+  </g>
+
+  <text x="480" y="398" text-anchor="middle" font-size="12" fill="var(--da-muted, #64748b)">Değerlendirme: gerçek kullanıcı verisinin (RUM) 75. yüzdeliği — laboratuvar puanı değil.</text>
+</svg>

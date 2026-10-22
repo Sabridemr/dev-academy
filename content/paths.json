@@ -13,12 +13,14 @@
     "icon": "terminal",
     "items": [
       "a-system-design-fundamentals",
+      "o-network-os",
       "d-database-design",
       "c-design-patterns",
       "f-code-and-infrastructure",
       "h-devops-tools",
       "i-api-sql-testing",
-      "n-auth-security"
+      "n-auth-security",
+      "b-architectures/b-06-hexagonal-clean-architecture"
     ]
   },
   {
@@ -35,6 +37,7 @@
     "icon": "network",
     "items": [
       "a-system-design-fundamentals",
+      "o-network-os",
       "b-architectures",
       "e-case-studies",
       "f-code-and-infrastructure",
@@ -99,9 +102,15 @@
       "a-system-design-fundamentals/a-10-rate-limiting",
       "a-system-design-fundamentals/a-11-consistent-hashing-sharding",
       "a-system-design-fundamentals/a-12-replication",
+      "a-system-design-fundamentals/a-14-websocket-realtime",
+      "a-system-design-fundamentals/a-15-search-systems",
       "d-database-design/d-04-sql-vs-nosql",
+      "d-database-design/d-07-query-planner-explain",
+      "d-database-design/d-09-zero-downtime-migrations",
       "e-case-studies",
       "c-design-patterns/c-04-distributed-patterns",
+      "b-architectures/b-07-event-sourcing-cqrs",
+      "b-architectures/b-08-saga-distributed-workflows",
       "q-distributed-advanced/q-02-consensus-raft",
       "q-distributed-advanced/q-03-distributed-locks-leases",
       "q-distributed-advanced/q-04-consistency-models",
@@ -111,6 +120,9 @@
       "h-devops-tools/h-10-mulakat-soru-cevap-ve-ozet",
       "i-api-sql-testing/i-04-api-ve-rest-api-uctan-uca-ornek-ve-mulakat",
       "j-system-design-notes/j-11-odunlesimler-mulakat-ve-ozet",
+      "p-frontend-web/p-02-csr-ssr-ssg-isr",
+      "p-frontend-web/p-04-web-performance",
+      "p-frontend-web/p-05-browser-security",
       "l-algorithms-data-structures"
     ]
   },
@@ -128,6 +140,7 @@
     "icon": "container",
     "items": [
       "h-devops-tools",
+      "o-network-os",
       "f-code-and-infrastructure",
       "a-system-design-fundamentals/a-13-observability-12-factor"
     ]
@@ -148,8 +161,13 @@
       "k-python",
       "i-api-sql-testing/i-01-how-apis-are-created-and-called",
       "a-system-design-fundamentals/a-01-client-server-dns-http",
+      "o-network-os/o-01-tcp-udp",
+      "o-network-os/o-02-dns-ip",
+      "p-frontend-web/p-01-browser-rendering-pipeline",
+      "p-frontend-web/p-06-accessibility-design-systems",
       "a-system-design-fundamentals/a-03-horizontal-vertical-scaling",
       "h-devops-tools/h-01-linux-notes",
+      "o-network-os/o-05-processes-threads",
       "h-devops-tools/h-04-git-notes"
     ]
   },

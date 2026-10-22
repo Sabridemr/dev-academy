@@ -1,0 +1,110 @@
+{
+  "id": "o-08-container-internals-quiz",
+  "title": { "tr": "Konteynerlerin Altındaki OS Quiz", "en": "The OS Beneath Containers Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Ana makinede `ps aux` çalıştırdığınızda, çalışan bir konteynerin içindeki uygulama süreci nasıl görünür?",
+        "en": "When you run `ps aux` on the host, how does the application process inside a running container appear?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Hiç görünmez; konteyner ayrı bir çekirdekte çalışır", "en": "It does not appear; the container runs on a separate kernel" } },
+        { "id": "b", "text": { "tr": "Ana makinede kendi PID'iyle sıradan bir süreç olarak görünür", "en": "It appears as an ordinary process with its own host PID" } },
+        { "id": "c", "text": { "tr": "PID 1 olarak görünür ve systemd'nin yerini alır", "en": "It appears as PID 1 and replaces systemd" } },
+        { "id": "d", "text": { "tr": "Yalnızca dockerd süreci görünür; içerideki süreçler onun thread'leridir", "en": "Only the dockerd process appears; the processes inside are its threads" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Konteyner bir süreçtir. PID namespace'i içeriden bakana PID 1 gösterir, ama ana makinenin PID namespace'inde süreç kendi numarasıyla (ör. 4123) listelenir. Konteynerler ayrı çekirdek çalıştırmaz; o sanal makinenin özelliğidir.",
+        "en": "A container is a process. The PID namespace shows PID 1 to the inside view, but in the host's PID namespace the process is listed with its own number (e.g. 4123). Containers do not run a separate kernel; that is what virtual machines do."
+      },
+      "difficulty": "easy",
+      "concepts": ["container-is-a-process", "pid-namespace"]
+    },
+    {
+      "id": "q2",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Aşağıdakilerden hangileri namespace'ler ile sağlanır? (Birden fazla seçin)",
+        "en": "Which of the following are provided by namespaces? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Konteynerin kendi host adına sahip olması", "en": "The container having its own hostname" } },
+        { "id": "b", "text": { "tr": "Konteynerin kendi 80 numaralı portunu dinleyebilmesi", "en": "The container being able to listen on its own port 80" } },
+        { "id": "c", "text": { "tr": "Konteynerin en fazla 256 MB bellek kullanabilmesi", "en": "The container being limited to 256 MB of memory" } },
+        { "id": "d", "text": { "tr": "İçerideki root kullanıcının dışarıda yetkisiz bir UID'ye eşlenmesi", "en": "Root inside the container being mapped to an unprivileged UID outside" } }
+      ],
+      "correct": ["a", "b", "d"],
+      "explanation": {
+        "tr": "Host adı UTS, port ve arayüzler network, UID eşlemesi user namespace'inin işidir. Bellek limiti ise görünürlükle değil kaynak kullanımıyla ilgilidir ve cgroup'larla (memory.max) sağlanır.",
+        "en": "The hostname is the UTS namespace's job, ports and interfaces the network namespace's, UID mapping the user namespace's. The memory limit is about resource usage, not visibility, and is provided by cgroups (memory.max)."
+      },
+      "difficulty": "medium",
+      "concepts": ["linux-namespaces", "cgroups"]
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": {
+        "tr": "`--cpus=0.5` ile çalışan bir konteyner kısa bir süre için tam bir çekirdek kadar CPU istiyor. Ne olur?",
+        "en": "A container running with `--cpus=0.5` briefly wants a full core of CPU. What happens?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "OOM killer süreci öldürür", "en": "The OOM killer kills the process" } },
+        { "id": "b", "text": { "tr": "Süreç kısılır (throttle): periyodun kalanında bekletilir ve gecikmesi artar", "en": "The process is throttled: it is held for the rest of the period and its latency rises" } },
+        { "id": "c", "text": { "tr": "Limit yok sayılır, çünkü CPU boşta", "en": "The limit is ignored because the CPU is idle" } },
+        { "id": "d", "text": { "tr": "Konteyner 137 koduyla yeniden başlatılır", "en": "The container is restarted with exit code 137" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "cpu.max bir kota tanımlar (ör. 100 ms'de 50 ms). Kota dolunca süreç öldürülmez, periyodun sonuna kadar çalıştırılmaz; bu kısılma cpu.stat içindeki nr_throttled ile görülür. Öldürme davranışı bellek limitine aittir.",
+        "en": "cpu.max defines a quota (e.g. 50 ms per 100 ms). When the quota is used up the process is not killed; it is not scheduled until the period ends, and this throttling shows up as nr_throttled in cpu.stat. Killing belongs to the memory limit."
+      },
+      "difficulty": "medium",
+      "concepts": ["cgroups"]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Overlay dosya sisteminde konteyner içinde bir imaj dosyasını değiştirmek, dosyayı imajın salt okunur katmanında yerinde günceller.",
+        "en": "In an overlay file system, modifying an image file inside a container updates it in place in the image's read-only layer."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "Yanlış. Alt katmanlar salt okunurdur. İlk değişiklikte dosya yazılabilir üst katmana kopyalanır (copy-up) ve değişiklik orada yapılır; aynı imajı kullanan diğer konteynerler etkilenmez. Silme de üst katmanda bir whiteout işaretiyle gösterilir.",
+        "en": "False. Lower layers are read-only. On the first change the file is copied into the writable upper layer (copy-up) and modified there; other containers using the same image are unaffected. Deletions are likewise represented by a whiteout marker in the upper layer."
+      },
+      "difficulty": "easy",
+      "concepts": ["overlayfs"]
+    },
+    {
+      "id": "q5",
+      "type": "order",
+      "prompt": {
+        "tr": "`docker run --memory=256m app` komutundan sonra olan adımları doğru sıraya koyun.",
+        "en": "Put the steps that happen after `docker run --memory=256m app` in the correct order."
+      },
+      "options": [
+        { "id": "exec", "text": { "tr": "runc uygulama komutunu exec eder ve süreç çalışmaya başlar", "en": "runc execs the application command and the process starts running" } },
+        { "id": "bundle", "text": { "tr": "containerd imajı hazırlar ve OCI paketini runc'a verir", "en": "containerd prepares the image and hands the OCI bundle to runc" } },
+        { "id": "oom", "text": { "tr": "Bellek limit aşılınca OOM killer süreci öldürür, çıkış kodu 137", "en": "When memory exceeds the limit the OOM killer kills the process, exit code 137" } },
+        { "id": "setup", "text": { "tr": "runc namespace'leri açar, overlay kökü bağlar ve süreci memory.max=256M olan cgroup'a ekler", "en": "runc creates the namespaces, mounts the overlay root and adds the process to a cgroup with memory.max=256M" } }
+      ],
+      "correct": ["bundle", "setup", "exec", "oom"],
+      "explanation": {
+        "tr": "Çalışma zamanı zinciri containerd → runc şeklindedir. runc yalıtımı ve limitleri komut çalışmadan önce kurar, sonra exec eder. OOM ancak çalışan süreç limiti aştığında, en son gerçekleşir.",
+        "en": "The runtime chain is containerd → runc. runc sets up isolation and limits before the command runs, then execs it. The OOM kill only happens once the running process exceeds the limit, so it comes last."
+      },
+      "difficulty": "hard",
+      "concepts": ["container-runtime", "memory-limit", "oom-killer"]
+    }
+  ]
+}

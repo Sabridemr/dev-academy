@@ -1,0 +1,249 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "o-04-http-versions-three-lanes",
+  "title": { "tr": "Aynı dört istek, üç protokol", "en": "The same four requests, three protocols" },
+  "summary": {
+    "tr": "A, B, C ve D adlı dört istek HTTP/1.1, HTTP/2 ve HTTP/3 ile ayrı şeritlerde gönderilir. HTTP/1.1 istekleri sırayla taşır, HTTP/2 tek TCP bağlantısında çoğullar ama tek kayıpta bütün stream'ler bekler, HTTP/3 ise kaybı yalnızca ilgili stream'e hapseder.",
+    "en": "Four requests named A, B, C and D are sent on separate lanes over HTTP/1.1, HTTP/2 and HTTP/3. HTTP/1.1 carries them one after another, HTTP/2 multiplexes them over one TCP connection but every stream waits on a single loss, and HTTP/3 confines the loss to the affected stream."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Üç yatay şerit vardır. Her şeridin solunda bir tarayıcı, sağında bir sunucu bulunur: üstte HTTP/1.1, ortada HTTP/2 (TCP), altta HTTP/3 (QUIC). Önce HTTP/1.1 şeridinde A, B, C, D istekleri tek tek gider ve her yanıt bitmeden sonraki istek gönderilemez; büyük C yanıtı D'yi bekletir. Sonra HTTP/2 şeridinde dört istek aynı anda gider ve yanıt çerçeveleri iç içe döner; bir TCP segmenti kaybolunca dört stream de yeniden iletimi bekler. Ardından HTTP/3 şeridinde dört stream QUIC üzerinden akar; C'ye ait paket kaybolduğunda yalnızca C bekler, A, B ve D teslim edilir. Son adımda HTTP/3 istemcisinin IP adresi değişir ama bağlantı kimliği sayesinde bağlantı kopmaz ve üç şeridin toplam süreleri karşılaştırılır.",
+      "en": "There are three horizontal lanes. Each lane has a browser on the left and a server on the right: HTTP/1.1 on top, HTTP/2 (TCP) in the middle, HTTP/3 (QUIC) at the bottom. First, on the HTTP/1.1 lane requests A, B, C, D go one at a time and the next request cannot be sent until the previous response finishes; the large C response holds up D. Then on the HTTP/2 lane all four requests go at once and response frames come back interleaved; when one TCP segment is lost all four streams wait for the retransmission. Next, on the HTTP/3 lane four streams flow over QUIC; when a packet belonging to C is lost only C waits while A, B and D are delivered. In the final step the HTTP/3 client's IP address changes but the connection survives thanks to its connection ID, and the total times of the three lanes are compared."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "c1", "kind": "browser", "label": "HTTP/1.1", "sublabel": { "tr": "keep-alive, 1 bağlantı", "en": "keep-alive, 1 connection" }, "x": 150, "y": 110, "w": 170, "h": 72 },
+    { "id": "s1", "kind": "server", "label": { "tr": "Sunucu", "en": "Server" }, "sublabel": "TCP + TLS", "x": 850, "y": 110, "w": 150, "h": 72 },
+    { "id": "c2", "kind": "browser", "label": "HTTP/2", "sublabel": { "tr": "tek TCP, çok stream", "en": "one TCP, many streams" }, "x": 150, "y": 300, "w": 170, "h": 72 },
+    { "id": "s2", "kind": "server", "label": { "tr": "Sunucu", "en": "Server" }, "sublabel": "TCP + TLS", "x": 850, "y": 300, "w": 150, "h": 72 },
+    { "id": "c3", "kind": "mobile", "label": "HTTP/3", "sublabel": { "tr": "QUIC (UDP)", "en": "QUIC (UDP)" }, "x": 150, "y": 490, "w": 170, "h": 72 },
+    { "id": "s3", "kind": "server", "label": { "tr": "Sunucu", "en": "Server" }, "sublabel": "QUIC + TLS 1.3", "x": 850, "y": 490, "w": 150, "h": 72 }
+  ],
+  "edges": [
+    { "id": "q1", "from": "c1", "to": "s1", "kind": "request", "curvature": -0.08 },
+    { "id": "r1", "from": "s1", "to": "c1", "kind": "response", "curvature": -0.08 },
+    { "id": "q2", "from": "c2", "to": "s2", "kind": "request", "curvature": -0.08 },
+    { "id": "r2", "from": "s2", "to": "c2", "kind": "response", "curvature": -0.08 },
+    { "id": "q3", "from": "c3", "to": "s3", "kind": "request", "curvature": -0.08 },
+    { "id": "r3", "from": "s3", "to": "c3", "kind": "response", "curvature": -0.08 }
+  ],
+  "steps": [
+    {
+      "id": "setup",
+      "title": { "tr": "Üç şerit, aynı dört istek", "en": "Three lanes, the same four requests" },
+      "narration": {
+        "tr": "Bir sayfa aynı sunucudan dört dosya istiyor: A (CSS), B (JS), C (büyük görsel) ve D (JSON). Bağlantılar zaten kurulu. Üç şeritte aynı istekleri farklı HTTP sürümleriyle göndereceğiz; anlam aynı, kabloya diziliş farklı.",
+        "en": "A page needs four files from the same server: A (CSS), B (JS), C (large image) and D (JSON). Connections are already established. We will send the same requests on three lanes with different HTTP versions; the semantics are the same, the wire layout differs."
+      },
+      "durationMs": 2600,
+      "inherit": false,
+      "highlight": { "nodes": ["c1", "c2", "c3"] },
+      "nodeStates": {
+        "c1": { "status": "idle", "badge": "A B C D" },
+        "c2": { "status": "idle", "badge": "A B C D" },
+        "c3": { "status": "idle", "badge": "A B C D" }
+      },
+      "annotations": [
+        { "id": "same", "x": 500, "y": 30, "text": { "tr": "GET /a.css · /b.js · /c.jpg · /d.json", "en": "GET /a.css · /b.js · /c.jpg · /d.json" }, "tone": "info" }
+      ]
+    },
+    {
+      "id": "h1-serial",
+      "title": { "tr": "HTTP/1.1: sırayla, bir yanıt bitmeden yenisi yok", "en": "HTTP/1.1: one at a time, no new request until the response ends" },
+      "narration": {
+        "tr": "Keep-alive sayesinde bağlantı yeniden kullanılır, ama bağlantıda aynı anda yalnızca bir istek-yanıt olabilir. A gider, A'nın yanıtı döner; ancak ondan sonra B gönderilir. Her dosya en az bir gidiş-dönüş bekler.",
+        "en": "Keep-alive reuses the connection, but only one request-response can be in flight on it. A goes out and A's response comes back; only then is B sent. Each file waits at least one round trip."
+      },
+      "durationMs": 3800,
+      "highlight": { "nodes": ["c1", "s1"], "edges": ["q1", "r1"] },
+      "nodeStates": { "c1": { "status": "active", "badge": "C D ⏳" }, "s1": { "status": "busy" } },
+      "edgeStates": { "q1": { "status": "active" }, "r1": { "status": "active" } },
+      "packets": [
+        { "edge": "q1", "shape": "envelope", "label": "A", "durationMs": 700 },
+        { "edge": "r1", "shape": "square", "label": "A", "startAt": 800, "durationMs": 700 },
+        { "edge": "q1", "shape": "envelope", "label": "B", "startAt": 1600, "durationMs": 700 },
+        { "edge": "r1", "shape": "square", "label": "B", "startAt": 2400, "durationMs": 700 }
+      ],
+      "annotations": [
+        { "id": "h1-note", "x": 500, "y": 30, "text": { "tr": "1 bağlantı = aynı anda 1 istek", "en": "1 connection = 1 request at a time" }, "tone": "warning" }
+      ]
+    },
+    {
+      "id": "h1-hol",
+      "title": { "tr": "HTTP/1.1: büyük C, küçük D'yi bekletir", "en": "HTTP/1.1: the big C holds up the small D" },
+      "narration": {
+        "tr": "C büyük bir görsel; yanıtı uzun sürer. D yalnızca birkaç yüz baytlık bir JSON olsa da C bitene kadar gönderilemez. Bu, uygulama katmanındaki head-of-line blocking'dir. Tarayıcılar bunu alan adı başına yaklaşık altı paralel bağlantı açarak hafifletir.",
+        "en": "C is a large image; its response takes a long time. D is just a few hundred bytes of JSON, yet it cannot be sent until C finishes. This is head-of-line blocking at the application layer. Browsers soften it by opening about six parallel connections per host."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["c1", "s1"], "edges": ["q1", "r1"] },
+      "nodeStates": { "c1": { "status": "warning", "badge": "D ⏳ (HOL)" } },
+      "packets": [
+        { "edge": "q1", "shape": "envelope", "label": "C", "durationMs": 600 },
+        { "edge": "r1", "shape": "square", "label": "C", "startAt": 700, "durationMs": 500, "repeat": 4, "repeatGapMs": 150 },
+        { "edge": "q1", "shape": "envelope", "label": "D", "startAt": 3200, "durationMs": 600 }
+      ],
+      "annotations": [
+        { "id": "h1-hol-note", "x": 500, "y": 200, "text": { "tr": "D, C'nin arkasında sırada", "en": "D is queued behind C" }, "tone": "warning", "target": "c1" }
+      ]
+    },
+    {
+      "id": "h2-mux",
+      "title": { "tr": "HTTP/2: dört stream tek bağlantıda iç içe", "en": "HTTP/2: four streams interleaved on one connection" },
+      "narration": {
+        "tr": "HTTP/2 her isteği bir stream kimliğiyle çerçevelere böler. Dört istek aynı anda gider; sunucu hazır olan yanıtların çerçevelerini araya sıkıştırır. Büyük C artık D'yi bekletmez. HPACK, tekrar eden başlıkları birkaç bayta indirir.",
+        "en": "HTTP/2 splits each request into frames tagged with a stream ID. All four requests go at once; the server interleaves frames from whichever responses are ready. The big C no longer holds up D. HPACK shrinks repeated headers to a few bytes."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["c2", "s2"], "edges": ["q2", "r2"] },
+      "nodeStates": {
+        "c1": { "status": "muted" },
+        "s1": { "status": "muted" },
+        "c2": { "status": "active", "badge": "4 stream" },
+        "s2": { "status": "busy" }
+      },
+      "edgeStates": { "q1": { "status": "muted" }, "r1": { "status": "muted" }, "q2": { "status": "active" }, "r2": { "status": "active" } },
+      "packets": [
+        { "edge": "q2", "shape": "envelope", "label": "A B C D", "durationMs": 800 },
+        { "edge": "r2", "shape": "square", "label": "A", "startAt": 900, "durationMs": 800 },
+        { "edge": "r2", "shape": "square", "label": "D", "startAt": 1150, "durationMs": 800 },
+        { "edge": "r2", "shape": "square", "label": "B", "startAt": 1400, "durationMs": 800 },
+        { "edge": "r2", "shape": "square", "label": "C", "startAt": 1650, "durationMs": 800, "repeat": 2, "repeatGapMs": 200 }
+      ],
+      "annotations": [
+        { "id": "h2-note", "x": 500, "y": 220, "text": { "tr": "çerçeveler stream kimliğine göre birleşir", "en": "frames reassembled by stream ID" }, "tone": "success", "target": "c2" }
+      ]
+    },
+    {
+      "id": "h2-loss",
+      "title": { "tr": "HTTP/2: tek kayıp, dört stream durur", "en": "HTTP/2: one loss, four streams stall" },
+      "narration": {
+        "tr": "Yolda C'ye ait bir TCP segmenti kayboluyor. TCP stream'leri tanımaz, yalnızca sıralı bir bayt akışı görür. Kayıp segmentin arkasından gelen A, B ve D baytları da çekirdekte bekletilir: bu, TCP seviyesindeki head-of-line blocking'dir.",
+        "en": "A TCP segment carrying part of C is lost on the way. TCP does not know about streams, it sees only an ordered byte stream. The A, B and D bytes that arrived after the lost segment are also held in the kernel: this is head-of-line blocking at the TCP level."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["c2", "s2"], "edges": ["r2"] },
+      "nodeStates": { "c2": { "status": "error", "badge": "A B C D ⏸" }, "s2": { "status": "warning" } },
+      "edgeStates": { "q2": { "status": "idle" }, "r2": { "status": "error" } },
+      "packets": [
+        { "edge": "r2", "shape": "square", "label": "C ✗", "color": "danger", "durationMs": 900 },
+        { "edge": "r2", "shape": "square", "label": "A", "startAt": 300, "durationMs": 900 },
+        { "edge": "r2", "shape": "square", "label": "D", "startAt": 600, "durationMs": 900 },
+        { "edge": "r2", "shape": "square", "label": "B", "startAt": 900, "durationMs": 900 }
+      ],
+      "annotations": [
+        { "id": "h2-loss-note", "x": 500, "y": 390, "text": { "tr": "TCP: önceki bayt gelmeden sonrakini teslim etmez", "en": "TCP will not deliver later bytes before the missing one" }, "tone": "danger", "target": "c2" }
+      ]
+    },
+    {
+      "id": "h2-retransmit",
+      "title": { "tr": "HTTP/2: yeniden iletim, akış sürer", "en": "HTTP/2: retransmit, flow resumes" },
+      "narration": {
+        "tr": "Gönderen eksik segmenti yeniden iletir. Boşluk dolunca TCP bekletilen tüm baytları birden uygulamaya verir ve dört stream birlikte devam eder. Kayıpsız ağda bu durum nadirdir; kayıplı bir mobil ağda ise tek kayıp tüm sayfayı durdurur.",
+        "en": "The sender retransmits the missing segment. Once the gap is filled, TCP hands all the held-back bytes to the application at once and the four streams continue together. On a lossless network this is rare; on a lossy mobile network a single loss stalls the whole page."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["c2", "s2"], "edges": ["r2"] },
+      "nodeStates": { "c2": { "status": "success", "badge": "A B C D ✓" }, "s2": { "status": "idle" } },
+      "edgeStates": { "r2": { "status": "active" } },
+      "packets": [{ "edge": "r2", "shape": "square", "label": { "tr": "C (yeniden)", "en": "C (retx)" }, "color": "warning", "durationMs": 1000 }]
+    },
+    {
+      "id": "h3-streams",
+      "title": { "tr": "HTTP/3: QUIC üzerinde bağımsız stream'ler", "en": "HTTP/3: independent streams over QUIC" },
+      "narration": {
+        "tr": "HTTP/3 aynı çoğullamayı QUIC üzerinde yapar. QUIC UDP üstünde çalışır ve güvenilirlik ile sıralamayı her stream için ayrı yürütür. Bağlantı kurulumu da kısadır: taşıma ve TLS 1.3 el sıkışması aynı paketlerde, tek gidiş-dönüşte biter.",
+        "en": "HTTP/3 does the same multiplexing over QUIC. QUIC runs on UDP and handles reliability and ordering separately for each stream. Connection setup is shorter too: the transport and TLS 1.3 handshakes finish together, in one round trip."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["c3", "s3"], "edges": ["q3", "r3"] },
+      "nodeStates": {
+        "c2": { "status": "muted", "badge": "" },
+        "s2": { "status": "muted" },
+        "c3": { "status": "active", "badge": "4 stream" },
+        "s3": { "status": "busy" }
+      },
+      "edgeStates": { "q2": { "status": "muted" }, "r2": { "status": "muted" }, "q3": { "status": "active" }, "r3": { "status": "active" } },
+      "packets": [
+        { "edge": "q3", "shape": "envelope", "label": "A B C D", "durationMs": 800 },
+        { "edge": "r3", "shape": "dot", "label": "A", "startAt": 900, "durationMs": 800 },
+        { "edge": "r3", "shape": "dot", "label": "D", "startAt": 1150, "durationMs": 800 },
+        { "edge": "r3", "shape": "dot", "label": "B", "startAt": 1400, "durationMs": 800 },
+        { "edge": "r3", "shape": "dot", "label": "C", "startAt": 1650, "durationMs": 800 }
+      ]
+    },
+    {
+      "id": "h3-loss",
+      "title": { "tr": "HTTP/3: kayıp yalnızca C'yi bekletir", "en": "HTTP/3: the loss stalls only C" },
+      "narration": {
+        "tr": "Aynı kayıp şimdi QUIC'te oluyor: C'ye ait bir paket düşüyor. QUIC hangi stream'in eksik olduğunu bilir; A, B ve D'nin verileri hemen uygulamaya teslim edilir, yalnızca C yeniden iletimi bekler. Head-of-line blocking taşıma katmanında da ortadan kalkmıştır.",
+        "en": "The same loss now happens on QUIC: a packet belonging to C is dropped. QUIC knows which stream is missing data; A, B and D are delivered to the application immediately and only C waits for the retransmission. Head-of-line blocking is gone at the transport layer too."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["c3", "s3"], "edges": ["r3"] },
+      "nodeStates": { "c3": { "status": "warning", "badge": "A B D ✓ · C ⏳" }, "s3": { "status": "active" } },
+      "edgeStates": { "q3": { "status": "idle" } },
+      "packets": [
+        { "edge": "r3", "shape": "dot", "label": "C ✗", "color": "danger", "durationMs": 900 },
+        { "edge": "r3", "shape": "dot", "label": "A", "color": "success", "startAt": 300, "durationMs": 900 },
+        { "edge": "r3", "shape": "dot", "label": "D", "color": "success", "startAt": 600, "durationMs": 900 },
+        { "edge": "r3", "shape": "dot", "label": "B", "color": "success", "startAt": 900, "durationMs": 900 },
+        { "edge": "r3", "shape": "dot", "label": { "tr": "C (yeniden)", "en": "C (retx)" }, "color": "warning", "startAt": 2100, "durationMs": 900 }
+      ],
+      "annotations": [
+        { "id": "h3-loss-note", "x": 500, "y": 580, "text": { "tr": "güvenilirlik stream başına: kayıp izole", "en": "reliability per stream: loss isolated" }, "tone": "success", "target": "c3" }
+      ]
+    },
+    {
+      "id": "h3-migrate",
+      "title": { "tr": "Bağlantı göçü: Wi-Fi'dan mobil veriye", "en": "Connection migration: Wi-Fi to mobile data" },
+      "narration": {
+        "tr": "Kullanıcı binadan çıkıyor, telefon Wi-Fi'dan mobil veriye geçiyor ve IP adresi değişiyor. TCP bağlantısı IP ve port dörtlüsüyle tanımlandığı için burada kopardı. QUIC bağlantısı ise bir connection ID taşır; sunucu yeni adresten gelen paketi tanır ve akış sürer.",
+        "en": "The user walks out of the building, the phone switches from Wi-Fi to mobile data and its IP address changes. A TCP connection, identified by the IP and port four-tuple, would break here. A QUIC connection carries a connection ID; the server recognises the packet from the new address and the flow continues."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["c3", "s3"], "edges": ["q3", "r3"] },
+      "nodeStates": {
+        "c3": { "status": "success", "badge": "IP ↻ · CID =", "sublabel": { "tr": "QUIC · yeni IP", "en": "QUIC · new IP" } },
+        "s3": { "status": "success" }
+      },
+      "edgeStates": { "q3": { "status": "active" }, "r3": { "status": "active" } },
+      "packets": [
+        { "edge": "q3", "shape": "envelope", "label": "CID 7f3a", "durationMs": 900 },
+        { "edge": "r3", "shape": "dot", "label": "C ✓", "color": "success", "startAt": 1000, "durationMs": 900 }
+      ]
+    },
+    {
+      "id": "compare",
+      "title": { "tr": "Karşılaştırma", "en": "Comparison" },
+      "narration": {
+        "tr": "HTTP/1.1 bağlantı başına tek istek taşır ve uygulama katmanında bekletir. HTTP/2 bunu çözer ama tek TCP bağlantısı yüzünden kayıpta hepsini birlikte durdurur. HTTP/3 kaybı yalnızca ilgili stream'e hapseder ve ağ değişikliğine dayanır. Üçünde de GET /c.jpg aynı anlama gelir.",
+        "en": "HTTP/1.1 carries one request per connection and blocks at the application layer. HTTP/2 fixes that but, on a single TCP connection, stalls everything together on loss. HTTP/3 confines a loss to its stream and survives network changes. In all three, GET /c.jpg means the same thing."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["c1", "c2", "c3"] },
+      "nodeStates": {
+        "c1": { "status": "warning", "badge": "1×1 · HOL (L7)" },
+        "s1": { "status": "idle" },
+        "c2": { "status": "warning", "badge": "mux · HOL (TCP)" },
+        "s2": { "status": "idle" },
+        "c3": { "status": "success", "badge": "mux · HOL ✗" },
+        "s3": { "status": "idle" }
+      },
+      "edgeStates": {
+        "q1": { "status": "idle" },
+        "r1": { "status": "idle" },
+        "q2": { "status": "idle" },
+        "r2": { "status": "idle" },
+        "q3": { "status": "idle" },
+        "r3": { "status": "idle" }
+      },
+      "annotations": [
+        { "id": "cmp", "x": 500, "y": 30, "text": { "tr": "Semantik aynı, taşıma farklı", "en": "Same semantics, different transport" }, "tone": "info" }
+      ]
+    }
+  ]
+}

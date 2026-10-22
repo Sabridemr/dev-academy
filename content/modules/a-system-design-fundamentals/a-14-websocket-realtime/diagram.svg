@@ -1,0 +1,134 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 470" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Polling, long polling, SSE ve WebSocket zaman çizelgeleri</title>
+  <desc id="desc">Dört satırda aynı üç sunucu olayı (yıldızlar) istemciye ulaşır. Kısa polling'de istemci düzenli sorar ve olay bir sonraki sorguyu bekler; long polling'de istek olay gelene kadar açık tutulur ve her olaydan sonra yeni istek açılır; SSE'de tek bir HTTP yanıtı açık kalır ve olaylar anında akar; WebSocket'te upgrade sonrası tek bağlantı iki yönlü kullanılır.</desc>
+  <defs>
+    <marker id="ws-up" viewBox="0 0 10 10" refX="5" refY="1" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 10 L 5 0 L 10 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+    <marker id="ws-down" viewBox="0 0 10 10" refX="5" refY="9" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 0 L 5 10 L 10 0 z" fill="var(--da-primary, #6366f1)"/>
+    </marker>
+  </defs>
+
+  <text x="480" y="26" text-anchor="middle" font-size="14" font-weight="600" fill="var(--da-fg, #0f172a)">Aynı üç olay, dört teknik: olay ne zaman ulaşır?</text>
+
+  <!-- Olay sütunları -->
+  <g stroke="var(--da-accent, #f59e0b)" stroke-width="1" stroke-dasharray="3 4" opacity="0.6">
+    <line x1="380" y1="44" x2="380" y2="440"/>
+    <line x1="590" y1="44" x2="590" y2="440"/>
+    <line x1="760" y1="44" x2="760" y2="440"/>
+  </g>
+  <g font-size="11" fill="var(--da-accent, #f59e0b)" text-anchor="middle" font-weight="600">
+    <text x="380" y="52">olay 1</text>
+    <text x="590" y="52">olay 2</text>
+    <text x="760" y="52">olay 3</text>
+  </g>
+
+  <!-- Satır başlıkları -->
+  <g font-size="13" font-weight="600" fill="var(--da-fg, #0f172a)">
+    <text x="20" y="105">Kısa polling</text>
+    <text x="20" y="200">Long polling</text>
+    <text x="20" y="295">SSE</text>
+    <text x="20" y="390">WebSocket</text>
+  </g>
+  <g font-size="10" fill="var(--da-muted, #64748b)">
+    <text x="20" y="121">her N sn sor; gecikme ≈ N/2</text>
+    <text x="20" y="216">olay gelene dek bekle</text>
+    <text x="20" y="311">tek yön, tek HTTP yanıtı</text>
+    <text x="20" y="406">çift yön, tek TCP bağlantısı</text>
+  </g>
+
+  <!-- Şeritler: sunucu (üst) ve istemci (alt) -->
+  <g stroke="var(--da-border, #cbd5e1)" stroke-width="1.5">
+    <line x1="170" y1="80" x2="900" y2="80"/>
+    <line x1="170" y1="125" x2="900" y2="125"/>
+    <line x1="170" y1="175" x2="900" y2="175"/>
+    <line x1="170" y1="220" x2="900" y2="220"/>
+    <line x1="170" y1="270" x2="900" y2="270"/>
+    <line x1="170" y1="315" x2="900" y2="315"/>
+    <line x1="170" y1="365" x2="900" y2="365"/>
+    <line x1="170" y1="410" x2="900" y2="410"/>
+  </g>
+  <g font-size="9" fill="var(--da-muted, #64748b)" text-anchor="end">
+    <text x="935" y="83">sunucu</text>
+    <text x="935" y="128">istemci</text>
+  </g>
+
+  <!-- Kısa polling: düzenli istek/yanıt -->
+  <g stroke="var(--da-muted, #64748b)" stroke-width="1.2">
+    <line x1="200" y1="123" x2="208" y2="84" marker-end="url(#ws-up)"/>
+    <line x1="320" y1="123" x2="328" y2="84" marker-end="url(#ws-up)"/>
+    <line x1="440" y1="123" x2="448" y2="84" marker-end="url(#ws-up)"/>
+    <line x1="560" y1="123" x2="568" y2="84" marker-end="url(#ws-up)"/>
+    <line x1="680" y1="123" x2="688" y2="84" marker-end="url(#ws-up)"/>
+    <line x1="800" y1="123" x2="808" y2="84" marker-end="url(#ws-up)"/>
+  </g>
+  <g stroke="var(--da-border, #cbd5e1)" stroke-width="1.2">
+    <line x1="212" y1="82" x2="220" y2="121"/>
+    <line x1="332" y1="82" x2="340" y2="121"/>
+    <line x1="572" y1="82" x2="580" y2="121"/>
+  </g>
+  <g stroke="var(--da-primary, #6366f1)" stroke-width="2">
+    <line x1="452" y1="82" x2="460" y2="119" marker-end="url(#ws-down)"/>
+    <line x1="692" y1="82" x2="700" y2="119" marker-end="url(#ws-down)"/>
+    <line x1="812" y1="82" x2="820" y2="119" marker-end="url(#ws-down)"/>
+  </g>
+  <g font-size="9" fill="var(--da-danger, #ef4444)">
+    <text x="384" y="140">sonraki sorguyu bekler</text>
+    <text x="224" y="140" fill="var(--da-muted, #64748b)">boş yanıt</text>
+  </g>
+
+  <!-- Long polling -->
+  <g stroke="var(--da-muted, #64748b)" stroke-width="1.2">
+    <line x1="190" y1="218" x2="198" y2="179" marker-end="url(#ws-up)"/>
+    <line x1="392" y1="218" x2="400" y2="179" marker-end="url(#ws-up)"/>
+    <line x1="602" y1="218" x2="610" y2="179" marker-end="url(#ws-up)"/>
+  </g>
+  <g stroke="var(--da-primary, #6366f1)" stroke-width="5" opacity="0.18">
+    <line x1="200" y1="175" x2="378" y2="175"/>
+    <line x1="402" y1="175" x2="588" y2="175"/>
+    <line x1="612" y1="175" x2="758" y2="175"/>
+  </g>
+  <g stroke="var(--da-primary, #6366f1)" stroke-width="2">
+    <line x1="380" y1="177" x2="384" y2="214" marker-end="url(#ws-down)"/>
+    <line x1="590" y1="177" x2="594" y2="214" marker-end="url(#ws-down)"/>
+    <line x1="760" y1="177" x2="764" y2="214" marker-end="url(#ws-down)"/>
+  </g>
+  <text x="250" y="168" font-size="9" fill="var(--da-muted, #64748b)">istek açık tutulur</text>
+  <text x="404" y="236" font-size="9" fill="var(--da-muted, #64748b)">her olaydan sonra yeni istek</text>
+
+  <!-- SSE -->
+  <line x1="190" y1="313" x2="198" y2="274" stroke="var(--da-muted, #64748b)" stroke-width="1.2" marker-end="url(#ws-up)"/>
+  <rect x="200" y="268" width="700" height="6" rx="3" fill="var(--da-success, #10b981)" opacity="0.25"/>
+  <g stroke="var(--da-primary, #6366f1)" stroke-width="2">
+    <line x1="380" y1="274" x2="384" y2="309" marker-end="url(#ws-down)"/>
+    <line x1="590" y1="274" x2="594" y2="309" marker-end="url(#ws-down)"/>
+    <line x1="760" y1="274" x2="764" y2="309" marker-end="url(#ws-down)"/>
+  </g>
+  <text x="210" y="262" font-size="9" fill="var(--da-success, #10b981)">text/event-stream (yanıt kapanmaz)</text>
+
+  <!-- WebSocket -->
+  <line x1="190" y1="408" x2="198" y2="369" stroke="var(--da-muted, #64748b)" stroke-width="1.2" marker-end="url(#ws-up)"/>
+  <text x="206" y="392" font-size="9" fill="var(--da-muted, #64748b)">Upgrade → 101</text>
+  <rect x="200" y="365" width="700" height="45" rx="6" fill="var(--da-success, #10b981)" opacity="0.10"/>
+  <g stroke="var(--da-primary, #6366f1)" stroke-width="2">
+    <line x1="380" y1="369" x2="384" y2="404" marker-end="url(#ws-down)"/>
+    <line x1="590" y1="369" x2="594" y2="404" marker-end="url(#ws-down)"/>
+    <line x1="760" y1="369" x2="764" y2="404" marker-end="url(#ws-down)"/>
+  </g>
+  <g stroke="var(--da-muted, #64748b)" stroke-width="1.5">
+    <line x1="480" y1="408" x2="484" y2="371" marker-end="url(#ws-up)"/>
+    <line x1="680" y1="408" x2="684" y2="371" marker-end="url(#ws-up)"/>
+  </g>
+  <text x="490" y="400" font-size="9" fill="var(--da-muted, #64748b)">istemci mesajı</text>
+
+  <!-- Lejant -->
+  <g font-size="11" fill="var(--da-muted, #64748b)">
+    <line x1="200" y1="452" x2="222" y2="452" stroke="var(--da-primary, #6366f1)" stroke-width="2"/>
+    <text x="228" y="456">olayın istemciye ulaşması</text>
+    <line x1="400" y1="452" x2="422" y2="452" stroke="var(--da-muted, #64748b)" stroke-width="1.5"/>
+    <text x="428" y="456">istemciden sunucuya istek/mesaj</text>
+    <rect x="640" y="446" width="22" height="10" rx="3" fill="var(--da-success, #10b981)" opacity="0.25"/>
+    <text x="668" y="456">açık kalan bağlantı</text>
+  </g>
+</svg>

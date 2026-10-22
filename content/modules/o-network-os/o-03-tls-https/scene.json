@@ -1,0 +1,237 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "o-03-tls-https-handshake",
+  "title": { "tr": "TLS 1.3 el sıkışması ve geçersiz sertifika reddi", "en": "The TLS 1.3 handshake and rejecting an invalid certificate" },
+  "summary": {
+    "tr": "Tarayıcı ile sunucu tek gidiş-dönüşte anahtar paylarını değiş tokuş eder, sunucu sertifika zincirini gönderir, tarayıcı zinciri güven deposuna kadar doğrular ve simetrik oturum anahtarıyla şifreli veri akar. Sonda süresi dolmuş sertifika sunan bir sunucuyla el sıkışma reddedilir.",
+    "en": "The browser and server exchange key shares in one round trip, the server sends its certificate chain, the browser validates the chain up to its trust store and encrypted data flows under a symmetric session key. Finally a handshake with a server presenting an expired certificate is rejected."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda tarayıcı, sol üstte işletim sisteminin güven deposu (kök sertifikalar), sağda shop.example.com sunucusu, sağ altta süresi dolmuş sertifika sunan ikinci bir sunucu. Tarayıcı ClientHello ve key share gönderir; sunucu ServerHello ve kendi key share'i ile döner, iki taraf ortak sırrı hesaplar. Sunucu şifreli olarak sertifika zincirini, imzasını ve Finished mesajını gönderir. Tarayıcı zinciri güven deposundaki köke kadar doğrular, Finished gönderir ve iki taraf da aynı simetrik oturum anahtarına sahip olur. HTTP istek ve yanıtları şifreli paketlerle akar. Son üç adımda tarayıcı ikinci sunucuya bağlanır, gelen sertifikanın süresi dolmuştur, doğrulama başarısız olur, tarayıcı alert gönderip bağlantıyı keser ve hiçbir HTTP isteği gönderilmez.",
+      "en": "Browser on the left, the operating system trust store (root certificates) top left, the shop.example.com server on the right, and a second server presenting an expired certificate bottom right. The browser sends ClientHello with a key share; the server replies with ServerHello and its own key share, and both compute the shared secret. The server sends its certificate chain, signature and Finished message, encrypted. The browser validates the chain up to the root in the trust store, sends Finished and both sides hold the same symmetric session key. HTTP requests and responses flow as encrypted packets. In the last three steps the browser connects to the second server, the certificate it receives has expired, validation fails, the browser sends an alert and closes the connection, and no HTTP request is sent."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "browser", "kind": "browser", "label": { "tr": "Tarayıcı", "en": "Browser" }, "sublabel": { "tr": "TLS istemcisi", "en": "TLS client" }, "x": 180, "y": 320, "w": 160, "h": 80 },
+    { "id": "trust", "kind": "storage", "label": { "tr": "Güven deposu", "en": "Trust store" }, "sublabel": { "tr": "kök CA'lar", "en": "root CAs" }, "x": 180, "y": 110, "w": 160, "h": 70 },
+    { "id": "server", "kind": "server", "label": "shop.example.com", "sublabel": { "tr": "sertifika + özel anahtar", "en": "certificate + private key" }, "x": 800, "y": 220, "w": 180, "h": 80 },
+    { "id": "bad", "kind": "server", "label": "old.example.com", "sublabel": { "tr": "sertifika: süresi dolmuş", "en": "certificate: expired" }, "x": 800, "y": 480, "w": 180, "h": 80, "status": "muted" }
+  ],
+  "edges": [
+    { "id": "c-s", "from": "browser", "to": "server", "kind": "request", "curvature": -0.12 },
+    { "id": "s-c", "from": "server", "to": "browser", "kind": "response", "curvature": -0.12 },
+    { "id": "c-trust", "from": "browser", "to": "trust", "kind": "control", "style": "dashed" },
+    { "id": "c-bad", "from": "browser", "to": "bad", "kind": "request", "curvature": 0.12 },
+    { "id": "bad-c", "from": "bad", "to": "browser", "kind": "response", "curvature": 0.12 }
+  ],
+  "steps": [
+    {
+      "id": "tcp-ready",
+      "title": { "tr": "TCP kanalı hazır, ama açık", "en": "TCP channel ready, but in the clear" },
+      "narration": {
+        "tr": "TCP el sıkışması bitti; şu an gönderilen her bayt yoldaki yönlendiriciler tarafından okunabilir ve değiştirilebilir. TLS bu açık kanalın üzerine şifreli ve kimliği doğrulanmış bir katman kuracak.",
+        "en": "The TCP handshake is done; every byte sent now can be read and modified by routers along the path. TLS will build an encrypted, authenticated layer on top of this open channel."
+      },
+      "durationMs": 2600,
+      "inherit": false,
+      "highlight": { "nodes": ["browser", "server"] },
+      "nodeStates": { "browser": { "status": "active" }, "server": { "status": "idle" }, "bad": { "status": "muted" } },
+      "edgeStates": { "c-bad": { "visible": false }, "bad-c": { "visible": false } },
+      "annotations": [
+        { "id": "plain", "x": 490, "y": 140, "text": { "tr": "TCP: eksiksiz ve sıralı, ama gizli değil", "en": "TCP: complete and ordered, but not private" }, "tone": "warning" }
+      ]
+    },
+    {
+      "id": "client-hello",
+      "title": { "tr": "ClientHello + key share", "en": "ClientHello + key share" },
+      "narration": {
+        "tr": "Tarayıcı tek mesajda desteklediği şifre takımlarını, SNI ile istediği alan adını ve bu bağlantı için ürettiği geçici ECDHE açık payını (key share) gönderir. TLS 1.3'ü bir RTT'ye indiren şey, key share'in daha ilk mesajda yola çıkmasıdır.",
+        "en": "In one message the browser sends its cipher suites, the requested host name via SNI and the ephemeral ECDHE public share (key share) it generated for this connection. Sending the key share in the very first message is what brings TLS 1.3 down to one RTT."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["browser", "server"], "edges": ["c-s"] },
+      "nodeStates": { "browser": { "status": "busy", "badge": "key share" } },
+      "edgeStates": { "c-s": { "status": "active" } },
+      "packets": [{ "edge": "c-s", "shape": "envelope", "label": "ClientHello", "durationMs": 1400 }],
+      "annotations": [
+        { "id": "sni", "x": 490, "y": 140, "text": { "tr": "SNI: shop.example.com · X25519 payı", "en": "SNI: shop.example.com · X25519 share" }, "tone": "info" }
+      ]
+    },
+    {
+      "id": "server-hello",
+      "title": { "tr": "ServerHello: ortak sır hesaplanır", "en": "ServerHello: shared secret computed" },
+      "narration": {
+        "tr": "Sunucu bir şifre takımı seçer ve kendi geçici payını döner. Artık iki taraf da kendi özel payı ve karşının açık payıyla aynı ortak sırrı hesaplayabilir; bu sır kablodan hiç geçmedi. Bu andan sonraki her şey şifrelidir.",
+        "en": "The server picks a cipher suite and returns its own ephemeral share. Each side can now compute the same shared secret from its private share and the other's public share; the secret never crossed the wire. Everything after this point is encrypted."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["server", "browser"], "edges": ["s-c"] },
+      "nodeStates": {
+        "server": { "status": "busy", "badge": "ECDHE ✓" },
+        "browser": { "status": "busy", "badge": "ECDHE ✓" }
+      },
+      "edgeStates": { "c-s": { "status": "idle" }, "s-c": { "status": "active" } },
+      "packets": [{ "edge": "s-c", "shape": "envelope", "label": "ServerHello", "durationMs": 1400 }]
+    },
+    {
+      "id": "certificate",
+      "title": { "tr": "Sertifika, imza ve Finished (şifreli)", "en": "Certificate, signature and Finished (encrypted)" },
+      "narration": {
+        "tr": "Aynı uçuşta sunucu şifreli olarak üç şey gönderir: sertifika zinciri (yaprak + ara CA), el sıkışma dökümünün özel anahtarla atılmış imzası (CertificateVerify) ve Finished. İmza, 'bu payı gerçekten sertifikanın sahibi gönderdi' demektir.",
+        "en": "In the same flight the server sends three things, encrypted: the certificate chain (leaf + intermediate CA), a signature over the handshake transcript made with its private key (CertificateVerify) and Finished. The signature means 'the owner of this certificate really sent that share'."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["server", "browser"], "edges": ["s-c"] },
+      "nodeStates": { "server": { "status": "active", "badge": "sig ✓" } },
+      "packets": [
+        { "edge": "s-c", "shape": "square", "label": { "tr": "Sertifika", "en": "Certificate" }, "durationMs": 1100 },
+        { "edge": "s-c", "shape": "diamond", "label": "CertVerify", "startAt": 700, "durationMs": 1100 },
+        { "edge": "s-c", "shape": "square", "label": "Finished", "startAt": 1400, "durationMs": 1100 }
+      ],
+      "annotations": [
+        { "id": "enc-cert", "x": 490, "y": 140, "text": { "tr": "TLS 1.3: sertifika bile şifreli gider", "en": "TLS 1.3: even the certificate is encrypted" }, "tone": "info" }
+      ]
+    },
+    {
+      "id": "verify-chain",
+      "title": { "tr": "Tarayıcı zinciri doğrular", "en": "The browser validates the chain" },
+      "narration": {
+        "tr": "Tarayıcı yaprak sertifikanın imzasını ara CA'nın açık anahtarıyla, ara CA'yı da güven deposundaki kök CA ile doğrular. Ayrıca tarihlerin geçerli olduğuna ve shop.example.com'un SAN listesinde bulunduğuna bakar. Hepsi tutarsa CertificateVerify imzasını kontrol eder.",
+        "en": "The browser checks the leaf's signature with the intermediate CA's public key, and the intermediate against a root CA in the trust store. It also checks the dates are valid and that shop.example.com is in the SAN list. If all hold, it verifies the CertificateVerify signature."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["browser", "trust"], "edges": ["c-trust"] },
+      "nodeStates": {
+        "trust": { "status": "active", "badge": "root ✓" },
+        "browser": { "status": "busy", "badge": "verify…" },
+        "server": { "status": "idle", "badge": "" }
+      },
+      "edgeStates": { "s-c": { "status": "idle" }, "c-trust": { "status": "active" } },
+      "packets": [
+        { "edge": "c-trust", "shape": "dot", "label": { "tr": "ara CA?", "en": "intermediate?" }, "durationMs": 900 },
+        { "edge": "c-trust", "direction": "backward", "shape": "dot", "color": "success", "label": "✓ root", "startAt": 1000, "durationMs": 900 }
+      ],
+      "annotations": [
+        { "id": "chain", "x": 420, "y": 60, "text": { "tr": "yaprak → ara CA → kök · tarih ✓ · SAN ✓", "en": "leaf → intermediate → root · dates ✓ · SAN ✓" }, "tone": "success", "target": "trust" }
+      ]
+    },
+    {
+      "id": "client-finished",
+      "title": { "tr": "İstemci Finished: el sıkışma bitti", "en": "Client Finished: handshake complete" },
+      "narration": {
+        "tr": "Tarayıcı kendi Finished mesajını gönderir. Finished, o ana kadarki tüm el sıkışma mesajlarının özetini doğrular: araya giren biri bir şifre takımını değiştirmeye çalışsaydı burada yakalanırdı. Toplam maliyet bir gidiş-dönüş.",
+        "en": "The browser sends its own Finished. Finished authenticates a hash of every handshake message so far: if someone had tried to tamper with the cipher suite choice it would be caught here. Total cost: one round trip."
+      },
+      "durationMs": 2600,
+      "highlight": { "nodes": ["browser", "server"], "edges": ["c-s"] },
+      "nodeStates": { "browser": { "status": "active", "badge": "1 RTT" }, "trust": { "status": "idle", "badge": "" } },
+      "edgeStates": { "c-trust": { "status": "idle" }, "c-s": { "status": "active" } },
+      "packets": [{ "edge": "c-s", "shape": "square", "label": "Finished", "durationMs": 1300 }]
+    },
+    {
+      "id": "session-key",
+      "title": { "tr": "Simetrik oturum anahtarı", "en": "Symmetric session key" },
+      "narration": {
+        "tr": "Ortak sırdan iki yön için ayrı simetrik anahtarlar türetilir. Asimetrik kriptografinin işi bitti; veri artık hızlı AES-GCM ya da ChaCha20 ile şifrelenecek. Geçici anahtarlar bağlantı sonunda silinir, bu yüzden sunucunun özel anahtarı ileride çalınsa bile bu kayıt çözülemez (forward secrecy).",
+        "en": "Separate symmetric keys for each direction are derived from the shared secret. Asymmetric crypto's job is done; data will now be encrypted with fast AES-GCM or ChaCha20. The ephemeral keys are deleted when the connection ends, so even if the server's private key is stolen later this recording cannot be decrypted (forward secrecy)."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["browser", "server"] },
+      "nodeStates": {
+        "browser": { "status": "success", "badge": "AES-GCM 🔑" },
+        "server": { "status": "success", "badge": "AES-GCM 🔑" }
+      },
+      "edgeStates": { "c-s": { "status": "idle" } },
+      "annotations": [
+        { "id": "fs", "x": 490, "y": 140, "text": { "tr": "aynı anahtar iki uçta; kablodan hiç geçmedi", "en": "same key on both ends; never crossed the wire" }, "tone": "success" }
+      ]
+    },
+    {
+      "id": "encrypted-data",
+      "title": { "tr": "Şifreli HTTP akışı", "en": "Encrypted HTTP flow" },
+      "narration": {
+        "tr": "GET isteği ve yanıtı şifreli TLS kayıtları olarak akar. Yoldaki bir gözlemci yalnızca IP adreslerini, paket boyutlarını ve zamanlamayı görür; içerik ve URL yolu gizlidir. Her kayıttaki doğrulama etiketi, tek bir bitin değiştirilmesini bile fark ettirir.",
+        "en": "The GET request and response flow as encrypted TLS records. An on-path observer sees only IP addresses, packet sizes and timing; the content and the URL path are hidden. The authentication tag on each record reveals even a single flipped bit."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["browser", "server"], "edges": ["c-s", "s-c"] },
+      "nodeStates": { "browser": { "status": "active" }, "server": { "status": "active" } },
+      "edgeStates": { "c-s": { "status": "active" }, "s-c": { "status": "active" } },
+      "packets": [
+        { "edge": "c-s", "shape": "envelope", "color": "success", "label": "🔒 GET /cart", "durationMs": 1100 },
+        { "edge": "s-c", "shape": "envelope", "color": "success", "label": "🔒 200 OK", "startAt": 1200, "durationMs": 900, "repeat": 3, "repeatGapMs": 200 }
+      ]
+    },
+    {
+      "id": "bad-hello",
+      "title": { "tr": "Başka bir sunucu: old.example.com", "en": "Another server: old.example.com" },
+      "narration": {
+        "tr": "Kullanıcı şimdi sertifikasını yenilemeyi unutmuş bir sunucuya bağlanıyor. Tarayıcı aynı ClientHello'yu gönderir ve ServerHello ile anahtar payını alır; şifreleme matematiği burada da sorunsuz çalışır.",
+        "en": "The user now connects to a server whose certificate renewal was forgotten. The browser sends the same ClientHello and receives ServerHello and a key share; the cryptography itself works fine here too."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["browser", "bad"], "edges": ["c-bad", "bad-c"] },
+      "nodeStates": {
+        "browser": { "status": "busy", "badge": "" },
+        "server": { "status": "muted", "badge": "" },
+        "bad": { "status": "active" }
+      },
+      "edgeStates": {
+        "c-s": { "status": "muted" },
+        "s-c": { "status": "muted" },
+        "c-bad": { "visible": true, "status": "active" },
+        "bad-c": { "visible": true, "status": "active" }
+      },
+      "packets": [
+        { "edge": "c-bad", "shape": "envelope", "label": "ClientHello", "durationMs": 1200 },
+        { "edge": "bad-c", "shape": "envelope", "label": "ServerHello", "startAt": 1300, "durationMs": 1200 }
+      ]
+    },
+    {
+      "id": "bad-cert",
+      "title": { "tr": "Sertifika: süresi dolmuş", "en": "Certificate: expired" },
+      "narration": {
+        "tr": "Gelen sertifikanın notAfter tarihi dün gece geçmiştir. İmza zinciri kusursuz olsa bile tarih kontrolü başarısız olur. Tarayıcı bu sunucunun kimliğini kanıtlayamaz; şifreli bir kanal kurmak, kiminle konuştuğunu bilmeden işe yaramaz.",
+        "en": "The certificate's notAfter date passed last night. Even with a flawless signature chain, the date check fails. The browser cannot prove this server's identity; an encrypted channel is worthless if you do not know who is on the other end."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["bad", "browser", "trust"], "edges": ["bad-c", "c-trust"] },
+      "nodeStates": {
+        "bad": { "status": "warning", "badge": "notAfter < now" },
+        "browser": { "status": "warning", "badge": "verify ✗" },
+        "trust": { "status": "active" }
+      },
+      "edgeStates": { "c-bad": { "status": "idle" }, "c-trust": { "status": "active" } },
+      "packets": [
+        { "edge": "bad-c", "shape": "square", "color": "danger", "label": { "tr": "Sertifika (süresi dolmuş)", "en": "Certificate (expired)" }, "durationMs": 1300 },
+        { "edge": "c-trust", "shape": "dot", "label": { "tr": "zincir?", "en": "chain?" }, "startAt": 1400, "durationMs": 800 }
+      ],
+      "annotations": [
+        { "id": "expired", "x": 520, "y": 560, "text": { "tr": "imza ✓ · kök ✓ · tarih ✗", "en": "signature ✓ · root ✓ · date ✗" }, "tone": "danger", "target": "bad" }
+      ]
+    },
+    {
+      "id": "reject",
+      "title": { "tr": "Alert ve red: HTTP hiç gönderilmez", "en": "Alert and reject: no HTTP is sent" },
+      "narration": {
+        "tr": "Tarayıcı certificate_expired alert'i gönderip bağlantıyı kapatır ve kullanıcıya tam sayfa uyarı gösterir. Çerezler, parolalar ya da HTTP isteği bu sunucuya hiç gitmez. Doğru düzeltme, uyarıyı geçmek değil sertifikayı otomatik yenilemektir.",
+        "en": "The browser sends a certificate_expired alert, closes the connection and shows the user a full-page warning. No cookies, passwords or HTTP request ever reach this server. The right fix is not to click through the warning but to renew the certificate automatically."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["browser", "bad"], "edges": ["c-bad"] },
+      "nodeStates": {
+        "bad": { "status": "error", "badge": "✗ alert" },
+        "browser": { "status": "error", "badge": "ERR_CERT_DATE_INVALID" },
+        "trust": { "status": "idle", "badge": "" }
+      },
+      "edgeStates": { "c-trust": { "status": "idle" }, "c-bad": { "status": "error" }, "bad-c": { "status": "error" } },
+      "packets": [{ "edge": "c-bad", "shape": "diamond", "color": "danger", "label": "alert", "durationMs": 1200 }],
+      "annotations": [
+        { "id": "no-http", "x": 520, "y": 560, "text": { "tr": "uygulama verisi: 0 bayt", "en": "application data: 0 bytes" }, "tone": "danger", "target": "bad" }
+      ]
+    }
+  ]
+}

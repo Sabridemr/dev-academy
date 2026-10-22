@@ -1,0 +1,110 @@
+{
+  "id": "o-05-processes-threads-quiz",
+  "title": { "tr": "Süreçler ve Thread'ler Quiz", "en": "Processes and Threads Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Bir süreç read() ile diskten veri beklerken hangi durumdadır ve CPU ne yapar?",
+        "en": "While a process waits for disk data via read(), what state is it in and what does the CPU do?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Running; CPU verinin gelmesini döngüde bekler", "en": "Running; the CPU spins waiting for the data" } },
+        { "id": "b", "text": { "tr": "Ready; CPU onu her dilimde tekrar dener", "en": "Ready; the CPU retries it on every slice" } },
+        { "id": "c", "text": { "tr": "Blocked; CPU hazır kuyruğundaki başka bir süreci çalıştırır", "en": "Blocked; the CPU runs another process from the ready queue" } },
+        { "id": "d", "text": { "tr": "Terminated; veri gelince yeniden başlatılır", "en": "Terminated; it is restarted when the data arrives" } }
+      ],
+      "correct": ["c"],
+      "explanation": {
+        "tr": "Bloklayan bir sistem çağrısı süreci blocked durumuna alır ve bekleme kuyruğuna koyar; hazır kuyruğunda olmadığı için CPU almaz. Zamanlayıcı başka bir süreci çalıştırır. Disk kesmesi gelince süreç önce ready durumuna döner.",
+        "en": "A blocking system call puts the process into the blocked state on a wait queue; since it is not in the ready queue it gets no CPU. The scheduler runs another process. When the disk interrupt arrives the process first returns to ready."
+      },
+      "difficulty": "easy",
+      "concepts": ["process-states", "cpu-scheduler"]
+    },
+    {
+      "id": "q2",
+      "type": "order",
+      "prompt": {
+        "tr": "Shell'e `ls` yazdığınızda gerçekleşen adımları sıraya koyun.",
+        "en": "Order the steps that happen when you type `ls` in a shell."
+      },
+      "options": [
+        { "id": "exec", "text": { "tr": "Çocuk süreç exec() ile kendi görüntüsünü ls programıyla değiştirir", "en": "The child replaces its image with the ls program via exec()" } },
+        { "id": "fork", "text": { "tr": "Shell fork() ile kendisinin kopyası olan bir çocuk süreç yaratır", "en": "The shell creates a child that is a copy of itself via fork()" } },
+        { "id": "wait", "text": { "tr": "Shell, çocuğun çıkış kodunu wait() ile toplar", "en": "The shell collects the child's exit code with wait()" } },
+        { "id": "exit", "text": { "tr": "ls çıktıyı yazar ve exit() ile sonlanır", "en": "ls writes its output and terminates with exit()" } }
+      ],
+      "correct": ["fork", "exec", "exit", "wait"],
+      "explanation": {
+        "tr": "Unix'te süreç yaratma iki adımlıdır: önce fork (copy-on-write kopya), sonra exec (yeni program). Çocuk bittiğinde ebeveyn wait() ile çıkış kodunu alır; almazsa çocuk zombie olarak kalır.",
+        "en": "Process creation on Unix has two steps: fork (a copy-on-write copy) then exec (the new program). When the child exits the parent collects the exit code with wait(); otherwise the child lingers as a zombie."
+      },
+      "difficulty": "medium",
+      "concepts": ["fork-exec", "process"]
+    },
+    {
+      "id": "q3",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Context switch için hangileri doğrudur? (Birden fazla seçin)",
+        "en": "Which statements about context switches are true? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Çalışan akışın yazmaçları kaydedilir, sıradakininkiler yüklenir", "en": "The running flow's registers are saved and the next one's are loaded" } },
+        { "id": "b", "text": { "tr": "Önbellek ve TLB yeni akış için soğuk başlayabilir, dolaylı bir maliyet doğar", "en": "Caches and the TLB may start cold for the new flow, adding an indirect cost" } },
+        { "id": "c", "text": { "tr": "Yalnızca süreç kendi isteğiyle CPU'yu bıraktığında olur", "en": "It only happens when a process voluntarily gives up the CPU" } },
+        { "id": "d", "text": { "tr": "vmstat çıktısındaki cs sütunu saniyedeki geçiş sayısını gösterir", "en": "The cs column in vmstat output shows switches per second" } }
+      ],
+      "correct": ["a", "b", "d"],
+      "explanation": {
+        "tr": "Context switch yazmaçları kaydedip yükler; doğrudan maliyeti küçüktür ama soğuyan önbellekler dolaylı maliyet yaratır. Zamanlayıcı kesmesiyle zorla da olur (preemption), bu yüzden (c) yanlıştır. vmstat'taki cs sütunu bu sayıyı izler.",
+        "en": "A context switch saves and loads registers; its direct cost is small but cooled caches add an indirect cost. It also happens involuntarily via the timer interrupt (preemption), so (c) is false. vmstat's cs column tracks the rate."
+      },
+      "difficulty": "medium",
+      "concepts": ["context-switch", "cpu-scheduler"]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "CPython'daki GIL sayesinde `sayac += 1` gibi bir işlem thread'ler arasında her zaman atomiktir ve kilide gerek yoktur.",
+        "en": "Thanks to CPython's GIL, an operation like `counter += 1` is always atomic across threads and needs no lock."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "Yanlış. GIL aynı anda tek thread'in bytecode yürütmesini sağlar ama thread geçişi bytecode'lar arasında olabilir. Oku-artır-yaz birden fazla bytecode'dur; arada geçiş olursa güncelleme kaybolur. Paylaşılan değişken için kilit gerekir.",
+        "en": "False. The GIL ensures only one thread executes bytecode at a time, but switches can happen between bytecodes. Read-increment-write spans several bytecodes; a switch in between loses an update. Shared variables need a lock."
+      },
+      "difficulty": "hard",
+      "concepts": ["race-condition", "gil", "mutex"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "Thread'leri süreçlerden ayıran temel özellik nedir?",
+        "en": "What is the key property that distinguishes threads from processes?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Thread'ler aynı adres alanını paylaşır; her birinin yalnızca kendi yığını ve yazmaçları vardır", "en": "Threads share one address space; each has only its own stack and registers" } },
+        { "id": "b", "text": { "tr": "Thread'leri işletim sistemi değil yalnızca programlama dili planlar", "en": "Threads are scheduled only by the programming language, not the OS" } },
+        { "id": "c", "text": { "tr": "Bir thread çökerse aynı süreçteki diğer thread'ler etkilenmez", "en": "If one thread crashes the other threads in the same process are unaffected" } },
+        { "id": "d", "text": { "tr": "Thread'ler arası veri paylaşımı için pipe ya da soket gerekir", "en": "Sharing data between threads requires pipes or sockets" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "Thread'ler belleği, heap'i ve açık dosyaları paylaşır; Linux onları zamanlayıcıda süreçler gibi planlar. Paylaşım ucuz iletişim sağlar ama yalıtım yoktur: bir thread'in bellek hatası tüm süreci düşürür. Pipe/soket gibi IPC süreçler arası iletişim içindir.",
+        "en": "Threads share memory, the heap and open files; Linux schedules them like processes. Sharing makes communication cheap but there is no isolation: one thread's memory fault brings down the whole process. IPC such as pipes and sockets is for processes."
+      },
+      "difficulty": "easy",
+      "concepts": ["thread", "process"]
+    }
+  ]
+}

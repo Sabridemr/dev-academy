@@ -1,0 +1,110 @@
+{
+  "id": "o-02-dns-ip-quiz",
+  "title": { "tr": "DNS ve IP Quiz", "en": "DNS and IP Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "order",
+      "prompt": {
+        "tr": "Önbelleği boş bir recursive resolver'ın `shop.example.com`'u çözerken izlediği adımları sıraya koyun.",
+        "en": "Order the steps a recursive resolver with an empty cache follows to resolve `shop.example.com`."
+      },
+      "options": [
+        { "id": "tld", "text": { "tr": ".com TLD sunucusuna sorar, example.com'un yetkili sunucusuna yönlendirilir", "en": "Asks the .com TLD server and is referred to example.com's authoritative server" } },
+        { "id": "stub", "text": { "tr": "Stub resolver soruyu recursive resolver'a iletir", "en": "The stub resolver forwards the question to the recursive resolver" } },
+        { "id": "auth", "text": { "tr": "Yetkili sunucu A kaydını TTL ile döner, resolver önbelleğe alır", "en": "The authoritative server returns the A record with a TTL and the resolver caches it" } },
+        { "id": "root", "text": { "tr": "Root sunucuya sorar, .com sunucularına yönlendirilir", "en": "Asks a root server and is referred to the .com servers" } }
+      ],
+      "correct": ["stub", "root", "tld", "auth"],
+      "explanation": {
+        "tr": "Stub yalnızca iletir; asıl işi recursive resolver yapar ve hiyerarşide yukarıdan aşağı iner: root .com'u, .com example.com'u devreder ve yalnızca yetkili sunucu gerçek cevabı verir.",
+        "en": "The stub only forwards; the recursive resolver does the work, walking down the hierarchy: the root delegates .com, .com delegates example.com and only the authoritative server gives the real answer."
+      },
+      "difficulty": "easy",
+      "concepts": ["recursive-resolver", "dns-delegation"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "Yarın bir veritabanı sunucusunu yeni bir IP'ye taşıyacaksınız; `db.example.com`'un TTL'i 86400 saniye. En iyi hazırlık hangisi?",
+        "en": "Tomorrow you will move a database server to a new IP; the TTL of `db.example.com` is 86400 seconds. What is the best preparation?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Taşıma anında kaydı değiştirmek; DNS değişikliği anında yayar", "en": "Change the record at migration time; DNS propagates the change instantly" } },
+        { "id": "b", "text": { "tr": "Bugünden TTL'i örneğin 60 saniyeye indirmek, taşımadan sonra yeniden uzatmak", "en": "Lower the TTL today, e.g. to 60 seconds, and raise it again after the migration" } },
+        { "id": "c", "text": { "tr": "Kayda ikinci bir A kaydı eklemek ve eski sunucuyu hemen kapatmak", "en": "Add a second A record and shut down the old server immediately" } },
+        { "id": "d", "text": { "tr": "TTL'i 0 yapıp kalıcı olarak öyle bırakmak", "en": "Set the TTL to 0 and leave it that way permanently" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Resolver'lar kaydı aldıkları andan itibaren TTL boyunca saklar; 24 saatlik TTL ile yapılan değişiklik bazı kullanıcılara bir gün boyunca ulaşmaz. TTL'i önceden kısaltmak, eski girdilerin taşıma anında hızla düşmesini sağlar. Kalıcı sıfır TTL her istekte sorgu ve gecikme demektir; eski sunucuyu hemen kapatmak da TTL'e uymayan istemcileri keser.",
+        "en": "Resolvers keep a record for its TTL from the moment they fetch it; with a 24-hour TTL a change may not reach some users for a day. Lowering the TTL in advance makes old entries expire quickly at migration time. A permanent zero TTL means a query and extra latency on every request, and shutting the old server down at once breaks clients that do not honour TTLs."
+      },
+      "difficulty": "medium",
+      "concepts": ["dns-ttl"]
+    },
+    {
+      "id": "q3",
+      "type": "multiple",
+      "prompt": {
+        "tr": "NAT için hangileri doğrudur? (Birden fazla seçin)",
+        "en": "Which statements about NAT are true? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Giden paketlerin kaynak adresini ve portunu değiştirip eşlemeyi bir tabloda tutar", "en": "It rewrites the source address and port of outgoing packets and keeps the mapping in a table" } },
+        { "id": "b", "text": { "tr": "Tabloda eşleme yoksa dışarıdan gelen bağlantı içerideki cihaza ulaşamaz", "en": "Without a mapping in the table, an incoming connection cannot reach an inside device" } },
+        { "id": "c", "text": { "tr": "Paketleri şifreler, bu yüzden TLS'e gerek bırakmaz", "en": "It encrypts packets, so TLS becomes unnecessary" } },
+        { "id": "d", "text": { "tr": "Aynı hedefe çok sayıda bağlantı açan servislerde port tükenmesine yol açabilir", "en": "It can cause port exhaustion for services that open many connections to the same destination" } }
+      ],
+      "correct": ["a", "b", "d"],
+      "explanation": {
+        "tr": "NAT yalnızca adres ve port çevirisi yapar ve bunun için bir bağlantı tablosu tutar. Tablo ve port sayısı sınırlıdır, dışarıdan başlatılan bağlantılar eşleme olmadan içeri giremez. Şifreleme NAT'ın işi değildir.",
+        "en": "NAT only translates addresses and ports and keeps a connection table to do so. The table and the port range are finite, and connections initiated from outside cannot enter without a mapping. Encryption is not NAT's job."
+      },
+      "difficulty": "medium",
+      "concepts": ["nat", "private-address-space"]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Henüz var olmayan bir alt alan adını sorgulayıp NXDOMAIN aldıktan sonra kaydı eklerseniz, resolver bir süre daha NXDOMAIN döndürmeye devam edebilir.",
+        "en": "If you query a subdomain that does not exist yet, get NXDOMAIN and then add the record, the resolver may keep returning NXDOMAIN for a while."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["t"],
+      "explanation": {
+        "tr": "Doğru. 'Yok' cevapları da bölgenin SOA kaydında belirtilen süre boyunca önbelleğe alınır (negative caching). Bu süre dolana kadar resolver yetkili sunucuya tekrar sormaz.",
+        "en": "True. 'Does not exist' answers are cached too, for the duration set in the zone's SOA record (negative caching). Until that time passes the resolver does not ask the authoritative server again."
+      },
+      "difficulty": "medium",
+      "concepts": ["negative-caching", "dns-ttl"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "`10.20.0.0/16` bloğu ve `1.1.1.1` adresi için hangisi doğrudur?",
+        "en": "Which statement is true about the `10.20.0.0/16` block and the address `1.1.1.1`?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "İkisi de internette doğrudan yönlendirilen genel adreslerdir", "en": "Both are public addresses routed directly on the internet" } },
+        { "id": "b", "text": { "tr": "10.20.0.0/16 özel adres alanındadır ve 65.536 adres içerir; 1.1.1.1 birçok veri merkezinden anycast ile duyurulan genel bir adrestir", "en": "10.20.0.0/16 is in private address space and holds 65,536 addresses; 1.1.1.1 is a public address announced via anycast from many data centres" } },
+        { "id": "c", "text": { "tr": "10.20.0.0/16 256 adres içerir; 1.1.1.1 tek bir fiziksel sunucunun adresidir", "en": "10.20.0.0/16 holds 256 addresses; 1.1.1.1 belongs to a single physical server" } },
+        { "id": "d", "text": { "tr": "İkisi de özel adrestir ve yalnızca NAT arkasında kullanılabilir", "en": "Both are private addresses and can only be used behind NAT" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "/16, ilk 16 bitin ağı belirlediği ve 2^16 = 65.536 adreslik bir bloktur; 10.0.0.0/8'in içinde olduğu için RFC 1918 özel alanındadır. 1.1.1.1 ise genel bir adrestir ve anycast sayesinde sorgular en yakın veri merkezine gider; tek bir sunucu değildir.",
+        "en": "A /16 is a block where the first 16 bits identify the network, giving 2^16 = 65,536 addresses; being inside 10.0.0.0/8 it is RFC 1918 private space. 1.1.1.1 is a public address and anycast sends queries to the nearest data centre; it is not a single server."
+      },
+      "difficulty": "hard",
+      "concepts": ["cidr", "private-address-space", "anycast"]
+    }
+  ]
+}

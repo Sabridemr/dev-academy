@@ -1,0 +1,110 @@
+{
+  "id": "p-04-web-performance-quiz",
+  "title": { "tr": "Web Performansı Quiz", "en": "Web Performance Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Kullanıcı bir butona tıkladıktan sonra arayüzün güncellenmesi uzun sürüyor. Hangi Core Web Vital bozulur?",
+        "en": "After the user clicks a button the UI takes a long time to update. Which Core Web Vital worsens?"
+      },
+      "options": [
+        { "id": "a", "text": "LCP" },
+        { "id": "b", "text": "INP" },
+        { "id": "c", "text": "CLS" },
+        { "id": "d", "text": "TTFB" }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "INP, etkileşimden bir sonraki boyamaya kadar geçen süreyi ölçer. Genellikle ana iş parçacığını işgal eden uzun JavaScript görevlerinden bozulur. LCP yüklemeyi, CLS düzen kaymasını ölçer; TTFB bir Core Web Vital değildir.",
+        "en": "INP measures the time from an interaction to the next paint. It usually suffers from long JavaScript tasks occupying the main thread. LCP measures loading, CLS layout shift; TTFB is not a Core Web Vital."
+      },
+      "difficulty": "easy",
+      "concepts": ["interaction-to-next-paint", "long-tasks"]
+    },
+    {
+      "id": "q2",
+      "type": "multiple",
+      "prompt": {
+        "tr": "LCP'yi iyileştirmek için hangileri işe yarar? (Birden fazla seçin)",
+        "en": "Which of these help improve LCP? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Kahraman görselini HTML'de vermek ve fetchpriority=\"high\" eklemek", "en": "Putting the hero image in the HTML and adding fetchpriority=\"high\"" } },
+        { "id": "b", "text": { "tr": "Kahraman görseline loading=\"lazy\" eklemek", "en": "Adding loading=\"lazy\" to the hero image" } },
+        { "id": "c", "text": { "tr": "Görseli AVIF/WebP ve uygun boyutta sunmak", "en": "Serving the image as AVIF/WebP at an appropriate size" } },
+        { "id": "d", "text": { "tr": "Statik varlıkları kullanıcıya yakın bir CDN'den sunmak", "en": "Serving static assets from a CDN close to the user" } }
+      ],
+      "correct": ["a", "c", "d"],
+      "explanation": {
+        "tr": "Erken keşif, küçük dosya ve kısa mesafe LCP'yi doğrudan kısaltır. LCP görseline lazy vermek ise tarayıcıya onu ertelemesini söyler ve LCP'yi kötüleştirir.",
+        "en": "Early discovery, smaller files and shorter distance cut LCP directly. Making the LCP image lazy tells the browser to postpone it and worsens LCP."
+      },
+      "difficulty": "medium",
+      "concepts": ["largest-contentful-paint", "image-optimization"]
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": {
+        "tr": "`main.3f9a1c.js` gibi içerik özetli bir dosya için en uygun önbellek başlığı hangisidir?",
+        "en": "What is the most suitable cache header for a content-hashed file like `main.3f9a1c.js`?"
+      },
+      "options": [
+        { "id": "a", "text": "Cache-Control: no-store" },
+        { "id": "b", "text": "Cache-Control: no-cache" },
+        { "id": "c", "text": "Cache-Control: public, max-age=31536000, immutable" },
+        { "id": "d", "text": "Cache-Control: max-age=60" }
+      ],
+      "correct": ["c"],
+      "explanation": {
+        "tr": "İçerik değişince dosya adı da değiştiği için bu dosya hiçbir zaman 'güncellenmez'; bir yıl ve immutable ile önbelleğe alınabilir. Kısa ömür ve yeniden doğrulama HTML içindir; no-store ise önbelleği tamamen kapatır.",
+        "en": "Because the file name changes whenever the content changes, this file is never 'updated'; it can be cached for a year as immutable. Short lifetimes and revalidation are for HTML; no-store disables caching entirely."
+      },
+      "difficulty": "medium",
+      "concepts": ["immutable-caching"]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Bir `<img>` etiketine width ve height vermek CLS'yi azaltır.",
+        "en": "Giving an `<img>` tag width and height reduces CLS."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["t"],
+      "explanation": {
+        "tr": "Doğru. Tarayıcı en-boy oranını bildiği için görsel gelmeden yer ayırır; görsel inince altındaki içerik itilmez.",
+        "en": "True. Knowing the aspect ratio, the browser reserves space before the image arrives; content below is not pushed down when it loads."
+      },
+      "difficulty": "easy",
+      "concepts": ["cumulative-layout-shift"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "İlk ekranda görünmeyen ağır bir grafik bileşeni için en iyi yaklaşım hangisidir?",
+        "en": "What is the best approach for a heavy chart component that is not visible on the first screen?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Ana bundle'a koymak; tek dosya her zaman daha hızlıdır", "en": "Put it in the main bundle; one file is always faster" } },
+        { "id": "b", "text": { "tr": "Dinamik import() ile ayrı bir parçaya bölüp ihtiyaç anında yüklemek", "en": "Split it into a separate chunk with dynamic import() and load it on demand" } },
+        { "id": "c", "text": { "tr": "Sayfa açılır açılmaz senkron bir script ile yüklemek", "en": "Load it with a synchronous script as soon as the page opens" } },
+        { "id": "d", "text": { "tr": "Inline script olarak HTML'e gömmek", "en": "Inline it into the HTML as a script" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Lazy loading ve code splitting, ilk yüklemenin indirme ve ana iş parçacığı maliyetini azaltır. Kod yalnızca kullanıcı ona yaklaştığında iner.",
+        "en": "Lazy loading and code splitting reduce the download and main-thread cost of the initial load. The code downloads only when the user approaches it."
+      },
+      "difficulty": "easy",
+      "concepts": ["code-splitting", "lazy-loading", "bundle-size"]
+    }
+  ]
+}

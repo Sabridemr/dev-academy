@@ -1,0 +1,111 @@
+{
+  "id": "p-01-browser-rendering-pipeline-quiz",
+  "title": { "tr": "Render Boru Hattı Quiz", "en": "Rendering Pipeline Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "order",
+      "prompt": {
+        "tr": "Tarayıcının ilk boyamaya giden adımlarını doğru sıraya koyun.",
+        "en": "Put the browser's steps towards the first paint in the correct order."
+      },
+      "options": [
+        { "id": "layout", "text": { "tr": "Layout: kutuların konum ve boyutu hesaplanır", "en": "Layout: box positions and sizes are computed" } },
+        { "id": "parse", "text": { "tr": "HTML ve CSS ayrıştırılıp DOM ve CSSOM kurulur", "en": "HTML and CSS are parsed into the DOM and CSSOM" } },
+        { "id": "composite", "text": { "tr": "Composite: katmanlar GPU'da birleştirilir", "en": "Composite: layers are combined on the GPU" } },
+        { "id": "render", "text": { "tr": "DOM ve CSSOM birleşip render ağacı oluşur", "en": "DOM and CSSOM merge into the render tree" } },
+        { "id": "paint", "text": { "tr": "Paint: çizim komutları üretilir", "en": "Paint: draw commands are produced" } }
+      ],
+      "correct": ["parse", "render", "layout", "paint", "composite"],
+      "explanation": {
+        "tr": "Önce iki ağaç (DOM, CSSOM) kurulur, sonra birleşip render ağacını oluşturur. Geometri bilinmeden çizilemeyeceği için layout paint'ten önce gelir; composite en sondadır.",
+        "en": "First the two trees (DOM, CSSOM) are built, then merged into the render tree. Layout precedes paint because nothing can be drawn before geometry is known; composite comes last."
+      },
+      "difficulty": "easy",
+      "concepts": ["critical-rendering-path", "render-tree"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "CSS dosyası için hangisi doğrudur?",
+        "en": "Which statement about a CSS file is true?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "HTML ayrıştırmayı durdurur, render'ı etkilemez", "en": "It stops HTML parsing but does not affect rendering" } },
+        { "id": "b", "text": { "tr": "Render'ı bloklar: CSSOM hazır olmadan ilk boyama yapılmaz", "en": "It blocks rendering: no first paint until the CSSOM is ready" } },
+        { "id": "c", "text": { "tr": "Hiçbir şeyi bloklamaz; tarayıcı stilleri sonradan uygular", "en": "It blocks nothing; the browser applies styles later" } },
+        { "id": "d", "text": { "tr": "Yalnızca görselleri bekletir", "en": "It only delays images" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "CSS render-blocking bir kaynaktır; stilsiz içerik çizmemek (FOUC) için tarayıcı CSSOM'u bekler. Ayrıştırmayı doğrudan durdurmaz; ama senkron bir script CSS'i beklediği için dolaylı olarak DOM inşasını da geciktirebilir.",
+        "en": "CSS is render-blocking; the browser waits for the CSSOM to avoid painting unstyled content (FOUC). It does not stop parsing directly, but because a synchronous script waits for CSS it can indirectly delay DOM construction."
+      },
+      "difficulty": "easy",
+      "concepts": ["render-blocking-resources", "cssom"]
+    },
+    {
+      "id": "q3",
+      "type": "multiple",
+      "prompt": {
+        "tr": "`<script defer src=\"app.js\">` için hangileri doğrudur? (Birden fazla seçin)",
+        "en": "Which statements are true for `<script defer src=\"app.js\">`? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Dosya HTML ayrıştırmayla paralel iner", "en": "The file downloads in parallel with HTML parsing" } },
+        { "id": "b", "text": { "tr": "Ayrıştırma bitince, DOMContentLoaded'dan önce çalışır", "en": "It runs after parsing finishes, before DOMContentLoaded" } },
+        { "id": "c", "text": { "tr": "Birden fazla defer script'in sırası korunmaz", "en": "The order of multiple defer scripts is not preserved" } },
+        { "id": "d", "text": { "tr": "Ayrıştırıcıyı durdurmaz", "en": "It does not stop the parser" } }
+      ],
+      "correct": ["a", "b", "d"],
+      "explanation": {
+        "tr": "defer paralel indirir, çalıştırmayı ayrıştırma sonuna erteler ve belge sırasını korur. Sırayı korumayan async'tir.",
+        "en": "defer downloads in parallel, postpones execution to the end of parsing and preserves document order. It is async that does not preserve order."
+      },
+      "difficulty": "medium",
+      "concepts": ["parser-blocking-script"]
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": {
+        "tr": "Akıcı bir kayma animasyonu için hangi CSS özelliğini değiştirmek en ucuzudur?",
+        "en": "Which CSS property is cheapest to change for a smooth sliding animation?"
+      },
+      "options": [
+        { "id": "a", "text": "left" },
+        { "id": "b", "text": "width" },
+        { "id": "c", "text": "transform" },
+        { "id": "d", "text": "margin-left" }
+      ],
+      "correct": ["c"],
+      "explanation": {
+        "tr": "left, width ve margin geometriyi değiştirir ve her karede layout → paint → composite zincirini tetikler. transform çoğu zaman yalnızca composite adımında, hatta compositor iş parçacığında işlenir.",
+        "en": "left, width and margin change geometry and trigger layout → paint → composite every frame. transform is usually handled only at the composite step, even on the compositor thread."
+      },
+      "difficulty": "medium",
+      "concepts": ["compositing", "layout-reflow"]
+    },
+    {
+      "id": "q5",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "`display: none` olan bir öğe render ağacında yer alır ama görünmez.",
+        "en": "An element with `display: none` is part of the render tree but invisible."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "Yanlış. display:none öğeler render ağacına hiç girmez ve yer kaplamaz. Render ağacında olup görünmeyen öğe visibility:hidden'dır; yer kaplamaya devam eder.",
+        "en": "False. display:none elements never enter the render tree and take no space. An element that is in the render tree but invisible is visibility:hidden; it still takes up space."
+      },
+      "difficulty": "easy",
+      "concepts": ["render-tree", "dom"]
+    }
+  ]
+}

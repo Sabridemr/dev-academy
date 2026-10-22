@@ -1,0 +1,110 @@
+{
+  "id": "p-05-browser-security-quiz",
+  "title": { "tr": "Tarayıcı Güvenliği Quiz", "en": "Browser Security Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Hangi çift aynı origin'dir?",
+        "en": "Which pair has the same origin?"
+      },
+      "options": [
+        { "id": "a", "text": "https://app.example.com ve https://api.example.com" },
+        { "id": "b", "text": "http://example.com ve https://example.com" },
+        { "id": "c", "text": "https://example.com/a ve https://example.com/b" },
+        { "id": "d", "text": "https://example.com ve https://example.com:8443" }
+      ],
+      "correct": ["c"],
+      "explanation": {
+        "tr": "Origin = şema + host + port. Yol (path) origin'in parçası değildir; bu yüzden (c) aynı origin'dir. (a) host, (b) şema, (d) port farklıdır.",
+        "en": "Origin = scheme + host + port. The path is not part of the origin, so (c) is same-origin. (a) differs in host, (b) in scheme, (d) in port."
+      },
+      "difficulty": "easy",
+      "concepts": ["origin", "same-origin-policy"]
+    },
+    {
+      "id": "q2",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Hangi cross-origin `fetch` istekleri bir CORS ön uçuşu (OPTIONS) tetikler? (Birden fazla seçin)",
+        "en": "Which cross-origin `fetch` requests trigger a CORS preflight (OPTIONS)? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Ek başlıksız basit bir GET", "en": "A plain GET with no extra headers" } },
+        { "id": "b", "text": { "tr": "`Content-Type: application/json` gövdeli bir POST", "en": "A POST with a `Content-Type: application/json` body" } },
+        { "id": "c", "text": { "tr": "Bir DELETE isteği", "en": "A DELETE request" } },
+        { "id": "d", "text": { "tr": "`Authorization` başlığı taşıyan bir GET", "en": "A GET carrying an `Authorization` header" } }
+      ],
+      "correct": ["b", "c", "d"],
+      "explanation": {
+        "tr": "Basit istekler (GET/HEAD/POST, güvenli başlıklar ve form türü içerik) ön uçuşsuz gider. JSON içerik türü, DELETE metodu ve Authorization gibi özel başlıklar 'basit' sayılmaz ve önce OPTIONS gönderilir.",
+        "en": "Simple requests (GET/HEAD/POST with safe headers and form-type content) go without a preflight. A JSON content type, the DELETE method and custom headers like Authorization are not 'simple', so OPTIONS is sent first."
+      },
+      "difficulty": "medium",
+      "concepts": ["cors-preflight", "cors"]
+    },
+    {
+      "id": "q3",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Bir API'ye CORS yapılandırması eklemek onu CSRF saldırılarına karşı korur.",
+        "en": "Adding a CORS configuration to an API protects it against CSRF attacks."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "Yanlış. CSRF'te saldırganın yanıtı okuması gerekmez; isteğin gönderilmesi yeterlidir. Basit istekler ön uçuşsuz gider ve sunucu işlemi yapar. Savunma SameSite çerezler ve CSRF token'larıdır.",
+        "en": "False. In CSRF the attacker does not need to read the response; sending the request is enough. Simple requests go without a preflight and the server performs the action. The defences are SameSite cookies and CSRF tokens."
+      },
+      "difficulty": "medium",
+      "concepts": ["csrf", "cors"]
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": {
+        "tr": "Nonce tabanlı bir CSP'de saldırganın enjekte ettiği `<script>alert(1)</script>` neden çalışmaz?",
+        "en": "In a nonce-based CSP, why does an attacker's injected `<script>alert(1)</script>` not run?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Tarayıcı alert fonksiyonunu her zaman engeller", "en": "Browsers always block the alert function" } },
+        { "id": "b", "text": { "tr": "Etiket, o isteğe özgü tahmin edilemez nonce'u taşımadığı ve 'unsafe-inline' izni olmadığı için", "en": "Because the tag lacks the unpredictable per-request nonce and 'unsafe-inline' is not allowed" } },
+        { "id": "c", "text": { "tr": "CORS inline script'leri engellediği için", "en": "Because CORS blocks inline scripts" } },
+        { "id": "d", "text": { "tr": "HttpOnly çerez script'i durdurduğu için", "en": "Because the HttpOnly cookie stops the script" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Tarayıcı yalnızca başlıktaki nonce ile eşleşen inline script'leri çalıştırır. Nonce her istekte yeniden üretildiği için saldırgan onu önceden bilemez. CORS ve HttpOnly farklı sorunları çözer.",
+        "en": "The browser runs only inline scripts matching the nonce in the header. The nonce is regenerated per request, so the attacker cannot know it in advance. CORS and HttpOnly solve different problems."
+      },
+      "difficulty": "medium",
+      "concepts": ["content-security-policy", "csp-nonce", "xss"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "Çerezli (`credentials: 'include'`) cross-origin istek için hangi sunucu yanıtı geçersizdir?",
+        "en": "For a cross-origin request with credentials (`credentials: 'include'`), which server response is invalid?"
+      },
+      "options": [
+        { "id": "a", "text": "Access-Control-Allow-Origin: https://app.example.com + Access-Control-Allow-Credentials: true" },
+        { "id": "b", "text": "Access-Control-Allow-Origin: * + Access-Control-Allow-Credentials: true" },
+        { "id": "c", "text": "Access-Control-Allow-Origin: https://app.example.com + Vary: Origin" },
+        { "id": "d", "text": "Access-Control-Max-Age: 600" }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Çerezli isteklerde joker karakter `*` kabul edilmez; tarayıcı yanıtı reddeder. Origin açıkça yazılmalı ve Allow-Credentials: true dönmelidir. Origin'e göre değişen yanıtlar için Vary: Origin önbellek hatalarını önler.",
+        "en": "The `*` wildcard is not accepted for credentialed requests; the browser rejects the response. The origin must be explicit and Allow-Credentials: true returned. Vary: Origin prevents caching mistakes for origin-dependent responses."
+      },
+      "difficulty": "hard",
+      "concepts": ["cors"]
+    }
+  ]
+}

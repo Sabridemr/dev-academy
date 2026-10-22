@@ -1,0 +1,110 @@
+{
+  "id": "b-08-saga-distributed-workflows-quiz",
+  "title": { "tr": "Saga ve Dağıtık İş Akışları Quiz", "en": "Sagas and Distributed Workflows Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "order",
+      "prompt": {
+        "tr": "Seyahat saga'sının adımlarını, telafi maliyetini en aza indirecek şekilde sıraya koyun.",
+        "en": "Order the travel saga's steps so that the cost of compensation is minimised."
+      },
+      "options": [
+        { "id": "flight", "text": { "tr": "Uçuş koltuğunu geçici olarak tut", "en": "Temporarily hold the flight seat" } },
+        { "id": "hotel", "text": { "tr": "Otel odasını geçici olarak tut", "en": "Temporarily hold the hotel room" } },
+        { "id": "charge", "text": { "tr": "Karttan tahsil et (pivot)", "en": "Charge the card (pivot)" } },
+        { "id": "tickets", "text": { "tr": "Biletleri kes ve onay e-postası gönder", "en": "Issue tickets and send the confirmation email" } }
+      ],
+      "correct": ["flight", "hotel", "charge", "tickets"],
+      "explanation": {
+        "tr": "Geri alınması kolay ve ucuz olan telafi edilebilir adımlar (tutmalar) başa, geri dönüşü olmayan pivot (tahsilat) ortaya, başarısız olmaması gereken ve başarana kadar yeniden denenen adımlar sona konur. Tahsilatı başa almak, otel bulunamazsa iade gibi pahalı bir telafi gerektirir.",
+        "en": "Compensatable steps that are cheap and easy to undo (holds) go first, the irreversible pivot (charging) in the middle, and steps that must not fail and are retried until they succeed go last. Charging first would require an expensive compensation such as a refund if no hotel is found."
+      },
+      "difficulty": "medium",
+      "concepts": ["pivot-transaction", "compensating-transaction"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "Otel servisine gönderilen ReserveHotel isteği zaman aşımına uğradı. Orkestratörün ilk tepkisi ne olmalı?",
+        "en": "A ReserveHotel request to the hotel service timed out. What should the orchestrator's first reaction be?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Hemen uçuşu iptal edip saga'yı başarısız saymak", "en": "Immediately cancel the flight and treat the saga as failed" } },
+        { "id": "b", "text": { "tr": "İsteği aynı idempotency anahtarıyla, geri çekilmeyle yeniden göndermek ya da durumunu sorgulamak", "en": "Resend the request with the same idempotency key and backoff, or query its status" } },
+        { "id": "c", "text": { "tr": "Yeni bir anahtarla yeni bir rezervasyon isteği göndermek", "en": "Send a new reservation request with a new key" } },
+        { "id": "d", "text": { "tr": "Otel adımını atlayıp araç adımına geçmek", "en": "Skip the hotel step and move on to the car step" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Zaman aşımı sonucu bilinmeyen bir adımdır; otel odayı tutmuş olabilir. Aynı anahtarla yeniden deneme güvenlidir çünkü otel ikinci bir oda tutmaz, ilk sonucu döner. Hemen telafiye geçmek (a) tutulmuş bir odayı sahipsiz bırakabilir; yeni anahtar (c) çift rezervasyon riskidir; adımı atlamak (d) saga'nın anlamını bozar.",
+        "en": "A timeout is a step with an unknown outcome; the hotel may have held the room. Retrying with the same key is safe because the hotel will not hold a second room but return the first result. Jumping to compensation (a) can orphan a held room; a new key (c) risks a double booking; skipping the step (d) breaks the saga's meaning."
+      },
+      "difficulty": "medium",
+      "concepts": ["saga-timeout", "idempotency-key"]
+    },
+    {
+      "id": "q3",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Bir telafi işleminin (ör. CancelFlight) taşıması gereken özellikler hangileridir? (Birden fazla seçin)",
+        "en": "Which properties must a compensating action (e.g. CancelFlight) have? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "İdempotent olmalı; aynı iptal iki kez gelirse ikinci kez ücret kesmemeli", "en": "It must be idempotent; a repeated cancellation must not charge a fee twice" } },
+        { "id": "b", "text": { "tr": "Geçici hatalarda başarılı olana kadar yeniden denenebilmeli", "en": "It must be retriable on transient errors until it succeeds" } },
+        { "id": "c", "text": { "tr": "Veritabanı rollback'i gibi hiçbir iz bırakmamalı", "en": "Like a database rollback, it must leave no trace at all" } },
+        { "id": "d", "text": { "tr": "İş kuralı gereği reddedilememeli; kalıcı başarısızlıkta insan müdahalesi için alarm üretilmeli", "en": "It must not be rejectable by business rules; a permanent failure should raise an alert for human intervention" } }
+      ],
+      "correct": ["a", "b", "d"],
+      "explanation": {
+        "tr": "Telafi, olmuş bir şeyin iş kuralına göre tersini yapan yeni bir işlemdir; iz bırakır (iptal kaydı, bazen iptal ücreti). Bu yüzden rollback gibi davranması beklenemez (c). Yeniden denenebilir ve idempotent olmalı, kalıcı olarak başarısız olursa da sistem bunu kendi çözemeyeceği için bir insana haber vermelidir.",
+        "en": "A compensation is a new action that does the business-level opposite of something that happened; it leaves a trace (a cancellation record, sometimes a fee). So it cannot be expected to behave like a rollback (c). It must be retriable and idempotent, and if it fails permanently the system cannot resolve that on its own and must alert a human."
+      },
+      "difficulty": "medium",
+      "concepts": ["compensating-transaction"]
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": {
+        "tr": "Temporal gibi bir dayanıklı yürütme motorunda iş akışı kodunun deterministik olması neden zorunludur?",
+        "en": "In a durable execution engine such as Temporal, why must workflow code be deterministic?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Motor, kodu daha hızlı derleyebilmek için", "en": "So the engine can compile the code faster" } },
+        { "id": "b", "text": { "tr": "İşçi çöktüğünde motor olay geçmişini yeniden oynatarak kodu kaldığı satıra getirir; kod her oynatmada aynı kararları vermelidir", "en": "When a worker crashes, the engine replays the event history to bring the code back to where it was; the code must make the same decisions on every replay" } },
+        { "id": "c", "text": { "tr": "Aktivitelerin yeniden denenmesini engellemek için", "en": "To prevent activities from being retried" } },
+        { "id": "d", "text": { "tr": "Deterministik kod ağ çağrısı yapamadığı için güvenlidir", "en": "Deterministic code is safe because it cannot make network calls" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Motor, tamamlanmış adımların sonuçlarını geçmişten okuyarak iş akışı fonksiyonunu yeniden çalıştırır. Kod saat, rastgelelik ya da doğrudan G/Ç kullanırsa yeniden oynatmada farklı bir yola sapar ve geçmişle uyuşmaz. Ağ çağrıları ve yeniden denemeler aktivitelerde yapılır; bu yüzden (c) ve (d) yanlıştır.",
+        "en": "The engine re-runs the workflow function, reading completed steps' results from history. If the code uses the clock, randomness or direct I/O, it diverges on replay and no longer matches the history. Network calls and retries happen in activities, which is why (c) and (d) are wrong."
+      },
+      "difficulty": "hard",
+      "concepts": ["durable-execution", "orchestration"]
+    },
+    {
+      "id": "q5",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Kendi durum makinesini kullanan bir saga orkestratöründe, saga durumunu güncellemek ve bir sonraki komutu outbox tablosuna yazmak aynı veritabanı transaction'ında yapılmalıdır.",
+        "en": "In a saga orchestrator with its own state machine, updating the saga state and writing the next command to the outbox table should happen in the same database transaction."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["t"],
+      "explanation": {
+        "tr": "İkisi ayrı yazılırsa çökme anında ya durum ilerler ama komut hiç gönderilmez ya da komut gider ama durum eski kalır ve saga takılır. Aynı transaction'da yazmak ikisini atomik yapar; ayrı bir süreç outbox'taki komutu kuyruğa taşır. Komut en az bir kez teslim edileceği için katılımcılar idempotent olmalıdır.",
+        "en": "If they are written separately, a crash can leave the state advanced with no command sent, or the command sent with the state unchanged, and the saga gets stuck. Writing both in one transaction makes them atomic; a separate process moves the command from the outbox to the queue. Since the command is delivered at least once, participants must be idempotent."
+      },
+      "difficulty": "medium",
+      "concepts": ["outbox-pattern", "orchestration"]
+    }
+  ]
+}

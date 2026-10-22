@@ -1,0 +1,110 @@
+{
+  "id": "o-06-virtual-memory-quiz",
+  "title": { "tr": "Sanal Bellek Quiz", "en": "Virtual Memory Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "order",
+      "prompt": {
+        "tr": "Swap'a gönderilmiş bir sayfaya erişildiğinde gerçekleşen adımları sıraya koyun.",
+        "en": "Order the steps that happen when a swapped-out page is accessed."
+      },
+      "options": [
+        { "id": "walk", "text": { "tr": "TLB ıskalar, MMU sayfa tablosunu yürür ve present bitini 0 bulur", "en": "The TLB misses, the MMU walks the page table and finds the present bit 0" } },
+        { "id": "retry", "text": { "tr": "Talimat yeniden çalışır ve veri RAM'den okunur", "en": "The instruction re-runs and the data is read from RAM" } },
+        { "id": "fault", "text": { "tr": "MMU page fault üretir, kontrol çekirdeğe geçer", "en": "The MMU raises a page fault and control passes to the kernel" } },
+        { "id": "load", "text": { "tr": "Çekirdek sayfayı diskten boş bir çerçeveye okur ve tabloyu günceller", "en": "The kernel reads the page from disk into a free frame and updates the table" } }
+      ],
+      "correct": ["walk", "fault", "load", "retry"],
+      "explanation": {
+        "tr": "Çeviri önce TLB'de aranır, yoksa sayfa tablosu yürünür. Present biti 0 ise page fault oluşur; çekirdek sayfayı yükleyip tabloyu günceller ve hatayı tetikleyen talimat baştan çalıştırılır.",
+        "en": "Translation is looked up in the TLB first, then the page table is walked. If the present bit is 0 a page fault occurs; the kernel loads the page, updates the table and the faulting instruction is re-run from the start."
+      },
+      "difficulty": "medium",
+      "concepts": ["page-fault", "page-table", "tlb"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "Minor ve major page fault arasındaki fark nedir?",
+        "en": "What is the difference between a minor and a major page fault?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Minor fault süreci öldürür, major fault öldürmez", "en": "A minor fault kills the process, a major fault does not" } },
+        { "id": "b", "text": { "tr": "Major fault'ta sayfanın diskten okunması gerekir; minor fault'ta sayfa zaten RAM'dedir", "en": "A major fault requires reading the page from disk; in a minor fault the page is already in RAM" } },
+        { "id": "c", "text": { "tr": "Minor fault TLB'de, major fault sayfa tablosunda oluşur", "en": "Minor faults happen in the TLB, major faults in the page table" } },
+        { "id": "d", "text": { "tr": "Aralarında fark yoktur; yalnızca isimlendirme farkıdır", "en": "There is no difference; it is only naming" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Minor fault'ta sayfa RAM'de vardır (ör. paylaşılan kütüphane ya da sıfırlanmış yeni sayfa), yalnızca tabloya eklenir; mikrosaniyeler sürer. Major fault disk I/O gerektirir ve milisaniyeler sürer. Geçersiz erişim ise ayrı bir durumdur ve SIGSEGV ile sonuçlanır.",
+        "en": "In a minor fault the page is in RAM (e.g. a shared library or a fresh zeroed page) and only needs mapping; microseconds. A major fault needs disk I/O and takes milliseconds. An invalid access is a separate case that ends in SIGSEGV."
+      },
+      "difficulty": "easy",
+      "concepts": ["page-fault", "swap"]
+    },
+    {
+      "id": "q3",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Bir servisin bellek sızıntısı yaşadığını hangi gözlemler destekler? (Birden fazla seçin)",
+        "en": "Which observations support that a service has a memory leak? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Yük sabitken RSS saatler içinde sürekli tırmanıyor", "en": "RSS keeps climbing over hours while load is constant" } },
+        { "id": "b", "text": { "tr": "Süreç başlar başlamaz VIRT değeri gigabaytlarca görünüyor", "en": "VIRT shows gigabytes right after the process starts" } },
+        { "id": "c", "text": { "tr": "Konteyner periyodik olarak 137 çıkış koduyla (OOM) yeniden başlıyor", "en": "The container periodically restarts with exit code 137 (OOM)" } },
+        { "id": "d", "text": { "tr": "tracemalloc anlık görüntüleri arasında aynı satırın ayırdığı bellek sürekli artıyor", "en": "Between tracemalloc snapshots, memory allocated by the same line keeps growing" } }
+      ],
+      "correct": ["a", "c", "d"],
+      "explanation": {
+        "tr": "Sızıntının işareti, iş yükü değişmezken ayrılmış ve kullanılan belleğin (RSS) büyümesi ve sonunda OOM killer'ın devreye girmesidir; tracemalloc da kaynağı gösterir. Yüksek VIRT tek başına bir şey söylemez: ayrılmış ama dokunulmamış sanal alan RAM tüketmez.",
+        "en": "The signs of a leak are resident memory (RSS) growing while the workload is unchanged, eventually triggering the OOM killer; tracemalloc points at the source. High VIRT alone means nothing: reserved but untouched virtual space uses no RAM."
+      },
+      "difficulty": "medium",
+      "concepts": ["memory-leak", "rss", "oom-killer"]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "İki süreç aynı sanal adresi kullanıyorsa, aynı fiziksel bellek konumuna eriştikleri kesindir.",
+        "en": "If two processes use the same virtual address, they are certainly accessing the same physical memory location."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "Yanlış. Her sürecin kendi sayfa tablosu vardır; aynı sanal adres iki süreçte farklı fiziksel çerçevelere eşlenebilir. Yalıtımı sağlayan budur. Ancak çekirdek bilerek aynı çerçeveyi paylaştırabilir (paylaşılan kütüphaneler, copy-on-write).",
+        "en": "False. Each process has its own page table; the same virtual address can map to different physical frames in two processes. That is what provides isolation. The kernel can deliberately share a frame, though (shared libraries, copy-on-write)."
+      },
+      "difficulty": "easy",
+      "concepts": ["virtual-memory", "page-table"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "Bir makinede CPU kullanımı düşük ama her şey çok yavaş; vmstat'ta si/so sütunları sürekli yüksek. En olası açıklama nedir?",
+        "en": "A machine has low CPU usage but everything is very slow; vmstat shows constantly high si/so columns. What is the most likely explanation?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Çok fazla context switch var", "en": "There are too many context switches" } },
+        { "id": "b", "text": { "tr": "Çalışma kümesi RAM'e sığmıyor; sistem sürekli swap'a sayfa yazıp okuyor (thrashing)", "en": "The working set does not fit in RAM; the system keeps swapping pages out and in (thrashing)" } },
+        { "id": "c", "text": { "tr": "Stack overflow oluşuyor", "en": "A stack overflow is happening" } },
+        { "id": "d", "text": { "tr": "TLB çok büyük olduğu için çeviri yavaşlıyor", "en": "Translation is slow because the TLB is too large" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "si/so swap'a giren ve çıkan sayfaları gösterir. Sürekli yüksek olmaları, süreçlerin major fault'larla diske bloklandığını, CPU'nun ise beklediğini gösterir: thrashing. Çözüm bellek eklemek, çalışma kümesini küçültmek ya da süreç sayısını azaltmaktır.",
+        "en": "si/so show pages swapped in and out. Constantly high values mean processes are blocking on disk through major faults while the CPU waits: thrashing. The fix is more memory, a smaller working set or fewer processes."
+      },
+      "difficulty": "hard",
+      "concepts": ["swap", "page-fault", "virtual-memory"]
+    }
+  ]
+}

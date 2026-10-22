@@ -1,0 +1,232 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "event-sourcing-projections",
+  "title": { "tr": "Komuttan Olaya, Olaydan Okuma Modeline", "en": "From Command to Event, From Event to Read Model" },
+  "summary": {
+    "tr": "Bir para çekme komutunun olaya dönüşmesi, iyimser eşzamanlılık çakışması, asenkron projeksiyonun okuma modelini geriden gelerek güncellemesi, snapshot ve replay ile sıfırdan yeni bir projeksiyon kurulması.",
+    "en": "A withdrawal command turning into an event, an optimistic concurrency conflict, an asynchronous projection updating the read model with a lag, a snapshot, and a brand-new projection built through replay."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda istemci ve komut işleyici, ortada wallet-42 akışını tutan olay deposu ve abonelik, sağda bakiye projeksiyonu ve wallet_balances okuma modeli, altta sorgu API'si. Komut işleyici akışın yedi olayını okuyup bakiyeyi 70 olarak kurar, 50 liralık çekim için MoneyWithdrawn olayını beklenen sürüm 7 ile ekler ve akış sürüm 8'e çıkar. Aynı anda eski sürüme dayanan ikinci bir çekim reddedilir. Abonelik yeni olayı projeksiyona taşır; projeksiyon işlemeden önce yapılan sorgu eski bakiyeyi görür, ardından okuma modeli 20'ye güncellenir. Sonra bir snapshot alınır ve yeni bir şüpheli işlem projeksiyonu global konum sıfırdan başlayarak bütün olayları yeniden oynatır, yetişince canlı akışa katılır.",
+      "en": "On the left the client and the command handler, in the middle the event store holding the wallet-42 stream and the subscription, on the right the balance projection and the wallet_balances read model, with the query API at the bottom. The command handler reads the stream's seven events, rebuilds the balance as 70, appends a MoneyWithdrawn event for a 50 withdrawal with expected version 7, and the stream moves to version 8. A concurrent second withdrawal based on the old version is rejected. The subscription carries the new event to the projection; a query made before the projection processes it sees the old balance, then the read model is updated to 20. Then a snapshot is taken and a new suspicious-activity projection replays every event from global position zero and joins the live feed once it catches up."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "user", "kind": "client", "label": { "tr": "İstemci", "en": "Client" }, "x": 70, "y": 110, "w": 110, "h": 60 },
+    { "id": "user2", "kind": "client", "label": { "tr": "Eşzamanlı istek", "en": "Concurrent request" }, "x": 70, "y": 250, "w": 130, "h": 60 },
+    { "id": "handler", "kind": "service", "label": { "tr": "Komut işleyici", "en": "Command handler" }, "sublabel": "decide · evolve", "x": 260, "y": 180, "w": 150, "h": 70 },
+    { "id": "store", "kind": "db", "label": { "tr": "Olay deposu", "en": "Event store" }, "sublabel": "wallet-42", "x": 480, "y": 180, "w": 160, "h": 80 },
+    { "id": "snap", "kind": "storage", "label": "Snapshot", "sublabel": { "tr": "durum @ v100", "en": "state @ v100" }, "x": 480, "y": 330, "w": 140, "h": 60 },
+    { "id": "sub", "kind": "queue", "label": { "tr": "Abonelik", "en": "Subscription" }, "sublabel": { "tr": "global konum", "en": "global position" }, "x": 670, "y": 180, "w": 130, "h": 64 },
+    { "id": "proj", "kind": "worker", "label": { "tr": "Bakiye projeksiyonu", "en": "Balance projection" }, "x": 870, "y": 90, "w": 170, "h": 60 },
+    { "id": "readdb", "kind": "db", "label": "wallet_balances", "sublabel": { "tr": "okuma modeli", "en": "read model" }, "x": 870, "y": 230, "w": 160, "h": 64 },
+    { "id": "query", "kind": "service", "label": { "tr": "Sorgu API", "en": "Query API" }, "sublabel": "GET /balance", "x": 260, "y": 400, "w": 140, "h": 60 },
+    { "id": "newproj", "kind": "worker", "label": { "tr": "Şüpheli işlem projeksiyonu", "en": "Suspicious-activity projection" }, "x": 870, "y": 400, "w": 190, "h": 60 },
+    { "id": "newdb", "kind": "db", "label": "suspicious_activity", "sublabel": { "tr": "yeni okuma modeli", "en": "new read model" }, "x": 870, "y": 530, "w": 170, "h": 60 }
+  ],
+  "edges": [
+    { "id": "u-h", "from": "user", "to": "handler", "kind": "request", "label": "Withdraw(50)" },
+    { "id": "u2-h", "from": "user2", "to": "handler", "kind": "request", "label": "Withdraw(40)" },
+    { "id": "h-store", "from": "handler", "to": "store", "kind": "data", "label": { "tr": "oku / ekle", "en": "read / append" } },
+    { "id": "store-snap", "from": "store", "to": "snap", "kind": "data", "style": "dashed" },
+    { "id": "store-sub", "from": "store", "to": "sub", "kind": "event" },
+    { "id": "sub-proj", "from": "sub", "to": "proj", "kind": "event", "curvature": -0.15 },
+    { "id": "proj-read", "from": "proj", "to": "readdb", "kind": "data" },
+    { "id": "u-q", "from": "user", "to": "query", "kind": "request", "curvature": 0.35 },
+    { "id": "q-read", "from": "query", "to": "readdb", "kind": "request", "curvature": 0.25 },
+    { "id": "sub-new", "from": "sub", "to": "newproj", "kind": "event", "curvature": 0.15 },
+    { "id": "new-db", "from": "newproj", "to": "newdb", "kind": "data" }
+  ],
+  "steps": [
+    {
+      "id": "command",
+      "title": { "tr": "Komut gelir", "en": "A command arrives" },
+      "narration": {
+        "tr": "İstemci wallet-42 için '50 TL çek' komutu gönderir. Komut bir istektir; reddedilebilir. Henüz hiçbir şey değişmedi.",
+        "en": "The client sends a 'withdraw 50' command for wallet-42. A command is a request; it may be rejected. Nothing has changed yet."
+      },
+      "durationMs": 2800,
+      "inherit": false,
+      "highlight": { "nodes": ["user", "handler"], "edges": ["u-h"] },
+      "nodeStates": {
+        "handler": { "status": "active" },
+        "store": { "badge": "v7" },
+        "readdb": { "badge": "70" },
+        "user2": { "visible": false },
+        "snap": { "visible": false },
+        "newproj": { "visible": false },
+        "newdb": { "visible": false }
+      },
+      "edgeStates": {
+        "u2-h": { "visible": false },
+        "store-snap": { "visible": false },
+        "sub-new": { "visible": false },
+        "new-db": { "visible": false }
+      },
+      "packets": [{ "edge": "u-h", "shape": "envelope", "label": "Withdraw(50)", "durationMs": 1300 }]
+    },
+    {
+      "id": "rehydrate",
+      "title": { "tr": "Akışı oku, durumu kur", "en": "Read the stream, rebuild state" },
+      "narration": {
+        "tr": "Komut işleyici wallet-42 akışının yedi olayını okur ve evolve ile sırayla katlar: açıldı, 100 yatırıldı, 30 çekildi... Sonuç: bakiye 70, sürüm 7. Tabloda saklanan bir bakiye yoktur; bakiye olaylardan hesaplanır.",
+        "en": "The command handler reads the seven events of the wallet-42 stream and folds them in order with evolve: opened, 100 deposited, 30 withdrawn... Result: balance 70, version 7. No balance is stored in a table; it is computed from the events."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["handler", "store"], "edges": ["h-store"] },
+      "nodeStates": { "handler": { "status": "busy", "badge": "70" }, "store": { "status": "active" } },
+      "edgeStates": { "h-store": { "status": "active" } },
+      "packets": [
+        { "edge": "h-store", "direction": "backward", "shape": "square", "label": "e1…e7", "durationMs": 700, "repeat": 3, "repeatGapMs": 250 }
+      ],
+      "annotations": [
+        { "id": "fold", "x": 260, "y": 270, "text": { "tr": "evolve: 0 → 100 → 70", "en": "evolve: 0 → 100 → 70" }, "target": "handler" }
+      ]
+    },
+    {
+      "id": "append",
+      "title": { "tr": "Karar ver ve ekle", "en": "Decide and append" },
+      "narration": {
+        "tr": "decide kuralı uygular: 70 ≥ 50, o hâlde MoneyWithdrawn(50) olayı üretilir. Olay 'beklenen sürüm 7' koşuluyla akışa eklenir ve akış sürüm 8'e çıkar. Olay artık değişmez bir gerçektir.",
+        "en": "decide applies the rule: 70 ≥ 50, so a MoneyWithdrawn(50) event is produced. It is appended with the condition 'expected version 7' and the stream moves to version 8. The event is now an immutable fact."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["handler", "store"], "edges": ["h-store"] },
+      "nodeStates": { "handler": { "status": "success", "badge": "" }, "store": { "status": "success", "badge": "v8" } },
+      "packets": [{ "edge": "h-store", "shape": "diamond", "label": "MoneyWithdrawn(50)", "durationMs": 1400, "color": "success" }]
+    },
+    {
+      "id": "conflict",
+      "title": { "tr": "İyimser eşzamanlılık çakışması", "en": "Optimistic concurrency conflict" },
+      "narration": {
+        "tr": "Aynı anda gelen ikinci bir komut da akışı sürüm 7'de okumuştu ve 40 TL çekmek istiyor. Ekleme 'beklenen sürüm 7' ile gelir ama akış artık 8'de: depo reddeder. İşleyici akışı yeniden okur; bakiye 20 olduğu için bu kez decide komutu reddeder.",
+        "en": "A second, concurrent command had also read the stream at version 7 and wants to withdraw 40. Its append arrives with 'expected version 7' but the stream is now at 8: the store rejects it. The handler re-reads the stream; with a balance of 20, decide now rejects the command."
+      },
+      "durationMs": 3800,
+      "highlight": { "nodes": ["user2", "handler", "store"], "edges": ["u2-h", "h-store"] },
+      "nodeStates": { "user2": { "visible": true, "status": "active" }, "handler": { "status": "error" }, "store": { "status": "active" } },
+      "edgeStates": { "u2-h": { "visible": true, "status": "active" }, "h-store": { "status": "error" } },
+      "packets": [
+        { "edge": "u2-h", "shape": "envelope", "label": "Withdraw(40)", "durationMs": 1000 },
+        { "edge": "h-store", "shape": "square", "label": { "tr": "beklenen v7", "en": "expected v7" }, "startAt": 1100, "durationMs": 1000, "color": "danger" },
+        { "edge": "h-store", "direction": "backward", "label": "WrongExpectedVersion", "startAt": 2200, "durationMs": 1000, "color": "danger" }
+      ],
+      "annotations": [
+        { "id": "occ", "x": 260, "y": 290, "text": { "tr": "yeniden oku → bakiye 20 < 40 → red", "en": "re-read → balance 20 < 40 → rejected" }, "tone": "danger", "target": "handler" }
+      ]
+    },
+    {
+      "id": "subscription",
+      "title": { "tr": "Abonelik olayı taşır", "en": "The subscription carries the event" },
+      "narration": {
+        "tr": "Olay deposu yeni olayı global konumuyla aboneliğe verir. Bakiye projeksiyonu asenkron çalışır; olay ona ulaşıyor ama okuma modeli henüz değişmedi.",
+        "en": "The event store hands the new event, with its global position, to the subscription. The balance projection runs asynchronously; the event is reaching it but the read model has not changed yet."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["store", "sub", "proj"], "edges": ["store-sub", "sub-proj"] },
+      "nodeStates": { "user2": { "status": "muted" }, "handler": { "status": "idle" }, "store": { "status": "idle" }, "sub": { "status": "active" }, "proj": { "status": "busy" } },
+      "edgeStates": { "u2-h": { "status": "muted" }, "h-store": { "status": "idle" }, "store-sub": { "status": "active" }, "sub-proj": { "status": "active" } },
+      "packets": [
+        { "edge": "store-sub", "shape": "diamond", "label": "#8", "durationMs": 1000 },
+        { "edge": "sub-proj", "shape": "diamond", "label": "#8", "startAt": 1100, "durationMs": 1200 }
+      ]
+    },
+    {
+      "id": "stale-read",
+      "title": { "tr": "Nihai tutarlılık penceresi", "en": "The eventual-consistency window" },
+      "narration": {
+        "tr": "Kullanıcı bakiyesine hemen bakar. Sorgu API'si yazma tarafına değil okuma modeline gider ve hâlâ 70 görür. Bu pencere genellikle milisaniyelerdir ama yük altında uzar; ürün tasarımı bunu hesaba katmalıdır.",
+        "en": "The user checks the balance right away. The query API goes to the read model, not the write side, and still sees 70. This window is usually milliseconds but grows under load; product design must account for it."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["user", "query", "readdb"], "edges": ["u-q", "q-read"] },
+      "nodeStates": { "query": { "status": "active" }, "readdb": { "status": "warning" } },
+      "edgeStates": { "u-q": { "status": "active" }, "q-read": { "status": "active" } },
+      "packets": [
+        { "edge": "u-q", "label": "GET", "durationMs": 1000 },
+        { "edge": "q-read", "startAt": 1000, "durationMs": 900 },
+        { "edge": "q-read", "direction": "backward", "label": "70", "startAt": 2000, "durationMs": 900, "color": "warning" }
+      ],
+      "annotations": [
+        { "id": "lag", "x": 870, "y": 315, "text": { "tr": "okuma modeli 1 olay geride", "en": "read model is 1 event behind" }, "tone": "warning", "target": "readdb" }
+      ]
+    },
+    {
+      "id": "project",
+      "title": { "tr": "Projeksiyon yetişir", "en": "The projection catches up" },
+      "narration": {
+        "tr": "Projeksiyon MoneyWithdrawn(50)'yi uygular: bakiye 20 olur. Aynı transaction'da checkpoint 8'e yazılır; olay yeniden teslim edilirse konumu checkpoint'ten küçük olacağı için atlanır. Projeksiyon böylece idempotenttir.",
+        "en": "The projection applies MoneyWithdrawn(50): the balance becomes 20. In the same transaction the checkpoint is set to 8; if the event is redelivered, its position is not beyond the checkpoint and it is skipped. That makes the projection idempotent."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["proj", "readdb"], "edges": ["proj-read"] },
+      "nodeStates": { "query": { "status": "idle" }, "sub": { "status": "idle" }, "proj": { "status": "success", "badge": "cp 8" }, "readdb": { "status": "success", "badge": "20" } },
+      "edgeStates": { "u-q": { "status": "idle" }, "q-read": { "status": "idle" }, "store-sub": { "status": "idle" }, "sub-proj": { "status": "idle" }, "proj-read": { "status": "active" } },
+      "packets": [{ "edge": "proj-read", "shape": "square", "label": "UPDATE", "durationMs": 1200 }]
+    },
+    {
+      "id": "snapshot",
+      "title": { "tr": "Snapshot: uzun akışlar için önbellek", "en": "Snapshot: a cache for long streams" },
+      "narration": {
+        "tr": "Akış zamanla yüzlerce olaya ulaşır. Her 100 olayda bir hesaplanmış durum snapshot olarak kaydedilir; komut işleyici artık 'snapshot + sonrasındaki olaylar'ı okur. Snapshot doğruluk kaynağı değildir; evolve değişirse atılıp olaylardan yeniden üretilir.",
+        "en": "Over time the stream grows to hundreds of events. Every 100 events a computed state is saved as a snapshot; the command handler now reads 'snapshot + subsequent events'. The snapshot is not the source of truth; if evolve changes it is discarded and rebuilt from events."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["store", "snap"], "edges": ["store-snap"] },
+      "nodeStates": { "proj": { "status": "idle" }, "readdb": { "status": "idle" }, "store": { "status": "active", "badge": "v100" }, "snap": { "visible": true, "status": "success" } },
+      "edgeStates": { "proj-read": { "status": "idle" }, "store-snap": { "visible": true, "status": "active" } },
+      "packets": [{ "edge": "store-snap", "shape": "square", "label": "state@100", "durationMs": 1300 }]
+    },
+    {
+      "id": "replay",
+      "title": { "tr": "Replay ile yeni projeksiyon", "en": "A new projection via replay" },
+      "narration": {
+        "tr": "Dolandırıcılık ekibi 'son bir saatte üçten fazla çekim' ekranı istiyor. Yeni bir projeksiyon yazılır ve global konum 0'dan başlatılır: bütün geçmiş olaylar ona sırayla oynatılır. Mevcut bakiye projeksiyonu bu sırada etkilenmez.",
+        "en": "The fraud team wants a 'more than three withdrawals in the last hour' screen. A new projection is written and started from global position 0: every past event is replayed to it in order. The existing balance projection is unaffected meanwhile."
+      },
+      "durationMs": 4200,
+      "highlight": { "nodes": ["sub", "newproj", "newdb"], "edges": ["sub-new", "new-db"] },
+      "nodeStates": {
+        "store": { "status": "idle" },
+        "snap": { "status": "idle" },
+        "sub": { "status": "active" },
+        "newproj": { "visible": true, "status": "busy", "progress": 0.6, "badge": "cp 0 → …" },
+        "newdb": { "visible": true, "status": "active" }
+      },
+      "edgeStates": {
+        "store-snap": { "status": "idle" },
+        "sub-new": { "visible": true, "status": "active" },
+        "new-db": { "visible": true, "status": "active" }
+      },
+      "packets": [
+        { "edge": "sub-new", "shape": "diamond", "label": "#1…", "durationMs": 600, "repeat": 5, "repeatGapMs": 120 },
+        { "edge": "new-db", "shape": "square", "startAt": 700, "durationMs": 500, "repeat": 4, "repeatGapMs": 250 }
+      ],
+      "annotations": [
+        { "id": "replay-note", "x": 640, "y": 470, "text": { "tr": "konum 0'dan replay", "en": "replay from position 0" }, "target": "newproj" }
+      ]
+    },
+    {
+      "id": "live",
+      "title": { "tr": "Yetişti, canlıya katıldı", "en": "Caught up and live" },
+      "narration": {
+        "tr": "Yeni projeksiyon güncel konuma yetişir ve canlı akışa katılır. Bundan sonra her yeni olay iki projeksiyona da gider. Aynı olaylardan iki farklı okuma modeli türedi; geçmişe dönük ekran, geçmiş zaten saklandığı için mümkün oldu.",
+        "en": "The new projection reaches the current position and joins the live feed. From now on every new event goes to both projections. Two different read models were derived from the same events; a retroactive screen was possible because history was already stored."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["sub", "proj", "newproj"], "edges": ["sub-proj", "sub-new"] },
+      "nodeStates": { "newproj": { "status": "success", "progress": 1, "badge": "cp 101" }, "newdb": { "status": "success" }, "proj": { "status": "success", "badge": "cp 101" } },
+      "edgeStates": { "sub-proj": { "status": "active" }, "new-db": { "status": "idle" } },
+      "packets": [
+        { "edge": "sub-proj", "shape": "diamond", "label": "#101", "durationMs": 1200 },
+        { "edge": "sub-new", "shape": "diamond", "label": "#101", "durationMs": 1200 }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["event-sourcing", "cqrs", "projection", "replay", "snapshot"]
+}

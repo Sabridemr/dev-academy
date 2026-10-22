@@ -1,5 +1,5 @@
-import { readdirSync } from 'node:fs';
-import { join } from 'node:path';
+import { readdirSync, statSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { parseLessonMarkdown, parseDirectiveAttributes, lessonPlainText } from './parser';
 import {
@@ -11,7 +11,6 @@ import {
 } from './schema';
 import { buildSearchText } from './search-text';
 import { CURRICULUM, allLessons, findLesson, nextLessonOf, TOTAL_LESSON_COUNT } from './curriculum';
-import { findContentRoot } from '../node/content-loader';
 
 const SAMPLE = `---
 id: a-05-load-balancing
@@ -296,38 +295,39 @@ describe('Alıştırma şeması', () => {
 });
 
 describe('Müfredat', () => {
-  // Sabit sayı/id yerine türetilmiş beklentiler: yeni modül eklendiğinde bu dosyaya dokunmak gerekmez.
-  it('her içerik modülü klasörü müfredatta, modüller order sırasında ve ders id’leri benzersiz', () => {
-    const moduleDirs = readdirSync(join(findContentRoot(), 'modules'), { withFileTypes: true })
-      .filter((d) => d.isDirectory())
-      .map((d) => d.name)
-      .sort();
-    expect(CURRICULUM.map((m) => m.id).sort()).toEqual(moduleDirs);
-    const orders = CURRICULUM.map((m) => m.order);
-    expect(orders).toEqual([...orders].sort((a, b) => a - b));
-    expect(new Set(orders).size).toBe(orders.length);
+  it('her içerik modülü müfredatta ve ders id’leri benzersiz', () => {
+    // Modül sayısı sabit yazılmaz: content/modules altındaki klasörlerden türetilir
+    const modulesDir = resolve(__dirname, '../../../../content/modules');
+    const moduleDirs = readdirSync(modulesDir).filter((d) =>
+      statSync(resolve(modulesDir, d)).isDirectory(),
+    );
+    expect(CURRICULUM).toHaveLength(moduleDirs.length);
+    expect(CURRICULUM.map((m) => m.id).sort()).toEqual([...moduleDirs].sort());
     const ids = allLessons().map((x) => x.lesson.id);
     expect(new Set(ids).size).toBe(ids.length);
     expect(TOTAL_LESSON_COUNT).toBe(ids.length);
   });
   it('ders arama ve sonraki ders', () => {
     expect(findLesson('a-05-load-balancing')?.module.code).toBe('A');
-    expect(nextLessonOf('a-13-observability-12-factor')?.id).toBe('b-01-monolith-to-microservices');
-    // Modül içinde her ders bir sonrakine bağlanır
-    for (const m of CURRICULUM) {
-      expect(m.lessons.length).toBeGreaterThan(0);
-      for (let i = 0; i < m.lessons.length - 1; i++) {
-        expect(nextLessonOf(m.lessons[i].id)?.id).toBe(m.lessons[i + 1].id);
-      }
-    }
-    // Modül sınırını aşar: her modülün son dersinden sonraki modülün ilk dersine
+    expect(nextLessonOf('a-13-observability-12-factor')?.id).toBe('a-14-websocket-realtime');
+    // Modül sınırını aşar: A'nın son dersinden B'nin ilk dersine
+    expect(nextLessonOf('a-17-grpc-graphql-rest')?.id).toBe('b-01-monolith-to-microservices');
+    // Modül sınırını aşar: G'nin son dersinden H'nin ilk dersine
+    expect(nextLessonOf('g-08-nn-playground')?.id).toBe('h-01-linux-notes');
+    expect(nextLessonOf('j-11-odunlesimler-mulakat-ve-ozet')?.id).toBe('k-01-python-nasil-calisir');
+    expect(nextLessonOf('k-19-testler-ve-mini-proje')?.id).toBe('l-01-big-o-complexity');
+  });
+  it('modüller order sırasıyla zincirlenir; son dersin sonrası yok', () => {
+    const orders = CURRICULUM.map((m) => m.order);
+    expect(orders).toEqual([...orders].sort((a, b) => a - b));
+    // Her ardışık modül çifti: önceki modülün son dersinden sonrakinin ilk dersine
     for (let i = 0; i < CURRICULUM.length - 1; i++) {
-      const prev = CURRICULUM[i].lessons;
-      expect(nextLessonOf(prev[prev.length - 1].id)?.id).toBe(CURRICULUM[i + 1].lessons[0].id);
+      const prev = CURRICULUM[i];
+      const next = CURRICULUM[i + 1];
+      const lastOfPrev = prev.lessons[prev.lessons.length - 1];
+      expect(nextLessonOf(lastOfPrev.id)?.id, `${prev.id} → ${next.id}`).toBe(next.lessons[0].id);
     }
-    // Müfredatın son dersinden sonra ders yok
-    const lastLessons = CURRICULUM[CURRICULUM.length - 1].lessons;
-    expect(nextLessonOf(lastLessons[lastLessons.length - 1].id)).toBeUndefined();
-    expect(nextLessonOf('olmayan-ders')).toBeUndefined();
+    const lastModule = CURRICULUM[CURRICULUM.length - 1];
+    expect(nextLessonOf(lastModule.lessons[lastModule.lessons.length - 1].id)).toBeUndefined();
   });
 });

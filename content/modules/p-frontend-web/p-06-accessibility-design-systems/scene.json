@@ -1,0 +1,160 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "p-06-screen-reader-tree",
+  "title": { "tr": "Ekran okuyucu: semantik ağaç vs. div çorbası", "en": "Screen reader: semantic tree vs. div soup" },
+  "summary": {
+    "tr": "Ekran okuyucu semantik sayfada landmark, başlık ve düğme arasında tuşlarla atlar; div çorbasında landmark ve başlık bulamaz, div onclick düğmesine Tab ile ulaşamaz; düzeltme yerel <button> kullanmaktır.",
+    "en": "A screen reader jumps between landmarks, headings and the button on the semantic page; in the div soup it finds no landmarks or headings and cannot reach the div onclick button with Tab; the fix is to use a native <button>."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Ortada ekran okuyucu kullanıcısı. Solda semantik HTML ile yazılmış sayfanın erişilebilirlik ağacı: gezinme bölgesi, ana bölge, birinci düzey başlık ve Tamamla düğmesi. Sağda aynı görünümün div'lerle yazılmış hâli: dört rolsüz div. Semantik tarafta kullanıcı landmark tuşuyla gezinmeye ve ana bölgeye, başlık tuşuyla başlığa, Tab ile düğmeye atlar ve Enter ile düğmeyi tetikler. Div tarafında landmark listesi ve başlık listesi boştur, metin düz okunur ve tıklanabilir div'e Tab ile ulaşılamaz. Son adımda div'in yerine yerel button öğesi konunca düğmeye ulaşılabilir.",
+      "en": "A screen reader user in the middle. On the left, the accessibility tree of the page written with semantic HTML: a navigation region, the main region, a level-one heading and the Complete button. On the right, the same look written with divs: four role-less divs. On the semantic side the user jumps to navigation and main with the landmark key, to the heading with the heading key, to the button with Tab, and activates it with Enter. On the div side the landmark and heading lists are empty, the text is read flat and the clickable div cannot be reached with Tab. In the last step the div is replaced with a native button element and it becomes reachable."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "sr", "kind": "user", "label": { "tr": "Ekran okuyucu", "en": "Screen reader" }, "sublabel": { "tr": "klavye: D · H · Tab", "en": "keys: D · H · Tab" }, "x": 500, "y": 300, "w": 170, "h": 84 },
+    { "id": "nav", "kind": "group", "label": "<nav>", "sublabel": { "tr": "rol: gezinme", "en": "role: navigation" }, "x": 170, "y": 100, "w": 190, "h": 64 },
+    { "id": "main", "kind": "group", "label": "<main>", "sublabel": { "tr": "rol: ana", "en": "role: main" }, "x": 170, "y": 230, "w": 190, "h": 64 },
+    { "id": "h1", "kind": "generic", "label": "<h1>", "sublabel": { "tr": "başlık, düzey 1", "en": "heading, level 1" }, "x": 170, "y": 360, "w": 190, "h": 64 },
+    { "id": "btn", "kind": "generic", "label": "<button>", "sublabel": { "tr": "rol: düğme · odaklanabilir", "en": "role: button · focusable" }, "x": 170, "y": 490, "w": 210, "h": 64 },
+    { "id": "d1", "kind": "generic", "label": "<div class=nav>", "sublabel": { "tr": "rol yok", "en": "no role" }, "x": 830, "y": 100, "w": 200, "h": 64 },
+    { "id": "d2", "kind": "generic", "label": "<div class=content>", "sublabel": { "tr": "rol yok", "en": "no role" }, "x": 830, "y": 230, "w": 200, "h": 64 },
+    { "id": "d3", "kind": "generic", "label": "<div class=title>", "sublabel": { "tr": "düz metin", "en": "plain text" }, "x": 830, "y": 360, "w": 200, "h": 64 },
+    { "id": "d4", "kind": "generic", "label": "<div onclick>", "sublabel": { "tr": "odaklanamaz", "en": "not focusable" }, "x": 830, "y": 490, "w": 200, "h": 64 }
+  ],
+  "edges": [
+    { "id": "sr-nav", "from": "sr", "to": "nav", "kind": "control" },
+    { "id": "sr-main", "from": "sr", "to": "main", "kind": "control" },
+    { "id": "sr-h1", "from": "sr", "to": "h1", "kind": "control" },
+    { "id": "sr-btn", "from": "sr", "to": "btn", "kind": "control" },
+    { "id": "sr-d1", "from": "sr", "to": "d1", "kind": "control", "style": "dashed" },
+    { "id": "sr-d2", "from": "sr", "to": "d2", "kind": "control", "style": "dashed" },
+    { "id": "sr-d3", "from": "sr", "to": "d3", "kind": "control", "style": "dashed" },
+    { "id": "sr-d4", "from": "sr", "to": "d4", "kind": "control", "style": "dashed" }
+  ],
+  "steps": [
+    {
+      "id": "tree",
+      "title": { "tr": "İki sayfa, aynı görünüm", "en": "Two pages, same look" },
+      "narration": {
+        "tr": "Solda semantik HTML, sağda div'lerle yazılmış aynı arayüz. Görsel olarak ikisi aynıdır; ama ekran okuyucu pikselleri değil, tarayıcının DOM'dan türettiği erişilebilirlik ağacını okur: rol, ad ve durum.",
+        "en": "Semantic HTML on the left, the same interface built from divs on the right. Visually they are identical; but a screen reader reads the accessibility tree the browser derives from the DOM, not pixels: role, name and state."
+      },
+      "durationMs": 3000,
+      "inherit": false,
+      "highlight": { "nodes": ["sr", "nav", "main", "h1", "btn", "d1", "d2", "d3", "d4"] },
+      "nodeStates": { "sr": { "status": "active" } }
+    },
+    {
+      "id": "landmarks",
+      "title": { "tr": "Landmark'lar arasında atlama", "en": "Jumping between landmarks" },
+      "narration": {
+        "tr": "Kullanıcı landmark tuşuna basar: 'gezinme bölgesi', sonra 'ana bölge'. Menüyü dinlemeden doğrudan içeriğe geçer.",
+        "en": "The user presses the landmark key: 'navigation region', then 'main region'. They skip straight to the content without listening to the menu."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["sr", "nav", "main"], "edges": ["sr-nav", "sr-main"] },
+      "nodeStates": { "nav": { "status": "success", "badge": "landmark" }, "main": { "status": "success", "badge": "landmark" } },
+      "packets": [
+        { "edge": "sr-nav", "shape": "dot", "label": "D", "durationMs": 900 },
+        { "edge": "sr-main", "shape": "dot", "label": "D", "startAt": 1100, "durationMs": 900 }
+      ]
+    },
+    {
+      "id": "heading",
+      "title": { "tr": "Başlıkla gezinme", "en": "Navigating by heading" },
+      "narration": {
+        "tr": "H tuşu bir sonraki başlığa atlar: 'başlık, düzey 1, CSR, SSR, SSG ve ISR'. Başlık hiyerarşisi kullanıcı için bir içindekiler tablosudur.",
+        "en": "The H key jumps to the next heading: 'heading, level 1, CSR, SSR, SSG and ISR'. The heading hierarchy is a table of contents for the user."
+      },
+      "durationMs": 2800,
+      "highlight": { "nodes": ["sr", "h1"], "edges": ["sr-h1"] },
+      "nodeStates": { "h1": { "status": "success", "badge": "H1" } },
+      "packets": [{ "edge": "sr-h1", "shape": "dot", "label": "H", "durationMs": 900 }]
+    },
+    {
+      "id": "button",
+      "title": { "tr": "Tab ile düğme, Enter ile tetikle", "en": "Tab to the button, Enter to activate" },
+      "narration": {
+        "tr": "Tab odağı düğmeye taşır, görünür bir odak halkası çıkar ve 'Tamamla, düğme' duyurulur. Enter ya da Space tıklamayla aynı işi yapar; bunların hepsi <button>'dan bedavaya gelir.",
+        "en": "Tab moves focus to the button, a visible focus ring appears and 'Complete, button' is announced. Enter or Space does the same as a click; all of this comes free with <button>."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["sr", "btn"], "edges": ["sr-btn"] },
+      "nodeStates": { "btn": { "status": "success", "badge": "focus ✓" } },
+      "packets": [
+        { "edge": "sr-btn", "shape": "dot", "label": "Tab", "durationMs": 900 },
+        { "edge": "sr-btn", "shape": "diamond", "label": "Enter", "color": "success", "startAt": 1200, "durationMs": 900 }
+      ]
+    },
+    {
+      "id": "soup-landmarks",
+      "title": { "tr": "Div çorbası: landmark yok", "en": "Div soup: no landmarks" },
+      "narration": {
+        "tr": "Aynı kullanıcı sağdaki sayfada landmark tuşuna basar: 'landmark bulunamadı'. class=nav yalnızca CSS için bir isimdir; erişilebilirlik ağacında rolü yoktur.",
+        "en": "The same user presses the landmark key on the right-hand page: 'no landmarks found'. class=nav is just a name for CSS; it has no role in the accessibility tree."
+      },
+      "durationMs": 3000,
+      "inherit": false,
+      "highlight": { "nodes": ["sr", "d1", "d2"], "edges": ["sr-d1", "sr-d2"] },
+      "nodeStates": { "sr": { "status": "warning" }, "d1": { "status": "warning", "badge": "?" }, "d2": { "status": "warning", "badge": "?" }, "nav": { "status": "muted" }, "main": { "status": "muted" }, "h1": { "status": "muted" }, "btn": { "status": "muted" } },
+      "packets": [
+        { "edge": "sr-d1", "shape": "dot", "label": "D", "color": "warning", "durationMs": 900 },
+        { "edge": "sr-d1", "direction": "backward", "shape": "square", "label": "∅", "color": "warning", "startAt": 1000, "durationMs": 800 }
+      ]
+    },
+    {
+      "id": "soup-heading",
+      "title": { "tr": "Başlık yok, düz metin", "en": "No headings, flat text" },
+      "narration": {
+        "tr": "H tuşu da sonuç vermez: büyük ve kalın yazılmış div bir başlık değildir. Kullanıcı sayfayı baştan sona satır satır dinlemek zorunda kalır.",
+        "en": "The H key finds nothing either: a large, bold div is not a heading. The user has to listen to the page line by line from top to bottom."
+      },
+      "durationMs": 2800,
+      "highlight": { "nodes": ["sr", "d3"], "edges": ["sr-d3"] },
+      "nodeStates": { "d3": { "status": "warning", "badge": "text" } },
+      "packets": [
+        { "edge": "sr-d3", "shape": "dot", "label": "H", "color": "warning", "durationMs": 900 },
+        { "edge": "sr-d3", "direction": "backward", "shape": "square", "label": "∅", "color": "warning", "startAt": 1000, "durationMs": 800 }
+      ]
+    },
+    {
+      "id": "soup-button",
+      "title": { "tr": "div onclick'e ulaşılamaz", "en": "div onclick is unreachable" },
+      "narration": {
+        "tr": "Tab'a basılır ama odak bu öğeye hiç gelmez: div odaklanabilir değildir. Fareyle tıklanınca çalışan 'Tamamla' düğmesi, klavye ve ekran okuyucu kullanıcısı için yoktur.",
+        "en": "Tab is pressed but focus never lands on this element: a div is not focusable. The 'Complete' button that works with a mouse click does not exist for keyboard and screen reader users."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["sr", "d4"], "edges": ["sr-d4"] },
+      "nodeStates": { "d4": { "status": "error", "badge": "Tab ✗" }, "sr": { "status": "error" } },
+      "edgeStates": { "sr-d4": { "status": "error" } },
+      "packets": [{ "edge": "sr-d4", "shape": "dot", "label": "Tab", "color": "danger", "durationMs": 1000 }],
+      "annotations": [
+        { "id": "soup-note", "x": 830, "y": 580, "text": { "tr": "yalnızca fareyle kullanılabilir", "en": "usable only with a mouse" }, "tone": "danger", "target": "d4" }
+      ]
+    },
+    {
+      "id": "fix",
+      "title": { "tr": "Düzeltme: yerel <button>", "en": "Fix: a native <button>" },
+      "narration": {
+        "tr": "role=button eklemek ekran okuyucuya rol verir ama odak ve Enter/Space davranışını eklemez; tabindex ve tuş işleyicisi de yazmak gerekir. ARIA'nın birinci kuralı: yerel öğe varsa onu kullan. div yerine <button> konunca her şey çalışır.",
+        "en": "Adding role=button gives the screen reader a role but adds no focus or Enter/Space behaviour; you would also need tabindex and key handlers. ARIA's first rule: if a native element exists, use it. Replacing the div with <button> makes everything work."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["sr", "d4"], "edges": ["sr-d4"] },
+      "nodeStates": { "sr": { "status": "success" }, "d4": { "status": "success", "label": "<button>", "sublabel": { "tr": "rol: düğme · odaklanabilir", "en": "role: button · focusable" }, "badge": "focus ✓" } },
+      "edgeStates": { "sr-d4": { "status": "active" } },
+      "packets": [
+        { "edge": "sr-d4", "shape": "dot", "label": "Tab", "durationMs": 900 },
+        { "edge": "sr-d4", "shape": "diamond", "label": "Enter", "color": "success", "startAt": 1200, "durationMs": 900 }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["accessibility", "screen-reader", "semantic-html", "aria"]
+}

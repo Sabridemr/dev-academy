@@ -1,0 +1,167 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "friend-of-friend-join-vs-traversal",
+  "title": { "tr": "Arkadaşın Arkadaşı: JOIN Zinciri ve Graf Gezintisi", "en": "Friend of a Friend: JOIN Chain vs Graph Traversal" },
+  "summary": {
+    "tr": "Aynı öneri sorgusu solda ilişkisel modelde iki indeks araması ve JOIN ile, sağda graf modelinde kenar işaretçileri izlenerek yürütülür.",
+    "en": "The same recommendation query runs on the left as two index lookups and JOINs in the relational model, and on the right by following edge pointers in the graph model."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Tuvalin sol yarısında ilişkisel yürütme vardır: SQL sorgusu, friendships tablosunun user_id indeksi, birinci JOIN, ikinci JOIN ve DISTINCT/filtre adımı. Sağ yarıda graf vardır: Ayşe, arkadaşları Ali ve Can, onların arkadaşları Deniz, Ece ve Fatih. İlişkisel tarafta önce Ayşe'nin arkadaşları indeksten bulunur, sonra her arkadaş için yeniden indekse gidilir; ara sonuçta Ece iki kez ve Ayşe'nin kendisi de yer alır, sonunda DISTINCT ve filtre bunları temizler. Graf tarafında Ayşe düğümü bir kez bulunur, ardından kenarlar boyunca Ali ve Can'a, oradan Deniz, Ece ve Fatih'e geçilir; Ece'ye iki yoldan ulaşıldığı için ortak arkadaş sayısı 2 olur. Son adım her iki yaklaşımın ne zaman uygun olduğunu özetler.",
+      "en": "The left half of the canvas shows relational execution: the SQL query, the user_id index on friendships, the first JOIN, the second JOIN and a DISTINCT/filter step. The right half shows the graph: Ayşe, her friends Ali and Can, and their friends Deniz, Ece and Fatih. On the relational side Ayşe's friends are first found in the index, then the index is visited again for each friend; the intermediate result contains Ece twice and Ayşe herself, and DISTINCT plus a filter clean these up at the end. On the graph side the Ayşe node is found once, then edges are followed to Ali and Can and on to Deniz, Ece and Fatih; Ece is reached by two paths, so her mutual friend count is 2. The final step summarises when each approach fits."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "sql", "kind": "service", "label": "SQL", "sublabel": { "tr": "iki self-join", "en": "two self-joins" }, "x": 90, "y": 90, "w": 130, "h": 60 },
+    { "id": "idx", "kind": "db", "label": { "tr": "friendships indeksi", "en": "friendships index" }, "sublabel": "B-tree (user_id)", "x": 90, "y": 330, "w": 160, "h": 70 },
+    { "id": "join1", "kind": "worker", "label": "JOIN 1", "sublabel": { "tr": "arkadaşlar", "en": "friends" }, "x": 290, "y": 200, "w": 140, "h": 60 },
+    { "id": "join2", "kind": "worker", "label": "JOIN 2", "sublabel": { "tr": "arkadaşın arkadaşı", "en": "friend of friend" }, "x": 290, "y": 360, "w": 150, "h": 60 },
+    { "id": "dedup", "kind": "generic", "label": "DISTINCT + NOT EXISTS", "sublabel": { "tr": "tekrarları ve kendini at", "en": "drop repeats and self" }, "x": 270, "y": 520, "w": 210, "h": 60 },
+    { "id": "me", "kind": "user", "label": "Ayşe", "x": 600, "y": 300 },
+    { "id": "ali", "kind": "user", "label": "Ali", "x": 740, "y": 170 },
+    { "id": "can", "kind": "user", "label": "Can", "x": 740, "y": 430 },
+    { "id": "deniz", "kind": "user", "label": "Deniz", "x": 910, "y": 90 },
+    { "id": "ece", "kind": "user", "label": "Ece", "x": 910, "y": 300 },
+    { "id": "fatih", "kind": "user", "label": "Fatih", "x": 910, "y": 510 }
+  ],
+  "edges": [
+    { "id": "sql-join1", "from": "sql", "to": "join1", "kind": "control" },
+    { "id": "join1-idx", "from": "join1", "to": "idx", "kind": "request", "bidirectional": true },
+    { "id": "join1-join2", "from": "join1", "to": "join2", "kind": "data" },
+    { "id": "join2-idx", "from": "join2", "to": "idx", "kind": "request", "bidirectional": true },
+    { "id": "join2-dedup", "from": "join2", "to": "dedup", "kind": "data" },
+    { "id": "me-ali", "from": "me", "to": "ali", "kind": "data", "label": "FRIEND" },
+    { "id": "me-can", "from": "me", "to": "can", "kind": "data", "label": "FRIEND" },
+    { "id": "ali-deniz", "from": "ali", "to": "deniz", "kind": "data" },
+    { "id": "ali-ece", "from": "ali", "to": "ece", "kind": "data" },
+    { "id": "can-ece", "from": "can", "to": "ece", "kind": "data" },
+    { "id": "can-fatih", "from": "can", "to": "fatih", "kind": "data" }
+  ],
+  "steps": [
+    {
+      "id": "question",
+      "title": { "tr": "Aynı soru, iki model", "en": "One question, two models" },
+      "narration": {
+        "tr": "Soru: Ayşe'ye, arkadaşlarının arkadaşları arasından, ortak arkadaş sayısına göre sıralı öneri yap. Solda ilişkisel `friendships(user_id, friend_id)` tablosu, sağda aynı verinin düğüm ve kenar olarak hâli.",
+        "en": "Question: recommend people to Ayşe from among her friends' friends, ranked by mutual friends. On the left the relational `friendships(user_id, friend_id)` table, on the right the same data as nodes and edges."
+      },
+      "durationMs": 3200,
+      "inherit": false,
+      "highlight": { "nodes": ["sql", "me"], "edges": [] },
+      "nodeStates": { "sql": { "status": "active" }, "me": { "status": "active" } }
+    },
+    {
+      "id": "sql-hop1",
+      "title": { "tr": "SQL, 1. atlama: indeks araması", "en": "SQL, hop 1: index lookup" },
+      "narration": {
+        "tr": "JOIN 1, `user_id = Ayşe` için B-tree'de iner ve iki satır bulur: Ali ve Can. Her atlama bir indeks araması demektir; maliyet tablonun boyutuyla logaritmik büyür.",
+        "en": "JOIN 1 descends the B-tree for `user_id = Ayşe` and finds two rows: Ali and Can. Every hop is an index lookup; its cost grows logarithmically with table size."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["join1", "idx"], "edges": ["sql-join1", "join1-idx"] },
+      "nodeStates": { "join1": { "status": "busy", "counter": 2 }, "idx": { "status": "active", "badge": "Ayşe" } },
+      "packets": [
+        { "edge": "sql-join1", "shape": "diamond", "durationMs": 700 },
+        { "edge": "join1-idx", "shape": "dot", "startAt": 700, "durationMs": 700 },
+        { "edge": "join1-idx", "direction": "backward", "shape": "square", "label": "2", "startAt": 1500, "durationMs": 700 }
+      ]
+    },
+    {
+      "id": "sql-hop2",
+      "title": { "tr": "SQL, 2. atlama: her satır için yeniden", "en": "SQL, hop 2: again for every row" },
+      "narration": {
+        "tr": "JOIN 2, Ali ve Can için indekse ayrı ayrı gider. Ara sonuç 2'den 6 satıra çıkar: Ayşe'nin kendisi (iki kez), Deniz, Ece (iki kez) ve Fatih. 200 arkadaşlı biri için bu ara sonuç 40.000 satırdır.",
+        "en": "JOIN 2 goes to the index separately for Ali and Can. The intermediate result grows from 2 to 6 rows: Ayşe herself (twice), Deniz, Ece (twice) and Fatih. For someone with 200 friends this intermediate result is 40,000 rows."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["join1", "join2", "idx"], "edges": ["join1-join2", "join2-idx"] },
+      "nodeStates": { "join1": { "status": "success" }, "join2": { "status": "busy", "counter": 6 }, "idx": { "status": "active", "badge": "Ali, Can" } },
+      "packets": [
+        { "edge": "join1-join2", "shape": "square", "durationMs": 600, "repeat": 2, "repeatGapMs": 150 },
+        { "edge": "join2-idx", "shape": "dot", "startAt": 900, "durationMs": 600, "repeat": 2, "repeatGapMs": 200 },
+        { "edge": "join2-idx", "direction": "backward", "shape": "square", "startAt": 2000, "durationMs": 700, "repeat": 2, "repeatGapMs": 150 }
+      ]
+    },
+    {
+      "id": "sql-dedup",
+      "title": { "tr": "SQL: temizlik ve gruplama", "en": "SQL: clean-up and grouping" },
+      "narration": {
+        "tr": "Ara sonuçtan Ayşe'nin kendisi ve zaten arkadaşı olanlar (`NOT EXISTS`) atılır, kalanlar gruplanıp sayılır: Ece 2, Deniz 1, Fatih 1. Atlama sayısı arttıkça ara sonuç çarpılarak büyür ve bu temizlik pahalılaşır.",
+        "en": "Ayşe herself and existing friends (`NOT EXISTS`) are removed from the intermediate result and the rest are grouped and counted: Ece 2, Deniz 1, Fatih 1. As hops increase, the intermediate result multiplies and this clean-up becomes expensive."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["join2", "dedup"], "edges": ["join2-dedup"] },
+      "nodeStates": { "join2": { "status": "success" }, "dedup": { "status": "success", "counter": 3, "badge": "Ece: 2" }, "idx": { "status": "idle", "badge": "" } },
+      "packets": [{ "edge": "join2-dedup", "shape": "square", "durationMs": 600, "repeat": 6, "repeatGapMs": 100 }]
+    },
+    {
+      "id": "graph-start",
+      "title": { "tr": "Graf: başlangıç düğümü bir kez bulunur", "en": "Graph: the start node is found once" },
+      "narration": {
+        "tr": "Graf tarafında indeks yalnızca başlangıç için kullanılır: `MATCH (me:User {id: $id})` Ayşe düğümünü bulur. Bundan sonrası arama değil, işaretçi izlemektir.",
+        "en": "On the graph side an index is used only for the start: `MATCH (me:User {id: $id})` finds the Ayşe node. Everything after that is following pointers, not searching."
+      },
+      "durationMs": 2800,
+      "highlight": { "nodes": ["me"], "edges": [] },
+      "nodeStates": { "sql": { "status": "muted" }, "join1": { "status": "muted" }, "join2": { "status": "muted" }, "dedup": { "status": "muted" }, "idx": { "status": "muted" }, "me": { "status": "busy", "badge": "start" } }
+    },
+    {
+      "id": "graph-hop1",
+      "title": { "tr": "Graf, 1. atlama: kenarları izle", "en": "Graph, hop 1: follow the edges" },
+      "narration": {
+        "tr": "Ayşe düğümü kendi FRIEND kenarlarına doğrudan işaret eder (index-free adjacency). İki kenar izlenir, Ali ve Can'a varılır. Maliyet, Ayşe'nin kenar sayısıyla orantılıdır; tablonun toplam boyutu rol oynamaz.",
+        "en": "The Ayşe node points directly to its own FRIEND edges (index-free adjacency). Two edges are followed, reaching Ali and Can. The cost is proportional to Ayşe's edge count; the total size of the data plays no role."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["me", "ali", "can"], "edges": ["me-ali", "me-can"] },
+      "nodeStates": { "me": { "status": "success" }, "ali": { "status": "active" }, "can": { "status": "active" } },
+      "edgeStates": { "me-ali": { "status": "active" }, "me-can": { "status": "active" } },
+      "packets": [
+        { "edge": "me-ali", "shape": "dot", "durationMs": 900 },
+        { "edge": "me-can", "shape": "dot", "durationMs": 900 }
+      ]
+    },
+    {
+      "id": "graph-hop2",
+      "title": { "tr": "Graf, 2. atlama: ortak arkadaşlar birikir", "en": "Graph, hop 2: mutual friends accumulate" },
+      "narration": {
+        "tr": "Ali ve Can'ın kenarları izlenir: Deniz, Ece ve Fatih'e varılır. Ece'ye iki farklı yoldan ulaşılır; gezinti sırasında `count(DISTINCT f)` onun için 2'ye çıkar. Ziyaret edilen düğüm kümesi tekrarları baştan engeller.",
+        "en": "Ali's and Can's edges are followed to Deniz, Ece and Fatih. Ece is reached by two different paths; during the traversal `count(DISTINCT f)` rises to 2 for her. The visited-node set prevents repeats from the start."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["ali", "can", "deniz", "ece", "fatih"], "edges": ["ali-deniz", "ali-ece", "can-ece", "can-fatih"] },
+      "nodeStates": {
+        "ali": { "status": "success" },
+        "can": { "status": "success" },
+        "deniz": { "status": "active", "badge": "1" },
+        "ece": { "status": "active", "badge": "2", "counter": 2 },
+        "fatih": { "status": "active", "badge": "1" }
+      },
+      "edgeStates": { "ali-deniz": { "status": "active" }, "ali-ece": { "status": "active" }, "can-ece": { "status": "active" }, "can-fatih": { "status": "active" } },
+      "packets": [
+        { "edge": "ali-deniz", "shape": "dot", "durationMs": 900 },
+        { "edge": "ali-ece", "shape": "dot", "durationMs": 900 },
+        { "edge": "can-ece", "shape": "dot", "durationMs": 900, "startAt": 300 },
+        { "edge": "can-fatih", "shape": "dot", "durationMs": 900, "startAt": 300 }
+      ]
+    },
+    {
+      "id": "graph-result",
+      "title": { "tr": "Sonuç ve ödünleşim", "en": "Result and trade-off" },
+      "narration": {
+        "tr": "İki model aynı cevabı verir: önce Ece (2 ortak arkadaş), sonra Deniz ve Fatih. Sabit iki atlama ve iyi indekslerle ilişkisel veritabanı yeterlidir; derinlik değişken olduğunda (`*1..4`) ya da yol sorgularında graf gezintisi, gezilen bölgeyle orantılı maliyetiyle öne geçer.",
+        "en": "Both models give the same answer: Ece first (2 mutual friends), then Deniz and Fatih. With a fixed two hops and good indexes a relational database is enough; when depth varies (`*1..4`) or for path queries, graph traversal pulls ahead because its cost tracks only the region visited."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["ece", "dedup"], "edges": [] },
+      "nodeStates": { "ece": { "status": "success", "badge": "#1" }, "deniz": { "status": "success", "badge": "#2" }, "fatih": { "status": "success", "badge": "#3" }, "dedup": { "status": "success" } },
+      "annotations": [
+        { "id": "sql-cost", "x": 270, "y": 460, "text": { "tr": "maliyet ≈ ara sonuç (çarpılarak büyür)", "en": "cost ≈ intermediate rows (multiplies)" }, "tone": "warning", "target": "dedup" },
+        { "id": "graph-cost", "x": 760, "y": 580, "text": { "tr": "maliyet ≈ gezilen kenarlar", "en": "cost ≈ edges visited" }, "tone": "success" }
+      ]
+    }
+  ]
+}

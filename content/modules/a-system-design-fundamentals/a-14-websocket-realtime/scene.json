@@ -1,0 +1,234 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "a-14-websocket-pubsub-reconnect",
+  "title": {
+    "tr": "İki replika, Redis pub/sub ve yeniden bağlanma",
+    "en": "Two replicas, Redis pub/sub and reconnection"
+  },
+  "summary": {
+    "tr": "İki API replikasına bağlı istemcilere bir olayın Redis pub/sub üzerinden ulaşması; replika düşünce bağlantının kopması, backoff ile yeniden bağlanma ve sıra numarasıyla kaçan olayın telafisi.",
+    "en": "An event reaching clients connected to two API replicas via Redis pub/sub; the connection dropping when a replica dies, reconnecting with backoff and recovering the missed event by sequence number."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda iki tarayıcı istemcisi (A üstte, B altta), ortada bir load balancer, sağ ortada iki API replikası, en sağda Redis pub/sub ve üstte kalıcı olay günlüğü. A ve B WebSocket el sıkışmasıyla farklı replikalara bağlanır. A'nın mesajı replika 1'e gelir, Redis'e yayınlanır ve Redis onu iki replikaya dağıtır; replika 2 mesajı B'ye iletir. Sonra replika 2 düşer, B'nin bağlantısı kopar ve bu sırada yayınlanan ikinci olay B'ye ulaşamaz. B üstel geri çekilmeyle yeniden bağlanır, load balancer onu replika 1'e yönlendirir; B son gördüğü sıra numarasını gönderir, replika 1 kaçan olayı günlükten okuyup B'ye iletir. Son adımda heartbeat ile presence anahtarı yenilenir.",
+      "en": "Two browser clients on the left (A on top, B below), a load balancer in the middle, two API replicas to the right, Redis pub/sub on the far right and a durable event log at the top. A and B connect to different replicas through a WebSocket handshake. A's message reaches replica 1, is published to Redis and Redis fans it out to both replicas; replica 2 forwards it to B. Then replica 2 dies, B's connection drops and a second event published meanwhile cannot reach B. B reconnects with exponential backoff, the load balancer routes it to replica 1; B sends the last sequence number it saw and replica 1 reads the missed event from the log and delivers it. In the last step a heartbeat refreshes the presence key."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "ca", "kind": "browser", "label": { "tr": "İstemci A", "en": "Client A" }, "x": 100, "y": 160 },
+    { "id": "cb", "kind": "browser", "label": { "tr": "İstemci B", "en": "Client B" }, "x": 100, "y": 450 },
+    { "id": "lb", "kind": "lb", "label": { "tr": "Load balancer", "en": "Load balancer" }, "sublabel": "L7", "x": 320, "y": 305 },
+    { "id": "api1", "kind": "server", "label": { "tr": "API replika 1", "en": "API replica 1" }, "sublabel": "socket.io", "x": 570, "y": 190, "w": 160, "h": 76 },
+    { "id": "api2", "kind": "server", "label": { "tr": "API replika 2", "en": "API replica 2" }, "sublabel": "socket.io", "x": 570, "y": 450, "w": 160, "h": 76 },
+    { "id": "redis", "kind": "cache", "label": "Redis pub/sub", "sublabel": { "tr": "kanal: user:B", "en": "channel: user:B" }, "x": 860, "y": 320, "w": 150, "h": 76 },
+    { "id": "log", "kind": "db", "label": { "tr": "Olay günlüğü", "en": "Event log" }, "sublabel": { "tr": "seq ile kalıcı", "en": "durable, by seq" }, "x": 860, "y": 90, "w": 150, "h": 70 }
+  ],
+  "edges": [
+    { "id": "ca-lb", "from": "ca", "to": "lb", "kind": "request", "label": "WS" },
+    { "id": "cb-lb", "from": "cb", "to": "lb", "kind": "request", "label": "WS" },
+    { "id": "lb-api1", "from": "lb", "to": "api1", "kind": "request" },
+    { "id": "lb-api2", "from": "lb", "to": "api2", "kind": "request" },
+    { "id": "api1-redis", "from": "api1", "to": "redis", "kind": "event", "label": "PUBLISH", "curvature": 0.15 },
+    { "id": "redis-api1", "from": "redis", "to": "api1", "kind": "event", "style": "dashed", "curvature": 0.15 },
+    { "id": "redis-api2", "from": "redis", "to": "api2", "kind": "event", "style": "dashed", "label": "message" },
+    { "id": "api1-log", "from": "api1", "to": "log", "kind": "data", "label": { "tr": "seq > 17", "en": "seq > 17" } }
+  ],
+  "steps": [
+    {
+      "id": "handshake-a",
+      "title": { "tr": "A bağlanır: HTTP upgrade", "en": "A connects: HTTP upgrade" },
+      "narration": {
+        "tr": "İstemci A, Upgrade: websocket başlığıyla bir HTTP isteği gönderir. Load balancer isteği replika 1'e iletir, replika token'ı doğrular ve 101 Switching Protocols döner. Artık bu TCP bağlantısı iki yönlü bir kanaldır ve replika 1'in belleğine bağlıdır.",
+        "en": "Client A sends an HTTP request with an Upgrade: websocket header. The load balancer forwards it to replica 1, which verifies the token and answers 101 Switching Protocols. This TCP connection is now a two-way channel tied to replica 1's memory."
+      },
+      "durationMs": 3200,
+      "inherit": false,
+      "highlight": { "nodes": ["ca", "lb", "api1"], "edges": ["ca-lb", "lb-api1"] },
+      "nodeStates": { "api1": { "status": "active", "badge": "1 WS" }, "ca": { "status": "success" } },
+      "edgeStates": { "api1-log": { "visible": false }, "redis-api1": { "visible": false } },
+      "packets": [
+        { "edge": "ca-lb", "label": "Upgrade", "shape": "envelope", "durationMs": 900 },
+        { "edge": "lb-api1", "label": "Upgrade", "shape": "envelope", "startAt": 950, "durationMs": 800 },
+        { "edge": "lb-api1", "direction": "backward", "label": "101", "color": "success", "startAt": 1850, "durationMs": 600 },
+        { "edge": "ca-lb", "direction": "backward", "label": "101", "color": "success", "startAt": 2450, "durationMs": 600 }
+      ]
+    },
+    {
+      "id": "handshake-b",
+      "title": { "tr": "B başka replikaya bağlanır", "en": "B lands on another replica" },
+      "narration": {
+        "tr": "İstemci B de bağlanır ama load balancer onu replika 2'ye gönderir. İki kullanıcı aynı sohbette olsa da soketleri farklı süreçlerde yaşıyor: bağlantılar stateful'dur ve her replika yalnızca kendi soketlerini tanır.",
+        "en": "Client B connects too, but the load balancer sends it to replica 2. Even though both users are in the same chat, their sockets live in different processes: connections are stateful and each replica only knows its own sockets."
+      },
+      "durationMs": 2800,
+      "highlight": { "nodes": ["cb", "lb", "api2"], "edges": ["cb-lb", "lb-api2"] },
+      "nodeStates": { "api2": { "status": "active", "badge": "1 WS" }, "cb": { "status": "success" } },
+      "packets": [
+        { "edge": "cb-lb", "label": "Upgrade", "shape": "envelope", "durationMs": 800 },
+        { "edge": "lb-api2", "label": "Upgrade", "shape": "envelope", "startAt": 850, "durationMs": 700 },
+        { "edge": "lb-api2", "direction": "backward", "label": "101", "color": "success", "startAt": 1650, "durationMs": 500 },
+        { "edge": "cb-lb", "direction": "backward", "label": "101", "color": "success", "startAt": 2150, "durationMs": 500 }
+      ],
+      "annotations": [
+        { "id": "sticky-note", "x": 320, "y": 400, "text": { "tr": "Her soket tek bir replikaya bağlı", "en": "Each socket is pinned to one replica" }, "tone": "info", "target": "lb" }
+      ]
+    },
+    {
+      "id": "local-only",
+      "title": { "tr": "Sorun: yerel yayın yetmez", "en": "Problem: a local emit is not enough" },
+      "narration": {
+        "tr": "A, B'ye bir mesaj gönderir; mesaj A'nın soketi üzerinden replika 1'e gelir. Replika 1 mesajı yalnızca kendi belleğindeki soketlere iletebilir; B'nin soketi replika 2'de olduğu için adapter olmasaydı mesaj burada kalırdı.",
+        "en": "A sends a message to B; it arrives at replica 1 over A's socket. Replica 1 can only deliver to sockets in its own memory; B's socket is on replica 2, so without an adapter the message would stop here."
+      },
+      "durationMs": 2800,
+      "highlight": { "nodes": ["ca", "api1"], "edges": ["ca-lb", "lb-api1"] },
+      "nodeStates": { "api1": { "status": "busy", "badge": "seq 17" }, "api2": { "status": "idle" } },
+      "packets": [
+        { "edge": "ca-lb", "label": "msg", "shape": "envelope", "durationMs": 800 },
+        { "edge": "lb-api1", "label": "msg", "shape": "envelope", "startAt": 850, "durationMs": 800 }
+      ],
+      "annotations": [
+        { "id": "local-note", "x": 570, "y": 300, "text": { "tr": "B'nin soketi burada değil!", "en": "B's socket is not here!" }, "tone": "warning", "target": "api1" }
+      ]
+    },
+    {
+      "id": "publish",
+      "title": { "tr": "Olay günlüğe ve Redis'e", "en": "Event to the log and Redis" },
+      "narration": {
+        "tr": "Replika 1 olayı önce kalıcı günlüğe seq 17 ile yazar, sonra Redis adapter üzerinden PUBLISH eder. Günlük telafi için, pub/sub ise canlı dağıtım içindir; ikisi farklı işler yapar.",
+        "en": "Replica 1 first writes the event to the durable log as seq 17, then PUBLISHes it through the Redis adapter. The log is for recovery, pub/sub for live delivery; they do different jobs."
+      },
+      "durationMs": 2800,
+      "highlight": { "nodes": ["api1", "log", "redis"], "edges": ["api1-log", "api1-redis"] },
+      "nodeStates": { "log": { "status": "success", "badge": "seq 17" }, "redis": { "status": "active" } },
+      "edgeStates": { "api1-log": { "visible": true, "status": "active", "label": "INSERT seq 17" } },
+      "packets": [
+        { "edge": "api1-log", "label": "17", "shape": "square", "durationMs": 800 },
+        { "edge": "api1-redis", "label": "PUBLISH", "shape": "diamond", "startAt": 1000, "durationMs": 900 }
+      ]
+    },
+    {
+      "id": "fanout",
+      "title": { "tr": "Redis tüm replikalara dağıtır", "en": "Redis fans out to every replica" },
+      "narration": {
+        "tr": "Her replika aynı kanala abonedir. Redis mesajı iki replikaya da gönderir; replika 2 kendi belleğinde B'nin soketini bulur ve mesajı açık WebSocket üzerinden iter. B'ye HTTP isteği atmak gerekmedi: sunucu konuşmayı başlattı.",
+        "en": "Every replica subscribes to the same channel. Redis sends the message to both replicas; replica 2 finds B's socket in its memory and pushes the message over the open WebSocket. No HTTP request from B was needed: the server started the conversation."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["redis", "api1", "api2", "cb"], "edges": ["redis-api1", "redis-api2", "lb-api2", "cb-lb"] },
+      "nodeStates": { "redis": { "status": "success" }, "api2": { "status": "active" }, "cb": { "status": "success", "badge": "seq 17" } },
+      "edgeStates": { "redis-api1": { "visible": true }, "api1-log": { "status": "idle" } },
+      "packets": [
+        { "edge": "redis-api1", "label": "msg", "shape": "diamond", "durationMs": 800 },
+        { "edge": "redis-api2", "label": "msg", "shape": "diamond", "durationMs": 800 },
+        { "edge": "lb-api2", "direction": "backward", "label": "msg", "shape": "envelope", "startAt": 1000, "durationMs": 800 },
+        { "edge": "cb-lb", "direction": "backward", "label": "msg", "shape": "envelope", "startAt": 1900, "durationMs": 800 }
+      ]
+    },
+    {
+      "id": "replica-down",
+      "title": { "tr": "Replika 2 düşer, B kopar", "en": "Replica 2 dies, B disconnects" },
+      "narration": {
+        "tr": "Bir deploy replika 2'yi yeniden başlatır. Süreç ölünce bellekteki soketler de gider; B'nin bağlantısı kapanır. Canlılık kontrolü (ping/pong) olmasaydı bazı istemciler bunu dakikalarca fark etmeyebilirdi.",
+        "en": "A deploy restarts replica 2. When the process dies its in-memory sockets go with it; B's connection closes. Without a liveness check (ping/pong) some clients might not notice for minutes."
+      },
+      "durationMs": 2600,
+      "highlight": { "nodes": ["api2", "cb"], "edges": ["cb-lb", "lb-api2"] },
+      "nodeStates": {
+        "api2": { "status": "down", "badge": "restart" },
+        "cb": { "status": "error", "badge": "✗ close" }
+      },
+      "edgeStates": { "lb-api2": { "status": "error" }, "cb-lb": { "status": "error" } }
+    },
+    {
+      "id": "missed",
+      "title": { "tr": "Kaçan olay", "en": "The missed event" },
+      "narration": {
+        "tr": "Bu sırada A ikinci bir mesaj gönderir: günlüğe seq 18 olarak yazılır ve yayınlanır. Redis pub/sub mesajı saklamaz; o an dinleyen replikalara iletir ve unutur. B'nin soketi hiçbir replikada yok, mesaj B'ye ulaşmaz.",
+        "en": "Meanwhile A sends a second message: it is written to the log as seq 18 and published. Redis pub/sub does not store messages; it forwards to whoever is listening and forgets. B's socket is on no replica, so the message never reaches B."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["api1", "redis", "log"], "edges": ["api1-redis", "api1-log", "redis-api1"] },
+      "nodeStates": { "log": { "status": "success", "badge": "seq 18" }, "api1": { "status": "busy", "badge": "seq 18" } },
+      "edgeStates": { "api1-log": { "status": "active", "label": "INSERT seq 18" }, "redis-api2": { "status": "muted" } },
+      "packets": [
+        { "edge": "api1-log", "label": "18", "shape": "square", "durationMs": 700 },
+        { "edge": "api1-redis", "label": "PUBLISH", "shape": "diamond", "startAt": 800, "durationMs": 800 },
+        { "edge": "redis-api1", "label": "msg", "shape": "diamond", "startAt": 1700, "durationMs": 700 }
+      ],
+      "annotations": [
+        { "id": "missed-note", "x": 820, "y": 430, "text": { "tr": "pub/sub: ateşle ve unut", "en": "pub/sub: fire and forget" }, "tone": "danger", "target": "redis" }
+      ]
+    },
+    {
+      "id": "reconnect",
+      "title": { "tr": "Backoff ile yeniden bağlanma", "en": "Reconnect with backoff" },
+      "narration": {
+        "tr": "B 1 saniye artı rastgele bir payla bekler ve yeniden bağlanır; el sıkışmada son gördüğü sıra numarasını (lastSeq=17) gönderir. Load balancer onu sağlıklı olan replika 1'e yönlendirir. Jitter, binlerce istemcinin aynı anda saldırmasını önler.",
+        "en": "B waits 1 second plus a random jitter and reconnects, sending the last sequence it saw (lastSeq=17) in the handshake. The load balancer routes it to the healthy replica 1. Jitter stops thousands of clients from stampeding at once."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["cb", "lb", "api1"], "edges": ["cb-lb", "lb-api1"] },
+      "nodeStates": {
+        "cb": { "status": "warning", "badge": "lastSeq=17" },
+        "api1": { "status": "active", "badge": "2 WS" }
+      },
+      "edgeStates": { "cb-lb": { "status": "active" }, "lb-api2": { "status": "muted" }, "api1-log": { "status": "idle", "label": { "tr": "seq > 17", "en": "seq > 17" } } },
+      "packets": [
+        { "edge": "cb-lb", "label": "Upgrade", "shape": "envelope", "startAt": 600, "durationMs": 800 },
+        { "edge": "lb-api1", "label": "lastSeq=17", "shape": "envelope", "startAt": 1450, "durationMs": 900 }
+      ],
+      "annotations": [
+        { "id": "backoff-note", "x": 120, "y": 545, "text": { "tr": "1 s → 2 s → 4 s (+ jitter)", "en": "1 s → 2 s → 4 s (+ jitter)" }, "tone": "info", "target": "cb" }
+      ]
+    },
+    {
+      "id": "catch-up",
+      "title": { "tr": "Telafi: günlükten seq > 17", "en": "Catch-up: seq > 17 from the log" },
+      "narration": {
+        "tr": "Replika 1 günlükten 17'den büyük sıra numaralı olayları okur ve seq 18'i B'ye gönderir. B artık canlı akışa kayıpsız katıldı. Günlük geçmişi tutmuyor olsaydı B durumu REST ile baştan yüklemek zorunda kalırdı.",
+        "en": "Replica 1 reads events with sequence greater than 17 from the log and sends seq 18 to B. B has rejoined the live stream without loss. Had the log not kept history, B would have to reload its state over REST."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["api1", "log", "cb"], "edges": ["api1-log", "lb-api1", "cb-lb"] },
+      "nodeStates": { "cb": { "status": "success", "badge": "seq 18" }, "log": { "status": "active" } },
+      "edgeStates": { "api1-log": { "status": "active" } },
+      "packets": [
+        { "edge": "api1-log", "label": "SELECT", "shape": "square", "durationMs": 700 },
+        { "edge": "api1-log", "direction": "backward", "label": "18", "shape": "square", "color": "success", "startAt": 800, "durationMs": 700 },
+        { "edge": "lb-api1", "direction": "backward", "label": "seq 18", "shape": "envelope", "color": "success", "startAt": 1600, "durationMs": 700 },
+        { "edge": "cb-lb", "direction": "backward", "label": "seq 18", "shape": "envelope", "color": "success", "startAt": 2350, "durationMs": 700 }
+      ]
+    },
+    {
+      "id": "presence",
+      "title": { "tr": "Heartbeat ve presence", "en": "Heartbeat and presence" },
+      "narration": {
+        "tr": "Bağlantılar her 25 saniyede bir ping/pong ile canlılığını kanıtlar. Replika her heartbeat'te Redis'teki presence anahtarını kısa bir TTL ile yeniler; heartbeat kesilirse anahtar kendiliğinden düşer ve kullanıcı çevrimdışı görünür.",
+        "en": "Every 25 seconds connections prove liveness with ping/pong. On each heartbeat the replica refreshes the presence key in Redis with a short TTL; if heartbeats stop, the key expires and the user shows as offline."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["ca", "cb", "api1", "redis"], "edges": ["ca-lb", "cb-lb", "api1-redis"] },
+      "nodeStates": {
+        "redis": { "status": "success", "sublabel": "presence:B EX 60" },
+        "api2": { "status": "idle", "badge": "" },
+        "log": { "status": "idle" }
+      },
+      "edgeStates": { "api1-redis": { "label": "SET presence EX 60" }, "api1-log": { "status": "idle" }, "lb-api2": { "status": "idle" } },
+      "packets": [
+        { "edge": "ca-lb", "label": "ping", "shape": "dot", "durationMs": 600, "repeat": 2, "repeatGapMs": 700 },
+        { "edge": "cb-lb", "label": "ping", "shape": "dot", "durationMs": 600, "repeat": 2, "repeatGapMs": 700 },
+        { "edge": "api1-redis", "label": "SET", "shape": "diamond", "startAt": 1200, "durationMs": 800 }
+      ],
+      "annotations": [
+        { "id": "presence-note", "x": 860, "y": 420, "text": { "tr": "TTL dolarsa: çevrimdışı", "en": "TTL expires: offline" }, "tone": "info", "target": "redis" }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["websocket", "pubsub", "redis", "reconnect", "presence"]
+}

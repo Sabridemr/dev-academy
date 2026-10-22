@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 400" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Süreç durum makinesi</title>
+  <desc id="desc">Beş durum: new, ready, running, blocked ve terminated. New'den ready'ye kabul; ready'den running'e zamanlayıcı seçimi; running'den ready'ye zaman dilimi bitince preemption; running'den blocked'a I/O ya da kilit beklemesi; blocked'tan ready'ye olay tamamlanınca kesme; running'den terminated'a exit.</desc>
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+    <marker id="arr-p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-primary, #6366f1)"/>
+    </marker>
+  </defs>
+
+  <text x="480" y="30" text-anchor="middle" font-size="15" font-weight="600" fill="var(--da-fg, #0f172a)">Bir sürecin ömrü: beş durum, altı geçiş</text>
+
+  <!-- Durumlar -->
+  <g stroke-width="1.6">
+    <rect x="40" y="150" width="140" height="64" rx="32" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+    <rect x="260" y="150" width="160" height="64" rx="32" fill="var(--da-surface, #ffffff)" stroke="var(--da-primary, #6366f1)"/>
+    <rect x="540" y="150" width="160" height="64" rx="32" fill="var(--da-success, #10b981)" fill-opacity="0.14" stroke="var(--da-success, #10b981)"/>
+    <rect x="400" y="300" width="160" height="64" rx="32" fill="var(--da-accent, #f59e0b)" fill-opacity="0.14" stroke="var(--da-accent, #f59e0b)"/>
+    <rect x="780" y="150" width="150" height="64" rx="32" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+  </g>
+  <g font-size="15" font-weight="600" text-anchor="middle" fill="var(--da-fg, #0f172a)">
+    <text x="110" y="180">New</text>
+    <text x="340" y="180">Ready</text>
+    <text x="620" y="180">Running</text>
+    <text x="480" y="330">Blocked</text>
+    <text x="855" y="180">Terminated</text>
+  </g>
+  <g font-size="11" text-anchor="middle" fill="var(--da-muted, #64748b)">
+    <text x="110" y="198">fork/clone</text>
+    <text x="340" y="198">run queue'da CPU bekler</text>
+    <text x="620" y="198">çekirdekte yürütür</text>
+    <text x="480" y="348">CPU harcamaz (S / D)</text>
+    <text x="855" y="198">wait() gelene dek zombie</text>
+  </g>
+
+  <!-- Geçişler -->
+  <g fill="none" stroke="var(--da-muted, #64748b)" stroke-width="1.8" marker-end="url(#arr)">
+    <path d="M 180 182 L 256 182"/>
+    <path d="M 700 182 L 776 182"/>
+    <path d="M 600 214 C 590 260, 570 290, 548 300"/>
+    <path d="M 412 300 C 390 280, 360 250, 345 218"/>
+  </g>
+  <g fill="none" stroke="var(--da-primary, #6366f1)" stroke-width="1.8" marker-end="url(#arr-p)">
+    <path d="M 400 160 C 450 110, 510 110, 560 152"/>
+    <path d="M 570 214 C 520 245, 450 245, 400 214"/>
+  </g>
+  <g font-size="12" text-anchor="middle">
+    <text x="218" y="172" fill="var(--da-muted, #64748b)">kabul</text>
+    <text x="738" y="172" fill="var(--da-muted, #64748b)">exit()</text>
+    <text x="480" y="100" fill="var(--da-primary, #6366f1)">zamanlayıcı seçer (dispatch)</text>
+    <text x="480" y="258" fill="var(--da-primary, #6366f1)">zaman dilimi doldu (preemption)</text>
+    <text x="660" y="280" fill="var(--da-muted, #64748b)">read(), kilit, sleep</text>
+    <text x="300" y="280" fill="var(--da-muted, #64748b)">I/O bitti → kesme</text>
+  </g>
+
+  <text x="480" y="392" text-anchor="middle" font-size="12" fill="var(--da-muted, #64748b)">Blocked süreç doğrudan çalışmaya dönmez: önce ready kuyruğuna girer, CPU'yu zamanlayıcı verir.</text>
+</svg>

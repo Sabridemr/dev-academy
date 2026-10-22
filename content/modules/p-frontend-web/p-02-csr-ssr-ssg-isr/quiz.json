@@ -1,0 +1,110 @@
+{
+  "id": "p-02-csr-ssr-ssg-isr-quiz",
+  "title": { "tr": "Render Stratejileri Quiz", "en": "Rendering Strategies Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Herkese aynı gösterilen ve birkaç dakikada bir değişen bir ürün sayfası için en uygun strateji hangisidir?",
+        "en": "Which strategy best fits a product page that is the same for everyone and changes every few minutes?"
+      },
+      "options": [
+        { "id": "a", "text": "CSR" },
+        { "id": "b", "text": { "tr": "Her istekte SSR", "en": "SSR on every request" } },
+        { "id": "c", "text": { "tr": "ISR (kısa revalidate süresiyle)", "en": "ISR (with a short revalidate window)" } },
+        { "id": "d", "text": { "tr": "Yalnızca SSG, değişince elle build", "en": "Plain SSG, rebuilt by hand on change" } }
+      ],
+      "correct": ["c"],
+      "explanation": {
+        "tr": "ISR sayfayı statik hızda CDN'den sunar ve revalidate süresi dolunca arka planda yeniler. Her istekte SSR gereksiz sunucu yükü yaratır; saf SSG dakikalık değişiklikler için sürekli build ister; CSR ise SEO ve ilk boyama için zayıftır.",
+        "en": "ISR serves the page from the CDN at static speed and regenerates it in the background after the revalidate window. Per-request SSR adds needless server load; plain SSG needs constant rebuilds for minute-level changes; CSR is weak for SEO and first paint."
+      },
+      "difficulty": "medium",
+      "concepts": ["incremental-static-regeneration", "static-site-generation"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "Hydration nedir?",
+        "en": "What is hydration?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Sunucunun HTML'i sıkıştırıp göndermesi", "en": "The server compressing and sending HTML" } },
+        { "id": "b", "text": { "tr": "İstemcideki JS'in sunucudan gelen DOM'u bileşen ağacıyla eşleştirip olay dinleyicilerini bağlaması", "en": "Client JS matching the server-sent DOM with the component tree and attaching event listeners" } },
+        { "id": "c", "text": { "tr": "CDN önbelleğinin arka planda yenilenmesi", "en": "The CDN cache being refreshed in the background" } },
+        { "id": "d", "text": { "tr": "Build anında tüm sayfaların üretilmesi", "en": "Generating all pages at build time" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Sunucudan gelen HTML görünür ama etkileşimsizdir. Hydration, React'in aynı ağacı istemcide kurup mevcut DOM'a bağlanmasıdır. (c) ISR'ı, (d) SSG'yi tanımlar.",
+        "en": "Server HTML is visible but not interactive. Hydration is React building the same tree on the client and attaching to the existing DOM. (c) describes ISR, (d) SSG."
+      },
+      "difficulty": "easy",
+      "concepts": ["hydration"]
+    },
+    {
+      "id": "q3",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Hangileri hydration uyumsuzluğuna (mismatch) yol açabilir? (Birden fazla seçin)",
+        "en": "Which of these can cause a hydration mismatch? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Render içinde `new Date().toLocaleTimeString()` kullanmak", "en": "Using `new Date().toLocaleTimeString()` during render" } },
+        { "id": "b", "text": { "tr": "Render içinde `typeof window !== 'undefined'` ile farklı içerik döndürmek", "en": "Returning different content during render based on `typeof window !== 'undefined'`" } },
+        { "id": "c", "text": { "tr": "`<p>` içine `<div>` koymak", "en": "Nesting a `<div>` inside a `<p>`" } },
+        { "id": "d", "text": { "tr": "`localStorage`'ı `useEffect` içinde okumak", "en": "Reading `localStorage` inside `useEffect`" } }
+      ],
+      "correct": ["a", "b", "c"],
+      "explanation": {
+        "tr": "Zaman, ortam kontrolü ve geçersiz HTML iç içeliği sunucu ve istemci çıktısını farklılaştırır. useEffect hydration'dan sonra çalıştığı için tarayıcıya özgü değerleri okumanın doğru yeridir.",
+        "en": "Time, environment checks and invalid HTML nesting make server and client output diverge. useEffect runs after hydration, so it is the right place to read browser-only values."
+      },
+      "difficulty": "medium",
+      "concepts": ["hydration-mismatch"]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "SSR, CSR'a göre her zaman daha iyi bir TTFB verir.",
+        "en": "SSR always gives a better TTFB than CSR."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "Yanlış. CSR'ın kabuğu statik olduğu için CDN'den çok hızlı gelir. SSR'da sunucunun veri çekme ve render süresi TTFB'ye eklenir. SSR'ın kazancı FCP'dedir, TTFB'de değil.",
+        "en": "False. A CSR shell is static and comes very fast from the CDN. In SSR the server's data fetching and render time add to TTFB. SSR wins on FCP, not TTFB."
+      },
+      "difficulty": "medium",
+      "concepts": ["ttfb", "server-side-rendering", "client-side-rendering"]
+    },
+    {
+      "id": "q5",
+      "type": "single",
+      "prompt": {
+        "tr": "DevAcademy'nin ders sayfası neden tamamen statik (SSG/ISR HTML) sunulmaz?",
+        "en": "Why isn't DevAcademy's lesson page served as fully static (SSG/ISR) HTML?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Next.js ISR'ı desteklemediği için", "en": "Because Next.js does not support ISR" } },
+        { "id": "b", "text": { "tr": "Her yanıt istek başına üretilen bir CSP nonce'u ve dil çerezine bağlı içerik taşıdığı için", "en": "Because each response carries a per-request CSP nonce and content tied to the language cookie" } },
+        { "id": "c", "text": { "tr": "Ders içeriği her saniye değiştiği için", "en": "Because lesson content changes every second" } },
+        { "id": "d", "text": { "tr": "CDN kullanılmadığı için", "en": "Because no CDN is used" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Statik bir HTML'e istek başına değişen bir nonce gömülemez. Bu yüzden sayfa istek başına render edilir; ISR fikri veri katmanında, fetch'in revalidate: 60 seçeneğiyle uygulanır.",
+        "en": "A per-request nonce cannot be embedded in a static HTML file. So the page renders per request and the ISR idea is applied at the data layer with fetch's revalidate: 60."
+      },
+      "difficulty": "hard",
+      "concepts": ["incremental-static-regeneration", "server-side-rendering"]
+    }
+  ]
+}
