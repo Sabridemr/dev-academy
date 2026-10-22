@@ -99,6 +99,8 @@
       "a-system-design-fundamentals/a-11-consistent-hashing-sharding",
       "a-system-design-fundamentals/a-12-replication",
       "d-database-design/d-04-sql-vs-nosql",
+      "d-database-design/d-07-query-planner-explain",
+      "d-database-design/d-09-zero-downtime-migrations",
       "e-case-studies",
       "c-design-patterns/c-04-distributed-patterns",
       "j-system-design-notes/j-01-must-know-system-design-patterns",
