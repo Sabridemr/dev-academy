@@ -50,6 +50,15 @@ Pratikte büyük sistemler ikisini üst üste kullanır: önde çok hızlı bir 
 
 Aşağıdaki animasyon en temel algoritma olan round-robin'i, bir sunucunun çökmesini ve health check'in devreye girmesini gösterir. Oynat/duraklat ve adım ileri/geri kontrollerini kullanın.
 
+:::predict{id="lb-cokmus-sunucu"}
+Üç sunucudan S2 yanıt vermeyi bıraktı ama bir sonraki health check yoklaması henüz yapılmadı. Round-robin sırası S2'ye geldiğinde o istek ne olur? | S2 of three servers stops responding, but the next health check probe has not run yet. When the round-robin turn reaches S2, what happens to that request?
+- [ ] Yük dengeleyici S2'nin çöktüğünü anında anlar ve isteği S3'e verir | The load balancer notices instantly that S2 is down and sends the request to S3
+- [x] İstek S2'ye gider ve zaman aşımına uğrar | The request goes to S2 and times out
+- [ ] Tüm sunucular durdurulur ve istekler kuyrukta bekler | All servers are stopped and requests wait in a queue
+- [ ] Round-robin S2'yi atlar, çünkü S2'nin yükü yüksektir | Round-robin skips S2 because its load is high
+Açıklama: Round-robin sunucunun durumuna ya da yüküne bakmaz; yalnızca sıradakini seçer. Yük dengeleyici S2'nin öldüğünü ancak health check yoklamaları art arda başarısız olduğunda öğrenir ve sunucuyu havuzdan o zaman çıkarır. Arada kalan istekler zaman aşımına uğrar; yoklama aralığını ve eşiği kısaltmak bu pencereyi daraltır. | Round-robin ignores server state and load; it just picks the next one. The load balancer only learns that S2 is dead after consecutive health check probes fail, and removes it from the pool then. Requests in between time out; shorter probe intervals and thresholds narrow that window.
+:::
+
 :::animation{scene="scene.json"}
 Round-robin dağıtım, S2'nin çökmesi ve health check ile havuzdan çıkarılması.
 :::
@@ -156,6 +165,14 @@ Amazon'da bir ürün sayfası isteği önce **Route 53** (DNS) ile en yakın bö
 :::
 
 :::quiz{src="quiz.json"}
+:::
+
+:::resources
+- [Using nginx as HTTP load balancer](https://nginx.org/en/docs/http/load_balancing.html) — belge — round-robin, least_conn ve ip_hash yapılandırması
+- [Load Balancing in the Datacenter (Site Reliability Engineering, 20. bölüm)](https://sre.google/sre-book/load-balancing-datacenter/) — kitap — Google'ın sağlık durumu ve ağırlıklı dağıtım yaklaşımı
+- [Maglev: A Fast and Reliable Software Network Load Balancer](https://www.usenix.org/conference/nsdi16/technical-sessions/presentation/eisenbud) — bildiri — Google'ın L4 yazılım yük dengeleyicisi (NSDI 2016)
+- [What is Elastic Load Balancing?](https://docs.aws.amazon.com/elasticloadbalancing/latest/userguide/what-is-load-balancing.html) — belge — AWS ALB/NLB türleri ve health check
+- [Envoy: Load balancing](https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/upstream/load_balancing/load_balancing) — belge — servis ağında L7 dağıtım algoritmaları
 :::
 
 :::next{lesson="a-06-api-gateway"}

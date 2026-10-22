@@ -19,6 +19,7 @@
     "content:traces": "pnpm --filter @devacademy/shared run content:traces",
     "db:migrate": "pnpm --filter @devacademy/backend run prisma:migrate",
     "db:seed": "pnpm --filter @devacademy/backend run prisma:seed",
+    "content:export": "pnpm --filter @devacademy/backend run content:export",
     "format": "prettier --write \"**/*.{ts,tsx,js,mjs,cjs,json,md,yml,yaml}\" --ignore-path .gitignore --ignore-path .prettierignore",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,mjs,cjs,json,md,yml,yaml}\" --ignore-path .gitignore --ignore-path .prettierignore",
     "clean": "turbo run clean && rm -rf node_modules"

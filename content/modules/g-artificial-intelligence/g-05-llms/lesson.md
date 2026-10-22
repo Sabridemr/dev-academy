@@ -67,6 +67,15 @@ LLM'in iki yapısal zayıflığı vardır: bilgisi eğitim kesim tarihinde donar
 4. **Prompt**: sistem talimatı + bulunan parçalar + soru birleştirilir.
 5. **Üretim**: LLM yalnızca bağlama dayanarak cevaplar ve kaynak gösterir.
 
+:::predict{id="rag-gecikme"}
+Bir RAG isteğinde soru gömülür, vektör veritabanında aranır, prompt kurulur ve LLM yanıtı üretir. Toplam gecikmenin en büyük payı hangi adımdadır? | In a RAG request the question is embedded, searched in the vector database, a prompt is built and the LLM generates the answer. Which step takes the largest share of total latency?
+- [ ] Sorunun embedding'e çevrilmesi | Embedding the question
+- [ ] Vektör veritabanında en yakın parçaların aranması | Searching the vector database for the nearest chunks
+- [x] LLM'in yanıtı token token üretmesi | The LLM generating the answer token by token
+- [ ] Prompt'un birleştirilmesi | Assembling the prompt
+Açıklama: Embedding onlarca, HNSW araması ise yaklaşık on milisaniye sürer; LLM her tokenı sırayla ürettiği için yanıt saniyeler alır. Bu yüzden optimizasyon önce üretime odaklanır: daha kısa çıktı, akış (streaming), daha küçük model ya da tekrar eden sorular için anlamsal önbellek. | Embedding takes tens of milliseconds and the HNSW search about ten; because the LLM produces each token in turn, the answer takes seconds. That is why optimisation starts with generation: shorter outputs, streaming, a smaller model or a semantic cache for repeated questions.
+:::
+
 :::animation{scene="scene.json"}
 RAG akışı: dokümanlar önceden indekslenir; soru gömülür, vektör DB'den en yakın parçalar alınır, prompt kurulur, LLM kaynaklı yanıt üretir.
 :::
@@ -200,6 +209,15 @@ Amazon'un alışveriş asistanı **Rufus**, ürün kataloğu, müşteri yorumlar
 :::
 
 :::quiz{src="quiz.json"}
+:::
+
+:::resources
+- [Attention Is All You Need](https://arxiv.org/abs/1706.03762) — akademik makale — Transformer mimarisini tanıtan özgün çalışma
+- [Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks](https://arxiv.org/abs/2005.11401) — akademik makale — RAG'ı adlandıran çalışma (Lewis vd., 2020)
+- [Training language models to follow instructions with human feedback](https://arxiv.org/abs/2203.02155) — akademik makale — InstructGPT: SFT ve RLHF
+- [Let's build GPT: from scratch, in code, spelled out](https://www.youtube.com/watch?v=kCc8FmEb1nY) — video — Andrej Karpathy
+- [Hugging Face LLM Course: Byte-Pair Encoding tokenization](https://huggingface.co/learn/llm-course/chapter6/5) — belge — BPE adım adım
+- [OWASP Top 10 for LLM Applications](https://genai.owasp.org/llm-top-10/) — belge — prompt injection ve diğer LLM riskleri
 :::
 
 :::next{lesson="g-06-mlops"}
