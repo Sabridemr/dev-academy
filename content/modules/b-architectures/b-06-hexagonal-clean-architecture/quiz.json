@@ -1,0 +1,111 @@
+{
+  "id": "b-06-hexagonal-clean-architecture-quiz",
+  "title": { "tr": "Hexagonal ve Clean Architecture Quiz", "en": "Hexagonal and Clean Architecture Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "Hexagonal mimaride bir use case kaydı veritabanına yazdırırken hangi bağımlılık yönü doğrudur?",
+        "en": "In hexagonal architecture, when a use case has a record written to the database, which dependency direction is correct?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Use case, Prisma repository sınıfını import eder; akış ve bağımlılık aynı yöndedir", "en": "The use case imports the Prisma repository class; flow and dependency go the same way" } },
+        { "id": "b", "text": { "tr": "Use case kendi tanımladığı port'u çağırır; Prisma adaptörü o port'u import edip uygular", "en": "The use case calls a port it defines itself; the Prisma adapter imports and implements that port" } },
+        { "id": "c", "text": { "tr": "Use case ile Prisma adaptörü birbirini import eder; döngüsel bağımlılık DI ile çözülür", "en": "The use case and the Prisma adapter import each other; the cycle is resolved by DI" } },
+        { "id": "d", "text": { "tr": "Port, Prisma paketinin içinde tanımlanır; use case ve adaptör onu birlikte kullanır", "en": "The port is defined inside the Prisma package; the use case and the adapter both use it" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Çağrı use case'ten veritabanına doğru akar, ama bağımlılık tersine çevrilir: port çekirdekte, çekirdeğin dilinde tanımlanır ve dıştaki adaptör onu import eder. (a) klasik katmanlı yapıdır; (c) döngüsel bağımlılıktır; (d) port'un sahipliğini çerçeveye verir, bu da çekirdeği yeniden çerçeveye bağlar.",
+        "en": "The call flows from the use case towards the database, but the dependency is inverted: the port lives in the core, in the core's language, and the outer adapter imports it. (a) is the classic layered style; (c) is a dependency cycle; (d) gives ownership of the port to the framework, coupling the core to it again."
+      },
+      "difficulty": "easy",
+      "concepts": ["dependency-rule", "dependency-inversion"]
+    },
+    {
+      "id": "q2",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Aşağıdakilerden hangileri sürücü (driving) adaptördür? (Birden fazla seçin)",
+        "en": "Which of the following are driving adapters? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Use case'i HTTP isteğiyle tetikleyen NestJS controller", "en": "A NestJS controller that triggers the use case from an HTTP request" } },
+        { "id": "b", "text": { "tr": "Use case'in çağırdığı PrismaQuizRepository", "en": "The PrismaQuizRepository called by the use case" } },
+        { "id": "c", "text": { "tr": "Kuyruktan gelen mesajla aynı use case'i çağıran tüketici", "en": "A consumer that calls the same use case from a queue message" } },
+        { "id": "d", "text": { "tr": "Use case'i doğrudan çağıran bir Jest testi", "en": "A Jest test that calls the use case directly" } }
+      ],
+      "correct": ["a", "c", "d"],
+      "explanation": {
+        "tr": "Sürücü adaptörler çekirdeği dışarıdan tetikler: controller, kuyruk tüketicisi, CLI ve test. PrismaQuizRepository ise çekirdeğin ihtiyacını karşılayan, çekirdek tarafından (port üzerinden) çağrılan sürülen adaptördür.",
+        "en": "Driving adapters trigger the core from outside: controllers, queue consumers, CLIs and tests. PrismaQuizRepository is a driven adapter that serves the core's need and is called by the core (through a port)."
+      },
+      "difficulty": "easy",
+      "concepts": ["driving-adapter", "driven-adapter"]
+    },
+    {
+      "id": "q3",
+      "type": "single",
+      "prompt": {
+        "tr": "Bir ekip Prisma istemcisini `interface Db { findFirst(where: unknown): Promise<unknown> }` arayüzüyle sarıp buna 'port' diyor. Sorun nedir?",
+        "en": "A team wraps the Prisma client in `interface Db { findFirst(where: unknown): Promise<unknown> }` and calls it a 'port'. What is the problem?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Sorun yok; her arayüz bir port'tur", "en": "No problem; every interface is a port" } },
+        { "id": "b", "text": { "tr": "Arayüz ORM'in şeklini taşıdığı için çekirdek hâlâ sorgu ayrıntılarını bilir; port çekirdeğin ihtiyacını çekirdeğin diliyle anlatmalıdır", "en": "The interface carries the ORM's shape, so the core still knows query details; a port should express the core's need in the core's language" } },
+        { "id": "c", "text": { "tr": "TypeScript arayüzleri çalışma zamanında yok olduğu için DI yapılamaz", "en": "TypeScript interfaces vanish at runtime, so DI is impossible" } },
+        { "id": "d", "text": { "tr": "Port'lar yalnızca sürücü taraf için tanımlanabilir", "en": "Ports can only be defined for the driving side" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "`findFirst(where)` imzası ORM'in kendisidir; use case hâlâ `where` cümlesi kurar ve testte sahte, ORM'i taklit etmek zorunda kalır. Doğru port `findPublished(quizId)` gibi bir iş ihtiyacıdır. Arayüzlerin çalışma zamanında silinmesi (c) bir enjeksiyon anahtarıyla (Symbol) çözülür; port'lar sürülen tarafta da vardır (d).",
+        "en": "A `findFirst(where)` signature is the ORM itself; the use case still builds a `where` clause and the test fake must imitate the ORM. A proper port is a business need such as `findPublished(quizId)`. Interfaces being erased at runtime (c) is solved with an injection token (Symbol); ports exist on the driven side too (d)."
+      },
+      "difficulty": "medium",
+      "concepts": ["ports-and-adapters"]
+    },
+    {
+      "id": "q4",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Use case testleri bellek içi sahte repository ile geçiyorsa, Prisma adaptörü için ayrıca bir test yazmaya gerek yoktur.",
+        "en": "If the use case tests pass with an in-memory fake repository, there is no need to write a separate test for the Prisma adapter."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "Sahte, gerçek adaptörün davranışını kanıtlamaz: eşleme hataları, kısıt ihlalleri ya da yanlış sorgu sahtede görünmez. Aynı sözleşme testi hem sahteye hem de gerçek veritabanına bağlı Prisma adaptörüne karşı çalıştırılır; böylece sahte 'yalan söyleyemez'.",
+        "en": "The fake does not prove the real adapter's behaviour: mapping bugs, constraint violations or a wrong query are invisible in the fake. The same contract test is run against both the fake and the Prisma adapter backed by a real database, so the fake cannot 'lie'."
+      },
+      "difficulty": "medium",
+      "concepts": ["test-double", "contract-test"]
+    },
+    {
+      "id": "q5",
+      "type": "order",
+      "prompt": {
+        "tr": "Hexagonal bir serviste `POST /quizzes/:id/attempts` isteğinin izlediği yolu sıraya koyun.",
+        "en": "Order the path a `POST /quizzes/:id/attempts` request follows in a hexagonal service."
+      },
+      "options": [
+        { "id": "controller", "text": { "tr": "Controller isteği doğrulayıp komuta çevirir", "en": "The controller validates the request and turns it into a command" } },
+        { "id": "inport", "text": { "tr": "Giriş port'u üzerinden use case çağrılır", "en": "The use case is called through the input port" } },
+        { "id": "outport", "text": { "tr": "Use case quiz'i çıkış port'undan ister", "en": "The use case asks the output port for the quiz" } },
+        { "id": "adapter", "text": { "tr": "Prisma adaptörü SQL'i çalıştırıp satırı domain nesnesine çevirir", "en": "The Prisma adapter runs the SQL and maps the row to a domain object" } },
+        { "id": "domain", "text": { "tr": "Domain kuralı cevapları puanlar", "en": "The domain rule grades the answers" } }
+      ],
+      "correct": ["controller", "inport", "outport", "adapter", "domain"],
+      "explanation": {
+        "tr": "Dışarıdan içeri: sürücü adaptör → giriş port'u → use case. Use case puanlamak için önce quiz'e ihtiyaç duyar, onu çıkış port'u ve sürülen adaptör üzerinden alır; ardından saf domain kuralı çalışır. Sonuç aynı yoldan geri döner ve controller onu HTTP yanıtına çevirir.",
+        "en": "Outside in: driving adapter → input port → use case. To grade, the use case first needs the quiz, which it fetches through the output port and the driven adapter; then the pure domain rule runs. The result returns the same way and the controller turns it into an HTTP response."
+      },
+      "difficulty": "medium",
+      "concepts": ["use-case", "ports-and-adapters"]
+    }
+  ]
+}
