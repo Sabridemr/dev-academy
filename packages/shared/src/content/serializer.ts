@@ -266,6 +266,9 @@ export function serializeBlock(block: LessonBlock, warn: Warn = () => {}): strin
         where,
         warn,
       );
+    case 'exercise':
+      // Seed'in gömdüğü `exercise`/`solution` alanları `<ad>.exercise.json` dosyasında durur
+      return directive('exercise', [['src', block.src]], lt(block.instructions), where, warn);
     case 'next':
       return directive('next', [['lesson', block.lesson]], lt(block.note), where, warn);
     case 'predict': {
@@ -355,7 +358,8 @@ function serializeEnglish(
 /**
  * Ders belgesini `lesson.md` (+ İngilizce metin varsa `lesson.en.md`) metnine çevirir.
  * Blok `id`'leri yazılmaz (ayrıştırıcı tür sırasıyla üretir); seed'in doldurduğu alanlar
- * (`svg`, `sceneId`, `quizId`, `trace`, raster `width/height`) dosya biçiminde yer almaz.
+ * (`svg`, `sceneId`, `quizId`, `trace`, `exercise`/`solution`, raster `width/height`) dosya biçiminde
+ * yer almaz.
  */
 export function serializeLesson(doc: SerializeLessonInput): SerializedLesson {
   const warnings: string[] = [];
