@@ -13,7 +13,7 @@ durationMinutes: 30
 level: advanced
 prerequisites: [q-01-time-and-ordering, a-12-replication, d-05-read-write-scaling]
 tags: [distributed-systems, consistency, replication, dynamodb, cap]
-concepts: [consistency-model, linearizability, sequential-consistency, causal-consistency, eventual-consistency, read-your-writes, monotonic-reads, session-guarantees, pacelc]
+concepts: [consistency-models, linearizability, sequential-consistency, causal-consistency, eventual-consistency, read-your-writes, monotonic-reads, session-guarantees, pacelc]
 ---
 
 ## Kavram: "en son değer" ne demek?

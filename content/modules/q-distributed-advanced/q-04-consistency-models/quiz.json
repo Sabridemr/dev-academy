@@ -64,7 +64,7 @@
         "en": "Linearizable adds real-time order on top of everything sequential guarantees. Sequential gives a single order for everyone; causal orders only causally related operations; eventual only promises eventual convergence."
       },
       "difficulty": "medium",
-      "concepts": ["consistency-model", "causal-consistency", "sequential-consistency"]
+      "concepts": ["consistency-models", "causal-consistency", "sequential-consistency"]
     },
     {
       "id": "q4",

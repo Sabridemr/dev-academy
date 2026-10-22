@@ -86,7 +86,7 @@
         "en": "The outbox solves the dual-write problem with a single database's ACID guarantee: events are not lost. But if the relay crashes after publishing and before marking the row, the event goes out again; delivery is at-least-once. Exactly-once effect comes from consumer idempotency."
       },
       "difficulty": "medium",
-      "concepts": ["transactional-outbox", "idempotency-key"]
+      "concepts": ["outbox-pattern", "idempotency-key"]
     },
     {
       "id": "q5",

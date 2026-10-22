@@ -13,7 +13,7 @@ durationMinutes: 35
 level: advanced
 prerequisites: [q-04-consistency-models, j-01-must-know-system-design-patterns]
 tags: [distributed-systems, transactions, 2pc, saga, outbox, idempotency, microservices]
-concepts: [two-phase-commit, coordinator-failure, in-doubt-transaction, saga-pattern, compensating-transaction, transactional-outbox, idempotency-key, tcc]
+concepts: [two-phase-commit, coordinator-failure, in-doubt-transaction, saga-pattern, compensating-transaction, outbox-pattern, idempotency-key, tcc]
 ---
 
 ## Kavram: tek veritabanının konforu bittiğinde
