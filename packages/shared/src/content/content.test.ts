@@ -1,3 +1,5 @@
+import { readdirSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { parseLessonMarkdown, parseDirectiveAttributes, lessonPlainText } from './parser';
 import {
@@ -9,6 +11,7 @@ import {
 } from './schema';
 import { buildSearchText } from './search-text';
 import { CURRICULUM, allLessons, findLesson, nextLessonOf, TOTAL_LESSON_COUNT } from './curriculum';
+import { findContentRoot } from '../node/content-loader';
 
 const SAMPLE = `---
 id: a-05-load-balancing
@@ -293,8 +296,16 @@ describe('Alıştırma şeması', () => {
 });
 
 describe('Müfredat', () => {
-  it('15 modül ve benzersiz ders id’leri', () => {
-    expect(CURRICULUM).toHaveLength(15);
+  // Sabit sayı/id yerine türetilmiş beklentiler: yeni modül eklendiğinde bu dosyaya dokunmak gerekmez.
+  it('her içerik modülü klasörü müfredatta, modüller order sırasında ve ders id’leri benzersiz', () => {
+    const moduleDirs = readdirSync(join(findContentRoot(), 'modules'), { withFileTypes: true })
+      .filter((d) => d.isDirectory())
+      .map((d) => d.name)
+      .sort();
+    expect(CURRICULUM.map((m) => m.id).sort()).toEqual(moduleDirs);
+    const orders = CURRICULUM.map((m) => m.order);
+    expect(orders).toEqual([...orders].sort((a, b) => a - b));
+    expect(new Set(orders).size).toBe(orders.length);
     const ids = allLessons().map((x) => x.lesson.id);
     expect(new Set(ids).size).toBe(ids.length);
     expect(TOTAL_LESSON_COUNT).toBe(ids.length);
@@ -302,11 +313,21 @@ describe('Müfredat', () => {
   it('ders arama ve sonraki ders', () => {
     expect(findLesson('a-05-load-balancing')?.module.code).toBe('A');
     expect(nextLessonOf('a-13-observability-12-factor')?.id).toBe('b-01-monolith-to-microservices');
-    // Modül sınırını aşar: G'nin son dersinden H'nin ilk dersine
-    expect(nextLessonOf('g-08-nn-playground')?.id).toBe('h-01-linux-notes');
-    expect(nextLessonOf('j-11-odunlesimler-mulakat-ve-ozet')?.id).toBe('k-01-python-nasil-calisir');
-    expect(nextLessonOf('k-19-testler-ve-mini-proje')?.id).toBe('l-01-big-o-complexity');
-    expect(nextLessonOf('n-07-threat-modeling')?.id).toBe('q-01-time-and-ordering');
-    expect(nextLessonOf('q-06-distributed-transactions')).toBeUndefined();
+    // Modül içinde her ders bir sonrakine bağlanır
+    for (const m of CURRICULUM) {
+      expect(m.lessons.length).toBeGreaterThan(0);
+      for (let i = 0; i < m.lessons.length - 1; i++) {
+        expect(nextLessonOf(m.lessons[i].id)?.id).toBe(m.lessons[i + 1].id);
+      }
+    }
+    // Modül sınırını aşar: her modülün son dersinden sonraki modülün ilk dersine
+    for (let i = 0; i < CURRICULUM.length - 1; i++) {
+      const prev = CURRICULUM[i].lessons;
+      expect(nextLessonOf(prev[prev.length - 1].id)?.id).toBe(CURRICULUM[i + 1].lessons[0].id);
+    }
+    // Müfredatın son dersinden sonra ders yok
+    const lastLessons = CURRICULUM[CURRICULUM.length - 1].lessons;
+    expect(nextLessonOf(lastLessons[lastLessons.length - 1].id)).toBeUndefined();
+    expect(nextLessonOf('olmayan-ders')).toBeUndefined();
   });
 });
