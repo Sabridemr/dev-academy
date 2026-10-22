@@ -48,6 +48,10 @@ import type { LocalizedString } from '../i18n';
  *   İsteğe bağlı alt yazı
  *   :::
  *
+ *   :::exercise{src="toplam.exercise.json"}
+ *   İsteğe bağlı yönerge
+ *   :::
+ *
  *   :::next{lesson="a-02-latency-throughput"}
  *   :::
  *
@@ -478,6 +482,15 @@ export function parseLessonMarkdown(markdown: string, options: ParseLessonOption
           src: requireAttr(attrs, 'src', name, sourcePath, seg.line),
           title: toLocalized(attrs.title),
           caption: seg.body ? toLocalized(seg.body) : undefined,
+        });
+        break;
+      case 'exercise':
+        blocks.push({
+          id: nextId('exercise'),
+          order,
+          type: 'exercise',
+          src: requireAttr(attrs, 'src', name, sourcePath, seg.line),
+          instructions: seg.body ? toLocalized(seg.body) : undefined,
         });
         break;
       case 'next':

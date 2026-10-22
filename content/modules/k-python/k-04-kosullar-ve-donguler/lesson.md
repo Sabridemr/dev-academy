@@ -383,6 +383,9 @@ while True:
 - İç içe döngülerde tur sayıları çarpılır; `break` yalnızca en içteki döngüyü bitirir.
 - Off-by-one hatalarına ve dolaşırken listeyi değiştirmeye dikkat et; yeni liste oluştur ya da kopya üzerinde dolaş.
 
+:::exercise{src="collatz.exercise.json"}
+:::
+
 :::quiz{src="quiz.json"}
 :::
 

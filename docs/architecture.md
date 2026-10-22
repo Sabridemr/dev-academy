@@ -50,7 +50,7 @@ flowchart LR
 | ------------- | --------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | auth          | `/auth/register`, `/login`, `/oauth`, `/refresh`, `/logout`, `/change-password`, `/forgot`, `/reset`, `/verify-email` | argon2id; refresh token rotasyonu ve yeniden kullanım tespiti; Google/Apple ID token doğrulama; tek kullanımlık, özeti saklanan sıfırlama/doğrulama token'ları |
 | users         | `/users/me` (GET/PATCH/DELETE), `/users/me/push-tokens` (POST, DELETE `/:token`)                                      | profil, öğrenme yolu, hatırlatma saati, doğrulanmış saat dilimi; hesabı ve kişisel verileri kalıcı silme (KVKK); push token başka hesaba devredilemez          |
-| content       | `/paths`, `/modules`, `/lessons`, `/scenes`                                                                           | yalnızca yayınlanmış sürümler; Redis cache + ETag; token varsa ilerleme eklenir                                                                                |
+| content       | `/paths`, `/modules`, `/lessons`, `/scenes`, `/lessons/:id/exercises/:exerciseId/solution`                            | yalnızca yayınlanmış sürümler; Redis cache + ETag; token varsa ilerleme eklenir; alıştırma çözümleri ders yanıtından çıkarılır, ayrı uç noktadan (oturumla)    |
 | quizzes       | `/quizzes/by-lesson/:id`, `/quizzes/:id/attempts`                                                                     | doğru cevaplar istemciye gönderilmez; yanlışlar SM-2 kartına dönüşür                                                                                           |
 | progress      | `/progress`, `/summary`, `/lessons/:id`, `/reviews`, `/badges`, `/interactive`, `/activity`, `/xp`                    | seri (dondurma hakkıyla), XP/seviye, günlük hedef ve aktivite, rozet, tekrar takvimi; WebSocket bildirimleri (`xp.updated`, `certificate.issued`)              |
 | certificates  | `/certificates`, `/certificates/public/:publicId`                                                                     | modül/yol tamamlanınca otomatik üretilir; herkese açık doğrulama sayfası                                                                                       |
@@ -111,6 +111,16 @@ erDiagram
 1. Kullanıcı bir modülü indirir: `GET /offline/modules/:id` (ETag ile).
 2. Dersler, sahneler ve quizler SQLite’a yazılır (modül başına ETag ve `synced_at` dahil); son senkron zamanı expo-sqlite/kv-store’da.
 3. Çevrimdışıyken içerik SQLite’tan okunur; ilerleme güncellemeleri kuyruğa alınır, bağlantı gelince gönderilir.
+
+### Kodlama alıştırmaları (istemci tarafı Python)
+
+1. `:::exercise` bloğu seed ile alıştırmayı (çözümsüz) ve çözümü (ayrı alan) ders sürümüne yazar; ders API'si
+   çözümü çıkarır.
+2. Web, ilk "Çalıştır"da bir modül Web Worker'ı kurar; worker Pyodide'ı (WebAssembly CPython) aynı origin'deki
+   `/pyodide/`'dan yükler. Kod + testler worker'da çalışır, stdout/stderr ve başarısız test satırı döner.
+   **Kod sunucuya gönderilmez.** `timeoutMs` aşılırsa worker `terminate` edilip yeniden kurulur.
+3. Testler geçince `POST /progress/interactive` (`code-exercise`) kaydı atılır. Çözüm, 3 başarısız denemeden sonra
+   `GET /lessons/:id/exercises/:exerciseId/solution` ile istenir. Mobilde Pyodide yok: görev + "Web'de çöz".
 
 ## Ölçekleme notları
 

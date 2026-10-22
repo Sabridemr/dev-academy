@@ -149,6 +149,26 @@ describe('serializeLesson — zor durumlar', () => {
     expect(doc.blocks).toEqual(blocks);
   });
 
+  it('alıştırma: src ve yönerge gövdesi yazılır, seed alanları (exercise/solution) yazılmaz', () => {
+    const block: LessonBlock = {
+      id: 'exercise-1',
+      order: 0,
+      type: 'exercise',
+      src: 'collatz.exercise.json',
+      instructions: { tr: 'Fonksiyonu tamamlayın.', en: 'Complete the function.' },
+    };
+    const out = serializeLesson({
+      meta: { ...META, status: 'published' },
+      blocks: [{ ...block, solution: 'def f():\n    return 1\n' }],
+    });
+    expect(out.markdown).toContain(
+      ':::exercise{src="collatz.exercise.json"}\nFonksiyonu tamamlayın.|Complete the function.\n:::',
+    );
+    expect(out.markdown).not.toContain('return 1');
+    expect(parseLessonMarkdown(out.markdown).blocks).toEqual([block]);
+    expect(out.warnings).toEqual([]);
+  });
+
   it('taşınamayan bilgi uyarı olarak raporlanır', () => {
     const out = serializeLesson({
       meta: { ...META, status: 'published' },

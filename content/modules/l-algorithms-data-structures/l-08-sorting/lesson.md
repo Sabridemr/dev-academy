@@ -142,6 +142,9 @@ Pivotu her zaman ilk ya da son eleman seçen bir quick sort, zaten sıralı ya d
 - Çoğu problemde önce `sorted()` ile O(n log n) sıralayıp sonra tek geçişte çözmek, daha karmaşık bir O(n) fikrinden daha hızlı doğru sonuç verir.
 :::
 
+:::exercise{src="merge-sort.exercise.json"}
+:::
+
 :::quiz{src="quiz.json"}
 :::
 

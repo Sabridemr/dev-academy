@@ -350,6 +350,9 @@ print(sorted(sehirler))  # ['Ankara', 'İzmir']
   `copy.deepcopy`.
 - İç içe liste oluştururken `*` değil comprehension kullan.
 
+:::exercise{src="tekillestir.exercise.json"}
+:::
+
 :::quiz{src="quiz.json"}
 :::
 
