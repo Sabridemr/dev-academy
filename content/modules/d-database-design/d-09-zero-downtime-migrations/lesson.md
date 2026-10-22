@@ -13,7 +13,7 @@ durationMinutes: 35
 level: advanced
 tags: [database, migration, postgresql, prisma, deployment, zero-downtime]
 prerequisites: [d-03-transactions-acid-isolation, d-07-query-planner-explain]
-concepts: [expand-contract, backward-compatible-migration, rolling-deploy, lock-queue, lock-timeout, create-index-concurrently, not-null-constraint, batched-backfill, migration-drift, roll-forward]
+concepts: [expand-contract, backward-compatible-migration, rolling-deployment, lock-queue, lock-timeout, create-index-concurrently, not-null-constraint, batched-backfill, migration-drift, roll-forward]
 ---
 
 ## Kavram: şema ile kod aynı anda değişmez
