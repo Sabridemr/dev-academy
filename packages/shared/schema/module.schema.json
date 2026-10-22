@@ -72,6 +72,17 @@
         "color": {
           "type": "string",
           "default": "#6366f1"
+        },
+        "group": {
+          "type": "string",
+          "enum": [
+            "system-design",
+            "software",
+            "infrastructure",
+            "ai",
+            "programming"
+          ],
+          "default": "system-design"
         }
       },
       "required": [
