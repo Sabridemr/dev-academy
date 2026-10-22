@@ -117,6 +117,15 @@ parametresini unutursan çağrıda `TypeError: ... takes 0 positional arguments 
 Python nesneyi otomatik olarak ilk argüman olarak verir ama metot onu kabul etmez.
 :::
 
+Simülasyondaki adımları bileşen bileşen bir daha izleyelim: sınıf çağrısı önce `__new__`'e, sonra `__init__`'e
+gider; ardından nitelik aramasının örnekten sınıfa nasıl ilerlediğini görürsün. Bu son adım, bir sonraki bölümün
+konusu olan bound method'un nereden geldiğini de açıklıyor.
+
+:::animation{scene="nesnenin-dogusu.scene.json"}
+`__new__`'in ürettiği boş `__dict__`'in `__init__` atamalarıyla nasıl dolduğuna ve `ada.yatir` aramasının örnekte
+"MISS" alıp sınıfta bulunduğuna dikkat et.
+:::
+
 ## Metotlar ve bound method
 
 Simülasyonda `ada.yatir(25)` ile `Hesap.yatir(linus, 10)` aynı şekilde çalıştı. Bunun nedeni şudur: metot,
@@ -140,6 +149,13 @@ print(Hesap.yatir(ada, 5))       # 110  → uzun yazım
 
 Bu sayede bound method'ları başka fonksiyonlara geri çağırma (callback) olarak verebilirsin; nesneyi
 "hatırlarlar".
+
+Şimdiye kadar gördüklerini tek resimde topla: metotlar ve sınıf nitelikleri sınıf nesnesinde, örneğe ait veriler
+her örneğin kendi `__dict__`'inde durur.
+
+:::diagram{src="sinif-ve-ornekler.svg" alt="Hesap sınıf nesnesinde tur niteliği ve metotlar, altında kendi __dict__ sözlükleri olan iki örnek; örnekler __class__ ile sınıfı, ada ve linus isimleri örnekleri gösterir.|The Hesap class object holds the tur attribute and the methods; below it two instances with their own __dict__; instances point to the class via __class__ and the names ada and linus point to the instances."}
+Okuma örnekten sınıfa doğru arar, atama ise her zaman örneğin kendisine yazar.
+:::
 
 ## Örnek nitelikleri ve sınıf nitelikleri
 
@@ -322,6 +338,29 @@ yaşıyor**. Yine de dikkat: `sepet.kalemler.append(...)` ile kuralı dışarıd
 Sınıfın tek ve net bir sorumluluğu olsun (adı bunu söylesin). Tüm nitelikleri `__init__`'te kur. Nesneyi
 geçersiz duruma sokan girdiyi metotlarda reddet. Yalnızca veri taşıyan, hiç davranışı olmayan bir sınıf
 yazıyorsan `dataclass` (K-14) daha uygun olabilir; durumu olmayan tek bir işlem içinse düz bir fonksiyon yeterlidir.
+:::
+
+:::realworld{company="Netflix"}
+Netflix, veri bilimcilerinin makine öğrenmesi iş akışlarını yazması için **Metaflow** adlı bir Python kütüphanesi
+geliştirdi ve açık kaynak olarak yayınladı. Metaflow'da bir iş akışı tam olarak bu dersteki araçlarla tanımlanır:
+`FlowSpec`'ten türeyen bir **sınıf** yazarsın, akışın her adımı `@step` ile işaretlenmiş bir **metottur** ve
+adımlar arasında taşınacak veri `self` üzerine atanan **örnek nitelikleridir**.
+
+```python
+class EgitimAkisi(FlowSpec):
+    @step
+    def start(self):
+        self.veri = yukle()        # bir sonraki adıma taşınır
+        self.next(self.egit)
+```
+
+Burada `self.veri = ...` satırı yalnızca nesnenin `__dict__`'ine yazmakla kalmaz; Metaflow adım bittiğinde
+örneğin niteliklerini "artifact" olarak saklar ve sonraki adımda yeniden yükler. Böylece bir adım başka bir
+makinede çalışsa bile `self.veri` oradadır ve geçmiş çalıştırmaların verisi sonradan incelenebilir.
+
+Çıkarılacak ders: "veri `self`'te, davranış metotlarda" fikri yalnızca küçük örneklerde değil, büyük bir
+şirketin üretim araçlarında da kullanıcıya sunulan arayüzün kendisidir. Nitelik atamasının nesneye yazıldığını
+bilmek, böyle bir çatının neyi neden kaydettiğini anlamanı sağlar.
 :::
 
 ## Özet
