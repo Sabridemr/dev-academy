@@ -1,0 +1,110 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 460" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">DNS çözümleme zinciri ve NAT</title>
+  <desc id="desc">Üstte uygulama ve stub resolver, recursive resolver'a tek bir özyinelemeli soru sorar. Recursive resolver sırayla root, .com TLD ve authoritative sunuculara iteratif sorular sorar; ilk ikisi yönlendirme, sonuncusu gerçek cevap döner. Her kaydın tipik önbellek süresi yazılıdır. Altta özel ağdaki üç cihaz NAT gateway üzerinden tek bir genel IP adresiyle internete çıkar; NAT tablosu iç adres ve port ile dış port eşlemesini tutar.</desc>
+  <defs>
+    <marker id="o2-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-primary, #6366f1)"/>
+    </marker>
+    <marker id="o2-arrow-muted" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+  </defs>
+
+  <text x="480" y="26" text-anchor="middle" font-size="14" font-weight="600" fill="var(--da-fg, #0f172a)">Bir isim, dört soru: özyinelemeli istek, iteratif çözümleme</text>
+
+  <!-- Kutular -->
+  <g fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)" stroke-width="1.5">
+    <rect x="30" y="60" width="170" height="90" rx="12"/>
+    <rect x="740" y="44" width="190" height="56" rx="10"/>
+    <rect x="740" y="112" width="190" height="56" rx="10"/>
+    <rect x="740" y="180" width="190" height="56" rx="10"/>
+  </g>
+  <rect x="300" y="70" width="230" height="140" rx="12" fill="var(--da-primary, #6366f1)" opacity="0.10" stroke="var(--da-primary, #6366f1)" stroke-width="1.5"/>
+
+  <g font-size="13" font-weight="600" fill="var(--da-fg, #0f172a)">
+    <text x="115" y="88" text-anchor="middle">Uygulama</text>
+    <text x="415" y="96" text-anchor="middle">Recursive resolver</text>
+    <text x="835" y="68" text-anchor="middle">Root (.)</text>
+    <text x="835" y="136" text-anchor="middle">TLD (.com)</text>
+    <text x="835" y="204" text-anchor="middle">Authoritative</text>
+  </g>
+  <g font-size="11" fill="var(--da-muted, #64748b)" text-anchor="middle">
+    <text x="115" y="108">getaddrinfo()</text>
+    <text x="115" y="126">stub: OS önbelleği,</text>
+    <text x="115" y="141">/etc/hosts</text>
+    <text x="835" y="88">→ ".com'a şunlar bakar"</text>
+    <text x="835" y="156">→ "example.com: ns1 + glue"</text>
+    <text x="835" y="224">→ A 203.0.113.10, TTL 300</text>
+  </g>
+
+  <!-- Resolver önbelleği -->
+  <g font-size="11" fill="var(--da-fg, #0f172a)">
+    <text x="318" y="122" font-weight="600">Önbellek (TTL ile)</text>
+    <text x="318" y="142">. NS ………… ~günler</text>
+    <text x="318" y="160">com. NS ……… ~günler</text>
+    <text x="318" y="178">example.com NS … saatler</text>
+    <text x="318" y="196">shop A ………… 300 s</text>
+  </g>
+
+  <!-- Oklar -->
+  <path d="M 200 105 L 298 120" stroke="var(--da-primary, #6366f1)" stroke-width="2" fill="none" marker-end="url(#o2-arrow)"/>
+  <text x="250" y="100" text-anchor="middle" font-size="10" fill="var(--da-primary, #6366f1)">özyinelemeli</text>
+  <g stroke="var(--da-muted, #64748b)" stroke-width="1.6" fill="none" marker-end="url(#o2-arrow-muted)">
+    <path d="M 530 100 L 738 72"/>
+    <path d="M 530 140 L 738 140"/>
+    <path d="M 530 180 L 738 208"/>
+  </g>
+  <g font-size="10" fill="var(--da-muted, #64748b)" text-anchor="middle">
+    <text x="634" y="78">1 · iteratif</text>
+    <text x="634" y="134">2 · iteratif</text>
+    <text x="634" y="186">3 · iteratif</text>
+  </g>
+  <text x="634" y="258" text-anchor="middle" font-size="11" fill="var(--da-accent, #f59e0b)">Sıcak önbellekte 1 ve 2 atlanır; çoğu zaman 0 ya da 1 dış sorgu</text>
+
+  <!-- Ayırıcı -->
+  <line x1="30" y1="282" x2="930" y2="282" stroke="var(--da-border, #cbd5e1)" stroke-dasharray="4 4"/>
+
+  <!-- NAT bölümü -->
+  <text x="30" y="306" font-size="13" font-weight="600" fill="var(--da-fg, #0f172a)">Özel ağ (RFC 1918) → NAT → genel internet</text>
+  <g fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)" stroke-width="1.5">
+    <rect x="30" y="322" width="150" height="34" rx="8"/>
+    <rect x="30" y="364" width="150" height="34" rx="8"/>
+    <rect x="30" y="406" width="150" height="34" rx="8"/>
+  </g>
+  <g font-size="11" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="105" y="344">10.0.1.11</text>
+    <text x="105" y="386">10.0.1.12</text>
+    <text x="105" y="428">10.0.2.40</text>
+  </g>
+  <g stroke="var(--da-muted, #64748b)" stroke-width="1.4" fill="none" marker-end="url(#o2-arrow-muted)">
+    <path d="M 180 339 L 278 372"/>
+    <path d="M 180 381 L 278 381"/>
+    <path d="M 180 423 L 278 390"/>
+  </g>
+  <rect x="280" y="340" width="150" height="80" rx="12" fill="var(--da-accent, #f59e0b)" opacity="0.14" stroke="var(--da-accent, #f59e0b)" stroke-width="1.5"/>
+  <text x="355" y="370" text-anchor="middle" font-size="13" font-weight="600" fill="var(--da-fg, #0f172a)">NAT gateway</text>
+  <text x="355" y="390" text-anchor="middle" font-size="11" fill="var(--da-muted, #64748b)">genel IP: 198.51.100.20</text>
+
+  <!-- NAT tablosu -->
+  <g font-size="11" fill="var(--da-fg, #0f172a)">
+    <rect x="470" y="318" width="290" height="124" rx="10" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+    <text x="486" y="340" font-weight="600">Bağlantı tablosu</text>
+    <text x="486" y="362" fill="var(--da-muted, #64748b)">iç adres:port</text>
+    <text x="640" y="362" fill="var(--da-muted, #64748b)">dış port</text>
+    <text x="486" y="382">10.0.1.11:51034</text>
+    <text x="640" y="382">40001</text>
+    <text x="486" y="400">10.0.1.12:49822</text>
+    <text x="640" y="400">40002</text>
+    <text x="486" y="418">10.0.2.40:53110</text>
+    <text x="640" y="418">40003</text>
+  </g>
+  <path d="M 430 380 L 468 380" stroke="var(--da-accent, #f59e0b)" stroke-width="1.6" fill="none" stroke-dasharray="3 3"/>
+  <g font-size="11" fill="var(--da-muted, #64748b)">
+    <text x="780" y="350">Giden: kaynak adres</text>
+    <text x="780" y="366">ve port değiştirilir.</text>
+    <text x="780" y="390">Gelen: tabloda eşleme</text>
+    <text x="780" y="406">yoksa paket düşer;</text>
+    <text x="780" y="422">dışarıdan bağlantı</text>
+    <text x="780" y="438">başlatılamaz.</text>
+  </g>
+</svg>

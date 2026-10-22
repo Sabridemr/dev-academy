@@ -1,0 +1,277 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "o-02-dns-resolution-cache",
+  "title": {
+    "tr": "DNS: Soğuk Çözümleme, Önbellek İsabeti ve TTL",
+    "en": "DNS: Cold Resolution, Cache Hit and TTL"
+  },
+  "summary": {
+    "tr": "Önbelleği boş bir recursive resolver'ın root, TLD ve authoritative sunucuları iteratif olarak sorgulaması, cevabı TTL ile saklaması, ikinci kullanıcıya önbellekten cevap vermesi, kayıt değişince TTL dolana kadar eski cevabı sunması ve olmayan ismi negatif önbelleğe alması.",
+    "en": "A recursive resolver with an empty cache queries the root, TLD and authoritative servers iteratively, stores the answer with its TTL, serves a second user from cache, keeps serving the old answer until the TTL expires after a record change, and negatively caches a non-existent name."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda iki kullanıcı, ortada recursive resolver, sağda yukarıdan aşağıya root, .com TLD ve authoritative DNS sunucuları var. Kullanıcı A shop.example.com'u sorar. Resolver'ın önbelleği boştur; root sunucuya sorar ve .com sunucularına yönlendirilir, TLD sunucusuna sorar ve example.com'un yetkili sunucusuna yönlendirilir, yetkili sunucu 300 saniye TTL'li A kaydını döner. Resolver cevabı önbelleğe alıp kullanıcıya iletir. Kullanıcı B aynı ismi sorduğunda resolver dış sorgu yapmadan önbellekten cevap verir. Kayıt yeni bir IP'ye çevrildiğinde resolver TTL dolana kadar eski IP'yi vermeye devam eder; TTL dolunca yalnızca yetkili sunucuya sorar çünkü .com yönlendirmesi hâlâ önbellektedir. Son adımda var olmayan bir isim için NXDOMAIN cevabı da önbelleğe alınır.",
+      "en": "Two users on the left, a recursive resolver in the middle and, on the right from top to bottom, the root, .com TLD and authoritative DNS servers. User A asks for shop.example.com. The resolver's cache is empty; it asks the root and is referred to the .com servers, asks the TLD and is referred to example.com's authoritative server, which returns the A record with a 300-second TTL. The resolver caches the answer and passes it to the user. When user B asks for the same name the resolver answers from cache without any external query. When the record is pointed to a new IP the resolver keeps returning the old IP until the TTL expires; then it asks only the authoritative server because the .com referral is still cached. In the last step an NXDOMAIN answer for a non-existent name is cached as well."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    {
+      "id": "user-a",
+      "kind": "client",
+      "label": { "tr": "Kullanıcı A", "en": "User A" },
+      "sublabel": "stub resolver",
+      "x": 120,
+      "y": 190,
+      "w": 160,
+      "h": 72
+    },
+    {
+      "id": "user-b",
+      "kind": "client",
+      "label": { "tr": "Kullanıcı B", "en": "User B" },
+      "sublabel": "stub resolver",
+      "x": 120,
+      "y": 440,
+      "w": 160,
+      "h": 72
+    },
+    {
+      "id": "resolver",
+      "kind": "dns",
+      "label": "Recursive resolver",
+      "sublabel": { "tr": "önbellekli", "en": "caching" },
+      "x": 430,
+      "y": 315,
+      "w": 190,
+      "h": 84
+    },
+    {
+      "id": "root",
+      "kind": "dns",
+      "label": "Root (.)",
+      "sublabel": { "tr": "yalnızca TLD'leri bilir", "en": "knows only TLDs" },
+      "x": 820,
+      "y": 110,
+      "w": 190,
+      "h": 70
+    },
+    {
+      "id": "tld",
+      "kind": "dns",
+      "label": "TLD (.com)",
+      "sublabel": { "tr": "bölgeleri devreder", "en": "delegates zones" },
+      "x": 820,
+      "y": 300,
+      "w": 190,
+      "h": 70
+    },
+    {
+      "id": "auth",
+      "kind": "dns",
+      "label": "Authoritative",
+      "sublabel": "ns1.example.com",
+      "x": 820,
+      "y": 490,
+      "w": 190,
+      "h": 70
+    }
+  ],
+  "edges": [
+    { "id": "a-res", "from": "user-a", "to": "resolver", "kind": "request" },
+    { "id": "b-res", "from": "user-b", "to": "resolver", "kind": "request" },
+    { "id": "res-root", "from": "resolver", "to": "root", "kind": "request" },
+    { "id": "res-tld", "from": "resolver", "to": "tld", "kind": "request" },
+    { "id": "res-auth", "from": "resolver", "to": "auth", "kind": "request" }
+  ],
+  "steps": [
+    {
+      "id": "stub-query",
+      "title": { "tr": "Stub soruyu iletir", "en": "The stub forwards the question" },
+      "narration": {
+        "tr": "Kullanıcı A'nın işletim sistemi kendi önbelleğinde ve hosts dosyasında cevabı bulamaz ve soruyu olduğu gibi recursive resolver'a iletir: 'shop.example.com'un A kaydı ne?' Resolver'ın önbelleği bu isim için boştur.",
+        "en": "User A's operating system finds no answer in its own cache or hosts file and forwards the question as-is to the recursive resolver: 'what is the A record of shop.example.com?' The resolver's cache is empty for this name."
+      },
+      "durationMs": 2800,
+      "inherit": false,
+      "highlight": { "nodes": ["user-a", "resolver"], "edges": ["a-res"] },
+      "nodeStates": {
+        "user-a": { "status": "active" },
+        "resolver": { "status": "warning", "badge": "MISS" }
+      },
+      "packets": [{ "edge": "a-res", "label": "A? shop.example.com", "shape": "envelope", "durationMs": 1000 }],
+      "annotations": [
+        { "id": "cold-note", "x": 430, "y": 420, "text": { "tr": "Soğuk önbellek: zincir yürünecek", "en": "Cold cache: the chain will be walked" }, "tone": "warning", "target": "resolver" }
+      ]
+    },
+    {
+      "id": "root-referral",
+      "title": { "tr": "Root: yönlendirme", "en": "Root: referral" },
+      "narration": {
+        "tr": "Resolver root sunucuya sorar. Root cevabı bilmez; yalnızca '.com bölgesini şu sunucular yönetir' der. Bu bir yönlendirmedir (referral), cevap değil. Resolver bu NS kayıtlarını da kendi TTL'leriyle önbelleğe alır.",
+        "en": "The resolver asks a root server. The root does not know the answer; it only says 'these servers run the .com zone'. This is a referral, not an answer. The resolver caches these NS records with their own TTLs too."
+      },
+      "durationMs": 2800,
+      "highlight": { "nodes": ["resolver", "root"], "edges": ["res-root"] },
+      "nodeStates": { "root": { "status": "active", "badge": "referral" } },
+      "packets": [
+        { "edge": "res-root", "label": "A? shop.example.com", "durationMs": 900 },
+        { "edge": "res-root", "direction": "backward", "label": "NS .com → a.gtld-servers.net", "shape": "diamond", "startAt": 1000, "durationMs": 900 }
+      ]
+    },
+    {
+      "id": "tld-referral",
+      "title": { "tr": "TLD: delegasyon ve glue", "en": "TLD: delegation and glue" },
+      "narration": {
+        "tr": ".com sunucusu da cevabı bilmez ama example.com'un kime devredildiğini bilir: 'ns1.example.com'a sor.' Yetkili sunucunun adı aynı bölgede olduğu için IP adresini de glue kaydı olarak ekler; yoksa resolver sonsuz döngüye girerdi.",
+        "en": "The .com server does not know the answer either, but it knows who example.com is delegated to: 'ask ns1.example.com'. Because the authoritative server's name is inside the same zone, it also adds its IP as a glue record; otherwise the resolver would loop forever."
+      },
+      "durationMs": 2800,
+      "highlight": { "nodes": ["resolver", "tld"], "edges": ["res-tld"] },
+      "nodeStates": {
+        "root": { "status": "idle", "badge": "" },
+        "tld": { "status": "active", "badge": "referral + glue" }
+      },
+      "packets": [
+        { "edge": "res-tld", "label": "A? shop.example.com", "durationMs": 900 },
+        { "edge": "res-tld", "direction": "backward", "label": "NS ns1.example.com + glue", "shape": "diamond", "startAt": 1000, "durationMs": 900 }
+      ]
+    },
+    {
+      "id": "authoritative-answer",
+      "title": { "tr": "Authoritative: gerçek cevap", "en": "Authoritative: the real answer" },
+      "narration": {
+        "tr": "Kaydın sahibi olan yetkili sunucu nihayet cevabı verir: A 203.0.113.10, TTL 300 saniye. TTL, bu cevabın başkaları tarafından en fazla ne kadar süre saklanabileceğini söyler.",
+        "en": "The authoritative server that owns the record finally answers: A 203.0.113.10, TTL 300 seconds. The TTL says how long others may keep this answer at most."
+      },
+      "durationMs": 2800,
+      "highlight": { "nodes": ["resolver", "auth"], "edges": ["res-auth"] },
+      "nodeStates": {
+        "tld": { "status": "idle", "badge": "" },
+        "auth": { "status": "success", "badge": "A 203.0.113.10" }
+      },
+      "packets": [
+        { "edge": "res-auth", "label": "A? shop.example.com", "durationMs": 900 },
+        { "edge": "res-auth", "direction": "backward", "label": "203.0.113.10 TTL 300", "color": "success", "shape": "square", "startAt": 1000, "durationMs": 900 }
+      ]
+    },
+    {
+      "id": "cache-and-reply",
+      "title": { "tr": "Önbelleğe al ve cevapla", "en": "Cache and reply" },
+      "narration": {
+        "tr": "Resolver cevabı 300 saniyelik TTL ile, .com yönlendirmesini ise çok daha uzun TTL'iyle saklar ve Kullanıcı A'ya iletir. Bu ilk sorgu dört gidiş-dönüşe mal oldu; bundan sonrakiler çok daha ucuz olacak.",
+        "en": "The resolver stores the answer with its 300-second TTL and the .com referral with its much longer TTL, then passes the answer to User A. This first query cost four round trips; the following ones will be much cheaper."
+      },
+      "durationMs": 2800,
+      "highlight": { "nodes": ["resolver", "user-a"], "edges": ["a-res"] },
+      "nodeStates": {
+        "resolver": { "status": "success", "badge": "cache: 3" },
+        "auth": { "status": "idle", "badge": "" },
+        "user-a": { "status": "success", "badge": "203.0.113.10" }
+      },
+      "packets": [{ "edge": "a-res", "direction": "backward", "label": "203.0.113.10", "color": "success", "shape": "envelope", "durationMs": 1000 }],
+      "annotations": [
+        { "id": "ttl-levels", "x": 430, "y": 430, "text": { "tr": ".com NS: günler · A kaydı: 300 s", "en": ".com NS: days · A record: 300 s" }, "tone": "info", "target": "resolver" }
+      ]
+    },
+    {
+      "id": "cache-hit",
+      "title": { "tr": "İkinci kullanıcı: önbellek isabeti", "en": "Second user: cache hit" },
+      "narration": {
+        "tr": "Birkaç dakika sonra Kullanıcı B aynı ismi sorar. Kayıt önbellektedir ve kalan TTL ile birlikte hemen döner. Root, TLD ve yetkili sunucuya tek bir paket bile gitmez; popüler isimlerin çoğu sorgusu böyle çözülür.",
+        "en": "A few minutes later User B asks for the same name. The record is cached and is returned immediately with its remaining TTL. Not a single packet goes to the root, TLD or authoritative server; most queries for popular names are resolved this way."
+      },
+      "durationMs": 2800,
+      "highlight": { "nodes": ["user-b", "resolver"], "edges": ["b-res"] },
+      "nodeStates": {
+        "user-a": { "status": "idle", "badge": "" },
+        "user-b": { "status": "success", "badge": "203.0.113.10" },
+        "resolver": { "status": "success", "badge": "HIT · TTL 212" },
+        "root": { "status": "muted" },
+        "tld": { "status": "muted" },
+        "auth": { "status": "muted" }
+      },
+      "packets": [
+        { "edge": "b-res", "label": "A? shop.example.com", "shape": "envelope", "durationMs": 900 },
+        { "edge": "b-res", "direction": "backward", "label": "203.0.113.10 (TTL 212)", "color": "success", "shape": "envelope", "startAt": 1000, "durationMs": 900 }
+      ],
+      "annotations": [
+        { "id": "hit-note", "x": 820, "y": 400, "text": { "tr": "0 dış sorgu", "en": "0 external queries" }, "tone": "success", "target": "tld" }
+      ]
+    },
+    {
+      "id": "record-change",
+      "title": { "tr": "Kayıt değişti, önbellek bilmiyor", "en": "Record changed, the cache doesn't know" },
+      "narration": {
+        "tr": "Operatör kaydı yeni bir sunucuya, 198.51.100.7'ye çevirir. DNS'te itme yoktur: resolver'ın haberi olmaz ve TTL dolana kadar Kullanıcı B'ye eski adresi vermeye devam eder. Eski sunucuyu hemen kapatmamanın nedeni budur.",
+        "en": "The operator points the record to a new server, 198.51.100.7. DNS has no push: the resolver is not told and keeps giving User B the old address until the TTL expires. That is why you should not shut the old server down immediately."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["auth", "resolver", "user-b"], "edges": ["b-res"] },
+      "nodeStates": {
+        "auth": { "status": "warning", "badge": "A 198.51.100.7" },
+        "resolver": { "status": "warning", "badge": "TTL 95 (eski)" },
+        "user-b": { "status": "warning", "badge": "203.0.113.10" }
+      },
+      "packets": [
+        { "edge": "b-res", "label": "A? shop.example.com", "shape": "envelope", "durationMs": 900 },
+        { "edge": "b-res", "direction": "backward", "label": "203.0.113.10", "color": "warning", "shape": "envelope", "startAt": 1000, "durationMs": 900 }
+      ],
+      "annotations": [
+        { "id": "stale-note", "x": 430, "y": 200, "text": { "tr": "Bayat ama TTL içinde: kurala uygun", "en": "Stale but within TTL: by the rules" }, "tone": "warning", "target": "resolver" }
+      ]
+    },
+    {
+      "id": "ttl-expired",
+      "title": { "tr": "TTL doldu: yalnızca yetkili sunucuya sor", "en": "TTL expired: ask only the authoritative server" },
+      "narration": {
+        "tr": "TTL dolunca A kaydı önbellekten düşer, ama .com yönlendirmesi ve ns1.example.com'un adresi hâlâ geçerlidir. Resolver root ve TLD'yi atlayıp doğrudan yetkili sunucuya sorar ve yeni adresi alır. Tek gidiş-dönüş yeter.",
+        "en": "When the TTL expires the A record drops out of the cache, but the .com referral and ns1.example.com's address are still valid. The resolver skips the root and TLD, asks the authoritative server directly and gets the new address. One round trip is enough."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["user-a", "resolver", "auth"], "edges": ["a-res", "res-auth"] },
+      "nodeStates": {
+        "user-b": { "status": "idle", "badge": "" },
+        "resolver": { "status": "active", "badge": "MISS (A)" },
+        "auth": { "status": "success", "badge": "A 198.51.100.7" },
+        "user-a": { "status": "success", "badge": "198.51.100.7" }
+      },
+      "packets": [
+        { "edge": "a-res", "label": "A? shop.example.com", "shape": "envelope", "durationMs": 700 },
+        { "edge": "res-auth", "label": "A?", "startAt": 750, "durationMs": 700 },
+        { "edge": "res-auth", "direction": "backward", "label": "198.51.100.7 TTL 300", "color": "success", "shape": "square", "startAt": 1500, "durationMs": 700 },
+        { "edge": "a-res", "direction": "backward", "label": "198.51.100.7", "color": "success", "shape": "envelope", "startAt": 2250, "durationMs": 700 }
+      ],
+      "annotations": [
+        { "id": "skip-note", "x": 820, "y": 200, "text": { "tr": "Root ve TLD atlandı", "en": "Root and TLD skipped" }, "tone": "success", "target": "root" }
+      ]
+    },
+    {
+      "id": "negative-cache",
+      "title": { "tr": "Olmayan isim: negatif önbellek", "en": "Non-existent name: negative caching" },
+      "narration": {
+        "tr": "Kullanıcı B henüz oluşturulmamış yeni.example.com'u sorar. Yetkili sunucu NXDOMAIN döner ve resolver bu 'yok' cevabını da bölgenin SOA kaydındaki süre kadar saklar. Kayıt az sonra eklense bile bu süre dolana kadar 'yok' görülebilir.",
+        "en": "User B asks for yeni.example.com, which has not been created yet. The authoritative server returns NXDOMAIN and the resolver stores this 'does not exist' answer for the duration set in the zone's SOA record. Even if the record is added moments later, it may appear missing until that time passes."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["user-b", "resolver", "auth"], "edges": ["b-res", "res-auth"] },
+      "nodeStates": {
+        "user-a": { "status": "idle", "badge": "" },
+        "resolver": { "status": "warning", "badge": "NXDOMAIN (SOA)" },
+        "auth": { "status": "error", "badge": "NXDOMAIN" },
+        "user-b": { "status": "error", "badge": "NXDOMAIN" }
+      },
+      "packets": [
+        { "edge": "b-res", "label": "A? yeni.example.com", "shape": "envelope", "durationMs": 700 },
+        { "edge": "res-auth", "label": "A?", "startAt": 750, "durationMs": 700 },
+        { "edge": "res-auth", "direction": "backward", "label": "NXDOMAIN", "color": "danger", "shape": "square", "startAt": 1500, "durationMs": 700 },
+        { "edge": "b-res", "direction": "backward", "label": "NXDOMAIN", "color": "danger", "shape": "envelope", "startAt": 2250, "durationMs": 700 }
+      ],
+      "annotations": [
+        { "id": "neg-note", "x": 430, "y": 200, "text": { "tr": "'Yok' cevabı da önbelleğe girer", "en": "'Does not exist' is cached too" }, "tone": "danger", "target": "resolver" }
+      ]
+    }
+  ]
+}
