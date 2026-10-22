@@ -55,6 +55,9 @@ WORKDIR /repo/backend
 COPY tsconfig.base.json /repo/
 COPY --from=tools-deps /tools /repo
 COPY content /repo/content
+# seed.ts, backend kaynaklarından içe aktarım yapar (src/modules/admin/content-sync.ts); tsx bunları
+# kaynak olarak çalıştırır, deploy çıktısı src'yi içermediği için ayrıca kopyalanır
+COPY backend/src /repo/backend/src
 CMD ["prisma", "migrate", "deploy"]
 
 # Varsayılan hedef (son aşama): API runtime imajı
