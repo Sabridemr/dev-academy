@@ -85,6 +85,10 @@ Dört tabloyu sürükleyin, bir tablonun sağ tutamacından diğerinin sol tutam
 4. **N-M ilişkiyi ara tabloyla çözün**: `order_items(order_id, product_id, qty, unit_price_at_purchase)`. Ara tablolar genellikle kendi özniteliklerini taşır — bu, onların gerçek varlık olduğunun işaretidir.
 5. **Anahtar seçimi**: doğal anahtar (e-posta, TC no) yerine çoğunlukla **surrogate key** (`bigint identity` ya da UUIDv7) kullanılır; doğal anahtarlar değişebilir ve dış sistemlere sızar.
 
+:::interactive{type="sql-playground" dataset="school"}
+Bu okul şemasında öğrenci ↔ ders çoka-çok ilişkisi `enrollments` ara tablosuyla çözülmüş; ara tablo kendi özniteliklerini (dönem, not) taşıyor. Sağdaki "Şema" listesinde bir tablo adına tıklayıp ilk satırlarını sorgula. Hazır sorgu üç tabloyu yeniden birleştiriyor: "Adım adım" görünümünde iki JOIN adımında hangi satır çiftlerinin eşleştiğini izle — normalizasyonun okuma tarafındaki bedeli bu JOIN'lerdir. Ardından görev listesinden "Her dersin kaç kayıtlı öğrencisi olduğunu bul" görevini seç; henüz kimsenin kaydolmadığı dersin 0 ile görünmesi için INNER JOIN yerine neyin gerektiğini "Kontrol et" düğmesinin geri bildirimiyle bul.
+:::
+
 :::code{lang="ts" title="Normalize şema: Drizzle ORM ile tablolar ve ilişkiler"}
 ```ts
 import { pgTable, bigserial, bigint, text, integer, numeric, timestamp, primaryKey } from 'drizzle-orm/pg-core';

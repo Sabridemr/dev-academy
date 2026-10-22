@@ -26,7 +26,6 @@ import {
   CURRICULUM,
   RASTER_IMAGE_TYPES,
   rasterExtension,
-  LEARNING_PATHS,
   type LocalizedString,
 } from '@devacademy/shared';
 import {
@@ -469,8 +468,9 @@ async function main(): Promise<void> {
     }
   }
 
-  // Öğrenme yolları (content/paths.json yoksa müfredattaki varsayılanlar)
-  const paths = content.paths.length ? content.paths : LEARNING_PATHS;
+  // Öğrenme yolları: content/paths.json tek kaynaktır (müfredattaki eski kopya kaldırıldı)
+  if (!content.paths.length) throw new Error('content/paths.json bulunamadı ya da boş');
+  const paths = content.paths;
   const existingLessonIds = new Set(
     (await prisma.lesson.findMany({ select: { id: true } })).map((l) => l.id),
   );

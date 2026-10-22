@@ -1,0 +1,220 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "gha-triggers-cache-needs",
+  "title": { "tr": "Tek Workflow, Üç Tetikleyici: Cache ve needs", "en": "One Workflow, Three Triggers: Cache and needs" },
+  "summary": {
+    "tr": "push, pull_request ve schedule aynı workflow'u farklı bağlamlarla çalıştırır; cache anahtarı lock dosyasının özetinden üretilir, isabet ya da ıska kurulum süresini belirler; build job'u needs ile lint ve teste bağlıdır.",
+    "en": "push, pull_request and schedule run the same workflow with different contexts; the cache key is derived from a hash of the lock file and a hit or miss decides install time; the build job depends on lint and test through needs."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda üç tetikleyici (push, pull_request, schedule) ortadaki ci.yml workflow'una bağlanır; altta Secrets deposu vardır. Workflow npm ci adımına, npm ci üstte Actions cache'e ve sağda paralel lint ve test job'larına bağlanır; ikisi build job'unda birleşir. Adımlarda push ile cache ıskası ve yavaş kurulum, cache'in kaydedilmesi, pull_request ile cache isabeti, fork PR'da secret'ların verilmemesi, lock dosyası değişince restore-keys ile kısmi isabet ve gece çalışan schedule'da testin düşüp build'in atlanması gösterilir.",
+      "en": "Three triggers on the left (push, pull_request, schedule) connect to the ci.yml workflow in the middle, with the Secrets store below. The workflow connects to the npm ci step, npm ci to the Actions cache above it and to parallel lint and test jobs on the right, which join at the build job. The steps show a cache miss and slow install on push, the cache being saved, a cache hit on pull_request, secrets withheld from a fork PR, a partial hit through restore-keys when the lock file changes, and a nightly schedule run where test fails and build is skipped."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "push", "kind": "user", "label": "push", "sublabel": "main", "x": 100, "y": 130, "w": 150, "h": 60 },
+    { "id": "pr", "kind": "user", "label": "pull_request", "sublabel": "opened / synchronize", "x": 100, "y": 300, "w": 170, "h": 60 },
+    { "id": "cron", "kind": "worker", "label": "schedule", "sublabel": "0 3 * * * (UTC)", "x": 100, "y": 470, "w": 160, "h": 60 },
+    { "id": "wf", "kind": "service", "label": "ci.yml", "sublabel": "github.event_name", "x": 330, "y": 300, "w": 150, "h": 70, "color": "primary" },
+    { "id": "secrets", "kind": "storage", "label": "Secrets", "sublabel": "DEPLOY_TOKEN", "x": 330, "y": 500, "w": 150, "h": 60 },
+    { "id": "cache", "kind": "cache", "label": "Actions cache", "sublabel": "npm-Linux-hash(lock)", "x": 560, "y": 110, "w": 210, "h": 64 },
+    { "id": "install", "kind": "worker", "label": "npm ci", "x": 560, "y": 300, "w": 140, "h": 64 },
+    { "id": "lint", "kind": "worker", "label": "lint", "x": 760, "y": 210, "w": 120, "h": 60 },
+    { "id": "test", "kind": "worker", "label": "test", "x": 760, "y": 400, "w": 120, "h": 60 },
+    { "id": "build", "kind": "worker", "label": "build", "sublabel": "needs: [lint, test]", "x": 910, "y": 300, "w": 150, "h": 64 }
+  ],
+  "edges": [
+    { "id": "push-wf", "from": "push", "to": "wf", "kind": "event" },
+    { "id": "pr-wf", "from": "pr", "to": "wf", "kind": "event" },
+    { "id": "cron-wf", "from": "cron", "to": "wf", "kind": "event" },
+    { "id": "secrets-wf", "from": "secrets", "to": "wf", "kind": "data", "style": "dashed" },
+    { "id": "wf-install", "from": "wf", "to": "install", "kind": "control" },
+    { "id": "install-cache", "from": "install", "to": "cache", "kind": "data", "bidirectional": true, "label": "restore / save" },
+    { "id": "install-lint", "from": "install", "to": "lint", "kind": "control" },
+    { "id": "install-test", "from": "install", "to": "test", "kind": "control" },
+    { "id": "lint-build", "from": "lint", "to": "build", "kind": "control" },
+    { "id": "test-build", "from": "test", "to": "build", "kind": "control" }
+  ],
+  "steps": [
+    {
+      "id": "push-miss",
+      "title": { "tr": "push: cache ıskası", "en": "push: cache miss" },
+      "narration": {
+        "tr": "main'e yapılan push workflow'u tetikler; github.event_name değeri push olur. setup-node, package-lock.json'un özetinden bir cache anahtarı üretir ve arar. Bu ilk çalıştırma olduğu için anahtar bulunamaz, npm ci bütün paketleri internetten indirir ve kurulum uzun sürer.",
+        "en": "A push to main triggers the workflow and github.event_name is push. setup-node derives a cache key from a hash of package-lock.json and looks it up. This is the first run, so the key is not found, npm ci downloads every package from the internet and the install takes a long time."
+      },
+      "durationMs": 4400,
+      "inherit": false,
+      "highlight": { "nodes": ["push", "wf", "install", "cache"], "edges": ["push-wf", "wf-install", "install-cache"] },
+      "nodeStates": {
+        "push": { "status": "active" },
+        "pr": { "status": "muted" },
+        "cron": { "status": "muted" },
+        "wf": { "status": "active", "badge": "push" },
+        "cache": { "status": "warning", "badge": "miss" },
+        "install": { "status": "busy", "progress": 0.3, "badge": "yavaş" },
+        "lint": { "status": "idle" },
+        "test": { "status": "idle" },
+        "build": { "status": "idle" },
+        "secrets": { "status": "idle" }
+      },
+      "edgeStates": { "push-wf": { "status": "active" }, "wf-install": { "status": "active" }, "install-cache": { "status": "error" } },
+      "packets": [
+        { "edge": "push-wf", "shape": "envelope", "label": "push", "durationMs": 900 },
+        { "edge": "wf-install", "shape": "dot", "startAt": 900, "durationMs": 700 },
+        { "edge": "install-cache", "shape": "diamond", "label": "key?", "startAt": 1600, "durationMs": 800 }
+      ]
+    },
+    {
+      "id": "parallel",
+      "title": { "tr": "lint ve test paralel", "en": "lint and test in parallel" },
+      "narration": {
+        "tr": "Kurulum biter. Aralarında needs bağı olmayan job'lar aynı anda ayrı runner'larda başlar, bu yüzden lint ve test paralel çalışır. build ise needs: [lint, test] satırı nedeniyle ikisinin de bitmesini bekler.",
+        "en": "The install finishes. Jobs with no needs link between them start at the same time on separate runners, so lint and test run in parallel. build waits for both to finish because of its needs: [lint, test] line."
+      },
+      "durationMs": 3800,
+      "highlight": { "nodes": ["lint", "test", "build"], "edges": ["install-lint", "install-test"] },
+      "nodeStates": {
+        "push": { "status": "idle" },
+        "install": { "status": "success", "progress": 1, "badge": "" },
+        "lint": { "status": "busy" },
+        "test": { "status": "busy" },
+        "build": { "status": "idle", "badge": "bekliyor" }
+      },
+      "edgeStates": { "push-wf": { "status": "idle" }, "wf-install": { "status": "idle" }, "install-cache": { "status": "idle" }, "install-lint": { "status": "active" }, "install-test": { "status": "active" } },
+      "packets": [
+        { "edge": "install-lint", "shape": "dot", "durationMs": 900 },
+        { "edge": "install-test", "shape": "dot", "durationMs": 900 }
+      ]
+    },
+    {
+      "id": "save",
+      "title": { "tr": "İkisi de yeşil: build ve cache kaydı", "en": "Both green: build and cache save" },
+      "narration": {
+        "tr": "lint ve test geçince build başlar. Job başarıyla bittiğinde ıskalanan anahtar için npm önbelleği Actions cache'e kaydedilir. Aynı lock dosyasıyla yapılan sonraki çalıştırmalar bu kaydı bulacaktır.",
+        "en": "Once lint and test pass, build starts. When the job finishes successfully, the npm cache is saved to the Actions cache under the key that missed. Later runs with the same lock file will find this entry."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["build", "cache"], "edges": ["lint-build", "test-build", "install-cache"] },
+      "nodeStates": { "lint": { "status": "success" }, "test": { "status": "success" }, "build": { "status": "success", "badge": "✓" }, "cache": { "status": "success", "badge": "saved" } },
+      "edgeStates": { "install-lint": { "status": "idle" }, "install-test": { "status": "idle" }, "lint-build": { "status": "active" }, "test-build": { "status": "active" }, "install-cache": { "status": "active" } },
+      "packets": [
+        { "edge": "lint-build", "shape": "dot", "durationMs": 800 },
+        { "edge": "test-build", "shape": "dot", "durationMs": 800 },
+        { "edge": "install-cache", "shape": "square", "label": "save", "color": "success", "startAt": 1000, "durationMs": 1000 }
+      ]
+    },
+    {
+      "id": "pr-hit",
+      "title": { "tr": "pull_request: cache isabeti", "en": "pull_request: cache hit" },
+      "narration": {
+        "tr": "Bir PR açılır ve aynı ci.yml bu kez github.event_name = pull_request ile çalışır. PR dalı, varsayılan dalda (main) oluşturulmuş cache'leri okuyabilir. Lock dosyası değişmediği için anahtar tutar, paketler önbellekten gelir ve kurulum belirgin biçimde kısalır.",
+        "en": "A PR is opened and the same ci.yml now runs with github.event_name = pull_request. A PR branch can read caches created on the default branch (main). The lock file has not changed, so the key matches, packages come from the cache and the install becomes noticeably shorter."
+      },
+      "durationMs": 4400,
+      "highlight": { "nodes": ["pr", "wf", "install", "cache"], "edges": ["pr-wf", "wf-install", "install-cache"] },
+      "nodeStates": {
+        "pr": { "status": "active" },
+        "push": { "status": "muted" },
+        "wf": { "status": "active", "badge": "pull_request" },
+        "cache": { "status": "success", "badge": "hit" },
+        "install": { "status": "success", "badge": "hızlı" },
+        "lint": { "status": "idle" },
+        "test": { "status": "idle" },
+        "build": { "status": "idle", "badge": "" }
+      },
+      "edgeStates": { "lint-build": { "status": "idle" }, "test-build": { "status": "idle" }, "pr-wf": { "status": "active" }, "wf-install": { "status": "active" }, "install-cache": { "status": "active" } },
+      "packets": [
+        { "edge": "pr-wf", "shape": "envelope", "label": "pull_request", "durationMs": 900 },
+        { "edge": "wf-install", "shape": "dot", "startAt": 900, "durationMs": 600 },
+        { "edge": "install-cache", "shape": "square", "label": "restore", "color": "success", "direction": "backward", "startAt": 1500, "durationMs": 800 }
+      ]
+    },
+    {
+      "id": "fork-secrets",
+      "title": { "tr": "Fork'tan gelen PR: secret yok", "en": "PR from a fork: no secrets" },
+      "narration": {
+        "tr": "PR bir fork'tan geliyorsa, pull_request olayıyla çalışan workflow'a depo secret'ları verilmez. GITHUB_TOKEN da yalnızca okuma yetkisiyle gelir. Yabancı kod sizin token'larınızı göremez. Bu yüzden secret gerektiren deploy adımları PR'da değil, main'e merge sonrasında çalışır.",
+        "en": "If the PR comes from a fork, the repository secrets are not passed to a workflow run by the pull_request event, and GITHUB_TOKEN arrives with read-only permissions. Outside code cannot see your tokens. This is why deploy steps that need secrets run after the merge to main, not on the PR."
+      },
+      "durationMs": 4400,
+      "highlight": { "nodes": ["secrets", "wf"], "edges": ["secrets-wf"] },
+      "nodeStates": { "secrets": { "status": "down", "badge": "verilmez" }, "wf": { "status": "warning", "badge": "fork PR" }, "install": { "status": "idle", "badge": "" }, "cache": { "status": "idle", "badge": "" } },
+      "edgeStates": { "pr-wf": { "status": "idle" }, "wf-install": { "status": "idle" }, "install-cache": { "status": "idle" }, "secrets-wf": { "status": "error" } },
+      "packets": [{ "edge": "pr-wf", "shape": "envelope", "label": "fork", "color": "warning", "durationMs": 900 }],
+      "annotations": [{ "id": "token", "x": 330, "y": 410, "text": { "tr": "GITHUB_TOKEN: salt okunur", "en": "GITHUB_TOKEN: read-only" }, "target": "wf", "tone": "warning" }]
+    },
+    {
+      "id": "restore-keys",
+      "title": { "tr": "Lock dosyası değişti: kısmi isabet", "en": "Lock file changed: partial hit" },
+      "narration": {
+        "tr": "Bir bağımlılık güncellenir ve package-lock.json'un özeti değişir. Tam anahtar bulunamaz, ancak restore-keys önekiyle en yakın eski cache geri yüklenir. Önbellekte zaten bulunan paketler yeniden indirilmez, yalnızca eksikler indirilir. Cache her durumda bir hızlandırmadır: o da yoksa workflow yine doğru çalışır, yalnızca yavaşlar.",
+        "en": "A dependency is updated and the hash of package-lock.json changes. The exact key is not found, but the closest older cache is restored through the restore-keys prefix. Packages already in the cache are not downloaded again; only the missing ones are fetched. Cache is always just a speed-up: without it the workflow still runs correctly, only slower."
+      },
+      "durationMs": 4600,
+      "highlight": { "nodes": ["install", "cache"], "edges": ["install-cache"] },
+      "nodeStates": {
+        "secrets": { "status": "idle", "badge": "" },
+        "pr": { "status": "idle" },
+        "wf": { "status": "active", "badge": "push" },
+        "cache": { "status": "warning", "badge": "restore-keys" },
+        "install": { "status": "busy", "progress": 0.7, "badge": "kısmi" }
+      },
+      "edgeStates": { "secrets-wf": { "status": "idle" }, "install-cache": { "status": "active" } },
+      "packets": [
+        { "edge": "install-cache", "shape": "diamond", "label": "key?", "durationMs": 800 },
+        { "edge": "install-cache", "shape": "square", "label": "npm-Linux-", "color": "warning", "direction": "backward", "startAt": 800, "durationMs": 900 }
+      ]
+    },
+    {
+      "id": "nightly",
+      "title": { "tr": "Gece 03:00 UTC: schedule", "en": "03:00 UTC at night: schedule" },
+      "narration": {
+        "tr": "schedule tetikleyicisi her gece varsayılan dalın son commit'iyle aynı workflow'u başlatır. Saat UTC'dir, yani İstanbul'da 06:00. Ağır uçtan uca testler ve bağımlılık taramaları bu çalıştırmaya bırakılır, böylece gündüz PR'ları beklemez.",
+        "en": "The schedule trigger starts the same workflow every night on the latest commit of the default branch. The time is in UTC, which is 06:00 in Istanbul. Heavy end-to-end tests and dependency scans are left to this run, so daytime PRs do not wait for them."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["cron", "wf"], "edges": ["cron-wf"] },
+      "nodeStates": {
+        "cron": { "status": "active", "badge": "06:00 TR" },
+        "wf": { "status": "active", "badge": "schedule" },
+        "cache": { "status": "success", "badge": "hit" },
+        "install": { "status": "success", "progress": 1, "badge": "" }
+      },
+      "edgeStates": { "install-cache": { "status": "idle" }, "cron-wf": { "status": "active" }, "wf-install": { "status": "active" } },
+      "packets": [
+        { "edge": "cron-wf", "shape": "envelope", "label": "schedule", "durationMs": 900 },
+        { "edge": "wf-install", "shape": "dot", "startAt": 900, "durationMs": 700 }
+      ]
+    },
+    {
+      "id": "needs-skip",
+      "title": { "tr": "Test düşer, build atlanır", "en": "Test fails, build is skipped" },
+      "narration": {
+        "tr": "Gece çalışmasında lint geçer ama test düşer. build, needs ile bağlı olduğu job'lardan biri başarısız olduğu için hiç başlamaz ve atlandı olarak görünür. Bir job'un ancak gereklerinin hepsi başarılı olunca çalışması, pipeline'ın job düzeyindeki fail fast hâlidir.",
+        "en": "In the nightly run lint passes but test fails. build never starts because one of the jobs it needs failed, and it shows as skipped. A job running only when all of its needs succeed is fail fast at the job level."
+      },
+      "durationMs": 4200,
+      "highlight": { "nodes": ["lint", "test", "build"], "edges": ["install-lint", "install-test", "test-build"] },
+      "nodeStates": {
+        "cron": { "status": "idle" },
+        "wf": { "status": "error", "badge": "failed" },
+        "lint": { "status": "success" },
+        "test": { "status": "error", "badge": "e2e ✗" },
+        "build": { "status": "muted", "badge": "skipped" }
+      },
+      "edgeStates": { "cron-wf": { "status": "idle" }, "wf-install": { "status": "idle" }, "install-lint": { "status": "active" }, "install-test": { "status": "active" }, "test-build": { "status": "error" }, "lint-build": { "status": "muted" } },
+      "packets": [
+        { "edge": "install-lint", "shape": "dot", "durationMs": 800 },
+        { "edge": "install-test", "shape": "dot", "durationMs": 800 },
+        { "edge": "test-build", "shape": "diamond", "label": "✗", "color": "danger", "startAt": 1000, "durationMs": 900 }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["github-actions", "triggers", "cache", "secrets", "needs"]
+}

@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 420" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Sanal makine ile konteyner karşılaştırması</title>
+  <desc id="desc">Solda sanal makineler: donanım üstünde hipervizör, her sanal makinede ayrı bir misafir işletim sistemi çekirdeği, kütüphaneler ve uygulama. Sağda konteynerler: donanım üstünde tek bir ana işletim sistemi çekirdeği ve Docker motoru, her konteynerde yalnızca kütüphaneler ve uygulama; konteynerler çekirdeği paylaşır.</desc>
+
+  <!-- Başlıklar -->
+  <text x="225" y="34" text-anchor="middle" font-size="16" font-weight="700" fill="var(--da-fg, #0f172a)">Sanal makine</text>
+  <text x="675" y="34" text-anchor="middle" font-size="16" font-weight="700" fill="var(--da-fg, #0f172a)">Konteyner</text>
+  <text x="225" y="54" text-anchor="middle" font-size="11" fill="var(--da-muted, #64748b)">GB boyutunda · dakikalar içinde açılır</text>
+  <text x="675" y="54" text-anchor="middle" font-size="11" fill="var(--da-muted, #64748b)">MB boyutunda · saniyeler içinde açılır</text>
+  <line x1="450" y1="20" x2="450" y2="400" stroke="var(--da-border, #cbd5e1)" stroke-dasharray="5 5"/>
+
+  <!-- VM sütunları -->
+  <g fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.3">
+    <rect x="40" y="76" width="110" height="40" rx="8"/>
+    <rect x="170" y="76" width="110" height="40" rx="8"/>
+    <rect x="300" y="76" width="110" height="40" rx="8"/>
+    <rect x="40" y="124" width="110" height="40" rx="8"/>
+    <rect x="170" y="124" width="110" height="40" rx="8"/>
+    <rect x="300" y="124" width="110" height="40" rx="8"/>
+  </g>
+  <g fill="var(--da-accent, #f59e0b)" opacity="0.18" stroke="var(--da-accent, #f59e0b)">
+    <rect x="40" y="172" width="110" height="60" rx="8"/>
+    <rect x="170" y="172" width="110" height="60" rx="8"/>
+    <rect x="300" y="172" width="110" height="60" rx="8"/>
+  </g>
+  <g font-size="12" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="95" y="101">Uygulama A</text>
+    <text x="225" y="101">Uygulama B</text>
+    <text x="355" y="101">Uygulama C</text>
+    <text x="95" y="149">Kütüphaneler</text>
+    <text x="225" y="149">Kütüphaneler</text>
+    <text x="355" y="149">Kütüphaneler</text>
+    <text x="95" y="199">Misafir OS</text>
+    <text x="225" y="199">Misafir OS</text>
+    <text x="355" y="199">Misafir OS</text>
+  </g>
+  <g font-size="10" fill="var(--da-muted, #64748b)" text-anchor="middle">
+    <text x="95" y="217">kendi çekirdeği</text>
+    <text x="225" y="217">kendi çekirdeği</text>
+    <text x="355" y="217">kendi çekirdeği</text>
+  </g>
+  <rect x="40" y="244" width="370" height="46" rx="10" fill="var(--da-primary, #6366f1)" opacity="0.14" stroke="var(--da-primary, #6366f1)"/>
+  <text x="225" y="272" text-anchor="middle" font-size="13" font-weight="600" fill="var(--da-fg, #0f172a)">Hipervizör (KVM, VMware, Hyper-V)</text>
+  <rect x="40" y="298" width="370" height="40" rx="10" fill="var(--da-surface, #f8fafc)" stroke="var(--da-border, #cbd5e1)"/>
+  <text x="225" y="323" text-anchor="middle" font-size="13" fill="var(--da-fg, #0f172a)">Ana makine (tip 1 hipervizörde doğrudan donanım)</text>
+  <rect x="40" y="346" width="370" height="40" rx="10" fill="var(--da-surface, #f8fafc)" stroke="var(--da-border, #cbd5e1)"/>
+  <text x="225" y="371" text-anchor="middle" font-size="13" fill="var(--da-fg, #0f172a)">Donanım: CPU, RAM, disk, ağ</text>
+
+  <!-- Konteyner sütunları -->
+  <g fill="var(--da-surface, #ffffff)" stroke="var(--da-fg, #0f172a)" stroke-width="1.3">
+    <rect x="490" y="124" width="110" height="40" rx="8"/>
+    <rect x="620" y="124" width="110" height="40" rx="8"/>
+    <rect x="750" y="124" width="110" height="40" rx="8"/>
+    <rect x="490" y="172" width="110" height="60" rx="8"/>
+    <rect x="620" y="172" width="110" height="60" rx="8"/>
+    <rect x="750" y="172" width="110" height="60" rx="8"/>
+  </g>
+  <g font-size="12" fill="var(--da-fg, #0f172a)" text-anchor="middle">
+    <text x="545" y="149">Uygulama A</text>
+    <text x="675" y="149">Uygulama B</text>
+    <text x="805" y="149">Uygulama C</text>
+    <text x="545" y="199">Kütüphaneler</text>
+    <text x="675" y="199">Kütüphaneler</text>
+    <text x="805" y="199">Kütüphaneler</text>
+  </g>
+  <g font-size="10" fill="var(--da-muted, #64748b)" text-anchor="middle">
+    <text x="545" y="217">imaj katmanları</text>
+    <text x="675" y="217">imaj katmanları</text>
+    <text x="805" y="217">imaj katmanları</text>
+  </g>
+  <rect x="490" y="244" width="370" height="46" rx="10" fill="var(--da-success, #10b981)" opacity="0.14" stroke="var(--da-success, #10b981)"/>
+  <text x="675" y="272" text-anchor="middle" font-size="13" font-weight="600" fill="var(--da-fg, #0f172a)">Docker motoru (containerd, runc)</text>
+  <rect x="490" y="298" width="370" height="40" rx="10" fill="var(--da-accent, #f59e0b)" opacity="0.18" stroke="var(--da-accent, #f59e0b)"/>
+  <text x="675" y="323" text-anchor="middle" font-size="13" font-weight="600" fill="var(--da-fg, #0f172a)">Tek Linux çekirdeği (paylaşılır)</text>
+  <rect x="490" y="346" width="370" height="40" rx="10" fill="var(--da-surface, #f8fafc)" stroke="var(--da-border, #cbd5e1)"/>
+  <text x="675" y="371" text-anchor="middle" font-size="13" fill="var(--da-fg, #0f172a)">Donanım: CPU, RAM, disk, ağ</text>
+  <text x="675" y="100" text-anchor="middle" font-size="11" fill="var(--da-muted, #64748b)">yalıtım: namespace + cgroup</text>
+</svg>

@@ -399,6 +399,16 @@ rsync -avz --delete ./site/ magaza:/var/www/site/   # Klasör senkronize et
 
 Sunucu açıldıktan sonra ilk 15 dakikada yapılması gerekenler:
 
+Aşağıdaki adımların her biri ayrı bir savunma katmanı kurar. Güvenlik duvarı gereksiz kapıları kapatır, SSH yalnızca anahtarla giriş kabul eder, Fail2ban ısrarcı saldırganı ağ katmanında durdurur. Tek bir katman aşılsa bile diğerleri ayakta kalır.
+
+:::diagram{src="diagram.svg" alt="VPS güvenlik katmanları: internetten gelen trafik UFW'den geçer; 22, 80 ve 443 açık, 5432 kapalı; sshd yalnızca anahtarla giriş kabul eder, PostgreSQL yalnızca localhost'u dinler; Fail2ban auth.log'u okuyup tekrar eden başarısız girişleri güvenlik duvarında engeller|VPS security layers: traffic from the internet passes UFW; 22, 80 and 443 are open, 5432 is closed; sshd accepts key-only logins, PostgreSQL listens on localhost only; Fail2ban reads auth.log and blocks repeated failed logins at the firewall"}
+Her açık port bir kapıdır; kapının arkasındaki servis de ayrıca sıkılaştırılır.
+:::
+
+:::animation{scene="ssh-firewall.scene.json"}
+Bir paketin UFW kurallarında düşürülmesi, yöneticinin açık anahtarla girişi, parola deneyen botun reddedilip Fail2ban tarafından engellenmesi.
+:::
+
 ### 1. Sistemi Güncelleyin
 
 :::code{lang="bash"}
@@ -468,6 +478,12 @@ sudo fail2ban-client status sshd
 ```
 :::
 
+Fail2ban'ın varsayılan sshd ayarında aynı IP'den `findtime` (10 dakika) içinde `maxretry` (5) başarısız giriş gelirse o IP `bantime` (10 dakika) boyunca engellenir. Bu sayıların bir saldırganı ne kadar yavaşlattığını aşağıdaki modelde deneyebilirsiniz.
+
+:::interactive{type="bruteforce-login" attemptsPerSecond=20 lockoutAfter=5 lockoutSeconds=600 passwordSpace=100000000}
+Model, Fail2ban'ın varsayılanlarına yakın başlar: saniyede 20 deneme, 5 hatada kilit, 600 saniye kilit süresi. Önce "Kilitleme eşiği"ni 0'a çekin ve "Beklenen kırılma süresi"nin nasıl çöktüğüne bakın; bu, korumasız bir SSH'tır. Eşiği 5'e geri alıp "Artan gecikme" kutusunu açın: Fail2ban'daki `bantime.increment` seçeneği de tekrar eden saldırganın cezasını her seferinde uzatır. Son olarak "Parola uzayı"nı "Uzunluk ve karakter seti"ne çevirip kısa bir parola seçin. Kilit, IP değiştiren bir bot ağına karşı tek başına yetmez; bu yüzden asıl çözüm `PasswordAuthentication no` ile parola tahminini tamamen ortadan kaldırmaktır.
+:::
+
 ### 6. Otomatik Güvenlik Güncellemeleri
 
 :::code{lang="bash"}
@@ -504,6 +520,10 @@ Yayılması birkaç dakika ile birkaç saat sürebilir. Kontrol:
 ```bash
 dig alanadi.com +short
 ```
+:::
+
+:::realworld{company="Meta (Facebook)"}
+Tek bir VPS'te `authorized_keys` dosyasını elle yönetmek kolaydır; yüz binlerce sunucuda ise imkânsızlaşır. Facebook mühendislik blogunda 2016'da yayımlanan "Scalable and secure access with SSH" yazısı, şirketin bu sorunu nasıl çözdüğünü anlatır. Her sunucuya tek tek açık anahtar dağıtmak yerine OpenSSH'ın **sertifika** özelliğini kullanırlar. Sunucular yalnızca şirketin sertifika otoritesine (CA) güvenir. Mühendisin anahtarı bu otorite tarafından imzalanır; sertifikanın içinde kimin, hangi rolle (principal) ve ne kadar süreyle bağlanabileceği yazar. Sunuculara doğrudan değil, merkezî olarak denetlenen ara sunucular (bastion) üzerinden erişilir. Yazının dersimize bağlanan fikri şudur: parola hiç yoktur, kimlik kriptografik olarak kanıtlanır, yetki dar ve süreyle sınırlıdır. Küçük bir projede de aynı ilkeleri uygularsınız. Yalnızca anahtarla giriş açılır, root girişi kapatılır, ayrı bir `deploy` kullanıcısı kullanılır ve SSH'a yalnızca gereken yerden erişim verilir.
 :::
 
 :::quiz{src="quiz.json"}

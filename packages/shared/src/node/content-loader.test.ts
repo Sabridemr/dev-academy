@@ -65,6 +65,23 @@ describe('içerik doğrulayıcı', () => {
     expect(errors()).toEqual([]);
   });
 
+  it('öznitelik değerinde } olan directive satırını hata sayar', () => {
+    const dir = fixture();
+    const md = join(dir, 'lesson.md');
+    const src = readFileSync(md, 'utf8');
+    writeFileSync(
+      md,
+      src.replace(
+        /:::diagram\{[^}]*\}/,
+        ':::diagram{src="diagram.svg" alt="Sayaç {A:6, B:2}|Counter"}',
+      ),
+    );
+    const errs = errors();
+    expect(errs.some((e) => e.message.includes('directive açılış satırı ayrıştırılamadı'))).toBe(
+      true,
+    );
+  });
+
   it('simülatörün okumadığı interaktif parametreyi hata sayar', () => {
     const dir = fixture();
     const md = join(dir, 'lesson.md');
@@ -78,6 +95,30 @@ describe('içerik doğrulayıcı', () => {
     expect(errors().map((e) => e.message)).toEqual([
       expect.stringContaining('bilinmeyen parametre: healthChecks'),
     ]);
+  });
+
+  it('predict-run iz dosyası yoksa ya da src verilmemişse hata verir', () => {
+    const dir = fixture();
+    const md = join(dir, 'lesson.md');
+    const original = readFileSync(md, 'utf8');
+    writeFileSync(
+      md,
+      original.replace(
+        ':::quiz{',
+        ':::interactive{type="predict-run" src="yok.trace.json"}\nTahmin et.\n:::\n\n:::quiz{',
+      ),
+    );
+    expect(errors().map((e) => e.message)).toEqual([
+      expect.stringContaining('iz dosyası bulunamadı ya da geçersiz: yok.trace.json'),
+    ]);
+    writeFileSync(
+      md,
+      original.replace(
+        ':::quiz{',
+        ':::interactive{type="predict-run"}\nTahmin et.\n:::\n\n:::quiz{',
+      ),
+    );
+    expect(errors().map((e) => e.message)).toEqual([expect.stringContaining('src parametresi')]);
   });
 
   it('3 sorudan az quiz hata verir', () => {

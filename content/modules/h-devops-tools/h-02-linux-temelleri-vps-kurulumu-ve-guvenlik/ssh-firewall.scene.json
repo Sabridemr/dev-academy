@@ -1,0 +1,204 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "vps-ssh-ufw-fail2ban",
+  "title": { "tr": "VPS Savunması: UFW, SSH Anahtarı ve Fail2ban", "en": "VPS Defence: UFW, SSH Keys and Fail2ban" },
+  "summary": {
+    "tr": "Gelen paketler önce UFW kurallarından geçer; yönetici SSH anahtarıyla girer, parola deneyen bot reddedilir ve Fail2ban tarafından engellenir.",
+    "en": "Incoming packets first pass the UFW rules; the administrator logs in with an SSH key, a bot trying passwords is rejected and then banned by Fail2ban."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda üstte özel anahtarlı yönetici, altta bir saldırgan bot bulunur. Ortada UFW güvenlik duvarı, sağında sshd (22), nginx (80/443) ve PostgreSQL (5432) servisleri, en sağda auth.log ve Fail2ban yer alır. Adımlarda 5432'ye gelen paket düşürülür, 443'e gelen geçer, yönetici açık anahtar doğrulamasıyla girer, botun parola denemeleri reddedilir, Fail2ban beş başarısız denemeden sonra botun IP'sini engeller ve sonraki paketleri güvenlik duvarında durdurur.",
+      "en": "The administrator with a private key is at the top left and an attacking bot at the bottom left. The UFW firewall is in the middle, with sshd (22), nginx (80/443) and PostgreSQL (5432) to its right, and auth.log and Fail2ban on the far right. Over the steps a packet to 5432 is dropped, one to 443 passes, the administrator logs in with public key authentication, the bot's password attempts are rejected, Fail2ban bans the bot's IP after five failures and its next packets stop at the firewall."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "admin", "kind": "user", "label": { "tr": "Yönetici", "en": "Administrator" }, "sublabel": "~/.ssh/id_ed25519", "x": 110, "y": 160, "w": 160, "h": 70 },
+    { "id": "bot", "kind": "client", "label": "Bot", "sublabel": "198.51.100.23", "x": 110, "y": 450, "w": 160, "h": 70, "color": "danger" },
+    { "id": "ufw", "kind": "gateway", "label": "UFW", "sublabel": { "tr": "varsayılan: gelen reddet", "en": "default: deny incoming" }, "x": 380, "y": 300, "w": 170, "h": 90, "color": "primary" },
+    { "id": "sshd", "kind": "service", "label": "sshd :22", "sublabel": { "tr": "yalnızca anahtar", "en": "keys only" }, "x": 640, "y": 150, "w": 170, "h": 64 },
+    { "id": "nginx", "kind": "proxy", "label": "nginx :80/443", "x": 640, "y": 300, "w": 170, "h": 64 },
+    { "id": "db", "kind": "db", "label": "PostgreSQL :5432", "sublabel": { "tr": "dışarıya kapalı", "en": "closed to outside" }, "x": 640, "y": 460, "w": 180, "h": 64 },
+    { "id": "authlog", "kind": "storage", "label": "auth.log", "sublabel": "/var/log/auth.log", "x": 880, "y": 150, "w": 160, "h": 64 },
+    { "id": "f2b", "kind": "worker", "label": "Fail2ban", "sublabel": "maxretry=5", "x": 880, "y": 400, "w": 150, "h": 64 }
+  ],
+  "edges": [
+    { "id": "admin-ufw", "from": "admin", "to": "ufw", "kind": "request" },
+    { "id": "bot-ufw", "from": "bot", "to": "ufw", "kind": "request" },
+    { "id": "ufw-sshd", "from": "ufw", "to": "sshd", "kind": "request", "label": "22/tcp" },
+    { "id": "ufw-nginx", "from": "ufw", "to": "nginx", "kind": "request", "label": "443/tcp" },
+    { "id": "ufw-db", "from": "ufw", "to": "db", "kind": "request", "label": "5432/tcp", "style": "dashed" },
+    { "id": "sshd-log", "from": "sshd", "to": "authlog", "kind": "data" },
+    { "id": "log-f2b", "from": "authlog", "to": "f2b", "kind": "data", "label": { "tr": "okur", "en": "reads" } },
+    { "id": "f2b-ufw", "from": "f2b", "to": "ufw", "kind": "control", "label": { "tr": "engelleme kuralı", "en": "ban rule" }, "curvature": 0.35 }
+  ],
+  "steps": [
+    {
+      "id": "policy",
+      "title": { "tr": "Varsayılan kural: her şeyi reddet", "en": "Default policy: deny everything" },
+      "narration": {
+        "tr": "ufw default deny incoming ile sunucuya gelen her bağlantı varsayılan olarak reddedilir; yalnızca açıkça izin verilen portlar açılır: OpenSSH (22), 80 ve 443. Kural listesi bir beyaz listedir: unutulan port kapalı kalır.",
+        "en": "With ufw default deny incoming, every connection to the server is refused by default; only explicitly allowed ports open: OpenSSH (22), 80 and 443. The rule list is an allow list: a forgotten port stays closed."
+      },
+      "durationMs": 3800,
+      "inherit": false,
+      "highlight": { "nodes": ["ufw"], "edges": [] },
+      "nodeStates": {
+        "ufw": { "status": "active", "badge": "allow 22, 80, 443" },
+        "db": { "status": "muted" },
+        "f2b": { "status": "idle", "counter": 0 }
+      },
+      "edgeStates": { "ufw-db": { "status": "muted" }, "f2b-ufw": { "visible": false } },
+      "annotations": [{ "id": "status", "x": 380, "y": 400, "text": "sudo ufw status verbose", "target": "ufw" }]
+    },
+    {
+      "id": "drop-db",
+      "title": { "tr": "5432'ye gelen paket düşürülür", "en": "A packet to 5432 is dropped" },
+      "narration": {
+        "tr": "İnternetteki tarayıcı botlar açık veritabanı portlarını arar. 5432 için izin kuralı olmadığından paket UFW'de düşürülür ve PostgreSQL'e hiç ulaşmaz. Veritabanı yalnızca aynı makinedeki uygulamaya, localhost üzerinden hizmet verir.",
+        "en": "Scanner bots on the internet look for open database ports. There is no allow rule for 5432, so the packet is dropped at UFW and never reaches PostgreSQL. The database serves only the application on the same machine, over localhost."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["bot", "ufw"], "edges": ["bot-ufw", "ufw-db"] },
+      "nodeStates": { "bot": { "status": "active" }, "ufw": { "status": "warning", "badge": "DROP 5432" } },
+      "edgeStates": { "bot-ufw": { "status": "active" }, "ufw-db": { "status": "error" } },
+      "packets": [{ "edge": "bot-ufw", "shape": "dot", "label": ":5432", "color": "danger", "durationMs": 1100 }],
+      "annotations": [{ "id": "dropped", "x": 520, "y": 430, "text": { "tr": "kural yok → düşür", "en": "no rule → drop" }, "tone": "danger" }]
+    },
+    {
+      "id": "allow-web",
+      "title": { "tr": "443 herkese açık", "en": "443 is open to everyone" },
+      "narration": {
+        "tr": "Aynı kaynaktan 443'e gelen istek ise geçer: web sitesi herkese açık olmalıdır. Güvenlik duvarı kimin iyi niyetli olduğunu bilmez; yalnızca hangi kapının açık olduğuna bakar. Bu yüzden asıl koruma, açık kapının arkasındaki servisin sıkılaştırılmasıdır.",
+        "en": "A request to 443 from the same source passes, because the website must be public. The firewall does not know who is well-meaning; it only checks which door is open. So the real protection is hardening the service behind each open door."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["ufw", "nginx"], "edges": ["bot-ufw", "ufw-nginx"] },
+      "nodeStates": { "ufw": { "status": "active", "badge": "ALLOW 443" }, "nginx": { "status": "success" } },
+      "edgeStates": { "ufw-db": { "status": "muted" }, "ufw-nginx": { "status": "active" } },
+      "packets": [
+        { "edge": "bot-ufw", "shape": "dot", "label": ":443", "durationMs": 900 },
+        { "edge": "ufw-nginx", "shape": "dot", "startAt": 900, "durationMs": 800 }
+      ],
+      "annotations": []
+    },
+    {
+      "id": "admin-connect",
+      "title": { "tr": "Yönetici bağlanır: sunucu kimliğini kanıtlar", "en": "The administrator connects: the server proves its identity" },
+      "narration": {
+        "tr": "ssh deploy@sunucu ile 22'ye TCP bağlantısı açılır. İki taraf anahtar değişimiyle şifreli bir kanal kurar; sunucu kendi host anahtarıyla kimliğini kanıtlar. İstemci bu anahtarı known_hosts dosyasındaki kayıtla karşılaştırır; değişmişse uyarı verip durur.",
+        "en": "ssh deploy@server opens a TCP connection to 22. Both sides set up an encrypted channel through key exchange, and the server proves who it is with its host key. The client compares that key with the entry in known_hosts and stops with a warning if it has changed."
+      },
+      "durationMs": 4200,
+      "highlight": { "nodes": ["admin", "ufw", "sshd"], "edges": ["admin-ufw", "ufw-sshd"] },
+      "nodeStates": {
+        "bot": { "status": "idle" },
+        "nginx": { "status": "idle" },
+        "admin": { "status": "active" },
+        "ufw": { "status": "active", "badge": "ALLOW 22" },
+        "sshd": { "status": "busy", "badge": "host key" }
+      },
+      "edgeStates": { "bot-ufw": { "status": "idle" }, "ufw-nginx": { "status": "idle" }, "admin-ufw": { "status": "active" }, "ufw-sshd": { "status": "active" } },
+      "packets": [
+        { "edge": "admin-ufw", "shape": "dot", "label": "SYN :22", "durationMs": 900 },
+        { "edge": "ufw-sshd", "shape": "dot", "startAt": 900, "durationMs": 800 },
+        { "edge": "ufw-sshd", "shape": "diamond", "label": "host key", "direction": "backward", "startAt": 1900, "durationMs": 900 },
+        { "edge": "admin-ufw", "shape": "diamond", "direction": "backward", "startAt": 2800, "durationMs": 900 }
+      ],
+      "annotations": [{ "id": "known", "x": 110, "y": 260, "text": "~/.ssh/known_hosts", "target": "admin" }]
+    },
+    {
+      "id": "pubkey",
+      "title": { "tr": "Açık anahtarla doğrulama", "en": "Public key authentication" },
+      "narration": {
+        "tr": "Kullanıcı doğrulamasında istemci, bu oturuma özgü veriyi özel anahtarıyla imzalar ve imzayı yollar. sshd imzayı authorized_keys içindeki açık anahtarla doğrular. Özel anahtar makineden hiç çıkmaz; yakalanan trafik başka bir oturumda tekrar kullanılamaz.",
+        "en": "For user authentication the client signs data unique to this session with its private key and sends the signature. sshd verifies it against the public key in authorized_keys. The private key never leaves the machine, and captured traffic cannot be replayed in another session."
+      },
+      "durationMs": 4400,
+      "highlight": { "nodes": ["admin", "sshd"], "edges": ["admin-ufw", "ufw-sshd"] },
+      "nodeStates": { "sshd": { "status": "success", "badge": "deploy@magaza" }, "admin": { "status": "success" }, "authlog": { "status": "active" } },
+      "edgeStates": { "sshd-log": { "status": "active" } },
+      "packets": [
+        { "edge": "admin-ufw", "shape": "envelope", "label": { "tr": "imza", "en": "signature" }, "durationMs": 1000 },
+        { "edge": "ufw-sshd", "shape": "envelope", "startAt": 1000, "durationMs": 900 },
+        { "edge": "sshd-log", "shape": "dot", "label": "Accepted publickey", "color": "success", "startAt": 2000, "durationMs": 900 }
+      ],
+      "annotations": [{ "id": "authkeys", "x": 640, "y": 60, "text": "~/.ssh/authorized_keys", "target": "sshd", "tone": "success" }]
+    },
+    {
+      "id": "bot-password",
+      "title": { "tr": "Bot parola dener", "en": "The bot tries a password" },
+      "narration": {
+        "tr": "Bot root ve admin gibi adlarla parola dener. sshd_config'te PasswordAuthentication no ve PermitRootLogin no olduğu için sunucu parola sormaz bile: Permission denied (publickey). Her başarısız deneme auth.log'a bir satır olarak yazılır.",
+        "en": "The bot tries passwords with names like root and admin. Because sshd_config has PasswordAuthentication no and PermitRootLogin no, the server does not even ask for a password: Permission denied (publickey). Every failed attempt is written to auth.log."
+      },
+      "durationMs": 4200,
+      "highlight": { "nodes": ["bot", "sshd", "authlog"], "edges": ["bot-ufw", "ufw-sshd", "sshd-log"] },
+      "nodeStates": {
+        "admin": { "status": "idle" },
+        "bot": { "status": "active", "badge": "root / 123456" },
+        "sshd": { "status": "warning", "badge": "Permission denied" },
+        "authlog": { "status": "warning" },
+        "f2b": { "status": "active", "counter": 1 }
+      },
+      "edgeStates": { "admin-ufw": { "status": "idle" }, "bot-ufw": { "status": "active" }, "ufw-sshd": { "status": "active" }, "log-f2b": { "status": "active" } },
+      "packets": [
+        { "edge": "bot-ufw", "shape": "dot", "label": ":22", "color": "danger", "durationMs": 900 },
+        { "edge": "ufw-sshd", "shape": "dot", "color": "danger", "startAt": 900, "durationMs": 800 },
+        { "edge": "sshd-log", "shape": "dot", "label": "Failed", "color": "danger", "startAt": 1800, "durationMs": 800 },
+        { "edge": "log-f2b", "shape": "dot", "color": "danger", "startAt": 2600, "durationMs": 800 }
+      ]
+    },
+    {
+      "id": "count",
+      "title": { "tr": "Fail2ban sayar", "en": "Fail2ban counts" },
+      "narration": {
+        "tr": "Fail2ban auth.log'u izler ve aynı IP'den gelen başarısızlıkları sayar. Varsayılan sshd hapsinde (jail) findtime içinde maxretry kadar hata birikirse IP engellenir. Bot hız kesmez; sayaç beşe ulaşır.",
+        "en": "Fail2ban watches auth.log and counts failures coming from the same IP. In the default sshd jail, if maxretry failures pile up within findtime, the IP is banned. The bot keeps going; the counter reaches five."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["f2b"], "edges": ["sshd-log", "log-f2b"] },
+      "nodeStates": { "f2b": { "status": "warning", "counter": 5, "badge": "5 / 5" }, "sshd": { "status": "warning" } },
+      "packets": [
+        { "edge": "bot-ufw", "shape": "dot", "color": "danger", "durationMs": 600, "repeat": 4, "repeatGapMs": 150 },
+        { "edge": "log-f2b", "shape": "dot", "color": "danger", "startAt": 700, "durationMs": 600, "repeat": 4, "repeatGapMs": 150 }
+      ]
+    },
+    {
+      "id": "ban",
+      "title": { "tr": "IP engellenir", "en": "The IP is banned" },
+      "narration": {
+        "tr": "Eşik aşılınca Fail2ban güvenlik duvarına bu IP için geçici bir engelleme kuralı ekler (bantime süresince). Engel sshd'nin değil, ağ katmanının işidir: sonraki paketler servise ulaşmadan durur. fail2ban-client status sshd engelli IP'leri listeler.",
+        "en": "Once the threshold is crossed, Fail2ban adds a temporary block rule for this IP to the firewall (for bantime). The block is done by the network layer, not sshd: later packets stop before reaching the service. fail2ban-client status sshd lists the banned IPs."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["f2b", "ufw"], "edges": ["f2b-ufw"] },
+      "nodeStates": { "f2b": { "status": "active", "badge": "ban 198.51.100.23" }, "ufw": { "status": "warning", "badge": "+ REJECT 198.51.100.23" }, "authlog": { "status": "idle" }, "sshd": { "status": "idle", "badge": "" } },
+      "edgeStates": { "f2b-ufw": { "visible": true, "status": "active" }, "sshd-log": { "status": "idle" }, "log-f2b": { "status": "idle" } },
+      "packets": [{ "edge": "f2b-ufw", "shape": "square", "label": "ban", "color": "warning", "durationMs": 1300 }]
+    },
+    {
+      "id": "blocked",
+      "title": { "tr": "Bot duvara çarpar, yönetici etkilenmez", "en": "The bot hits the wall, the administrator is unaffected" },
+      "narration": {
+        "tr": "Botun yeni paketleri güvenlik duvarında geri çevrilir ve sshd'yi meşgul etmez; aynı anda yöneticinin oturumu sorunsuz sürer. Katmanlar birbirini tamamlar: UFW gereksiz kapıları kapatır, anahtar doğrulaması parola tahminini anlamsız kılar, Fail2ban gürültüyü kaynağında keser.",
+        "en": "The bot's new packets are turned away at the firewall and no longer keep sshd busy, while the administrator's session carries on. The layers complement each other: UFW closes needless doors, key authentication makes password guessing pointless and Fail2ban cuts the noise at its source."
+      },
+      "durationMs": 4400,
+      "highlight": { "nodes": ["bot", "ufw", "admin", "sshd"], "edges": ["bot-ufw", "admin-ufw", "ufw-sshd"] },
+      "nodeStates": { "bot": { "status": "down", "badge": "banned" }, "admin": { "status": "success" }, "sshd": { "status": "success", "badge": "deploy@magaza" }, "f2b": { "status": "success" } },
+      "edgeStates": { "bot-ufw": { "status": "error" }, "admin-ufw": { "status": "active" }, "f2b-ufw": { "status": "idle" } },
+      "packets": [
+        { "edge": "bot-ufw", "shape": "dot", "color": "danger", "durationMs": 800, "repeat": 3, "repeatGapMs": 300 },
+        { "edge": "admin-ufw", "shape": "envelope", "durationMs": 900 },
+        { "edge": "ufw-sshd", "shape": "envelope", "startAt": 900, "durationMs": 800 }
+      ],
+      "annotations": [{ "id": "layers", "x": 380, "y": 560, "text": { "tr": "UFW + yalnızca anahtar + Fail2ban", "en": "UFW + keys only + Fail2ban" }, "tone": "success" }]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["linux", "ssh", "ufw", "fail2ban", "security"]
+}

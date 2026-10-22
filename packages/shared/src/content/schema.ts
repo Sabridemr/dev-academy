@@ -115,6 +115,13 @@ export const InteractiveTypeSchema = z.enum([
   'jwt-inspector',
   'bruteforce-login',
   'git-graph',
+  'dp-table',
+  'heap',
+  'stack-queue',
+  'python-memory',
+  'predict-run',
+  'sql-playground',
+  'docker-layers',
 ]);
 export type InteractiveType = z.infer<typeof InteractiveTypeSchema>;
 
@@ -162,7 +169,30 @@ export const INTERACTIVE_PARAMS = {
   'jwt-inspector': ['secret', 'token'],
   'bruteforce-login': ['attemptsPerSecond', 'lockoutAfter', 'lockoutSeconds', 'passwordSpace'],
   'git-graph': ['scenario'],
+  'dp-table': ['problem', 'size'],
+  heap: ['initial', 'kind'],
+  'stack-queue': ['expression', 'mode'],
+  'python-memory': ['scenario'],
+  'predict-run': ['src'],
+  'sql-playground': ['dataset', 'query'],
+  'docker-layers': ['contextMb', 'example'],
 } as const satisfies Record<InteractiveType, readonly string[]>;
+
+/** Kod izini (`*.trace.json`) girdi olarak alan interaktif türler: iz, `src` parametresinden çözülür */
+export const TRACE_INTERACTIVES: readonly InteractiveType[] = ['predict-run'];
+
+/**
+ * İz kullanan interaktif bloğun ders klasörüne göre iz dosya adı (`src` parametresi); iz kullanmayan
+ * türlerde ya da parametre eksikse null. İçerik doğrulayıcısı ve seed aynı çözümlemeyi kullanır.
+ */
+export function interactiveTraceSrc(block: {
+  interactive: InteractiveType;
+  params?: Record<string, unknown>;
+}): string | null {
+  if (!TRACE_INTERACTIVES.includes(block.interactive)) return null;
+  const src = block.params?.src;
+  return typeof src === 'string' && src.length > 0 ? src : null;
+}
 
 /** Quiz soru sayısı kuralı (içerik yazım kılavuzu): en az 3, en fazla 6 */
 export const QUIZ_QUESTION_RANGE = { min: 3, max: 6 } as const;
@@ -174,6 +204,8 @@ export const InteractiveBlockSchema = BaseBlock.extend({
   params: z.record(z.unknown()).default({}),
   title: LocalizedStringSchema.optional(),
   instructions: LocalizedStringSchema.optional(),
+  /** predict-run: `params.src` ile verilen ders klasöründeki kod izi (seed sırasında doldurulur) */
+  trace: CodeTraceSchema.optional(),
 });
 
 export const CodeBlockSchema = BaseBlock.extend({

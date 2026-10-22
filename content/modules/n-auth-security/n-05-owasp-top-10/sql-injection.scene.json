@@ -1,0 +1,520 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "n-05-sql-injection",
+  "title": {
+    "tr": "SQL Enjeksiyonu ve Parametreli Sorgu",
+    "en": "SQL Injection and Parameterised Queries"
+  },
+  "summary": {
+    "tr": "Normal bir ad sorgusu tek satır döndürür. Tırnak içeren girdi string birleştirmeyle sorgunun yapısını değiştirir ve tüm tablo sızar. Parametreli sorguda sorgu şablonu ve değer ayrı gider; aynı girdi yalnızca bir değer olarak kalır.",
+    "en": "A normal name lookup returns one row. Input containing a quote changes the query structure through string concatenation and the whole table leaks. With a parameterised query the template and the value travel separately; the same input stays just a value."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Soldan sağa kullanıcı, arama formu, API, SQL ayrıştırıcısı ve kullanıcılar tablosu bulunur. İlk akışta \"ayse\" girdisi sorguya eklenir ve tek satır döner. İkinci akışta tırnak ve OR içeren girdi string birleştirmeyle sorguya yapıştırılır; ayrıştırıcı yeni bir koşul görür ve veritabanı tüm satırları döndürür. Üçüncü akışta API parametreli sorgu kullanır: sorgu şablonu ve değer ayrı paketler olarak gider, ayrıştırıcının yapısı değişmez ve sonuç boş döner.",
+      "en": "From left to right: the user, a search form, the API, the SQL parser and the users table. In the first flow the input \"ayse\" is added to the query and one row returns. In the second, input containing a quote and OR is pasted into the query by string concatenation; the parser sees a new condition and the database returns every row. In the third the API uses a parameterised query: the template and the value travel as separate packets, the parser's structure does not change and the result is empty."
+    }
+  },
+  "canvas": {
+    "width": 1000,
+    "height": 600
+  },
+  "nodes": [
+    {
+      "id": "user",
+      "kind": "user",
+      "label": {
+        "tr": "Kullanıcı / saldırgan",
+        "en": "User / attacker"
+      },
+      "x": 90,
+      "y": 300,
+      "w": 140,
+      "h": 76
+    },
+    {
+      "id": "form",
+      "kind": "browser",
+      "label": {
+        "tr": "Arama formu",
+        "en": "Search form"
+      },
+      "x": 260,
+      "y": 300,
+      "w": 130,
+      "h": 76
+    },
+    {
+      "id": "api",
+      "kind": "server",
+      "label": "API",
+      "sublabel": {
+        "tr": "sorgu oluşturucu",
+        "en": "query builder"
+      },
+      "x": 460,
+      "y": 300,
+      "w": 140,
+      "h": 84
+    },
+    {
+      "id": "parser",
+      "kind": "function",
+      "label": {
+        "tr": "SQL ayrıştırıcı",
+        "en": "SQL parser"
+      },
+      "x": 680,
+      "y": 300,
+      "w": 140,
+      "h": 80
+    },
+    {
+      "id": "db",
+      "kind": "db",
+      "label": {
+        "tr": "users tablosu",
+        "en": "users table"
+      },
+      "x": 890,
+      "y": 300,
+      "w": 140,
+      "h": 80
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-user-form",
+      "from": "user",
+      "to": "form",
+      "kind": "request"
+    },
+    {
+      "id": "e-form-api",
+      "from": "form",
+      "to": "api",
+      "kind": "request"
+    },
+    {
+      "id": "e-api-parser",
+      "from": "api",
+      "to": "parser",
+      "kind": "request"
+    },
+    {
+      "id": "e-parser-db",
+      "from": "parser",
+      "to": "db",
+      "kind": "data"
+    }
+  ],
+  "steps": [
+    {
+      "id": "normal",
+      "title": {
+        "tr": "Normal girdi",
+        "en": "Normal input"
+      },
+      "narration": {
+        "tr": "Kullanıcı arama kutusuna bir ad yazar. API bu değeri sorgu metnine yapıştırır; tırnaklar arasındaki değer bir ad olarak kalır ve veritabanı tek satır döndürür.",
+        "en": "The user types a name into the search box. The API pastes the value into the query text; the value between the quotes stays a name and the database returns one row."
+      },
+      "durationMs": 4200,
+      "inherit": false,
+      "highlight": {
+        "nodes": [
+          "user",
+          "form",
+          "api",
+          "parser",
+          "db"
+        ],
+        "edges": [
+          "e-user-form",
+          "e-form-api",
+          "e-api-parser",
+          "e-parser-db"
+        ]
+      },
+      "nodeStates": {
+        "api": {
+          "status": "active"
+        },
+        "parser": {
+          "status": "success"
+        },
+        "db": {
+          "status": "success",
+          "badge": "1 satır"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-user-form",
+          "shape": "dot",
+          "label": "ayse",
+          "durationMs": 700
+        },
+        {
+          "edge": "e-form-api",
+          "shape": "dot",
+          "label": "name=ayse",
+          "startAt": 800,
+          "durationMs": 700
+        },
+        {
+          "edge": "e-api-parser",
+          "shape": "square",
+          "label": "… WHERE name = 'ayse'",
+          "startAt": 1600,
+          "durationMs": 1000
+        },
+        {
+          "edge": "e-parser-db",
+          "shape": "dot",
+          "label": "SELECT",
+          "startAt": 2700,
+          "durationMs": 700
+        },
+        {
+          "edge": "e-parser-db",
+          "direction": "backward",
+          "shape": "dot",
+          "label": "1",
+          "color": "success",
+          "startAt": 3500,
+          "durationMs": 600
+        }
+      ]
+    },
+    {
+      "id": "malicious",
+      "title": {
+        "tr": "Tırnak içeren girdi",
+        "en": "Input with a quote"
+      },
+      "narration": {
+        "tr": "Saldırgan ad yerine bir tırnak ve ardından OR koşulu yazar. Form ve API için bu yalnızca bir metindir; kimse içeriğine bakmaz.",
+        "en": "Instead of a name the attacker types a quote followed by an OR condition. To the form and the API it is just text; nobody inspects it."
+      },
+      "durationMs": 3000,
+      "highlight": {
+        "nodes": [
+          "user",
+          "form",
+          "api"
+        ],
+        "edges": [
+          "e-user-form",
+          "e-form-api"
+        ]
+      },
+      "nodeStates": {
+        "user": {
+          "status": "warning"
+        },
+        "parser": {
+          "status": "idle"
+        },
+        "db": {
+          "status": "idle"
+        },
+        "api": {
+          "status": "active"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-user-form",
+          "shape": "dot",
+          "label": "' OR '1'='1",
+          "color": "danger",
+          "durationMs": 1000
+        },
+        {
+          "edge": "e-form-api",
+          "shape": "dot",
+          "label": "name=' OR '1'='1",
+          "color": "danger",
+          "startAt": 1200,
+          "durationMs": 1000
+        }
+      ]
+    },
+    {
+      "id": "concat",
+      "title": {
+        "tr": "String birleştirme",
+        "en": "String concatenation"
+      },
+      "narration": {
+        "tr": "API değeri tırnakların arasına yapıştırır. Girdideki ilk tırnak ad dizesini erken kapatır; geri kalanı artık veri değil, sorgunun bir parçasıdır.",
+        "en": "The API pastes the value between the quotes. The first quote in the input closes the name string early; the rest is no longer data but part of the query."
+      },
+      "durationMs": 3200,
+      "highlight": {
+        "nodes": [
+          "api"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "api": {
+          "status": "warning",
+          "badge": "birleştirme"
+        }
+      },
+      "annotations": [
+        {
+          "id": "a-concat",
+          "x": 460,
+          "y": 170,
+          "text": "WHERE name = '' OR '1'='1'",
+          "tone": "danger",
+          "target": "api"
+        }
+      ]
+    },
+    {
+      "id": "parsed",
+      "title": {
+        "tr": "Veri koda dönüştü",
+        "en": "Data became code"
+      },
+      "narration": {
+        "tr": "Ayrıştırıcı sorguyu okur ve iki koşul görür: boş ad VEYA her zaman doğru olan bir eşitlik. Sorgunun yapısı değişmiştir; veritabanı bunu meşru bir istek sanar.",
+        "en": "The parser reads the query and sees two conditions: an empty name OR an equality that is always true. The query structure has changed; the database takes it as a legitimate request."
+      },
+      "durationMs": 3200,
+      "highlight": {
+        "nodes": [
+          "api",
+          "parser"
+        ],
+        "edges": [
+          "e-api-parser"
+        ]
+      },
+      "nodeStates": {
+        "parser": {
+          "status": "error",
+          "badge": "yapı değişti"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-api-parser",
+          "shape": "square",
+          "label": "… OR '1'='1'",
+          "color": "danger",
+          "durationMs": 1200
+        }
+      ]
+    },
+    {
+      "id": "leak",
+      "title": {
+        "tr": "Tüm tablo sızar",
+        "en": "The whole table leaks"
+      },
+      "narration": {
+        "tr": "Koşul her satır için doğru olduğundan veritabanı tüm kullanıcıları döndürür ve sonuç saldırgana kadar gider. Girdiyi \"temizlemeye\" çalışmak bu açığı güvenilir biçimde kapatmaz.",
+        "en": "Since the condition is true for every row, the database returns all users and the result travels back to the attacker. Trying to \"sanitise\" the input does not close this hole reliably."
+      },
+      "durationMs": 3600,
+      "highlight": {
+        "nodes": [
+          "parser",
+          "db",
+          "user"
+        ],
+        "edges": [
+          "e-parser-db",
+          "e-api-parser",
+          "e-form-api",
+          "e-user-form"
+        ]
+      },
+      "nodeStates": {
+        "db": {
+          "status": "error",
+          "badge": "tüm satırlar"
+        },
+        "user": {
+          "status": "error"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-parser-db",
+          "shape": "dot",
+          "label": "SELECT",
+          "durationMs": 700
+        },
+        {
+          "edge": "e-parser-db",
+          "direction": "backward",
+          "shape": "dot",
+          "label": {
+            "tr": "tüm kullanıcılar",
+            "en": "all users"
+          },
+          "color": "danger",
+          "startAt": 800,
+          "durationMs": 800
+        },
+        {
+          "edge": "e-api-parser",
+          "direction": "backward",
+          "shape": "dot",
+          "label": "*",
+          "color": "danger",
+          "startAt": 1700,
+          "durationMs": 600
+        },
+        {
+          "edge": "e-form-api",
+          "direction": "backward",
+          "shape": "dot",
+          "label": "*",
+          "color": "danger",
+          "startAt": 2400,
+          "durationMs": 600
+        },
+        {
+          "edge": "e-user-form",
+          "direction": "backward",
+          "shape": "dot",
+          "label": "*",
+          "color": "danger",
+          "startAt": 3100,
+          "durationMs": 600
+        }
+      ]
+    },
+    {
+      "id": "param",
+      "title": {
+        "tr": "Parametreli sorgu",
+        "en": "Parameterised query"
+      },
+      "narration": {
+        "tr": "Düzeltilmiş API sorgu metnine yalnızca bir yer tutucu koyar ve değeri ayrı gönderir. Önce şablon, sonra değer gider; ikisi hiçbir noktada aynı dizeye birleşmez.",
+        "en": "The fixed API puts only a placeholder in the query text and sends the value separately. First the template, then the value; the two are never joined into one string."
+      },
+      "durationMs": 3600,
+      "highlight": {
+        "nodes": [
+          "api",
+          "parser"
+        ],
+        "edges": [
+          "e-api-parser"
+        ]
+      },
+      "nodeStates": {
+        "api": {
+          "status": "success",
+          "badge": "$1"
+        },
+        "parser": {
+          "status": "active"
+        },
+        "db": {
+          "status": "idle"
+        },
+        "user": {
+          "status": "warning"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-api-parser",
+          "shape": "square",
+          "label": "WHERE name = $1",
+          "durationMs": 1100
+        },
+        {
+          "edge": "e-api-parser",
+          "shape": "diamond",
+          "label": {
+            "tr": "değer: ' OR '1'='1",
+            "en": "value: ' OR '1'='1"
+          },
+          "startAt": 1400,
+          "durationMs": 1100
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a-param",
+          "x": 460,
+          "y": 170,
+          "text": "WHERE name = $1",
+          "tone": "success",
+          "target": "api"
+        }
+      ]
+    },
+    {
+      "id": "safe",
+      "title": {
+        "tr": "Değer yalnızca değer kalır",
+        "en": "The value stays a value"
+      },
+      "narration": {
+        "tr": "Ayrıştırıcı sorgunun yapısını değerden önce bilir; gelen metin ne içerirse içersin tek bir ad olarak karşılaştırılır. Bu adda bir kullanıcı yoktur ve sonuç boş döner.",
+        "en": "The parser knows the query structure before the value arrives; whatever the text contains, it is compared as a single name. No user has that name and the result is empty."
+      },
+      "durationMs": 3400,
+      "highlight": {
+        "nodes": [
+          "parser",
+          "db"
+        ],
+        "edges": [
+          "e-parser-db"
+        ]
+      },
+      "nodeStates": {
+        "parser": {
+          "status": "success",
+          "badge": "yapı sabit"
+        },
+        "db": {
+          "status": "success",
+          "badge": "0 satır"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-parser-db",
+          "shape": "dot",
+          "label": "SELECT",
+          "durationMs": 800
+        },
+        {
+          "edge": "e-parser-db",
+          "direction": "backward",
+          "shape": "dot",
+          "label": {
+            "tr": "boş sonuç",
+            "en": "empty result"
+          },
+          "color": "success",
+          "startAt": 1000,
+          "durationMs": 900
+        }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": [
+    "owasp",
+    "sql-injection",
+    "parameterized-query",
+    "injection"
+  ]
+}

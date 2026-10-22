@@ -1,0 +1,648 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "m-05-eval-pipeline",
+  "title": {
+    "tr": "Değerlendirme Hattı ve Regresyon Kapısı",
+    "en": "Evaluation Pipeline and Regression Gate"
+  },
+  "summary": {
+    "tr": "Bir prompt değişikliği CI'da altın veri setiyle çalıştırılır; kural kontrolleri ve LLM yargıcı puan üretir, metrikler kırılımlara ayrılır. Bir etikette gerileme kapıyı kapatır; düzeltme sonrası kapı açılır ve üretimdeki hatalar veri setine geri döner.",
+    "en": "A prompt change runs against the golden dataset in CI; rule checks and an LLM judge produce scores and metrics are broken down by label. A regression in one label closes the gate; after a fix the gate opens and production failures flow back into the dataset."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda değişiklik isteği, üstte altın veri seti, ortada LLM uygulaması, sağda üstte kural kontrolleri ve altta LLM yargıcı, onların sağında metrikler, en sağda CI kapısı ve sağ üstte üretim bulunur. Değişiklik CI'ı tetikler, veri setinin örnekleri uygulamadan geçer, çıktılar kurallarla ve yargıçla puanlanır. Ortalama yükselir ama iade etiketinde gerileme görülür ve kapı kırmızıya döner. Düzeltilmiş sürüm yeniden çalıştırılır, tüm kırılımlar eşikleri geçer ve kapı kademeli dağıtıma izin verir. Son adımda üretimde yakalanan kötü bir cevap altın veri setine yeni bir test olarak eklenir.",
+      "en": "On the left the change request, at the top the golden dataset, in the middle the LLM application, on the right rule checks above and the LLM judge below, then metrics, the CI gate at the far right and production at the top right. The change triggers CI, the dataset examples run through the application and outputs are scored by rules and by the judge. The average rises but the returns label regresses and the gate turns red. The fixed version is rerun, every slice passes its threshold and the gate allows a gradual rollout. In the last step a bad answer caught in production is added to the golden dataset as a new test."
+    }
+  },
+  "canvas": {
+    "width": 1000,
+    "height": 600
+  },
+  "nodes": [
+    {
+      "id": "pr",
+      "kind": "user",
+      "label": {
+        "tr": "Değişiklik",
+        "en": "Change"
+      },
+      "sublabel": "prompt v7",
+      "x": 90,
+      "y": 320,
+      "w": 130,
+      "h": 76
+    },
+    {
+      "id": "golden",
+      "kind": "db",
+      "label": {
+        "tr": "Altın veri seti",
+        "en": "Golden dataset"
+      },
+      "x": 300,
+      "y": 110,
+      "w": 160,
+      "h": 76
+    },
+    {
+      "id": "app",
+      "kind": "model",
+      "label": {
+        "tr": "LLM uygulaması",
+        "en": "LLM application"
+      },
+      "x": 300,
+      "y": 320,
+      "w": 160,
+      "h": 84
+    },
+    {
+      "id": "rules",
+      "kind": "function",
+      "label": {
+        "tr": "Kural kontrolleri",
+        "en": "Rule checks"
+      },
+      "sublabel": {
+        "tr": "şema, kaynak",
+        "en": "schema, citations"
+      },
+      "x": 540,
+      "y": 210,
+      "w": 150,
+      "h": 72
+    },
+    {
+      "id": "judge",
+      "kind": "model",
+      "label": {
+        "tr": "LLM yargıcı",
+        "en": "LLM judge"
+      },
+      "sublabel": {
+        "tr": "rubrik",
+        "en": "rubric"
+      },
+      "x": 540,
+      "y": 440,
+      "w": 150,
+      "h": 72
+    },
+    {
+      "id": "metrics",
+      "kind": "generic",
+      "label": {
+        "tr": "Metrikler",
+        "en": "Metrics"
+      },
+      "sublabel": {
+        "tr": "kırılımlar",
+        "en": "slices"
+      },
+      "x": 750,
+      "y": 320,
+      "w": 130,
+      "h": 76
+    },
+    {
+      "id": "gate",
+      "kind": "gateway",
+      "label": {
+        "tr": "CI kapısı",
+        "en": "CI gate"
+      },
+      "x": 920,
+      "y": 320,
+      "w": 110,
+      "h": 76
+    },
+    {
+      "id": "prod",
+      "kind": "server",
+      "label": {
+        "tr": "Üretim",
+        "en": "Production"
+      },
+      "x": 900,
+      "y": 100,
+      "w": 130,
+      "h": 72
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-pr-app",
+      "from": "pr",
+      "to": "app",
+      "kind": "control",
+      "label": {
+        "tr": "CI tetikler",
+        "en": "triggers CI"
+      }
+    },
+    {
+      "id": "e-golden-app",
+      "from": "golden",
+      "to": "app",
+      "kind": "data"
+    },
+    {
+      "id": "e-app-rules",
+      "from": "app",
+      "to": "rules",
+      "kind": "data"
+    },
+    {
+      "id": "e-app-judge",
+      "from": "app",
+      "to": "judge",
+      "kind": "data"
+    },
+    {
+      "id": "e-rules-metrics",
+      "from": "rules",
+      "to": "metrics",
+      "kind": "data"
+    },
+    {
+      "id": "e-judge-metrics",
+      "from": "judge",
+      "to": "metrics",
+      "kind": "data"
+    },
+    {
+      "id": "e-metrics-gate",
+      "from": "metrics",
+      "to": "gate",
+      "kind": "control"
+    },
+    {
+      "id": "e-gate-prod",
+      "from": "gate",
+      "to": "prod",
+      "kind": "request",
+      "label": {
+        "tr": "kademeli dağıtım",
+        "en": "gradual rollout"
+      }
+    },
+    {
+      "id": "e-prod-golden",
+      "from": "prod",
+      "to": "golden",
+      "kind": "event",
+      "label": {
+        "tr": "hatalı örnek",
+        "en": "failing example"
+      },
+      "style": "dashed",
+      "curvature": -0.2
+    }
+  ],
+  "steps": [
+    {
+      "id": "trigger",
+      "title": {
+        "tr": "Değişiklik CI'ı tetikler",
+        "en": "The change triggers CI"
+      },
+      "narration": {
+        "tr": "Bir mühendis prompt'a yeni bir kural ekleyip çekme isteği açar. \"Bana iyi göründü\" yerine aynı ölçümler her değişiklikte tekrarlanabilir biçimde çalıştırılır.",
+        "en": "An engineer adds a new rule to the prompt and opens a pull request. Instead of \"looks good to me\", the same measurements run reproducibly on every change."
+      },
+      "durationMs": 2800,
+      "inherit": false,
+      "highlight": {
+        "nodes": [
+          "pr",
+          "app"
+        ],
+        "edges": [
+          "e-pr-app"
+        ]
+      },
+      "nodeStates": {
+        "pr": {
+          "status": "active",
+          "badge": "v7"
+        }
+      },
+      "edgeStates": {
+        "e-gate-prod": {
+          "status": "muted"
+        },
+        "e-prod-golden": {
+          "status": "muted"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-pr-app",
+          "shape": "envelope",
+          "label": "v7",
+          "durationMs": 1100
+        }
+      ]
+    },
+    {
+      "id": "run-set",
+      "title": {
+        "tr": "Altın veri seti çalışır",
+        "en": "The golden dataset runs"
+      },
+      "narration": {
+        "tr": "Gerçek trafikten, bilinen hatalardan ve kasıtlı zor vakalardan oluşan etiketli örnekler tek tek uygulamaya verilir. Her örneğin bir etiketi vardır: soru tipi, zorluk, test ettiği özellik.",
+        "en": "Labelled examples drawn from real traffic, known failures and deliberate hard cases are fed to the application one by one. Each example has a label: question type, difficulty, the feature it tests."
+      },
+      "durationMs": 3400,
+      "highlight": {
+        "nodes": [
+          "golden",
+          "app"
+        ],
+        "edges": [
+          "e-golden-app"
+        ]
+      },
+      "nodeStates": {
+        "golden": {
+          "status": "active",
+          "badge": "120 örnek"
+        },
+        "app": {
+          "status": "busy"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-golden-app",
+          "shape": "square",
+          "label": "örnek",
+          "durationMs": 700,
+          "repeat": 4,
+          "repeatGapMs": 200
+        }
+      ]
+    },
+    {
+      "id": "rules",
+      "title": {
+        "tr": "Önce ucuz kontroller",
+        "en": "Cheap checks first"
+      },
+      "narration": {
+        "tr": "Kodla kontrol edilebilen her şey kodla kontrol edilir: JSON şemaya uyuyor mu, kaynak kimlikleri bağlamda var mı, yasaklı ifade var mı? Bunlar ucuz, hızlı ve deterministiktir.",
+        "en": "Everything that code can check is checked by code: does the JSON match the schema, do citation ids exist in the context, is there a forbidden phrase? These are cheap, fast and deterministic."
+      },
+      "durationMs": 3000,
+      "highlight": {
+        "nodes": [
+          "app",
+          "rules"
+        ],
+        "edges": [
+          "e-app-rules"
+        ]
+      },
+      "nodeStates": {
+        "rules": {
+          "status": "success",
+          "badge": "✓ şema"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-app-rules",
+          "shape": "dot",
+          "label": "çıktı",
+          "durationMs": 700,
+          "repeat": 3,
+          "repeatGapMs": 200
+        }
+      ]
+    },
+    {
+      "id": "judge",
+      "title": {
+        "tr": "Anlam için LLM yargıcı",
+        "en": "An LLM judge for meaning"
+      },
+      "narration": {
+        "tr": "Cevabın kaynağa sadık olup olmadığı ve soruyu karşılayıp karşılamadığı gibi anlam gerektiren sorular, net bir rubrikle çalışan ayrı bir yargıç modele sorulur. Yargıç da bir modeldir; insan etiketleriyle uyumu ayrıca ölçülür.",
+        "en": "Questions that need meaning, such as whether the answer is faithful to the source and whether it addresses the question, go to a separate judge model with a clear rubric. The judge is a model too; its agreement with human labels is measured separately."
+      },
+      "durationMs": 3400,
+      "highlight": {
+        "nodes": [
+          "app",
+          "judge"
+        ],
+        "edges": [
+          "e-app-judge"
+        ]
+      },
+      "nodeStates": {
+        "judge": {
+          "status": "busy",
+          "badge": "sadakat?"
+        },
+        "app": {
+          "status": "idle"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-app-judge",
+          "shape": "dot",
+          "label": "çıktı + kaynak",
+          "durationMs": 800,
+          "repeat": 3,
+          "repeatGapMs": 200
+        }
+      ]
+    },
+    {
+      "id": "metrics",
+      "title": {
+        "tr": "Ortalama yükseldi, bir kırılım düştü",
+        "en": "The average rose, one slice dropped"
+      },
+      "narration": {
+        "tr": "Puanlar metriklere toplanır ve etiketlere göre kırılır. Ortalama bir önceki sürümden yüksektir, ama iade etiketli sorularda belirgin bir gerileme var. Bu, ancak kırılımlara bakınca görülür.",
+        "en": "Scores are aggregated into metrics and broken down by label. The average is higher than the previous version, but questions labelled \"returns\" regress noticeably. Only the breakdown reveals it."
+      },
+      "durationMs": 3400,
+      "highlight": {
+        "nodes": [
+          "metrics"
+        ],
+        "edges": [
+          "e-rules-metrics",
+          "e-judge-metrics"
+        ]
+      },
+      "nodeStates": {
+        "metrics": {
+          "status": "warning",
+          "badge": "ort. ↑"
+        },
+        "judge": {
+          "status": "success"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-rules-metrics",
+          "shape": "dot",
+          "label": "puan",
+          "durationMs": 900
+        },
+        {
+          "edge": "e-judge-metrics",
+          "shape": "dot",
+          "label": "puan",
+          "durationMs": 900
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a-slice",
+          "x": 750,
+          "y": 420,
+          "text": {
+            "tr": "iade kırılımı ↓",
+            "en": "returns slice ↓"
+          },
+          "tone": "danger",
+          "target": "metrics"
+        }
+      ]
+    },
+    {
+      "id": "gate-fail",
+      "title": {
+        "tr": "Kapı kapanır",
+        "en": "The gate closes"
+      },
+      "narration": {
+        "tr": "Karar tek tek testlere değil, toplu eşiklere bağlıdır: hiçbir kırılım önceki sürüme göre belirlenen paydan fazla gerileyemez. Kural ihlal edildiği için kapı kırmızıya döner ve dağıtım yapılmaz; bozulan örnekler tek tek okunur.",
+        "en": "The decision rests on aggregate thresholds, not single tests: no slice may regress more than the set margin against the previous version. The rule is broken, so the gate turns red and nothing is deployed; the broken examples are read one by one."
+      },
+      "durationMs": 3200,
+      "highlight": {
+        "nodes": [
+          "gate",
+          "pr"
+        ],
+        "edges": [
+          "e-metrics-gate"
+        ]
+      },
+      "nodeStates": {
+        "gate": {
+          "status": "error",
+          "badge": "✗ regresyon"
+        },
+        "pr": {
+          "status": "warning",
+          "badge": "düzelt"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-metrics-gate",
+          "shape": "diamond",
+          "label": "eşik",
+          "color": "danger",
+          "durationMs": 1000
+        }
+      ]
+    },
+    {
+      "id": "rerun",
+      "title": {
+        "tr": "Düzeltme ve yeniden çalıştırma",
+        "en": "Fix and rerun"
+      },
+      "narration": {
+        "tr": "Mühendis iade vakalarını bozan ifadeyi düzeltir. Aynı set, aynı kontroller ve aynı yargıç yeniden çalışır; böylece fark yalnızca değişiklikten gelir.",
+        "en": "The engineer fixes the wording that broke the returns cases. The same set, checks and judge run again, so any difference comes only from the change."
+      },
+      "durationMs": 3600,
+      "highlight": {
+        "nodes": [
+          "pr",
+          "app",
+          "rules",
+          "judge"
+        ],
+        "edges": [
+          "e-pr-app",
+          "e-app-rules",
+          "e-app-judge"
+        ]
+      },
+      "nodeStates": {
+        "pr": {
+          "status": "active",
+          "badge": "v8"
+        },
+        "gate": {
+          "status": "idle"
+        },
+        "metrics": {
+          "status": "success",
+          "badge": "kırılımlar ✓"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-pr-app",
+          "shape": "envelope",
+          "label": "v8",
+          "durationMs": 900
+        },
+        {
+          "edge": "e-app-rules",
+          "shape": "dot",
+          "label": "çıktı",
+          "startAt": 1100,
+          "durationMs": 900
+        },
+        {
+          "edge": "e-app-judge",
+          "shape": "dot",
+          "label": "çıktı",
+          "startAt": 1100,
+          "durationMs": 900
+        },
+        {
+          "edge": "e-rules-metrics",
+          "shape": "dot",
+          "label": "puan",
+          "startAt": 2200,
+          "durationMs": 800
+        },
+        {
+          "edge": "e-judge-metrics",
+          "shape": "dot",
+          "label": "puan",
+          "startAt": 2200,
+          "durationMs": 800
+        }
+      ]
+    },
+    {
+      "id": "deploy",
+      "title": {
+        "tr": "Kapı açılır: kademeli dağıtım",
+        "en": "The gate opens: gradual rollout"
+      },
+      "narration": {
+        "tr": "Tüm eşikler geçilir ve kapı yeşile döner. Yeni sürüm önce trafiğin küçük bir dilimine açılır; çevrimiçi sinyaller iki grup arasında karşılaştırılır.",
+        "en": "All thresholds pass and the gate turns green. The new version is first exposed to a small slice of traffic; online signals are compared between the two groups."
+      },
+      "durationMs": 3000,
+      "highlight": {
+        "nodes": [
+          "gate",
+          "prod"
+        ],
+        "edges": [
+          "e-metrics-gate",
+          "e-gate-prod"
+        ]
+      },
+      "nodeStates": {
+        "gate": {
+          "status": "success",
+          "badge": "✓"
+        },
+        "prod": {
+          "status": "active",
+          "badge": "%5 trafik"
+        },
+        "pr": {
+          "status": "success"
+        }
+      },
+      "edgeStates": {
+        "e-gate-prod": {
+          "status": "active"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-metrics-gate",
+          "shape": "diamond",
+          "label": "eşik",
+          "color": "success",
+          "durationMs": 800
+        },
+        {
+          "edge": "e-gate-prod",
+          "shape": "envelope",
+          "label": "v8",
+          "color": "success",
+          "startAt": 1000,
+          "durationMs": 1100
+        }
+      ]
+    },
+    {
+      "id": "close-loop",
+      "title": {
+        "tr": "Döngüyü kapatmak",
+        "en": "Closing the loop"
+      },
+      "narration": {
+        "tr": "Üretimde bir kullanıcı kötü bir cevabı işaretler. Örnek incelenir, nedeni sınıflandırılır ve altın veri setine yeni bir test olarak eklenir. Zamanla set, ürünün gerçekten zorlandığı vakaların haritasına dönüşür.",
+        "en": "In production a user flags a bad answer. The example is reviewed, its cause classified and it is added to the golden dataset as a new test. Over time the set becomes a map of the cases the product truly struggles with."
+      },
+      "durationMs": 3200,
+      "highlight": {
+        "nodes": [
+          "prod",
+          "golden"
+        ],
+        "edges": [
+          "e-prod-golden"
+        ]
+      },
+      "nodeStates": {
+        "golden": {
+          "status": "success",
+          "badge": "+1"
+        },
+        "prod": {
+          "status": "warning",
+          "badge": "şikâyet"
+        }
+      },
+      "edgeStates": {
+        "e-prod-golden": {
+          "status": "active"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e-prod-golden",
+          "shape": "square",
+          "label": "kötü cevap → test",
+          "durationMs": 1500
+        }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": [
+    "llm",
+    "evaluation",
+    "llm-as-judge",
+    "regression",
+    "ci"
+  ]
+}

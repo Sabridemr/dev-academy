@@ -72,6 +72,12 @@ concepts: [elasticsearch, cache-aside, ttl, state-machine, saga-pattern, outbox-
 
 **TTL (Time To Live):** Önbellekteki verinin ne kadar süre geçerli kalacağıdır. 5–10 dakika sonra veri silinir ve bir sonraki istekte tazesi alınır. Bu, hız ile güncellik arasındaki dengeyi sağlar.
 
+Önbellek mantığı ile menü servisinin önbelleği aynı fikri paylaşır. Aşağıdaki animasyon iki yolu birlikte gösteriyor: konum hücresine göre önbelleklenen arama ve cache-aside ile okunan menü; restoran bir ürünü tükendi yapınca anahtarın silinmesi ve arama indeksinin birkaç saniye geriden gelmesi.
+
+:::animation{scene="discovery-cache.scene.json"}
+Redis ıskası → Elasticsearch coğrafi sorgu → TTL ile önbelleğe yazma; aynı hücreden ikinci arama HIT; menü güncellenince geçersiz kılma ve yeniden indeksleme.
+:::
+
 ### Sıralama faktörleri (ranking)
 
 - Arama sorgusuyla ilgi (ad, mutfak, yemekler)
@@ -132,7 +138,7 @@ Birkaç yüz ürünlük bir katalogda Elasticsearch'e gerek yok. PostgreSQL'in t
 :::diagram{src="sekil-03.png" alt="Restoran kayıt akışı: kayıt, belge doğrulama, admin onayı ve yayına alma|Restaurant onboarding flow: registration, document verification, admin approval and going live"}
 :::
 
-Notlardaki GST (Hindistan vergi kaydı) ve FSSAI (Hindistan gıda güvenliği ruhsatı), Türkiye'de vergi levhası ve işletme kayıt/gıda belgelerine karşılık gelir.
+Hindistan'daki GST (vergi kaydı) ve FSSAI (gıda güvenliği ruhsatı), Türkiye'de vergi levhası ve işletme kayıt/gıda belgelerine karşılık gelir.
 
 ### Veri modeli (ER diyagramı)
 
@@ -226,7 +232,8 @@ async function getMenu(restaurantId) {
 "Bilgisayar biliminde iki zor şey vardır: önbelleği geçersiz kılmak ve bir şeye isim vermek." Önbellek hızlıdır ama bayat (stale) veri gösterme riski taşır.
 :::
 
-### Ürün stok durumunu yönetme
+:::callout{tone="info" title="Derinleşme"}
+**Ürün stok durumunu yönetme**
 
 - Restoran bir ürünü mevcut / tükendi olarak işaretleyebilir.
 - Değişiklik uygulamada anında görünmeli.
@@ -234,9 +241,10 @@ async function getMenu(restaurantId) {
 - Değişiklikler için denetim kaydı (audit log) tutulur.
 - Restoran kapanınca ürünler otomatik olarak satışa kapanır.
 
-### Ek özellikler
+**Ek özellikler**
 
 Çalışma saatleri, çoklu şube, resimli zengin menü, ürün özelleştirme (ek malzeme), restoran düzeyinde kampanyalar, puan ve yorumlar, menü versiyonlama ve ürünler için **soft delete** (silmek yerine `is_deleted = true` işaretlemek; eski siparişler bozulmaz).
+:::
 
 :::callout{tone="tip" title="Senin projen için"}
 Restoran yerine tedarikçi veya kendi depon, menü yerine ürün kataloğu düşünülebilir. Category → Product → Variant (250 g, 1 kg, 5 L) yapısı kullan. Variant, menü ürünlerindeki "boyut seçimi"nin karşılığıdır. Ürün silinmesin, is_active = false yapılsın; geçmiş faturalar bozulmaz.
@@ -396,6 +404,12 @@ Toptan satış sipariş durumları: PENDING_PAYMENT → PAID (veya havalede AWAI
 
 :::interactive{type="geo-index" drivers=40 resolution=7 showBoundaryProblem=true}
 Coğrafi ızgara çözünürlüğünü değiştir; hücre sınırlarındaki "yakın ama farklı hücrede" problemini ve komşu hücre sorgusunu gözle.
+:::
+
+:::realworld{company="Yelp"}
+Restoran keşfinin "metin + konum + sıralama" üçlüsü, Yelp'in 2017'de mühendislik blogunda paylaştığı "Moving Yelp's Core Business Search to Elasticsearch" yazısının da konusudur. Yelp'in işletme araması uzun süre şirket içinde geliştirilmiş, Lucene tabanlı özel bir sistemde çalışıyordu. Yazıda anlatılan temel sıkıntı, bu yapıda yeni bir sıralama sinyali eklemenin ya da indeksi güncellemenin yavaş ve zahmetli olmasıydı: işletme bilgisi değiştiğinde aramaya yansıması gecikebiliyordu.
+
+Yelp aramayı Elasticsearch'e taşıyarak indeks güncellemelerini neredeyse gerçek zamanlı hâle getirdi ve sıralama mantığını aramayı yapan servisle daha iyi ayrıştırdı. Bu, dersteki mimarinin aynısıdır: asıl veri ilişkisel veritabanında durur, arama motoru onun sorgulamaya göre biçimlenmiş bir kopyasıdır ve değişiklikler olaylarla asenkron olarak indekse taşınır. Bedeli de aynıdır: indeks kısa bir süre geriden gelebilir; bu yüzden ödeme gibi kritik adımlarda bilgi her zaman asıl kaynaktan yeniden okunur.
 :::
 
 :::callout{tone="info" title="İlgili dersler"}

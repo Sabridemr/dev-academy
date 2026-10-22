@@ -1,0 +1,257 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "linux-process-signals",
+  "title": { "tr": "Süreç Ağacı ve Sinyaller: SIGTERM, SIGKILL ve systemd", "en": "Process Tree and Signals: SIGTERM, SIGKILL and systemd" },
+  "summary": {
+    "tr": "systemd bir servisi başlatır, servis işçi süreçler doğurur; durdurmada önce nazik SIGTERM, zaman aşımında SIGKILL gönderilir; elle öldürülen servis Restart=on-failure ile yeniden ayağa kalkar.",
+    "en": "systemd starts a service, the service forks worker processes; stopping sends a polite SIGTERM first and SIGKILL after a timeout; a manually killed service comes back through Restart=on-failure."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda systemd (PID 1), üstte kullanıcının bash kabuğu ve kernel, ortada myapp ana süreci, sağda iki worker süreci, altta journald log deposu bulunur. Adımlar boyunca süreçler başlatılır, loglar journald'ye akar, systemctl stop ile SIGTERM gönderilir, takılan worker zaman aşımında SIGKILL ile sonlandırılır, ardından kill -9 ile öldürülen servis systemd tarafından yeni bir PID ile yeniden başlatılır.",
+      "en": "systemd (PID 1) sits on the left, the user's bash shell and the kernel at the top, the myapp main process in the middle, two worker processes on the right and the journald log store at the bottom. Over the steps the processes start, logs flow to journald, systemctl stop sends SIGTERM, a stuck worker is ended with SIGKILL after a timeout, and a service killed with kill -9 is restarted by systemd with a new PID."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "systemd", "kind": "service", "label": "systemd", "sublabel": "PID 1", "x": 150, "y": 300, "w": 150, "h": 70, "color": "primary" },
+    { "id": "shell", "kind": "client", "label": "bash", "sublabel": { "tr": "kullanıcı kabuğu · PID 2201", "en": "user shell · PID 2201" }, "x": 150, "y": 100, "w": 170, "h": 64 },
+    { "id": "kernel", "kind": "generic", "label": "kernel", "sublabel": { "tr": "sinyali teslim eder", "en": "delivers the signal" }, "x": 450, "y": 100, "w": 170, "h": 64, "color": "muted" },
+    { "id": "app", "kind": "server", "label": "myapp", "sublabel": "PID 4312", "x": 450, "y": 300, "w": 160, "h": 70 },
+    { "id": "w1", "kind": "worker", "label": "worker", "sublabel": "PID 4313", "x": 780, "y": 220, "w": 150, "h": 60 },
+    { "id": "w2", "kind": "worker", "label": "worker", "sublabel": "PID 4314", "x": 780, "y": 400, "w": 150, "h": 60 },
+    { "id": "journal", "kind": "storage", "label": "journald", "sublabel": "journalctl -u myapp", "x": 450, "y": 510, "w": 190, "h": 64 }
+  ],
+  "edges": [
+    { "id": "sys-app", "from": "systemd", "to": "app", "kind": "control", "label": "fork + exec" },
+    { "id": "app-w1", "from": "app", "to": "w1", "kind": "control", "label": "fork" },
+    { "id": "app-w2", "from": "app", "to": "w2", "kind": "control", "label": "fork" },
+    { "id": "sys-w1", "from": "systemd", "to": "w1", "kind": "event", "style": "dashed", "curvature": -0.35 },
+    { "id": "sys-w2", "from": "systemd", "to": "w2", "kind": "event", "style": "dashed", "curvature": 0.35 },
+    { "id": "app-journal", "from": "app", "to": "journal", "kind": "data", "label": "stdout / stderr" },
+    { "id": "shell-kernel", "from": "shell", "to": "kernel", "kind": "request", "label": "kill()" },
+    { "id": "kernel-app", "from": "kernel", "to": "app", "kind": "event" }
+  ],
+  "steps": [
+    {
+      "id": "start",
+      "title": { "tr": "systemd servisi başlatır", "en": "systemd starts the service" },
+      "narration": {
+        "tr": "Açılışta kernel'in başlattığı ilk süreç systemd'dir (PID 1). systemctl start myapp denildiğinde systemd kendini çatallar (fork) ve çocuğun yerine unit dosyasındaki ExecStart programını yükler (exec). Yeni süreç PID 4312'yi alır; ebeveyni systemd'dir.",
+        "en": "The first process the kernel starts at boot is systemd (PID 1). On systemctl start myapp, systemd forks itself and replaces the child with the ExecStart program from the unit file (exec). The new process gets PID 4312; its parent is systemd."
+      },
+      "durationMs": 4000,
+      "inherit": false,
+      "highlight": { "nodes": ["systemd", "app"], "edges": ["sys-app"] },
+      "nodeStates": {
+        "systemd": { "status": "active" },
+        "app": { "status": "active", "badge": "running" },
+        "w1": { "visible": false },
+        "w2": { "visible": false },
+        "journal": { "status": "idle" },
+        "shell": { "status": "muted" },
+        "kernel": { "status": "muted" }
+      },
+      "edgeStates": {
+        "app-w1": { "visible": false },
+        "app-w2": { "visible": false },
+        "sys-w1": { "visible": false },
+        "sys-w2": { "visible": false },
+        "kernel-app": { "visible": false },
+        "shell-kernel": { "status": "muted" }
+      },
+      "packets": [{ "edge": "sys-app", "shape": "square", "label": "ExecStart", "durationMs": 1400 }],
+      "annotations": [{ "id": "unit", "x": 300, "y": 400, "text": "/etc/systemd/system/myapp.service", "target": "app" }]
+    },
+    {
+      "id": "fork-workers",
+      "title": { "tr": "Ana süreç işçilerini doğurur", "en": "The main process forks its workers" },
+      "narration": {
+        "tr": "myapp gelen işi paylaştırmak için iki worker süreci çatallar. Her birinin kendi PID'i vardır ve ebeveyn kimliği (PPID) 4312'dir. ps -ef --forest ya da pstree bu ağacı gösterir; hepsi aynı servis grubunun (cgroup) içindedir.",
+        "en": "myapp forks two worker processes to share the load. Each has its own PID and a parent ID (PPID) of 4312. ps -ef --forest or pstree shows this tree; all of them live in the same service control group (cgroup)."
+      },
+      "durationMs": 3800,
+      "highlight": { "nodes": ["app", "w1", "w2"], "edges": ["app-w1", "app-w2"] },
+      "nodeStates": {
+        "app": { "status": "idle" },
+        "w1": { "visible": true, "status": "active", "badge": "PPID 4312" },
+        "w2": { "visible": true, "status": "active", "badge": "PPID 4312" }
+      },
+      "edgeStates": { "app-w1": { "visible": true, "status": "active" }, "app-w2": { "visible": true, "status": "active" } },
+      "packets": [
+        { "edge": "app-w1", "shape": "dot", "label": "fork", "durationMs": 1000 },
+        { "edge": "app-w2", "shape": "dot", "label": "fork", "startAt": 400, "durationMs": 1000 }
+      ],
+      "annotations": [{ "id": "pstree", "x": 780, "y": 520, "text": "pstree -p 4312", "tone": "info" }]
+    },
+    {
+      "id": "logs",
+      "title": { "tr": "Loglar journald'ye akar", "en": "Logs flow into journald" },
+      "narration": {
+        "tr": "Servisin standart çıktısı ve hata çıktısı dosyaya değil journald'ye gider. journalctl -u myapp -f ile canlı izlenir, --since ve -p err ile süzülür. Log dosyasının yerini aramak zorunda kalmazsınız.",
+        "en": "The service's standard output and error streams go to journald rather than a file. journalctl -u myapp -f follows them live, and --since and -p err filter them. You never have to hunt for the log file."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["app", "journal"], "edges": ["app-journal"] },
+      "nodeStates": { "w1": { "status": "busy" }, "w2": { "status": "busy" }, "journal": { "status": "active", "counter": 128 } },
+      "edgeStates": { "app-w1": { "status": "idle" }, "app-w2": { "status": "idle" }, "app-journal": { "status": "active" } },
+      "packets": [{ "edge": "app-journal", "shape": "envelope", "durationMs": 700, "repeat": 4, "repeatGapMs": 250 }]
+    },
+    {
+      "id": "sigterm",
+      "title": { "tr": "systemctl stop: önce SIGTERM", "en": "systemctl stop: SIGTERM first" },
+      "narration": {
+        "tr": "sudo systemctl stop myapp, servisin cgroup'undaki tüm süreçlere SIGTERM gönderir. SIGTERM bir rica gibidir: program onu yakalayıp yarım kalan isteği bitirebilir, dosyaları kapatabilir, bağlantıları düzgünce bırakabilir.",
+        "en": "sudo systemctl stop myapp sends SIGTERM to every process in the service's cgroup. SIGTERM is a request: the program can catch it, finish the request in flight, close files and release connections cleanly."
+      },
+      "durationMs": 4200,
+      "highlight": { "nodes": ["systemd", "app", "w1", "w2"], "edges": ["sys-app", "sys-w1", "sys-w2"] },
+      "nodeStates": {
+        "systemd": { "status": "busy", "badge": "stopping" },
+        "app": { "status": "warning", "badge": "SIGTERM" },
+        "w1": { "status": "warning", "badge": "SIGTERM" },
+        "w2": { "status": "warning", "badge": "SIGTERM" },
+        "journal": { "status": "idle" }
+      },
+      "edgeStates": {
+        "sys-app": { "status": "active", "label": "SIGTERM" },
+        "sys-w1": { "visible": true, "status": "active" },
+        "sys-w2": { "visible": true, "status": "active" },
+        "app-journal": { "status": "idle" }
+      },
+      "packets": [
+        { "edge": "sys-app", "shape": "diamond", "label": "15", "color": "warning", "durationMs": 1000 },
+        { "edge": "sys-w1", "shape": "diamond", "label": "15", "color": "warning", "durationMs": 1200 },
+        { "edge": "sys-w2", "shape": "diamond", "label": "15", "color": "warning", "durationMs": 1200 }
+      ],
+      "annotations": [{ "id": "kill-mode", "x": 300, "y": 470, "text": { "tr": "KillMode=control-group", "en": "KillMode=control-group" }, "tone": "info" }]
+    },
+    {
+      "id": "graceful",
+      "title": { "tr": "Nazik çıkış ve takılan işçi", "en": "Graceful exit and a stuck worker" },
+      "narration": {
+        "tr": "Ana süreç ve ilk worker temizliğini yapıp çıkış kodu 0 ile sonlanır; son log satırları journald'ye düşer. İkinci worker ise kilitlenmiş bir dosya işleminde takılı kalmıştır ve SIGTERM'e yanıt vermez.",
+        "en": "The main process and the first worker clean up and exit with code 0; their last log lines land in journald. The second worker, however, is stuck in a blocked file operation and does not respond to SIGTERM."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["w2"], "edges": [] },
+      "nodeStates": {
+        "app": { "status": "muted", "badge": "exit 0" },
+        "w1": { "status": "muted", "badge": "exit 0" },
+        "w2": { "status": "error", "badge": "yanıt yok" },
+        "journal": { "status": "active", "counter": 131 }
+      },
+      "edgeStates": { "sys-app": { "status": "muted" }, "sys-w1": { "status": "muted" }, "app-w1": { "status": "muted" }, "app-journal": { "status": "active" } },
+      "packets": [{ "edge": "app-journal", "shape": "envelope", "label": "shutdown", "durationMs": 900 }],
+      "annotations": [{ "id": "timeout", "x": 780, "y": 520, "text": { "tr": "TimeoutStopSec (varsayılan 90 sn) işliyor", "en": "TimeoutStopSec (default 90 s) is ticking" }, "target": "w2", "tone": "warning" }]
+    },
+    {
+      "id": "sigkill",
+      "title": { "tr": "Zaman aşımı: SIGKILL", "en": "Timeout: SIGKILL" },
+      "narration": {
+        "tr": "Süre dolunca systemd kalan süreçlere SIGKILL gönderir. SIGKILL yakalanamaz ve yok sayılamaz: kernel süreci anında kaldırır, temizlik fırsatı yoktur. kill -9'un neden son çare olduğu buradan gelir; yarım yazılmış dosya ya da kapanmamış bağlantı kalabilir.",
+        "en": "When the time is up, systemd sends SIGKILL to the remaining processes. SIGKILL cannot be caught or ignored: the kernel removes the process at once, with no chance to clean up. That is why kill -9 is a last resort; half-written files or unclosed connections may be left behind."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["w2"], "edges": ["sys-w2"] },
+      "nodeStates": { "w2": { "status": "down", "badge": "SIGKILL" }, "systemd": { "status": "active", "badge": "inactive (dead)" }, "journal": { "status": "idle" } },
+      "edgeStates": { "sys-w2": { "status": "error", "label": "SIGKILL" }, "app-journal": { "status": "idle" } },
+      "packets": [{ "edge": "sys-w2", "shape": "diamond", "label": "9", "color": "danger", "durationMs": 900 }],
+      "annotations": [{ "id": "nine", "x": 780, "y": 520, "text": { "tr": "yakalanamaz, temizlik yok", "en": "uncatchable, no cleanup" }, "target": "w2", "tone": "danger" }]
+    },
+    {
+      "id": "restart-start",
+      "title": { "tr": "Yeniden başlat: yeni PID'ler", "en": "Start again: new PIDs" },
+      "narration": {
+        "tr": "systemctl start myapp ile servis yeniden kalkar. Süreçler yeniden doğduğu için PID'ler değişir; PID bir kimlik değil, o anki sıra numarasıdır. Betiklerde sabit PID yerine systemctl ya da pgrep kullanmanın nedeni budur.",
+        "en": "systemctl start myapp brings the service back. Because the processes are born again the PIDs change; a PID is not an identity, just a number for this run. That is why scripts use systemctl or pgrep instead of a hard-coded PID."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["app", "w1", "w2"], "edges": ["sys-app", "app-w1", "app-w2"] },
+      "nodeStates": {
+        "systemd": { "status": "active", "badge": "active (running)" },
+        "app": { "status": "active", "badge": "running", "sublabel": "PID 4520" },
+        "w1": { "status": "active", "badge": "", "sublabel": "PID 4521" },
+        "w2": { "status": "active", "badge": "", "sublabel": "PID 4522" }
+      },
+      "edgeStates": {
+        "sys-app": { "status": "active", "label": "fork + exec" },
+        "sys-w1": { "visible": false },
+        "sys-w2": { "visible": false },
+        "app-w1": { "status": "active" },
+        "app-w2": { "status": "active" }
+      },
+      "packets": [
+        { "edge": "sys-app", "shape": "square", "label": "ExecStart", "durationMs": 1000 },
+        { "edge": "app-w1", "shape": "dot", "startAt": 1000, "durationMs": 800 },
+        { "edge": "app-w2", "shape": "dot", "startAt": 1100, "durationMs": 800 }
+      ],
+      "annotations": []
+    },
+    {
+      "id": "manual-kill",
+      "title": { "tr": "Kabuktan kill -9", "en": "kill -9 from the shell" },
+      "narration": {
+        "tr": "Bir yönetici kabuktan kill -9 4520 yazar. Kabuk kill() sistem çağrısını yapar, kernel sinyali doğrudan sürece teslim eder; systemd araya girmez. Ana süreç anında ölür, öksüz kalan worker'lar da servis grubuyla birlikte temizlenir.",
+        "en": "An administrator types kill -9 4520 in the shell. The shell makes the kill() system call and the kernel delivers the signal straight to the process; systemd is not involved. The main process dies at once and the orphaned workers are cleaned up with the service group."
+      },
+      "durationMs": 4200,
+      "highlight": { "nodes": ["shell", "kernel", "app"], "edges": ["shell-kernel", "kernel-app"] },
+      "nodeStates": {
+        "shell": { "status": "active", "badge": "kill -9 4520" },
+        "kernel": { "status": "active" },
+        "app": { "status": "down", "badge": "killed (9)" },
+        "w1": { "status": "muted" },
+        "w2": { "status": "muted" },
+        "systemd": { "status": "warning", "badge": "çıkış: sinyal 9" }
+      },
+      "edgeStates": {
+        "shell-kernel": { "status": "active" },
+        "kernel-app": { "visible": true, "status": "error", "label": "SIGKILL" },
+        "sys-app": { "status": "idle" },
+        "app-w1": { "status": "muted" },
+        "app-w2": { "status": "muted" }
+      },
+      "packets": [
+        { "edge": "shell-kernel", "shape": "dot", "label": "kill()", "durationMs": 900 },
+        { "edge": "kernel-app", "shape": "diamond", "label": "9", "color": "danger", "startAt": 900, "durationMs": 900 }
+      ]
+    },
+    {
+      "id": "auto-restart",
+      "title": { "tr": "Restart=on-failure devreye girer", "en": "Restart=on-failure kicks in" },
+      "narration": {
+        "tr": "systemd, PID 1 olarak servisin bir sinyalle öldüğünü fark eder. Unit dosyasında Restart=on-failure varsa RestartSec kadar bekler ve servisi yeni bir PID ile yeniden başlatır; olay journald'ye yazılır. Düzgün bir SIGTERM çıkışı ise başarısızlık sayılmaz, bu yüzden systemctl stop sonrası yeniden başlatma olmaz.",
+        "en": "As PID 1, systemd notices the service died from a signal. With Restart=on-failure in the unit file it waits RestartSec and restarts the service under a new PID; the event is written to journald. A clean SIGTERM exit does not count as a failure, which is why there is no restart after systemctl stop."
+      },
+      "durationMs": 4600,
+      "highlight": { "nodes": ["systemd", "app", "journal"], "edges": ["sys-app", "app-journal"] },
+      "nodeStates": {
+        "shell": { "status": "muted", "badge": "" },
+        "kernel": { "status": "muted" },
+        "systemd": { "status": "success", "badge": "Restart=on-failure" },
+        "app": { "status": "success", "badge": "running", "sublabel": "PID 4618" },
+        "w1": { "status": "success", "sublabel": "PID 4619" },
+        "w2": { "status": "success", "sublabel": "PID 4620" },
+        "journal": { "status": "active", "counter": 136 }
+      },
+      "edgeStates": {
+        "shell-kernel": { "status": "muted" },
+        "kernel-app": { "visible": false },
+        "sys-app": { "status": "active" },
+        "app-w1": { "status": "active" },
+        "app-w2": { "status": "active" },
+        "app-journal": { "status": "active" }
+      },
+      "packets": [
+        { "edge": "sys-app", "shape": "square", "label": "restart", "color": "success", "durationMs": 1100 },
+        { "edge": "app-journal", "shape": "envelope", "startAt": 1100, "durationMs": 800 }
+      ],
+      "annotations": [{ "id": "status", "x": 450, "y": 420, "text": "systemctl status myapp", "target": "app", "tone": "success" }]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["linux", "process", "signals", "systemd"]
+}
