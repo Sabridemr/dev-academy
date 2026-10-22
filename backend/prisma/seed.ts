@@ -21,6 +21,7 @@ import {
   CURRICULUM,
   RASTER_IMAGE_TYPES,
   rasterExtension,
+  interactiveTraceSrc,
   LEARNING_PATHS,
   type LessonBlock,
   type LocalizedString,
@@ -109,6 +110,11 @@ function resolveBlocks(lesson: LoadedLesson, assets: Record<string, StoredAsset>
         return { ...b, quizId: lesson.quiz?.id };
       case 'trace':
         return { ...b, trace: lesson.traces[b.src] };
+      case 'interactive': {
+        // İz kullanan simülatör (predict-run): :::trace ile aynı iz bloğa gömülür
+        const src = interactiveTraceSrc(b);
+        return src ? { ...b, trace: lesson.traces[src] } : b;
+      }
       default:
         return b;
     }
