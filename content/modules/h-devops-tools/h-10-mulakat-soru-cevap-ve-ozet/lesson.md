@@ -16,6 +16,12 @@ prerequisites: [h-09-kalite-izleme-ve-tam-pipeline]
 concepts: [continuous-delivery, pipeline, deployment-strategies, secrets, gitops, dora-metrics]
 ---
 
+Bu ders modülün tekrarıdır. Soru-cevaplara geçmeden önce, önceki derslerde parça parça kurduğumuz akışın tamamına tek bir haritada bakın. Mülakatta "CI/CD sürecinizi anlatın" sorusunun iyi bir cevabı bu haritayı soldan sağa, yukarıdan aşağı anlatmaktır.
+
+:::diagram{src="diagram.svg" alt="CI/CD akışının tek sayfalık haritası: pull request aşamasında tetikleyici, lint, test, güvenlik ve branch protection ile merge; main sonrasında bir kez build edilen SHA etiketli imaj, staging, onay ve dağıtım stratejisiyle production; canlıda izleme, alarm ve rollback; altta hız ve kararlılığı ölçen dört DORA metriği|One-page map of the CI/CD flow: in the pull request stage trigger, lint, test, security and merge with branch protection; after main a SHA-tagged image built once, staging, approval and production with a deployment strategy; in production monitoring, alerting and rollback; at the bottom the four DORA metrics measuring speed and stability"}
+Üç şerit, üç soru: kod birleşmeye hazır mı, paket canlıya hazır mı, canlı sağlıklı mı?
+:::
+
 ## Mülakat soru-cevap
 
 **1. CI/CD nedir?** Kodun otomatik olarak entegre edilmesi, test edilmesi ve canlıya güvenli şekilde çıkarılması sürecidir.
@@ -117,6 +123,10 @@ concepts: [continuous-delivery, pipeline, deployment-strategies, secrets, gitops
 | Güvenlik kontrol listesi |
 |---|
 | Secret'ları koda yazma · permissions kısıtla · action'ları SHA ile sabitle · pull_request_target'a dikkat · Dependabot + CodeQL aç · branch protection kur · production'a onay koy |
+
+:::realworld{company="Google Cloud (DORA)"}
+Mülakattaki 29. sorunun cevabı olan DORA metrikleri, bir araştırma programından gelir. DevOps Research and Assessment (DORA) ekibi Nicole Forsgren, Jez Humble ve Gene Kim'in çalışmalarıyla başladı ve 2018'de Google Cloud bünyesine katıldı. Ekip, binlerce kuruluştan toplanan anket verisine dayanan yıllık "State of DevOps" raporlarını yayımlar. Bulgular 2018'de "Accelerate" kitabında da toplandı. Araştırmanın en çok alıntılanan sonucu, hız ile kararlılığın birbirinin karşıtı olmadığıdır. En iyi performans gösteren ekipler hem daha sık dağıtım yapar ve değişikliği daha kısa sürede canlıya taşır, hem de daha düşük hata oranına ve daha kısa geri dönüş süresine sahiptir. Raporlar bu sonucu, bu modülde öğrendiğiniz pratiklerle ilişkilendirir: sürekli entegrasyon, test otomasyonu, küçük partiler hâlinde çalışma, gövde tabanlı geliştirme ve iyi izleme. Mülakatta DORA metriklerini sayarken bu bağlantıyı kurmak, ezber bir listeden daha güçlü bir cevap olur. Örneğin "fail fast ve küçük PR'lar teslim süresini kısaltır, hızlı rollback de geri dönüş süresini düşürür" diyebilirsiniz.
+:::
 
 :::callout{tone="info" title="İlgili dersler"}
 Bu konuyu başka bir açıdan anlatan dersler:
