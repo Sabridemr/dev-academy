@@ -35,6 +35,11 @@ export function buildSearchText(
           return `${loc(b.exercise?.title)} ${loc(b.exercise?.prompt)} ${loc(b.instructions)}`;
         case 'interactive':
           return `${b.interactive} ${loc(b.title)} ${loc(b.instructions)}`;
+        // Tahmin sorusu ders konusunu anlatır; kaynakça (dış başlıklar) aramayı kirletmesin diye dahil edilmez
+        case 'predict':
+          return loc(b.prompt);
+        case 'resources':
+          return '';
         default:
           return '';
       }

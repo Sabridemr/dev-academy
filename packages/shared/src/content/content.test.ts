@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { parseLessonMarkdown, parseDirectiveAttributes, lessonPlainText } from './parser';
-import { ExerciseSchema, QuizSchema, stripExerciseSolutions, type LessonBlock } from './schema';
+import {
+  ExerciseSchema,
+  LessonBlockSchema,
+  QuizSchema,
+  stripExerciseSolutions,
+  type LessonBlock,
+} from './schema';
+import { buildSearchText } from './search-text';
 import { CURRICULUM, allLessons, findLesson, nextLessonOf, TOTAL_LESSON_COUNT } from './curriculum';
 
 const SAMPLE = `---
@@ -141,6 +148,85 @@ describe('Ders Markdown ayrıştırıcı', () => {
   it('düz metin çıkarır', () => {
     const doc = parseLessonMarkdown(SAMPLE);
     expect(lessonPlainText(doc)).toContain('Yük dengeleyici istekleri dağıtır');
+  });
+});
+
+describe('predict ve resources directive’leri', () => {
+  const PREDICT = `:::predict{id="lb-yeni-sunucu"}
+Dördüncü sunucu eklenince **ilk istek** nereye gider? | Where does the **first request** go after a fourth server is added?
+- [ ] Hep birinci sunucuya | Always to the first server
+- [x] Sıradaki sunucuya | To the next server in turn
+- [ ] Rastgele bir sunucuya
+Açıklama: Round robin sırayı korur.
+Yeni sunucu sıraya katılır. | Round robin keeps the order.
+:::
+`;
+  const RESOURCES = `:::resources
+- [Designing Data-Intensive Applications](https://dataintensive.net) — kitap — 6. bölüm
+- [NGINX load balancing](https://nginx.org/en/docs/http/load_balancing.html) — docs
+- [Bir yazı](https://example.org/yazi) — Herhangi bir not
+- [Yalın bağlantı](https://example.org/yalin)
+:::
+`;
+  const withBlocks = (extra: string) => SAMPLE.replace(':::animation{scene="scene.json"}', `${extra}\n:::animation{scene="scene.json"}`);
+
+  it('tahmin sorusunu iki dilli soru, seçenek, doğru cevap ve açıklamaya ayırır', () => {
+    const doc = parseLessonMarkdown(withBlocks(PREDICT));
+    const types = doc.blocks.map((b) => b.type);
+    expect(types.indexOf('predict')).toBe(types.indexOf('animation') - 1);
+    const block = doc.blocks.find((b) => b.type === 'predict');
+    expect(block).toEqual({
+      id: 'lb-yeni-sunucu',
+      order: 2,
+      type: 'predict',
+      prompt: {
+        tr: 'Dördüncü sunucu eklenince **ilk istek** nereye gider?',
+        en: 'Where does the **first request** go after a fourth server is added?',
+      },
+      options: [
+        { id: 'a', text: { tr: 'Hep birinci sunucuya', en: 'Always to the first server' } },
+        { id: 'b', text: { tr: 'Sıradaki sunucuya', en: 'To the next server in turn' } },
+        { id: 'c', text: { tr: 'Rastgele bir sunucuya' } },
+      ],
+      correct: 'b',
+      explanation: { tr: 'Round robin sırayı korur.\nYeni sunucu sıraya katılır.', en: 'Round robin keeps the order.' },
+    });
+    expect(LessonBlockSchema.safeParse(block).success).toBe(true);
+  });
+
+  it('tahmin sorusunda doğru seçenek sayısı bir değilse ya da id eksikse hata verir', () => {
+    expect(() => parseLessonMarkdown(withBlocks(PREDICT.replace('- [ ] Hep', '- [x] Hep')))).toThrow(/tam olarak bir doğru/);
+    expect(() => parseLessonMarkdown(withBlocks(PREDICT.replace('- [x] Sıradaki', '- [ ] Sıradaki')))).toThrow(/şu an 0/);
+    expect(() => parseLessonMarkdown(withBlocks(PREDICT.replace('{id="lb-yeni-sunucu"}', '')))).toThrow(/'id' özniteliği zorunlu/);
+    expect(() => parseLessonMarkdown(withBlocks(PREDICT + '\n' + PREDICT))).toThrow(/benzersiz/);
+  });
+
+  it('kaynakça satırlarından başlık, URL, tür ve notu çıkarır', () => {
+    const doc = parseLessonMarkdown(withBlocks(RESOURCES));
+    const block = doc.blocks.find((b) => b.type === 'resources');
+    expect(block && block.type === 'resources' && block.items).toEqual([
+      { title: 'Designing Data-Intensive Applications', url: 'https://dataintensive.net', kind: 'book', note: '6. bölüm' },
+      { title: 'NGINX load balancing', url: 'https://nginx.org/en/docs/http/load_balancing.html', kind: 'docs', note: undefined },
+      { title: 'Bir yazı', url: 'https://example.org/yazi', kind: undefined, note: 'Herhangi bir not' },
+      { title: 'Yalın bağlantı', url: 'https://example.org/yalin', kind: undefined, note: undefined },
+    ]);
+    expect(LessonBlockSchema.safeParse(block).success).toBe(true);
+    expect(() => parseLessonMarkdown(withBlocks(':::resources\nDüz metin\n:::'))).toThrow(/biçiminde olmalı/);
+  });
+
+  it('şema bilinmeyen doğru seçeneği ve https olmayan URL’yi reddeder', () => {
+    const predict = parseLessonMarkdown(withBlocks(PREDICT)).blocks.find((b) => b.type === 'predict');
+    expect(LessonBlockSchema.safeParse({ ...predict, correct: 'z' }).success).toBe(false);
+    const resources = { id: 'r', order: 0, type: 'resources', items: [{ title: 'X', url: 'http://example.org' }] };
+    expect(LessonBlockSchema.safeParse(resources).success).toBe(false);
+  });
+
+  it('arama metnine tahmin sorusu girer, kaynakça girmez', () => {
+    const doc = parseLessonMarkdown(withBlocks(PREDICT + '\n' + RESOURCES));
+    const text = buildSearchText(doc.blocks, 'LB', 'Özet', []);
+    expect(text).toContain('Dördüncü sunucu eklenince');
+    expect(text).not.toContain('Designing Data-Intensive');
+    expect(text).not.toContain('dataintensive.net');
   });
 });
 

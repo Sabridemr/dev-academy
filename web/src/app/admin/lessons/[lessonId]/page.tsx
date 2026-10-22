@@ -16,6 +16,8 @@ import { useI18n } from '@/i18n';
 import { ApiError, api } from '@/lib/api';
 import { BlockRenderer } from '@/components/lesson/BlockRenderer';
 import { cn } from '@/lib/utils';
+import { useAuthStore } from '@/lib/auth-store';
+import { ContentExportDialog } from '@/components/admin/ContentExportDialog';
 
 interface VersionFull {
   id: string;
@@ -50,6 +52,20 @@ const BLOCK_TEMPLATES: Record<
   callout: { type: 'callout', tone: 'tip', markdown: 'İpucu…' },
   quiz: { type: 'quiz', src: 'quiz.json' },
   next: { type: 'next', lesson: '' },
+  predict: {
+    type: 'predict',
+    prompt: { tr: 'Sence ne olacak?' },
+    options: [
+      { id: 'a', text: { tr: 'Seçenek A' } },
+      { id: 'b', text: { tr: 'Seçenek B' } },
+    ],
+    correct: 'a',
+    explanation: { tr: 'Neden A?' },
+  },
+  resources: {
+    type: 'resources',
+    items: [{ title: 'Kaynak', url: 'https://example.org', kind: 'docs' }],
+  },
 } as Record<(typeof LESSON_BLOCK_TYPES)[number], Omit<LessonBlock, 'id' | 'order'>>;
 
 /**
@@ -60,6 +76,7 @@ export default function AdminLessonEditor({ params }: { params: Promise<{ lesson
   const { lessonId } = use(params);
   const { t, tl } = useI18n();
   const qc = useQueryClient();
+  const isAdmin = useAuthStore((s) => s.user?.role === 'admin');
   const versions = useQuery({
     queryKey: ['admin-versions', lessonId],
     queryFn: () => api<AdminLessonVersion[]>(`/admin/lessons/${lessonId}/versions`),
@@ -250,6 +267,8 @@ export default function AdminLessonEditor({ params }: { params: Promise<{ lesson
               {status.text}
             </span>
           )}
+          {/* Yayındaki sürümü content/ dosyalarına çevirir (seed'in panel değişikliğini ezmemesi için) */}
+          {isAdmin && <ContentExportDialog lessonId={lessonId} />}
           <Link href={`/lessons/${lessonId}`} className="btn-ghost" target="_blank">
             {t('admin.preview')}
           </Link>

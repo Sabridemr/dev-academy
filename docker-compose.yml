@@ -128,6 +128,8 @@ services:
       S3_ACCESS_KEY: minioadmin
       S3_SECRET_KEY: minioadmin
       CONTENT_DIR: ../content
+      # Sentry isteğe bağlı: kök .env'de SENTRY_DSN verilirse 5xx hatalar raporlanır
+      SENTRY_DSN: ${SENTRY_DSN:-}
       SEED_ADMIN_EMAIL: admin@devacademy.local
       SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-Admin123!}
     depends_on:
@@ -160,7 +162,7 @@ services:
       dockerfile: backend/Dockerfile
       target: tools
     environment: *api-env
-    command: ['sh', '-c', 'pnpm exec tsx prisma/seed.ts']
+    command: ['tsx', 'prisma/seed.ts']
     depends_on:
       migrate:
         condition: service_completed_successfully

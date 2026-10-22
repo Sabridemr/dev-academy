@@ -9,10 +9,13 @@ import {
 import type { Request, Response } from 'express';
 import { Prisma } from '@prisma/client';
 import type { ApiErrorBody } from '@devacademy/shared';
+import { routeLabel } from '../metrics/http-metrics.middleware';
+import { captureServerError } from '../sentry/sentry';
 
 /**
  * Merkezi hata formatı: tüm hatalar ApiErrorBody biçiminde döner.
  * Prisma'nın bilinen hatalarını anlamlı HTTP kodlarına çevirir.
+ * 5xx hatalar (SENTRY_DSN verilmişse) Sentry'ye raporlanır; 4xx istemci hataları raporlanmaz.
  */
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
@@ -69,6 +72,15 @@ export class HttpExceptionFilter implements ExceptionFilter {
       this.logger.error(
         exception instanceof Error ? (exception.stack ?? exception.message) : String(exception),
       );
+    }
+
+    if (status >= 500) {
+      captureServerError(exception, {
+        requestId: req.id,
+        method: req.method,
+        route: routeLabel(req),
+        status,
+      });
     }
 
     const body: ApiErrorBody = {

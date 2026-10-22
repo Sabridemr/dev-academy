@@ -94,6 +94,27 @@ export const en: Messages = {
     sceneError: 'Animation failed to load',
     codeAlternatives: 'Languages',
     callout: { info: 'Info', tip: 'Tip', warning: 'Warning', danger: 'Danger' },
+    predict: {
+      label: 'Make a prediction',
+      notScored: 'Not graded',
+      hint: 'Before moving on, pick what you think will happen.',
+      correct: 'Correct prediction!',
+      incorrect: 'Not quite. The answer is {answer}',
+      correctOption: 'Correct option',
+      retry: 'Try again',
+    },
+    resources: {
+      title: 'Further reading',
+      opensInBrowser: 'Opens in the browser',
+      kind: {
+        book: 'Book',
+        article: 'Article',
+        docs: 'Documentation',
+        video: 'Video',
+        paper: 'Paper',
+        repo: 'Repository',
+      },
+    },
     loginRequired: 'You need to log in for this.',
   },
   exercise: {

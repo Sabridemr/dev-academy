@@ -1,5 +1,6 @@
 /**
  * Zod şemalarını JSON Schema'ya aktarır; editörlerde (VS Code) sahne/quiz JSON'ları için otomatik tamamlama sağlar.
+ * lesson-block.schema.json: ayrıştırılmış ders bloklarının (admin editörü, API yanıtı) biçimi.
  * Çalıştır: pnpm --filter @devacademy/shared schema:export
  */
 import { mkdirSync, writeFileSync } from 'node:fs';
@@ -8,6 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 import { AnimationSceneSchema } from '../src/scene/schema';
 import {
+  LessonBlockSchema,
   LessonFrontmatterSchema,
   ModuleManifestSchema,
   QuizSchema,
@@ -23,6 +25,7 @@ const targets: [string, Parameters<typeof zodToJsonSchema>[0]][] = [
   ['animation-scene.schema.json', AnimationSceneSchema],
   ['quiz.schema.json', QuizSchema],
   ['lesson-frontmatter.schema.json', LessonFrontmatterSchema],
+  ['lesson-block.schema.json', LessonBlockSchema],
   ['module.schema.json', ModuleManifestSchema],
   ['learning-path.schema.json', LearningPathManifestSchema],
   ['exercise.schema.json', ExerciseSchema],
