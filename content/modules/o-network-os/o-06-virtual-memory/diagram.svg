@@ -1,0 +1,106 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 460" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Sanal adres alanı ve sayfa tablosu</title>
+  <desc id="desc">Solda bir sürecin sanal adres alanı: altta kod ve veri, üstüne doğru büyüyen heap, ortada paylaşılan kütüphaneler ve mmap bölgesi, en üstte aşağı doğru büyüyen stack. Ortada sayfa tablosu dört girdi gösterir: kod ve stack sayfaları fiziksel çerçevelere eşli, bir heap sayfası swap'ta, bir heap sayfası hiç ayrılmamış. Sağda fiziksel RAM çerçeveleri ve altında diskteki swap alanı.</desc>
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+    <marker id="arr-w" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-accent, #f59e0b)"/>
+    </marker>
+  </defs>
+
+  <text x="480" y="28" text-anchor="middle" font-size="15" font-weight="600" fill="var(--da-fg, #0f172a)">Sanal sayfa → sayfa tablosu → fiziksel çerçeve (ya da disk)</text>
+
+  <!-- Sanal adres alanı -->
+  <text x="140" y="60" text-anchor="middle" font-size="13" font-weight="600" fill="var(--da-fg, #0f172a)">Sanal adres alanı</text>
+  <g stroke="var(--da-border, #cbd5e1)" stroke-width="1.4">
+    <rect x="60" y="72" width="160" height="56" fill="var(--da-primary, #6366f1)" fill-opacity="0.14"/>
+    <rect x="60" y="128" width="160" height="56" fill="var(--da-surface, #ffffff)"/>
+    <rect x="60" y="184" width="160" height="56" fill="var(--da-primary, #6366f1)" fill-opacity="0.06"/>
+    <rect x="60" y="240" width="160" height="70" fill="var(--da-surface, #ffffff)"/>
+    <rect x="60" y="310" width="160" height="56" fill="var(--da-success, #10b981)" fill-opacity="0.12"/>
+    <rect x="60" y="366" width="160" height="50" fill="var(--da-muted, #64748b)" fill-opacity="0.10"/>
+  </g>
+  <g font-size="12" text-anchor="middle" fill="var(--da-fg, #0f172a)">
+    <text x="140" y="96">stack</text>
+    <text x="140" y="160" fill="var(--da-muted, #64748b)">boş (büyüme alanı)</text>
+    <text x="140" y="208">mmap / kütüphaneler</text>
+    <text x="140" y="270">heap</text>
+    <text x="140" y="338">veri (data/bss)</text>
+    <text x="140" y="394">kod (text)</text>
+  </g>
+  <g font-size="10" text-anchor="middle" fill="var(--da-muted, #64748b)">
+    <text x="140" y="114">↓ aşağı büyür</text>
+    <text x="140" y="286">↑ yukarı büyür (brk/mmap)</text>
+  </g>
+  <text x="40" y="78" font-size="10" text-anchor="end" fill="var(--da-muted, #64748b)">yüksek</text>
+  <text x="40" y="414" font-size="10" text-anchor="end" fill="var(--da-muted, #64748b)">düşük</text>
+
+  <!-- Sayfa tablosu -->
+  <text x="470" y="60" text-anchor="middle" font-size="13" font-weight="600" fill="var(--da-fg, #0f172a)">Sayfa tablosu (süreç başına)</text>
+  <g stroke="var(--da-border, #cbd5e1)" stroke-width="1.2" fill="var(--da-surface, #ffffff)">
+    <rect x="360" y="80" width="220" height="44"/>
+    <rect x="360" y="124" width="220" height="44"/>
+    <rect x="360" y="168" width="220" height="44"/>
+    <rect x="360" y="212" width="220" height="44"/>
+    <rect x="360" y="256" width="220" height="44"/>
+  </g>
+  <g font-size="11" fill="var(--da-fg, #0f172a)">
+    <text x="372" y="106">stack sayfası → çerçeve 7</text>
+    <text x="372" y="150">heap sayfası A → çerçeve 2</text>
+    <text x="372" y="194">heap sayfası B → swap</text>
+    <text x="372" y="238">heap sayfası C → ayrılmadı</text>
+    <text x="372" y="282">kod sayfası → çerçeve 4 (paylaşılan)</text>
+  </g>
+  <g font-size="10" font-weight="600" text-anchor="end">
+    <text x="572" y="106" fill="var(--da-success, #10b981)">P=1</text>
+    <text x="572" y="150" fill="var(--da-success, #10b981)">P=1</text>
+    <text x="572" y="194" fill="var(--da-accent, #f59e0b)">P=0</text>
+    <text x="572" y="238" fill="var(--da-danger, #ef4444)">yok</text>
+    <text x="572" y="282" fill="var(--da-success, #10b981)">P=1, R-X</text>
+  </g>
+  <rect x="380" y="320" width="180" height="40" rx="8" fill="var(--da-primary, #6366f1)" fill-opacity="0.12" stroke="var(--da-primary, #6366f1)"/>
+  <text x="470" y="338" text-anchor="middle" font-size="12" font-weight="600" fill="var(--da-primary, #6366f1)">TLB</text>
+  <text x="470" y="353" text-anchor="middle" font-size="10" fill="var(--da-muted, #64748b)">son çevirilerin önbelleği</text>
+
+  <g fill="none" stroke="var(--da-muted, #64748b)" stroke-width="1.4" marker-end="url(#arr)">
+    <path d="M 220 100 L 356 100"/>
+    <path d="M 220 262 C 290 262, 300 146, 356 146"/>
+    <path d="M 220 280 C 290 280, 300 190, 356 190"/>
+    <path d="M 220 296 C 300 296, 300 234, 356 234"/>
+    <path d="M 220 390 C 300 390, 300 280, 356 280"/>
+  </g>
+
+  <!-- Fiziksel RAM -->
+  <text x="790" y="60" text-anchor="middle" font-size="13" font-weight="600" fill="var(--da-fg, #0f172a)">Fiziksel RAM (çerçeveler)</text>
+  <g stroke="var(--da-border, #cbd5e1)" stroke-width="1.2">
+    <rect x="700" y="76" width="180" height="28" fill="var(--da-surface, #ffffff)"/>
+    <rect x="700" y="104" width="180" height="28" fill="var(--da-success, #10b981)" fill-opacity="0.15"/>
+    <rect x="700" y="132" width="180" height="28" fill="var(--da-surface, #ffffff)"/>
+    <rect x="700" y="160" width="180" height="28" fill="var(--da-success, #10b981)" fill-opacity="0.15"/>
+    <rect x="700" y="188" width="180" height="28" fill="var(--da-surface, #ffffff)"/>
+    <rect x="700" y="216" width="180" height="28" fill="var(--da-success, #10b981)" fill-opacity="0.15"/>
+  </g>
+  <g font-size="11" fill="var(--da-fg, #0f172a)">
+    <text x="712" y="95">çerçeve 1 · başka süreç</text>
+    <text x="712" y="123">çerçeve 2 · heap A</text>
+    <text x="712" y="151">çerçeve 3 · page cache</text>
+    <text x="712" y="179">çerçeve 4 · kod (paylaşılan)</text>
+    <text x="712" y="207">çerçeve 5 · boş</text>
+    <text x="712" y="235">çerçeve 7 · stack</text>
+  </g>
+  <rect x="700" y="320" width="180" height="56" rx="10" fill="var(--da-accent, #f59e0b)" fill-opacity="0.14" stroke="var(--da-accent, #f59e0b)"/>
+  <text x="790" y="344" text-anchor="middle" font-size="12" font-weight="600" fill="var(--da-fg, #0f172a)">Disk: swap alanı</text>
+  <text x="790" y="362" text-anchor="middle" font-size="11" fill="var(--da-muted, #64748b)">heap B burada (P=0)</text>
+
+  <g fill="none" stroke="var(--da-muted, #64748b)" stroke-width="1.4" marker-end="url(#arr)">
+    <path d="M 580 102 C 640 102, 650 230, 696 230"/>
+    <path d="M 580 146 C 640 146, 650 118, 696 118"/>
+    <path d="M 580 280 C 640 280, 650 174, 696 174"/>
+  </g>
+  <path d="M 580 190 C 640 190, 650 348, 696 348" fill="none" stroke="var(--da-accent, #f59e0b)" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#arr-w)"/>
+  <text x="640" y="300" text-anchor="middle" font-size="10" fill="var(--da-accent, #f59e0b)">erişim → major page fault</text>
+
+  <text x="480" y="446" text-anchor="middle" font-size="12" fill="var(--da-muted, #64748b)">P (present) biti 0 ise erişim page fault üretir; çekirdek sayfayı yükler, tabloyu günceller ve talimatı yeniden çalıştırır.</text>
+</svg>
