@@ -85,7 +85,7 @@
         "en": "The engine re-runs the workflow function, reading completed steps' results from history. If the code uses the clock, randomness or direct I/O, it diverges on replay and no longer matches the history. Network calls and retries happen in activities, which is why (c) and (d) are wrong."
       },
       "difficulty": "hard",
-      "concepts": ["durable-execution", "saga-orchestration"]
+      "concepts": ["durable-execution", "orchestration"]
     },
     {
       "id": "q5",
@@ -104,7 +104,7 @@
         "en": "If they are written separately, a crash can leave the state advanced with no command sent, or the command sent with the state unchanged, and the saga gets stuck. Writing both in one transaction makes them atomic; a separate process moves the command from the outbox to the queue. Since the command is delivered at least once, participants must be idempotent."
       },
       "difficulty": "medium",
-      "concepts": ["transactional-outbox", "saga-orchestration"]
+      "concepts": ["outbox-pattern", "orchestration"]
     }
   ]
 }

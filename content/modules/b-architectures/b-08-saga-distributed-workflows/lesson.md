@@ -13,7 +13,7 @@ durationMinutes: 35
 level: advanced
 tags: [architecture, saga, workflow, orchestration, compensation, temporal, idempotency]
 prerequisites: [b-02-microservice-communication, b-07-event-sourcing-cqrs, i-03-api-ve-rest-api-tasarim-guvenlik-ve-idempotency]
-concepts: [saga-pattern, saga-orchestration, saga-choreography, compensating-transaction, pivot-transaction, saga-timeout, durable-execution, idempotency-key, transactional-outbox]
+concepts: [saga-pattern, orchestration, choreography, compensating-transaction, pivot-transaction, saga-timeout, durable-execution, idempotency-key, outbox-pattern]
 ---
 
 ## Kavram: uzun süren, birden fazla sahibi olan bir iş

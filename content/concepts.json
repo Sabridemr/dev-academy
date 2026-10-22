@@ -3182,6 +3182,21 @@
       "pull-request"
     ]
   },
+  "contract-test": {
+    "term": {
+      "tr": "Adaptör sözleşme testi",
+      "en": "Contract test"
+    },
+    "definition": {
+      "tr": "Aynı test paketinin bir port'un bütün uygulamalarına, örneğin bellek içi sahteye ve gerçek veritabanına bağlı adaptöre karşı çalıştırılması. Sahtenin gerçek adaptörle aynı davrandığını kanıtlar; böylece sahteyle yazılan hızlı use case testlerine güvenilebilir. Servisler arası API sözleşmesini doğrulayan contract testing ile aynı fikri port düzeyinde uygular."
+    },
+    "related": [
+      "contract-testing",
+      "test-double",
+      "ports-and-adapters",
+      "driven-adapter"
+    ]
+  },
   "contract-testing": {
     "term": {
       "tr": "Sözleşme testi (contract testing)",
@@ -3195,7 +3210,8 @@
       "test-pyramid",
       "schema-validation",
       "openapi",
-      "ci-test-stage"
+      "ci-test-stage",
+      "contract-test"
     ]
   },
   "conversation-model": {
@@ -4636,6 +4652,24 @@
       "declarative-reconciliation"
     ]
   },
+  "driven-adapter": {
+    "term": {
+      "tr": "Sürülen adaptör (driven adapter)",
+      "en": "Driven adapter"
+    },
+    "definition": {
+      "tr": "Hexagonal mimaride çekirdeğin kendi dilinde tanımladığı çıkış port'unu uygulayan bileşen: veritabanı repository'si, e-posta istemcisi ya da testteki bellek içi sahte. Port'u import eden adaptördür, çekirdek adaptörü bilmez; teknoloji değiştiğinde yalnızca adaptör değişir."
+    },
+    "aliases": [
+      "secondary adapter"
+    ],
+    "related": [
+      "driving-adapter",
+      "ports-and-adapters",
+      "dependency-inversion",
+      "test-double"
+    ]
+  },
   "driver-matching": {
     "term": {
       "tr": "Sürücü eşleştirme",
@@ -4650,6 +4684,24 @@
       "assignment-algorithm",
       "distributed-lock",
       "surge-pricing"
+    ]
+  },
+  "driving-adapter": {
+    "term": {
+      "tr": "Sürücü adaptör (driving adapter)",
+      "en": "Driving adapter"
+    },
+    "definition": {
+      "tr": "Hexagonal mimaride dış dünyadan gelen isteği alıp uygulama çekirdeğini giriş port'u üzerinden çağıran bileşen: HTTP controller, CLI komutu, kuyruk tüketicisi ya da bir test. Protokole özgü işleri (kimlik çözme, girdi doğrulama, komut nesnesi üretme) üstlenir, iş kuralı içermez."
+    },
+    "aliases": [
+      "primary adapter"
+    ],
+    "related": [
+      "driven-adapter",
+      "ports-and-adapters",
+      "hexagonal-architecture",
+      "use-case"
     ]
   },
   "dual-write": {
@@ -4701,6 +4753,25 @@
       "init-method",
       "iterator-protocol",
       "context-manager"
+    ]
+  },
+  "durable-execution": {
+    "term": {
+      "tr": "Dayanıklı yürütme (durable execution)",
+      "en": "Durable execution"
+    },
+    "definition": {
+      "tr": "İş akışı kodunu sıradan bir fonksiyon gibi yazdırıp her dış çağrının sonucunu bir olay geçmişine kaydeden yürütme modeli (ör. Temporal, Cadence). Süreç çökerse başka bir işçi geçmişi yeniden oynatarak fonksiyonu kaldığı yerden sürdürür; bunun için iş akışı kodunun deterministik olması gerekir."
+    },
+    "aliases": [
+      "workflow engine"
+    ],
+    "related": [
+      "orchestration",
+      "saga-pattern",
+      "event-sourcing",
+      "replay",
+      "state-machine"
     ]
   },
   "dynamic-array": {
@@ -5129,6 +5200,22 @@
       "log-compaction"
     ]
   },
+  "event-store": {
+    "term": {
+      "tr": "Olay deposu (event store)",
+      "en": "Event store"
+    },
+    "definition": {
+      "tr": "Event sourcing'de olayları akış (stream) başına sıralı ve değişmez biçimde saklayan veritabanı. Temel işlemleri beklenen sürümle ekleme, bir akışı okuma ve bütün olaylara global sırayla abone olmaktır; EventStoreDB bu iş için tasarlanmış bir veritabanı, Marten ise aynı modeli PostgreSQL üzerine kuran bir kütüphanedir."
+    },
+    "related": [
+      "event-sourcing",
+      "event-stream",
+      "append-only",
+      "optimistic-concurrency",
+      "projection"
+    ]
+  },
   "event-stream": {
     "term": {
       "tr": "Olay akışı (event stream)",
@@ -5159,6 +5246,23 @@
       "message-queue",
       "sync-vs-async",
       "event-driven-order-flow"
+    ]
+  },
+  "event-upcasting": {
+    "term": {
+      "tr": "Olay upcasting'i (event upcasting)",
+      "en": "Event upcasting"
+    },
+    "definition": {
+      "tr": "Olay şeması değiştiğinde depodaki eski olayları yeniden yazmak yerine, okunurken eski sürümü yeni şekle dönüştürme (ör. eksik para birimi alanına varsayılan değer vermek). Olaylar değiştirilemediği için event sourcing'de şema evriminin temel aracıdır; alan silmek ya da anlam değiştirmek ise genellikle yeni bir olay tipi gerektirir."
+    },
+    "aliases": [
+      "upcaster"
+    ],
+    "related": [
+      "event-sourcing",
+      "event-store",
+      "replay"
     ]
   },
   "events": {
@@ -7046,6 +7150,24 @@
       "sort-stability"
     ]
   },
+  "in-process-events": {
+    "term": {
+      "tr": "Süreç içi olaylar",
+      "en": "In-process events"
+    },
+    "definition": {
+      "tr": "Aynı uygulama sürecindeki bir modülün yayınladığı olayın, mesaj kuyruğu yerine bellek içi bir dağıtıcı (event emitter) ile diğer modüllere iletilmesi. Yayıncının dinleyicileri tanımasını gerektirmez; ancak olay, transaction commit edildikten sonra dağıtılmalıdır, yoksa geri alınmış bir işlemin sonuçları tetiklenir."
+    },
+    "aliases": [
+      "in-memory events"
+    ],
+    "related": [
+      "modular-monolith",
+      "observer",
+      "pub-sub",
+      "outbox-pattern"
+    ]
+  },
   "indentation": {
     "term": {
       "tr": "Girinti (indentation)",
@@ -8892,6 +9014,44 @@
       "virtual-environment"
     ]
   },
+  "module-boundary-enforcement": {
+    "term": {
+      "tr": "Modül sınırı denetimi",
+      "en": "Module boundary enforcement"
+    },
+    "definition": {
+      "tr": "Bir modülün başka bir modülün iç koduna erişmesini yasaklayan kuralların derleme ya da CI aşamasında araçla doğrulanması (ör. dependency-cruiser, ArchUnit, Packwerk). Sınır kod incelemesindeki dikkate bırakılmadığı için başka modülün iç dosyasını import eden bir değişiklik testlere gelmeden reddedilir."
+    },
+    "aliases": [
+      "boundary check",
+      "architecture test"
+    ],
+    "related": [
+      "modular-monolith",
+      "module-public-api",
+      "continuous-integration",
+      "dependency-rule"
+    ]
+  },
+  "module-public-api": {
+    "term": {
+      "tr": "Modül açık API'si (public API)",
+      "en": "Module public API"
+    },
+    "definition": {
+      "tr": "Modüler monolitte bir modülün diğer modüllere açtığı tek yüz: facade sınıfı ya da fonksiyonlar, komut/sorgu DTO'ları ve yayınlanan olay tipleri. Diğer modüller yalnızca bu yüzü kullanır, iç kod ve tablolar gizli kalır; modül ileride servise ayrıldığında bu arayüz bir ağ sözleşmesine dönüşür."
+    },
+    "aliases": [
+      "public API"
+    ],
+    "related": [
+      "modular-monolith",
+      "facade",
+      "encapsulation",
+      "module-boundary-enforcement",
+      "service-extraction"
+    ]
+  },
   "monolith": {
     "term": {
       "tr": "Monolit",
@@ -9624,6 +9784,25 @@
       "tabulation"
     ]
   },
+  "optimistic-concurrency": {
+    "term": {
+      "tr": "İyimser eşzamanlılık (optimistic concurrency)",
+      "en": "Optimistic concurrency control"
+    },
+    "definition": {
+      "tr": "Kaynağı kilitlemeden okuyup yazarken, okunan sürümün yazma anında hâlâ geçerli olduğunu doğrulayan kontrol. Olay deposunda olaylar beklenen sürümle (expected version) eklenir; arada akışa başka biri yazdıysa ekleme reddedilir ve komut güncel durumla yeniden denenir."
+    },
+    "aliases": [
+      "expected version",
+      "OCC"
+    ],
+    "related": [
+      "optimistic-locking",
+      "event-store",
+      "lost-update",
+      "aggregate"
+    ]
+  },
   "optimistic-locking": {
     "term": {
       "tr": "İyimser kilitleme (optimistic locking)",
@@ -9637,7 +9816,8 @@
       "lock",
       "atomic-conditional-update",
       "etag",
-      "mvcc"
+      "mvcc",
+      "optimistic-concurrency"
     ]
   },
   "orchestration": {
@@ -10162,6 +10342,21 @@
       "shell-scripting"
     ]
   },
+  "pivot-transaction": {
+    "term": {
+      "tr": "Pivot işlem (dönüm noktası)",
+      "en": "Pivot transaction"
+    },
+    "definition": {
+      "tr": "Saga'da başarıyla tamamlandığında akışın artık geri dönmediği adım (ör. karttan tahsilat); bundan sonra saga yalnızca ileri gider. Öncesine telafi edilebilir adımlar, sonrasına başarılı olana kadar yeniden denenen adımlar konur; bu sınıflandırma adımların sırasını belirler."
+    },
+    "related": [
+      "saga-pattern",
+      "compensating-transaction",
+      "orchestration",
+      "saga"
+    ]
+  },
   "pkce": {
     "term": {
       "tr": "PKCE",
@@ -10492,6 +10687,22 @@
       "search-indexing",
       "caching",
       "cdn"
+    ]
+  },
+  "projection": {
+    "term": {
+      "tr": "Projeksiyon (projection)",
+      "en": "Projection"
+    },
+    "definition": {
+      "tr": "Olay akışını dinleyip her olayı bir okuma modeline uygulayan kod (ör. MoneyWithdrawn gelince bakiye tablosunu güncellemek). Olayla aynı transaction'da (inline) ya da abonelikle ayrı bir süreçte (asenkron) çalışır; asenkron projeksiyon aynı olayı iki kez alabileceği için checkpoint ile idempotent tutulur."
+    },
+    "related": [
+      "read-model",
+      "event-sourcing",
+      "cqrs",
+      "replay",
+      "idempotency"
     ]
   },
   "prometheus-data-model": {
@@ -11119,6 +11330,24 @@
       "learning-to-rank"
     ]
   },
+  "read-model": {
+    "term": {
+      "tr": "Okuma modeli (read model)",
+      "en": "Read model"
+    },
+    "definition": {
+      "tr": "CQRS'te sorgular için olaylardan ya da yazma modelinden türetilen, ekranın ihtiyacına göre şekillendirilmiş veri: denormalize bir tablo, arama indeksi ya da önbellek. Doğruluk kaynağı değildir, silinip olaylardan yeniden üretilebilir; asenkron güncellendiğinde yazma tarafının biraz gerisinden gelir."
+    },
+    "aliases": [
+      "query model"
+    ],
+    "related": [
+      "cqrs",
+      "projection",
+      "denormalization",
+      "eventual-consistency"
+    ]
+  },
   "read-replica": {
     "term": {
       "tr": "Okuma replikası (read replica)",
@@ -11675,6 +11904,25 @@
       "pull-request",
       "merge",
       "branching"
+    ]
+  },
+  "replay": {
+    "term": {
+      "tr": "Replay (olayları yeniden oynatma)",
+      "en": "Event replay"
+    },
+    "definition": {
+      "tr": "Saklanan olayların baştan itibaren yeniden işlenmesi. Event sourcing'de yeni bir projeksiyonu geçmiş veriyle kurmak ya da hatalı bir okuma modelini silip düzeltilmiş kodla yeniden üretmek için kullanılır; büyük depolarda uzun sürdüğünden yeni model genellikle eskisinin yanında kurulup yetişince trafiğe açılır."
+    },
+    "aliases": [
+      "event replay"
+    ],
+    "related": [
+      "event-sourcing",
+      "projection",
+      "read-model",
+      "snapshot",
+      "durable-execution"
     ]
   },
   "replicaset": {
@@ -12280,6 +12528,21 @@
       "orchestration"
     ]
   },
+  "saga-timeout": {
+    "term": {
+      "tr": "Saga zaman aşımı",
+      "en": "Saga timeout"
+    },
+    "definition": {
+      "tr": "Bir saga adımının ya da saganın tamamının belirlenen sürede bitmemesi. Zaman aşımı adımın başarısız olduğunu değil sonucunun bilinmediğini gösterir; bu yüzden önce aynı idempotency anahtarıyla yeniden denenir ya da adımın durumu sorgulanır, toplam süre aşılırsa telafiye geçilir."
+    },
+    "related": [
+      "saga-pattern",
+      "idempotency-key",
+      "exponential-backoff",
+      "compensating-transaction"
+    ]
+  },
   "samesite": {
     "term": {
       "tr": "SameSite çerez özniteliği",
@@ -12339,6 +12602,21 @@
       "sql-vs-nosql",
       "data-lake",
       "relational-vs-nosql"
+    ]
+  },
+  "schema-per-module": {
+    "term": {
+      "tr": "Modül başına şema",
+      "en": "Schema per module"
+    },
+    "definition": {
+      "tr": "Modüler monolitte her modülün tablolarını ayrı bir veritabanı şemasında (ya da tablo önekiyle) tutması ve başka bir modülün tablosunu okumaması, yazmaması, JOIN etmemesi kuralı. Modül başına ayrı veritabanı kullanıcısı bu sınırı veritabanının kendisine de zorlatır ve modül servise ayrılırken verisinin taşınmasını kolaylaştırır."
+    },
+    "related": [
+      "modular-monolith",
+      "database-per-service",
+      "database-schema",
+      "bounded-context"
     ]
   },
   "schema-validation": {
@@ -12656,6 +12934,22 @@
       "dns-resolution"
     ]
   },
+  "service-extraction": {
+    "term": {
+      "tr": "Servis ayırma (service extraction)",
+      "en": "Service extraction"
+    },
+    "definition": {
+      "tr": "Bir modülü monolitten çıkarıp bağımsız dağıtılan bir servise dönüştürme. Sınırları korunmuş bir modülde açık API bir ağ sözleşmesine (REST/gRPC), süreç içi adaptör HTTP adaptörüne, modülün şeması ayrı veritabanına, süreç içi olaylar mesaj kuyruğuna taşınır. Gerekçesi ölçek profili, dağıtım ritmi ya da hata izolasyonu gibi ölçülebilir bir ihtiyaç olmalıdır."
+    },
+    "related": [
+      "modular-monolith",
+      "microservices",
+      "strangler-fig",
+      "module-public-api",
+      "decomposition-criteria"
+    ]
+  },
   "service-identity": {
     "term": {
       "tr": "Servis kimliği (service identity)",
@@ -12956,6 +13250,21 @@
       "vanishing-gradient"
     ]
   },
+  "single-deployment-unit": {
+    "term": {
+      "tr": "Tek dağıtım birimi",
+      "en": "Single deployment unit"
+    },
+    "definition": {
+      "tr": "Uygulamanın bütün modülleriyle birlikte tek derleme, tek sürüm ve tek süreç (ya da aynı imajdan çoğaltılmış replikalar) olarak dağıtılması. Modüller arası ağ çağrısı yerine fonksiyon çağrısı ve yerel transaction kullanılabilir; bedeli, bütün modüllerin aynı sürüm treniyle çıkması ve birlikte ölçeklenmesidir."
+    },
+    "related": [
+      "modular-monolith",
+      "monolith",
+      "microservices",
+      "horizontal-scaling"
+    ]
+  },
   "single-point-of-failure": {
     "term": {
       "tr": "Tek hata noktası (SPOF)",
@@ -13132,6 +13441,21 @@
       "dunder-methods",
       "memory-profiling",
       "dataclass"
+    ]
+  },
+  "snapshot": {
+    "term": {
+      "tr": "Snapshot (anlık durum kaydı)",
+      "en": "Snapshot"
+    },
+    "definition": {
+      "tr": "Event sourcing'de uzun bir olay akışı için belirli aralıklarla kaydedilen hesaplanmış durum; aggregate yüklenirken her olayı baştan katlamak yerine snapshot ve sonrasındaki olaylar okunur. Doğruluk kaynağı değil bir önbellektir: durum hesaplama mantığı değişirse atılıp olaylardan yeniden üretilir."
+    },
+    "related": [
+      "event-sourcing",
+      "event-store",
+      "replay",
+      "aggregate"
     ]
   },
   "social-graph": {
@@ -15248,6 +15572,26 @@
       "rest",
       "http-methods",
       "pagination"
+    ]
+  },
+  "use-case": {
+    "term": {
+      "tr": "Use case (kullanım senaryosu)",
+      "en": "Use case"
+    },
+    "definition": {
+      "tr": "Clean ve hexagonal mimaride uygulama katmanında tek bir iş eylemini (ör. SubmitAttempt) yürüten sınıf ya da fonksiyon. Gereken veriyi port'lar üzerinden ister, domain kurallarını çağırır ve sonucu kaydettirir; HTTP, ORM ya da çerçeve ayrıntısı bilmediği için bellek içi sahtelerle hızlıca test edilir."
+    },
+    "aliases": [
+      "interactor",
+      "application service"
+    ],
+    "related": [
+      "clean-architecture",
+      "hexagonal-architecture",
+      "ports-and-adapters",
+      "driving-adapter",
+      "driven-adapter"
     ]
   },
   "vanishing-gradient": {
