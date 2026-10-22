@@ -41,6 +41,14 @@ const interactiveCount = content.modules.reduce(
     m.lessons.reduce((b, l) => b + l.doc.blocks.filter((x) => x.type === 'interactive').length, 0),
   0,
 );
+const blockCount = (type: string) =>
+  content.modules.reduce(
+    (a, m) =>
+      a + m.lessons.reduce((b, l) => b + l.doc.blocks.filter((x) => x.type === type).length, 0),
+    0,
+  );
+const predictCount = blockCount('predict');
+const resourcesCount = blockCount('resources');
 
 if (asJson) {
   console.log(
@@ -49,7 +57,7 @@ if (asJson) {
         root,
         coverage,
         translation,
-        counts: { sceneCount, quizCount, svgCount, interactiveCount },
+        counts: { sceneCount, quizCount, svgCount, interactiveCount, predictCount, resourcesCount },
         errors,
         warnings,
       },
@@ -60,7 +68,7 @@ if (asJson) {
 } else {
   console.log(`İçerik kökü: ${root}`);
   console.log(
-    `Modül: ${content.modules.length}  Ders: ${coverage.written}/${coverage.total}  Sahne: ${sceneCount}  Quiz: ${quizCount}  SVG: ${svgCount}  İnteraktif: ${interactiveCount}`,
+    `Modül: ${content.modules.length}  Ders: ${coverage.written}/${coverage.total}  Sahne: ${sceneCount}  Quiz: ${quizCount}  SVG: ${svgCount}  İnteraktif: ${interactiveCount}  Tahmin: ${predictCount}  Kaynakça: ${resourcesCount}`,
   );
   // Bilgi amaçlı (doğrulama sonucunu etkilemez)
   console.log(

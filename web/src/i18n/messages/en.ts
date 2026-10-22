@@ -240,6 +240,26 @@ export const en: Messages = {
       diagram: 'Diagram',
     },
     calloutTone: { info: 'Info', tip: 'Tip', warning: 'Caution', danger: 'Warning' },
+    predict: {
+      label: 'Make a prediction',
+      notScored: 'Not graded',
+      hint: 'Before moving on, pick what you think will happen.',
+      correct: 'Correct prediction!',
+      incorrect: 'Not quite. The answer is {answer}',
+      retry: 'Try again',
+    },
+    resources: {
+      title: 'Further reading',
+      opensInNewTab: '(opens in a new tab)',
+      kind: {
+        book: 'Book',
+        article: 'Article',
+        docs: 'Documentation',
+        video: 'Video',
+        paper: 'Paper',
+        repo: 'Repository',
+      },
+    },
   },
   trace: {
     role: 'Code simulation',

@@ -48,6 +48,20 @@ const BLOCK_TEMPLATES: Record<
   callout: { type: 'callout', tone: 'tip', markdown: 'İpucu…' },
   quiz: { type: 'quiz', src: 'quiz.json' },
   next: { type: 'next', lesson: '' },
+  predict: {
+    type: 'predict',
+    prompt: { tr: 'Sence ne olacak?' },
+    options: [
+      { id: 'a', text: { tr: 'Seçenek A' } },
+      { id: 'b', text: { tr: 'Seçenek B' } },
+    ],
+    correct: 'a',
+    explanation: { tr: 'Neden A?' },
+  },
+  resources: {
+    type: 'resources',
+    items: [{ title: 'Kaynak', url: 'https://example.org', kind: 'docs' }],
+  },
 } as Record<(typeof LESSON_BLOCK_TYPES)[number], Omit<LessonBlock, 'id' | 'order'>>;
 
 /**
