@@ -607,6 +607,15 @@ export const en: Messages = {
     descTr: 'Description (TR)',
     descEn: 'Description (EN)',
     lessonCount: '{count} lessons',
+    exportContent: 'Export in content/ format',
+    exportTitle: 'content/ export',
+    exportHint:
+      'v{version} ({status}) · {count} files. Put the files at their paths in the repo and run pnpm content:validate --strict.',
+    exportWarnings: 'Not carried over exactly',
+    exportCopy: 'Copy',
+    exportCopied: 'Copied',
+    exportDownload: 'Download',
+    exportFailed: 'Export failed',
   },
   xp: {
     toast: '+{delta} XP',
