@@ -235,6 +235,26 @@ export const tr = {
       diagram: 'Diyagram',
     },
     calloutTone: { info: 'Bilgi', tip: 'İpucu', warning: 'Dikkat', danger: 'Uyarı' },
+    predict: {
+      label: 'Tahmin et',
+      notScored: 'Puanlanmaz',
+      hint: 'Devam etmeden önce sence ne olacağını seç.',
+      correct: 'Doğru tahmin!',
+      incorrect: 'Tam değil. Doğru cevap: {answer}',
+      retry: 'Yeniden dene',
+    },
+    resources: {
+      title: 'Kaynakça',
+      opensInNewTab: '(yeni sekmede açılır)',
+      kind: {
+        book: 'Kitap',
+        article: 'Makale',
+        docs: 'Dokümantasyon',
+        video: 'Video',
+        paper: 'Akademik makale',
+        repo: 'Kod deposu',
+      },
+    },
   },
   trace: {
     role: 'Kod simülasyonu',
