@@ -241,6 +241,10 @@ dist
 - Şifreleri imaja gömmeyin; ortam değişkeni veya secret kullanın.
 - Her konteyner tek bir iş yapsın.
 
+:::interactive{type="docker-layers" example="node-multistage"}
+Yukarıdaki çok aşamalı Dockerfile editörde açık. Katman yığınında RUN/COPY satırlarının dosya sistemi katmanı ürettiğini, WORKDIR/ENV/EXPOSE/CMD gibi talimatların ise yalnızca "metadata" olduğunu gör; "build" aşamasındaki "final imaja girmez" etiketine dikkat et. "Build cache simülasyonu" kutusunda "src/ değişti"ye bas: `npm ci` cache'ten gelirken `COPY . .` ve sonrası kırmızıya döner, ikinci aşamada da yalnızca `COPY --from=build` yeniden kopyalanır. Aynısını "package.json değişti" ile karşılaştır. Son olarak "Yükle: Tek aşamalı sürüm" düğmesine bas ve "Önce / sonra" tablosunda final imaj boyutunun nasıl büyüdüğünü oku; "Build context boyutu" kaydırıcısı `COPY . .` katmanının büyüklüğünü değiştirir.
+:::
+
 ## 8. Volume ve Ağ Yönetimi
 
 ### Volume

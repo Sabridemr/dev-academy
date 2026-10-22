@@ -150,6 +150,10 @@ ORDER BY revenue DESC;
 
 `WHERE` ve `HAVING` farkı mülakatların klasiğidir: `WHERE` satırlara gruplamadan önce, `HAVING` gruplara toplamdan sonra uygulanır. `WHERE SUM(...) > 100` yazılamaz çünkü WHERE çalışırken henüz toplam yoktur. Diğer sık hata, `SELECT` listesine gruplanmayan ve toplanmayan bir sütun koymaktır; standart SQL bunu reddeder, çünkü grup içindeki hangi satırın değerinin gösterileceği belirsizdir. Kural basit: SELECT'teki her sütun ya `GROUP BY`'da olmalı ya da bir toplama fonksiyonunun içinde.
 
+:::interactive{type="sql-playground" dataset="shop"}
+Editördeki hazır sorgu customers → orders → order_items zincirini birleştirip müşteri başına harcamayı hesaplıyor (oyun alanındaki veri kümesinde müşteri tablosunun adı `customers`). "Adım adım" görünümünde ok düğmeleriyle ya da ← → tuşlarıyla ilerle: JOIN adımında eşleşen satır çiftlerini ve hiç siparişi olmayan müşterilerin soluklaşarak elendiğini, WHERE adımında iptal edilen siparişlerin düştüğünü, GROUP BY adımında satırların renkli gruplara ayrıldığını, LIMIT adımında kesilen satırları izle. Sonra ilk `JOIN`'i `LEFT JOIN` yapıp "Çalıştır"a bas: eşleşmeyen müşteriler JOIN adımında NULL ile korunuyor, peki sonraki JOIN ve WHERE adımlarından sağ çıkabiliyorlar mı? Sağdaki görev listesinden "Her müşterinin toplam harcamasını bul" görevini seçip kendi sorgunu yaz ve "Kontrol et" ile beklenen sonuçla karşılaştır. Oyun alanı yalnızca `SELECT` çalıştırır; `DELETE` ya da `DROP` yazmayı denersen reddedildiğini göreceksin.
+:::
+
 ## Alt sorgular ve CTE
 
 Bir sorgunun sonucunu başka bir sorgunun içinde kullanabilirsin. **Alt sorgu (subquery)** `WHERE` içinde tek değer ya da liste üretebilir, `FROM` içinde türetilmiş tablo olarak durabilir. **Korelasyonlu alt sorgu** dış sorgunun her satırı için yeniden çalışır; küçük tablolarda zararsız, büyük tablolarda yavaştır.
