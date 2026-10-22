@@ -13,6 +13,7 @@ content/
       quiz.json                               → quiz
       *.svg                                   → diyagramlar
       <ad>.trace.py → <ad>.trace.json         → kod simülasyonu (kaynak + üretilmiş iz)
+      <ad>.exercise.json                      → kodlama alıştırması (görev, starter, testler, çözüm)
 ```
 
 Modül ve ders kimlikleri `packages/shared/src/content/curriculum.ts` içindeki müfredattan gelir. Klasör adı = `lesson id` olmalıdır (ör. `a-05-load-balancing`).
@@ -72,6 +73,10 @@ info | tip | warning | danger
 
 :::trace{src="ornek.trace.json" title="Türkçe başlık|English title"}
 İsteğe bağlı yönerge
+:::
+
+:::exercise{src="ornek.exercise.json"}
+İsteğe bağlı yönerge (görev metninin üstünde gösterilir)
 :::
 
 :::quiz{src="quiz.json"}
@@ -152,6 +157,46 @@ pnpm content:traces   # tüm <ad>.trace.py dosyalarından <ad>.trace.json üreti
 - Üretilen iz kaynağın SHA-256 özetini taşır; kaynak değişip iz yeniden üretilmediyse doğrulayıcı hata verir.
 - Kod kısa olsun (≤ 25 satır, en fazla 300 adım). `input()`, rastgelelik, thread ve gerçek dosya yazma kullanmayın.
 - Üretici: `packages/shared/scripts/python-trace/tracer.py` (testleri: `python3 -m unittest discover -s packages/shared/scripts/python-trace`).
+
+## Kodlama alıştırmaları (`*.exercise.json`)
+
+"Şu fonksiyonu tamamla, testler geçsin" türü alıştırma. Web'de kod **tarayıcıda** çalışır: Python, Pyodide
+(WebAssembly CPython) ile bir Web Worker içinde yürütülür; **sunucuya kod gönderilmez**. Mobilde Pyodide yoktur:
+görev ve başlangıç kodu gösterilir, "Web'de çöz" dersi web'de açar.
+
+```json
+{
+  "id": "k-06-varsayilan-arguman-hatasi",
+  "title": { "tr": "Türkçe başlık", "en": "English title" },
+  "language": "python",
+  "prompt": { "tr": "Markdown görev açıklaması", "en": "Markdown task" },
+  "starter": "def toplam(xs):\n    ...\n",
+  "solution": "def toplam(xs):\n    return sum(xs)\n",
+  "tests": "assert toplam([1, 2, 3]) == 6\nassert toplam([]) == 0\n",
+  "hints": [{ "tr": "İpucu", "en": "Hint" }],
+  "timeoutMs": 5000
+}
+```
+
+- `id` kebab-case ve **tüm içerikte benzersiz** olmalı (`<ders-kodu>-<ad>` önerilir). Şema:
+  `packages/shared/schema/exercise.schema.json`.
+- **Testler** kullanıcı kodundan sonra aynı ad alanında çalışır; hata fırlatmadan biterse alıştırma geçilmiş sayılır.
+  3–6 `assert` yazın; mesajlı assert (`assert x == 1, "neden"`) kullanıcıya hangi kuralın bozulduğunu söyler.
+  Başarısız test satırı çıktı panelinde gösterilir.
+- **starter** derlenebilir olmalı ama testleri **geçmemeli**; **solution** testleri 5 sn içinde geçmeli. Bunu
+  `pnpm content:exercises` gerçekten çalıştırarak sınar (`python3 -I -c "<solution>\n<tests>"`, CI'da da çalışır).
+  `pnpm content:validate` yalnızca yapıyı doğrular (şema, starter ≠ solution, assert varlığı, İngilizce metin,
+  benzersiz id, bloktan referans).
+- `timeoutMs` (500–30000, varsayılan 5000) aşılırsa tarayıcıdaki worker sonlandırılır (sonsuz döngüye karşı).
+- Yalnızca standart kütüphane kullanın; `input()`, ağ ve dosya erişimi tarayıcı çalıştırıcısında yoktur. Pyodide
+  sürümü (şu an Python 3.14) yerel `python3` sürümünden farklı olabilir: sürüme özgü davranışa dayanmayın.
+- **Çözüm istemciye gitmez.** Seed çözümü bloğun ayrı bir alanına yazar, ders API'si (`GET /lessons/:id`, offline
+  paket) onu çıkarır. "Çözümü göster" düğmesi **3 başarısız test denemesinden sonra** (ya da testler geçince)
+  açılır ve oturum gerektiren `GET /lessons/:lessonId/exercises/:exerciseId/solution` uç noktasını çağırır.
+  Çözüme bakıldıktan sonra geçilen alıştırma ilerlemeye kaydedilmez.
+- Testleri geçen oturum `POST /progress/interactive` ile `code-exercise` türünde kaydedilir (interaktif rozet
+  sayacına katılır).
+- Blok genelde quiz'den önce, dersin konusunu pekiştiren yere konur.
 
 ## Raster görseller (png, jpg, webp)
 
