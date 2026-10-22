@@ -268,6 +268,29 @@ export function serializeBlock(block: LessonBlock, warn: Warn = () => {}): strin
       );
     case 'next':
       return directive('next', [['lesson', block.lesson]], lt(block.note), where, warn);
+    case 'predict': {
+      // parser.parsePredictBody'nin tersi: soru, "- [x]" seçenekler, "Açıklama:" satırı; dil ayırıcısı " | "
+      const bi = (v: { tr: string; en?: string }) => (v.en ? `${v.tr} | ${v.en}` : v.tr);
+      const lines = [
+        bi(block.prompt),
+        ...block.options.map((o) => `- [${o.id === block.correct ? 'x' : ' '}] ${bi(o.text)}`),
+        ...(block.explanation ? [`Açıklama: ${bi(block.explanation)}`] : []),
+      ];
+      return directive('predict', [['id', block.id]], lines.join('\n'), where, warn);
+    }
+    case 'resources':
+      return directive(
+        'resources',
+        [],
+        block.items
+          .map(
+            (i) =>
+              `- [${i.title}](${i.url})${i.kind ? ` — ${i.kind}` : ''}${i.note ? ` — ${i.note}` : ''}`,
+          )
+          .join('\n'),
+        where,
+        warn,
+      );
   }
 }
 
