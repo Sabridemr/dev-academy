@@ -170,6 +170,31 @@ kullanılır:
 - `alt` metni zorunludur (ekran okuyucu ve arama için); öznitelikte `"`, `}` ve (ayırıcı dışında) `|` kullanmayın.
 
 
+## Panelden dışa aktarım
+
+Admin panelinde düzenlenip yayınlanan dersler veritabanında yeni bir sürüm olarak durur. Bunları bu klasöre geri
+almak için:
+
+```bash
+pnpm content:export --lesson a-05-load-balancing   # tek ders (tekrarlanabilir); --lesson yoksa yayındaki tüm dersler
+pnpm content:export --out /tmp/content             # başka klasöre yaz (varsayılan: CONTENT_DIR, yani content/)
+pnpm content:validate --strict && git diff         # doğrula ve değişiklikleri gözden geçir
+```
+
+Ders editöründeki **content/ formatında dışa aktar** düğmesi (yalnızca admin) aynı dosyaları bir pencerede gösterir;
+her dosya kopyalanabilir ya da indirilebilir. Çıktı: `lesson.md` (gerekirse `lesson.en.md`), gömülü SVG'ler,
+`*.scene.json`, `quiz.json`, `*.trace.json` ve raster görseller.
+
+- Çıktı seed ile yeniden yüklendiğinde aynı blokları üretir; ancak biçim birebir aynı olmayabilir: JSON dosyaları
+  `JSON.stringify` girintisiyle yazılır, `:::interactive` parametrelerinin sırası değişebilir, frontmatter'da
+  tırnak kullanımı sadeleşir. Blok kimlikleri yazılmaz (ayrıştırıcı tür sırasıyla yeniden üretir).
+- `*.trace.py` kaynakları veritabanında tutulmaz; klasördeki mevcut kaynak korunmalıdır (CLI dosya silmez).
+- Klasörde aynı içerikli görsel yoksa raster görseller `gorsel-<sha256 ilk 12>.<uzantı>` adıyla yazılır.
+- Biçimin taşıyamadığı durumlar (ör. öznitelikte `}`, ardışık iki metin bloğu, iç içe obje parametreler)
+  uyarı olarak listelenir.
+- Seed, panelde yayınlanmış bir sürümü bu klasördeki ders değişmediği sürece ezmez ve uyarır; içeriği dışa
+  aktarıp commit'leyin ya da panel sürümünü bilerek ezmek için `pnpm db:seed -- --force` kullanın.
+
 ```bash
 pnpm content:validate          # hatalar varsa çıkış kodu 1
 pnpm content:validate --strict # uyarıları da hata say
