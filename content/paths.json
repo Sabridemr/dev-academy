@@ -106,6 +106,9 @@
       "h-devops-tools/h-10-mulakat-soru-cevap-ve-ozet",
       "i-api-sql-testing/i-04-api-ve-rest-api-uctan-uca-ornek-ve-mulakat",
       "j-system-design-notes/j-11-odunlesimler-mulakat-ve-ozet",
+      "p-frontend-web/p-02-csr-ssr-ssg-isr",
+      "p-frontend-web/p-04-web-performance",
+      "p-frontend-web/p-05-browser-security",
       "l-algorithms-data-structures"
     ]
   },
@@ -143,6 +146,8 @@
       "k-python",
       "i-api-sql-testing/i-01-how-apis-are-created-and-called",
       "a-system-design-fundamentals/a-01-client-server-dns-http",
+      "p-frontend-web/p-01-browser-rendering-pipeline",
+      "p-frontend-web/p-06-accessibility-design-systems",
       "a-system-design-fundamentals/a-03-horizontal-vertical-scaling",
       "h-devops-tools/h-01-linux-notes",
       "h-devops-tools/h-04-git-notes"

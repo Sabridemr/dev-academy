@@ -100,7 +100,7 @@ Seçimi verinin değişme sıklığı ve kişiselleşmesi belirler: herkese ayn�
 :::resources
 - [Rendering on the Web](https://web.dev/articles/rendering-on-the-web) — makale — Chrome ekibi: SSR, CSR, statik render ve hydration ödünleşimleri
 - [React: hydrateRoot](https://react.dev/reference/react-dom/client/hydrateRoot) — belge — hydration ve uyumsuzluk hataları
-- [Next.js: Incremental Static Regeneration](https://nextjs.org/docs/app/building-your-application/data-fetching/incremental-static-regeneration) — belge
+- [Next.js: Incremental Static Regeneration](https://nextjs.org/docs/app/guides/incremental-static-regeneration) — belge
 :::
 
 :::next{lesson="p-03-state-management-data-flow"}
