@@ -1,0 +1,219 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "modular-monolith-boundaries",
+  "title": { "tr": "Modüler Monolitte Sınırlar ve Bir Modülün Ayrılması", "en": "Boundaries in a Modular Monolith and Extracting a Module" },
+  "summary": {
+    "tr": "Tek süreçteki modüllerin açık API ve süreç içi olaylarla konuşması, bir sınır ihlalinin CI'da yakalanması, tek dağıtım ve ödeme modülünün ayrı servise çıkarılması.",
+    "en": "Modules in one process talking through public APIs and in-process events, a boundary violation caught in CI, a single deployment, and the payments module being extracted into its own service."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda kullanıcı, ortada tek dağıtım birimi olan monolit kutusu ve içinde Orders, Catalog ve Payments modülleri, altında modül başına şeması olan tek bir PostgreSQL, sağ üstte CI. Orders, Catalog'u açık API'sinden çağırır ve Payments'a süreç içi olay gönderir. Bir geliştirici Catalog'un iç koduna uzanınca CI sınır denetimi derlemeyi kırar; ihlal düzeltilince tüm modüller tek sürüm olarak dağıtılır. Son adımlarda Payments modülü kendi veritabanı olan ayrı bir servise taşınır ve Orders aynı arayüzü artık ağ üzerinden çağırır; ağ zaman aşımı gibi yeni maliyetler ortaya çıkar.",
+      "en": "A user on the left, a monolith box in the middle as the single deployment unit containing the Orders, Catalog and Payments modules, one PostgreSQL with a schema per module below it, and CI at the top right. Orders calls Catalog through its public API and sends an in-process event to Payments. When a developer reaches into Catalog's internal code, the CI boundary check breaks the build; once fixed, all modules are deployed as one release. In the last steps the Payments module is moved into a separate service with its own database and Orders calls the same interface over the network; new costs such as network timeouts appear."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "user", "kind": "user", "label": { "tr": "Kullanıcı", "en": "User" }, "x": 70, "y": 250 },
+    { "id": "mono", "kind": "group", "label": { "tr": "Tek dağıtım birimi (monolit süreci)", "en": "Single deployment unit (monolith process)" }, "x": 430, "y": 250, "w": 600, "h": 400 },
+    { "id": "orders", "kind": "service", "label": "Orders", "sublabel": { "tr": "public: placeOrder()", "en": "public: placeOrder()" }, "x": 250, "y": 160, "w": 150, "h": 70, "parent": "mono" },
+    { "id": "catalog", "kind": "service", "label": "Catalog", "sublabel": { "tr": "public: getPrice()", "en": "public: getPrice()" }, "x": 610, "y": 160, "w": 150, "h": 70, "parent": "mono" },
+    { "id": "payments", "kind": "service", "label": "Payments", "sublabel": { "tr": "dinler: OrderPlaced", "en": "listens: OrderPlaced" }, "x": 430, "y": 340, "w": 150, "h": 70, "parent": "mono" },
+    { "id": "db", "kind": "db", "label": "PostgreSQL", "sublabel": { "tr": "orders · catalog · payments şemaları", "en": "orders · catalog · payments schemas" }, "x": 430, "y": 535, "w": 250, "h": 70 },
+    { "id": "ci", "kind": "worker", "label": "CI", "sublabel": { "tr": "sınır denetimi + build", "en": "boundary check + build" }, "x": 880, "y": 90, "w": 150, "h": 70 },
+    { "id": "paysvc", "kind": "service", "label": "payments-service", "sublabel": { "tr": "ayrı süreç", "en": "separate process" }, "x": 880, "y": 340, "w": 170, "h": 70 },
+    { "id": "paydb", "kind": "db", "label": "payments DB", "x": 880, "y": 535, "w": 150, "h": 64 }
+  ],
+  "edges": [
+    { "id": "u-orders", "from": "user", "to": "orders", "kind": "request", "label": "POST /orders" },
+    { "id": "orders-catalog", "from": "orders", "to": "catalog", "kind": "request", "label": { "tr": "açık API", "en": "public API" } },
+    { "id": "orders-payments", "from": "orders", "to": "payments", "kind": "event", "label": { "tr": "süreç içi olay", "en": "in-process event" } },
+    { "id": "orders-db", "from": "orders", "to": "db", "kind": "data", "curvature": 0.25 },
+    { "id": "catalog-db", "from": "catalog", "to": "db", "kind": "data", "curvature": -0.25 },
+    { "id": "payments-db", "from": "payments", "to": "db", "kind": "data" },
+    { "id": "bad", "from": "orders", "to": "catalog", "kind": "control", "style": "dashed", "curvature": 0.45, "label": { "tr": "import catalog/internal", "en": "import catalog/internal" } },
+    { "id": "ci-check", "from": "ci", "to": "orders", "kind": "control", "style": "dotted", "curvature": -0.35, "label": { "tr": "bağımlılık taraması", "en": "dependency scan" } },
+    { "id": "ci-deploy", "from": "ci", "to": "mono", "kind": "request", "label": { "tr": "tek imaj", "en": "one image" } },
+    { "id": "orders-paysvc", "from": "orders", "to": "paysvc", "kind": "request", "curvature": 0.2, "label": "HTTP/gRPC" },
+    { "id": "paysvc-db", "from": "paysvc", "to": "paydb", "kind": "data" }
+  ],
+  "steps": [
+    {
+      "id": "single-process",
+      "title": { "tr": "Tek süreç, çok modül", "en": "One process, many modules" },
+      "narration": {
+        "tr": "Kullanıcının isteği tek bir sürece girer. Süreç içinde üç modül var: Orders, Catalog, Payments. Hepsi aynı derlemeyle, aynı sürümle çalışır ama her biri ayrı bir sınırlı bağlamdır.",
+        "en": "The user's request enters a single process. Inside it are three modules: Orders, Catalog, Payments. They share one build and one version, yet each is a separate bounded context."
+      },
+      "durationMs": 3200,
+      "inherit": false,
+      "highlight": { "nodes": ["user", "orders", "mono"], "edges": ["u-orders"] },
+      "nodeStates": {
+        "orders": { "status": "active" },
+        "paysvc": { "visible": false },
+        "paydb": { "visible": false }
+      },
+      "edgeStates": {
+        "bad": { "visible": false },
+        "orders-paysvc": { "visible": false },
+        "paysvc-db": { "visible": false }
+      },
+      "packets": [{ "edge": "u-orders", "shape": "envelope", "label": "POST /orders", "durationMs": 1400 }]
+    },
+    {
+      "id": "public-api",
+      "title": { "tr": "Açık API ile senkron çağrı", "en": "Synchronous call through the public API" },
+      "narration": {
+        "tr": "Orders fiyatı öğrenmek için Catalog'un açık API'sini çağırır: getPrice(42). Bu bir fonksiyon çağrısıdır; ağ yok, serileştirme yok. Orders, Catalog'un Product sınıfını değil yalnızca küçük bir fiyat görünümünü bilir.",
+        "en": "To learn the price, Orders calls Catalog's public API: getPrice(42). It is a function call; no network, no serialisation. Orders knows only a small price view, not Catalog's Product class."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["orders", "catalog"], "edges": ["orders-catalog"] },
+      "nodeStates": { "catalog": { "status": "active" } },
+      "edgeStates": { "orders-catalog": { "status": "active" } },
+      "packets": [
+        { "edge": "orders-catalog", "label": "getPrice(42)", "durationMs": 1100 },
+        { "edge": "orders-catalog", "direction": "backward", "label": "120 TRY", "startAt": 1500, "durationMs": 1100, "color": "success" }
+      ]
+    },
+    {
+      "id": "in-process-event",
+      "title": { "tr": "Süreç içi olay", "en": "In-process event" },
+      "narration": {
+        "tr": "Sipariş kaydedilip transaction commit edilince Orders bir OrderPlaced olayı yayınlar. Payments bu olayı dinler; Orders, Payments'ın ne yaptığını bilmez. Olay commit'ten sonra dağıtılır ki geri alınan bir sipariş için ödeme başlamasın.",
+        "en": "Once the order is saved and the transaction commits, Orders publishes an OrderPlaced event. Payments listens; Orders does not know what Payments does. The event is dispatched after commit so a rolled-back order never triggers a payment."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["orders", "payments"], "edges": ["orders-payments"] },
+      "nodeStates": { "catalog": { "status": "idle" }, "payments": { "status": "busy" } },
+      "edgeStates": { "orders-catalog": { "status": "idle" }, "orders-payments": { "status": "active" } },
+      "packets": [{ "edge": "orders-payments", "shape": "diamond", "label": "OrderPlaced", "durationMs": 1300 }]
+    },
+    {
+      "id": "schema-per-module",
+      "title": { "tr": "Her modül kendi şemasının sahibi", "en": "Each module owns its schema" },
+      "narration": {
+        "tr": "Veritabanı tek ama her modül yalnızca kendi şemasına yazar ve kendi şemasından okur. Orders, catalog.products tablosuna JOIN yapmaz; ihtiyacı olanı Catalog'un API'sinden ister.",
+        "en": "There is one database, but each module writes to and reads from its own schema only. Orders never JOINs catalog.products; it asks Catalog's API for what it needs."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["orders", "catalog", "payments", "db"], "edges": ["orders-db", "catalog-db", "payments-db"] },
+      "nodeStates": { "payments": { "status": "success" }, "db": { "status": "active" } },
+      "edgeStates": { "orders-payments": { "status": "idle" } },
+      "packets": [
+        { "edge": "orders-db", "shape": "square", "label": "orders.*", "durationMs": 1000 },
+        { "edge": "catalog-db", "shape": "square", "label": "catalog.*", "startAt": 400, "durationMs": 1000 },
+        { "edge": "payments-db", "shape": "square", "label": "payments.*", "startAt": 800, "durationMs": 1000 }
+      ],
+      "annotations": [
+        { "id": "schema-note", "x": 430, "y": 470, "text": { "tr": "başkasının tablosuna JOIN yok", "en": "no JOIN into another module's tables" }, "target": "db" }
+      ]
+    },
+    {
+      "id": "violation",
+      "title": { "tr": "Sınır ihlali", "en": "Boundary violation" },
+      "narration": {
+        "tr": "Bir geliştirici kısa yol arar: Orders içinden catalog/internal/product.repository dosyasını doğrudan import eder. Kod derlenir, testler geçer; ama artık Catalog ekibi iç kodunu değiştiremez ve Catalog servise ayrılamaz.",
+        "en": "A developer takes a shortcut: Orders imports catalog/internal/product.repository directly. The code compiles and tests pass, but now the Catalog team cannot change its internals and Catalog cannot be extracted."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["orders", "catalog"], "edges": ["bad"] },
+      "nodeStates": { "orders": { "status": "warning" }, "payments": { "status": "idle" }, "db": { "status": "idle" } },
+      "edgeStates": { "bad": { "visible": true, "status": "error" } },
+      "packets": [{ "edge": "bad", "shape": "square", "label": "ProductRepository", "color": "danger", "durationMs": 1400 }],
+      "annotations": [
+        { "id": "bad-note", "x": 430, "y": 75, "text": { "tr": "iç koda erişim: gizli bağlaşıklık", "en": "reaching into internals: hidden coupling" }, "tone": "warning", "target": "catalog" }
+      ]
+    },
+    {
+      "id": "ci-catches",
+      "title": { "tr": "CI ihlali yakalar", "en": "CI catches the violation" },
+      "narration": {
+        "tr": "CI'daki bağımlılık denetimi (dependency-cruiser, ArchUnit, Packwerk gibi) kuralı uygular: bir modül başka modülün yalnızca public/ klasörünü import edebilir. Derleme kırmızıya döner ve değişiklik birleştirilemez.",
+        "en": "The dependency check in CI (such as dependency-cruiser, ArchUnit or Packwerk) enforces the rule: a module may import only another module's public/ folder. The build turns red and the change cannot be merged."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["ci", "orders"], "edges": ["ci-check", "bad"] },
+      "nodeStates": { "ci": { "status": "error", "badge": "✕" } },
+      "edgeStates": { "ci-check": { "status": "active" } },
+      "packets": [{ "edge": "ci-check", "shape": "diamond", "label": { "tr": "tarama", "en": "scan" }, "durationMs": 900, "repeat": 2, "repeatGapMs": 300 }],
+      "annotations": [
+        { "id": "ci-note", "x": 880, "y": 175, "text": { "tr": "orders → catalog/internal YASAK", "en": "orders → catalog/internal FORBIDDEN" }, "tone": "danger", "target": "ci" }
+      ]
+    },
+    {
+      "id": "single-deploy",
+      "title": { "tr": "Düzeltme ve tek dağıtım", "en": "Fix and single deployment" },
+      "narration": {
+        "tr": "Geliştirici import'u Catalog'un açık API'siyle değiştirir; CI yeşile döner. Ardından tek bir imaj üretilir ve üç modül birlikte aynı sürümle (v42) dağıtılır. Ağ sözleşmesi, sürüm uyumluluğu, servis keşfi gerekmez.",
+        "en": "The developer replaces the import with Catalog's public API; CI turns green. A single image is built and all three modules are deployed together as the same version (v42). No network contracts, version compatibility or service discovery are needed."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["ci", "mono", "orders", "catalog", "payments"], "edges": ["ci-deploy"] },
+      "nodeStates": {
+        "ci": { "status": "success", "badge": "✓" },
+        "orders": { "status": "success", "badge": "v42" },
+        "catalog": { "status": "success", "badge": "v42" },
+        "payments": { "status": "success", "badge": "v42" }
+      },
+      "edgeStates": { "bad": { "visible": false }, "ci-check": { "status": "idle" }, "ci-deploy": { "status": "active" } },
+      "packets": [{ "edge": "ci-deploy", "shape": "square", "label": "v42", "durationMs": 1500 }]
+    },
+    {
+      "id": "extract",
+      "title": { "tr": "Payments ayrı servise çıkıyor", "en": "Payments is extracted into a service" },
+      "narration": {
+        "tr": "Ödeme ekibi günde birkaç kez dağıtım yapmak ve kart verisini ayrı denetim kapsamına almak istiyor. Sınır zaten temiz olduğu için çıkarma mekaniktir: modül kendi süreci ve veritabanıyla payments-service olur, Orders aynı arayüzü artık HTTP/gRPC adaptörüyle çağırır.",
+        "en": "The payments team wants to deploy several times a day and put card data into a separate compliance scope. Because the boundary is already clean, extraction is mechanical: the module becomes payments-service with its own process and database, and Orders now calls the same interface through an HTTP/gRPC adapter."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["orders", "paysvc", "paydb"], "edges": ["orders-paysvc", "paysvc-db"] },
+      "nodeStates": {
+        "ci": { "status": "idle", "badge": "" },
+        "orders": { "status": "active", "badge": "" },
+        "catalog": { "status": "idle", "badge": "" },
+        "payments": { "status": "muted", "badge": "", "sublabel": { "tr": "taşındı", "en": "moved out" } },
+        "paysvc": { "visible": true, "status": "active" },
+        "paydb": { "visible": true, "status": "active" }
+      },
+      "edgeStates": {
+        "ci-deploy": { "status": "idle" },
+        "orders-payments": { "status": "muted" },
+        "payments-db": { "status": "muted" },
+        "orders-paysvc": { "visible": true, "status": "active" },
+        "paysvc-db": { "visible": true, "status": "active" }
+      },
+      "packets": [
+        { "edge": "orders-paysvc", "shape": "envelope", "label": "charge()", "durationMs": 1300 },
+        { "edge": "paysvc-db", "shape": "square", "startAt": 1300, "durationMs": 900 },
+        { "edge": "orders-paysvc", "direction": "backward", "label": "200 OK", "startAt": 2300, "durationMs": 1200, "color": "success" }
+      ],
+      "annotations": [
+        { "id": "same-port", "x": 640, "y": 440, "text": { "tr": "aynı arayüz, artık ağ çağrısı", "en": "same interface, now a network call" }, "target": "paysvc" }
+      ]
+    },
+    {
+      "id": "new-costs",
+      "title": { "tr": "Ayrılmanın yeni bedelleri", "en": "The new costs of splitting" },
+      "narration": {
+        "tr": "Fonksiyon çağrısı ağ çağrısına dönüşünce yeni hata türleri gelir: zaman aşımı, yeniden deneme, kısmi hata. Olay artık süreç içinde değil; kaybolmaması için outbox ve kuyruk gerekir, iki veritabanı arasındaki tutarlılık için saga (b-08). Bu bedeli yalnızca ölçülebilir bir kazanç için ödeyin.",
+        "en": "Once the function call becomes a network call, new failure modes arrive: timeouts, retries, partial failure. The event is no longer in-process; it needs an outbox and a queue so it is not lost, and consistency across two databases needs a saga (b-08). Pay this price only for a measurable gain."
+      },
+      "durationMs": 3800,
+      "highlight": { "nodes": ["orders", "paysvc"], "edges": ["orders-paysvc"] },
+      "nodeStates": { "paysvc": { "status": "warning" }, "paydb": { "status": "idle" } },
+      "edgeStates": { "orders-paysvc": { "status": "error", "label": "timeout 300 ms" }, "paysvc-db": { "status": "idle" } },
+      "packets": [
+        { "edge": "orders-paysvc", "label": "charge()", "color": "danger", "shape": "square", "durationMs": 1300 },
+        { "edge": "orders-paysvc", "label": { "tr": "yeniden dene", "en": "retry" }, "startAt": 1700, "durationMs": 1300 }
+      ],
+      "annotations": [
+        { "id": "cost-note", "x": 640, "y": 440, "text": { "tr": "timeout · retry · outbox · saga", "en": "timeout · retry · outbox · saga" }, "tone": "warning", "target": "paysvc" }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["modular-monolith", "module-boundaries", "service-extraction"]
+}

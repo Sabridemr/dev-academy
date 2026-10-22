@@ -1,0 +1,180 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "n-plus-one-and-pool",
+  "title": { "tr": "1 + N Sorgu ve Dolan Havuz", "en": "1 + N Queries and a Full Pool" },
+  "summary": {
+    "tr": "Bir liste isteğinin 1 + N ardışık sorguyla, sonra IN ve JOIN ile getirilmesi; ardından havuz dolunca isteklerin kuyrukta beklemesi.",
+    "en": "A list request served with 1 + N sequential queries, then with IN and JOIN; afterwards requests waiting in a queue once the pool is full."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda kullanıcılar, ortada Prisma kullanan API sunucusu ve bağlantı havuzu, altta bekleme kuyruğu, sağda PostgreSQL bulunur. İlk adımlarda tek bir ders listesi isteği önce bir liste sorgusu, ardından her ders için ayrı bir ilerleme sorgusu gönderir; paketler veritabanına birer birer, sırayla gider ve sayaç 1 + N gidiş-dönüşe ulaşır. Sonra aynı veri include ile iki sorguda (IN listesiyle) ve JOIN ile tek sorguda gelir. Son adımlarda trafik artar, havuzdaki beş bağlantının tamamı dolar, yeni istekler kuyrukta bekler ve bekleme süresini aşan bir istek P2024 zaman aşımıyla düşer. N+1 düzeltilince bağlantılar hızlı geri verilir ve kuyruk boşalır.",
+      "en": "Users on the left, an API server using Prisma with its connection pool in the middle, a wait queue below and PostgreSQL on the right. In the first steps a single lesson-list request sends a list query and then one progress query per lesson; packets travel to the database one at a time and the counter reaches 1 + N round trips. Then the same data arrives in two queries with include (using an IN list) and in a single query with a JOIN. In the final steps traffic rises, all five pool connections fill up, new requests wait in the queue and one request exceeding the wait limit fails with a P2024 timeout. Once N+1 is fixed, connections are returned quickly and the queue drains."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "users", "kind": "user", "label": { "tr": "Kullanıcılar", "en": "Users" }, "x": 90, "y": 280 },
+    { "id": "api", "kind": "server", "label": "API", "sublabel": "Prisma Client", "x": 290, "y": 280, "w": 140, "h": 70 },
+    { "id": "pool", "kind": "proxy", "label": { "tr": "Bağlantı havuzu", "en": "Connection pool" }, "sublabel": "connection_limit=5", "x": 540, "y": 280, "w": 170, "h": 76 },
+    { "id": "queue", "kind": "queue", "label": { "tr": "Bekleme kuyruğu", "en": "Wait queue" }, "sublabel": "pool_timeout=10s", "x": 540, "y": 490, "w": 170, "h": 64 },
+    { "id": "db", "kind": "db", "label": "PostgreSQL", "x": 850, "y": 280, "w": 150, "h": 80 }
+  ],
+  "edges": [
+    { "id": "users-api", "from": "users", "to": "api", "kind": "request" },
+    { "id": "api-pool", "from": "api", "to": "pool", "kind": "request" },
+    { "id": "pool-db", "from": "pool", "to": "db", "kind": "request", "bidirectional": true },
+    { "id": "api-queue", "from": "api", "to": "queue", "kind": "control", "style": "dashed", "curvature": 0.25 },
+    { "id": "queue-pool", "from": "queue", "to": "pool", "kind": "control", "style": "dashed" },
+    { "id": "api-users", "from": "api", "to": "users", "kind": "response", "curvature": 0.3 }
+  ],
+  "steps": [
+    {
+      "id": "request",
+      "title": { "tr": "Bir liste isteği", "en": "One list request" },
+      "narration": {
+        "tr": "Kullanıcı bir modülün ders listesini, kendi ilerlemesiyle birlikte ister. API havuzdan bir bağlantı ödünç alır; bağlantı istek bitene kadar bu isteğe aittir.",
+        "en": "A user asks for a module's lessons together with their own progress. The API borrows a connection from the pool; it belongs to this request until the request finishes."
+      },
+      "durationMs": 2800,
+      "inherit": false,
+      "highlight": { "nodes": ["users", "api", "pool"], "edges": ["users-api", "api-pool"] },
+      "nodeStates": { "api": { "status": "active" }, "pool": { "status": "active", "progress": 0.2, "badge": "1/5" }, "queue": { "status": "muted" } },
+      "packets": [
+        { "edge": "users-api", "shape": "envelope", "label": "GET", "durationMs": 900 },
+        { "edge": "api-pool", "shape": "dot", "startAt": 900, "durationMs": 700 }
+      ]
+    },
+    {
+      "id": "first-query",
+      "title": { "tr": "1: liste sorgusu", "en": "1: the list query" },
+      "narration": {
+        "tr": "İlk sorgu dersleri getirir: `SELECT * FROM \"Lesson\" WHERE \"moduleId\" = $1`. Hızlıdır; sorun bundan sonra başlar.",
+        "en": "The first query fetches the lessons: `SELECT * FROM \"Lesson\" WHERE \"moduleId\" = $1`. It is fast; the problem starts after it."
+      },
+      "durationMs": 2600,
+      "highlight": { "nodes": ["pool", "db"], "edges": ["pool-db"] },
+      "nodeStates": { "db": { "status": "active", "counter": 1 } },
+      "packets": [
+        { "edge": "pool-db", "shape": "square", "label": "1", "durationMs": 700 },
+        { "edge": "pool-db", "direction": "backward", "shape": "dot", "startAt": 800, "durationMs": 700 }
+      ]
+    },
+    {
+      "id": "n-queries",
+      "title": { "tr": "+N: her ders için bir sorgu", "en": "+N: one query per lesson" },
+      "narration": {
+        "tr": "Döngü içindeki `await prisma.progress.findFirst(...)` her ders için ayrı bir gidiş-dönüş yapar. Sorgular sırayla beklenir; her birine ağ gecikmesi ve planlama süresi eklenir. 12 ders = 13 sorgu.",
+        "en": "The `await prisma.progress.findFirst(...)` inside the loop makes a separate round trip per lesson. Queries are awaited one after another; each adds network latency and planning time. 12 lessons = 13 queries."
+      },
+      "durationMs": 4200,
+      "highlight": { "nodes": ["pool", "db"], "edges": ["pool-db"] },
+      "nodeStates": { "db": { "status": "busy", "counter": 13 }, "api": { "status": "warning", "badge": "1 + N" } },
+      "packets": [{ "edge": "pool-db", "shape": "square", "durationMs": 400, "repeat": 8, "repeatGapMs": 150 }]
+    },
+    {
+      "id": "latency",
+      "title": { "tr": "Gecikme listeyle büyür", "en": "Latency grows with the list" },
+      "narration": {
+        "tr": "Yanıt sonunda döner, ama süresi liste uzunluğuyla doğrusal artar ve bağlantı bütün bu süre boyunca meşgul kalır. 3 kayıtlı test verisinde görünmeyen sorun, 500 kayıtlı yönetici sayfasında 501 sorgudur.",
+        "en": "The response finally returns, but its duration grows linearly with the list and the connection stays busy the whole time. A problem invisible with 3 test records becomes 501 queries on a 500-row admin page."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["api", "users"], "edges": ["api-users"] },
+      "nodeStates": { "db": { "status": "idle" }, "pool": { "status": "idle", "progress": 0, "badge": "0/5" } },
+      "packets": [{ "edge": "api-users", "shape": "envelope", "label": { "tr": "yavaş", "en": "slow" }, "durationMs": 1400 }]
+    },
+    {
+      "id": "include",
+      "title": { "tr": "Düzeltme 1: include → IN", "en": "Fix 1: include → IN" },
+      "narration": {
+        "tr": "`include: { progress: { where: { userId } } }` ile Prisma ilişkiyi ayrı ama tek bir toplu sorguyla getirir: `WHERE \"lessonId\" IN (...)`. Liste ne kadar uzun olursa olsun iki sorgu.",
+        "en": "With `include: { progress: { where: { userId } } }` Prisma loads the relation with a separate but single batched query: `WHERE \"lessonId\" IN (...)`. Two queries no matter how long the list is."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["pool", "db"], "edges": ["pool-db"] },
+      "nodeStates": { "api": { "status": "success", "badge": "2" }, "db": { "status": "active", "counter": 2 }, "pool": { "status": "active", "progress": 0.2, "badge": "1/5" } },
+      "packets": [
+        { "edge": "pool-db", "shape": "square", "label": "1", "durationMs": 700 },
+        { "edge": "pool-db", "shape": "square", "label": "IN", "startAt": 900, "durationMs": 700 }
+      ]
+    },
+    {
+      "id": "join",
+      "title": { "tr": "Düzeltme 2: tek JOIN", "en": "Fix 2: a single JOIN" },
+      "narration": {
+        "tr": "`relationLoadStrategy: 'join'` ile birleştirme veritabanında yapılır: tek sorgu, tek gidiş-dönüş. Bağlantı çok kısa süre tutulur ve hemen havuza döner.",
+        "en": "With `relationLoadStrategy: 'join'` the join happens in the database: one query, one round trip. The connection is held very briefly and goes straight back to the pool."
+      },
+      "durationMs": 2800,
+      "highlight": { "nodes": ["pool", "db", "api"], "edges": ["pool-db", "api-users"] },
+      "nodeStates": { "api": { "status": "success", "badge": "1" }, "db": { "status": "success", "counter": 1 }, "pool": { "status": "idle", "progress": 0, "badge": "0/5" } },
+      "packets": [
+        { "edge": "pool-db", "shape": "square", "label": "JOIN", "durationMs": 700 },
+        { "edge": "api-users", "shape": "envelope", "label": { "tr": "hızlı", "en": "fast" }, "startAt": 900, "durationMs": 900 }
+      ]
+    },
+    {
+      "id": "burst",
+      "title": { "tr": "Trafik artışı: havuz doluyor", "en": "Traffic burst: the pool fills" },
+      "narration": {
+        "tr": "Şimdi N+1'li sürüm yoğun trafik altında. Her istek bağlantısını uzun süre tuttuğu için beş bağlantının beşi de meşgul. Havuz doluyken veritabanı aslında boşta bile olabilir; darboğaz sorgu değil, bağlantının tutulma süresidir.",
+        "en": "Now the N+1 version under heavy traffic. Each request holds its connection for a long time, so all five connections are busy. With the pool full, the database may even be mostly idle; the bottleneck is not the query but how long connections are held."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["users", "api", "pool"], "edges": ["users-api", "api-pool"] },
+      "nodeStates": { "api": { "status": "busy", "badge": "1 + N" }, "pool": { "status": "warning", "progress": 1, "badge": "5/5" }, "db": { "status": "busy" } },
+      "packets": [
+        { "edge": "users-api", "shape": "envelope", "durationMs": 700, "repeat": 6, "repeatGapMs": 120 },
+        { "edge": "pool-db", "shape": "square", "startAt": 300, "durationMs": 500, "repeat": 5, "repeatGapMs": 150 }
+      ]
+    },
+    {
+      "id": "waiting",
+      "title": { "tr": "İstekler kuyrukta bekliyor", "en": "Requests wait in the queue" },
+      "narration": {
+        "tr": "Yeni gelen istekler boş bağlantı için kuyrukta bekler. Kullanıcı açısından bu bekleme, sorgunun kendisinden ayırt edilemez; izlenmesi gereken metrik havuz bekleme süresidir.",
+        "en": "New requests wait in the queue for a free connection. From the user's point of view this wait is indistinguishable from the query itself; the metric to watch is pool wait time."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["api", "queue"], "edges": ["api-queue"] },
+      "nodeStates": { "queue": { "status": "busy", "progress": 0.7, "counter": 7 } },
+      "edgeStates": { "api-queue": { "status": "active" } },
+      "packets": [{ "edge": "api-queue", "shape": "envelope", "durationMs": 700, "repeat": 4, "repeatGapMs": 150 }]
+    },
+    {
+      "id": "timeout",
+      "title": { "tr": "pool_timeout: P2024", "en": "pool_timeout: P2024" },
+      "narration": {
+        "tr": "Kuyrukta 10 saniyeyi aşan istek `P2024` hatasıyla düşer: \"Timed out fetching a new connection from the connection pool\". Havuzu büyütmek ilk refleks olur, ama veritabanına daha çok eşzamanlı bağlantı yüklemek asıl nedeni çözmez.",
+        "en": "A request waiting longer than 10 seconds fails with `P2024`: \"Timed out fetching a new connection from the connection pool\". Enlarging the pool is the first reflex, but loading the database with more concurrent connections does not fix the root cause."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["queue", "users"], "edges": ["api-users"] },
+      "nodeStates": { "queue": { "status": "error", "badge": "P2024" } },
+      "packets": [{ "edge": "api-users", "shape": "diamond", "label": "500", "color": "danger", "durationMs": 1000 }]
+    },
+    {
+      "id": "drain",
+      "title": { "tr": "Kök neden düzelince kuyruk boşalır", "en": "Fix the root cause, the queue drains" },
+      "narration": {
+        "tr": "N+1 tek JOIN'e çevrilince her istek bağlantıyı milisaniyeler içinde geri verir. Aynı beş bağlantı çok daha fazla isteğe hizmet eder, kuyruk boşalır ve hata kaybolur.",
+        "en": "Once N+1 becomes a single JOIN, each request returns its connection within milliseconds. The same five connections serve far more requests, the queue drains and the errors disappear."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["pool", "queue", "db"], "edges": ["queue-pool", "pool-db"] },
+      "nodeStates": {
+        "api": { "status": "success", "badge": "1" },
+        "pool": { "status": "success", "progress": 0.4, "badge": "2/5" },
+        "queue": { "status": "success", "progress": 0, "counter": 0, "badge": "" },
+        "db": { "status": "active" }
+      },
+      "edgeStates": { "api-queue": { "status": "idle" } },
+      "packets": [
+        { "edge": "queue-pool", "shape": "envelope", "durationMs": 600, "repeat": 4, "repeatGapMs": 120 },
+        { "edge": "pool-db", "shape": "square", "startAt": 600, "durationMs": 500, "repeat": 4, "repeatGapMs": 150 }
+      ]
+    }
+  ]
+}

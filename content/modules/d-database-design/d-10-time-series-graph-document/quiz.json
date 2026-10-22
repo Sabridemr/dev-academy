@@ -1,0 +1,110 @@
+{
+  "id": "d-10-time-series-graph-document-quiz",
+  "title": { "tr": "Zaman Serisi, Graf ve Belge Quiz", "en": "Time-Series, Graph and Document Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "TimescaleDB'de 90 günden eski ölçümleri silmenin, `DELETE FROM metrics WHERE time < now() - interval '90 days'` çalıştırmaktan daha ucuz olmasının nedeni nedir?",
+        "en": "Why is removing measurements older than 90 days in TimescaleDB cheaper than running `DELETE FROM metrics WHERE time < now() - interval '90 days'`?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Retention politikası süresi dolan chunk'ları bütün olarak düşürür; satır satır silme, ölü satır ve vacuum yükü oluşmaz", "en": "The retention policy drops expired chunks whole; no row-by-row deletes, dead tuples or vacuum load" } },
+        { "id": "b", "text": { "tr": "TimescaleDB verileri hiç silmez, yalnızca gizler", "en": "TimescaleDB never deletes data, it only hides it" } },
+        { "id": "c", "text": { "tr": "DELETE ifadesi hypertable üzerinde çalışmaz", "en": "DELETE does not work on a hypertable" } },
+        { "id": "d", "text": { "tr": "Retention politikası verileri InfluxDB'ye taşır", "en": "The retention policy moves the data to InfluxDB" } }
+      ],
+      "correct": ["a"],
+      "explanation": {
+        "tr": "Hypertable zaman aralıklarına göre chunk'lara bölündüğü için eski veri, ayrı alt tabloların tamamıdır ve bütün olarak düşürülebilir. DELETE çalışır ama her satırı tek tek işaretler; ölü satırlar ve vacuum yükü üretir.",
+        "en": "Because a hypertable is split into chunks by time range, old data is whole sub-tables that can be dropped entirely. DELETE works but marks each row individually, producing dead tuples and vacuum load."
+      },
+      "difficulty": "easy",
+      "concepts": ["hypertable-chunk", "retention-policy"]
+    },
+    {
+      "id": "q2",
+      "type": "single",
+      "prompt": {
+        "tr": "Bir InfluxDB tasarımında her isteğin benzersiz `request_id` değeri etiket (tag) olarak yazılıyor. Beklenen sorun nedir?",
+        "en": "An InfluxDB design writes each request's unique `request_id` as a tag. What problem should you expect?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Alanlar indekslenmediği için sorgular yavaşlar", "en": "Queries slow down because fields are not indexed" } },
+        { "id": "b", "text": { "tr": "Seri sayısı patlar ve etiket indeksi bellekte büyür (yüksek kardinalite)", "en": "The number of series explodes and the tag index grows in memory (high cardinality)" } },
+        { "id": "c", "text": { "tr": "Zaman damgaları çakışır", "en": "Timestamps collide" } },
+        { "id": "d", "text": { "tr": "Hiçbir sorun olmaz; etiketler sınırsızdır", "en": "No problem; tags are unlimited" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Ölçüm adı + etiket kümesi bir seri tanımlar. Her istekte farklı bir etiket değeri, her istek için yeni bir seri demektir. Benzersiz değerler alan (field) olarak saklanmalı; etiketler gruplanacak, düşük kardinaliteli boyutlar için kullanılmalıdır.",
+        "en": "Measurement name + tag set define a series. A different tag value per request means a new series per request. Unique values belong in fields; tags are for low-cardinality dimensions you group and filter by."
+      },
+      "difficulty": "medium",
+      "concepts": ["series-cardinality"]
+    },
+    {
+      "id": "q3",
+      "type": "multiple",
+      "prompt": {
+        "tr": "\"Arkadaşın arkadaşı\" sorgusu için hangi ifadeler doğrudur? (Birden fazla seçin)",
+        "en": "Which statements about the \"friend of a friend\" query are true? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "İlişkisel modelde her atlama bir indeks araması ve JOIN'dir; ara sonuç atlama başına çarpılarak büyür", "en": "In the relational model every hop is an index lookup and a JOIN; the intermediate result multiplies per hop" } },
+        { "id": "b", "text": { "tr": "Yerel graf veritabanında komşuya geçmek bir işaretçiyi izlemektir (index-free adjacency)", "en": "In a native graph database moving to a neighbour means following a pointer (index-free adjacency)" } },
+        { "id": "c", "text": { "tr": "Graf gezintisinin maliyeti grafın toplam düğüm sayısıyla doğrusal artar", "en": "Graph traversal cost grows linearly with the total number of nodes in the graph" } },
+        { "id": "d", "text": { "tr": "Sabit iki atlama ve iyi indekslerle ilişkisel veritabanı çoğu zaman yeterlidir", "en": "With a fixed two hops and good indexes a relational database is often enough" } }
+      ],
+      "correct": ["a", "b", "d"],
+      "explanation": {
+        "tr": "Gezintinin maliyeti tüm grafa değil, başlangıçtan gezilen bölgeye bağlıdır; bu yüzden (c) yanlıştır. Sabit ve sığ sorgularda ilişkisel model iş görür; değişken derinlik ve yol sorgularında graf öne geçer.",
+        "en": "Traversal cost depends on the region visited from the start, not the whole graph, so (c) is false. For fixed, shallow queries the relational model works; for variable depth and path queries the graph pulls ahead."
+      },
+      "difficulty": "medium",
+      "concepts": ["index-free-adjacency", "graph-traversal", "property-graph"]
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": {
+        "tr": "Bir blog platformunda gönderilerin yorumları sınırsız büyüyebiliyor ve sayfa en son 20 yorumu gösteriyor. MongoDB'de en uygun tasarım hangisidir?",
+        "en": "On a blog platform a post's comments can grow without bound and the page shows the latest 20. Which MongoDB design fits best?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Tüm yorumları gönderi belgesine gömmek", "en": "Embed every comment in the post document" } },
+        { "id": "b", "text": { "tr": "Son 20 yorumu gönderiye gömmek, tamamını ayrı bir koleksiyonda gönderiye referansla tutmak", "en": "Embed the latest 20 comments in the post and keep all comments in a separate collection referencing the post" } },
+        { "id": "c", "text": { "tr": "Her yorumu kendi veritabanında tutmak", "en": "Keep each comment in its own database" } },
+        { "id": "d", "text": { "tr": "Gönderiyi her yorum belgesine kopyalamak ve gönderi koleksiyonunu kaldırmak", "en": "Copy the post into every comment document and drop the posts collection" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Sınırsız dizi belgeyi 16 MB sınırına doğru şişirir ve her yorum eklemede büyük belgeyi yeniden yazar. Subset deseni sık okunan küçük parçayı gömer, tamamını referansla ayrı tutar: sayfa tek okumayla açılır, büyüme sınırlı kalır.",
+        "en": "An unbounded array bloats the document toward the 16 MB limit and rewrites a large document on every comment. The subset pattern embeds the small, frequently read slice and keeps the full set separately by reference: the page opens with one read and growth stays bounded."
+      },
+      "difficulty": "medium",
+      "concepts": ["document-embedding", "document-referencing"]
+    },
+    {
+      "id": "q5",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Facebook'un TAO sistemi bir graf veri modeli sunar ama veriyi parçalanmış MySQL üzerinde, önünde önbellek katmanıyla saklar.",
+        "en": "Facebook's TAO offers a graph data model but stores the data on sharded MySQL with a caching layer in front."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["t"],
+      "explanation": {
+        "tr": "TAO nesne ve ilişki (association) modelini sunar; kalıcı depolama parçalanmış MySQL'dir ve okumalar dağıtık önbellekten karşılanır. Graf bir veri modelidir; sorgu şekli \"bir düğümün komşularını getir\" olduğunda ilişkisel depo üzerinde de verimli sunulabilir.",
+        "en": "TAO exposes an object and association model; persistent storage is sharded MySQL and reads are served from a distributed cache. A graph is a data model; when the query shape is \"fetch a node's neighbours\" it can be served efficiently on a relational store too."
+      },
+      "difficulty": "easy",
+      "concepts": ["property-graph"]
+    }
+  ]
+}

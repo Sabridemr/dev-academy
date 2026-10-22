@@ -1,0 +1,242 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "hexagonal-request-path",
+  "title": { "tr": "Hexagonal Bir Serviste İsteğin Yolu", "en": "A Request's Path Through a Hexagonal Service" },
+  "summary": {
+    "tr": "Quiz gönderimi isteğinin sürücü adaptör → giriş port'u → use case → çıkış port'u → sürülen adaptör yolculuğu, bağımlılık oklarının içeri bakması ve Prisma adaptörünün testte bellek içi sahteyle değiştirilmesi.",
+    "en": "A quiz-submission request travelling driving adapter → input port → use case → output port → driven adapter, dependency arrows pointing inward, and the Prisma adapter being swapped for an in-memory fake in a test."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda istemci ve NestJS controller, ortada uygulama çekirdeği grubunun içinde giriş port'u, use case, domain kuralı ve QuizRepository çıkış port'u, sağda Prisma adaptörü ve PostgreSQL. İstek controller'dan port'a, use case'e, domain kuralına ve çıkış port'u üzerinden Prisma adaptörüne ve veritabanına gider, yanıt aynı yoldan döner. Ardından Prisma adaptöründen port'a uzanan 'uygular' okunun içeri baktığı vurgulanır. Sonra bir Jest testi controller yerine use case'i doğrudan çağırır ve Prisma adaptörü yerine bellek içi sahte takılır; veritabanı devre dışı kalır. Son adımda bir kuyruk tüketicisi aynı use case'i ikinci bir sürücü adaptör olarak çağırır.",
+      "en": "On the left the client and the NestJS controller, in the middle inside the application core group the input port, the use case, the domain rule and the QuizRepository output port, on the right the Prisma adapter and PostgreSQL. The request goes from the controller to the port, the use case, the domain rule, and via the output port to the Prisma adapter and the database; the response returns the same way. Then the 'implements' arrow from the Prisma adapter to the port is shown pointing inward. Next a Jest test calls the use case directly instead of the controller and an in-memory fake replaces the Prisma adapter; the database is out of the picture. In the last step a queue consumer calls the same use case as a second driving adapter."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "client", "kind": "client", "label": { "tr": "İstemci", "en": "Client" }, "x": 70, "y": 200, "w": 110, "h": 64 },
+    { "id": "controller", "kind": "gateway", "label": "QuizzesController", "sublabel": { "tr": "sürücü adaptör", "en": "driving adapter" }, "x": 225, "y": 200, "w": 150, "h": 70 },
+    { "id": "core", "kind": "group", "label": { "tr": "Uygulama çekirdeği (çerçeve yok)", "en": "Application core (no framework)" }, "x": 505, "y": 270, "w": 330, "h": 340 },
+    { "id": "inport", "kind": "generic", "label": { "tr": "giriş port'u", "en": "input port" }, "sublabel": "SubmitAttempt", "x": 400, "y": 200, "w": 100, "h": 60, "parent": "core" },
+    { "id": "usecase", "kind": "service", "label": { "tr": "Use case", "en": "Use case" }, "sublabel": "SubmitAttempt.execute()", "x": 505, "y": 310, "w": 160, "h": 64, "parent": "core" },
+    { "id": "domain", "kind": "generic", "label": "Domain", "sublabel": { "tr": "gradeAnswer() — saf", "en": "gradeAnswer() — pure" }, "x": 505, "y": 405, "w": 150, "h": 56, "parent": "core" },
+    { "id": "outport", "kind": "generic", "label": { "tr": "çıkış port'u", "en": "output port" }, "sublabel": "QuizRepository", "x": 610, "y": 200, "w": 110, "h": 60, "parent": "core" },
+    { "id": "prisma", "kind": "service", "label": "PrismaQuizRepository", "sublabel": { "tr": "sürülen adaptör", "en": "driven adapter" }, "x": 805, "y": 200, "w": 170, "h": 70 },
+    { "id": "db", "kind": "db", "label": "PostgreSQL", "x": 805, "y": 70, "w": 130, "h": 56 },
+    { "id": "fake", "kind": "storage", "label": "InMemoryQuizRepository", "sublabel": { "tr": "test sahtesi", "en": "test fake" }, "x": 805, "y": 400, "w": 180, "h": 64 },
+    { "id": "test", "kind": "client", "label": { "tr": "Jest testi", "en": "Jest test" }, "x": 225, "y": 360, "w": 130, "h": 60 },
+    { "id": "queue", "kind": "queue", "label": { "tr": "Kuyruk tüketicisi", "en": "Queue consumer" }, "sublabel": { "tr": "çevrimdışı senkron", "en": "offline sync" }, "x": 225, "y": 510, "w": 150, "h": 64 }
+  ],
+  "edges": [
+    { "id": "c-ctrl", "from": "client", "to": "controller", "kind": "request", "label": "POST /attempts" },
+    { "id": "ctrl-in", "from": "controller", "to": "inport", "kind": "request", "label": { "tr": "komut", "en": "command" } },
+    { "id": "in-uc", "from": "inport", "to": "usecase", "kind": "request" },
+    { "id": "uc-dom", "from": "usecase", "to": "domain", "kind": "request" },
+    { "id": "uc-out", "from": "usecase", "to": "outport", "kind": "request" },
+    { "id": "prisma-out", "from": "prisma", "to": "outport", "kind": "control", "style": "dashed", "label": { "tr": "uygular", "en": "implements" } },
+    { "id": "prisma-db", "from": "prisma", "to": "db", "kind": "data", "label": "SQL" },
+    { "id": "fake-out", "from": "fake", "to": "outport", "kind": "control", "style": "dashed", "curvature": 0.15, "label": { "tr": "uygular", "en": "implements" } },
+    { "id": "test-in", "from": "test", "to": "inport", "kind": "request", "curvature": -0.15 },
+    { "id": "queue-in", "from": "queue", "to": "inport", "kind": "request", "curvature": -0.25 }
+  ],
+  "steps": [
+    {
+      "id": "layout",
+      "title": { "tr": "Çekirdek ve çevresi", "en": "The core and its surroundings" },
+      "narration": {
+        "tr": "Ortadaki çekirdek; use case, domain kuralı ve iki port'tan oluşur ve hiçbir çerçeveyi import etmez. Solda dünyayı çekirdeğe bağlayan sürücü adaptör (controller), sağda çekirdeğin ihtiyacını karşılayan sürülen adaptör (Prisma) durur.",
+        "en": "The core in the middle consists of the use case, the domain rule and two ports and imports no framework. On the left is the driving adapter (controller) that connects the world to the core; on the right the driven adapter (Prisma) that serves the core's needs."
+      },
+      "durationMs": 3400,
+      "inherit": false,
+      "highlight": { "nodes": ["core", "inport", "usecase", "domain", "outport"] },
+      "nodeStates": {
+        "fake": { "visible": false },
+        "test": { "visible": false },
+        "queue": { "visible": false }
+      },
+      "edgeStates": {
+        "fake-out": { "visible": false },
+        "test-in": { "visible": false },
+        "queue-in": { "visible": false }
+      },
+      "annotations": [
+        { "id": "rule", "x": 505, "y": 515, "text": { "tr": "bağımlılıklar içeri akar", "en": "dependencies point inward" }, "target": "core" }
+      ]
+    },
+    {
+      "id": "driving-adapter",
+      "title": { "tr": "Sürücü adaptör HTTP'yi çözer", "en": "The driving adapter handles HTTP" },
+      "narration": {
+        "tr": "İstek controller'a gelir. Controller HTTP'ye özgü her işi burada bitirir: JWT'den kullanıcıyı çıkarır, gövdeyi doğrular ve isteği bir SubmitAttemptCommand nesnesine çevirir. Çekirdek ne URL'yi ne durum kodlarını görür.",
+        "en": "The request reaches the controller. The controller finishes all HTTP-specific work here: it extracts the user from the JWT, validates the body and turns the request into a SubmitAttemptCommand. The core never sees the URL or status codes."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["client", "controller"], "edges": ["c-ctrl"] },
+      "nodeStates": { "controller": { "status": "active" } },
+      "edgeStates": { "c-ctrl": { "status": "active" } },
+      "packets": [{ "edge": "c-ctrl", "shape": "envelope", "label": "JSON", "durationMs": 1300 }]
+    },
+    {
+      "id": "into-core",
+      "title": { "tr": "Port üzerinden use case'e", "en": "Through the port to the use case" },
+      "narration": {
+        "tr": "Controller giriş port'unu çağırır; port'un arkasında SubmitAttempt use case'i vardır. Aynı use case yarın bir CLI komutundan ya da kuyruktan da çağrılabilir; HTTP yalnızca girişlerden biridir.",
+        "en": "The controller calls the input port; behind it sits the SubmitAttempt use case. Tomorrow the same use case can be called from a CLI command or a queue; HTTP is just one of the entry points."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["controller", "inport", "usecase"], "edges": ["ctrl-in", "in-uc"] },
+      "nodeStates": { "inport": { "status": "active" }, "usecase": { "status": "busy" } },
+      "edgeStates": { "c-ctrl": { "status": "idle" }, "ctrl-in": { "status": "active" }, "in-uc": { "status": "active" } },
+      "packets": [
+        { "edge": "ctrl-in", "shape": "square", "label": { "tr": "komut", "en": "command" }, "durationMs": 1000 },
+        { "edge": "in-uc", "shape": "square", "startAt": 1100, "durationMs": 900 }
+      ]
+    },
+    {
+      "id": "load-quiz",
+      "title": { "tr": "Çıkış port'u: quiz'i getir", "en": "Output port: load the quiz" },
+      "narration": {
+        "tr": "Use case yayındaki quiz'i ister: quizzes.findPublished(id). Çağrı çıkış port'una gider; port'u uygulayan Prisma adaptörü SQL'i çalıştırır ve dönen satırı bir domain nesnesine çevirir. Use case Prisma'nın varlığından habersizdir.",
+        "en": "The use case asks for the published quiz: quizzes.findPublished(id). The call goes to the output port; the Prisma adapter that implements it runs the SQL and turns the row into a domain object. The use case is unaware Prisma exists."
+      },
+      "durationMs": 3800,
+      "highlight": { "nodes": ["usecase", "outport", "prisma", "db"], "edges": ["uc-out", "prisma-out", "prisma-db"] },
+      "nodeStates": { "inport": { "status": "idle" }, "outport": { "status": "active" }, "prisma": { "status": "active" }, "db": { "status": "active" } },
+      "edgeStates": { "ctrl-in": { "status": "idle" }, "in-uc": { "status": "idle" }, "uc-out": { "status": "active" }, "prisma-out": { "status": "active" }, "prisma-db": { "status": "active" } },
+      "packets": [
+        { "edge": "uc-out", "label": "findPublished()", "durationMs": 900 },
+        { "edge": "prisma-out", "direction": "backward", "durationMs": 800, "startAt": 950 },
+        { "edge": "prisma-db", "shape": "square", "label": "SELECT", "startAt": 1800, "durationMs": 800 },
+        { "edge": "prisma-db", "direction": "backward", "shape": "square", "label": "row", "startAt": 2700, "durationMs": 800, "color": "success" }
+      ]
+    },
+    {
+      "id": "domain-rule",
+      "title": { "tr": "Domain kuralı: saf puanlama", "en": "Domain rule: pure grading" },
+      "narration": {
+        "tr": "Use case cevapları domain kuralına verir. gradeAnswer saf bir fonksiyondur: G/Ç yapmaz, saat okumaz, veritabanı bilmez. Bu projede shared paketinde yaşar ve web ile mobil aynı kuralı kullanır.",
+        "en": "The use case hands the answers to the domain rule. gradeAnswer is a pure function: no I/O, no clock, no database. In this project it lives in the shared package, and web and mobile use the same rule."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["usecase", "domain"], "edges": ["uc-dom"] },
+      "nodeStates": { "outport": { "status": "idle" }, "prisma": { "status": "idle" }, "db": { "status": "idle" }, "domain": { "status": "success", "badge": "80" } },
+      "edgeStates": { "uc-out": { "status": "idle" }, "prisma-out": { "status": "idle" }, "prisma-db": { "status": "idle" }, "uc-dom": { "status": "active" } },
+      "packets": [
+        { "edge": "uc-dom", "label": "gradeAnswer()", "durationMs": 900 },
+        { "edge": "uc-dom", "direction": "backward", "label": { "tr": "puan 80", "en": "score 80" }, "startAt": 1200, "durationMs": 900, "color": "success" }
+      ]
+    },
+    {
+      "id": "save-and-respond",
+      "title": { "tr": "Kaydet ve yanıtla", "en": "Save and respond" },
+      "narration": {
+        "tr": "Use case denemeyi aynı port üzerinden kaydettirir ve sonucu döndürür. Controller sonucu HTTP 201 yanıtına çevirir. Bir domain hatası (QuizNotPublished) olsaydı onu 404'e eşleyen de yine controller olurdu.",
+        "en": "The use case saves the attempt through the same port and returns the result. The controller turns it into an HTTP 201 response. Had there been a domain error (QuizNotPublished), the controller would also be the one mapping it to 404."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["usecase", "outport", "prisma", "controller", "client"], "edges": ["uc-out", "prisma-out", "c-ctrl"] },
+      "nodeStates": { "domain": { "status": "idle", "badge": "" }, "usecase": { "status": "success" }, "prisma": { "status": "active" } },
+      "edgeStates": { "uc-dom": { "status": "idle" }, "uc-out": { "status": "active" }, "prisma-out": { "status": "active" }, "c-ctrl": { "status": "active" } },
+      "packets": [
+        { "edge": "uc-out", "label": "saveAttempt()", "durationMs": 800 },
+        { "edge": "prisma-out", "direction": "backward", "startAt": 850, "durationMs": 700 },
+        { "edge": "c-ctrl", "direction": "backward", "shape": "envelope", "label": "201", "startAt": 2000, "durationMs": 1200, "color": "success" }
+      ]
+    },
+    {
+      "id": "dependency-direction",
+      "title": { "tr": "Akış dışarı, bağımlılık içeri", "en": "Flow outward, dependency inward" },
+      "narration": {
+        "tr": "Çağrı use case'ten Prisma'ya doğru aktı, ama kesikli 'uygular' oku tersine, Prisma adaptöründen port'a bakıyor. Port'u çekirdek tanımlar ve çekirdeğin dilinde yazar; Prisma adaptörü port'u import eder. Bağımlılığın tersine çevrilmesi tam olarak budur.",
+        "en": "The call flowed from the use case towards Prisma, yet the dashed 'implements' arrow points the other way, from the Prisma adapter to the port. The core defines the port in its own language; the Prisma adapter imports the port. That is dependency inversion."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["prisma", "outport", "controller", "inport"], "edges": ["prisma-out", "ctrl-in"] },
+      "nodeStates": { "usecase": { "status": "idle" }, "controller": { "status": "idle" }, "prisma": { "status": "warning" }, "outport": { "status": "active" } },
+      "edgeStates": { "uc-out": { "status": "idle" }, "c-ctrl": { "status": "idle" }, "prisma-out": { "status": "active" }, "ctrl-in": { "status": "active" } },
+      "packets": [
+        { "edge": "prisma-out", "shape": "diamond", "label": "import", "durationMs": 1100, "repeat": 2, "repeatGapMs": 400 },
+        { "edge": "ctrl-in", "shape": "diamond", "label": "import", "durationMs": 1100, "repeat": 2, "repeatGapMs": 400 }
+      ],
+      "annotations": [
+        { "id": "dip", "x": 805, "y": 290, "text": { "tr": "adaptör port'u bilir, port adaptörü bilmez", "en": "the adapter knows the port, not vice versa" }, "tone": "warning", "target": "prisma" }
+      ]
+    },
+    {
+      "id": "swap-fake",
+      "title": { "tr": "Testte veritabanı yerine sahte", "en": "A fake instead of the database in tests" },
+      "narration": {
+        "tr": "Use case testinde controller ve veritabanı yoktur. Jest testi giriş port'unu doğrudan çağırır; QUIZ_REPOSITORY sağlayıcısı bellek içi sahteyle değiştirilir. Use case tek satır değişmeden çalışır ve test milisaniyeler içinde biter.",
+        "en": "In the use case test there is no controller and no database. The Jest test calls the input port directly; the QUIZ_REPOSITORY provider is overridden with an in-memory fake. The use case runs without a single line changed and the test finishes in milliseconds."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["test", "inport", "usecase", "outport", "fake"], "edges": ["test-in", "in-uc", "uc-out", "fake-out"] },
+      "nodeStates": {
+        "client": { "status": "muted" },
+        "controller": { "status": "muted" },
+        "prisma": { "status": "muted" },
+        "db": { "status": "muted" },
+        "test": { "visible": true, "status": "active" },
+        "fake": { "visible": true, "status": "active" },
+        "usecase": { "status": "busy" }
+      },
+      "edgeStates": {
+        "prisma-out": { "status": "muted" },
+        "prisma-db": { "status": "muted" },
+        "ctrl-in": { "status": "muted" },
+        "c-ctrl": { "status": "muted" },
+        "test-in": { "visible": true, "status": "active" },
+        "fake-out": { "visible": true, "status": "active" },
+        "in-uc": { "status": "active" },
+        "uc-out": { "status": "active" }
+      },
+      "packets": [
+        { "edge": "test-in", "shape": "square", "label": "execute()", "durationMs": 900 },
+        { "edge": "in-uc", "shape": "square", "startAt": 950, "durationMs": 700 },
+        { "edge": "uc-out", "label": "findPublished()", "startAt": 1700, "durationMs": 700 },
+        { "edge": "fake-out", "direction": "backward", "label": "Map.get()", "startAt": 2450, "durationMs": 700 }
+      ],
+      "annotations": [
+        { "id": "fast", "x": 805, "y": 480, "text": { "tr": "veritabanı yok · birkaç ms", "en": "no database · a few ms" }, "tone": "success", "target": "fake" }
+      ]
+    },
+    {
+      "id": "second-driver",
+      "title": { "tr": "İkinci sürücü adaptör", "en": "A second driving adapter" },
+      "narration": {
+        "tr": "Mobil uygulama çevrimdışıyken biriken denemeler daha sonra bir kuyruktan gelir. Kuyruk tüketicisi yeni bir sürücü adaptördür ve aynı giriş port'unu çağırır; iş kuralı kopyalanmaz. Üretimde Prisma adaptörü geri takılır; bütün değişiklik bağlama noktasındadır.",
+        "en": "Attempts made while the mobile app was offline arrive later from a queue. The queue consumer is a new driving adapter and calls the same input port; the business rule is not copied. In production the Prisma adapter is plugged back in; the whole change lives in the composition root."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["queue", "inport", "usecase", "prisma"], "edges": ["queue-in", "in-uc", "prisma-out"] },
+      "nodeStates": {
+        "test": { "status": "muted" },
+        "fake": { "status": "muted" },
+        "prisma": { "status": "active" },
+        "db": { "status": "idle" },
+        "queue": { "visible": true, "status": "active" },
+        "usecase": { "status": "success" }
+      },
+      "edgeStates": {
+        "test-in": { "status": "muted" },
+        "fake-out": { "status": "muted" },
+        "prisma-out": { "status": "active" },
+        "prisma-db": { "status": "idle" },
+        "uc-out": { "status": "idle" },
+        "queue-in": { "visible": true, "status": "active" }
+      },
+      "packets": [
+        { "edge": "queue-in", "shape": "diamond", "label": "AttemptQueued", "durationMs": 1200 },
+        { "edge": "in-uc", "shape": "square", "startAt": 1300, "durationMs": 800 }
+      ],
+      "annotations": [
+        { "id": "same-uc", "x": 400, "y": 560, "text": { "tr": "aynı use case, farklı giriş", "en": "same use case, different entry" }, "target": "queue" }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["hexagonal", "ports-and-adapters", "dependency-inversion", "testing"]
+}

@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 400" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Expand/contract zaman çizelgesi</title>
+  <desc id="desc">Soldan sağa altı adım: expand migration'ı, v2 çift yazma, partili backfill, v3 okumayı yeni sütuna taşır, v4 eski sütuna yazmayı bırakır, contract migration'ı eski sütunu siler. Altta her geçişte yan yana çalışan uygulama sürümleri ve geri alma penceresinin contract'a kadar açık kaldığını gösteren bant.</desc>
+  <defs>
+    <marker id="d09-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+  </defs>
+
+  <!-- Zaman ekseni -->
+  <line x1="30" y1="200" x2="870" y2="200" stroke="var(--da-muted, #64748b)" stroke-width="1.6" marker-end="url(#d09-arrow)"/>
+  <text x="860" y="222" font-size="11" text-anchor="end" fill="var(--da-muted, #64748b)">zaman</text>
+
+  <!-- Adımlar -->
+  <g stroke-width="1.6">
+    <rect x="30" y="40" width="125" height="130" rx="12" fill="var(--da-primary, #6366f1)" fill-opacity="0.10" stroke="var(--da-primary, #6366f1)"/>
+    <rect x="170" y="40" width="125" height="130" rx="12" fill="var(--da-surface, #f8fafc)" stroke="var(--da-fg, #0f172a)"/>
+    <rect x="310" y="40" width="125" height="130" rx="12" fill="var(--da-accent, #f59e0b)" fill-opacity="0.10" stroke="var(--da-accent, #f59e0b)"/>
+    <rect x="450" y="40" width="125" height="130" rx="12" fill="var(--da-surface, #f8fafc)" stroke="var(--da-fg, #0f172a)"/>
+    <rect x="590" y="40" width="125" height="130" rx="12" fill="var(--da-surface, #f8fafc)" stroke="var(--da-fg, #0f172a)"/>
+    <rect x="730" y="40" width="125" height="130" rx="12" fill="var(--da-danger, #ef4444)" fill-opacity="0.10" stroke="var(--da-danger, #ef4444)"/>
+  </g>
+  <g font-size="13" font-weight="600" text-anchor="middle" fill="var(--da-fg, #0f172a)">
+    <text x="92" y="64">1 · Expand</text>
+    <text x="232" y="64">2 · Çift yazma</text>
+    <text x="372" y="64">3 · Backfill</text>
+    <text x="512" y="64">4 · Okuma geçişi</text>
+    <text x="652" y="64">5 · Yazmayı bırak</text>
+    <text x="792" y="64">6 · Contract</text>
+  </g>
+  <g font-size="11" text-anchor="middle" fill="var(--da-muted, #64748b)">
+    <text x="92" y="88">migration</text>
+    <text x="92" y="106">ADD COLUMN</text>
+    <text x="92" y="124">display_name</text>
+    <text x="92" y="142">(NULL olabilir)</text>
+
+    <text x="232" y="88">dağıtım v2</text>
+    <text x="232" y="106">yaz: name +</text>
+    <text x="232" y="124">display_name</text>
+    <text x="232" y="142">oku: name</text>
+
+    <text x="372" y="88">arka plan işi</text>
+    <text x="372" y="106">1000'lik partiler</text>
+    <text x="372" y="124">NOT VALID +</text>
+    <text x="372" y="142">VALIDATE</text>
+
+    <text x="512" y="88">dağıtım v3</text>
+    <text x="512" y="106">yaz: ikisi de</text>
+    <text x="512" y="124">oku: display_name</text>
+
+    <text x="652" y="88">dağıtım v4</text>
+    <text x="652" y="106">yalnızca</text>
+    <text x="652" y="124">display_name</text>
+
+    <text x="792" y="88">post-deployment</text>
+    <text x="792" y="106">migration</text>
+    <text x="792" y="124">DROP COLUMN name</text>
+    <text x="792" y="142">geri alınamaz</text>
+  </g>
+
+  <!-- Adım noktaları -->
+  <g fill="var(--da-fg, #0f172a)">
+    <circle cx="92" cy="200" r="5"/>
+    <circle cx="232" cy="200" r="5"/>
+    <circle cx="372" cy="200" r="5"/>
+    <circle cx="512" cy="200" r="5"/>
+    <circle cx="652" cy="200" r="5"/>
+    <circle cx="792" cy="200" r="5"/>
+  </g>
+
+  <!-- Yan yana çalışan sürümler -->
+  <text x="30" y="250" font-size="12" font-weight="600" fill="var(--da-fg, #0f172a)">Yan yana çalışan sürümler</text>
+  <g stroke="var(--da-primary, #6366f1)" stroke-dasharray="5 4" stroke-width="1.5" fill="none">
+    <rect x="170" y="262" width="125" height="34" rx="8"/>
+    <rect x="450" y="262" width="125" height="34" rx="8"/>
+    <rect x="590" y="262" width="125" height="34" rx="8"/>
+  </g>
+  <g font-size="12" text-anchor="middle" fill="var(--da-primary, #6366f1)">
+    <text x="92" y="284">v1</text>
+    <text x="232" y="284">v1 + v2</text>
+    <text x="372" y="284">v2</text>
+    <text x="512" y="284">v2 + v3</text>
+    <text x="652" y="284">v3 + v4</text>
+    <text x="792" y="284">v4</text>
+  </g>
+
+  <!-- Geri alma penceresi -->
+  <rect x="30" y="320" width="560" height="30" rx="8" fill="var(--da-success, #10b981)" fill-opacity="0.15" stroke="var(--da-success, #10b981)"/>
+  <text x="310" y="340" font-size="12" text-anchor="middle" fill="var(--da-fg, #0f172a)">Geri alma = uygulama sürümünü geri almak (eski sütun güncel)</text>
+  <rect x="590" y="320" width="140" height="30" rx="8" fill="var(--da-accent, #f59e0b)" fill-opacity="0.15" stroke="var(--da-accent, #f59e0b)"/>
+  <text x="660" y="340" font-size="11" text-anchor="middle" fill="var(--da-fg, #0f172a)">pencere daralıyor</text>
+  <rect x="730" y="320" width="125" height="30" rx="8" fill="var(--da-danger, #ef4444)" fill-opacity="0.15" stroke="var(--da-danger, #ef4444)"/>
+  <text x="792" y="340" font-size="11" text-anchor="middle" fill="var(--da-fg, #0f172a)">yalnızca yedek</text>
+  <text x="30" y="380" font-size="11" fill="var(--da-muted, #64748b)">Her geçişte şema iki sürümle de uyumludur; kırıcı değişiklik hiçbir adımda tek başına yapılmaz.</text>
+</svg>

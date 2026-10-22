@@ -323,6 +323,62 @@ export const CURRICULUM: CurriculumModule[] = [
           en: 'RPO/RTO, failover animation, data residency.',
         },
       ),
+      lesson(
+        'b',
+        5,
+        'modular-monolith',
+        {
+          tr: 'Modüler Monolit: Sınırlı Bağlamlar, Tek Dağıtım',
+          en: 'Modular Monolith: Bounded Contexts, Single Deploy',
+        },
+        {
+          tr: "Mikroservise geçmeden modül sınırları, iç API'ler, sınır ihlalinin CI'da yakalanması ve bir modülün servise ayrılması.",
+          en: 'Module boundaries without microservices, internal APIs, catching boundary violations in CI and extracting a module into a service.',
+        },
+        ['pipeline'],
+      ),
+      lesson(
+        'b',
+        6,
+        'hexagonal-clean-architecture',
+        {
+          tr: 'Hexagonal ve Clean Architecture: Port, Adaptör, Use Case',
+          en: 'Hexagonal and Clean Architecture: Ports, Adapters, Use Cases',
+        },
+        {
+          tr: 'Bağımlılık yönü, use case katmanı, sürücü ve sürülen adaptörler, veritabanını sahteyle değiştirerek test.',
+          en: 'Dependency direction, the use case layer, driving and driven adapters, testing by swapping the database for a fake.',
+        },
+        ['request-journey'],
+      ),
+      lesson(
+        'b',
+        7,
+        'event-sourcing-cqrs',
+        {
+          tr: 'Event Sourcing ve CQRS: Olay Deposu, Projeksiyon, Replay',
+          en: 'Event Sourcing and CQRS: Event Store, Projections, Replay',
+        },
+        {
+          tr: 'Olay deposu, projeksiyonlar, replay ve snapshot, okuma/yazma ayrımı, nihai tutarlılık ve ne zaman kullanılmaz.',
+          en: 'Event store, projections, replay and snapshots, read/write separation, eventual consistency and when not to use it.',
+        },
+        ['message-queue'],
+      ),
+      lesson(
+        'b',
+        8,
+        'saga-distributed-workflows',
+        {
+          tr: "Saga ve Dağıtık İş Akışları: Telafi, Zaman Aşımı, Orkestratör",
+          en: 'Sagas and Distributed Workflows: Compensation, Timeouts, Orchestrators',
+        },
+        {
+          tr: 'Koreografi ve orkestrasyon, telafi işlemleri, zaman aşımı, Temporal/Step Functions, idempotency ve outbox ile ilişki.',
+          en: 'Choreography and orchestration, compensating actions, timeouts, Temporal/Step Functions, and how idempotency and the outbox fit in.',
+        },
+        ['pipeline'],
+      ),
     ],
   },
   {
@@ -485,6 +541,60 @@ export const CURRICULUM: CurriculumModule[] = [
           en: 'Four real-world schemas and their design decisions.',
         },
         ['er-diagram'],
+      ),
+      lesson(
+        'd',
+        7,
+        'query-planner-explain',
+        {
+          tr: 'Sorgu Planlayıcı ve EXPLAIN Okuma: Tarama, Join Yöntemleri, İstatistikler',
+          en: 'The Query Planner and Reading EXPLAIN: Scans, Join Methods, Statistics',
+        },
+        {
+          tr: 'Planlayıcının maliyet tahminini, tarama ve join seçimlerini EXPLAIN çıktısından okuyun; yavaş sorgu kalıplarını düzeltin.',
+          en: 'Read the planner’s cost estimates, scan and join choices from EXPLAIN output; fix common slow-query patterns.',
+        },
+        ['index-query-plan'],
+      ),
+      lesson(
+        'd',
+        8,
+        'connection-pooling-n-plus-one',
+        {
+          tr: 'Bağlantı Havuzu, N+1 ve ORM Tuzakları',
+          en: 'Connection Pools, N+1 and ORM Pitfalls',
+        },
+        {
+          tr: 'Bağlantının maliyeti, havuz boyutu ve PgBouncer; N+1 sorgunun tespiti ve Prisma ile çözümü.',
+          en: 'The cost of a connection, pool sizing and PgBouncer; detecting N+1 queries and fixing them with Prisma.',
+        },
+      ),
+      lesson(
+        'd',
+        9,
+        'zero-downtime-migrations',
+        {
+          tr: 'Sıfır Kesintiyle Şema Değişiklikleri: Expand/Contract',
+          en: 'Zero-Downtime Schema Changes: Expand/Contract',
+        },
+        {
+          tr: 'Geriye uyumlu migration, CONCURRENTLY indeks, NOT NULL tuzağı, partili backfill ve geri alma planı.',
+          en: 'Backward-compatible migrations, CONCURRENTLY indexes, the NOT NULL trap, batched backfills and rollback plans.',
+        },
+      ),
+      lesson(
+        'd',
+        10,
+        'time-series-graph-document',
+        {
+          tr: 'Zaman Serisi, Graf ve Belge Veritabanları: Veri Düzeni ve Sorgu Şekli',
+          en: 'Time-Series, Graph and Document Databases: Data Layout and Query Shape',
+        },
+        {
+          tr: 'Chunk ve retention, düğüm/kenar gezintisi, gömme ve referans; ilişkisel modelin yetmediği yerler.',
+          en: 'Chunks and retention, node/edge traversal, embedding and referencing; where the relational model falls short.',
+        },
+        ['graph-traversal'],
       ),
     ],
   },

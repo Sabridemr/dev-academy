@@ -468,6 +468,20 @@
       "list"
     ]
   },
+  "analyze": {
+    "term": {
+      "tr": "ANALYZE (istatistik toplama)",
+      "en": "ANALYZE"
+    },
+    "definition": {
+      "tr": "Tablodan örnek satırlar okuyup planlayıcının kullandığı sütun istatistiklerini güncelleyen PostgreSQL komutu. Autovacuum belli oranda satır değişince bunu otomatik çalıştırır; toplu yüklemeden hemen sonra elle çalıştırmak bayat tahminleri önler. EXPLAIN ANALYZE'daki ANALYZE seçeneğiyle karıştırılmamalıdır."
+    },
+    "related": [
+      "table-statistics",
+      "query-planner",
+      "explain"
+    ]
+  },
   "ann": {
     "term": {
       "tr": "ANN (yaklaşık en yakın komşu)",
@@ -1066,6 +1080,21 @@
       "learning-rate"
     ]
   },
+  "backward-compatible-migration": {
+    "term": {
+      "tr": "Geriye uyumlu migration",
+      "en": "Backward-compatible migration"
+    },
+    "definition": {
+      "tr": "Hem kendisinden önceki hem de sonraki uygulama sürümünün sorunsuz çalışabileceği şema değişikliği. Kademeli dağıtımda iki sürüm aynı veritabanına aynı anda eriştiği için sıfır kesintinin temel şartıdır; sütun yeniden adlandırma veya silme gibi değişiklikler bu yüzden tek adımda yapılmaz."
+    },
+    "related": [
+      "expand-contract",
+      "rolling-deployment",
+      "database-migrations",
+      "rollback"
+    ]
+  },
   "balanced-tree": {
     "term": {
       "tr": "Dengeli ağaç",
@@ -1153,6 +1182,24 @@
       "training-serving-skew",
       "model-registry",
       "real-time-features"
+    ]
+  },
+  "batched-backfill": {
+    "term": {
+      "tr": "Partili backfill",
+      "en": "Batched backfill"
+    },
+    "definition": {
+      "tr": "Mevcut satırları yeni bir sütuna ya da yapıya, kimlik aralığına göre ilerleyen ve her biri kendi kısa transaction'ında commit edilen küçük partiler hâlinde doldurma. Tek dev UPDATE'in yarattığı uzun kilitleri, büyük WAL hacmini ve replika gecikmesini önler; iş yarıda kesilirse kaldığı yerden devam eder."
+    },
+    "aliases": [
+      "backfill",
+      "batched background migration"
+    ],
+    "related": [
+      "expand-contract",
+      "replication-lag",
+      "transaction"
     ]
   },
   "batching": {
@@ -1365,6 +1412,24 @@
       "lower-bound",
       "upper-bound",
       "standard-library"
+    ]
+  },
+  "bitmap-scan": {
+    "term": {
+      "tr": "Bitmap taraması (Bitmap Index/Heap Scan)",
+      "en": "Bitmap scan"
+    },
+    "definition": {
+      "tr": "İndeksten eşleşen satır adreslerini toplayıp sayfa sırasına dizen bir bit eşlemi kuran, ardından tabloyu (heap) fiziksel sırayla bir kez gezen PostgreSQL tarama yöntemi. Orta seçicilikteki sorgularda ve birden çok indeksin BitmapAnd/BitmapOr ile birleştirilmesinde kullanılır; GIN indeksleri yalnızca bu yolla okunur."
+    },
+    "aliases": [
+      "Bitmap Heap Scan",
+      "Bitmap Index Scan"
+    ],
+    "related": [
+      "seq-scan",
+      "index",
+      "query-planner"
     ]
   },
   "bitrate-ladder": {
@@ -2913,6 +2978,21 @@
       "multi-region"
     ]
   },
+  "connection-cost": {
+    "term": {
+      "tr": "Bağlantı kurma maliyeti",
+      "en": "Connection setup cost"
+    },
+    "definition": {
+      "tr": "Bir veritabanına yeni bağlantı açmanın getirdiği süre ve kaynak yükü: TCP ve çoğunlukla TLS el sıkışması, kimlik doğrulama gidiş-dönüşleri ve PostgreSQL'de bağlantı başına yeni bir arka uç süreci. Açık her bağlantı sunucuda bellek tuttuğu için uygulamalar bağlantıları havuzda yeniden kullanır."
+    },
+    "related": [
+      "connection-pooling",
+      "tcp-handshake",
+      "tls-handshake",
+      "pgbouncer"
+    ]
+  },
   "connection-lifecycle": {
     "term": {
       "tr": "Bağlantı yaşam döngüsü",
@@ -3253,6 +3333,21 @@
       "pull-request"
     ]
   },
+  "contract-test": {
+    "term": {
+      "tr": "Adaptör sözleşme testi",
+      "en": "Contract test"
+    },
+    "definition": {
+      "tr": "Aynı test paketinin bir port'un bütün uygulamalarına, örneğin bellek içi sahteye ve gerçek veritabanına bağlı adaptöre karşı çalıştırılması. Sahtenin gerçek adaptörle aynı davrandığını kanıtlar; böylece sahteyle yazılan hızlı use case testlerine güvenilebilir. Servisler arası API sözleşmesini doğrulayan contract testing ile aynı fikri port düzeyinde uygular."
+    },
+    "related": [
+      "contract-testing",
+      "test-double",
+      "ports-and-adapters",
+      "driven-adapter"
+    ]
+  },
   "contract-testing": {
     "term": {
       "tr": "Sözleşme testi (contract testing)",
@@ -3266,7 +3361,8 @@
       "test-pyramid",
       "schema-validation",
       "openapi",
-      "ci-test-stage"
+      "ci-test-stage",
+      "contract-test"
     ]
   },
   "conversation-model": {
@@ -3387,6 +3483,24 @@
       "approximate-nearest-neighbor"
     ]
   },
+  "cost-model": {
+    "term": {
+      "tr": "Maliyet modeli (planlayıcı)",
+      "en": "Planner cost model"
+    },
+    "definition": {
+      "tr": "Planlayıcının alternatif planları karşılaştırmak için kullandığı birimsiz tahmin sistemi. PostgreSQL'de bir sayfayı sıralı okumanın maliyeti 1 kabul edilir; rastgele sayfa okuma (random_page_cost), satır ve operatör işleme bu birime göre ölçeklenir. Değerler milisaniye değildir, yalnızca planları birbirine göre sıralar."
+    },
+    "aliases": [
+      "random_page_cost",
+      "seq_page_cost"
+    ],
+    "related": [
+      "query-planner",
+      "seq-scan",
+      "explain"
+    ]
+  },
   "count-min-sketch": {
     "term": {
       "tr": "Count-Min Sketch",
@@ -3465,6 +3579,24 @@
       "read-replica",
       "eventual-consistency",
       "denormalization"
+    ]
+  },
+  "create-index-concurrently": {
+    "term": {
+      "tr": "CREATE INDEX CONCURRENTLY",
+      "en": "CREATE INDEX CONCURRENTLY"
+    },
+    "definition": {
+      "tr": "Tabloya yazmaları bloklamadan indeks oluşturan PostgreSQL komutu. Tabloyu birden fazla kez taradığı için normal CREATE INDEX'ten yavaştır, transaction bloğu içinde çalışamaz ve başarısız olursa geride INVALID bir indeks bırakır; bu indeks silinip işlem yeniden denenmelidir."
+    },
+    "aliases": [
+      "concurrent index",
+      "add_concurrent_index"
+    ],
+    "related": [
+      "index",
+      "database-migrations",
+      "lock"
     ]
   },
   "creational-patterns": {
@@ -3602,6 +3734,23 @@
       "try-except",
       "inheritance",
       "error-handling"
+    ]
+  },
+  "cypher": {
+    "term": {
+      "tr": "Cypher (graf sorgu dili)",
+      "en": "Cypher"
+    },
+    "definition": {
+      "tr": "Neo4j'nin bildirimsel graf sorgu dili. Aranan yapıyı (düğüm)-[:İLİŞKİ]->(düğüm) biçiminde ASCII çizimine benzeyen desenlerle tarif eder; değişken derinlikli gezintiler -[:FRIEND*1..3]- gibi kısa bir sözdizimiyle yazılır."
+    },
+    "aliases": [
+      "openCypher"
+    ],
+    "related": [
+      "property-graph",
+      "graph-database",
+      "graph-traversal"
     ]
   },
   "dashboard": {
@@ -3903,13 +4052,13 @@
       "en": "DataLoader"
     },
     "definition": {
-      "tr": "Aynı olay döngüsü turunda istenen anahtarları toplayıp tek bir toplu çağrıyla getiren ve istek süresince aynı anahtarı tekrar istemeyen yükleme deseni (Facebook'un açık kaynak kütüphanesi). GraphQL resolver'larındaki N+1 çağrıyı 1 + 1'e indirir; önbelleği istek kapsamlı olmalıdır."
+      "tr": "Aynı olay döngüsü turunda istenen anahtarları toplayıp tek bir toplu çağrıya (WHERE id IN (...)) çeviren ve sonuçları istek süresince önbelleğe alan, Facebook'un açık kaynak yaptığı yardımcı kütüphane. Resolver'ları bağımsız çalışan GraphQL sunucularında N+1'i önlemenin yaygın yoludur."
     },
     "related": [
       "n-plus-one",
-      "graphql",
-      "batching",
-      "event-loop"
+      "eager-loading",
+      "rest-vs-graphql",
+      "batching"
     ]
   },
   "ddd": {
@@ -4608,6 +4757,42 @@
       "konteyner"
     ]
   },
+  "document-embedding": {
+    "term": {
+      "tr": "Belgeye gömme (embedding)",
+      "en": "Document embedding"
+    },
+    "definition": {
+      "tr": "Belge veritabanlarında ilişkili veriyi ayrı bir koleksiyona referans vermek yerine ana belgenin içine iç içe alan ya da dizi olarak koymak, ör. siparişin kalemleri ve teslimat adresi. Birlikte okunan, sınırlı büyüyen ve bağımsız güncellenmeyen veri için uygundur; tek belgenin boyut sınırı ve kopyaların eskimesi dikkate alınmalıdır."
+    },
+    "aliases": [
+      "embedded document",
+      "gömülü belge"
+    ],
+    "related": [
+      "document-referencing",
+      "document-store",
+      "denormalization"
+    ]
+  },
+  "document-referencing": {
+    "term": {
+      "tr": "Belgeler arası referans",
+      "en": "Document referencing"
+    },
+    "definition": {
+      "tr": "Belge veritabanlarında ilişkili veriyi ayrı bir belgede tutup ana belgede yalnızca kimliğini saklamak, ör. siparişte customerId. Bağımsız güncellenen, birçok belgede paylaşılan, sınırsız büyüyen ya da çoka-çok ilişkili veri için uygundur; okurken ek sorgu ya da $lookup gerekir."
+    },
+    "aliases": [
+      "reference",
+      "$lookup"
+    ],
+    "related": [
+      "document-embedding",
+      "document-store",
+      "foreign-key"
+    ]
+  },
   "document-store": {
     "term": {
       "tr": "Doküman veritabanı",
@@ -4702,6 +4887,24 @@
       "key-management"
     ]
   },
+  "downsampling": {
+    "term": {
+      "tr": "Downsampling (seyreltme / özetleme)",
+      "en": "Downsampling"
+    },
+    "definition": {
+      "tr": "Yüksek çözünürlüklü zaman serisi verisini daha kaba zaman dilimlerine (ör. saatlik ortalama ve maksimum) özetleyerek saklamak. Ham veri kısa, özet uzun süre tutulabilir; TimescaleDB'de continuous aggregate'ler bu özetleri artımlı olarak güncel tutar ve panolar çok daha az satır okur."
+    },
+    "aliases": [
+      "continuous aggregate",
+      "rollup"
+    ],
+    "related": [
+      "retention-policy",
+      "hypertable-chunk",
+      "time-series"
+    ]
+  },
   "dr-tiers": {
     "term": {
       "tr": "Felaket kurtarma katmanları (DR tiers)",
@@ -4740,6 +4943,24 @@
       "declarative-reconciliation"
     ]
   },
+  "driven-adapter": {
+    "term": {
+      "tr": "Sürülen adaptör (driven adapter)",
+      "en": "Driven adapter"
+    },
+    "definition": {
+      "tr": "Hexagonal mimaride çekirdeğin kendi dilinde tanımladığı çıkış port'unu uygulayan bileşen: veritabanı repository'si, e-posta istemcisi ya da testteki bellek içi sahte. Port'u import eden adaptördür, çekirdek adaptörü bilmez; teknoloji değiştiğinde yalnızca adaptör değişir."
+    },
+    "aliases": [
+      "secondary adapter"
+    ],
+    "related": [
+      "driving-adapter",
+      "ports-and-adapters",
+      "dependency-inversion",
+      "test-double"
+    ]
+  },
   "driver-matching": {
     "term": {
       "tr": "Sürücü eşleştirme",
@@ -4754,6 +4975,24 @@
       "assignment-algorithm",
       "distributed-lock",
       "surge-pricing"
+    ]
+  },
+  "driving-adapter": {
+    "term": {
+      "tr": "Sürücü adaptör (driving adapter)",
+      "en": "Driving adapter"
+    },
+    "definition": {
+      "tr": "Hexagonal mimaride dış dünyadan gelen isteği alıp uygulama çekirdeğini giriş port'u üzerinden çağıran bileşen: HTTP controller, CLI komutu, kuyruk tüketicisi ya da bir test. Protokole özgü işleri (kimlik çözme, girdi doğrulama, komut nesnesi üretme) üstlenir, iş kuralı içermez."
+    },
+    "aliases": [
+      "primary adapter"
+    ],
+    "related": [
+      "driven-adapter",
+      "ports-and-adapters",
+      "hexagonal-architecture",
+      "use-case"
     ]
   },
   "dual-write": {
@@ -4807,6 +5046,25 @@
       "context-manager"
     ]
   },
+  "durable-execution": {
+    "term": {
+      "tr": "Dayanıklı yürütme (durable execution)",
+      "en": "Durable execution"
+    },
+    "definition": {
+      "tr": "İş akışı kodunu sıradan bir fonksiyon gibi yazdırıp her dış çağrının sonucunu bir olay geçmişine kaydeden yürütme modeli (ör. Temporal, Cadence). Süreç çökerse başka bir işçi geçmişi yeniden oynatarak fonksiyonu kaldığı yerden sürdürür; bunun için iş akışı kodunun deterministik olması gerekir."
+    },
+    "aliases": [
+      "workflow engine"
+    ],
+    "related": [
+      "orchestration",
+      "saga-pattern",
+      "event-sourcing",
+      "replay",
+      "state-machine"
+    ]
+  },
   "dynamic-array": {
     "term": {
       "tr": "Dinamik dizi",
@@ -4856,6 +5114,25 @@
       "overlapping-subproblems",
       "optimal-substructure",
       "knapsack"
+    ]
+  },
+  "eager-loading": {
+    "term": {
+      "tr": "Eager loading (önceden yükleme)",
+      "en": "Eager loading"
+    },
+    "definition": {
+      "tr": "İlişkili verinin ana sorguyla birlikte, toplu bir IN sorgusu ya da JOIN ile baştan yüklenmesi (ör. Prisma'da include, Django'da select_related/prefetch_related). N+1'i önler; ancak gereğinden fazla ilişki ve sütun yüklemek her istekte gereksiz veri taşır."
+    },
+    "aliases": [
+      "include",
+      "select_related",
+      "prefetch_related"
+    ],
+    "related": [
+      "n-plus-one",
+      "lazy-loading",
+      "dataloader"
     ]
   },
   "edge-authentication": {
@@ -5233,6 +5510,22 @@
       "log-compaction"
     ]
   },
+  "event-store": {
+    "term": {
+      "tr": "Olay deposu (event store)",
+      "en": "Event store"
+    },
+    "definition": {
+      "tr": "Event sourcing'de olayları akış (stream) başına sıralı ve değişmez biçimde saklayan veritabanı. Temel işlemleri beklenen sürümle ekleme, bir akışı okuma ve bütün olaylara global sırayla abone olmaktır; EventStoreDB bu iş için tasarlanmış bir veritabanı, Marten ise aynı modeli PostgreSQL üzerine kuran bir kütüphanedir."
+    },
+    "related": [
+      "event-sourcing",
+      "event-stream",
+      "append-only",
+      "optimistic-concurrency",
+      "projection"
+    ]
+  },
   "event-stream": {
     "term": {
       "tr": "Olay akışı (event stream)",
@@ -5263,6 +5556,23 @@
       "message-queue",
       "sync-vs-async",
       "event-driven-order-flow"
+    ]
+  },
+  "event-upcasting": {
+    "term": {
+      "tr": "Olay upcasting'i (event upcasting)",
+      "en": "Event upcasting"
+    },
+    "definition": {
+      "tr": "Olay şeması değiştiğinde depodaki eski olayları yeniden yazmak yerine, okunurken eski sürümü yeni şekle dönüştürme (ör. eksik para birimi alanına varsayılan değer vermek). Olaylar değiştirilemediği için event sourcing'de şema evriminin temel aracıdır; alan silmek ya da anlam değiştirmek ise genellikle yeni bir olay tipi gerektirir."
+    },
+    "aliases": [
+      "upcaster"
+    ],
+    "related": [
+      "event-sourcing",
+      "event-store",
+      "replay"
     ]
   },
   "events": {
@@ -5346,6 +5656,26 @@
       "stack-frame"
     ]
   },
+  "expand-contract": {
+    "term": {
+      "tr": "Expand/contract (paralel değişiklik)",
+      "en": "Expand/contract"
+    },
+    "definition": {
+      "tr": "Kırıcı bir şema değişikliğini, her biri hem eski hem yeni uygulama sürümüyle uyumlu küçük adımlara bölen desen: önce yeni yapı eklenir (expand), çift yazma ve backfill yapılır, okumalar yeni yapıya geçer, eski yapı en son ve ayrı bir dağıtımda kaldırılır (contract). Contract adımına kadar uygulama sürümünü geri almak güvenlidir."
+    },
+    "aliases": [
+      "parallel change",
+      "expand and contract"
+    ],
+    "related": [
+      "database-migrations",
+      "backward-compatible-migration",
+      "batched-backfill",
+      "dual-write",
+      "rolling-deployment"
+    ]
+  },
   "explain": {
     "term": {
       "tr": "EXPLAIN (sorgu planı)",
@@ -5379,6 +5709,25 @@
       "dead-letter-queue",
       "retry-backoff-dlq",
       "thundering-herd"
+    ]
+  },
+  "expression-index": {
+    "term": {
+      "tr": "İfade indeksi (expression index)",
+      "en": "Expression index"
+    },
+    "definition": {
+      "tr": "Sütunun kendisi yerine bir ifadenin sonucu üzerine kurulan indeks, ör. CREATE INDEX ON users (lower(email)). Sorgunun WHERE koşulundaki ifade indeksteki ifadeyle birebir aynı olduğunda kullanılır; aksi hâlde planlayıcı sıralı taramaya döner."
+    },
+    "aliases": [
+      "functional index",
+      "fonksiyon indeksi"
+    ],
+    "related": [
+      "index",
+      "b-tree",
+      "query-anti-patterns",
+      "seq-scan"
     ]
   },
   "expressions": {
@@ -6334,6 +6683,26 @@
       "space-complexity"
     ]
   },
+  "graph-traversal": {
+    "term": {
+      "tr": "Graf gezintisi (graph traversal)",
+      "en": "Graph traversal"
+    },
+    "definition": {
+      "tr": "Bir başlangıç düğümünden kenarları izleyerek komşu düğümleri sistematik biçimde ziyaret etmek; \"arkadaşın arkadaşı\" ya da en kısa yol sorguları böyle yanıtlanır. Genellikle BFS veya DFS ile yapılır ve aynı düğümün iki kez işlenmesi bir ziyaret kümesiyle önlenir; ilişkisel modelde her atlama bir JOIN'e karşılık gelir."
+    },
+    "aliases": [
+      "traversal",
+      "gezinti"
+    ],
+    "related": [
+      "bfs",
+      "dfs",
+      "graph-database",
+      "index-free-adjacency",
+      "visited-set"
+    ]
+  },
   "graphql": {
     "term": {
       "tr": "GraphQL",
@@ -6537,6 +6906,21 @@
       "b-tree",
       "index",
       "composite-index",
+      "hash-function"
+    ]
+  },
+  "hash-join": {
+    "term": {
+      "tr": "Hash Join",
+      "en": "Hash join"
+    },
+    "definition": {
+      "tr": "Küçük girdiden bellekte join anahtarına göre bir hash tablosu kuran (build), büyük girdiyi tarayıp her satırı bu tabloda arayan (probe) join algoritması. Yalnızca eşitlik koşulunda çalışır; hash tablosu work_mem'e sığmazsa veri partiler (batch) hâlinde diske taşar."
+    },
+    "related": [
+      "nested-loop-join",
+      "merge-join",
+      "sql-joins",
       "hash-function"
     ]
   },
@@ -7036,6 +7420,25 @@
       "metadata-filtering"
     ]
   },
+  "hypertable-chunk": {
+    "term": {
+      "tr": "Hypertable ve chunk (TimescaleDB)",
+      "en": "Hypertable chunk"
+    },
+    "definition": {
+      "tr": "TimescaleDB'de tek bir tablo gibi görünen hypertable'ın arka planda zaman aralıklarına göre (varsayılan 7 gün) bölündüğü alt tablolar. Zaman aralığı içeren sorgular ilgisiz chunk'ları hiç açmaz; eski veriyi silmek ve sıkıştırmak da tüm chunk üzerinde ucuzca yapılır."
+    },
+    "aliases": [
+      "hypertable",
+      "chunk"
+    ],
+    "related": [
+      "time-series-database",
+      "retention-policy",
+      "downsampling",
+      "range-partitioning"
+    ]
+  },
   "iac-generation": {
     "term": {
       "tr": "IaC üretimi (yapay zekâ ile)",
@@ -7251,6 +7654,24 @@
       "sort-stability"
     ]
   },
+  "in-process-events": {
+    "term": {
+      "tr": "Süreç içi olaylar",
+      "en": "In-process events"
+    },
+    "definition": {
+      "tr": "Aynı uygulama sürecindeki bir modülün yayınladığı olayın, mesaj kuyruğu yerine bellek içi bir dağıtıcı (event emitter) ile diğer modüllere iletilmesi. Yayıncının dinleyicileri tanımasını gerektirmez; ancak olay, transaction commit edildikten sonra dağıtılmalıdır, yoksa geri alınmış bir işlemin sonuçları tetiklenir."
+    },
+    "aliases": [
+      "in-memory events"
+    ],
+    "related": [
+      "modular-monolith",
+      "observer",
+      "pub-sub",
+      "outbox-pattern"
+    ]
+  },
   "indentation": {
     "term": {
       "tr": "Girinti (indentation)",
@@ -7279,6 +7700,21 @@
       "covering-index",
       "hash-index",
       "selectivity"
+    ]
+  },
+  "index-free-adjacency": {
+    "term": {
+      "tr": "Index-free adjacency (indekssiz komşuluk)",
+      "en": "Index-free adjacency"
+    },
+    "definition": {
+      "tr": "Her düğümün kendi kenarlarına doğrudan işaretçi tuttuğu yerel graf depolama yaklaşımı. Bir komşuya geçmek indekste arama yapmak yerine işaretçi izlemek olduğu için gezinti maliyeti grafın toplam boyutuna değil, gezilen alt grafa bağlıdır."
+    },
+    "related": [
+      "graph-database",
+      "property-graph",
+      "graph-traversal",
+      "adjacency-list"
     ]
   },
   "indexes-explain": {
@@ -8072,6 +8508,20 @@
       "map-filter"
     ]
   },
+  "lazy-loading": {
+    "term": {
+      "tr": "Lazy loading (ORM'de tembel yükleme)",
+      "en": "Lazy loading"
+    },
+    "definition": {
+      "tr": "ORM'lerde ilişkili verinin ancak koda erişildiği anda, arka planda ayrı bir sorguyla yüklenmesi (ör. Hibernate, ActiveRecord'da order.customer). Erişim bir döngü, şablon ya da serileştirici içinde görünmez biçimde tekrarlandığında N+1'in en yaygın kaynağıdır."
+    },
+    "related": [
+      "n-plus-one",
+      "eager-loading",
+      "lazy-evaluation"
+    ]
+  },
   "lcs": {
     "term": {
       "tr": "En uzun ortak alt dizi (LCS)",
@@ -8509,6 +8959,41 @@
       "distributed-lock"
     ]
   },
+  "lock-queue": {
+    "term": {
+      "tr": "Kilit kuyruğu (lock queue)",
+      "en": "Lock queue"
+    },
+    "definition": {
+      "tr": "PostgreSQL'de bir kilit isteğinin, kendisinden önce bekleyen çakışan isteklerin arkasına sıralanması. ACCESS EXCLUSIVE isteyen bir ALTER TABLE uzun süren bir sorguyu beklerken, normalde birbirini bloklamayan sıradan SELECT'ler de onun arkasında birikir ve bağlantı havuzu dakikalar içinde tükenebilir."
+    },
+    "aliases": [
+      "lock contention",
+      "kilit bekleme"
+    ],
+    "related": [
+      "lock",
+      "lock-timeout",
+      "connection-pooling"
+    ]
+  },
+  "lock-timeout": {
+    "term": {
+      "tr": "lock_timeout (kilit zaman aşımı)",
+      "en": "Lock timeout"
+    },
+    "definition": {
+      "tr": "Bir ifadenin kilit almak için bekleyebileceği en uzun süreyi sınırlayan PostgreSQL ayarı (ör. SET lock_timeout = '5s'). Migration oturumunda kısa tutulursa kilit alınamayan ALTER hızla düşer, arkasında kilit kuyruğu oluşmaz ve işlem daha sonra yeniden denenir."
+    },
+    "aliases": [
+      "lock_timeout"
+    ],
+    "related": [
+      "lock-queue",
+      "lock",
+      "database-migrations"
+    ]
+  },
   "log-compaction": {
     "term": {
       "tr": "Log compaction (kayıt sıkıştırma)",
@@ -8891,6 +9376,24 @@
       "trunk-based-development"
     ]
   },
+  "merge-join": {
+    "term": {
+      "tr": "Merge Join (birleştirmeli join)",
+      "en": "Merge join"
+    },
+    "definition": {
+      "tr": "Join anahtarına göre sıralı iki girdiyi aynı anda baştan sona okuyup fermuar gibi eşleştiren join algoritması. Girdiler indeks sayesinde zaten sıralıysa büyük veri setlerinde verimlidir; değilse önce sıralama maliyeti ödenir."
+    },
+    "aliases": [
+      "sort-merge join"
+    ],
+    "related": [
+      "nested-loop-join",
+      "hash-join",
+      "sql-joins",
+      "merge-sort"
+    ]
+  },
   "merge-sort": {
     "term": {
       "tr": "Merge sort (birleştirmeli sıralama)",
@@ -9038,6 +9541,24 @@
       "bounded-context"
     ]
   },
+  "migration-drift": {
+    "term": {
+      "tr": "Migration sapması (schema drift)",
+      "en": "Migration drift"
+    },
+    "definition": {
+      "tr": "Migration geçmişinin uygulanmasıyla oluşan şemanın, beklenen şemadan (ORM şema dosyası ya da gerçek veritabanı) farklılaşması; ör. şema dosyasına alan eklenip migration'ının üretilmemesi. CI'da migration'ları boş bir gölge veritabanına uygulayıp sonucu şemayla karşılaştırarak (prisma migrate diff --exit-code) yakalanır; bu kontrol kesinti riskini değil yalnızca tutarlılığı denetler."
+    },
+    "aliases": [
+      "schema drift",
+      "şema sapması"
+    ],
+    "related": [
+      "database-migrations",
+      "continuous-integration",
+      "database-schema"
+    ]
+  },
   "missed-messages": {
     "term": {
       "tr": "Kaçan mesajların telafisi",
@@ -9161,6 +9682,44 @@
       "import-system",
       "standard-library",
       "virtual-environment"
+    ]
+  },
+  "module-boundary-enforcement": {
+    "term": {
+      "tr": "Modül sınırı denetimi",
+      "en": "Module boundary enforcement"
+    },
+    "definition": {
+      "tr": "Bir modülün başka bir modülün iç koduna erişmesini yasaklayan kuralların derleme ya da CI aşamasında araçla doğrulanması (ör. dependency-cruiser, ArchUnit, Packwerk). Sınır kod incelemesindeki dikkate bırakılmadığı için başka modülün iç dosyasını import eden bir değişiklik testlere gelmeden reddedilir."
+    },
+    "aliases": [
+      "boundary check",
+      "architecture test"
+    ],
+    "related": [
+      "modular-monolith",
+      "module-public-api",
+      "continuous-integration",
+      "dependency-rule"
+    ]
+  },
+  "module-public-api": {
+    "term": {
+      "tr": "Modül açık API'si (public API)",
+      "en": "Module public API"
+    },
+    "definition": {
+      "tr": "Modüler monolitte bir modülün diğer modüllere açtığı tek yüz: facade sınıfı ya da fonksiyonlar, komut/sorgu DTO'ları ve yayınlanan olay tipleri. Diğer modüller yalnızca bu yüzü kullanır, iç kod ve tablolar gizli kalır; modül ileride servise ayrıldığında bu arayüz bir ağ sözleşmesine dönüşür."
+    },
+    "aliases": [
+      "public API"
+    ],
+    "related": [
+      "modular-monolith",
+      "facade",
+      "encapsulation",
+      "module-boundary-enforcement",
+      "service-extraction"
     ]
   },
   "monolith": {
@@ -9382,15 +9941,17 @@
       "en": "N+1 query problem"
     },
     "definition": {
-      "tr": "Bir listeyi getiren 1 çağrının ardından listedeki her öğe için ayrı bir çağrı yapılması; toplam 1 + N çağrı oluşur. GraphQL'de alan alan çalışan resolver'larda ve ORM'lerde sık görülür; çağrıları toplu (batch) yapmak ya da tek sorguda birleştirmek ile çözülür."
+      "tr": "Bir liste için 1 sorgu atıldıktan sonra listedeki her öğenin ilişkili verisi için ayrı ayrı N sorgu daha atılması. Her sorgu hızlı olsa da gidiş-dönüşler sırayla biriktiği için süre liste boyutuyla doğrusal artar; çözümü eager loading, toplu IN sorgusu ya da JOIN'dir."
     },
     "aliases": [
-      "N+1"
+      "N+1",
+      "1+N"
     ],
     "related": [
+      "eager-loading",
+      "lazy-loading",
       "dataloader",
-      "graphql",
-      "batching"
+      "query-anti-patterns"
     ]
   },
   "near-real-time-search": {
@@ -9438,6 +9999,24 @@
       "status-code-assertions",
       "http-status-codes",
       "authentication-vs-authorization"
+    ]
+  },
+  "nested-loop-join": {
+    "term": {
+      "tr": "Nested Loop Join (iç içe döngü birleştirme)",
+      "en": "Nested loop join"
+    },
+    "definition": {
+      "tr": "Dış girdideki her satır için iç girdide eşleşen satırları arayan join algoritması. Dış taraf küçük ve iç tarafta join sütununda indeks varsa çok hızlıdır; dış taraf beklenenden büyükse arama sayısı satır sayısıyla çarpılarak patlar."
+    },
+    "aliases": [
+      "Nested Loop"
+    ],
+    "related": [
+      "hash-join",
+      "merge-join",
+      "sql-joins",
+      "query-planner"
     ]
   },
   "nested-loops": {
@@ -9553,6 +10132,23 @@
       "relational-vs-nosql",
       "access-pattern-modeling",
       "oltp-vs-olap"
+    ]
+  },
+  "not-null-constraint": {
+    "term": {
+      "tr": "NOT NULL kısıtı",
+      "en": "NOT NULL constraint"
+    },
+    "definition": {
+      "tr": "Bir sütunun boş (NULL) değer almasını yasaklayan kısıt. PostgreSQL'de mevcut büyük bir tabloya doğrudan SET NOT NULL eklemek tüm tabloyu ağır bir kilit altında tarar; güvenli yol önce NOT VALID bir CHECK kısıtı eklemek, onu hafif kilitle doğrulamak ve ardından SET NOT NULL uygulamaktır (PostgreSQL 12+ bu durumda taramayı atlar)."
+    },
+    "aliases": [
+      "SET NOT NULL"
+    ],
+    "related": [
+      "database-migrations",
+      "lock",
+      "foreign-key"
     ]
   },
   "notification-fan-out": {
@@ -9929,6 +10525,25 @@
       "tabulation"
     ]
   },
+  "optimistic-concurrency": {
+    "term": {
+      "tr": "İyimser eşzamanlılık (optimistic concurrency)",
+      "en": "Optimistic concurrency control"
+    },
+    "definition": {
+      "tr": "Kaynağı kilitlemeden okuyup yazarken, okunan sürümün yazma anında hâlâ geçerli olduğunu doğrulayan kontrol. Olay deposunda olaylar beklenen sürümle (expected version) eklenir; arada akışa başka biri yazdıysa ekleme reddedilir ve komut güncel durumla yeniden denenir."
+    },
+    "aliases": [
+      "expected version",
+      "OCC"
+    ],
+    "related": [
+      "optimistic-locking",
+      "event-store",
+      "lost-update",
+      "aggregate"
+    ]
+  },
   "optimistic-locking": {
     "term": {
       "tr": "İyimser kilitleme (optimistic locking)",
@@ -9942,7 +10557,8 @@
       "lock",
       "atomic-conditional-update",
       "etag",
-      "mvcc"
+      "mvcc",
+      "optimistic-concurrency"
     ]
   },
   "orchestration": {
@@ -10415,6 +11031,21 @@
       "slo"
     ]
   },
+  "pgbouncer": {
+    "term": {
+      "tr": "PgBouncer",
+      "en": "PgBouncer"
+    },
+    "definition": {
+      "tr": "Uygulamalar ile PostgreSQL arasına konan hafif bağlantı havuzlayıcı. Çok sayıda istemci bağlantısını az sayıda sunucu bağlantısına çoklar; transaction kipinde bir sunucu bağlantısı yalnızca transaction süresince bir istemciye ayrıldığı için oturum ayarları, LISTEN ve geçici tablolar gibi oturuma bağlı özellikler güvenilir değildir."
+    },
+    "related": [
+      "connection-pooling",
+      "pool-sizing",
+      "connection-cost",
+      "serverless"
+    ]
+  },
   "phantom-read": {
     "term": {
       "tr": "Hayalet okuma (phantom read)",
@@ -10465,6 +11096,21 @@
       "shell",
       "grep",
       "shell-scripting"
+    ]
+  },
+  "pivot-transaction": {
+    "term": {
+      "tr": "Pivot işlem (dönüm noktası)",
+      "en": "Pivot transaction"
+    },
+    "definition": {
+      "tr": "Saga'da başarıyla tamamlandığında akışın artık geri dönmediği adım (ör. karttan tahsilat); bundan sonra saga yalnızca ileri gider. Öncesine telafi edilebilir adımlar, sonrasına başarılı olana kadar yeniden denenen adımlar konur; bu sınıflandırma adımların sırasını belirler."
+    },
+    "related": [
+      "saga-pattern",
+      "compensating-transaction",
+      "orchestration",
+      "saga"
     ]
   },
   "pkce": {
@@ -10642,6 +11288,24 @@
       "connection-pooling",
       "load-testing",
       "throughput"
+    ]
+  },
+  "pool-timeout": {
+    "term": {
+      "tr": "Havuz zaman aşımı (pool timeout)",
+      "en": "Pool timeout"
+    },
+    "definition": {
+      "tr": "Bir isteğin bağlantı havuzundan boş bağlantı almak için bekleyebileceği en uzun süre; dolarsa sorgu hata ile düşer (Prisma'da pool_timeout, hata kodu P2024). Bu hata çoğu zaman havuzun küçüklüğünü değil, bağlantıları uzun tutan transaction'ları, yavaş sorguları ya da N+1 döngülerini gösterir."
+    },
+    "aliases": [
+      "pool_timeout",
+      "P2024"
+    ],
+    "related": [
+      "connection-pooling",
+      "pool-sizing",
+      "n-plus-one"
     ]
   },
   "pooling": {
@@ -10853,6 +11517,22 @@
       "cdn"
     ]
   },
+  "projection": {
+    "term": {
+      "tr": "Projeksiyon (projection)",
+      "en": "Projection"
+    },
+    "definition": {
+      "tr": "Olay akışını dinleyip her olayı bir okuma modeline uygulayan kod (ör. MoneyWithdrawn gelince bakiye tablosunu güncellemek). Olayla aynı transaction'da (inline) ya da abonelikle ayrı bir süreçte (asenkron) çalışır; asenkron projeksiyon aynı olayı iki kez alabileceği için checkpoint ile idempotent tutulur."
+    },
+    "related": [
+      "read-model",
+      "event-sourcing",
+      "cqrs",
+      "replay",
+      "idempotency"
+    ]
+  },
   "prometheus-data-model": {
     "term": {
       "tr": "Prometheus veri modeli",
@@ -10975,6 +11655,25 @@
       "instance-attribute",
       "dunder-methods",
       "dataclass"
+    ]
+  },
+  "property-graph": {
+    "term": {
+      "tr": "Özellikli graf (property graph)",
+      "en": "Property graph"
+    },
+    "definition": {
+      "tr": "Düğümlerin etiket ve özellik taşıdığı, kenarların (ilişkilerin) da türü, yönü ve kendi özellikleri olduğu graf veri modeli, ör. (:User)-[:FRIEND {since: 2021}]->(:User). Neo4j gibi graf veritabanlarının ve Cypher sorgu dilinin temel modelidir."
+    },
+    "aliases": [
+      "labeled property graph",
+      "LPG"
+    ],
+    "related": [
+      "graph-database",
+      "cypher",
+      "index-free-adjacency",
+      "social-graph"
     ]
   },
   "protobuf": {
@@ -11271,6 +11970,27 @@
       "index"
     ]
   },
+  "query-planner": {
+    "term": {
+      "tr": "Sorgu planlayıcı (query planner)",
+      "en": "Query planner"
+    },
+    "definition": {
+      "tr": "Bildirimsel bir SQL sorgusu için olası yürütme yollarını (tarama yöntemi, join sırası ve algoritması) üreten, her birine maliyet biçip en ucuzunu seçen veritabanı bileşeni. Kararları tablo istatistiklerinden gelen satır tahminlerine dayandığı için tahmin bozulduğunda plan da bozulur."
+    },
+    "aliases": [
+      "optimizer",
+      "query optimizer",
+      "planlayıcı"
+    ],
+    "related": [
+      "query-plan",
+      "explain",
+      "cost-model",
+      "table-statistics",
+      "selectivity"
+    ]
+  },
   "queue": {
     "term": {
       "tr": "Kuyruk (queue)",
@@ -11482,6 +12202,23 @@
       "http-429"
     ]
   },
+  "raw-sql": {
+    "term": {
+      "tr": "Ham SQL (raw SQL)",
+      "en": "Raw SQL"
+    },
+    "definition": {
+      "tr": "ORM'in sorgu oluşturucusunu atlayıp SQL'i doğrudan yazmak (ör. Prisma'da $queryRaw). Pencere fonksiyonları, karmaşık raporlar ve full-text arama gibi veritabanına özgü özellikler için daha açık ve hızlıdır; değerler parametre olarak verilmezse SQL enjeksiyonuna açık olur."
+    },
+    "aliases": [
+      "$queryRaw"
+    ],
+    "related": [
+      "sql-injection",
+      "window-functions",
+      "subqueries-cte"
+    ]
+  },
   "rbac": {
     "term": {
       "tr": "RBAC (rol tabanlı erişim denetimi)",
@@ -11510,6 +12247,24 @@
       "ranking",
       "candidate-generation",
       "learning-to-rank"
+    ]
+  },
+  "read-model": {
+    "term": {
+      "tr": "Okuma modeli (read model)",
+      "en": "Read model"
+    },
+    "definition": {
+      "tr": "CQRS'te sorgular için olaylardan ya da yazma modelinden türetilen, ekranın ihtiyacına göre şekillendirilmiş veri: denormalize bir tablo, arama indeksi ya da önbellek. Doğruluk kaynağı değildir, silinip olaylardan yeniden üretilebilir; asenkron güncellendiğinde yazma tarafının biraz gerisinden gelir."
+    },
+    "aliases": [
+      "query model"
+    ],
+    "related": [
+      "cqrs",
+      "projection",
+      "denormalization",
+      "eventual-consistency"
     ]
   },
   "read-replica": {
@@ -12103,6 +12858,25 @@
       "branching"
     ]
   },
+  "replay": {
+    "term": {
+      "tr": "Replay (olayları yeniden oynatma)",
+      "en": "Event replay"
+    },
+    "definition": {
+      "tr": "Saklanan olayların baştan itibaren yeniden işlenmesi. Event sourcing'de yeni bir projeksiyonu geçmiş veriyle kurmak ya da hatalı bir okuma modelini silip düzeltilmiş kodla yeniden üretmek için kullanılır; büyük depolarda uzun sürdüğünden yeni model genellikle eskisinin yanında kurulup yetişince trafiğe açılır."
+    },
+    "aliases": [
+      "event replay"
+    ],
+    "related": [
+      "event-sourcing",
+      "projection",
+      "read-model",
+      "snapshot",
+      "durable-execution"
+    ]
+  },
   "replicaset": {
     "term": {
       "tr": "ReplicaSet",
@@ -12362,6 +13136,24 @@
       "sync-vs-async"
     ]
   },
+  "retention-policy": {
+    "term": {
+      "tr": "Saklama politikası (retention policy)",
+      "en": "Retention policy"
+    },
+    "definition": {
+      "tr": "Belirli bir yaştan eski verinin otomatik ve düzenli olarak silinmesini tanımlayan kural. Zaman serisi veritabanlarında satır satır DELETE yerine tüm zaman bölümü düşürülür (TimescaleDB'de add_retention_policy ile chunk düşürme); böylece ölü satır ve vacuum yükü oluşmaz."
+    },
+    "aliases": [
+      "add_retention_policy"
+    ],
+    "related": [
+      "data-retention",
+      "hypertable-chunk",
+      "downsampling",
+      "time-series-database"
+    ]
+  },
   "retraining-loop": {
     "term": {
       "tr": "Yeniden eğitim döngüsü",
@@ -12520,6 +13312,24 @@
       "vanishing-gradient",
       "transformer",
       "backpropagation"
+    ]
+  },
+  "roll-forward": {
+    "term": {
+      "tr": "Roll-forward (ileri sararak düzeltme)",
+      "en": "Roll-forward"
+    },
+    "definition": {
+      "tr": "Hatalı bir dağıtımı önceki sürüme dönerek değil, düzeltmeyi içeren yeni bir sürüm yayımlayarak gidermek. Şema değişikliklerinde ters (down) migration'lar çoğu zaman güvenilmez olduğu için tercih edilir; geri alınamayan adımlar (ör. sütun silme) en sona bırakılır ve veri kaybına karşı tek gerçek geri dönüş yolu test edilmiş yedektir."
+    },
+    "aliases": [
+      "fix forward",
+      "ileri sarma"
+    ],
+    "related": [
+      "rollback",
+      "expand-contract",
+      "backward-compatible-migration"
     ]
   },
   "rollback": {
@@ -12706,6 +13516,21 @@
       "orchestration"
     ]
   },
+  "saga-timeout": {
+    "term": {
+      "tr": "Saga zaman aşımı",
+      "en": "Saga timeout"
+    },
+    "definition": {
+      "tr": "Bir saga adımının ya da saganın tamamının belirlenen sürede bitmemesi. Zaman aşımı adımın başarısız olduğunu değil sonucunun bilinmediğini gösterir; bu yüzden önce aynı idempotency anahtarıyla yeniden denenir ya da adımın durumu sorgulanır, toplam süre aşılırsa telafiye geçilir."
+    },
+    "related": [
+      "saga-pattern",
+      "idempotency-key",
+      "exponential-backoff",
+      "compensating-transaction"
+    ]
+  },
   "samesite": {
     "term": {
       "tr": "SameSite çerez özniteliği",
@@ -12765,6 +13590,21 @@
       "sql-vs-nosql",
       "data-lake",
       "relational-vs-nosql"
+    ]
+  },
+  "schema-per-module": {
+    "term": {
+      "tr": "Modül başına şema",
+      "en": "Schema per module"
+    },
+    "definition": {
+      "tr": "Modüler monolitte her modülün tablolarını ayrı bir veritabanı şemasında (ya da tablo önekiyle) tutması ve başka bir modülün tablosunu okumaması, yazmaması, JOIN etmemesi kuralı. Modül başına ayrı veritabanı kullanıcısı bu sınırı veritabanının kendisine de zorlatır ve modül servise ayrılırken verisinin taşınmasını kolaylaştırır."
+    },
+    "related": [
+      "modular-monolith",
+      "database-per-service",
+      "database-schema",
+      "bounded-context"
     ]
   },
   "schema-validation": {
@@ -12986,6 +13826,26 @@
       "immutable-artifact"
     ]
   },
+  "seq-scan": {
+    "term": {
+      "tr": "Seq Scan (sıralı tarama)",
+      "en": "Sequential scan"
+    },
+    "definition": {
+      "tr": "Tablonun tüm sayfalarını sırayla okuyup her satıra filtreyi uygulayan tarama yöntemi. Küçük tablolarda ve satırların büyük kısmını döndüren sorgularda en ucuz plandır; büyük tabloda seçici bir sorguda görülmesi ise eksik ya da kullanılamayan bir indeksin belirtisidir."
+    },
+    "aliases": [
+      "Seq Scan",
+      "full table scan",
+      "tam tablo taraması"
+    ],
+    "related": [
+      "bitmap-scan",
+      "index",
+      "selectivity",
+      "cost-model"
+    ]
+  },
   "serializable": {
     "term": {
       "tr": "Serializable (seri hâle getirilebilir izolasyon)",
@@ -13000,6 +13860,24 @@
       "lost-update",
       "mvcc",
       "acid"
+    ]
+  },
+  "series-cardinality": {
+    "term": {
+      "tr": "Seri kardinalitesi",
+      "en": "Series cardinality"
+    },
+    "definition": {
+      "tr": "Bir zaman serisi veritabanındaki benzersiz serilerin sayısı; InfluxDB'de ölçüm adı ve etiket kümesinin her farklı birleşimi ayrı bir seridir. Etikete kullanıcı ya da istek kimliği gibi yüksek kardinaliteli değerler konursa seri sayısı patlar ve indeks belleğe sığmaz."
+    },
+    "aliases": [
+      "high cardinality",
+      "tag cardinality"
+    ],
+    "related": [
+      "cardinality",
+      "time-series-database",
+      "prometheus-data-model"
     ]
   },
   "server-sent-events": {
@@ -13096,6 +13974,22 @@
       "load-balancer",
       "service-mesh",
       "dns-resolution"
+    ]
+  },
+  "service-extraction": {
+    "term": {
+      "tr": "Servis ayırma (service extraction)",
+      "en": "Service extraction"
+    },
+    "definition": {
+      "tr": "Bir modülü monolitten çıkarıp bağımsız dağıtılan bir servise dönüştürme. Sınırları korunmuş bir modülde açık API bir ağ sözleşmesine (REST/gRPC), süreç içi adaptör HTTP adaptörüne, modülün şeması ayrı veritabanına, süreç içi olaylar mesaj kuyruğuna taşınır. Gerekçesi ölçek profili, dağıtım ritmi ya da hata izolasyonu gibi ölçülebilir bir ihtiyaç olmalıdır."
+    },
+    "related": [
+      "modular-monolith",
+      "microservices",
+      "strangler-fig",
+      "module-public-api",
+      "decomposition-criteria"
     ]
   },
   "service-identity": {
@@ -13398,6 +14292,21 @@
       "vanishing-gradient"
     ]
   },
+  "single-deployment-unit": {
+    "term": {
+      "tr": "Tek dağıtım birimi",
+      "en": "Single deployment unit"
+    },
+    "definition": {
+      "tr": "Uygulamanın bütün modülleriyle birlikte tek derleme, tek sürüm ve tek süreç (ya da aynı imajdan çoğaltılmış replikalar) olarak dağıtılması. Modüller arası ağ çağrısı yerine fonksiyon çağrısı ve yerel transaction kullanılabilir; bedeli, bütün modüllerin aynı sürüm treniyle çıkması ve birlikte ölçeklenmesidir."
+    },
+    "related": [
+      "modular-monolith",
+      "monolith",
+      "microservices",
+      "horizontal-scaling"
+    ]
+  },
   "single-point-of-failure": {
     "term": {
       "tr": "Tek hata noktası (SPOF)",
@@ -13574,6 +14483,21 @@
       "dunder-methods",
       "memory-profiling",
       "dataclass"
+    ]
+  },
+  "snapshot": {
+    "term": {
+      "tr": "Snapshot (anlık durum kaydı)",
+      "en": "Snapshot"
+    },
+    "definition": {
+      "tr": "Event sourcing'de uzun bir olay akışı için belirli aralıklarla kaydedilen hesaplanmış durum; aggregate yüklenirken her olayı baştan katlamak yerine snapshot ve sonrasındaki olaylar okunur. Doğruluk kaynağı değil bir önbellektir: durum hesaplama mantığı değişirse atılıp olaylardan yeniden üretilir."
+    },
+    "related": [
+      "event-sourcing",
+      "event-store",
+      "replay",
+      "aggregate"
     ]
   },
   "social-graph": {
@@ -14454,6 +15378,26 @@
       "systemd",
       "ters-vekil",
       "process-management"
+    ]
+  },
+  "table-statistics": {
+    "term": {
+      "tr": "Tablo istatistikleri (planlayıcı istatistikleri)",
+      "en": "Planner statistics"
+    },
+    "definition": {
+      "tr": "Planlayıcının satır sayısı tahmini için kullandığı sütun özetleri: boş değer oranı, farklı değer sayısı, en sık değerler, histogram ve fiziksel sıra korelasyonu. PostgreSQL'de pg_stats görünümünden okunur; bayat ya da ilişkili sütunları hesaba katmayan istatistikler yanlış join ve tarama seçimlerine yol açar."
+    },
+    "aliases": [
+      "pg_stats",
+      "pg_statistic",
+      "CREATE STATISTICS"
+    ],
+    "related": [
+      "analyze",
+      "query-planner",
+      "selectivity",
+      "cardinality"
     ]
   },
   "tabulation": {
@@ -15742,6 +16686,26 @@
       "rest",
       "http-methods",
       "pagination"
+    ]
+  },
+  "use-case": {
+    "term": {
+      "tr": "Use case (kullanım senaryosu)",
+      "en": "Use case"
+    },
+    "definition": {
+      "tr": "Clean ve hexagonal mimaride uygulama katmanında tek bir iş eylemini (ör. SubmitAttempt) yürüten sınıf ya da fonksiyon. Gereken veriyi port'lar üzerinden ister, domain kurallarını çağırır ve sonucu kaydettirir; HTTP, ORM ya da çerçeve ayrıntısı bilmediği için bellek içi sahtelerle hızlıca test edilir."
+    },
+    "aliases": [
+      "interactor",
+      "application service"
+    ],
+    "related": [
+      "clean-architecture",
+      "hexagonal-architecture",
+      "ports-and-adapters",
+      "driving-adapter",
+      "driven-adapter"
     ]
   },
   "vanishing-gradient": {
