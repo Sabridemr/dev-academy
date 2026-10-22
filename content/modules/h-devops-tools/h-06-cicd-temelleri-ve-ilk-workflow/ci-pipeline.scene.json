@@ -1,0 +1,188 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "ci-pipeline-fail-fast",
+  "title": { "tr": "CI Pipeline: Sırayla Yeşil, Hatada Dur", "en": "CI Pipeline: Green in Order, Stop on Failure" },
+  "summary": {
+    "tr": "Bir push pipeline'ı tetikler; aşamalar sırayla çalışır, test düşünce sonraki aşamalar atlanır ve PR birleştirilemez; düzeltmeden sonra tek bir paket önce staging'e, onaydan sonra canlıya çıkar.",
+    "en": "A push triggers the pipeline; stages run in order, when tests fail the later stages are skipped and the PR cannot be merged; after the fix a single package goes to staging and, after approval, to production."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda geliştirici ve GitHub'daki pull request, sağa doğru sırayla lint, test, build, staging ve production aşamaları dizilidir. İlk çalıştırmada lint geçer, test kırmızıya döner, build, staging ve production atlanır ve PR'da birleştirme engellenir. Düzeltme commit'inden sonra tüm aşamalar sırayla yeşile döner; build bir kez paket üretir, aynı paket staging'e ve onaydan sonra production'a gider.",
+      "en": "The developer and the GitHub pull request are on the left, with lint, test, build, staging and production stages to the right in order. In the first run lint passes, test turns red, build, staging and production are skipped and merging is blocked on the PR. After a fix commit every stage turns green in order; build produces a package once and the same package goes to staging and, after approval, to production."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "dev", "kind": "user", "label": { "tr": "Geliştirici", "en": "Developer" }, "x": 80, "y": 300, "w": 120, "h": 64 },
+    { "id": "pr", "kind": "service", "label": "PR #17", "sublabel": "GitHub", "x": 220, "y": 300, "w": 120, "h": 70, "color": "primary" },
+    { "id": "lint", "kind": "worker", "label": "lint", "sublabel": "~10 sn", "x": 370, "y": 300, "w": 110, "h": 64 },
+    { "id": "test", "kind": "worker", "label": "test", "sublabel": "~2 dk", "x": 500, "y": 300, "w": 110, "h": 64 },
+    { "id": "build", "kind": "worker", "label": "build", "sublabel": "Docker image", "x": 630, "y": 300, "w": 110, "h": 64 },
+    { "id": "staging", "kind": "server", "label": "staging", "sublabel": "smoke test", "x": 760, "y": 300, "w": 110, "h": 64 },
+    { "id": "prod", "kind": "server", "label": "production", "x": 900, "y": 300, "w": 120, "h": 64, "color": "success" }
+  ],
+  "edges": [
+    { "id": "dev-pr", "from": "dev", "to": "pr", "kind": "request", "label": "git push" },
+    { "id": "pr-lint", "from": "pr", "to": "lint", "kind": "control" },
+    { "id": "lint-test", "from": "lint", "to": "test", "kind": "control" },
+    { "id": "test-build", "from": "test", "to": "build", "kind": "control" },
+    { "id": "build-staging", "from": "build", "to": "staging", "kind": "data" },
+    { "id": "staging-prod", "from": "staging", "to": "prod", "kind": "data" },
+    { "id": "test-pr", "from": "test", "to": "pr", "kind": "event", "style": "dashed", "curvature": 0.5, "label": { "tr": "durum kontrolü", "en": "status check" } }
+  ],
+  "steps": [
+    {
+      "id": "push",
+      "title": { "tr": "push pipeline'ı tetikler", "en": "A push triggers the pipeline" },
+      "narration": {
+        "tr": "Geliştirici dalına commit gönderir ve PR açar. pull_request olayı .github/workflows/ci.yml'yi tetikler, GitHub temiz bir runner makinesi ayırır. Aşamaların hiçbiri henüz çalışmadı; hepsi sırasını bekliyor.",
+        "en": "The developer pushes a commit to the branch and opens a PR. The pull_request event triggers .github/workflows/ci.yml and GitHub allocates a clean runner machine. None of the stages has run yet; all are waiting their turn."
+      },
+      "durationMs": 3600,
+      "inherit": false,
+      "highlight": { "nodes": ["dev", "pr"], "edges": ["dev-pr"] },
+      "nodeStates": {
+        "dev": { "status": "active" },
+        "pr": { "status": "busy", "badge": "CI…" },
+        "lint": { "status": "idle" },
+        "test": { "status": "idle" },
+        "build": { "status": "idle" },
+        "staging": { "status": "idle" },
+        "prod": { "status": "idle" }
+      },
+      "edgeStates": { "test-pr": { "visible": false } },
+      "packets": [{ "edge": "dev-pr", "shape": "envelope", "label": "commit a1b2c3", "durationMs": 1300 }]
+    },
+    {
+      "id": "lint",
+      "title": { "tr": "En ucuz kontrol önce: lint", "en": "Cheapest check first: lint" },
+      "narration": {
+        "tr": "Fail fast ilkesi gereği önce saniyeler süren lint çalışır. Stil ve basit hata kontrolü geçer, aşama yeşile döner ve sıra bir sonrakine geçer.",
+        "en": "Following the fail fast principle, the seconds-long lint runs first. The style and simple-error checks pass, the stage turns green and the turn moves on."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["lint"], "edges": ["pr-lint"] },
+      "nodeStates": { "dev": { "status": "idle" }, "lint": { "status": "success", "badge": "✓" } },
+      "edgeStates": { "pr-lint": { "status": "active" } },
+      "packets": [{ "edge": "pr-lint", "shape": "dot", "durationMs": 900 }]
+    },
+    {
+      "id": "test-fails",
+      "title": { "tr": "Test düşer, zincir durur", "en": "Tests fail, the chain stops" },
+      "narration": {
+        "tr": "Birim testlerinden biri kırmızıya döner. Pipeline burada durur: build, staging ve production hiç çalışmaz, \"atlandı\" olarak işaretlenir. Hatalı kod paketlenmez ve hiçbir ortama ulaşmaz.",
+        "en": "One of the unit tests turns red. The pipeline stops here: build, staging and production never run and are marked as skipped. Broken code is never packaged and never reaches any environment."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["test"], "edges": ["lint-test"] },
+      "nodeStates": {
+        "test": { "status": "error", "badge": "1 failed" },
+        "build": { "status": "muted", "badge": "skipped" },
+        "staging": { "status": "muted", "badge": "skipped" },
+        "prod": { "status": "muted", "badge": "skipped" }
+      },
+      "edgeStates": { "pr-lint": { "status": "idle" }, "lint-test": { "status": "active" }, "test-build": { "status": "muted" }, "build-staging": { "status": "muted" }, "staging-prod": { "status": "muted" } },
+      "packets": [{ "edge": "lint-test", "shape": "dot", "durationMs": 900 }],
+      "annotations": [{ "id": "fail-fast", "x": 700, "y": 200, "text": { "tr": "sonraki aşamalar çalışmaz", "en": "later stages never run" }, "tone": "danger" }]
+    },
+    {
+      "id": "blocked",
+      "title": { "tr": "PR birleştirilemez", "en": "The PR cannot be merged" },
+      "narration": {
+        "tr": "Kırmızı sonuç PR'a durum kontrolü olarak döner. Branch protection kuralında test zorunlu kontrol olarak tanımlandığı için Merge düğmesi kilitlenir. Geliştirici bildirim alır ve logda hangi testin neden düştüğünü görür.",
+        "en": "The red result is reported to the PR as a status check. Because test is a required check in the branch protection rule, the Merge button is locked. The developer is notified and sees in the log which test failed and why."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["pr", "dev"], "edges": ["test-pr", "dev-pr"] },
+      "nodeStates": { "pr": { "status": "error", "badge": "merge engelli" }, "dev": { "status": "warning" } },
+      "edgeStates": { "lint-test": { "status": "idle" }, "test-pr": { "visible": true, "status": "error" } },
+      "packets": [
+        { "edge": "test-pr", "shape": "diamond", "label": "✗", "color": "danger", "durationMs": 1100 },
+        { "edge": "dev-pr", "shape": "envelope", "direction": "backward", "color": "danger", "startAt": 1100, "durationMs": 900 }
+      ]
+    },
+    {
+      "id": "fix",
+      "title": { "tr": "Düzeltme: yeni çalıştırma", "en": "The fix: a new run" },
+      "narration": {
+        "tr": "Geliştirici hatayı düzeltip aynı dala yeni bir commit gönderir. PR güncellendiği için (synchronize) workflow baştan çalışır. Önceki sonuçlar silinir ve lint yine birkaç saniyede geçer.",
+        "en": "The developer fixes the bug and pushes a new commit to the same branch. The PR is updated (synchronize), so the workflow runs from the start. Earlier results are cleared and lint passes again within seconds."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["dev", "pr", "lint"], "edges": ["dev-pr", "pr-lint"] },
+      "nodeStates": {
+        "dev": { "status": "active" },
+        "pr": { "status": "busy", "badge": "CI…" },
+        "lint": { "status": "success", "badge": "✓" },
+        "test": { "status": "idle", "badge": "" },
+        "build": { "status": "idle", "badge": "" },
+        "staging": { "status": "idle", "badge": "" },
+        "prod": { "status": "idle", "badge": "" }
+      },
+      "edgeStates": {
+        "test-pr": { "visible": false },
+        "pr-lint": { "status": "active" },
+        "test-build": { "status": "idle" },
+        "build-staging": { "status": "idle" },
+        "staging-prod": { "status": "idle" }
+      },
+      "packets": [
+        { "edge": "dev-pr", "shape": "envelope", "label": "commit d4e5f6", "durationMs": 1000 },
+        { "edge": "pr-lint", "shape": "dot", "startAt": 1000, "durationMs": 800 }
+      ]
+    },
+    {
+      "id": "build-once",
+      "title": { "tr": "Testler geçer, paket bir kez üretilir", "en": "Tests pass, the package is built once" },
+      "narration": {
+        "tr": "Testler yeşile döner ve PR birleştirilebilir hâle gelir. build aşaması uygulamayı bir kez paketler ve Docker imajını commit SHA'sıyla etiketler. Build once, deploy many: bundan sonraki her ortam bu aynı paketi kullanır.",
+        "en": "The tests turn green and the PR becomes mergeable. The build stage packages the application once and tags the Docker image with the commit SHA. Build once, deploy many: every environment from here on uses this very same package."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["test", "build"], "edges": ["lint-test", "test-build"] },
+      "nodeStates": {
+        "dev": { "status": "idle" },
+        "pr": { "status": "success", "badge": "✓ merge" },
+        "test": { "status": "success", "badge": "✓" },
+        "build": { "status": "success", "badge": "app:d4e5f6" }
+      },
+      "edgeStates": { "pr-lint": { "status": "idle" }, "lint-test": { "status": "active" }, "test-build": { "status": "active" } },
+      "packets": [
+        { "edge": "lint-test", "shape": "dot", "durationMs": 800 },
+        { "edge": "test-build", "shape": "dot", "startAt": 800, "durationMs": 800 }
+      ]
+    },
+    {
+      "id": "staging",
+      "title": { "tr": "Staging: aynı paket, gerçeğe yakın ortam", "en": "Staging: same package, near-real environment" },
+      "narration": {
+        "tr": "Aynı imaj staging ortamına çıkar ve duman testi (smoke test) çalışır: /health 200 dönüyor mu, giriş sayfası açılıyor mu? Staging'de geçen paket, canlıya giden paketin ta kendisidir.",
+        "en": "The same image goes to staging and a smoke test runs: does /health return 200, does the login page load? The package that passed in staging is exactly the package that goes to production."
+      },
+      "durationMs": 3800,
+      "highlight": { "nodes": ["build", "staging"], "edges": ["build-staging"] },
+      "nodeStates": { "staging": { "status": "success", "badge": "smoke ✓" } },
+      "edgeStates": { "lint-test": { "status": "idle" }, "test-build": { "status": "idle" }, "build-staging": { "status": "active" } },
+      "packets": [{ "edge": "build-staging", "shape": "square", "label": "app:d4e5f6", "durationMs": 1200 }]
+    },
+    {
+      "id": "approve",
+      "title": { "tr": "Onay ve canlı", "en": "Approval and production" },
+      "narration": {
+        "tr": "Continuous delivery kurgusunda production ortamı bir onay kapısıyla korunur. Yetkili kişi onaylayınca aynı paket canlıya çıkar. Onay adımı kaldırılıp her yeşil commit otomatik canlıya gidiyorsa buna continuous deployment denir.",
+        "en": "In a continuous delivery setup the production environment is guarded by an approval gate. Once an authorised person approves, the same package goes live. If the approval step is removed and every green commit goes live automatically, that is continuous deployment."
+      },
+      "durationMs": 4200,
+      "highlight": { "nodes": ["staging", "prod"], "edges": ["staging-prod"] },
+      "nodeStates": { "prod": { "status": "success", "badge": "app:d4e5f6" } },
+      "edgeStates": { "build-staging": { "status": "idle" }, "staging-prod": { "status": "active" } },
+      "packets": [{ "edge": "staging-prod", "shape": "square", "label": "app:d4e5f6", "color": "success", "durationMs": 1300 }],
+      "annotations": [{ "id": "gate", "x": 830, "y": 200, "text": { "tr": "environment: production (onay)", "en": "environment: production (approval)" }, "target": "prod", "tone": "warning" }]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["ci-cd", "pipeline", "fail-fast", "github-actions"]
+}

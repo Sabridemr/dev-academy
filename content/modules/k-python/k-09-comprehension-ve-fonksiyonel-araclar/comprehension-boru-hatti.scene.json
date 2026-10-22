@@ -1,0 +1,217 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "k-09-comprehension-boru-hatti",
+  "title": { "tr": "Comprehension Bir Boru Hattıdır: Hevesli ve Tembel", "en": "A Comprehension Is a Pipeline: Eager and Lazy" },
+  "summary": {
+    "tr": "Elemanların kaynaktan tek tek çıkıp filtreden geçmesi ve dönüştürülmesi; list comprehension'ın sonucu baştan kurması, generator ifadesinin ise değerleri sum istedikçe üretmesi.",
+    "en": "Elements leaving the source one by one, passing the filter and being transformed; a list comprehension building the whole result up front, while a generator expression produces values only as sum asks for them."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Soldan sağa bir boru hattı vardır: kaynak liste [1, 2, 3, 4, 5, 6], bir filtre (x % 2 == 0), bir dönüştürme (x * x) ve sağda sonuç. Tek sayılar filtrede elenip atılanlar kutusuna gider; çift sayılar karelenip sonuç listesine eklenir ve liste [4, 16, 36] olur. İkinci yarıda aynı hat generator ifadesiyle çalışır: sonuç listesi kaybolur, sağda sum tüketicisi belirir. sum her değer istediğinde hat yalnızca bir eleman işler; ara toplam 4, 20 ve 56 olur ve bellekte hiçbir zaman tam bir liste tutulmaz.",
+      "en": "A left-to-right pipeline: the source list [1, 2, 3, 4, 5, 6], a filter (x % 2 == 0), a transform (x * x) and the result on the right. Odd numbers are rejected by the filter and go to the discarded box; even numbers are squared and appended to the result list, which becomes [4, 16, 36]. In the second half the same pipeline runs as a generator expression: the result list disappears and a sum consumer appears on the right. Each time sum asks for a value the pipeline processes just one element; the running total becomes 4, 20 and 56 and a full list is never held in memory."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "kaynak", "kind": "storage", "label": { "tr": "kaynak: sayilar", "en": "source: sayilar" }, "sublabel": "[1, 2, 3, 4, 5, 6]", "x": 120, "y": 280, "w": 190, "h": 80 },
+    { "id": "filtre", "kind": "function", "label": { "tr": "filtre", "en": "filter" }, "sublabel": "if x % 2 == 0", "x": 360, "y": 280, "w": 170, "h": 80 },
+    { "id": "donustur", "kind": "function", "label": { "tr": "dönüştür", "en": "transform" }, "sublabel": "x * x", "x": 590, "y": 280, "w": 170, "h": 80 },
+    { "id": "liste", "kind": "db", "label": { "tr": "sonuç listesi", "en": "result list" }, "sublabel": "[]", "x": 850, "y": 160, "w": 190, "h": 80 },
+    { "id": "sum", "kind": "client", "label": { "tr": "tüketici: sum()", "en": "consumer: sum()" }, "sublabel": { "tr": "toplam = 0", "en": "total = 0" }, "x": 850, "y": 420, "w": 190, "h": 80 },
+    { "id": "atilan", "kind": "generic", "label": { "tr": "elenenler", "en": "rejected" }, "x": 360, "y": 480, "w": 170, "h": 60 }
+  ],
+  "edges": [
+    { "id": "k-f", "from": "kaynak", "to": "filtre", "kind": "data", "label": "x" },
+    { "id": "f-d", "from": "filtre", "to": "donustur", "kind": "data", "label": { "tr": "çift x", "en": "even x" } },
+    { "id": "d-l", "from": "donustur", "to": "liste", "kind": "data", "label": "append" },
+    { "id": "d-s", "from": "donustur", "to": "sum", "kind": "data", "label": "yield" },
+    { "id": "s-d", "from": "sum", "to": "donustur", "kind": "control", "style": "dotted", "curvature": 0.35, "label": "next()" },
+    { "id": "f-a", "from": "filtre", "to": "atilan", "kind": "data", "style": "dashed" }
+  ],
+  "steps": [
+    {
+      "id": "kurulum",
+      "title": { "tr": "Bir satır, üç parça", "en": "One line, three parts" },
+      "narration": {
+        "tr": "`kareler = [x * x for x in sayilar if x % 2 == 0]` aslında küçük bir boru hattıdır: `for x in sayilar` kaynağı dolaşır, `if` filtreler, baştaki `x * x` dönüştürür. Köşeli parantez sonucun bir **liste** olacağını söyler.",
+        "en": "`kareler = [x * x for x in sayilar if x % 2 == 0]` is really a small pipeline: `for x in sayilar` walks the source, `if` filters, and the leading `x * x` transforms. The square brackets say the result will be a **list**."
+      },
+      "durationMs": 3400,
+      "inherit": false,
+      "highlight": { "nodes": ["kaynak", "filtre", "donustur", "liste"], "edges": ["k-f", "f-d", "d-l"] },
+      "nodeStates": {
+        "sum": { "visible": false },
+        "atilan": { "status": "muted" }
+      },
+      "edgeStates": { "d-s": { "visible": false }, "s-d": { "visible": false } }
+    },
+    {
+      "id": "bir-elenir",
+      "title": { "tr": "x = 1 filtrede elenir", "en": "x = 1 is rejected by the filter" },
+      "narration": {
+        "tr": "Döngü ilk elemanı alır. `1 % 2 == 0` yanlış olduğu için 1 dönüştürmeye hiç ulaşmaz; `x * x` bu eleman için **hiç çalışmaz**. Filtre her zaman dönüştürmeden önce uygulanır.",
+        "en": "The loop takes the first element. `1 % 2 == 0` is false, so 1 never reaches the transform; `x * x` **never runs** for this element. The filter is always applied before the transform."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["filtre", "atilan"], "edges": ["k-f", "f-a"] },
+      "nodeStates": {
+        "kaynak": { "status": "active", "badge": "x=1" },
+        "filtre": { "status": "warning", "badge": "1 ✕" },
+        "atilan": { "status": "idle", "sublabel": "1" }
+      },
+      "edgeStates": { "k-f": { "status": "active" }, "f-a": { "status": "active" } },
+      "packets": [
+        { "edge": "k-f", "shape": "dot", "label": "1", "durationMs": 1000 },
+        { "edge": "f-a", "shape": "dot", "label": "1", "color": "danger", "startAt": 1200, "durationMs": 900 }
+      ]
+    },
+    {
+      "id": "iki-gecer",
+      "title": { "tr": "x = 2 geçer, 4 olur", "en": "x = 2 passes and becomes 4" },
+      "narration": {
+        "tr": "2 çift olduğu için filtreden geçer, `x * x` ile 4'e dönüşür ve sonuç listesine eklenir. Arka planda yorumlayıcı, döngüdeki `append` ile aynı işi yapar ama daha az bytecode ile.",
+        "en": "2 is even, so it passes the filter, becomes 4 via `x * x` and is appended to the result list. Behind the scenes the interpreter does the same job as `append` in a loop, but with less bytecode."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["filtre", "donustur", "liste"], "edges": ["k-f", "f-d", "d-l"] },
+      "nodeStates": {
+        "kaynak": { "badge": "x=2" },
+        "filtre": { "status": "success", "badge": "2 ✓" },
+        "donustur": { "status": "active", "badge": "4" },
+        "liste": { "status": "active", "sublabel": "[4]", "progress": 0.33 }
+      },
+      "edgeStates": { "f-a": { "status": "idle" }, "f-d": { "status": "active" }, "d-l": { "status": "active" } },
+      "packets": [
+        { "edge": "k-f", "shape": "dot", "label": "2", "durationMs": 900 },
+        { "edge": "f-d", "shape": "dot", "label": "2", "startAt": 1000, "durationMs": 900 },
+        { "edge": "d-l", "shape": "square", "label": "4", "color": "success", "startAt": 2000, "durationMs": 900 }
+      ]
+    },
+    {
+      "id": "kalanlar",
+      "title": { "tr": "Kalan elemanlar aynı yoldan", "en": "The remaining elements take the same path" },
+      "narration": {
+        "tr": "3 ve 5 elenir; 4 ve 6 geçip 16 ve 36 olur. Kaynağın her elemanı tam olarak bir kez dolaşılır. Sonuç listesi yavaş yavaş dolar.",
+        "en": "3 and 5 are rejected; 4 and 6 pass and become 16 and 36. Every element of the source is visited exactly once. The result list fills up gradually."
+      },
+      "durationMs": 4200,
+      "highlight": { "nodes": ["kaynak", "filtre", "donustur", "liste"], "edges": ["k-f", "f-d", "d-l", "f-a"] },
+      "nodeStates": {
+        "kaynak": { "badge": "x=6" },
+        "filtre": { "status": "active", "badge": "" },
+        "donustur": { "badge": "36" },
+        "liste": { "sublabel": "[4, 16, 36]", "progress": 1 },
+        "atilan": { "sublabel": "1, 3, 5" }
+      },
+      "edgeStates": { "f-a": { "status": "active" } },
+      "packets": [
+        { "edge": "k-f", "shape": "dot", "label": "3", "durationMs": 600 },
+        { "edge": "f-a", "shape": "dot", "label": "3", "color": "danger", "startAt": 650, "durationMs": 500 },
+        { "edge": "k-f", "shape": "dot", "label": "4", "startAt": 700, "durationMs": 600 },
+        { "edge": "f-d", "shape": "dot", "label": "4", "startAt": 1350, "durationMs": 600 },
+        { "edge": "d-l", "shape": "square", "label": "16", "color": "success", "startAt": 2000, "durationMs": 600 },
+        { "edge": "k-f", "shape": "dot", "label": "5", "startAt": 1400, "durationMs": 600 },
+        { "edge": "f-a", "shape": "dot", "label": "5", "color": "danger", "startAt": 2050, "durationMs": 500 },
+        { "edge": "k-f", "shape": "dot", "label": "6", "startAt": 2100, "durationMs": 600 },
+        { "edge": "f-d", "shape": "dot", "label": "6", "startAt": 2750, "durationMs": 600 },
+        { "edge": "d-l", "shape": "square", "label": "36", "color": "success", "startAt": 3400, "durationMs": 600 }
+      ]
+    },
+    {
+      "id": "hevesli",
+      "title": { "tr": "Hevesli: bütün sonuç bellekte", "en": "Eager: the whole result is in memory" },
+      "narration": {
+        "tr": "List comprehension **heveslidir** (eager): satır bittiğinde bütün sonuç tek seferde bellekte durur. Üç eleman için sorun değil; bir milyon satırlık bir dosya için bu, bir milyon nesnelik bir liste demektir.",
+        "en": "A list comprehension is **eager**: when the line finishes, the entire result sits in memory at once. Fine for three elements; for a file with a million lines it means a list of a million objects."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["liste"], "edges": [] },
+      "nodeStates": {
+        "kaynak": { "status": "idle", "badge": "" },
+        "filtre": { "status": "idle" },
+        "donustur": { "status": "idle", "badge": "" },
+        "liste": { "status": "success", "badge": "3 nesne" },
+        "atilan": { "status": "muted" }
+      },
+      "edgeStates": { "k-f": { "status": "idle" }, "f-d": { "status": "idle" }, "d-l": { "status": "idle" }, "f-a": { "status": "idle" } },
+      "annotations": [
+        { "id": "bellek", "x": 850, "y": 60, "text": { "tr": "tamamı aynı anda bellekte", "en": "all of it in memory at once" }, "target": "liste", "tone": "warning" }
+      ]
+    },
+    {
+      "id": "tembel-kurulum",
+      "title": { "tr": "Generator ifadesi: henüz hiçbir şey olmadı", "en": "Generator expression: nothing has happened yet" },
+      "narration": {
+        "tr": "Şimdi `sum(x * x for x in sayilar if x % 2 == 0)` yazalım. Parantezler bir **generator** üretir; hat kurulur ama tek bir eleman bile işlenmez. Sonuç listesi hiç oluşturulmaz; onun yerine değerleri isteyen bir tüketici, `sum`, vardır.",
+        "en": "Now write `sum(x * x for x in sayilar if x % 2 == 0)`. The parentheses produce a **generator**; the pipeline is set up but not a single element is processed. No result list is ever built; instead there is a consumer, `sum`, that asks for values."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["sum", "donustur"], "edges": ["d-s", "s-d"] },
+      "nodeStates": {
+        "liste": { "visible": false },
+        "sum": { "visible": true, "status": "idle" },
+        "atilan": { "sublabel": "" },
+        "filtre": { "status": "muted" },
+        "donustur": { "status": "muted", "label": { "tr": "generator", "en": "generator" }, "sublabel": { "tr": "askıda", "en": "suspended" } }
+      },
+      "edgeStates": { "d-l": { "visible": false }, "d-s": { "visible": true, "status": "idle" }, "s-d": { "visible": true, "status": "idle" } }
+    },
+    {
+      "id": "ilk-next",
+      "title": { "tr": "sum ilk değeri ister", "en": "sum asks for the first value" },
+      "narration": {
+        "tr": "`sum` bir değer için `next()` çağırır. Hat ancak şimdi çalışır: 1'i alıp eler, 2'yi alıp 4'e çevirir ve onu **verir** (yield), sonra tekrar askıya alınır. Ara toplam 4'tür; 3, 4, 5, 6 henüz kaynaktan çıkmadı.",
+        "en": "`sum` calls `next()` for a value. Only now does the pipeline run: it takes 1 and rejects it, takes 2, turns it into 4 and **yields** it, then suspends again. The running total is 4; 3, 4, 5, 6 have not left the source yet."
+      },
+      "durationMs": 4200,
+      "highlight": { "nodes": ["sum", "filtre", "donustur"], "edges": ["s-d", "k-f", "f-d", "d-s"] },
+      "nodeStates": {
+        "sum": { "status": "active", "sublabel": { "tr": "toplam = 4", "en": "total = 4" }, "counter": 4 },
+        "filtre": { "status": "active" },
+        "donustur": { "status": "active", "sublabel": { "tr": "4 verildi, askıda", "en": "yielded 4, suspended" } },
+        "kaynak": { "badge": "x=2" }
+      },
+      "edgeStates": { "s-d": { "status": "active" }, "d-s": { "status": "active" } },
+      "packets": [
+        { "edge": "s-d", "shape": "diamond", "label": "next()", "durationMs": 700 },
+        { "edge": "k-f", "shape": "dot", "label": "1", "startAt": 750, "durationMs": 500 },
+        { "edge": "f-a", "shape": "dot", "label": "1", "color": "danger", "startAt": 1300, "durationMs": 500 },
+        { "edge": "k-f", "shape": "dot", "label": "2", "startAt": 1350, "durationMs": 500 },
+        { "edge": "f-d", "shape": "dot", "label": "2", "startAt": 1900, "durationMs": 600 },
+        { "edge": "d-s", "shape": "square", "label": "4", "color": "success", "startAt": 2600, "durationMs": 800 }
+      ]
+    },
+    {
+      "id": "tuketim-biter",
+      "title": { "tr": "Birer birer: 20, 56, bitti", "en": "One at a time: 20, 56, done" },
+      "narration": {
+        "tr": "Her `next()` hattı bir sonraki çift sayıya kadar ilerletir: toplam önce 20, sonra 56 olur. Kaynak bitince generator `StopIteration` fırlatır ve `sum` 56 döndürür. Bellekte hiçbir an tam bir liste yoktu; aynı anda yalnızca bir değer taşındı.",
+        "en": "Each `next()` advances the pipeline to the next even number: the total becomes 20, then 56. When the source runs out the generator raises `StopIteration` and `sum` returns 56. At no moment was a full list in memory; only one value travelled at a time."
+      },
+      "durationMs": 4200,
+      "highlight": { "nodes": ["sum"], "edges": ["d-s", "s-d"] },
+      "nodeStates": {
+        "kaynak": { "badge": "x=6" },
+        "filtre": { "status": "idle" },
+        "donustur": { "status": "muted", "sublabel": "StopIteration" },
+        "sum": { "status": "success", "sublabel": { "tr": "toplam = 56", "en": "total = 56" }, "counter": 56, "badge": "56" },
+        "atilan": { "sublabel": "1, 3, 5" }
+      },
+      "packets": [
+        { "edge": "s-d", "shape": "diamond", "label": "next()", "durationMs": 600 },
+        { "edge": "d-s", "shape": "square", "label": "16", "color": "success", "startAt": 700, "durationMs": 700 },
+        { "edge": "s-d", "shape": "diamond", "label": "next()", "startAt": 1500, "durationMs": 600 },
+        { "edge": "d-s", "shape": "square", "label": "36", "color": "success", "startAt": 2200, "durationMs": 700 },
+        { "edge": "s-d", "shape": "diamond", "label": "next()", "startAt": 3000, "durationMs": 600 }
+      ],
+      "annotations": [
+        { "id": "tek-deger", "x": 600, "y": 560, "text": { "tr": "aynı anda tek değer: bellek sabit", "en": "one value at a time: constant memory" }, "target": "sum", "tone": "success" }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["python", "comprehension", "generator-expression", "lazy-evaluation"]
+}

@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 420" role="img" aria-labelledby="title desc" font-family="inherit">
+  <title id="title">Sınıf nesnesi ve örnekleri</title>
+  <desc id="desc">Üstte Hesap sınıf nesnesi: sınıf niteliği tur ve metotlar __init__ ile yatir. Altta iki örnek, ada ve linus; her birinin kendi __dict__ sözlüğünde sahip ve bakiye değerleri var. Her örnek __class__ okuyla sınıfı gösterir. Soldaki ada ve linus isimleri örneklere bağlıdır. Nitelik araması önce örnekte, bulunamazsa sınıfta yapılır.</desc>
+  <defs>
+    <marker id="ok" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-muted, #64748b)"/>
+    </marker>
+    <marker id="ok-p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--da-primary, #6366f1)"/>
+    </marker>
+  </defs>
+
+  <!-- Sınıf nesnesi -->
+  <rect x="300" y="24" width="320" height="140" rx="14" fill="var(--da-primary, #6366f1)" fill-opacity="0.12" stroke="var(--da-primary, #6366f1)" stroke-width="2"/>
+  <text x="460" y="52" text-anchor="middle" font-size="16" font-weight="600" fill="var(--da-primary, #6366f1)">Hesap (sınıf nesnesi)</text>
+  <line x1="316" y1="64" x2="604" y2="64" stroke="var(--da-border, #cbd5e1)"/>
+  <g font-size="13" fill="var(--da-fg, #0f172a)">
+    <text x="324" y="88">tur = "vadesiz"</text>
+    <text x="324" y="112">__init__(self, sahip, bakiye)</text>
+    <text x="324" y="136">yatir(self, tutar)</text>
+  </g>
+  <text x="600" y="88" text-anchor="end" font-size="11" fill="var(--da-muted, #64748b)">sınıf niteliği</text>
+  <text x="600" y="124" text-anchor="end" font-size="11" fill="var(--da-muted, #64748b)">metotlar</text>
+
+  <!-- Örnekler -->
+  <g>
+    <rect x="200" y="250" width="240" height="120" rx="12" fill="var(--da-surface, #f8fafc)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5"/>
+    <text x="320" y="276" text-anchor="middle" font-size="15" font-weight="600" fill="var(--da-fg, #0f172a)">örnek #1</text>
+    <text x="216" y="302" font-size="12" fill="var(--da-muted, #64748b)">__dict__</text>
+    <text x="216" y="326" font-size="13" fill="var(--da-fg, #0f172a)">sahip = "Ada"</text>
+    <text x="216" y="350" font-size="13" fill="var(--da-fg, #0f172a)">bakiye = 125</text>
+  </g>
+  <g>
+    <rect x="500" y="250" width="240" height="120" rx="12" fill="var(--da-surface, #f8fafc)" stroke="var(--da-fg, #0f172a)" stroke-width="1.5"/>
+    <text x="620" y="276" text-anchor="middle" font-size="15" font-weight="600" fill="var(--da-fg, #0f172a)">örnek #2</text>
+    <text x="516" y="302" font-size="12" fill="var(--da-muted, #64748b)">__dict__</text>
+    <text x="516" y="326" font-size="13" fill="var(--da-fg, #0f172a)">sahip = "Linus"</text>
+    <text x="516" y="350" font-size="13" fill="var(--da-fg, #0f172a)">bakiye = 60</text>
+  </g>
+
+  <!-- __class__ okları -->
+  <g stroke="var(--da-primary, #6366f1)" stroke-width="1.8" fill="none" marker-end="url(#ok-p)">
+    <path d="M 320 250 C 320 210, 380 200, 410 166"/>
+    <path d="M 620 250 C 620 210, 540 200, 510 166"/>
+  </g>
+  <text x="300" y="214" font-size="12" fill="var(--da-primary, #6366f1)" text-anchor="end">__class__</text>
+  <text x="640" y="214" font-size="12" fill="var(--da-primary, #6366f1)">__class__</text>
+
+  <!-- İsimler -->
+  <g font-size="14" fill="var(--da-fg, #0f172a)">
+    <rect x="40" y="290" width="90" height="40" rx="8" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+    <text x="85" y="315" text-anchor="middle">ada</text>
+    <rect x="780" y="290" width="90" height="40" rx="8" fill="var(--da-surface, #ffffff)" stroke="var(--da-border, #cbd5e1)"/>
+    <text x="825" y="315" text-anchor="middle">linus</text>
+  </g>
+  <g stroke="var(--da-muted, #64748b)" stroke-width="1.6" fill="none" marker-end="url(#ok)">
+    <path d="M 130 310 L 198 310"/>
+    <path d="M 780 310 L 742 310"/>
+  </g>
+
+  <!-- Arama sırası notu -->
+  <rect x="200" y="384" width="540" height="28" rx="8" fill="var(--da-accent, #f59e0b)" fill-opacity="0.12" stroke="var(--da-accent, #f59e0b)"/>
+  <text x="470" y="403" text-anchor="middle" font-size="13" fill="var(--da-fg, #0f172a)">ada.tur okunurken: örnek → sınıf · ada.tur = ... her zaman örneğe yazar</text>
+</svg>

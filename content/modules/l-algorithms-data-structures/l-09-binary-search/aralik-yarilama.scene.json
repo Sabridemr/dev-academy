@@ -1,0 +1,694 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "l-09-aralik-yarilama",
+  "title": {
+    "tr": "İkili arama aralığı yarılıyor",
+    "en": "Binary search halves the range"
+  },
+  "summary": {
+    "tr": "Sıralı dizide olmayan bir değerin aranması: aralığın her turda yarılanması, boşalan aralıkta sol'un ekleme yerini göstermesi ve sag = orta hatasının sonsuz döngüsü.",
+    "en": "Searching a sorted array for a missing value: the range halving each round, sol marking the insertion point when the range empties, and the infinite loop caused by the sag = orta bug."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Üstte bir karşılaştırma kutusu, altında 3, 8, 12, 17, 23, 31, 42, 56 değerli sekiz hücre vardır; hedef 20'dir. Başta sol işaretçisi indeks 0'da, sag indeks 7'dedir. Tur 1'de orta indeks 3'teki 17 hedeften küçüktür ve ilk dört hücre grileşir. Tur 2'de orta indeks 5'teki 31 hedeften büyüktür ve son üç hücre grileşir. Tur 3'te tek aday olan indeks 4'teki 23 de büyüktür; sag 3'e iner, sol 4'te kalır, aralık boşalır ve sonuç −1 olur; sol'un 20'nin ekleneceği yeri gösterdiği belirtilir. Ardından sag = orta yazılırsa indeks 4'te aralığın daralmadığı ve sonsuz döngü oluştuğu kırmızıyla gösterilir. Son adım 8 elemanda 3 karşılaştırma yapıldığını ve maliyetin O(log n) olduğunu özetler.",
+      "en": "A compare box sits above eight cells holding 3, 8, 12, 17, 23, 31, 42, 56; the target is 20. Initially sol is at index 0 and sag at index 7. In round 1 the middle value 17 at index 3 is smaller than the target and the first four cells grey out. In round 2 the middle value 31 at index 5 is larger and the last three cells grey out. In round 3 the only candidate, 23 at index 4, is also larger; sag drops to 3, sol stays at 4, the range empties and the result is −1, and sol is shown to mark where 20 would be inserted. Then, in red, writing sag = orta is shown to keep the range stuck at index 4 in an infinite loop. The last step notes 3 comparisons for 8 elements and an O(log n) cost."
+    }
+  },
+  "canvas": {
+    "width": 1000,
+    "height": 600
+  },
+  "nodes": [
+    {
+      "id": "cmp",
+      "kind": "function",
+      "label": {
+        "tr": "karşılaştır",
+        "en": "compare"
+      },
+      "x": 500,
+      "y": 110,
+      "w": 270,
+      "h": 74,
+      "sublabel": {
+        "tr": "hedef = 20",
+        "en": "target = 20"
+      }
+    },
+    {
+      "id": "c0",
+      "kind": "generic",
+      "label": "3",
+      "x": 95,
+      "y": 330,
+      "w": 96,
+      "h": 56,
+      "sublabel": "[0]"
+    },
+    {
+      "id": "c1",
+      "kind": "generic",
+      "label": "8",
+      "x": 210,
+      "y": 330,
+      "w": 96,
+      "h": 56,
+      "sublabel": "[1]"
+    },
+    {
+      "id": "c2",
+      "kind": "generic",
+      "label": "12",
+      "x": 325,
+      "y": 330,
+      "w": 96,
+      "h": 56,
+      "sublabel": "[2]"
+    },
+    {
+      "id": "c3",
+      "kind": "generic",
+      "label": "17",
+      "x": 440,
+      "y": 330,
+      "w": 96,
+      "h": 56,
+      "sublabel": "[3]"
+    },
+    {
+      "id": "c4",
+      "kind": "generic",
+      "label": "23",
+      "x": 555,
+      "y": 330,
+      "w": 96,
+      "h": 56,
+      "sublabel": "[4]"
+    },
+    {
+      "id": "c5",
+      "kind": "generic",
+      "label": "31",
+      "x": 670,
+      "y": 330,
+      "w": 96,
+      "h": 56,
+      "sublabel": "[5]"
+    },
+    {
+      "id": "c6",
+      "kind": "generic",
+      "label": "42",
+      "x": 785,
+      "y": 330,
+      "w": 96,
+      "h": 56,
+      "sublabel": "[6]"
+    },
+    {
+      "id": "c7",
+      "kind": "generic",
+      "label": "56",
+      "x": 900,
+      "y": 330,
+      "w": 96,
+      "h": 56,
+      "sublabel": "[7]"
+    }
+  ],
+  "edges": [
+    {
+      "id": "e0",
+      "from": "c0",
+      "to": "cmp",
+      "kind": "data"
+    },
+    {
+      "id": "e1",
+      "from": "c1",
+      "to": "cmp",
+      "kind": "data"
+    },
+    {
+      "id": "e2",
+      "from": "c2",
+      "to": "cmp",
+      "kind": "data"
+    },
+    {
+      "id": "e3",
+      "from": "c3",
+      "to": "cmp",
+      "kind": "data"
+    },
+    {
+      "id": "e4",
+      "from": "c4",
+      "to": "cmp",
+      "kind": "data"
+    },
+    {
+      "id": "e5",
+      "from": "c5",
+      "to": "cmp",
+      "kind": "data"
+    },
+    {
+      "id": "e6",
+      "from": "c6",
+      "to": "cmp",
+      "kind": "data"
+    },
+    {
+      "id": "e7",
+      "from": "c7",
+      "to": "cmp",
+      "kind": "data"
+    }
+  ],
+  "steps": [
+    {
+      "id": "intro",
+      "title": {
+        "tr": "Sıralı dizide 20'yi ara",
+        "en": "Search for 20 in a sorted array"
+      },
+      "narration": {
+        "tr": "Sekiz elemanlı sıralı dizide 20'yi arıyoruz (dizide yok). Kapalı aralık `[sol, sag]` kullanıyoruz: başta tüm dizi aday, `sol = 0`, `sag = 7`.",
+        "en": "We search the eight-element sorted array for 20 (it is not there). We use the closed range `[sol, sag]`: at first the whole array is a candidate, `sol = 0`, `sag = 7`."
+      },
+      "durationMs": 3200,
+      "inherit": false,
+      "highlight": {
+        "nodes": [
+          "c0",
+          "c1",
+          "c2",
+          "c3",
+          "c4",
+          "c5",
+          "c6",
+          "c7"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "c0": {
+          "badge": "sol"
+        },
+        "c7": {
+          "badge": "sag"
+        }
+      },
+      "edgeStates": {
+        "e0": {
+          "visible": false
+        },
+        "e1": {
+          "visible": false
+        },
+        "e2": {
+          "visible": false
+        },
+        "e3": {
+          "visible": false
+        },
+        "e4": {
+          "visible": false
+        },
+        "e5": {
+          "visible": false
+        },
+        "e6": {
+          "visible": false
+        },
+        "e7": {
+          "visible": false
+        }
+      },
+      "annotations": [
+        {
+          "id": "a-aday",
+          "x": 500,
+          "y": 440,
+          "text": {
+            "tr": "8 aday",
+            "en": "8 candidates"
+          }
+        }
+      ]
+    },
+    {
+      "id": "r1",
+      "title": {
+        "tr": "Tur 1: orta = 3 → 17 < 20",
+        "en": "Round 1: mid = 3 → 17 < 20"
+      },
+      "narration": {
+        "tr": "`orta = (0 + 7) // 2 = 3`. dizi[3] = 17, hedeften küçük. Dizi sıralı olduğu için 17 ve solundaki her şey 20'den küçük: bu dört aday elenecek.",
+        "en": "`orta = (0 + 7) // 2 = 3`. dizi[3] = 17, smaller than the target. Because the array is sorted, 17 and everything to its left is below 20: these four candidates will be dropped."
+      },
+      "durationMs": 3000,
+      "highlight": {
+        "nodes": [
+          "c3",
+          "cmp"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "c3": {
+          "badge": "orta",
+          "status": "active"
+        },
+        "cmp": {
+          "badge": "17 < 20",
+          "status": "warning"
+        }
+      },
+      "edgeStates": {
+        "e0": {
+          "visible": false
+        },
+        "e1": {
+          "visible": false
+        },
+        "e2": {
+          "visible": false
+        },
+        "e3": {
+          "visible": true,
+          "status": "active"
+        },
+        "e4": {
+          "visible": false
+        },
+        "e5": {
+          "visible": false
+        },
+        "e6": {
+          "visible": false
+        },
+        "e7": {
+          "visible": false
+        }
+      },
+      "packets": [
+        {
+          "edge": "e3",
+          "label": "17",
+          "durationMs": 900
+        }
+      ]
+    },
+    {
+      "id": "r2",
+      "title": {
+        "tr": "sol = orta + 1; tur 2: 31 > 20",
+        "en": "sol = orta + 1; round 2: 31 > 20"
+      },
+      "narration": {
+        "tr": "Ortayı da eleyerek `sol = 4` olur; 4 aday kaldı. Yeni `orta = (4 + 7) // 2 = 5`, dizi[5] = 31 hedeften büyük. Bu kez sağ yarı elenecek.",
+        "en": "Dropping the middle as well, `sol = 4`; 4 candidates remain. The new `orta = (4 + 7) // 2 = 5`, and dizi[5] = 31 is larger than the target. This time the right half goes."
+      },
+      "durationMs": 3200,
+      "highlight": {
+        "nodes": [
+          "c5",
+          "cmp"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "c0": {
+          "status": "muted",
+          "badge": ""
+        },
+        "c1": {
+          "status": "muted",
+          "badge": ""
+        },
+        "c2": {
+          "status": "muted",
+          "badge": ""
+        },
+        "c3": {
+          "status": "muted",
+          "badge": ""
+        },
+        "c4": {
+          "badge": "sol"
+        },
+        "c5": {
+          "badge": "orta",
+          "status": "active"
+        },
+        "cmp": {
+          "badge": "31 > 20"
+        }
+      },
+      "edgeStates": {
+        "e0": {
+          "visible": false
+        },
+        "e1": {
+          "visible": false
+        },
+        "e2": {
+          "visible": false
+        },
+        "e3": {
+          "visible": false
+        },
+        "e4": {
+          "visible": false
+        },
+        "e5": {
+          "visible": true,
+          "status": "active"
+        },
+        "e6": {
+          "visible": false
+        },
+        "e7": {
+          "visible": false
+        }
+      },
+      "packets": [
+        {
+          "edge": "e5",
+          "label": "31",
+          "durationMs": 900
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a-aday",
+          "x": 500,
+          "y": 440,
+          "text": {
+            "tr": "4 aday",
+            "en": "4 candidates"
+          }
+        }
+      ]
+    },
+    {
+      "id": "r3",
+      "title": {
+        "tr": "sag = orta − 1; tur 3: 23 > 20",
+        "en": "sag = orta − 1; round 3: 23 > 20"
+      },
+      "narration": {
+        "tr": "`sag = 4` olur; artık `sol = sag = 4`, tek aday kaldı. Kapalı aralıkta bu hâlâ geçerli bir aday olduğu için döngü koşulu `sol <= sag` olmalıdır. dizi[4] = 23 > 20.",
+        "en": "`sag = 4`; now `sol = sag = 4` and one candidate is left. In a closed range this is still a valid candidate, which is why the loop condition must be `sol <= sag`. dizi[4] = 23 > 20."
+      },
+      "durationMs": 3200,
+      "highlight": {
+        "nodes": [
+          "c4",
+          "cmp"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "c5": {
+          "status": "muted",
+          "badge": ""
+        },
+        "c6": {
+          "status": "muted",
+          "badge": ""
+        },
+        "c7": {
+          "status": "muted",
+          "badge": ""
+        },
+        "c4": {
+          "badge": "sol=sag",
+          "status": "active"
+        },
+        "cmp": {
+          "badge": "23 > 20"
+        }
+      },
+      "edgeStates": {
+        "e0": {
+          "visible": false
+        },
+        "e1": {
+          "visible": false
+        },
+        "e2": {
+          "visible": false
+        },
+        "e3": {
+          "visible": false
+        },
+        "e4": {
+          "visible": true,
+          "status": "active"
+        },
+        "e5": {
+          "visible": false
+        },
+        "e6": {
+          "visible": false
+        },
+        "e7": {
+          "visible": false
+        }
+      },
+      "packets": [
+        {
+          "edge": "e4",
+          "label": "23",
+          "durationMs": 900
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a-aday",
+          "x": 500,
+          "y": 440,
+          "text": {
+            "tr": "1 aday",
+            "en": "1 candidate"
+          }
+        }
+      ]
+    },
+    {
+      "id": "bos",
+      "title": {
+        "tr": "Aralık boşaldı: −1",
+        "en": "The range is empty: −1"
+      },
+      "narration": {
+        "tr": "`sag = orta − 1 = 3` olur ve `sol = 4 > sag = 3`: aralık boş, 20 dizide **yok**, fonksiyon −1 döner. Bir bonus: döngü bittiğinde `sol`, 20'nin sırayı bozmadan **ekleneceği yeri** (alt sınırı) gösterir.",
+        "en": "`sag = orta − 1 = 3`, so `sol = 4 > sag = 3`: the range is empty, 20 is **not** in the array and the function returns −1. A bonus: when the loop ends, `sol` points to **where 20 would be inserted** to keep the order (the lower bound)."
+      },
+      "durationMs": 3500,
+      "highlight": {
+        "nodes": [
+          "c3",
+          "c4",
+          "cmp"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "c4": {
+          "status": "muted",
+          "badge": "sol"
+        },
+        "c3": {
+          "badge": "sag",
+          "status": "muted"
+        },
+        "cmp": {
+          "badge": "-1",
+          "status": "idle"
+        }
+      },
+      "edgeStates": {
+        "e0": {
+          "visible": false
+        },
+        "e1": {
+          "visible": false
+        },
+        "e2": {
+          "visible": false
+        },
+        "e3": {
+          "visible": false
+        },
+        "e4": {
+          "visible": false
+        },
+        "e5": {
+          "visible": false
+        },
+        "e6": {
+          "visible": false
+        },
+        "e7": {
+          "visible": false
+        }
+      },
+      "annotations": [
+        {
+          "id": "a-ekle",
+          "x": 400,
+          "y": 440,
+          "text": {
+            "tr": "sol = 4: 20 buraya eklenir",
+            "en": "sol = 4: insert 20 here"
+          },
+          "target": "c4",
+          "tone": "success"
+        }
+      ]
+    },
+    {
+      "id": "hata",
+      "title": {
+        "tr": "Sınır hatası: sag = orta",
+        "en": "Boundary bug: sag = orta"
+      },
+      "narration": {
+        "tr": "Aynı kodda `sag = orta - 1` yerine `sag = orta` yazılsaydı ne olurdu? `sol = sag = 4` durumunda orta yine 4, 23 > 20 ve `sag = 4`: aralık **hiç daralmaz** ve döngü sonsuza kadar döner. Kapalı aralıkta ortayı elemeyi unutmak klasik bir hatadır.",
+        "en": "What if the same code said `sag = orta` instead of `sag = orta - 1`? With `sol = sag = 4` the middle is 4 again, 23 > 20 and `sag = 4`: the range **never shrinks** and the loop runs forever. Forgetting to drop the middle in a closed range is a classic bug."
+      },
+      "durationMs": 3500,
+      "highlight": {
+        "nodes": [
+          "c4",
+          "cmp"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "c3": {
+          "badge": ""
+        },
+        "c4": {
+          "badge": "∞",
+          "status": "error"
+        },
+        "cmp": {
+          "badge": "23 > 20",
+          "status": "error"
+        }
+      },
+      "edgeStates": {
+        "e0": {
+          "visible": false
+        },
+        "e1": {
+          "visible": false
+        },
+        "e2": {
+          "visible": false
+        },
+        "e3": {
+          "visible": false
+        },
+        "e4": {
+          "visible": true,
+          "status": "active"
+        },
+        "e5": {
+          "visible": false
+        },
+        "e6": {
+          "visible": false
+        },
+        "e7": {
+          "visible": false
+        }
+      },
+      "packets": [
+        {
+          "edge": "e4",
+          "label": "23",
+          "durationMs": 600,
+          "repeat": 3,
+          "repeatGapMs": 150
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a-sonsuz",
+          "x": 500,
+          "y": 440,
+          "text": {
+            "tr": "sag = orta → sonsuz döngü",
+            "en": "sag = orta → infinite loop"
+          },
+          "tone": "danger"
+        }
+      ]
+    },
+    {
+      "id": "ozet",
+      "title": {
+        "tr": "Her turda yarı",
+        "en": "Half per round"
+      },
+      "narration": {
+        "tr": "Her tur aday sayısını yarıya indirdi: 8 → 4 → 1 → 0, yani 3 karşılaştırma. n eleman için en fazla yaklaşık log₂ n + 1 tur gerekir: bir milyon elemanda 20 civarı. Doğru yazmanın anahtarı, aralığın kapalı mı yarı açık mı olduğuna karar verip güncellemeleri buna göre seçmektir.",
+        "en": "Each round halved the candidates: 8 → 4 → 1 → 0, three comparisons. n elements need at most about log₂ n + 1 rounds: around 20 for a million. The key to getting it right is deciding whether the range is closed or half-open and choosing the updates to match."
+      },
+      "durationMs": 3500,
+      "highlight": {
+        "nodes": [
+          "cmp"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "c4": {
+          "status": "muted",
+          "badge": ""
+        },
+        "cmp": {
+          "badge": "O(log n)",
+          "status": "success"
+        }
+      },
+      "edgeStates": {
+        "e0": {
+          "visible": false
+        },
+        "e1": {
+          "visible": false
+        },
+        "e2": {
+          "visible": false
+        },
+        "e3": {
+          "visible": false
+        },
+        "e4": {
+          "visible": false
+        },
+        "e5": {
+          "visible": false
+        },
+        "e6": {
+          "visible": false
+        },
+        "e7": {
+          "visible": false
+        }
+      }
+    }
+  ],
+  "tags": [
+    "ikili-arama"
+  ]
+}

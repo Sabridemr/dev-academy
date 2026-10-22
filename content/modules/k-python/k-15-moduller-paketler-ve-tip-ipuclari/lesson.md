@@ -82,6 +82,14 @@ from math import *
 `from math import sqrt` da modülün **tamamını** yükler ve çalıştırır; yalnızca senin isim alanına `sqrt` adını
 ekler. Yani "sadece bir fonksiyonu içe aktarıp hız kazanmak" diye bir şey yoktur.
 
+Yukarıdaki dört adımı, import mekanizmasının parçaları arasında dolaşan mesajlar olarak izle: önbellek, bulucu,
+yükleyici ve sonunda oluşan modül nesnesi.
+
+:::animation{scene="import-sistemi.scene.json"}
+Boş modülün kod çalışmadan önce `sys.modules`'e girdiğine ve ikinci `import`'ta bulucu ile yükleyicinin hiç
+çalışmadığına dikkat et.
+:::
+
 ## if __name__ == "__main__"
 
 Python her modüle `__name__` adlı özel bir değişken verir:
@@ -134,6 +142,10 @@ magaza/
   (`.` aynı paket, `..` bir üst paket). Yalnızca paket içindeki modüllerde çalışır; doğrudan
   `python3 kart.py` diye çalıştırılan dosyada "no known parent package" hatası verir. Paket içindeki bir modülü
   çalıştırmak için `python3 -m magaza.odeme.kart` kullan.
+
+:::diagram{src="paket-yapisi.svg" alt="magaza paketinin klasör ağacı, dosya yollarının noktalı modül adlarına karşılığı ve kart.py içinden para modülüne mutlak ve göreli import yolları|Folder tree of the magaza package, how file paths map to dotted module names, and absolute and relative import paths from kart.py to the para module"}
+Klasör yolu noktalı modül adına dönüşür; `magaza.odeme.kart` içe aktarılırken önce üst paketlerin `__init__.py` dosyaları çalışır.
+:::
 
 :::callout{tone="warning" title="Döngüsel import tuzağı"}
 `siparis.py` başında `from magaza.musteri import Musteri`, `musteri.py` başında `from magaza.siparis import Siparis`
@@ -427,6 +439,23 @@ siparis_onayla(Yazici())            # mypy: Argument 1 to "siparis_onayla" has i
 `siparis_onayla` fonksiyonu hangi somut sınıfla çalıştığını bilmez; yalnızca "gonder metodu olan bir şey" ister.
 Bu, bir sonraki dersin konusu olan **dependency injection**'ın temelidir: fonksiyon ya da sınıf somut bir
 e-posta servisine değil, bir **arayüze** bağımlı olur; testte o arayüze uyan sahte bir nesne verirsin.
+
+:::realworld{company="Instagram"}
+Instagram'ın sunucu tarafı, yıllar içinde büyüyen tek bir Django kod tabanıdır ve Python 3'e geçişini tamamladıktan
+sonra ekip tip ipuçlarına yöneldi. Milyonlarca satırlık, tipsiz yazılmış bir koda elle açıklama eklemek pratik
+olmadığı için Instagram mühendisleri **MonkeyType** adlı aracı geliştirip 2017'de açık kaynak olarak yayımladı.
+MonkeyType, kod çalışırken (ör. testler ya da gerçek trafik sırasında) fonksiyonlara gerçekte hangi türde
+argümanların geldiğini ve ne döndürdüklerini kaydeder; ardından bu kayıtlardan taslak tip açıklamaları üretip
+kaynağa ya da `.pyi` dosyalarına yazabilir.
+
+Bu, derste anlattığımız **kademeli tiplemenin** büyük ölçekteki karşılığıdır: tip ipuçları çalışma zamanında
+zorlanmaz, ama bir kez eklendiklerinde mypy ya da Meta'nın kendi denetleyicisi Pyre gibi statik araçlar onları
+okuyup hataları kod çalışmadan yakalar. Üretilen açıklamalar körü körüne kabul edilmez; geliştirici onları gözden
+geçirip daha genel bir tür (ör. somut `list` yerine `Iterable`) ya da bir `Protocol` seçer. Modüller ve paketler
+de bu süreçte önemlidir: tip denetleyicisi, `from magaza.ortak.para import Para` gibi mutlak import'ları izleyerek
+bir modüldeki türü diğerinde doğrular. Ders boyunca gördüğün araçlar, yani paket yapısı, mutlak import'lar ve tip
+ipuçları, büyük bir Python kod tabanının bakımını mümkün kılan aynı parçalardır.
+:::
 
 ## Özet
 

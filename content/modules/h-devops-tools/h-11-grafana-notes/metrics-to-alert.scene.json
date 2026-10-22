@@ -1,0 +1,195 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "prometheus-scrape-to-alert",
+  "title": { "tr": "Metrikten Alarma: Kazıma, Sorgu, Panel, Bildirim", "en": "From Metric to Alert: Scrape, Query, Panel, Notify" },
+  "summary": {
+    "tr": "Prometheus hedefleri kazır ve zaman serisi saklar; Grafana PromQL ile panel çizer; alert kuralı önce pending, süre dolunca firing olur; Alertmanager uyarıyı etiketlerine göre Slack'e ve nöbetçiye yönlendirir; sorun düzelince uyarı çözülür.",
+    "en": "Prometheus scrapes targets and stores time series; Grafana draws panels with PromQL; an alert rule goes pending first and firing once the duration passes; Alertmanager routes the alert by its labels to Slack and the on-call engineer; once the problem is fixed the alert resolves."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda iki API pod'u ve node_exporter, ortada Prometheus, sağ üstte Grafana ve onu izleyen mühendis, sağ altta Alertmanager, Slack kanalı ve nöbetçinin telefonu bulunur. Adımlarda Prometheus üç hedefi kazır, değerler zaman serisi olarak saklanır, Grafana sorgu gönderip panel çizer, api-2'de hata oranı artınca kural pending olur, beş dakika sonra firing olup Alertmanager'a gider, Alertmanager Slack'e ve nöbetçiye bildirir, mühendis panelde instance bazında kırılıma bakıp api-2'yi bulur ve düzeltme sonrası uyarı çözülür.",
+      "en": "Two API pods and node_exporter are on the left, Prometheus in the middle, Grafana and the engineer watching it at the top right, and Alertmanager, a Slack channel and the on-call phone at the bottom right. Over the steps Prometheus scrapes three targets, values are stored as time series, Grafana sends queries and draws a panel, the rule goes pending when api-2's error rate rises, fires after five minutes and goes to Alertmanager, Alertmanager notifies Slack and the on-call engineer, the engineer breaks the panel down by instance to find api-2, and the alert resolves after the fix."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "api1", "kind": "pod", "label": "api-1", "sublabel": "/metrics", "x": 110, "y": 140, "w": 150, "h": 60 },
+    { "id": "api2", "kind": "pod", "label": "api-2", "sublabel": "/metrics", "x": 110, "y": 300, "w": 150, "h": 60 },
+    { "id": "node", "kind": "server", "label": "node_exporter", "sublabel": ":9100", "x": 110, "y": 460, "w": 170, "h": 60 },
+    { "id": "prom", "kind": "service", "label": "Prometheus", "sublabel": "TSDB · kurallar", "x": 420, "y": 300, "w": 180, "h": 80, "color": "primary" },
+    { "id": "grafana", "kind": "service", "label": "Grafana", "sublabel": { "tr": "panel", "en": "dashboard" }, "x": 690, "y": 120, "w": 160, "h": 64 },
+    { "id": "eng", "kind": "user", "label": { "tr": "Mühendis", "en": "Engineer" }, "x": 900, "y": 120, "w": 130, "h": 60 },
+    { "id": "am", "kind": "queue", "label": "Alertmanager", "sublabel": "group · route", "x": 690, "y": 420, "w": 180, "h": 70 },
+    { "id": "slack", "kind": "client", "label": "Slack #alerts", "x": 900, "y": 340, "w": 150, "h": 56 },
+    { "id": "pager", "kind": "mobile", "label": { "tr": "Nöbetçi", "en": "On-call" }, "sublabel": "PagerDuty", "x": 900, "y": 520, "w": 140, "h": 60 }
+  ],
+  "edges": [
+    { "id": "prom-api1", "from": "prom", "to": "api1", "kind": "request" },
+    { "id": "prom-api2", "from": "prom", "to": "api2", "kind": "request" },
+    { "id": "prom-node", "from": "prom", "to": "node", "kind": "request" },
+    { "id": "grafana-prom", "from": "grafana", "to": "prom", "kind": "request", "label": "PromQL" },
+    { "id": "eng-grafana", "from": "eng", "to": "grafana", "kind": "request" },
+    { "id": "prom-am", "from": "prom", "to": "am", "kind": "event", "label": "alert" },
+    { "id": "am-slack", "from": "am", "to": "slack", "kind": "event" },
+    { "id": "am-pager", "from": "am", "to": "pager", "kind": "event" }
+  ],
+  "steps": [
+    {
+      "id": "scrape",
+      "title": { "tr": "Pull: hedefler kazınır", "en": "Pull: targets are scraped" },
+      "narration": {
+        "tr": "Prometheus her 15 saniyede bir hedeflerin /metrics uç noktasına HTTP isteği atar. Uygulamalar düz metin olarak sayaçlarını döner. Kazıma başarılıysa her hedef için up metriği 1 olur; hedefin ayakta olup olmadığı böylece kendiliğinden bilinir.",
+        "en": "Every 15 seconds Prometheus sends an HTTP request to each target's /metrics endpoint and the applications reply with their counters as plain text. When a scrape succeeds, the up metric for that target is 1; whether a target is alive is known for free."
+      },
+      "durationMs": 4000,
+      "inherit": false,
+      "highlight": { "nodes": ["prom", "api1", "api2", "node"], "edges": ["prom-api1", "prom-api2", "prom-node"] },
+      "nodeStates": {
+        "prom": { "status": "active" },
+        "api1": { "status": "success", "badge": "up=1" },
+        "api2": { "status": "success", "badge": "up=1" },
+        "node": { "status": "success", "badge": "up=1" },
+        "grafana": { "status": "idle" },
+        "eng": { "status": "idle" },
+        "am": { "status": "idle" },
+        "slack": { "status": "muted" },
+        "pager": { "status": "muted" }
+      },
+      "edgeStates": { "prom-api1": { "status": "active" }, "prom-api2": { "status": "active" }, "prom-node": { "status": "active" }, "prom-am": { "status": "muted" }, "am-slack": { "status": "muted" }, "am-pager": { "status": "muted" } },
+      "packets": [
+        { "edge": "prom-api1", "shape": "dot", "label": "GET", "durationMs": 700 },
+        { "edge": "prom-api2", "shape": "dot", "durationMs": 700 },
+        { "edge": "prom-node", "shape": "dot", "durationMs": 700 },
+        { "edge": "prom-api1", "shape": "square", "direction": "backward", "startAt": 800, "durationMs": 700 },
+        { "edge": "prom-api2", "shape": "square", "direction": "backward", "startAt": 800, "durationMs": 700 },
+        { "edge": "prom-node", "shape": "square", "direction": "backward", "startAt": 800, "durationMs": 700 }
+      ]
+    },
+    {
+      "id": "tsdb",
+      "title": { "tr": "Etiketli zaman serileri", "en": "Labelled time series" },
+      "narration": {
+        "tr": "Her örnek bir metrik adı, bir etiket kümesi ve zaman damgalı bir değerdir: http_requests_total{instance=\"api-2\", status=\"500\"}. Counter yalnızca artar; anlamlı olan değeri değil, artış hızıdır. Bu yüzden sorgularda hep rate() kullanılır.",
+        "en": "Each sample is a metric name, a set of labels and a timestamped value: http_requests_total{instance=\"api-2\", status=\"500\"}. A counter only goes up; what matters is not its value but how fast it grows. That is why queries always use rate()."
+      },
+      "durationMs": 3800,
+      "highlight": { "nodes": ["prom"], "edges": [] },
+      "nodeStates": { "prom": { "status": "active", "counter": 1842 }, "api1": { "status": "idle" }, "api2": { "status": "idle" }, "node": { "status": "idle" } },
+      "edgeStates": { "prom-api1": { "status": "idle" }, "prom-api2": { "status": "idle" }, "prom-node": { "status": "idle" } },
+      "packets": [
+        { "edge": "prom-api1", "shape": "square", "direction": "backward", "durationMs": 600, "repeat": 2, "repeatGapMs": 500 },
+        { "edge": "prom-api2", "shape": "square", "direction": "backward", "durationMs": 600, "repeat": 2, "repeatGapMs": 500 }
+      ],
+      "annotations": [{ "id": "series", "x": 420, "y": 420, "text": "http_requests_total{instance, status}", "target": "prom" }]
+    },
+    {
+      "id": "panel",
+      "title": { "tr": "Grafana paneli sorgular", "en": "The Grafana panel queries" },
+      "narration": {
+        "tr": "Mühendis panoyu açtığında Grafana her paneli bir PromQL sorgusu olarak Prometheus'a gönderir: 5xx isteklerin oranı, toplam isteklerin oranına bölünür. Sonuç grafiğe dönüşür. Grafana veri saklamaz; her yenilemede veri kaynağına sorar.",
+        "en": "When the engineer opens the dashboard, Grafana sends each panel to Prometheus as a PromQL query: the rate of 5xx requests divided by the rate of all requests. The result becomes a graph. Grafana stores no data; it asks the data source on every refresh."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["eng", "grafana", "prom"], "edges": ["eng-grafana", "grafana-prom"] },
+      "nodeStates": { "eng": { "status": "active" }, "grafana": { "status": "active", "badge": "5xx %0,3" } },
+      "edgeStates": { "eng-grafana": { "status": "active" }, "grafana-prom": { "status": "active" } },
+      "packets": [
+        { "edge": "eng-grafana", "shape": "dot", "durationMs": 700 },
+        { "edge": "grafana-prom", "shape": "dot", "label": "rate(…[5m])", "startAt": 700, "durationMs": 800 },
+        { "edge": "grafana-prom", "shape": "square", "direction": "backward", "startAt": 1500, "durationMs": 800 }
+      ]
+    },
+    {
+      "id": "pending",
+      "title": { "tr": "Eşik aşıldı: pending", "en": "Threshold crossed: pending" },
+      "narration": {
+        "tr": "api-2 bir bağımlılığına bağlanamamaya başlar ve 500 döner. Prometheus alert kuralını düzenli aralıklarla değerlendirir: 5xx oranı %2'yi geçmiştir. Ama kuralda for: 5m yazdığı için uyarı önce pending durumuna geçer. Henüz kimseye bildirim gitmez, kısa bir dalgalanma kimseyi uyandırmaz.",
+        "en": "api-2 starts failing to reach one of its dependencies and returns 500s. Prometheus evaluates the alert rule at regular intervals: the 5xx ratio has passed 2%. But the rule says for: 5m, so the alert first goes pending. No one is notified yet; a short blip wakes nobody up."
+      },
+      "durationMs": 4400,
+      "highlight": { "nodes": ["api2", "prom"], "edges": ["prom-api2"] },
+      "nodeStates": { "eng": { "status": "idle" }, "api2": { "status": "error", "badge": "500 ↑" }, "prom": { "status": "warning", "badge": "pending" }, "grafana": { "status": "warning", "badge": "5xx %3,1" } },
+      "edgeStates": { "eng-grafana": { "status": "idle" }, "grafana-prom": { "status": "idle" }, "prom-api2": { "status": "error" } },
+      "packets": [
+        { "edge": "prom-api2", "shape": "dot", "durationMs": 700 },
+        { "edge": "prom-api2", "shape": "square", "label": "5xx", "color": "danger", "direction": "backward", "startAt": 700, "durationMs": 800 }
+      ],
+      "annotations": [{ "id": "for", "x": 420, "y": 420, "text": { "tr": "for: 5m → bekle", "en": "for: 5m → wait" }, "target": "prom", "tone": "warning" }]
+    },
+    {
+      "id": "firing",
+      "title": { "tr": "Süre doldu: firing", "en": "Duration passed: firing" },
+      "narration": {
+        "tr": "Koşul beş dakika boyunca kesintisiz doğru kalır ve uyarı firing durumuna geçer. Prometheus uyarıyı, severity=critical ve team=payments gibi etiketleriyle birlikte Alertmanager'a gönderir. Prometheus uyarıyı üretir, ama kime gideceğine karar vermez.",
+        "en": "The condition stays true for five uninterrupted minutes and the alert moves to firing. Prometheus sends it to Alertmanager with labels such as severity=critical and team=payments. Prometheus produces the alert but does not decide who receives it."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["prom", "am"], "edges": ["prom-am"] },
+      "nodeStates": { "prom": { "status": "error", "badge": "firing" }, "am": { "status": "active" } },
+      "edgeStates": { "prom-api2": { "status": "idle" }, "prom-am": { "status": "active" } },
+      "packets": [{ "edge": "prom-am", "shape": "envelope", "label": "HighErrorRate", "color": "danger", "durationMs": 1200 }]
+    },
+    {
+      "id": "route",
+      "title": { "tr": "Alertmanager gruplar ve yönlendirir", "en": "Alertmanager groups and routes" },
+      "narration": {
+        "tr": "Alertmanager aynı olaya ait uyarıları gruplar ve tek bir bildirim gönderir. Yönlendirme ağacı etiketlere bakar: severity=critical olduğu için hem Slack kanalına hem de nöbetçinin telefonuna gider. Sessize alma (silence) kuralı olsaydı bildirim burada durdurulurdu.",
+        "en": "Alertmanager groups alerts that belong to the same incident and sends a single notification. The routing tree looks at the labels: because severity=critical, it goes to both the Slack channel and the on-call engineer's phone. If a silence rule matched, the notification would be stopped here."
+      },
+      "durationMs": 4200,
+      "highlight": { "nodes": ["am", "slack", "pager"], "edges": ["am-slack", "am-pager"] },
+      "nodeStates": { "am": { "status": "warning", "badge": "critical" }, "slack": { "status": "error", "badge": "🔴 1" }, "pager": { "status": "error", "badge": "ring" } },
+      "edgeStates": { "prom-am": { "status": "idle" }, "am-slack": { "status": "active" }, "am-pager": { "status": "active" } },
+      "packets": [
+        { "edge": "am-slack", "shape": "envelope", "color": "danger", "durationMs": 900 },
+        { "edge": "am-pager", "shape": "envelope", "color": "danger", "durationMs": 900 }
+      ]
+    },
+    {
+      "id": "drill-down",
+      "title": { "tr": "Panelde kırılım: hangi instance?", "en": "Panel breakdown: which instance?" },
+      "narration": {
+        "tr": "Nöbetçi bildirimdeki bağlantıdan panoya gelir ve sorguyu sum by (instance) ile kırar. Hataların tamamı api-2'den gelmektedir, api-1 temizdir. Uyarı belirtiyi bildirir (kullanıcılar hata alıyor), panel ise nedene giden yolu gösterir.",
+        "en": "The on-call engineer follows the link in the notification to the dashboard and breaks the query down with sum by (instance). All errors come from api-2; api-1 is clean. The alert reports the symptom (users are getting errors) and the panel shows the path to the cause."
+      },
+      "durationMs": 4200,
+      "highlight": { "nodes": ["eng", "grafana", "api2"], "edges": ["eng-grafana", "grafana-prom"] },
+      "nodeStates": { "pager": { "status": "warning", "badge": "ack" }, "eng": { "status": "active" }, "grafana": { "status": "active", "badge": "api-2: %6,2" }, "api1": { "status": "success" } },
+      "edgeStates": { "am-slack": { "status": "idle" }, "am-pager": { "status": "idle" }, "eng-grafana": { "status": "active" }, "grafana-prom": { "status": "active" } },
+      "packets": [
+        { "edge": "eng-grafana", "shape": "dot", "durationMs": 700 },
+        { "edge": "grafana-prom", "shape": "dot", "label": "sum by (instance)", "startAt": 700, "durationMs": 900 }
+      ]
+    },
+    {
+      "id": "resolved",
+      "title": { "tr": "Düzeltme ve çözüm bildirimi", "en": "Fix and resolution notice" },
+      "narration": {
+        "tr": "api-2 yeniden başlatılır ve hata oranı eşiğin altına iner. Kural koşulu artık sağlanmaz, uyarı çözülür (resolved). Alertmanager, yapılandırmada çözüm bildirimi açıksa kanala haber verir. Olayın zaman çizelgesi panelde durur ve sonraki postmortem'in verisi olur.",
+        "en": "api-2 is restarted and the error rate drops below the threshold. The rule condition no longer holds and the alert resolves. If resolve notifications are enabled in the configuration, Alertmanager tells the channel. The incident timeline stays on the dashboard and becomes data for the postmortem."
+      },
+      "durationMs": 4400,
+      "highlight": { "nodes": ["api2", "prom", "am", "slack"], "edges": ["prom-api2", "prom-am", "am-slack"] },
+      "nodeStates": {
+        "api2": { "status": "success", "badge": "up=1" },
+        "prom": { "status": "success", "badge": "resolved" },
+        "am": { "status": "success", "badge": "" },
+        "slack": { "status": "success", "badge": "✅ resolved" },
+        "pager": { "status": "idle", "badge": "" },
+        "grafana": { "status": "success", "badge": "5xx %0,3" },
+        "eng": { "status": "idle" }
+      },
+      "edgeStates": { "eng-grafana": { "status": "idle" }, "grafana-prom": { "status": "idle" }, "prom-api2": { "status": "active" }, "prom-am": { "status": "active" }, "am-slack": { "status": "active" } },
+      "packets": [
+        { "edge": "prom-api2", "shape": "square", "color": "success", "direction": "backward", "durationMs": 700 },
+        { "edge": "prom-am", "shape": "envelope", "label": "resolved", "color": "success", "startAt": 700, "durationMs": 900 },
+        { "edge": "am-slack", "shape": "envelope", "color": "success", "startAt": 1600, "durationMs": 800 }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["prometheus", "grafana", "alerting", "alertmanager", "promql"]
+}

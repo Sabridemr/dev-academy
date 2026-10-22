@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import {
   ArrowRight,
   BookOpen,
+  BookText,
   CornerDownLeft,
   LayoutDashboard,
   Library,
@@ -69,6 +70,13 @@ export function CommandPalette() {
     () => [
       { key: 'modules', label: t('nav.modules'), href: '/modules', icon: BookOpen, group: 'nav' },
       { key: 'paths', label: t('nav.paths'), href: '/#paths', icon: Route, group: 'nav' },
+      {
+        key: 'glossary',
+        label: t('nav.glossary'),
+        href: '/glossary',
+        icon: BookText,
+        group: 'nav',
+      },
       ...(authed
         ? [
             {

@@ -1,0 +1,240 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "i-06-join-matching",
+  "title": { "tr": "JOIN Satırları Nasıl Eşleştirir?", "en": "How Does a JOIN Match Rows?" },
+  "summary": {
+    "tr": "users ve orders tablolarının ON o.customer_id = u.id koşuluyla satır satır eşleşmesi; INNER, LEFT ve RIGHT JOIN'de eşleşmeyen satırların akıbeti, LEFT JOIN'i bozan WHERE ve anti-join.",
+    "en": "The users and orders tables matched row by row on ON o.customer_id = u.id; what happens to unmatched rows in INNER, LEFT and RIGHT JOIN, the WHERE that breaks a LEFT JOIN, and the anti-join."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda users tablosunun dört satırı (Ayşe 1, Mehmet 2, Zeynep 3, Can 4), ortada orders tablosunun dört satırı (101 ve 102 müşteri 1, 103 müşteri 2, 104 müşterisiz), sağda sonuç kutusu ve satır sayacı vardır. Ayşe'nin satırı 101 ve 102 ile, Mehmet'inki 103 ile eşleşir; Zeynep ve Can hiçbir siparişle eşleşmez, 104'ün NULL müşteri kimliği hiçbir değere eşit değildir. INNER JOIN 3 satır üretir. LEFT JOIN'de Zeynep ve Can bir NULL satırına bağlanır ve sonuç 5 olur; RIGHT JOIN'de 104 bir NULL kullanıcıya bağlanır ve sonuç 4 olur. WHERE o.status = 'paid' eklenince NULL'lu satırlar ve kargodaki 102 elenir, sonuç 2'ye iner. Anti-join yalnızca Zeynep ile Can'ı döndürür. Son adım indeksin her kullanıcı için doğrudan eşleşen siparişlere atladığını gösterir.",
+      "en": "On the left are the four rows of users (Ayşe 1, Mehmet 2, Zeynep 3, Can 4), in the middle the four rows of orders (101 and 102 for customer 1, 103 for customer 2, 104 with no customer), and on the right a result box with a row counter. Ayşe's row matches 101 and 102, Mehmet's matches 103; Zeynep and Can match no order, and 104's NULL customer id equals no value. INNER JOIN produces 3 rows. In LEFT JOIN Zeynep and Can are attached to a NULL row and the result is 5; in RIGHT JOIN 104 is attached to a NULL user and the result is 4. Adding WHERE o.status = 'paid' removes the NULL rows and the shipped 102, dropping the result to 2. The anti-join returns only Zeynep and Can. The last step shows the index jumping straight to the matching orders for each user."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "u1", "kind": "generic", "label": "users · 1 Ayşe", "sublabel": "İstanbul", "x": 190, "y": 110, "w": 190, "h": 60 },
+    { "id": "u2", "kind": "generic", "label": "users · 2 Mehmet", "sublabel": "Ankara", "x": 190, "y": 210, "w": 190, "h": 60 },
+    { "id": "u3", "kind": "generic", "label": "users · 3 Zeynep", "sublabel": "İzmir", "x": 190, "y": 310, "w": 190, "h": 60 },
+    { "id": "u4", "kind": "generic", "label": "users · 4 Can", "sublabel": "Bursa", "x": 190, "y": 410, "w": 190, "h": 60 },
+    { "id": "nullL", "kind": "generic", "label": "NULL", "sublabel": { "tr": "boş kullanıcı", "en": "empty user" }, "x": 190, "y": 520, "w": 190, "h": 56 },
+    { "id": "o101", "kind": "generic", "label": "orders · 101", "sublabel": "customer_id 1 · paid · 250", "x": 560, "y": 110, "w": 210, "h": 60 },
+    { "id": "o102", "kind": "generic", "label": "orders · 102", "sublabel": "customer_id 1 · shipped · 120", "x": 560, "y": 210, "w": 210, "h": 60 },
+    { "id": "o103", "kind": "generic", "label": "orders · 103", "sublabel": "customer_id 2 · paid · 80", "x": 560, "y": 310, "w": 210, "h": 60 },
+    { "id": "o104", "kind": "generic", "label": "orders · 104", "sublabel": "customer_id NULL · paid · 60", "x": 560, "y": 410, "w": 210, "h": 60 },
+    { "id": "nullR", "kind": "generic", "label": "NULL", "sublabel": { "tr": "boş sipariş", "en": "empty order" }, "x": 560, "y": 520, "w": 210, "h": 56 },
+    { "id": "result", "kind": "storage", "label": { "tr": "Sonuç", "en": "Result" }, "sublabel": { "tr": "satır sayısı", "en": "row count" }, "x": 870, "y": 300, "w": 160, "h": 90 }
+  ],
+  "edges": [
+    { "id": "m1", "from": "u1", "to": "o101", "kind": "data", "label": "1 = 1" },
+    { "id": "m2", "from": "u1", "to": "o102", "kind": "data", "label": "1 = 1", "curvature": 0.15 },
+    { "id": "m3", "from": "u2", "to": "o103", "kind": "data", "label": "2 = 2" },
+    { "id": "n3", "from": "u3", "to": "nullR", "kind": "generic", "style": "dashed", "curvature": 0.15 },
+    { "id": "n4", "from": "u4", "to": "nullR", "kind": "generic", "style": "dashed" },
+    { "id": "n104", "from": "nullL", "to": "o104", "kind": "generic", "style": "dashed" }
+  ],
+  "steps": [
+    {
+      "id": "setup",
+      "title": { "tr": "İki tablo, bir koşul", "en": "Two tables, one condition" },
+      "narration": {
+        "tr": "Solda users, ortada orders var. Sorgu: SELECT u.name, o.id FROM users u JOIN orders o ON o.customer_id = u.id. Motor soldaki her satır için ON koşulunu sağlayan sağdaki satırları arar; her eşleşme sonuçta bir satır olur.",
+        "en": "users is on the left, orders in the middle. The query: SELECT u.name, o.id FROM users u JOIN orders o ON o.customer_id = u.id. For each row on the left the engine looks for rows on the right that satisfy the ON condition; every match becomes one row in the result."
+      },
+      "durationMs": 4000,
+      "inherit": false,
+      "highlight": { "nodes": ["u1", "u2", "u3", "u4", "o101", "o102", "o103", "o104"], "edges": [] },
+      "nodeStates": {
+        "u1": { "status": "idle" }, "u2": { "status": "idle" }, "u3": { "status": "idle" }, "u4": { "status": "idle" },
+        "o101": { "status": "idle" }, "o102": { "status": "idle" }, "o103": { "status": "idle" }, "o104": { "status": "idle" },
+        "nullL": { "visible": false }, "nullR": { "visible": false },
+        "result": { "status": "idle", "counter": 0, "badge": "" }
+      },
+      "edgeStates": {
+        "m1": { "visible": false }, "m2": { "visible": false }, "m3": { "visible": false },
+        "n3": { "visible": false }, "n4": { "visible": false }, "n104": { "visible": false }
+      },
+      "annotations": [
+        { "id": "on", "x": 380, "y": 40, "text": "ON o.customer_id = u.id", "tone": "info" }
+      ]
+    },
+    {
+      "id": "ayse",
+      "title": { "tr": "Ayşe: iki eşleşme", "en": "Ayşe: two matches" },
+      "narration": {
+        "tr": "Ayşe'nin id'si 1. customer_id değeri 1 olan iki sipariş var: 101 ve 102. Bu yüzden Ayşe sonuçta iki kez görünür. JOIN satırları birleştirirken çoğaltabilir; bire-çok ilişkide bu beklenen davranıştır.",
+        "en": "Ayşe's id is 1. Two orders have customer_id 1: 101 and 102. So Ayşe appears twice in the result. A JOIN can multiply rows while combining them; in a one-to-many relationship this is expected."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["u1", "o101", "o102"], "edges": ["m1", "m2"] },
+      "nodeStates": { "u1": { "status": "active" }, "o101": { "status": "success" }, "o102": { "status": "success" }, "result": { "status": "active", "counter": 2 } },
+      "edgeStates": { "m1": { "visible": true, "status": "active" }, "m2": { "visible": true, "status": "active" } },
+      "packets": [
+        { "edge": "m1", "shape": "dot", "label": "1 = 1 ✓", "color": "success", "durationMs": 1000 },
+        { "edge": "m2", "shape": "dot", "label": "1 = 1 ✓", "color": "success", "startAt": 1200, "durationMs": 1000 }
+      ]
+    },
+    {
+      "id": "mehmet",
+      "title": { "tr": "Mehmet: bir eşleşme", "en": "Mehmet: one match" },
+      "narration": {
+        "tr": "Mehmet'in id'si 2; yalnızca 103 numaralı sipariş eşleşir. Sonuç 3 satıra çıktı.",
+        "en": "Mehmet's id is 2; only order 103 matches. The result grows to 3 rows."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["u2", "o103"], "edges": ["m3"] },
+      "nodeStates": { "u1": { "status": "idle" }, "u2": { "status": "active" }, "o103": { "status": "success" }, "result": { "counter": 3 } },
+      "edgeStates": { "m1": { "status": "idle" }, "m2": { "status": "idle" }, "m3": { "visible": true, "status": "active" } },
+      "packets": [
+        { "edge": "m3", "shape": "dot", "label": "2 = 2 ✓", "color": "success", "durationMs": 1000 }
+      ]
+    },
+    {
+      "id": "no-match",
+      "title": { "tr": "Eşleşmeyenler: INNER = 3", "en": "The unmatched: INNER = 3" },
+      "narration": {
+        "tr": "Zeynep (3) ve Can (4) için customer_id değeri 3 ya da 4 olan sipariş yok. 104'ün customer_id'si NULL: NULL hiçbir değere eşit değildir, karşılaştırma UNKNOWN döner ve eşleşme sayılmaz. INNER JOIN eşleşmeyen satırları atar; sonuç 3 satır.",
+        "en": "There is no order with customer_id 3 or 4 for Zeynep (3) and Can (4). Order 104 has a NULL customer_id: NULL equals no value, the comparison yields UNKNOWN and does not count as a match. INNER JOIN drops unmatched rows; the result is 3 rows."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["u3", "u4", "o104", "result"], "edges": [] },
+      "nodeStates": {
+        "u2": { "status": "idle" },
+        "u3": { "status": "muted" }, "u4": { "status": "muted" }, "o104": { "status": "muted" },
+        "result": { "status": "success", "counter": 3, "badge": "INNER" }
+      },
+      "edgeStates": { "m3": { "status": "idle" } },
+      "annotations": [
+        { "id": "null-unknown", "x": 560, "y": 480, "text": "NULL = 1 → UNKNOWN", "tone": "warning", "target": "o104" },
+        { "id": "dropped", "x": 190, "y": 470, "text": { "tr": "eşleşme yok → atılır", "en": "no match → dropped" }, "tone": "warning", "target": "u4" }
+      ]
+    },
+    {
+      "id": "left",
+      "title": { "tr": "LEFT JOIN = 5", "en": "LEFT JOIN = 5" },
+      "narration": {
+        "tr": "LEFT JOIN'de soldaki her satır sonuçta en az bir kez bulunmak zorundadır. Eşleşmesi olmayan Zeynep ve Can, sağ tarafı tamamen NULL olan bir satıra bağlanır. Sonuç 5 satır; 104 hâlâ dışarıda, çünkü o sağ tarafta.",
+        "en": "In a LEFT JOIN every row on the left must appear at least once. Zeynep and Can, who have no match, are attached to a row whose right side is entirely NULL. The result is 5 rows; 104 is still out because it is on the right side."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["u3", "u4", "nullR"], "edges": ["n3", "n4"] },
+      "nodeStates": {
+        "u3": { "status": "active" }, "u4": { "status": "active" },
+        "nullR": { "visible": true, "status": "warning" },
+        "result": { "status": "active", "counter": 5, "badge": "LEFT" }
+      },
+      "edgeStates": { "n3": { "visible": true, "status": "active" }, "n4": { "visible": true, "status": "active" } },
+      "packets": [
+        { "edge": "n3", "shape": "dot", "label": "NULL", "color": "warning", "durationMs": 1000 },
+        { "edge": "n4", "shape": "dot", "label": "NULL", "color": "warning", "startAt": 1100, "durationMs": 1000 }
+      ],
+      "annotations": [
+        { "id": "left-keep", "x": 560, "y": 585, "text": { "tr": "sağ taraf NULL ile doldurulur", "en": "right side filled with NULL" }, "tone": "info" }
+      ]
+    },
+    {
+      "id": "right",
+      "title": { "tr": "RIGHT JOIN = 4", "en": "RIGHT JOIN = 4" },
+      "narration": {
+        "tr": "RIGHT JOIN'de tersine, sağdaki her sipariş korunur. Misafir siparişi 104 sol tarafı NULL olan bir kullanıcı satırına bağlanır; Zeynep ve Can yine düşer. Sonuç 4 satır. Aynı sonucu tabloların yerini değiştirip LEFT JOIN ile de alabilirsin.",
+        "en": "In a RIGHT JOIN, conversely, every order on the right is kept. Guest order 104 is attached to a user row whose left side is NULL; Zeynep and Can drop out again. The result is 4 rows. You can get the same result by swapping the tables and using LEFT JOIN."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["nullL", "o104"], "edges": ["n104"] },
+      "nodeStates": {
+        "u3": { "status": "muted" }, "u4": { "status": "muted" },
+        "nullR": { "visible": false },
+        "nullL": { "visible": true, "status": "warning" },
+        "o104": { "status": "active" },
+        "result": { "counter": 4, "badge": "RIGHT" }
+      },
+      "edgeStates": { "n3": { "visible": false }, "n4": { "visible": false }, "n104": { "visible": true, "status": "active" } },
+      "packets": [
+        { "edge": "n104", "shape": "dot", "label": "NULL", "color": "warning", "direction": "backward", "durationMs": 1100 }
+      ]
+    },
+    {
+      "id": "left-where",
+      "title": { "tr": "Tuzak: LEFT JOIN + WHERE = 2", "en": "Trap: LEFT JOIN + WHERE = 2" },
+      "narration": {
+        "tr": "LEFT JOIN'e WHERE o.status = 'paid' eklendi. WHERE, JOIN'den sonra çalışır: Zeynep ve Can'ın satırında o.status NULL olduğu için koşul UNKNOWN döner ve satırlar elenir; kargodaki 102 de düşer. LEFT JOIN sessizce INNER'a döndü ve sonuç 2. Koşul ON cümlesine taşınırsa 4 müşteri de korunur.",
+        "en": "WHERE o.status = 'paid' was added to the LEFT JOIN. WHERE runs after the JOIN: on Zeynep's and Can's rows o.status is NULL, so the condition is UNKNOWN and the rows are removed; the shipped 102 drops too. The LEFT JOIN silently became an INNER JOIN and the result is 2. Moving the condition into ON keeps all 4 customers."
+      },
+      "durationMs": 5500,
+      "highlight": { "nodes": ["nullR", "o102", "result"], "edges": ["n3", "n4", "m2"] },
+      "nodeStates": {
+        "nullL": { "visible": false }, "o104": { "status": "muted" },
+        "u3": { "status": "error" }, "u4": { "status": "error" },
+        "nullR": { "visible": true, "status": "error" },
+        "o102": { "status": "error" },
+        "result": { "status": "warning", "counter": 2, "badge": "LEFT+WHERE" }
+      },
+      "edgeStates": {
+        "n104": { "visible": false },
+        "n3": { "visible": true, "status": "error" }, "n4": { "visible": true, "status": "error" },
+        "m2": { "status": "error" }
+      },
+      "packets": [
+        { "edge": "m1", "shape": "dot", "label": "paid ✓", "color": "success", "durationMs": 900 },
+        { "edge": "m3", "shape": "dot", "label": "paid ✓", "color": "success", "startAt": 300, "durationMs": 900 },
+        { "edge": "m2", "shape": "dot", "label": "shipped ✗", "color": "danger", "startAt": 1300, "durationMs": 900 }
+      ],
+      "annotations": [
+        { "id": "trap", "x": 870, "y": 410, "text": { "tr": "LEFT, INNER'a dönüştü", "en": "LEFT turned into INNER" }, "tone": "danger", "target": "result" }
+      ]
+    },
+    {
+      "id": "anti-join",
+      "title": { "tr": "Anti-join: siparişi olmayanlar", "en": "Anti-join: customers without orders" },
+      "narration": {
+        "tr": "Bu kez bilerek NULL'ları arıyoruz: LEFT JOIN … WHERE o.id IS NULL. Eşleşen tüm satırlar elenir, yalnızca sağ tarafı NULL kalan Zeynep ve Can döner. 'Hiç siparişi olmayan müşteriler' sorusunun klasik cevabı budur.",
+        "en": "This time we look for the NULLs on purpose: LEFT JOIN … WHERE o.id IS NULL. All matched rows are removed and only Zeynep and Can, whose right side stayed NULL, are returned. This is the classic answer to 'customers who have never ordered'."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["u3", "u4", "nullR"], "edges": ["n3", "n4"] },
+      "nodeStates": {
+        "u1": { "status": "muted" }, "u2": { "status": "muted" },
+        "o101": { "status": "muted" }, "o102": { "status": "muted" }, "o103": { "status": "muted" },
+        "u3": { "status": "success" }, "u4": { "status": "success" },
+        "nullR": { "status": "success" },
+        "result": { "status": "success", "counter": 2, "badge": "IS NULL" }
+      },
+      "edgeStates": { "m1": { "status": "muted" }, "m2": { "status": "muted" }, "m3": { "status": "muted" }, "n3": { "status": "active" }, "n4": { "status": "active" } },
+      "packets": [
+        { "edge": "n3", "shape": "dot", "label": "IS NULL ✓", "color": "success", "durationMs": 1000 },
+        { "edge": "n4", "shape": "dot", "label": "IS NULL ✓", "color": "success", "startAt": 1100, "durationMs": 1000 }
+      ]
+    },
+    {
+      "id": "index",
+      "title": { "tr": "Motor eşleşmeyi nasıl bulur?", "en": "How does the engine find matches?" },
+      "narration": {
+        "tr": "İndeks yoksa motor her kullanıcı için orders tablosunun tamamını tarar; 4 × 4 = 16 karşılaştırma, milyon satırda ise milyonlarca. orders.customer_id üzerinde bir B-tree indeksi varsa her kullanıcı için doğrudan eşleşen siparişlere atlar. Bu yüzden JOIN sütunları neredeyse her zaman indekslenir.",
+        "en": "Without an index the engine scans the whole orders table for each user: 4 × 4 = 16 comparisons, and millions on a table with a million rows. With a B-tree index on orders.customer_id it jumps straight to the matching orders for each user. That is why JOIN columns are almost always indexed."
+      },
+      "durationMs": 5000,
+      "inherit": false,
+      "highlight": { "nodes": ["u1", "u2", "o101", "o102", "o103"], "edges": ["m1", "m2", "m3"] },
+      "nodeStates": {
+        "u1": { "status": "active" }, "u2": { "status": "active" }, "u3": { "status": "idle" }, "u4": { "status": "idle" },
+        "o101": { "status": "success" }, "o102": { "status": "success" }, "o103": { "status": "success" }, "o104": { "status": "idle" },
+        "nullL": { "visible": false }, "nullR": { "visible": false },
+        "result": { "status": "success", "counter": 3, "badge": "INNER" }
+      },
+      "edgeStates": {
+        "m1": { "visible": true, "status": "active" }, "m2": { "visible": true, "status": "active" }, "m3": { "visible": true, "status": "active" },
+        "n3": { "visible": false }, "n4": { "visible": false }, "n104": { "visible": false }
+      },
+      "packets": [
+        { "edge": "m1", "shape": "diamond", "label": { "tr": "indeks", "en": "index" }, "color": "primary", "durationMs": 700 },
+        { "edge": "m2", "shape": "diamond", "label": { "tr": "indeks", "en": "index" }, "color": "primary", "startAt": 200, "durationMs": 700 },
+        { "edge": "m3", "shape": "diamond", "label": { "tr": "indeks", "en": "index" }, "color": "primary", "startAt": 900, "durationMs": 700 }
+      ],
+      "annotations": [
+        { "id": "seq", "x": 380, "y": 40, "text": { "tr": "indekssiz: 16 karşılaştırma · indeksli: kullanıcı başına 1 arama", "en": "no index: 16 comparisons · indexed: 1 lookup per user" }, "tone": "info" }
+      ]
+    }
+  ]
+}

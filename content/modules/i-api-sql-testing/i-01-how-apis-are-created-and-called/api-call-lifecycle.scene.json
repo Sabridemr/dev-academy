@@ -1,0 +1,224 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "i-01-api-call-lifecycle",
+  "title": { "tr": "Bir API Çağrısının Yaşam Döngüsü", "en": "The Lifecycle of an API Call" },
+  "summary": {
+    "tr": "fetch ile başlayan bir GET isteğinin DNS, TLS, gateway, handler ve veritabanından geçip durum koduyla geri dönüşü; 200, 404, 401 ve 503'ün hangi katmanda üretildiği.",
+    "en": "A GET request started with fetch passing through DNS, TLS, the gateway, the handler and the database and returning with a status code; which layer produces 200, 404, 401 and 503."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda istemci, üstte DNS çözümleyici, ortada API gateway, sağda API sunucusu ve en sağda veritabanı vardır. İstemci önce DNS'ten IP adresini öğrenir, gateway ile TCP ve TLS el sıkışması yapar, ardından GET /v1/users/42 isteğini gönderir. Gateway token'ı doğrulayıp isteği API sunucusuna iletir; handler veritabanından satırı okur ve 200 yanıtı aynı yoldan geri döner. Sonraki adımlarda olmayan kullanıcı için handler 404 üretir, token'sız istek gateway'de 401 ile durur, veritabanı çöktüğünde sunucu 503 döner. Son adım hangi durum kodunun hangi katmanda doğduğunu özetler.",
+      "en": "The client is on the left, a DNS resolver at the top, the API gateway in the middle, the API server on the right and the database at the far right. The client first learns the IP address from DNS, performs the TCP and TLS handshakes with the gateway and then sends GET /v1/users/42. The gateway verifies the token and forwards the request to the API server; the handler reads the row from the database and the 200 response returns along the same path. In later steps the handler produces 404 for a missing user, a request without a token stops at the gateway with 401, and when the database is down the server returns 503. The last step summarises which status code is born in which layer."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "client", "kind": "client", "label": { "tr": "İstemci", "en": "Client" }, "sublabel": "fetch()", "x": 110, "y": 320, "w": 150, "h": 80 },
+    { "id": "dns", "kind": "dns", "label": { "tr": "DNS çözümleyici", "en": "DNS resolver" }, "sublabel": "api.example.com", "x": 300, "y": 110, "w": 170, "h": 70 },
+    { "id": "gateway", "kind": "gateway", "label": "API Gateway", "sublabel": { "tr": "TLS · token · limit", "en": "TLS · token · limit" }, "x": 400, "y": 320, "w": 160, "h": 80 },
+    { "id": "api", "kind": "server", "label": { "tr": "API sunucusu", "en": "API server" }, "sublabel": "router → handler", "x": 660, "y": 320, "w": 160, "h": 80 },
+    { "id": "db", "kind": "db", "label": { "tr": "Veritabanı", "en": "Database" }, "sublabel": "users", "x": 890, "y": 320, "w": 140, "h": 80 }
+  ],
+  "edges": [
+    { "id": "c-dns", "from": "client", "to": "dns", "kind": "request", "label": { "tr": "A kaydı?", "en": "A record?" }, "curvature": -0.15 },
+    { "id": "c-gw", "from": "client", "to": "gateway", "kind": "request", "label": "HTTPS" },
+    { "id": "gw-api", "from": "gateway", "to": "api", "kind": "request", "label": { "tr": "iç ağ", "en": "internal" } },
+    { "id": "api-db", "from": "api", "to": "db", "kind": "data", "label": "SQL" }
+  ],
+  "steps": [
+    {
+      "id": "start",
+      "title": { "tr": "Çağrı başlıyor", "en": "The call starts" },
+      "narration": {
+        "tr": "Mobil uygulama fetch('https://api.example.com/v1/users/42') çağırdı; isteğe Authorization: Bearer başlığı eklendi. Henüz ağa tek paket çıkmadı: önce adresin IP'si bulunmalı, sonra güvenli bir bağlantı kurulmalı.",
+        "en": "The mobile app called fetch('https://api.example.com/v1/users/42') with an Authorization: Bearer header. No packet has left yet: first the address's IP must be found, then a secure connection must be set up."
+      },
+      "durationMs": 3500,
+      "inherit": false,
+      "highlight": { "nodes": ["client"], "edges": [] },
+      "nodeStates": {
+        "client": { "status": "active", "badge": "GET" },
+        "dns": { "status": "idle" },
+        "gateway": { "status": "idle" },
+        "api": { "status": "idle" },
+        "db": { "status": "idle" }
+      },
+      "annotations": [
+        { "id": "url", "x": 110, "y": 430, "text": "GET /v1/users/42", "target": "client" }
+      ]
+    },
+    {
+      "id": "dns",
+      "title": { "tr": "DNS: ad → IP", "en": "DNS: name → IP" },
+      "narration": {
+        "tr": "İstemci api.example.com için A kaydını sorar ve TTL ile birlikte bir IP adresi alır. Bu cevap önbelleğe alınır; sonraki çağrılar bu adımı atlar.",
+        "en": "The client asks for the A record of api.example.com and receives an IP address with a TTL. The answer is cached; later calls skip this step."
+      },
+      "durationMs": 3500,
+      "highlight": { "nodes": ["client", "dns"], "edges": ["c-dns"] },
+      "nodeStates": { "dns": { "status": "active" } },
+      "edgeStates": { "c-dns": { "status": "active" } },
+      "packets": [
+        { "edge": "c-dns", "shape": "diamond", "label": "A?", "durationMs": 900 },
+        { "edge": "c-dns", "shape": "diamond", "direction": "backward", "label": "203.0.113.7 · TTL 300", "color": "success", "startAt": 1100, "durationMs": 900 }
+      ]
+    },
+    {
+      "id": "tls",
+      "title": { "tr": "TCP + TLS el sıkışma", "en": "TCP + TLS handshake" },
+      "narration": {
+        "tr": "IP bilindi; istemci gateway'in 443 portuna TCP bağlantısı açar, ardından TLS el sıkışmasıyla sertifikayı doğrulayıp oturum anahtarını kurar. TLS 1.3 ile bu iki adım toplam iki gidiş-dönüş sürer ve hâlâ tek byte HTTP gönderilmemiştir.",
+        "en": "With the IP known, the client opens a TCP connection to the gateway's port 443, then verifies the certificate and sets up the session key with the TLS handshake. With TLS 1.3 these two steps take two round trips in total and not a single byte of HTTP has been sent yet."
+      },
+      "durationMs": 4500,
+      "highlight": { "nodes": ["client", "gateway"], "edges": ["c-gw"] },
+      "nodeStates": { "dns": { "status": "idle" }, "gateway": { "status": "active", "badge": "🔒" } },
+      "edgeStates": { "c-dns": { "status": "idle" }, "c-gw": { "status": "active", "label": "TCP + TLS 1.3" } },
+      "packets": [
+        { "edge": "c-gw", "shape": "square", "label": "SYN", "durationMs": 700 },
+        { "edge": "c-gw", "shape": "square", "direction": "backward", "label": "SYN-ACK", "startAt": 800, "durationMs": 700 },
+        { "edge": "c-gw", "shape": "envelope", "label": "ClientHello", "startAt": 1600, "durationMs": 800 },
+        { "edge": "c-gw", "shape": "envelope", "direction": "backward", "label": { "tr": "ServerHello · sertifika", "en": "ServerHello · certificate" }, "startAt": 2500, "durationMs": 800 }
+      ],
+      "annotations": [
+        { "id": "rtt", "x": 260, "y": 250, "text": { "tr": "2 RTT, henüz HTTP yok", "en": "2 RTT, no HTTP yet" }, "tone": "warning" }
+      ]
+    },
+    {
+      "id": "request",
+      "title": { "tr": "İstek gateway'den geçer", "en": "The request passes the gateway" },
+      "narration": {
+        "tr": "Şifreli kanaldan GET /v1/users/42 gider. Gateway TLS'i sonlandırır, Authorization başlığındaki token'ın imzasını ve süresini doğrular, istek limitini kontrol eder ve isteği iç ağdaki API sunucusuna iletir.",
+        "en": "GET /v1/users/42 travels over the encrypted channel. The gateway terminates TLS, verifies the signature and expiry of the token in the Authorization header, checks the rate limit and forwards the request to the API server on the internal network."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["gateway", "api"], "edges": ["c-gw", "gw-api"] },
+      "nodeStates": { "client": { "badge": "…" }, "gateway": { "status": "busy", "badge": "token ✓" }, "api": { "status": "active" } },
+      "edgeStates": { "c-gw": { "label": "HTTPS" }, "gw-api": { "status": "active" } },
+      "packets": [
+        { "edge": "c-gw", "shape": "envelope", "label": "GET /v1/users/42", "durationMs": 1000 },
+        { "edge": "gw-api", "shape": "envelope", "label": "GET /v1/users/42", "startAt": 1500, "durationMs": 1000 }
+      ]
+    },
+    {
+      "id": "handler",
+      "title": { "tr": "Router → handler → veritabanı", "en": "Router → handler → database" },
+      "narration": {
+        "tr": "Router metod ve yolu GET /v1/users/:id kalıbıyla eşleştirip getUser handler'ını çağırır. Handler id'nin geçerli bir tam sayı olduğunu doğrular, sonra veritabanına tek satırlık bir sorgu gönderir ve cevabı bekler.",
+        "en": "The router matches the method and path against GET /v1/users/:id and calls the getUser handler. The handler validates that the id is an integer, then sends a single-row query to the database and waits for the answer."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["api", "db"], "edges": ["api-db"] },
+      "nodeStates": { "gateway": { "status": "active", "badge": "" }, "api": { "status": "busy", "badge": "getUser" }, "db": { "status": "active" } },
+      "edgeStates": { "c-gw": { "status": "idle" }, "api-db": { "status": "active" } },
+      "packets": [
+        { "edge": "api-db", "shape": "square", "label": "SELECT … WHERE id = 42", "durationMs": 1000 },
+        { "edge": "api-db", "shape": "square", "direction": "backward", "label": { "tr": "1 satır", "en": "1 row" }, "color": "success", "startAt": 1500, "durationMs": 1000 }
+      ]
+    },
+    {
+      "id": "ok",
+      "title": { "tr": "200 OK geri döner", "en": "200 OK returns" },
+      "narration": {
+        "tr": "Handler satırı JSON'a çevirir ve 200 OK, Content-Type: application/json ve X-Request-Id başlıklarıyla yanıtı yazar. Yanıt aynı yoldan, gateway üzerinden istemciye döner; istemci res.ok true olduğu için gövdeyi okur.",
+        "en": "The handler serialises the row to JSON and writes the response with 200 OK, Content-Type: application/json and X-Request-Id headers. The response returns along the same path through the gateway; since res.ok is true the client reads the body."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["client", "gateway", "api"], "edges": ["gw-api", "c-gw"] },
+      "nodeStates": { "client": { "status": "success", "badge": "200" }, "api": { "status": "active", "badge": "" }, "db": { "status": "idle" } },
+      "edgeStates": { "api-db": { "status": "idle" }, "c-gw": { "status": "active" } },
+      "packets": [
+        { "edge": "gw-api", "shape": "envelope", "direction": "backward", "label": "200 · JSON", "color": "success", "durationMs": 1000 },
+        { "edge": "c-gw", "shape": "envelope", "direction": "backward", "label": "200 · JSON", "color": "success", "startAt": 1200, "durationMs": 1000 }
+      ],
+      "annotations": [
+        { "id": "ok-class", "x": 110, "y": 430, "text": { "tr": "2xx: başarılı", "en": "2xx: success" }, "tone": "success", "target": "client" }
+      ]
+    },
+    {
+      "id": "not-found",
+      "title": { "tr": "Olmayan kaynak: 404", "en": "Missing resource: 404" },
+      "narration": {
+        "tr": "Bu kez GET /v1/users/999 gönderiliyor. İstek gateway'den geçer, sorgu çalışır ama veritabanı sıfır satır döner. Handler bunu 500 değil 404 Not Found ve sabit bir hata gövdesiyle bildirir: sorun istekte, istemci aynı isteği tekrarlamamalı.",
+        "en": "This time GET /v1/users/999 is sent. The request passes the gateway and the query runs, but the database returns zero rows. The handler reports this not as 500 but as 404 Not Found with a fixed error body: the problem is in the request and the client should not repeat it."
+      },
+      "durationMs": 5000,
+      "highlight": { "nodes": ["api", "db", "client"], "edges": ["gw-api", "api-db", "c-gw"] },
+      "nodeStates": { "client": { "status": "warning", "badge": "404" }, "api": { "status": "warning", "badge": "USER_NOT_FOUND" }, "db": { "status": "active" } },
+      "edgeStates": { "api-db": { "status": "active" } },
+      "packets": [
+        { "edge": "c-gw", "shape": "envelope", "label": "GET /v1/users/999", "durationMs": 600 },
+        { "edge": "gw-api", "shape": "envelope", "label": "GET /v1/users/999", "startAt": 700, "durationMs": 600 },
+        { "edge": "api-db", "shape": "square", "label": "SELECT …", "startAt": 1400, "durationMs": 600 },
+        { "edge": "api-db", "shape": "square", "direction": "backward", "label": { "tr": "0 satır", "en": "0 rows" }, "color": "warning", "startAt": 2100, "durationMs": 600 },
+        { "edge": "gw-api", "shape": "envelope", "direction": "backward", "label": "404", "color": "warning", "startAt": 2800, "durationMs": 600 },
+        { "edge": "c-gw", "shape": "envelope", "direction": "backward", "label": "404", "color": "warning", "startAt": 3500, "durationMs": 600 }
+      ],
+      "annotations": [
+        { "id": "nf-class", "x": 110, "y": 430, "text": { "tr": "4xx: istemci isteğini değiştirmeli", "en": "4xx: the client must change the request" }, "tone": "warning", "target": "client" }
+      ]
+    },
+    {
+      "id": "unauthorized",
+      "title": { "tr": "Token yok: 401 gateway'de", "en": "No token: 401 at the gateway" },
+      "narration": {
+        "tr": "Süresi dolmuş bir token'la aynı istek gönderiliyor. Gateway imzayı ya da süreyi doğrulayamaz ve 401 Unauthorized döner. İstek API sunucusuna ve veritabanına hiç ulaşmaz; kimlik kontrolünün handler'dan önce, tek bir ara katmanda yapılmasının kazancı budur.",
+        "en": "The same request is sent with an expired token. The gateway cannot verify the signature or expiry and returns 401 Unauthorized. The request never reaches the API server or the database; this is the payoff of checking identity once, in a layer before the handler."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["gateway", "client"], "edges": ["c-gw"] },
+      "nodeStates": { "client": { "status": "error", "badge": "401" }, "gateway": { "status": "error", "badge": "token ✗" }, "api": { "status": "muted", "badge": "" }, "db": { "status": "muted" } },
+      "edgeStates": { "gw-api": { "status": "muted" }, "api-db": { "status": "muted" } },
+      "packets": [
+        { "edge": "c-gw", "shape": "envelope", "label": { "tr": "GET · süresi dolmuş token", "en": "GET · expired token" }, "durationMs": 1000 },
+        { "edge": "c-gw", "shape": "envelope", "direction": "backward", "label": "401", "color": "danger", "startAt": 1400, "durationMs": 1000 }
+      ]
+    },
+    {
+      "id": "server-error",
+      "title": { "tr": "Veritabanı erişilemez: 503", "en": "Database unreachable: 503" },
+      "narration": {
+        "tr": "Geçerli bir istek handler'a ulaşır ama veritabanı bağlantısı zaman aşımına uğrar. Merkezi hata yakalayıcı ayrıntıyı loga yazar, istemciye 503 Service Unavailable ve Retry-After döner. Bu bir sunucu hatasıdır; GET idempotent olduğu için istemci kısa bir beklemeden sonra güvenle tekrar deneyebilir.",
+        "en": "A valid request reaches the handler but the database connection times out. The central error handler writes the details to the log and returns 503 Service Unavailable with Retry-After to the client. This is a server error; since GET is idempotent the client can safely retry after a short wait."
+      },
+      "durationMs": 5000,
+      "highlight": { "nodes": ["api", "db", "client"], "edges": ["api-db", "gw-api", "c-gw"] },
+      "nodeStates": { "client": { "status": "warning", "badge": "503" }, "gateway": { "status": "active", "badge": "" }, "api": { "status": "error", "badge": "timeout" }, "db": { "status": "down" } },
+      "edgeStates": { "gw-api": { "status": "active" }, "api-db": { "status": "error" } },
+      "packets": [
+        { "edge": "gw-api", "shape": "envelope", "label": "GET /v1/users/42", "durationMs": 700 },
+        { "edge": "api-db", "shape": "square", "label": "SELECT …", "color": "danger", "startAt": 800, "durationMs": 1400 },
+        { "edge": "gw-api", "shape": "envelope", "direction": "backward", "label": "503", "color": "danger", "startAt": 2600, "durationMs": 700 },
+        { "edge": "c-gw", "shape": "envelope", "direction": "backward", "label": "503 · Retry-After", "color": "danger", "startAt": 3400, "durationMs": 700 }
+      ],
+      "annotations": [
+        { "id": "srv-class", "x": 110, "y": 430, "text": { "tr": "5xx: sunucu tarafı, sonra tekrar dene", "en": "5xx: server side, retry later" }, "tone": "danger", "target": "client" }
+      ]
+    },
+    {
+      "id": "summary",
+      "title": { "tr": "Hangi kod nerede doğar?", "en": "Where is each code born?" },
+      "narration": {
+        "tr": "Özetle: 401 ve 429 gibi kodlar isteği erken durduran gateway'de, 400, 404 ve 422 iş kurallarını bilen handler'da, 5xx ise bağımlılıklar çöktüğünde üretilir. Bir hatayı ayıklarken önce yanıtın hangi katmandan geldiğini, yani X-Request-Id ile loglarda nerede durduğunu bulun.",
+        "en": "In short: codes like 401 and 429 are produced at the gateway, which stops requests early; 400, 404 and 422 at the handler, which knows the business rules; and 5xx when dependencies fail. When debugging, first find which layer the response came from, using X-Request-Id to see where it stopped in the logs."
+      },
+      "durationMs": 5000,
+      "inherit": false,
+      "highlight": { "nodes": ["gateway", "api", "db"], "edges": [] },
+      "nodeStates": {
+        "client": { "status": "idle" },
+        "dns": { "status": "muted" },
+        "gateway": { "status": "active", "badge": "401 · 429" },
+        "api": { "status": "active", "badge": "400 · 404 · 422" },
+        "db": { "status": "warning", "badge": "→ 5xx" }
+      },
+      "annotations": [
+        { "id": "sum-gw", "x": 400, "y": 440, "text": { "tr": "erken ret: kimlik, limit", "en": "early reject: identity, limit" }, "target": "gateway" },
+        { "id": "sum-api", "x": 660, "y": 440, "text": { "tr": "iş kuralı: girdi, kaynak", "en": "business rules: input, resource" }, "target": "api" },
+        { "id": "sum-db", "x": 880, "y": 200, "text": { "tr": "bağımlılık hatası", "en": "dependency failure" }, "tone": "danger", "target": "db" }
+      ]
+    }
+  ]
+}

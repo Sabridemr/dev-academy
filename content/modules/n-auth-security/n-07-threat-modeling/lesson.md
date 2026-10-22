@@ -52,7 +52,23 @@ Kesik çizgiler güven sınırlarıdır; numaralı noktalar aşağıdaki tehdit 
 | **D** | Denial of service (hizmet engelleme) | Erişilebilirlik | Giriş uç noktasını boğmak, pahalı sorgu tetiklemek | Hız sınırı, kota, zaman aşımı, otomatik ölçekleme |
 | **E** | Elevation of privilege (yetki yükseltme) | Yetkilendirme | Toplu atamayla `role: admin` yazmak | Varsayılan ret, sunucu tarafı yetki, en az ayrıcalık |
 
+:::callout{tone="info" title="Derinleşme"}
 Pratik bir kural, her öğe türüne hangi kategorilerin özellikle uygulandığıdır: dış varlıklar en çok kimlik taklidi ve inkâr tehdidi taşır; süreçler altı kategorinin tamamına açıktır; veri depoları kurcalama, bilgi sızması ve hizmet engellemeye; veri akışları ise kurcalama, bilgi sızması ve hizmet engellemeye açıktır. Bu eşleme, büyük bir diyagramda kontrol listesini yönetilebilir tutar.
+:::
+
+STRIDE'ı bir veri akış diyagramına uygulamak, her güven sınırı geçişinde "burada ne ters gidebilir?" diye sormak ve hemen ardından önlemi yazmaktır. Sahne bunu bu platformun basitleştirilmiş modeli üzerinde yapıyor.
+
+:::predict{id="stride-calinmis-token"}
+Saldırgan XSS ile çaldığı bir access token'la API'ye istek atıyor ve API onu meşru kullanıcı sanıyor. Bu hangi STRIDE kategorisidir? | An attacker sends a request to the API with an access token stolen via XSS and the API takes it for the legitimate user. Which STRIDE category is this?
+- [ ] Tampering (kurcalama) | Tampering
+- [x] Spoofing (kimlik taklidi) | Spoofing
+- [ ] Repudiation (inkâr) | Repudiation
+Açıklama: Saldırgan token'ı değiştirmiyor, başkasının kimliğini taşıyor; ihlal edilen özellik kimlik doğrulamadır. Kısa ömürlü token ve refresh token rotasyonu bu tehdidin tipik azaltımlarıdır. | The attacker does not modify the token but carries someone else's identity; the violated property is authentication. Short-lived tokens and refresh token rotation are the typical mitigations.
+:::
+
+:::animation{scene="stride-boundaries.scene.json"}
+İnternet, uygulama ve veri bölgelerinin sınırlarında S, T/I, E ve D tehditleri işaretlenir ve her birine önlem eklenir; son adımda dış kimlik sağlayıcısı sınırı.
+:::
 
 ## Örnek tehdit modeli: bu platform
 
@@ -176,6 +192,10 @@ jobs:
 ## Tehdit modelini yaşatmak
 
 Tehdit modeli bir kez yazılıp rafa kaldırılan bir belge olduğunda değerini hızla yitirir. Onu yaşatmanın pratik yolları: büyük bir özellik ya da yeni bir dış bağımlılık eklendiğinde tasarım belgesinin bir bölümü olarak güncellemek; her güvenlik olayından sonra "modelimizde bu tehdit var mıydı, yoksa neden yoktu?" sorusunu sormak; azaltımları otomatik testlere bağlamak (örneğin "yönetim uç noktaları rolsüz kullanıcıya 403 döner" testi) ve modeli yılda en az bir kez ekip olarak yeniden okumak. Modelin amacı mükemmel olmak değil, sistemdeki en tehlikeli varsayımları görünür kılmaktır.
+
+:::interactive{type="threat-model" scenario="web-app"}
+Web uygulaması senaryosunda diyagramdaki her bileşene ve oka tek tek tıklayın (klavyede Tab ve Enter da çalışır). Alttaki panelde STRIDE'ın altı kategorisinden bu öğeye uyduğunu düşündüklerinizi işaretleyin ve her işaret için kısa gerekçenizi yazın. Kesikli kırmızı çerçeveler güven sınırlarıdır; bir sınırı geçen akışlara özellikle dikkat edin. Bitirdiğinizde **Bitirdim, göster** düğmesine basın: her kategori "buldun", "kaçırdın" ya da "beklenmiyor" olarak işaretlenir, beklenen her tehdit için bir gerekçe ve örnek önlem görünür, yan panelde bulunan/toplam puanınız çıkar. Ardından senaryoyu **CI/CD hattı** yapın ve aşağıdaki Codecov olayını okumadan önce CI çalıştırıcıdaki bilgi sızması tehdidini bulup bulamadığınıza bakın.
+:::
 
 :::realworld{company="Codecov"}
 2021'in başında, CI süreçlerinde kod kapsamı raporu yüklemek için yaygın kullanılan Codecov'un indirilebilir yükleme betiği, saldırganlar tarafından değiştirildi. Saldırganlar, şirketin kapsayıcı imajı oluşturma sürecindeki bir hatadan elde ettikleri bir kimlik bilgisiyle betiğe tek satırlık bir ekleme yaptı: betik, çalıştığı CI ortamındaki **ortam değişkenlerini** saldırganın sunucusuna gönderiyordu. Değişiklik yaklaşık iki ay fark edilmedi ve bu sürede betiği kullanan binlerce müşterinin CI'ındaki erişim anahtarları, token'lar ve parolalar risk altına girdi. Olay, bu dersin iki konusunun nasıl birleştiğini gösterir: CI'daki sırlar bir tedarik zinciri saldırısının birincil hedefidir, ve indirilen betiklerin bütünlük özeti doğrulanmadan çalıştırılması saldırganın elindeki tek değişikliği tüm müşterilere dağıtır. Sonrasında birçok kuruluş CI sırlarını döndürdü, betikleri özet doğrulamasıyla çalıştırmaya ve CI'a yalnızca kısa ömürlü kimlik bilgileri vermeye yöneldi.

@@ -32,6 +32,12 @@ Kalıpları beş aileye ayırarak okumak kolaylaştırır:
 Her kalıp isteğin yolunda belirli bir noktada devreye girer; haritayı okuyabilmek, mülakatta "nereye ne koyarım" sorusunun yarısıdır.
 :::
 
+Kalıplar tek başına değil, zincir hâlinde çalışır. Aşağıdaki animasyon, listenin sonundaki üçlünün (outbox, message queue ve idempotency) birlikte nasıl "kaybolmayan ama tekrarlanabilen" bir olay akışı kurduğunu adım adım gösteriyor; ayrıntılarını 15. maddede bulacaksın.
+
+:::animation{scene="outbox.scene.json"}
+Sipariş satırı ve olay aynı transaction'da yazılır, relay olayı Kafka'ya taşır; relay çökünce olay tekrar gelir ve idempotent tüketici onu ayıklar.
+:::
+
 ## Trafik dağıtımı
 
 ### 1. Load balancing
@@ -112,17 +118,23 @@ Devre kesici, hata veren bir bağımlılığa istek göndermeyi bir süreliğine
 - **Kullan:** Ağ üzerinden çağrılan her dış bağımlılıkta; özellikle zaman aşımı uzun ve çağrı hacmi yüksekse.
 - **Kullanma:** Hata olmadığında anlamlı bir "geri düşüş" (fallback) yanıtı veremiyorsan devre açıkken kullanıcı yine hata görür; önce fallback'i tasarla.
 
-### 12. CQRS
+İleri seviye iki kalıp, CQRS ve event sourcing, çoğu sistemde ilk gün gerekmez; mülakatta sorulduğunda ayırt edebilmek yeterlidir.
+
+:::callout{tone="info" title="Derinleşme"}
+**12. CQRS**
+
 Komut ve sorgu sorumluluk ayrımı, yazma modelini okuma modelinden ayırır: komutlar normalize bir yazma deposuna gider, okuma tarafı ise sorgulara göre biçimlenmiş, çoğu zaman denormalize ayrı bir depodan beslenir. İki taraf olaylarla senkronlanır, bu yüzden okuma tarafı nihai tutarlıdır. Karşılığında her taraf bağımsız ölçeklenir ve optimize edilir. Ayrıntı için [Mikroservis iletişimi dersi](/lessons/b-02-microservice-communication).
 
 - **Kullan:** Okuma ve yazma kalıpları çok farklıysa (karmaşık raporlar ile basit komutlar) ya da okuma yükü yazmanın çok üstündeyse.
 - **Kullanma:** Basit CRUD uygulamalarında; iki model ve senkronizasyon, kazanılan esneklikten pahalıya gelir.
 
-### 13. Event sourcing
+**13. Event sourcing**
+
 Olay kaynaklama, mevcut durumu saklamak yerine durumu değiştiren her olayı sırayla saklar; güncel durum olayların baştan oynatılmasıyla elde edilir. Bu, tam denetim izi, geçmişteki herhangi bir ana dönebilme ve yeni okuma modellerini eski olaylardan türetme imkânı verir. Bedeli, olay şemasının evrimi ve uzun olay akışlarında anlık görüntü (snapshot) ihtiyacıdır. Ayrıntı için [Mikroservis iletişimi dersi](/lessons/b-02-microservice-communication).
 
 - **Kullan:** Finans, muhasebe ve denetim gerektiren alanlarda; "bu bakiye nasıl oluştu" sorusunun cevabı zorunluysa.
 - **Kullanma:** Yalnızca güncel durumun önemli olduğu, geçmişin sorgulanmadığı basit alanlarda; eğitim ve araç maliyeti yüksektir.
+:::
 
 ### 14. Saga
 Saga, birden fazla servise yayılan bir iş akışını yerel transaction'lar zinciri olarak yürütür: sipariş oluştur, ödeme al, stok ayır, kargo planla. Bir adım başarısız olursa önceki adımlar telafi işlemleriyle geri alınır (ödemeyi iade et, stoğu bırak). Koreografi her servisin olaylara tepki vermesiyle, orkestrasyon ise merkezi bir koordinatörle yürür. Dağıtık transaction ve uzun süreli kilitlere gerek kalmaz. Ayrıntı için [Mikroservis iletişimi dersi](/lessons/b-02-microservice-communication).

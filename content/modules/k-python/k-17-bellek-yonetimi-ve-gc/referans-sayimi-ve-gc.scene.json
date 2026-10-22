@@ -1,0 +1,269 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "k17-referans-sayimi-ve-gc",
+  "title": { "tr": "Referans Sayımı ve Döngüsel Çöp Toplayıcı", "en": "Reference Counting and the Cyclic Garbage Collector" },
+  "summary": {
+    "tr": "Bir listenin referans sayacının isim bağlama, listeye koyma ve del ile artıp azalması, sıfırda anında serbest bırakılması; ardından birbirini gösteren iki nesnenin sayaçlarının 1'de takılı kalması ve döngüsel GC'nin onları toplaması.",
+    "en": "A list's reference count rising and falling through name binding, being placed in a list and del, being freed immediately at zero; then two objects pointing at each other getting stuck at 1 and the cyclic GC collecting them."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda isimlerin bulunduğu çerçeve, ortada heap nesneleri, sağda serbest bırakma işlevi ve döngüsel çöp toplayıcı vardır. Önce [1, 2, 3] listesine veri, yedek ve kutu listesi bağlanır; sayaç 1, 2, 3 olur. del veri, kutu.clear() ve del yedek ile sayaç sıfıra iner ve liste o anda serbest bırakılır. Sonra a ve b adlı iki düğüm komsu nitelikleriyle birbirini gösterir; del a ve del b sonrasında ikisi de erişilemez olduğu hâlde sayaçları 1'de kalır. gc.collect() çağrısında toplayıcı bu iki nesneyi tarar, yalnızca birbirlerinden gelen referanslar olduğunu bulur ve ikisini de toplar.",
+      "en": "On the left is the frame holding names, in the middle heap objects, on the right the deallocation function and the cyclic garbage collector. First veri, yedek and the kutu list are bound to the list [1, 2, 3]; the count goes 1, 2, 3. With del veri, kutu.clear() and del yedek the count drops to zero and the list is freed at that moment. Then two nodes a and b point at each other through komsu attributes; after del a and del b both are unreachable yet their counts stay at 1. On gc.collect() the collector scans these two objects, finds only references coming from each other and collects both."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "frame", "kind": "service", "label": { "tr": "Çerçeve (isimler)", "en": "Frame (names)" }, "sublabel": { "tr": "global isim tablosu", "en": "global name table" }, "x": 140, "y": 300, "w": 170, "h": 90 },
+    { "id": "kutu", "kind": "storage", "label": { "tr": "kutu: list", "en": "kutu: list" }, "sublabel": "[ • ]", "x": 400, "y": 90, "w": 140, "h": 64 },
+    { "id": "veri", "kind": "storage", "label": "[1, 2, 3]", "sublabel": "ob_refcnt", "x": 640, "y": 190, "w": 150, "h": 70 },
+    { "id": "free", "kind": "function", "label": { "tr": "serbest bırak", "en": "deallocate" }, "sublabel": "tp_dealloc", "x": 880, "y": 90, "w": 150, "h": 64 },
+    { "id": "a", "kind": "storage", "label": { "tr": "Dugum a", "en": "Node a" }, "sublabel": "ob_refcnt", "x": 470, "y": 470, "w": 140, "h": 70 },
+    { "id": "b", "kind": "storage", "label": { "tr": "Dugum b", "en": "Node b" }, "sublabel": "ob_refcnt", "x": 720, "y": 470, "w": 140, "h": 70 },
+    { "id": "gc", "kind": "worker", "label": { "tr": "Döngüsel GC", "en": "Cyclic GC" }, "sublabel": { "tr": "gc modülü", "en": "gc module" }, "x": 880, "y": 320, "w": 150, "h": 70 }
+  ],
+  "edges": [
+    { "id": "f-veri", "from": "frame", "to": "veri", "kind": "data", "label": "veri", "curvature": -0.15 },
+    { "id": "f-yedek", "from": "frame", "to": "veri", "kind": "data", "label": "yedek", "curvature": 0.2 },
+    { "id": "f-kutu", "from": "frame", "to": "kutu", "kind": "data", "label": "kutu", "curvature": -0.1 },
+    { "id": "kutu-veri", "from": "kutu", "to": "veri", "kind": "data", "label": "kutu[0]" },
+    { "id": "veri-free", "from": "veri", "to": "free", "kind": "control", "style": "dashed" },
+    { "id": "f-a", "from": "frame", "to": "a", "kind": "data", "label": "a", "curvature": 0.1 },
+    { "id": "f-b", "from": "frame", "to": "b", "kind": "data", "label": "b", "curvature": 0.3 },
+    { "id": "a-b", "from": "a", "to": "b", "kind": "data", "label": "komsu", "curvature": -0.3 },
+    { "id": "b-a", "from": "b", "to": "a", "kind": "data", "label": "komsu", "curvature": -0.3 },
+    { "id": "gc-a", "from": "gc", "to": "a", "kind": "control", "style": "dotted", "curvature": -0.2 },
+    { "id": "gc-b", "from": "gc", "to": "b", "kind": "control", "style": "dotted" }
+  ],
+  "steps": [
+    {
+      "id": "bind",
+      "title": { "tr": "veri = [1, 2, 3]", "en": "veri = [1, 2, 3]" },
+      "narration": {
+        "tr": "Liste heap'te oluşur ve `veri` ismi ona bağlanır. Nesne başlığındaki `ob_refcnt` sayacı **1** olur: onu gösteren tek referans bu isim.",
+        "en": "The list is created on the heap and the name `veri` is bound to it. The `ob_refcnt` counter in the object header becomes **1**: this name is the only reference."
+      },
+      "durationMs": 3000,
+      "inherit": false,
+      "highlight": { "nodes": ["frame", "veri"], "edges": ["f-veri"] },
+      "nodeStates": {
+        "veri": { "status": "active", "counter": 1, "badge": "rc=1" },
+        "kutu": { "visible": false },
+        "a": { "visible": false },
+        "b": { "visible": false }
+      },
+      "edgeStates": {
+        "f-yedek": { "visible": false },
+        "f-kutu": { "visible": false },
+        "kutu-veri": { "visible": false },
+        "veri-free": { "visible": false },
+        "f-a": { "visible": false },
+        "f-b": { "visible": false },
+        "a-b": { "visible": false },
+        "b-a": { "visible": false },
+        "gc-a": { "visible": false },
+        "gc-b": { "visible": false }
+      },
+      "packets": [{ "edge": "f-veri", "label": "+1", "durationMs": 1000 }]
+    },
+    {
+      "id": "alias",
+      "title": { "tr": "yedek = veri", "en": "yedek = veri" },
+      "narration": {
+        "tr": "Yeni bir liste oluşmaz; ikinci bir isim **aynı** nesneye bağlanır. Sayaç **2** olur.",
+        "en": "No new list is created; a second name is bound to the **same** object. The count becomes **2**."
+      },
+      "durationMs": 2800,
+      "highlight": { "nodes": ["veri"], "edges": ["f-yedek"] },
+      "nodeStates": { "veri": { "counter": 2, "badge": "rc=2" } },
+      "edgeStates": { "f-yedek": { "visible": true, "status": "active" } },
+      "packets": [{ "edge": "f-yedek", "label": "+1", "durationMs": 1000 }]
+    },
+    {
+      "id": "in-list",
+      "title": { "tr": "kutu = [veri]", "en": "kutu = [veri]" },
+      "narration": {
+        "tr": "Referans yalnızca isimlerden gelmez: başka bir listenin elemanı da referanstır. `kutu` listesinin içindeki yuva nesneyi gösterince sayaç **3** olur.",
+        "en": "References don't only come from names: an element of another list is a reference too. When a slot inside the `kutu` list points at the object the count becomes **3**."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["kutu", "veri"], "edges": ["f-kutu", "kutu-veri"] },
+      "nodeStates": {
+        "kutu": { "visible": true, "status": "active", "badge": "rc=1" },
+        "veri": { "counter": 3, "badge": "rc=3" }
+      },
+      "edgeStates": {
+        "f-kutu": { "visible": true },
+        "kutu-veri": { "visible": true, "status": "active" },
+        "f-yedek": { "status": "idle" }
+      },
+      "packets": [
+        { "edge": "f-kutu", "durationMs": 900 },
+        { "edge": "kutu-veri", "label": "+1", "startAt": 900, "durationMs": 1000 }
+      ]
+    },
+    {
+      "id": "del-veri",
+      "title": { "tr": "del veri", "en": "del veri" },
+      "narration": {
+        "tr": "`del veri` nesneyi silmez; yalnızca **ismi** çerçeveden kaldırır ve sayacı bir azaltır. Liste `yedek` ve `kutu` sayesinde yaşamaya devam eder: sayaç **2**.",
+        "en": "`del veri` does not delete the object; it only removes the **name** from the frame and decrements the count. The list lives on thanks to `yedek` and `kutu`: count **2**."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["veri"], "edges": ["f-veri"] },
+      "nodeStates": {
+        "kutu": { "status": "idle" },
+        "veri": { "counter": 2, "badge": "rc=2", "status": "warning" }
+      },
+      "edgeStates": { "f-veri": { "visible": false }, "kutu-veri": { "status": "idle" } },
+      "packets": [{ "edge": "f-veri", "direction": "backward", "label": "−1", "color": "warning", "durationMs": 1000 }],
+      "annotations": [
+        { "id": "del-note", "x": 640, "y": 300, "text": { "tr": "isim gitti, nesne duruyor", "en": "name gone, object stays" }, "target": "veri", "tone": "warning" }
+      ]
+    },
+    {
+      "id": "clear",
+      "title": { "tr": "kutu.clear()", "en": "kutu.clear()" },
+      "narration": {
+        "tr": "Liste boşaltılınca içindeki yuva referansı bırakır. Sayaç **1**'e iner; nesneyi artık yalnızca `yedek` tutuyor.",
+        "en": "When the list is cleared, its slot drops the reference. The count falls to **1**; only `yedek` holds the object now."
+      },
+      "durationMs": 2800,
+      "highlight": { "nodes": ["kutu", "veri"], "edges": ["kutu-veri"] },
+      "nodeStates": {
+        "kutu": { "sublabel": "[ ]" },
+        "veri": { "counter": 1, "badge": "rc=1" }
+      },
+      "edgeStates": { "kutu-veri": { "visible": false } },
+      "packets": [{ "edge": "kutu-veri", "direction": "backward", "label": "−1", "color": "warning", "durationMs": 1000 }]
+    },
+    {
+      "id": "free-now",
+      "title": { "tr": "del yedek: sayaç 0", "en": "del yedek: count 0" },
+      "narration": {
+        "tr": "Son referans da gidince sayaç **0** olur ve CPython nesneyi **o satırda** serbest bırakır. Beklenecek bir temizlik turu yoktur; bellek hemen geri döner.",
+        "en": "When the last reference goes too, the count hits **0** and CPython frees the object **on that very line**. There is no cleanup round to wait for; the memory comes back immediately."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["veri", "free"], "edges": ["veri-free"] },
+      "nodeStates": {
+        "veri": { "counter": 0, "badge": "rc=0", "status": "down", "sublabel": { "tr": "serbest bırakıldı", "en": "freed" } },
+        "free": { "status": "success" }
+      },
+      "edgeStates": { "f-yedek": { "visible": false }, "veri-free": { "visible": true, "status": "active" } },
+      "packets": [
+        { "edge": "f-yedek", "direction": "backward", "label": "−1", "color": "warning", "durationMs": 900 },
+        { "edge": "veri-free", "shape": "square", "label": "free", "startAt": 1000, "durationMs": 1200 }
+      ]
+    },
+    {
+      "id": "cycle",
+      "title": { "tr": "a.komsu = b; b.komsu = a", "en": "a.komsu = b; b.komsu = a" },
+      "narration": {
+        "tr": "İki düğüm oluşur ve `komsu` nitelikleriyle birbirini gösterir. Her birinin sayacı **2**: biri dışarıdaki isimden, biri diğer düğümden.",
+        "en": "Two nodes are created and point at each other through `komsu` attributes. Each count is **2**: one from the outside name, one from the other node."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["a", "b"], "edges": ["a-b", "b-a"] },
+      "nodeStates": {
+        "veri": { "visible": false },
+        "free": { "status": "idle" },
+        "a": { "visible": true, "status": "active", "counter": 2, "badge": "rc=2" },
+        "b": { "visible": true, "status": "active", "counter": 2, "badge": "rc=2" }
+      },
+      "edgeStates": {
+        "veri-free": { "visible": false },
+        "f-a": { "visible": true },
+        "f-b": { "visible": true },
+        "a-b": { "visible": true, "status": "active" },
+        "b-a": { "visible": true, "status": "active" }
+      },
+      "packets": [
+        { "edge": "f-a", "durationMs": 800 },
+        { "edge": "f-b", "durationMs": 800 },
+        { "edge": "a-b", "label": "+1", "startAt": 1000, "durationMs": 1000 },
+        { "edge": "b-a", "label": "+1", "startAt": 2000, "durationMs": 1000 }
+      ]
+    },
+    {
+      "id": "stuck",
+      "title": { "tr": "del a; del b: sayaçlar 1'de takıldı", "en": "del a; del b: counts stuck at 1" },
+      "narration": {
+        "tr": "İki isim de silinir. Programdan bu nesnelere ulaşan **hiçbir yol kalmadı**, ama birbirlerini gösterdikleri için sayaçları **1**'de kalır. Referans sayımı bu çöpü tek başına asla temizleyemez.",
+        "en": "Both names are deleted. **No path** from the program reaches these objects any more, yet because they point at each other their counts stay at **1**. Reference counting alone can never clean up this garbage."
+      },
+      "durationMs": 3800,
+      "highlight": { "nodes": ["a", "b"], "edges": ["a-b", "b-a"] },
+      "nodeStates": {
+        "a": { "status": "warning", "counter": 1, "badge": "rc=1" },
+        "b": { "status": "warning", "counter": 1, "badge": "rc=1" }
+      },
+      "edgeStates": {
+        "f-a": { "visible": false },
+        "f-b": { "visible": false },
+        "a-b": { "status": "idle" },
+        "b-a": { "status": "idle" }
+      },
+      "packets": [
+        { "edge": "f-a", "direction": "backward", "label": "−1", "color": "warning", "durationMs": 900 },
+        { "edge": "f-b", "direction": "backward", "label": "−1", "color": "warning", "startAt": 600, "durationMs": 900 }
+      ],
+      "annotations": [
+        { "id": "stuck-note", "x": 595, "y": 560, "text": { "tr": "erişilemez ama rc ≠ 0: sızıntı adayı", "en": "unreachable but rc ≠ 0: a leak candidate" }, "tone": "danger" }
+      ]
+    },
+    {
+      "id": "gc-scan",
+      "title": { "tr": "gc.collect(): tarama", "en": "gc.collect(): scanning" },
+      "narration": {
+        "tr": "Döngüsel toplayıcı yalnızca konteyner nesnelerini (liste, sözlük, sınıf örnekleri) izler. Genç nesildeki her nesnenin sayacından, **izlenen nesnelerden gelen** referansları düşer. Geriye dışarıdan referans kalmazsa grup erişilemezdir.",
+        "en": "The cyclic collector only tracks container objects (lists, dicts, class instances). For every object in the young generation it subtracts the references **coming from other tracked objects**. If no outside reference remains, the group is unreachable."
+      },
+      "durationMs": 4000,
+      "highlight": { "nodes": ["gc", "a", "b"], "edges": ["gc-a", "gc-b"] },
+      "nodeStates": {
+        "gc": { "status": "busy", "badge": "gen 0" },
+        "a": { "badge": "1 − 1 = 0" },
+        "b": { "badge": "1 − 1 = 0" }
+      },
+      "edgeStates": {
+        "gc-a": { "visible": true, "status": "active" },
+        "gc-b": { "visible": true, "status": "active" }
+      },
+      "packets": [
+        { "edge": "gc-a", "shape": "diamond", "label": { "tr": "tara", "en": "scan" }, "durationMs": 1000 },
+        { "edge": "gc-b", "shape": "diamond", "label": { "tr": "tara", "en": "scan" }, "startAt": 300, "durationMs": 1000 },
+        { "edge": "a-b", "durationMs": 800, "startAt": 1500 },
+        { "edge": "b-a", "durationMs": 800, "startAt": 2300 }
+      ]
+    },
+    {
+      "id": "collected",
+      "title": { "tr": "Döngü toplandı", "en": "Cycle collected" },
+      "narration": {
+        "tr": "Toplayıcı döngüyü kırar, sayaçlar sıfıra iner ve iki nesne serbest bırakılır. `gc.collect()` bu örnekte **2** döndürür. Taramadan sağ çıkan nesneler olsaydı daha yaşlı bir nesle taşınır ve daha seyrek taranırdı.",
+        "en": "The collector breaks the cycle, the counts drop to zero and both objects are freed. In this example `gc.collect()` returns **2**. Objects surviving the scan would move to an older generation and be scanned less often."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["gc"] },
+      "nodeStates": {
+        "gc": { "status": "success", "counter": 2, "badge": "2" },
+        "a": { "status": "down", "badge": "rc=0", "sublabel": { "tr": "toplandı", "en": "collected" } },
+        "b": { "status": "down", "badge": "rc=0", "sublabel": { "tr": "toplandı", "en": "collected" } }
+      },
+      "edgeStates": {
+        "a-b": { "visible": false },
+        "b-a": { "visible": false },
+        "gc-a": { "status": "muted" },
+        "gc-b": { "status": "muted" }
+      },
+      "annotations": [
+        { "id": "gc-note", "x": 880, "y": 420, "text": "gc.collect() → 2", "target": "gc", "tone": "success" }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["python", "memory", "reference-counting", "garbage-collector"]
+}

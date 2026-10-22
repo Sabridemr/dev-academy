@@ -1,0 +1,204 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "generator-askiya-alma",
+  "title": { "tr": "Generator: next ile çalış, yield'de dur", "en": "Generator: run on next, pause at yield" },
+  "summary": {
+    "tr": "sayac(2) generator'ının her next() çağrısında bir sonraki yield'e kadar çalışması, askıya alınması ve sonunda StopIteration fırlatması.",
+    "en": "The sayac(2) generator running up to the next yield on every next() call, being suspended and finally raising StopIteration."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda çağıran kod, ortada generator nesnesi, sağ üstte sayac() fonksiyon çerçevesi, sağ altta çağrı yığını bulunur. gen = sayac(2) yalnızca nesneyi oluşturur, gövde çalışmaz. Her next() çağrısında çerçeve yığına girer, yield n satırına kadar çalışır, değeri çağırana verir ve yerel değişkenleriyle birlikte generator nesnesinin içinde askıya alınır. İkinci next n += 1 satırından devam eder. Üçüncü next'te döngü biter, çerçeve sonlanır ve StopIteration çağırana gider; for döngüsü bunu sessizce yakalar. Tükenen generator'a yapılan yeni next çağrısı hemen StopIteration alır.",
+      "en": "Calling code on the left, the generator object in the middle, the sayac() function frame at the top right and the call stack at the bottom right. gen = sayac(2) only creates the object; the body does not run. On every next() call the frame is pushed onto the stack, runs up to the yield n line, hands the value to the caller and is suspended inside the generator object together with its local variables. The second next resumes from the n += 1 line. On the third next the loop ends, the frame finishes and StopIteration reaches the caller; a for loop catches it silently. A new next on the exhausted generator gets StopIteration immediately."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "caller", "kind": "client", "label": { "tr": "Çağıran kod", "en": "Calling code" }, "sublabel": { "tr": "next(gen) / for", "en": "next(gen) / for" }, "x": 140, "y": 260, "w": 170, "h": 80 },
+    { "id": "gen", "kind": "service", "label": { "tr": "gen nesnesi", "en": "gen object" }, "sublabel": { "tr": "generator (heap)", "en": "generator (heap)" }, "x": 470, "y": 260, "w": 170, "h": 80 },
+    { "id": "frame", "kind": "function", "label": { "tr": "sayac() çerçevesi", "en": "sayac() frame" }, "sublabel": { "tr": "henüz çalışmadı", "en": "not started yet" }, "x": 820, "y": 150, "w": 180, "h": 80 },
+    { "id": "stack", "kind": "queue", "label": { "tr": "Çağrı yığını", "en": "Call stack" }, "sublabel": "Global", "x": 820, "y": 420, "w": 180, "h": 80 },
+    { "id": "out", "kind": "storage", "label": { "tr": "Alınan değerler", "en": "Received values" }, "sublabel": "[]", "x": 140, "y": 480, "w": 170, "h": 70 }
+  ],
+  "edges": [
+    { "id": "e-next", "from": "caller", "to": "gen", "kind": "request", "label": "next()" },
+    { "id": "e-resume", "from": "gen", "to": "frame", "kind": "control", "curvature": -0.2, "label": { "tr": "devam et", "en": "resume" } },
+    { "id": "e-push", "from": "frame", "to": "stack", "kind": "control", "style": "dashed", "label": { "tr": "yığına gir / çık", "en": "push / pop" } },
+    { "id": "e-out", "from": "caller", "to": "out", "kind": "data" }
+  ],
+  "steps": [
+    {
+      "id": "create",
+      "title": { "tr": "gen = sayac(2)", "en": "gen = sayac(2)" },
+      "narration": {
+        "tr": "Gövdesinde `yield` olan bir fonksiyonu çağırmak gövdeyi **çalıştırmaz**. Python yalnızca bir generator nesnesi oluşturur ve döndürür. Çerçeve hazırlanmış ama ilk satırı bile çalışmamıştır; çıktıda hiçbir şey yok.",
+        "en": "Calling a function whose body contains `yield` does **not** run the body. Python only creates and returns a generator object. The frame is prepared but not even its first line has run; there is no output."
+      },
+      "durationMs": 3200,
+      "inherit": false,
+      "highlight": { "nodes": ["caller", "gen"], "edges": ["e-next"] },
+      "nodeStates": {
+        "gen": { "status": "active", "badge": "CREATED" },
+        "frame": { "status": "muted" }
+      },
+      "packets": [{ "edge": "e-next", "shape": "envelope", "label": "sayac(2)", "durationMs": 1200 }],
+      "annotations": [
+        { "id": "a-create", "x": 470, "y": 380, "text": { "tr": "gövde henüz çalışmadı", "en": "body has not run yet" }, "target": "gen" }
+      ]
+    },
+    {
+      "id": "next1",
+      "title": { "tr": "İlk next(gen)", "en": "First next(gen)" },
+      "narration": {
+        "tr": "İlk `next(gen)` ile generator çerçevesi yığına girer ve gövde baştan çalışmaya başlar: `n = 1`, `while n <= limit` doğru.",
+        "en": "With the first `next(gen)` the generator frame is pushed onto the stack and the body starts from the top: `n = 1`, `while n <= limit` is true."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["gen", "frame", "stack"], "edges": ["e-next", "e-resume", "e-push"] },
+      "nodeStates": {
+        "gen": { "status": "active", "badge": "RUNNING" },
+        "frame": { "status": "active", "sublabel": "n = 1" },
+        "stack": { "status": "active", "sublabel": "Global → sayac", "counter": 2 }
+      },
+      "packets": [
+        { "edge": "e-next", "label": "next()", "durationMs": 900 },
+        { "edge": "e-resume", "label": { "tr": "başla", "en": "start" }, "startAt": 900, "durationMs": 900 },
+        { "edge": "e-push", "shape": "square", "label": "push", "startAt": 1800, "durationMs": 900 }
+      ]
+    },
+    {
+      "id": "yield1",
+      "title": { "tr": "yield n: değer dışarı, çerçeve askıya", "en": "yield n: value out, frame suspended" },
+      "narration": {
+        "tr": "`yield n` satırında gövde durur ve 1 değeri çağırana verilir. Çerçeve yığından çıkar ama **yok edilmez**: yerel değişkenler (`n = 1`) ve kaldığı satır generator nesnesinin içinde saklanır.",
+        "en": "At the `yield n` line the body stops and the value 1 is handed to the caller. The frame leaves the stack but is **not destroyed**: its locals (`n = 1`) and the current line are kept inside the generator object."
+      },
+      "durationMs": 3800,
+      "highlight": { "nodes": ["frame", "gen", "caller", "out"], "edges": ["e-resume", "e-next", "e-out"] },
+      "nodeStates": {
+        "gen": { "status": "warning", "badge": "SUSPENDED" },
+        "frame": { "status": "warning", "badge": "ASKIDA", "sublabel": { "tr": "n = 1, satır: yield", "en": "n = 1, line: yield" } },
+        "stack": { "status": "idle", "sublabel": "Global", "counter": 1 },
+        "out": { "status": "success", "sublabel": "[1]" }
+      },
+      "packets": [
+        { "edge": "e-resume", "direction": "backward", "shape": "diamond", "label": "1", "durationMs": 900 },
+        { "edge": "e-push", "direction": "backward", "shape": "square", "label": "pop", "startAt": 900, "durationMs": 900 },
+        { "edge": "e-next", "direction": "backward", "shape": "diamond", "label": "1", "startAt": 900, "durationMs": 900 },
+        { "edge": "e-out", "shape": "diamond", "label": "1", "startAt": 1800, "durationMs": 900 }
+      ],
+      "annotations": [
+        { "id": "a-suspend", "x": 820, "y": 50, "text": { "tr": "çerçeve gen'in içinde bekliyor", "en": "frame waits inside gen" }, "tone": "warning", "target": "frame" }
+      ]
+    },
+    {
+      "id": "next2",
+      "title": { "tr": "İkinci next: kaldığı yerden", "en": "Second next: resume where it stopped" },
+      "narration": {
+        "tr": "İkinci `next(gen)` çerçeveyi **aynı yerel değişkenlerle** yığına geri koyar. Çalışma baştan değil, `yield`'den sonraki satırdan (`n += 1`) devam eder; artık `n = 2`.",
+        "en": "The second `next(gen)` puts the frame back on the stack **with the same locals**. Execution continues not from the top but from the line after `yield` (`n += 1`); now `n = 2`."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["gen", "frame", "stack"], "edges": ["e-next", "e-resume", "e-push"] },
+      "nodeStates": {
+        "gen": { "status": "active", "badge": "RUNNING" },
+        "frame": { "status": "active", "badge": "", "sublabel": { "tr": "n += 1 → n = 2", "en": "n += 1 → n = 2" } },
+        "stack": { "status": "active", "sublabel": "Global → sayac", "counter": 2 }
+      },
+      "packets": [
+        { "edge": "e-next", "label": "next()", "durationMs": 900 },
+        { "edge": "e-resume", "label": { "tr": "devam", "en": "resume" }, "startAt": 900, "durationMs": 900 },
+        { "edge": "e-push", "shape": "square", "label": "push", "startAt": 1800, "durationMs": 900 }
+      ],
+      "annotations": [
+        { "id": "a-resume", "x": 820, "y": 50, "text": { "tr": "baştan değil, yield'den sonrası", "en": "not from the top, after yield" }, "tone": "success", "target": "frame" }
+      ]
+    },
+    {
+      "id": "yield2",
+      "title": { "tr": "İkinci yield", "en": "Second yield" },
+      "narration": {
+        "tr": "Döngü koşulu (`2 <= 2`) hâlâ doğru; `yield n` 2 değerini verir ve çerçeve yine askıya alınır. Bellekte hiçbir zaman bütün dizi yoktur, yalnızca o anki `n` vardır.",
+        "en": "The loop condition (`2 <= 2`) is still true; `yield n` produces 2 and the frame is suspended again. The whole sequence never exists in memory, only the current `n`."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["frame", "gen", "caller", "out"], "edges": ["e-resume", "e-next", "e-out"] },
+      "nodeStates": {
+        "gen": { "status": "warning", "badge": "SUSPENDED" },
+        "frame": { "status": "warning", "badge": "ASKIDA", "sublabel": { "tr": "n = 2, satır: yield", "en": "n = 2, line: yield" } },
+        "stack": { "status": "idle", "sublabel": "Global", "counter": 1 },
+        "out": { "status": "success", "sublabel": "[1, 2]" }
+      },
+      "packets": [
+        { "edge": "e-resume", "direction": "backward", "shape": "diamond", "label": "2", "durationMs": 900 },
+        { "edge": "e-push", "direction": "backward", "shape": "square", "label": "pop", "startAt": 900, "durationMs": 900 },
+        { "edge": "e-next", "direction": "backward", "shape": "diamond", "label": "2", "startAt": 900, "durationMs": 900 },
+        { "edge": "e-out", "shape": "diamond", "label": "2", "startAt": 1800, "durationMs": 900 }
+      ]
+    },
+    {
+      "id": "next3",
+      "title": { "tr": "Üçüncü next: döngü biter", "en": "Third next: the loop ends" },
+      "narration": {
+        "tr": "Üçüncü `next` çerçeveyi yine uyandırır: `n += 1` ile `n = 3` olur, `3 <= 2` yanlıştır ve fonksiyon sonuna ulaşır. Bu kez çerçeve gerçekten sonlanır ve yok edilir.",
+        "en": "The third `next` wakes the frame again: `n += 1` makes `n = 3`, `3 <= 2` is false and the function reaches its end. This time the frame really finishes and is destroyed."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["gen", "frame"], "edges": ["e-next", "e-resume"] },
+      "nodeStates": {
+        "gen": { "status": "active", "badge": "RUNNING" },
+        "frame": { "status": "down", "badge": "✕", "sublabel": { "tr": "n = 3, gövde bitti", "en": "n = 3, body finished" } },
+        "stack": { "status": "idle", "sublabel": "Global", "counter": 1 }
+      },
+      "packets": [
+        { "edge": "e-next", "label": "next()", "durationMs": 900 },
+        { "edge": "e-resume", "label": { "tr": "devam", "en": "resume" }, "startAt": 900, "durationMs": 900 }
+      ]
+    },
+    {
+      "id": "stop",
+      "title": { "tr": "StopIteration", "en": "StopIteration" },
+      "narration": {
+        "tr": "Gövdesi biten generator `StopIteration` fırlatır. `for` döngüsü bu istisnayı **sessizce yakalar** ve döngüyü bitirir; elle `next(gen)` çağırdıysan istisnayı sen görürsün (ya da `next(gen, varsayilan)` ile varsayılanı alırsın).",
+        "en": "A generator whose body has finished raises `StopIteration`. A `for` loop **silently catches** it and ends the loop; if you called `next(gen)` by hand you see the exception (or get the default with `next(gen, default)`)."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["gen", "caller"], "edges": ["e-next"] },
+      "nodeStates": {
+        "gen": { "status": "error", "badge": "STOP" },
+        "frame": { "visible": false },
+        "caller": { "status": "success", "sublabel": { "tr": "for döngüsü bitti", "en": "for loop ended" } }
+      },
+      "edgeStates": { "e-resume": { "status": "muted" }, "e-push": { "status": "muted" }, "e-next": { "status": "error" } },
+      "packets": [
+        { "edge": "e-next", "direction": "backward", "shape": "square", "color": "danger", "label": "StopIteration", "durationMs": 1200 }
+      ],
+      "annotations": [
+        { "id": "a-stop", "x": 300, "y": 150, "text": { "tr": "for bunu yakalar, hata görünmez", "en": "for catches it, no error shown" }, "tone": "danger", "target": "caller" }
+      ]
+    },
+    {
+      "id": "exhausted",
+      "title": { "tr": "Tükenmiş generator", "en": "An exhausted generator" },
+      "narration": {
+        "tr": "Generator bir kez tükendi mi baştan başlamaz. Aynı `gen` üzerinde yeni bir `next` hemen `StopIteration` alır, ikinci bir `for` döngüsü hiç dönmez. Yeniden dolaşmak için `sayac(2)`'yi yeniden çağırıp yeni bir generator oluşturmalısın.",
+        "en": "Once a generator is exhausted it does not restart. A new `next` on the same `gen` gets `StopIteration` immediately and a second `for` loop never runs. To iterate again you must call `sayac(2)` again and create a new generator."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["gen", "out"], "edges": ["e-next"] },
+      "nodeStates": {
+        "gen": { "status": "muted", "badge": "EXHAUSTED" },
+        "caller": { "status": "idle", "sublabel": "next(gen)" }
+      },
+      "edgeStates": { "e-next": { "status": "active" } },
+      "packets": [
+        { "edge": "e-next", "label": "next()", "durationMs": 900 },
+        { "edge": "e-next", "direction": "backward", "shape": "square", "color": "danger", "label": "StopIteration", "startAt": 1000, "durationMs": 900 }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["python", "generator", "yield", "stop-iteration"]
+}

@@ -34,6 +34,13 @@ tiplerle ve onları birleştiren operatörlerle tanışacaksın.
 Bir nesnenin tipini `type()` ile, belirli bir tipten olup olmadığını `isinstance()` ile sorarsın:
 `type(3.0)` → `<class 'float'>`, `isinstance(True, int)` → `True` (nedenini birazdan göreceksin).
 
+Tipin neden bu kadar önemli olduğunu tek bir operatör üzerinden görebilirsin: aynı `+` işareti, operandların
+tipine göre bambaşka işler yapar ya da hiç çalışmaz. Animasyonda `+`'nın her ifadede nereye yönlendiğini izle.
+
+:::animation{scene="tip-operator-secimi.scene.json"}
+`"3" + 4` adımında Python'un hiçbir şeyi kendiliğinden dönüştürmediğine ve her başarılı işlemin yeni bir sonuç nesnesi ürettiğine dikkat et.
+:::
+
 ## Sayılar: int ve float
 
 ### int: sınırsız hassasiyet
@@ -228,6 +235,10 @@ hesaplanır). `is` / `is not` kimlik, `in` / `not in` üyelik sorar.
 2. **Operandın kendisini döndürürler**, `True`/`False`'u değil: `x and y` → `x` yanlışsa `x`, değilse `y`;
    `x or y` → `x` doğruysa `x`, değilse `y`. `not` ise her zaman `bool` döndürür.
 
+:::diagram{src="kisa-devre.svg" alt="and ve or için kısa devre karar şeması: sol operand doğru mu sorusuna göre sağ operandın hesaplanıp hesaplanmadığı ve yanlış sayılan değerler|Short-circuit decision chart for and and or: whether the right operand is evaluated depending on the truthiness of the left operand, and the values that count as false"}
+İki operatör de tek bir soru sorar: sol operand doğru mu? Cevaba göre ya sol operandı döndürür ya da sağ tarafı hesaplar.
+:::
+
 Aşağıdaki simülasyonda `sol` ve `sag` fonksiyonları çağrıldıklarında ekrana yazar. Hangi fonksiyonun çağrı
 yığınında hiç çerçeve açmadığına bak.
 
@@ -331,6 +342,22 @@ indirimli = toplam * 0.9 if kupon else toplam
 print(f"{urun} x{adet} | kupon: {kupon_kodu} | {indirimli:,.2f} TL")
 # Kablosuz Kulaklık x2 | kupon: YOK | 2,999.80 TL
 ```
+:::
+
+:::realworld{company="Stripe"}
+Yukarıdaki fiyat örneği küçük bir betik için yeterli, ama gerçek ödeme sistemleri parayı neredeyse hiç `float`
+ile taşımaz. Ödeme altyapısı sağlayan Stripe'ın API belgelerinde tutarlar (`amount`) para biriminin **en küçük
+biriminde bir tam sayı** olarak istenir: 10,00 USD için `1000` (sent) gönderilir. Kuruşu olmayan para birimlerinde
+ise tutar doğrudan o birimdeki tam sayıdır.
+
+Bu tasarımın nedeni bu dersin `0.1 + 0.2` bölümüyle aynıdır: ikilik tabanda saklanan bir `float` çoğu ondalık
+tutarı tam temsil edemez; toplama, indirim ve vergi hesapları üst üste bindikçe küçük yuvarlama farkları birikir
+ve muhasebe kayıtları tutmaz. Tam sayılarla bu sorun yoktur.
+
+Python tarafında aynı ilkeyi iki şekilde uygularsın: tutarları kuruş cinsinden `int` olarak tutmak ya da ondalık
+hesap gereken yerde standart kütüphanedeki `decimal.Decimal` tipini (metinden oluşturarak: `Decimal("1499.90")`)
+kullanmak. Formdan gelen `"1499.90"` metnini `float()` ile değil bu yollardan biriyle dönüştürmek, faturada bir
+kuruşluk farkla uğraşmanı baştan önler.
 :::
 
 ## Özet

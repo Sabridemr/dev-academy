@@ -1,0 +1,578 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "l-01-buyume-siniflari",
+  "title": {
+    "tr": "Girdi büyürken işlem sayısı",
+    "en": "Operation count as the input grows"
+  },
+  "summary": {
+    "tr": "Aynı girdi 4, 8, 16 ve bir milyon elemana büyürken O(1), O(log n), O(n) ve O(n²) algoritmalarının yaptığı işlem sayısı.",
+    "en": "How many operations O(1), O(log n), O(n) and O(n²) algorithms perform as the same input grows to 4, 8, 16 and a million elements."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda bir girdi kutusu, sağda alt alta O(1), O(log n), O(n) ve O(n²) etiketli dört algoritma vardır. Girdiden her algoritmaya, yaptığı işlem sayısı kadar paket gider. n = 4 için sırasıyla 1, 2, 4 ve 16; n = 8 için 1, 3, 8 ve 64; n = 16 için 1, 4, 16 ve 256 işlem sayılır. n iki katına çıktığında O(log n) bir adım ekler, O(n) iki katına, O(n²) dört katına çıkar. Bir milyon elemanda O(n²) 10¹² işleme ulaşır ve kırmızıya döner. Son adımda sabit çarpanların sınıfı değiştirmediği gösterilir.",
+      "en": "An input box on the left and four algorithms stacked on the right, labelled O(1), O(log n), O(n) and O(n²). Packets travel from the input to each algorithm, one per operation. For n = 4 the counts are 1, 2, 4 and 16; for n = 8 they are 1, 3, 8 and 64; for n = 16 they are 1, 4, 16 and 256. When n doubles O(log n) adds one step, O(n) doubles and O(n²) quadruples. With a million elements O(n²) reaches 10¹² operations and turns red. The last step shows that constant factors do not change the class."
+    }
+  },
+  "canvas": {
+    "width": 1000,
+    "height": 600
+  },
+  "nodes": [
+    {
+      "id": "inp",
+      "kind": "storage",
+      "label": {
+        "tr": "Girdi",
+        "en": "Input"
+      },
+      "x": 140,
+      "y": 300,
+      "w": 170,
+      "h": 84,
+      "sublabel": {
+        "tr": "n = 4",
+        "en": "n = 4"
+      }
+    },
+    {
+      "id": "o1",
+      "kind": "function",
+      "label": "O(1)",
+      "x": 640,
+      "y": 90,
+      "w": 250,
+      "h": 74,
+      "sublabel": {
+        "tr": "sözlükte anahtar okuma",
+        "en": "dict key lookup"
+      }
+    },
+    {
+      "id": "olog",
+      "kind": "function",
+      "label": "O(log n)",
+      "x": 640,
+      "y": 230,
+      "w": 250,
+      "h": 74,
+      "sublabel": {
+        "tr": "ikili arama",
+        "en": "binary search"
+      }
+    },
+    {
+      "id": "on",
+      "kind": "function",
+      "label": "O(n)",
+      "x": 640,
+      "y": 370,
+      "w": 250,
+      "h": 74,
+      "sublabel": {
+        "tr": "listeyi bir kez tarama",
+        "en": "one pass over a list"
+      }
+    },
+    {
+      "id": "on2",
+      "kind": "function",
+      "label": "O(n²)",
+      "x": 640,
+      "y": 510,
+      "w": 250,
+      "h": 74,
+      "sublabel": {
+        "tr": "her çifti karşılaştırma",
+        "en": "compare every pair"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "from": "inp",
+      "to": "o1",
+      "kind": "request",
+      "curvature": -0.1
+    },
+    {
+      "id": "elog",
+      "from": "inp",
+      "to": "olog",
+      "kind": "request",
+      "curvature": -0.05
+    },
+    {
+      "id": "en",
+      "from": "inp",
+      "to": "on",
+      "kind": "request",
+      "curvature": 0.05
+    },
+    {
+      "id": "en2",
+      "from": "inp",
+      "to": "on2",
+      "kind": "request",
+      "curvature": 0.1
+    }
+  ],
+  "steps": [
+    {
+      "id": "intro",
+      "title": {
+        "tr": "Aynı girdi, dört algoritma",
+        "en": "Same input, four algorithms"
+      },
+      "narration": {
+        "tr": "Solda n elemanlı bir girdi, sağda dört farklı büyüme sınıfından birer algoritma var. Her paket bir temel işlemi (karşılaştırma, okuma) temsil ediyor. Saniyeleri değil, **işlem sayısının n ile nasıl büyüdüğünü** izleyeceğiz.",
+        "en": "On the left an input of n elements, on the right one algorithm from each of four growth classes. Each packet stands for one basic operation (a comparison, a read). We will watch not seconds but **how the operation count grows with n**."
+      },
+      "durationMs": 3500,
+      "inherit": false,
+      "highlight": {
+        "nodes": [
+          "inp",
+          "o1",
+          "olog",
+          "on",
+          "on2"
+        ],
+        "edges": []
+      },
+      "annotations": [
+        {
+          "id": "a-birim",
+          "x": 140,
+          "y": 420,
+          "text": {
+            "tr": "1 paket = 1 temel işlem",
+            "en": "1 packet = 1 basic operation"
+          }
+        }
+      ]
+    },
+    {
+      "id": "n4",
+      "title": {
+        "tr": "n = 4",
+        "en": "n = 4"
+      },
+      "narration": {
+        "tr": "n = 4 iken farklar küçük: O(1) bir, O(log n) iki, O(n) dört, O(n²) on altı işlem yapıyor. Bu ölçekte hepsi \"hızlı\" görünür; küçük test verisinin yanıltıcı olmasının nedeni budur.",
+        "en": "At n = 4 the gaps are small: O(1) does one operation, O(log n) two, O(n) four and O(n²) sixteen. At this scale everything looks \"fast\"; that is why small test data is misleading."
+      },
+      "durationMs": 4200,
+      "highlight": {
+        "nodes": [
+          "o1",
+          "olog",
+          "on",
+          "on2"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "o1": {
+          "counter": 1,
+          "status": "active"
+        },
+        "olog": {
+          "counter": 2,
+          "status": "active"
+        },
+        "on": {
+          "counter": 4,
+          "status": "active"
+        },
+        "on2": {
+          "counter": 16,
+          "status": "active"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e1",
+          "durationMs": 700
+        },
+        {
+          "edge": "elog",
+          "durationMs": 700,
+          "repeat": 2,
+          "repeatGapMs": 150
+        },
+        {
+          "edge": "en",
+          "durationMs": 500,
+          "repeat": 4,
+          "repeatGapMs": 100
+        },
+        {
+          "edge": "en2",
+          "durationMs": 220,
+          "repeat": 16,
+          "repeatGapMs": 40
+        }
+      ]
+    },
+    {
+      "id": "n8",
+      "title": {
+        "tr": "n = 8: girdi iki katına çıktı",
+        "en": "n = 8: the input doubled"
+      },
+      "narration": {
+        "tr": "Girdi iki katına çıktığında O(1) hâlâ tek işlem yapar, O(log n) yalnızca **bir** adım ekler (3), O(n) iki katına çıkar (8), O(n²) ise **dört katına** çıkar (64). Kırmızı hattaki her paket artık 8 işlemlik bir demeti temsil ediyor.",
+        "en": "When the input doubles, O(1) still does one operation, O(log n) adds only **one** step (3), O(n) doubles (8) and O(n²) **quadruples** (64). Each packet on the bottom line now carries a bundle of 8 operations."
+      },
+      "durationMs": 4200,
+      "highlight": {
+        "nodes": [
+          "inp",
+          "on2"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "inp": {
+          "sublabel": {
+            "tr": "n = 8",
+            "en": "n = 8"
+          }
+        },
+        "o1": {
+          "counter": 1
+        },
+        "olog": {
+          "counter": 3
+        },
+        "on": {
+          "counter": 8
+        },
+        "on2": {
+          "counter": 64,
+          "status": "busy"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e1",
+          "durationMs": 700
+        },
+        {
+          "edge": "elog",
+          "durationMs": 600,
+          "repeat": 3,
+          "repeatGapMs": 120
+        },
+        {
+          "edge": "en",
+          "durationMs": 380,
+          "repeat": 8,
+          "repeatGapMs": 60
+        },
+        {
+          "edge": "en2",
+          "label": "×8",
+          "shape": "square",
+          "durationMs": 380,
+          "repeat": 8,
+          "repeatGapMs": 60
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a-kat",
+          "x": 880,
+          "y": 510,
+          "text": {
+            "tr": "×4",
+            "en": "×4"
+          },
+          "target": "on2",
+          "tone": "warning"
+        }
+      ]
+    },
+    {
+      "id": "n16",
+      "title": {
+        "tr": "n = 16",
+        "en": "n = 16"
+      },
+      "narration": {
+        "tr": "Bir kez daha ikiye katlayalım. O(log n) 4 adımda kalırken O(n²) 256 işleme fırladı. Aynı girdi büyümesi, algoritmaya göre ya fark edilmez ya da sistemi zorlar.",
+        "en": "Let us double once more. O(log n) stays at 4 steps while O(n²) jumps to 256 operations. The same growth in input is either unnoticeable or a burden, depending on the algorithm."
+      },
+      "durationMs": 4500,
+      "highlight": {
+        "nodes": [
+          "olog",
+          "on2"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "inp": {
+          "sublabel": {
+            "tr": "n = 16",
+            "en": "n = 16"
+          }
+        },
+        "olog": {
+          "counter": 4
+        },
+        "on": {
+          "counter": 16
+        },
+        "on2": {
+          "counter": 256,
+          "status": "warning"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e1",
+          "durationMs": 700
+        },
+        {
+          "edge": "elog",
+          "durationMs": 500,
+          "repeat": 4,
+          "repeatGapMs": 100
+        },
+        {
+          "edge": "en",
+          "durationMs": 240,
+          "repeat": 16,
+          "repeatGapMs": 40
+        },
+        {
+          "edge": "en2",
+          "label": "×16",
+          "shape": "square",
+          "durationMs": 240,
+          "repeat": 16,
+          "repeatGapMs": 40
+        }
+      ]
+    },
+    {
+      "id": "oran",
+      "title": {
+        "tr": "İkiye katlamanın kuralı",
+        "en": "The doubling rule"
+      },
+      "narration": {
+        "tr": "Büyüme sınıfını tanımanın kısa yolu: n iki katına çıkınca ne olur? O(1) değişmez, O(log n) **+1 adım**, O(n) **×2**, O(n²) **×4**. Bu oranlar sabit çarpanlardan bağımsızdır; bu yüzden Big-O sabitleri atar.",
+        "en": "A quick way to recognise a growth class: what happens when n doubles? O(1) stays the same, O(log n) gains **+1 step**, O(n) goes **×2**, O(n²) goes **×4**. These ratios do not depend on constant factors, which is why Big-O drops them."
+      },
+      "durationMs": 3500,
+      "highlight": {
+        "nodes": [
+          "o1",
+          "olog",
+          "on",
+          "on2"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "o1": {
+          "status": "success"
+        },
+        "olog": {
+          "status": "success"
+        },
+        "on": {
+          "status": "active"
+        }
+      },
+      "annotations": [
+        {
+          "id": "r1",
+          "x": 870,
+          "y": 90,
+          "text": {
+            "tr": "değişmez",
+            "en": "unchanged"
+          },
+          "target": "o1",
+          "tone": "success"
+        },
+        {
+          "id": "r2",
+          "x": 870,
+          "y": 230,
+          "text": {
+            "tr": "+1 adım",
+            "en": "+1 step"
+          },
+          "target": "olog",
+          "tone": "success"
+        },
+        {
+          "id": "r3",
+          "x": 870,
+          "y": 370,
+          "text": {
+            "tr": "×2",
+            "en": "×2"
+          },
+          "target": "on"
+        },
+        {
+          "id": "r4",
+          "x": 870,
+          "y": 510,
+          "text": {
+            "tr": "×4",
+            "en": "×4"
+          },
+          "target": "on2",
+          "tone": "danger"
+        }
+      ]
+    },
+    {
+      "id": "milyon",
+      "title": {
+        "tr": "n = 1.000.000",
+        "en": "n = 1,000,000"
+      },
+      "narration": {
+        "tr": "Gerçek veri boyutuna geçelim. Bir milyon elemanda O(log n) yaklaşık 20 adım, O(n) bir milyon işlem yapar; ikisi de Python'da bir saniyenin altındadır. O(n²) ise 10¹² işlem demektir: aynı makinede saatler mertebesinde sürer.",
+        "en": "Now a realistic size. With a million elements O(log n) takes about 20 steps and O(n) a million operations; both finish well under a second in Python. O(n²) means 10¹² operations: hours on the same machine."
+      },
+      "durationMs": 3500,
+      "highlight": {
+        "nodes": [
+          "inp",
+          "on2"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "inp": {
+          "sublabel": {
+            "tr": "n = 1.000.000",
+            "en": "n = 1,000,000"
+          }
+        },
+        "o1": {
+          "badge": "1"
+        },
+        "olog": {
+          "badge": "≈ 20"
+        },
+        "on": {
+          "badge": "10⁶",
+          "status": "success"
+        },
+        "on2": {
+          "badge": "10¹²",
+          "status": "error"
+        }
+      },
+      "packets": [
+        {
+          "edge": "e1",
+          "label": "1",
+          "shape": "square",
+          "durationMs": 900
+        },
+        {
+          "edge": "elog",
+          "label": "20",
+          "shape": "square",
+          "durationMs": 900
+        },
+        {
+          "edge": "en",
+          "label": "10⁶",
+          "shape": "square",
+          "durationMs": 900
+        },
+        {
+          "edge": "en2",
+          "label": "10¹²",
+          "shape": "square",
+          "durationMs": 2400
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a-zaman",
+          "x": 640,
+          "y": 580,
+          "text": {
+            "tr": "O(n²): saatler sürer",
+            "en": "O(n²): takes hours"
+          },
+          "tone": "danger"
+        }
+      ]
+    },
+    {
+      "id": "sabit",
+      "title": {
+        "tr": "Sabitler büyümeyi değiştirmez",
+        "en": "Constants do not change the growth"
+      },
+      "narration": {
+        "tr": "İç içe döngüyü kısaltmak (n² yerine n²/2) ya da başına birkaç satır eklemek (3n² + 5n + 20) sayıları değiştirir ama eğrinin şeklini değiştirmez; algoritma hâlâ O(n²) sınıfındadır. Gerçek kazanç, sınıf değiştirmekten gelir: bir küme kullanıp aynı problemi O(n)'e indirmek gibi.",
+        "en": "Shortening the nested loop (n²/2 instead of n²) or adding a few lines (3n² + 5n + 20) changes the numbers but not the shape of the curve; the algorithm is still O(n²). The real win comes from changing class, such as solving the same problem in O(n) with a set."
+      },
+      "durationMs": 3800,
+      "highlight": {
+        "nodes": [
+          "on2",
+          "on"
+        ],
+        "edges": []
+      },
+      "nodeStates": {
+        "on2": {
+          "sublabel": {
+            "tr": "3n² + 5n + 20 → O(n²)",
+            "en": "3n² + 5n + 20 → O(n²)"
+          },
+          "status": "warning"
+        },
+        "on": {
+          "sublabel": {
+            "tr": "set ile tekrar kontrolü",
+            "en": "duplicate check with a set"
+          },
+          "status": "success"
+        }
+      },
+      "packets": [
+        {
+          "edge": "en",
+          "durationMs": 900
+        }
+      ],
+      "annotations": [
+        {
+          "id": "a-sinif",
+          "x": 640,
+          "y": 440,
+          "text": {
+            "tr": "sınıf değiştir: O(n²) → O(n)",
+            "en": "change class: O(n²) → O(n)"
+          },
+          "target": "on",
+          "tone": "success"
+        }
+      ]
+    }
+  ],
+  "tags": [
+    "big-o",
+    "karmasiklik"
+  ]
+}

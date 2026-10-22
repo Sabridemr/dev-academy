@@ -1,0 +1,816 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "docker-image-layers",
+  "title": {
+    "tr": "Docker İmajı: Katmanlar, Önbellek ve Konteyner",
+    "en": "Docker Image: Layers, Cache and Containers"
+  },
+  "summary": {
+    "tr": "Dockerfile talimatları salt okunur katmanlara dönüşür; konteynerler bu katmanları paylaşıp üstüne ince bir yazılabilir katman ekler; kod değişince yalnızca değişen katman ve üstü yeniden derlenir, push ve pull da yalnızca eksik katmanları taşır.",
+    "en": "Dockerfile instructions become read-only layers; containers share those layers and add a thin writable layer on top; when code changes only the changed layer and those above it are rebuilt, and push and pull move only missing layers."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda Dockerfile, ortada alttan üste beş imaj katmanı yer alır: temel imaj, package.json kopyası, npm ci, kaynak kodu kopyası ve derleme. En üstte aynı imajdan çalışan iki konteyner, sağda registry ve üretim sunucusu bulunur. Adımlarda katmanlar sırayla oluşur, iki konteyner aynı katmanları paylaşır, bir konteyner dosya yazınca yalnızca kendi katmanı değişir, kod değişikliğinde alttaki üç katman önbellekten gelir, push ve pull yalnızca değişen katmanları taşır.",
+      "en": "The Dockerfile is on the left and five image layers stack from bottom to top in the middle: base image, package.json copy, npm ci, source copy and build. Two containers running from the same image sit on top, with the registry and the production server on the right. Over the steps the layers are built in order, both containers share them, a container writing a file changes only its own layer, a code change reuses the bottom three layers from cache, and push and pull move only the changed layers."
+    }
+  },
+  "canvas": {
+    "width": 1000,
+    "height": 600
+  },
+  "nodes": [
+    {
+      "id": "dockerfile",
+      "kind": "generic",
+      "label": "Dockerfile",
+      "sublabel": {
+        "tr": "tarif",
+        "en": "recipe"
+      },
+      "x": 120,
+      "y": 340,
+      "w": 160,
+      "h": 70
+    },
+    {
+      "id": "l1",
+      "kind": "storage",
+      "label": "FROM node:20-alpine",
+      "sublabel": {
+        "tr": "temel imaj katmanları",
+        "en": "base image layers"
+      },
+      "x": 470,
+      "y": 530,
+      "w": 320,
+      "h": 56,
+      "color": "muted"
+    },
+    {
+      "id": "l2",
+      "kind": "storage",
+      "label": "COPY package*.json ./",
+      "sublabel": {
+        "tr": "birkaç KB",
+        "en": "a few KB"
+      },
+      "x": 470,
+      "y": 455,
+      "w": 320,
+      "h": 56
+    },
+    {
+      "id": "l3",
+      "kind": "storage",
+      "label": "RUN npm ci",
+      "sublabel": "node_modules",
+      "x": 470,
+      "y": 380,
+      "w": 320,
+      "h": 56
+    },
+    {
+      "id": "l4",
+      "kind": "storage",
+      "label": "COPY . .",
+      "sublabel": {
+        "tr": "kaynak kod",
+        "en": "source code"
+      },
+      "x": 470,
+      "y": 305,
+      "w": 320,
+      "h": 56
+    },
+    {
+      "id": "l5",
+      "kind": "storage",
+      "label": "RUN npm run build",
+      "sublabel": "dist/",
+      "x": 470,
+      "y": 230,
+      "w": 320,
+      "h": 56
+    },
+    {
+      "id": "c1",
+      "kind": "container",
+      "label": "web-1",
+      "sublabel": {
+        "tr": "yazılabilir katman",
+        "en": "writable layer"
+      },
+      "x": 380,
+      "y": 90,
+      "w": 170,
+      "h": 64,
+      "color": "accent"
+    },
+    {
+      "id": "c2",
+      "kind": "container",
+      "label": "web-2",
+      "sublabel": {
+        "tr": "yazılabilir katman",
+        "en": "writable layer"
+      },
+      "x": 580,
+      "y": 90,
+      "w": 170,
+      "h": 64,
+      "color": "accent"
+    },
+    {
+      "id": "registry",
+      "kind": "storage",
+      "label": "Registry",
+      "sublabel": "ghcr.io",
+      "x": 860,
+      "y": 230,
+      "w": 160,
+      "h": 70,
+      "color": "primary"
+    },
+    {
+      "id": "server",
+      "kind": "server",
+      "label": {
+        "tr": "Üretim sunucusu",
+        "en": "Production server"
+      },
+      "x": 860,
+      "y": 470,
+      "w": 170,
+      "h": 70
+    }
+  ],
+  "edges": [
+    {
+      "id": "df-l1",
+      "from": "dockerfile",
+      "to": "l1",
+      "kind": "control",
+      "curvature": 0.2
+    },
+    {
+      "id": "l1-l2",
+      "from": "l1",
+      "to": "l2",
+      "kind": "data"
+    },
+    {
+      "id": "l2-l3",
+      "from": "l2",
+      "to": "l3",
+      "kind": "data"
+    },
+    {
+      "id": "l3-l4",
+      "from": "l3",
+      "to": "l4",
+      "kind": "data"
+    },
+    {
+      "id": "l4-l5",
+      "from": "l4",
+      "to": "l5",
+      "kind": "data"
+    },
+    {
+      "id": "l5-c1",
+      "from": "l5",
+      "to": "c1",
+      "kind": "data"
+    },
+    {
+      "id": "l5-c2",
+      "from": "l5",
+      "to": "c2",
+      "kind": "data"
+    },
+    {
+      "id": "l5-reg",
+      "from": "l5",
+      "to": "registry",
+      "kind": "data",
+      "label": "docker push"
+    },
+    {
+      "id": "reg-server",
+      "from": "registry",
+      "to": "server",
+      "kind": "data",
+      "label": "docker pull"
+    }
+  ],
+  "steps": [
+    {
+      "id": "base",
+      "title": {
+        "tr": "FROM: temel imaj",
+        "en": "FROM: the base image"
+      },
+      "narration": {
+        "tr": "docker build Dockerfile'ı yukarıdan aşağı okur. FROM node:20-alpine, hazır bir imajın katmanlarını temel alır: küçük bir Alpine dosya sistemi ve Node.js çalışma ortamı. Bu katmanlar salt okunurdur ve içeriklerinin özetiyle (sha256) tanımlanır.",
+        "en": "docker build reads the Dockerfile from top to bottom. FROM node:20-alpine starts from the layers of an existing image: a small Alpine file system and the Node.js runtime. These layers are read-only and identified by a digest of their content (sha256)."
+      },
+      "durationMs": 3800,
+      "inherit": false,
+      "highlight": {
+        "nodes": [
+          "dockerfile",
+          "l1"
+        ],
+        "edges": [
+          "df-l1"
+        ]
+      },
+      "nodeStates": {
+        "dockerfile": {
+          "status": "active"
+        },
+        "l1": {
+          "status": "active",
+          "badge": "sha256:…"
+        },
+        "l2": {
+          "visible": false
+        },
+        "l3": {
+          "visible": false
+        },
+        "l4": {
+          "visible": false
+        },
+        "l5": {
+          "visible": false
+        },
+        "c1": {
+          "visible": false
+        },
+        "c2": {
+          "visible": false
+        },
+        "registry": {
+          "status": "idle"
+        },
+        "server": {
+          "status": "idle"
+        }
+      },
+      "edgeStates": {
+        "df-l1": {
+          "status": "active"
+        },
+        "l1-l2": {
+          "visible": false
+        },
+        "l2-l3": {
+          "visible": false
+        },
+        "l3-l4": {
+          "visible": false
+        },
+        "l4-l5": {
+          "visible": false
+        },
+        "l5-c1": {
+          "visible": false
+        },
+        "l5-c2": {
+          "visible": false
+        },
+        "l5-reg": {
+          "visible": false
+        },
+        "reg-server": {
+          "visible": false
+        }
+      },
+      "packets": [
+        {
+          "edge": "df-l1",
+          "shape": "square",
+          "label": "FROM",
+          "durationMs": 1300
+        }
+      ]
+    },
+    {
+      "id": "deps",
+      "title": {
+        "tr": "Önce bağımlılık listesi, sonra kurulum",
+        "en": "Dependency list first, then install"
+      },
+      "narration": {
+        "tr": "Dosya sistemini değiştiren her talimat (COPY, RUN, ADD) yeni bir katman ekler. Önce yalnızca package.json ve package-lock.json kopyalanır, ardından npm ci bağımlılıkları kurar. Bu sıralama bilinçlidir: bağımlılık listesi değişmedikçe en ağır katman önbellekten gelir.",
+        "en": "Every instruction that changes the file system (COPY, RUN, ADD) adds a new layer. First only package.json and package-lock.json are copied, then npm ci installs the dependencies. The order is deliberate: as long as the dependency list does not change, the heaviest layer comes from cache."
+      },
+      "durationMs": 4200,
+      "highlight": {
+        "nodes": [
+          "l2",
+          "l3"
+        ],
+        "edges": [
+          "l1-l2",
+          "l2-l3"
+        ]
+      },
+      "nodeStates": {
+        "l1": {
+          "status": "idle"
+        },
+        "l2": {
+          "visible": true,
+          "status": "active"
+        },
+        "l3": {
+          "visible": true,
+          "status": "busy",
+          "badge": "en ağır katman"
+        }
+      },
+      "edgeStates": {
+        "df-l1": {
+          "status": "idle"
+        },
+        "l1-l2": {
+          "visible": true,
+          "status": "active"
+        },
+        "l2-l3": {
+          "visible": true,
+          "status": "active"
+        }
+      },
+      "packets": [
+        {
+          "edge": "l1-l2",
+          "shape": "square",
+          "label": "COPY",
+          "durationMs": 900
+        },
+        {
+          "edge": "l2-l3",
+          "shape": "square",
+          "label": "RUN",
+          "startAt": 900,
+          "durationMs": 1100
+        }
+      ]
+    },
+    {
+      "id": "code",
+      "title": {
+        "tr": "Kod ve derleme katmanları",
+        "en": "Code and build layers"
+      },
+      "narration": {
+        "tr": "COPY . . kaynak kodu ekler (.dockerignore sayesinde node_modules, .git ve .env dışarıda kalır), RUN npm run build derlenmiş çıktıyı üretir. İmaj, bu salt okunur katmanların üst üste dizilmiş hâlidir. Aynı imaj nerede çalıştırılırsa çalıştırılsın içeriği birebir aynıdır.",
+        "en": "COPY . . adds the source code (.dockerignore keeps node_modules, .git and .env out), and RUN npm run build produces the compiled output. The image is these read-only layers stacked on top of each other. Wherever the same image runs, its contents are identical."
+      },
+      "durationMs": 4000,
+      "highlight": {
+        "nodes": [
+          "l4",
+          "l5"
+        ],
+        "edges": [
+          "l3-l4",
+          "l4-l5"
+        ]
+      },
+      "nodeStates": {
+        "l2": {
+          "status": "idle"
+        },
+        "l3": {
+          "status": "idle"
+        },
+        "l4": {
+          "visible": true,
+          "status": "active"
+        },
+        "l5": {
+          "visible": true,
+          "status": "success",
+          "badge": "magaza:1.0"
+        }
+      },
+      "edgeStates": {
+        "l1-l2": {
+          "status": "idle"
+        },
+        "l2-l3": {
+          "status": "idle"
+        },
+        "l3-l4": {
+          "visible": true,
+          "status": "active"
+        },
+        "l4-l5": {
+          "visible": true,
+          "status": "active"
+        }
+      },
+      "packets": [
+        {
+          "edge": "l3-l4",
+          "shape": "square",
+          "label": "COPY",
+          "durationMs": 900
+        },
+        {
+          "edge": "l4-l5",
+          "shape": "square",
+          "label": "RUN",
+          "startAt": 900,
+          "durationMs": 1000
+        }
+      ],
+      "annotations": [
+        {
+          "id": "readonly",
+          "x": 160,
+          "y": 230,
+          "text": {
+            "tr": "imaj = salt okunur katman yığını",
+            "en": "image = stack of read-only layers"
+          },
+          "tone": "info"
+        }
+      ]
+    },
+    {
+      "id": "containers",
+      "title": {
+        "tr": "Konteyner: imaj + ince yazılabilir katman",
+        "en": "Container: image + a thin writable layer"
+      },
+      "narration": {
+        "tr": "docker run iki kez çalıştırılır. İki konteyner aynı imaj katmanlarını diskte paylaşır, yani imaj kopyalanmaz. Her konteynere yalnızca kendine ait, ince bir yazılabilir katman eklenir. Bu sayede konteynerler saniyeler içinde açılır.",
+        "en": "docker run is executed twice. Both containers share the same image layers on disk, so the image is not copied. Each container gets only its own thin writable layer. This is why containers start in seconds."
+      },
+      "durationMs": 4000,
+      "highlight": {
+        "nodes": [
+          "c1",
+          "c2",
+          "l5"
+        ],
+        "edges": [
+          "l5-c1",
+          "l5-c2"
+        ]
+      },
+      "nodeStates": {
+        "l4": {
+          "status": "idle"
+        },
+        "l5": {
+          "status": "idle"
+        },
+        "c1": {
+          "visible": true,
+          "status": "active",
+          "badge": "running"
+        },
+        "c2": {
+          "visible": true,
+          "status": "active",
+          "badge": "running"
+        }
+      },
+      "edgeStates": {
+        "l3-l4": {
+          "status": "idle"
+        },
+        "l4-l5": {
+          "status": "idle"
+        },
+        "l5-c1": {
+          "visible": true,
+          "status": "active"
+        },
+        "l5-c2": {
+          "visible": true,
+          "status": "active"
+        }
+      },
+      "packets": [
+        {
+          "edge": "l5-c1",
+          "shape": "dot",
+          "label": "docker run",
+          "durationMs": 1000
+        },
+        {
+          "edge": "l5-c2",
+          "shape": "dot",
+          "startAt": 400,
+          "durationMs": 1000
+        }
+      ]
+    },
+    {
+      "id": "cow",
+      "title": {
+        "tr": "Yazınca kopyala (copy-on-write)",
+        "en": "Copy-on-write"
+      },
+      "narration": {
+        "tr": "web-1 bir log dosyasını değiştirdiğinde dosya önce imajdan onun yazılabilir katmanına kopyalanır, değişiklik orada yapılır. İmaj ve web-2 bundan etkilenmez. Konteyner silinince bu katman da silinir. Kalıcı olması gereken veri bu yüzden volume'da tutulur.",
+        "en": "When web-1 modifies a log file, the file is first copied from the image into its writable layer and changed there. The image and web-2 are not affected. When the container is removed, that layer is removed too. This is why data that must persist lives in a volume."
+      },
+      "durationMs": 4200,
+      "highlight": {
+        "nodes": [
+          "c1"
+        ],
+        "edges": [
+          "l5-c1"
+        ]
+      },
+      "nodeStates": {
+        "c1": {
+          "status": "warning",
+          "badge": "+ /app/app.log"
+        },
+        "c2": {
+          "status": "idle"
+        }
+      },
+      "edgeStates": {
+        "l5-c2": {
+          "status": "idle"
+        }
+      },
+      "packets": [
+        {
+          "edge": "l5-c1",
+          "shape": "envelope",
+          "label": "copy-up",
+          "color": "warning",
+          "durationMs": 1100
+        }
+      ],
+      "annotations": [
+        {
+          "id": "volume",
+          "x": 380,
+          "y": 170,
+          "text": {
+            "tr": "docker rm → bu katman gider",
+            "en": "docker rm → this layer is gone"
+          },
+          "target": "c1",
+          "tone": "warning"
+        }
+      ]
+    },
+    {
+      "id": "rebuild",
+      "title": {
+        "tr": "Kod değişti: önbellek devrede",
+        "en": "Code changed: the cache kicks in"
+      },
+      "narration": {
+        "tr": "Bir satır kod değiştirip yeniden derlersiniz. Docker her talimat için girdiyi önbellekle karşılaştırır. Alttaki üç katman aynı kaldığı için CACHED gelir. COPY . . farklı bir içerik gördüğü için o katman ve üstündeki her şey yeniden üretilir. Kod package.json'dan önce kopyalansaydı, her değişiklikte npm ci de baştan çalışırdı.",
+        "en": "You change one line of code and rebuild. Docker compares the input of each instruction with its cache. The bottom three layers are unchanged, so they come back as CACHED. COPY . . sees different content, so that layer and everything above it is rebuilt. Had the code been copied before package.json, npm ci would rerun on every change."
+      },
+      "durationMs": 4800,
+      "highlight": {
+        "nodes": [
+          "l1",
+          "l2",
+          "l3",
+          "l4",
+          "l5"
+        ],
+        "edges": [
+          "l3-l4",
+          "l4-l5"
+        ]
+      },
+      "nodeStates": {
+        "c1": {
+          "status": "muted",
+          "badge": ""
+        },
+        "c2": {
+          "status": "muted",
+          "badge": ""
+        },
+        "l1": {
+          "status": "success",
+          "badge": "CACHED"
+        },
+        "l2": {
+          "status": "success",
+          "badge": "CACHED"
+        },
+        "l3": {
+          "status": "success",
+          "badge": "CACHED"
+        },
+        "l4": {
+          "status": "warning",
+          "badge": "yeniden"
+        },
+        "l5": {
+          "status": "warning",
+          "badge": "magaza:1.1"
+        }
+      },
+      "edgeStates": {
+        "l5-c1": {
+          "status": "muted"
+        },
+        "l5-c2": {
+          "status": "muted"
+        },
+        "l3-l4": {
+          "status": "active"
+        },
+        "l4-l5": {
+          "status": "active"
+        }
+      },
+      "packets": [
+        {
+          "edge": "l3-l4",
+          "shape": "square",
+          "label": "COPY",
+          "color": "warning",
+          "durationMs": 900
+        },
+        {
+          "edge": "l4-l5",
+          "shape": "square",
+          "label": "RUN",
+          "color": "warning",
+          "startAt": 900,
+          "durationMs": 1000
+        }
+      ],
+      "annotations": [
+        {
+          "id": "order",
+          "x": 160,
+          "y": 470,
+          "text": {
+            "tr": "sık değişen katman en üste",
+            "en": "frequently changing layers on top"
+          },
+          "tone": "success"
+        }
+      ]
+    },
+    {
+      "id": "push",
+      "title": {
+        "tr": "push: yalnızca yeni katmanlar gider",
+        "en": "push: only new layers travel"
+      },
+      "narration": {
+        "tr": "docker push imajı registry'ye gönderir. Registry'de zaten bulunan katmanlar için \"Layer already exists\" yazar ve onları yeniden yüklemez. Ağdan yalnızca değişen iki katman geçer.",
+        "en": "docker push sends the image to the registry. For layers the registry already has it prints \"Layer already exists\" and does not upload them again. Only the two changed layers cross the network."
+      },
+      "durationMs": 4000,
+      "highlight": {
+        "nodes": [
+          "l5",
+          "registry"
+        ],
+        "edges": [
+          "l5-reg"
+        ]
+      },
+      "nodeStates": {
+        "l1": {
+          "status": "idle",
+          "badge": ""
+        },
+        "l2": {
+          "status": "idle",
+          "badge": ""
+        },
+        "l3": {
+          "status": "idle",
+          "badge": ""
+        },
+        "l4": {
+          "status": "idle",
+          "badge": ""
+        },
+        "l5": {
+          "status": "idle"
+        },
+        "registry": {
+          "status": "active",
+          "badge": "magaza:1.1"
+        }
+      },
+      "edgeStates": {
+        "l3-l4": {
+          "status": "idle"
+        },
+        "l4-l5": {
+          "status": "idle"
+        },
+        "l5-reg": {
+          "visible": true,
+          "status": "active"
+        }
+      },
+      "packets": [
+        {
+          "edge": "l5-reg",
+          "shape": "square",
+          "label": {
+            "tr": "2 katman",
+            "en": "2 layers"
+          },
+          "durationMs": 700,
+          "repeat": 2,
+          "repeatGapMs": 250
+        }
+      ],
+      "annotations": [
+        {
+          "id": "exists",
+          "x": 860,
+          "y": 140,
+          "text": "Layer already exists ×3",
+          "target": "registry",
+          "tone": "info"
+        }
+      ]
+    },
+    {
+      "id": "pull",
+      "title": {
+        "tr": "pull: sunucu eksik katmanı indirir",
+        "en": "pull: the server downloads missing layers"
+      },
+      "narration": {
+        "tr": "Üretim sunucusunda docker pull çalıştığında da aynı kural geçerlidir: sunucuda temel imaj ve bağımlılık katmanları zaten olduğundan yalnızca yeni katmanlar indirilir. Dağıtımların hızlı olmasının bir nedeni budur. Dockerfile'daki talimat sırası hem derleme süresini hem dağıtım süresini belirler.",
+        "en": "The same rule applies when docker pull runs on the production server: the base image and dependency layers are already there, so only the new layers are downloaded. This is one reason deployments are fast. The order of instructions in the Dockerfile sets both build time and deploy time."
+      },
+      "durationMs": 4200,
+      "highlight": {
+        "nodes": [
+          "registry",
+          "server"
+        ],
+        "edges": [
+          "reg-server"
+        ]
+      },
+      "nodeStates": {
+        "registry": {
+          "status": "idle"
+        },
+        "server": {
+          "status": "success",
+          "badge": "magaza:1.1"
+        }
+      },
+      "edgeStates": {
+        "l5-reg": {
+          "status": "idle"
+        },
+        "reg-server": {
+          "visible": true,
+          "status": "active"
+        }
+      },
+      "packets": [
+        {
+          "edge": "reg-server",
+          "shape": "square",
+          "label": {
+            "tr": "2 katman",
+            "en": "2 layers"
+          },
+          "color": "success",
+          "durationMs": 800,
+          "repeat": 2,
+          "repeatGapMs": 250
+        }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": [
+    "docker",
+    "image",
+    "layers",
+    "build-cache",
+    "container"
+  ]
+}

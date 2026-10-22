@@ -1,0 +1,26 @@
+{
+  "id": "l-03-anagram-gruplari",
+  "title": {
+    "tr": "Anagram grupları",
+    "en": "Anagram groups"
+  },
+  "language": "python",
+  "prompt": {
+    "tr": "`anagram_gruplari(kelimeler)` aynı harflerden oluşan kelimeleri gruplasın. Sözlüğü bir hash tablosu olarak kullan: anahtar, kelimenin harflerinden türetilen **imza**, değer o imzaya sahip kelimelerin listesi.\n\n- Gruplar, grubun ilk kelimesinin listede ilk görüldüğü sırayla döner; grup içindeki kelimeler de girdi sırasındadır.\n- Beklenen süre O(n · k log k) (n kelime, k en uzun kelime): her kelimeyi diğer tüm kelimelerle karşılaştırma.\n\n`[\"elma\", \"lame\", \"kar\", \"ark\", \"mela\"]` → `[[\"elma\", \"lame\", \"mela\"], [\"kar\", \"ark\"]]`",
+    "en": "`anagram_gruplari(kelimeler)` should group words made of the same letters. Use a dict as a hash table: the key is a **signature** derived from the word's letters, the value is the list of words with that signature.\n\n- Groups are returned in the order their first word first appears; words inside a group keep input order too.\n- Expected time is O(n · k log k) (n words, k the longest word): don't compare every word with every other word.\n\n`[\"elma\", \"lame\", \"kar\", \"ark\", \"mela\"]` → `[[\"elma\", \"lame\", \"mela\"], [\"kar\", \"ark\"]]`"
+  },
+  "starter": "def anagram_gruplari(kelimeler):\n    gruplar = {}\n    # her kelime için bir imza hesapla ve gruplar[imza] listesine ekle\n    return []\n",
+  "solution": "def anagram_gruplari(kelimeler):\n    gruplar = {}\n    for kelime in kelimeler:\n        imza = \"\".join(sorted(kelime))\n        gruplar.setdefault(imza, []).append(kelime)\n    return list(gruplar.values())\n",
+  "tests": "assert anagram_gruplari([\"elma\", \"lame\", \"kar\", \"ark\", \"mela\"]) == [[\"elma\", \"lame\", \"mela\"], [\"kar\", \"ark\"]]\nassert anagram_gruplari([]) == []\nassert anagram_gruplari([\"a\"]) == [[\"a\"]]\nassert anagram_gruplari([\"ab\", \"ba\", \"ab\"]) == [[\"ab\", \"ba\", \"ab\"]]\nassert anagram_gruplari([\"abc\", \"abd\"]) == [[\"abc\"], [\"abd\"]]\n",
+  "hints": [
+    {
+      "tr": "Anagramların sıralanmış harfleri aynıdır: `\"\".join(sorted(kelime))` iyi bir imza (hashable bir str).",
+      "en": "Anagrams have the same sorted letters: `\"\".join(sorted(kelime))` is a good signature (a hashable str)."
+    },
+    {
+      "tr": "`gruplar.setdefault(imza, []).append(kelime)` eksik anahtarı tek satırda oluşturur. Python 3.7+ sözlükleri ekleme sırasını korur: `list(gruplar.values())`.",
+      "en": "`gruplar.setdefault(imza, []).append(kelime)` creates a missing key in one line. Python 3.7+ dicts keep insertion order: `list(gruplar.values())`."
+    }
+  ],
+  "timeoutMs": 5000
+}

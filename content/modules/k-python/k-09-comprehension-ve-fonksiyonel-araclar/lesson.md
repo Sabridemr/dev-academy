@@ -87,6 +87,12 @@ print(["A" if n >= 80 else "B" for n in notlar if n >= 50])  # ['A', 'B']
 Her eleman için bir değer seçmek istiyorsan koşullu ifadeyi başa taşı: `[n if n >= 50 else 0 for n in notlar]`.
 :::
 
+Comprehension'ı okurken zorlanıyorsan onu parçalarına ayırıp eşdeğer döngüyle yan yana koy:
+
+:::diagram{src="comprehension-anatomisi.svg" alt="List comprehension'ın ifade, for ve if parçaları ile eşdeğer for döngüsündeki karşılıkları|The expression, for and if parts of a list comprehension and their counterparts in the equivalent for loop"}
+İfade başta yazılır ama her eleman için en son, filtreden geçtikten sonra hesaplanır.
+:::
+
 ## Yorumlayıcıda ne oluyor?
 
 Python 3.12'den önce her comprehension, arka planda gizli bir fonksiyon olarak derlenir ve çağrıldığında **kendi
@@ -185,6 +191,12 @@ Son satır bir milyon elemanlı bir liste **kurmadan** toplamı hesaplar; bellek
 Sonucu tek seferde tüketeceksen (`sum`, `max`, `any`, `"".join`) generator ifadesi tercih edilir. Iterator ve
 generator'ları K-11'de ayrıntılı göreceksin.
 
+Hevesli liste ile tembel generator arasındaki farkı en iyi, elemanların hattan nasıl aktığını izleyerek görürsün.
+
+:::animation{scene="comprehension-boru-hatti.scene.json"}
+İlk yarıda sonuç listesinin baştan sona dolduğuna, ikinci yarıda ise hiçbir liste kurulmadan `sum`'ın her `next()` çağrısında yalnızca bir değer aldığına dikkat et.
+:::
+
 ## lambda: tek satırlık isimsiz fonksiyon
 
 `lambda`, bir **ifade** olarak fonksiyon oluşturur: `lambda parametreler: dönüş_ifadesi`. Gövdesinde tek bir ifade
@@ -234,6 +246,10 @@ daha okunur yazılabilir.
 `sorted(kaynak)` **yeni bir liste** döndürür; `liste.sort()` ise listeyi **yerinde** sıralar ve `None` döndürür.
 İkisi de `key` ve `reverse` parametrelerini alır. `key`, her elemandan karşılaştırılacak değeri çıkaran bir
 fonksiyondur. `min` ve `max` da aynı `key` parametresini kabul eder.
+
+:::interactive{type="predict-run" src="sorted-key.trace.json" title="Önce tahmin et: sorted ve key|Predict first: sorted and key"}
+Simülasyonu izlemeden önce kodu oku: aynı puana sahip öğrenciler sıralamada nereye düşer, `max` hangisini seçer? Her soruda bir seçenek işaretle. Sorulardaki satır numaraları soldaki kod listesine göredir. "Çalıştır ve karşılaştır" ile cevapların işaretlenir, doğru ve yanlış sayısı görünür ve iz oynamaya başlar; her sorunun altındaki adım numarasına izin kaydırıcısıyla gidip değeri kendin doğrula. Puan sunucuya gönderilmez; "Yeniden dene" ile tekrar cevaplayabilirsin.
+:::
 
 :::trace{src="sorted-key.trace.json" title="sorted ve key fonksiyonu|sorted and the key function"}
 Her sorted ve max çağrısında lambda çerçevesinin üç kez, her öğrenci için bir kez açılıp anahtarı döndürdüğünü izle.
@@ -357,6 +373,21 @@ satırdır: `sorted({s["email"] for s in siparisler if s["durum"] == "aktif"})`.
 `sorted` sıralar ve listeye çevirir.
 :::
 
+:::realworld{company="Yelp"}
+Yelp, kullanıcı etkinliği ve log verisini işlemek için yazdığı **mrjob** kütüphanesini 2010'da açık kaynak yaptı.
+mrjob, MapReduce işlerini saf Python ile yazmanı ve aynı kodu kendi bilgisayarında, bir Hadoop kümesinde ya da
+Amazon EMR üzerinde çalıştırmanı sağlar. Kütüphanenin belgelerindeki klasik örnek bir kelime sayacıdır: `MRJob`'dan
+türeyen bir sınıfta `mapper` metodu her satır için `(kelime, 1)` çiftlerini **yield** eder, `reducer` metodu da bir
+kelimeye ait değerleri bir iterator olarak alıp `sum(degerler)` ile toplar.
+
+Bu derste gördüğün fikirler burada dağıtık ölçekte karşına çıkıyor. `mapper` bir dönüştürme ve filtre adımıdır,
+tıpkı bir comprehension'ın `if` ve ifade kısımları gibi; `reducer` ise `reduce` ya da `sum` gibi bir koleksiyonu tek
+değere indirir. Fonksiyonların **saf** olması (yalnızca girdisine bakıp çıktı üretmesi) burada bir zorunluluktur:
+çerçeve aynı fonksiyonu farklı makinelerde, verinin farklı parçaları üzerinde paralel çalıştırır ve hata olursa bir
+parçayı yeniden dener. Değerlerin liste yerine generator ile akması da, tek bir makinenin belleğine sığmayacak kadar
+büyük veriyle çalışmayı mümkün kılar.
+:::
+
 ## Özet
 
 - `[ifade for x in kaynak if koşul]`: dönüştür ve süz. Sondaki `if` filtredir; değer seçmek için başta
@@ -370,6 +401,9 @@ satırdır: `sorted({s["email"] for s in siparisler if s["durum"] == "aktif"})`.
   sıralama kararlıdır. `itemgetter` ve `attrgetter` hazır anahtar fonksiyonlarıdır.
 - `zip` ve `enumerate` indeks hesabını ortadan kaldırır. `zip` en kısada durur, bu yüzden gerekirse `strict=True`
   kullan. Saf fonksiyonlar test etmesi ve akıl yürütmesi en kolay kodu oluşturur.
+
+:::exercise{src="transpoz.exercise.json"}
+:::
 
 :::quiz{src="quiz.json"}
 :::

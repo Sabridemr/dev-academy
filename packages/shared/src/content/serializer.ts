@@ -238,7 +238,9 @@ export function serializeBlock(block: LessonBlock, warn: Warn = () => {}): strin
         warn,
       );
       // Kod gövdesi kırpılmamalı ve ::: kontrolü çit içinde anlamsız: doğrudan yerleştir
-      return head.replace(/\n:::$/, `\n${body}\n:::`);
+      // Değiştirme metni fonksiyonla verilir: aksi hâlde koddaki `$$`, `$&` gibi diziler
+      // String.replace'in özel desenleri sayılır ve bozulur (ör. bash `$$` → `$`)
+      return head.replace(/\n:::$/, () => `\n${body}\n:::`);
     }
     case 'realworld':
       return directive('realworld', [['company', block.company]], block.markdown, where, warn);
@@ -266,6 +268,9 @@ export function serializeBlock(block: LessonBlock, warn: Warn = () => {}): strin
         where,
         warn,
       );
+    case 'exercise':
+      // Seed'in gömdüğü `exercise`/`solution` alanları `<ad>.exercise.json` dosyasında durur
+      return directive('exercise', [['src', block.src]], lt(block.instructions), where, warn);
     case 'next':
       return directive('next', [['lesson', block.lesson]], lt(block.note), where, warn);
     case 'predict': {
@@ -355,7 +360,8 @@ function serializeEnglish(
 /**
  * Ders belgesini `lesson.md` (+ İngilizce metin varsa `lesson.en.md`) metnine çevirir.
  * Blok `id`'leri yazılmaz (ayrıştırıcı tür sırasıyla üretir); seed'in doldurduğu alanlar
- * (`svg`, `sceneId`, `quizId`, `trace`, raster `width/height`) dosya biçiminde yer almaz.
+ * (`svg`, `sceneId`, `quizId`, `trace`, `exercise`/`solution`, raster `width/height`) dosya biçiminde
+ * yer almaz.
  */
 export function serializeLesson(doc: SerializeLessonInput): SerializedLesson {
   const warnings: string[] = [];

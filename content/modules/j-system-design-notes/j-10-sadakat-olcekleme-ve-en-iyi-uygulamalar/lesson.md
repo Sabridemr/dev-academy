@@ -81,6 +81,12 @@ CREATE TABLE loyalty_transactions (
 ```
 :::
 
+Ledger tablosu, puanın para gibi davranması gerektiğini kabul etmektir. Aşağıdaki animasyon bir puan kazanımının ve harcamasının uçtan uca yolculuğunu gösteriyor: teslim olayının puana çevrilmesi, tek transaction'da ledger ve bakiye yazımı, tekrar gelen olayın benzersiz kısıtla reddi ve okumaların replikalara dağıtılırken "kendi yazdığını oku" kuralının korunması. Okuma replikaları 15. bölümdeki ölçekleme fikrinin veritabanı tarafıdır.
+
+:::animation{scene="loyalty-replicas.scene.json"}
+order-delivered → 67 puan → ledger + bakiye; tekrar olay reddedilir; replikalardan okuma, puan harcayan kullanıcı için primary'den okuma.
+:::
+
 ### Sadakat kademeleri
 
 | Kademe | Kriter | Avantajlar |
@@ -211,7 +217,9 @@ Ek bileşenler: Notification Service (sipariş durumu), veritabanı (PostgreSQL/
 - Canlı güncelleme durursa tahmini konumu göster.
 - WebSocket kopmalarını ve yeniden bağlanmaları yönet.
 
-### GeoHash örneği
+:::callout{tone="info" title="Derinleşme"}
+**GeoHash örneği**
+
 
 Konum: enlem = 28.5355, boylam = 77.3910 → GeoHash (hassasiyet 6) = `t2h5e6`
 
@@ -225,6 +233,7 @@ Konum: enlem = 28.5355, boylam = 77.3910 → GeoHash (hassasiyet 6) = `t2h5e6`
 | 7 | ~153 m × 153 m |
 
 Yakın noktaların GeoHash'leri genellikle aynı önekle başlar. Böylece "5 km içindeki kuryeler" sorgusu, tüm veritabanını taramak yerine birkaç önek eşleştirmesiyle yapılır. Not: Hücre sınırına yakın noktalar için komşu hücreler de sorgulanmalıdır.
+:::
 
 ### Kullanılan teknolojiler
 
@@ -305,7 +314,9 @@ CLOSED (normal) → hata eşiği aşıldı → OPEN (istekler kesilir)
 - İzleme ve optimizasyon sürekli bir süreçtir.
 - Sonuçta mesele kullanıcılar, restoranlar ve kuryeler için gerçek sorunları çözmektir.
 
-### Örnek teknoloji yığını (nihai)
+:::callout{tone="info" title="Derinleşme"}
+**Örnek teknoloji yığını (nihai)**
+
 
 | Katman | Teknoloji |
 |---|---|
@@ -322,14 +333,22 @@ CLOSED (normal) → hata eşiği aşıldı → OPEN (istekler kesilir)
 | Altyapı | Docker, Kubernetes, AWS |
 | İzleme | Prometheus, Grafana, ELK |
 
-### Gelecek geliştirmeler
+**Gelecek geliştirmeler**
+
 
 Yapay zekâ tabanlı ETA tahmini, talebe göre dinamik fiyatlama (surge algoritması), makine öğrenmesiyle daha iyi dolandırıcılık tespiti, sesli sipariş takibi, drone/robot teslimat (uzun vadede), çok şehirli ve uluslararası genişleme, sürdürülebilir (çevre dostu) teslimat seçenekleri, kişiselleştirilmiş öneriler, market ve eczane gibi diğer hizmetlerle entegrasyon.
+:::
 
 ## Dene: kampanya günü trafiği
 
 :::interactive{type="traffic-wave" baselineRps=500 peakMultiplier=6 autoscale=true queueEnabled=true}
 Trafik dalgasında otomatik ölçekleme gecikmesini ve kuyruğun tampon etkisini izle; kuyruğu kapatınca hangi isteklerin düştüğüne bak.
+:::
+
+:::realworld{company="Stripe"}
+Puan bakiyesini tek bir sayı yerine hareketler defteri (ledger) olarak tutma fikri, para taşıyan sistemlerde yaygın bir pratiktir. Stripe 2022'de mühendislik blogunda yayımladığı "Ledger: Stripe's system for tracking and validating money movement" yazısında, para hareketlerini izlemek için kurduğu Ledger sistemini anlatır. Yazıya göre her para hareketi değiştirilemez kayıtlar olarak defterde tutulur; bakiyeler bu kayıtlardan türetilir ve sistem, beklenen hareketlerle gerçekleşenleri sürekli karşılaştırarak tutarsızlıkları kendiliğinden ortaya çıkarır.
+
+Sadakat puanı gerçek para olmasa da kullanıcı gözünde para gibidir: "puanım nereye gitti?" sorusu destek ekibine gelir. Ders boyunca önerilen yapı, Stripe'ın ölçeğinde anlattığı ilkelerin küçük bir kopyasıdır: hareketler silinmez ve güncellenmez, düzeltme yeni bir hareketle yapılır; aynı olayın iki kez yazılması veritabanı kısıtıyla engellenir; bakiye ise hızlı okuma için tutulan, gerektiğinde hareketlerden yeniden hesaplanabilen bir özettir. Okuma yükü arttığında bu özet replikalardan okunur, yazma tek kaynakta kalır.
 :::
 
 :::quiz{src="quiz.json"}

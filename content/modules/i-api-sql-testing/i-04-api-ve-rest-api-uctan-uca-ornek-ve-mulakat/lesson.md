@@ -93,6 +93,21 @@ Adımların ayrıntısı:
 7. **Stok:** Rezerve stok kalıcı olarak düşülür. Ödeme başarısızsa rezervasyon serbest bırakılır.
 8. **Kargo:** Kargo firması webhook ile takip numarası ve durum gönderir. Müşteriye e-posta bildirimi gider.
 
+Dördüncü adımın içi en kritik kısımdır: `POST /orders` önce doğrulamadan, sonra iş kurallarından geçer; ardından sipariş satırı, stok rezervasyonu ve "sipariş oluşturuldu" olay kaydı **tek bir transaction** içinde yazılır. Olayı transaction ile aynı anda veritabanındaki bir `outbox` tablosuna yazıp ayrı bir süreçle kuyruğa yayınlamaya **outbox kalıbı** denir; böylece sipariş ile olay birbirinden kopamaz.
+
+:::predict{id="stok-yetmezse-olay"}
+Sipariş satırı transaction içinde eklendi, ama stok rezervasyonu yapan koşullu `UPDATE` 0 satır etkiledi ve API `ROLLBACK` çağırdı. "Sipariş oluşturuldu" olayı aynı transaction'da outbox tablosuna yazılmıştı. E-posta işçisi onay e-postası gönderir mi? | The order row was inserted inside the transaction, but the conditional `UPDATE` reserving stock affected 0 rows and the API called `ROLLBACK`. The "order created" event had been written to the outbox table in the same transaction. Does the email worker send a confirmation email?
+- [ ] Evet, olay kaydı yazıldığı anda kuyruğa gitmişti | Yes, the event went to the queue as soon as it was written
+- [x] Hayır, ROLLBACK outbox kaydını da geri aldı; yayınlanacak olay yok | No, ROLLBACK also undid the outbox record; there is no event to publish
+- [ ] Evet, ama ardından "sipariş iptal" e-postası da gider | Yes, but an "order cancelled" email follows
+- [ ] Hayır, çünkü API 201 döndükten sonra işçi kapanır | No, because the worker shuts down after the API returns 201
+Açıklama: Olay, sipariş satırıyla aynı transaction'da yazıldığı için onunla aynı kaderi paylaşır: COMMIT olursa ikisi birden kalıcıdır, ROLLBACK olursa ikisi birden yok olur. Olay doğrudan kuyruğa transaction içinden gönderilseydi geri alınamazdı ve müşteri var olmayan bir sipariş için e-posta alırdı. | Because the event was written in the same transaction as the order row it shares its fate: on COMMIT both persist, on ROLLBACK both vanish. Had the event been sent straight to the queue from inside the transaction it could not be undone and the customer would get an email for an order that does not exist.
+:::
+
+:::animation{scene="order-flow.scene.json"}
+Doğrulama → iş kuralı → tek transaction → 201 → olay yayını → ödeme webhook'u; stok yetmezse ROLLBACK.
+:::
+
 Sipariş durumları için önerilen yaşam döngüsü:
 
 :::code{lang="text"}
@@ -115,6 +130,12 @@ Google ile girişte en doğru yöntem **Authorization Code Flow**'dur (tarayıc�
 3. Google kullanıcıyı `redirect_uri` adresine tek kullanımlık bir `code` ile geri gönderir.
 4. Sunucun bu `code`'u, `client_secret` ile birlikte Google'a gönderir ve karşılığında `id_token` alır. Bu adım mutlaka sunucuda yapılır, çünkü `client_secret` tarayıcıya konmaz.
 5. Sunucu `id_token` imzasını doğrular, e-postayı çıkarır, kullanıcıyı veritabanında bulur ya da oluşturur ve kendi JWT'sini üretir.
+
+Bu beş adımı simülatörde tek tek ilerletebilirsin:
+
+:::interactive{type="oauth-flow" flow="authorization-code" pkce=true}
+Akışı ileri düğmesiyle adım adım ilerlet ve her adımda hangi değerin tarayıcının adres çubuğundan (ön kanal), hangisinin sunucudan sunucuya (arka kanal) taşındığına bak: `code` tarayıcıdan geçer, token takası ise sunucuda yapılır. "Saldırı senaryosu: code ele geçirildi" kutusunu işaretle; PKCE açıkken saldırganın `code_verifier` olmadan token alamadığını izle. Sonra PKCE'yi kapatıp aynı adımları tekrarla ve yakalanan kodun tek başına token'a çevrilebildiğini gör.
+:::
 
 Güvenlik kontrolleri:
 
@@ -244,17 +265,15 @@ Tasarım notları:
 - **Yarış durumu (race condition):** Stok düşerken `UPDATE stock SET quantity = quantity - $1 WHERE product_id = $2 AND quantity >= $1` kullan. Etkilenen satır sayısı 0 ise stok yetmemiştir.
 - **IDOR koruması:** Sipariş sorgularında her zaman `WHERE id = $1 AND user_id = $currentUser` kullan.
 
-## Postman koleksiyonu
+## Postman koleksiyonu oluşturma
 
-Bu PDF ile birlikte masaüstüne **Toptan_Eticaret_API.postman_collection.json** dosyası kaydedildi. Kullanımı:
+Bu dersteki uç noktaları elle denemek için Postman'de **Toptan E-ticaret API** adında bir koleksiyon kur. Koleksiyonu sıfırdan kurmak, API'nin kimlik doğrulama ve idempotency kurallarını pekiştirir:
 
-1. Postman'de **Import** düğmesine tıkla ve dosyayı seç.
-2. Koleksiyonun **Variables** sekmesinde `baseUrl` değerini kontrol et (varsayılan: `http://localhost:3000/api/v1`).
-3. Önce **Auth → Login** isteğini çalıştır. Test betiği gelen token'ı otomatik olarak `accessToken` değişkenine kaydeder.
-4. Diğer istekler `Authorization: Bearer {{accessToken}}` başlığını otomatik kullanır.
-5. **Orders → Create Order** isteği her çalıştırmada yeni bir `Idempotency-Key` üretir (`{{$guid}}`).
-
-Koleksiyonda Auth, Products, Cart, Orders, Admin ve Webhooks klasörleri ile durum kodu testleri bulunur.
+1. Koleksiyonun **Variables** sekmesine `baseUrl` değişkenini ekle (varsayılan: `http://localhost:3000/api/v1`). Her istek adresi `{{baseUrl}}/...` ile başlasın.
+2. Koleksiyonun **Authorization** sekmesini *Bearer Token* yap ve değer olarak `{{accessToken}}` ver; klasörler ve istekler bunu *Inherit auth from parent* ile devralır.
+3. **Auth → Login** isteğinin **Tests** sekmesine gelen token'ı kaydeden bir betik yaz: `pm.collectionVariables.set("accessToken", pm.response.json().accessToken)`. Böylece bir kez giriş yapınca diğer istekler otomatik yetkilenir.
+4. **Orders → Create Order** isteğinin başlıklarına `Idempotency-Key: {{$guid}}` ekle; Postman her çalıştırmada yeni bir GUID üretir. Aynı anahtarla tekrar göndermek istediğinde değeri sabit bir dizeyle değiştirip 200 (önbellekten) yanıtını gözle.
+5. İstekleri Auth, Products, Cart, Orders, Admin ve Webhooks klasörlerine ayır; her isteğin **Tests** sekmesine en azından beklenen durum kodunu doğrulayan bir satır koy: `pm.test("201", () => pm.response.to.have.status(201))`.
 
 ## Mülakat soru-cevap
 
@@ -353,6 +372,10 @@ Koleksiyonda Auth, Products, Cart, Orders, Admin ve Webhooks klasörleri ile dur
 | **Rate limit** | Zaman başına istek sınırı → 429 |
 | **OpenAPI** | API'yi tanımlayan standart (Swagger) |
 | **Latency** | İstek-cevap arası süre (ms) |
+
+:::realworld{company="Shopify"}
+Shopify'ın mühendislik blogunda yayımlanan "10 Tips for Building Resilient Payment Systems" yazısı, bu dersteki sipariş ve ödeme akışının üretimde nelere dikkat ettirdiğini özetler. Yazının ana fikri, ödeme gibi dış bir sisteme yapılan her çağrının yavaşlayabileceği, yanıtın kaybolabileceği ya da aynı işlemin iki kez denenebileceğidir. Önerilerin başında kısa ve bilinçli seçilmiş zaman aşımları ile sorunlu bir bağımlılığa istek göndermeyi geçici olarak kesen devre kesiciler (circuit breaker) gelir; böylece yavaş bir ödeme sağlayıcısı tüm ödeme sayfasını kilitlemez. Tekrar denemelerin çift tahsilata dönüşmemesi için idempotency anahtarları kullanılır: animasyondaki `Idempotency-Key` başlığının amacı tam olarak budur. Yazı ayrıca para hareketlerinin kendi kayıtlarınla ödeme sağlayıcısının kayıtları arasında düzenli olarak mutabakat (reconciliation) ile karşılaştırılmasını, kapasite planlamasını ve doğru metriklerle izlemeyi önerir. Webhook'ların imzasını doğrulamak ve olay kimliğini saklamak da aynı düşüncenin parçasıdır: ağdan gelen hiçbir bildirim "bir kez ve doğru sırada" gelecek diye varsayılmaz.
+:::
 
 :::quiz{src="quiz.json"}
 :::

@@ -1,7 +1,12 @@
 import { Body, Controller, Get, Param, Post, Put, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { z } from 'zod';
-import { InteractiveTypeSchema, ReviewGradeSchema, UpdateProgressSchema } from '@devacademy/shared';
+import {
+  EXERCISE_SESSION_KIND,
+  InteractiveTypeSchema,
+  ReviewGradeSchema,
+  UpdateProgressSchema,
+} from '@devacademy/shared';
 import type {
   BadgeDto,
   DailyActivityDto,
@@ -18,8 +23,8 @@ import { ApiZodBody } from '../../common/swagger/zod-openapi';
 import { ProgressService } from './progress.service';
 
 const InteractiveSchema = z.object({
-  // Yalnızca bilinen simülatörler: rastgele adlarla "interaktif" rozeti kasılamaz
-  interactive: InteractiveTypeSchema,
+  // Yalnızca bilinen simülatörler ve kodlama alıştırması: rastgele adlarla "interaktif" rozeti kasılamaz
+  interactive: z.union([InteractiveTypeSchema, z.literal(EXERCISE_SESSION_KIND)]),
   lessonId: z.string().max(100).optional(),
   params: z
     .record(z.unknown())
@@ -78,7 +83,10 @@ export class ProgressController {
   }
 
   @Post('interactive')
-  @ApiOperation({ summary: 'İnteraktif simülatör oturumu kaydet (rozetler için)' })
+  @ApiOperation({
+    summary:
+      'İnteraktif simülatör ya da geçilen kodlama alıştırması oturumu kaydet (rozetler için)',
+  })
   @ApiZodBody(InteractiveSchema)
   interactive(
     @CurrentUser() user: AuthUser,

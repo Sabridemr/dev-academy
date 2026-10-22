@@ -1,0 +1,26 @@
+{
+  "id": "k-09-matris-transpozu",
+  "title": {
+    "tr": "Comprehension ile matris transpozu",
+    "en": "Matrix transpose with a comprehension"
+  },
+  "language": "python",
+  "prompt": {
+    "tr": "`transpoz(matris)` satırları liste olan dikdörtgen bir matrisin transpozunu (satırlar ↔ sütunlar) **yeni bir liste listesi** olarak döndürsün. Döngü yerine iç içe bir list comprehension (ya da `zip`) kullan.\n\n`[[1, 2, 3], [4, 5, 6]]` → `[[1, 4], [2, 5], [3, 6]]`. Boş matris için `[]` döndür. Sonuçtaki satırlar tuple değil liste olmalı.",
+    "en": "`transpoz(matris)` should return the transpose (rows ↔ columns) of a rectangular matrix whose rows are lists, as a **new list of lists**. Use a nested list comprehension (or `zip`) instead of loops.\n\n`[[1, 2, 3], [4, 5, 6]]` → `[[1, 4], [2, 5], [3, 6]]`. Return `[]` for an empty matrix. The rows of the result must be lists, not tuples."
+  },
+  "starter": "def transpoz(matris):\n    return [satir for satir in matris]\n",
+  "solution": "def transpoz(matris):\n    if not matris:\n        return []\n    return [[satir[j] for satir in matris] for j in range(len(matris[0]))]\n",
+  "tests": "assert transpoz([[1, 2, 3], [4, 5, 6]]) == [[1, 4], [2, 5], [3, 6]]\nassert transpoz([]) == []\nassert transpoz([[7]]) == [[7]]\nassert transpoz([[1, 2]]) == [[1], [2]]\nassert all(type(s) is list for s in transpoz([[1, 2], [3, 4]])), \"satırlar liste olmalı\"\n",
+  "hints": [
+    {
+      "tr": "Sonucun `j`'inci satırı, her satırın `j`'inci elemanıdır: `[satir[j] for satir in matris]`.",
+      "en": "Row `j` of the result is element `j` of every row: `[satir[j] for satir in matris]`."
+    },
+    {
+      "tr": "Bunu `for j in range(len(matris[0]))` ile dışarıdan sar; ya da `[list(s) for s in zip(*matris)]`. Boş matrisi önce ayrıca ele al.",
+      "en": "Wrap it from outside with `for j in range(len(matris[0]))`; or use `[list(s) for s in zip(*matris)]`. Handle the empty matrix separately first."
+    }
+  ],
+  "timeoutMs": 5000
+}

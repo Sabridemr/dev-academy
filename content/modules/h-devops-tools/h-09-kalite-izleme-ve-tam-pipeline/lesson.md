@@ -123,6 +123,12 @@ Deploy bitti diye iş bitmez; canlıda ne olduğunu görmek gerekir.
 - **Uptime izleme:** UptimeRobot, Better Stack gibi araçlar site kapanınca haber verir.
 - **Log ve metrik:** Grafana, Datadog, Logtail.
 
+Kalite kapıları ile canlı izleme aynı geri bildirim döngüsünün iki ucudur. Kapılar hatalı kodun canlıya çıkmasını engellemeye çalışır, izleme ise kapılardan kaçanı yakalar. Aşağıdaki animasyon iki ucu tek bir sürümün hikâyesinde birleştiriyor.
+
+:::animation{scene="quality-gates.scene.json"}
+Kapsam eşiği ve güvenlik taraması kalite kapısını kapalı tutar, sorunlar düzeltilince sürüm canlıya çıkar. Ardından Prometheus metrikleri kazır, Grafana gösterir ve hata oranı yükselince alarm ekibe ulaşıp geri alma yapılır.
+:::
+
 :::code{lang="javascript"}
 ```javascript
 app.get('/health', async (req, res) => {
@@ -422,8 +428,12 @@ Kurulum kontrol listesi:
 
 ## Dene: tam pipeline
 
-:::interactive{type="pipeline" stages=8 failureStage=0 retries=1}
-Lint, test, güvenlik taraması, paketleme, staging ve canlı aşamalarını içeren tam pipeline'ı çalıştır; bir aşamayı bozup hangi noktada durduğunu izle.
+:::interactive{type="pipeline" stages="lint,unit-test,integration,security-scan,docker-build,staging,production" failureStage="security-scan" retries=1}
+Lint, test, güvenlik taraması, paketleme, staging ve canlı aşamalarını içeren tam pipeline'ı çalıştır. Ardından "Hata enjekte et" kutusunu işaretle ("Hata aşaması" security-scan seçili gelir) ve yeniden çalıştır. Tarama bir kez yeniden denenir, yine düşünce docker-build'den production'a kadar her şey "atlandı" kalır: açık barındıran imaj hiç üretilmez. Son olarak hata enjeksiyonunu kapatıp "Dağıtım stratejisi"ni Canary yap ve "Canary hata oranı"nı %2'nin üstüne çıkar. Bu, kapılardan geçmiş ama canlıda sorun çıkaran bir sürümün otomatik geri alınmasıdır.
+:::
+
+:::realworld{company="Cloudflare"}
+2 Temmuz 2019'da Cloudflare'in ağı yaklaşık yarım saat boyunca dünya genelinde 502 hataları verdi. Şirketin ardından yayımladığı ayrıntılı postmortem, nedenin web uygulama güvenlik duvarına (WAF) eklenen tek bir kural olduğunu anlatır. Kuraldaki düzenli ifade aşırı geri izleme (catastrophic backtracking) yaparak işlemcileri tamamen tüketti. Kural, hızlı tepki gerektiren güvenlik güncellemeleri için kullanılan bir yolla tüm dünyaya aynı anda dağıtılmıştı. Bu yüzden sorun önce küçük bir bölgede görülüp durdurulamadı. Postmortem'de sıralanan düzeltmeler bu dersin konusuyla örtüşür. Kurallar artık kademeli olarak dağıtılacak, düzenli ifadelerin performansı dağıtımdan önce test edilecek, tek bir kuralın işlemci tüketimi sınırlandırılacaktı. Ders şudur: bir kalite kapısının yokluğu ya da atlanabilmesi, en küçük değişikliği bile küresel bir kesintiye dönüştürebilir. İzleme sorunu dakikalar içinde gösterdi, ama kademeli dağıtım etki alanını baştan küçültebilirdi.
 :::
 
 :::callout{tone="info" title="İlgili dersler"}
