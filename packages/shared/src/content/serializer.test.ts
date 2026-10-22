@@ -39,9 +39,6 @@ function roundTrip(markdown: string, englishMarkdown?: string) {
  * ayrıştırıcıda metin bloğu olarak okunuyor (ders dosyasındaki hata; gidiş-dönüş yine birebir).
  */
 const KNOWN_WARNINGS: Record<string, string[]> = {
-  'k-python/k-06-fonksiyonlar-ve-cagri-yigini/lesson.md': [
-    "blok 16 (text): gövdede ':::' satırı var; dosya yeniden okunurken blok bölünür",
-  ],
 };
 
 describe('serializeLesson — gerçek derslerle gidiş-dönüş', () => {

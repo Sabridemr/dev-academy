@@ -186,7 +186,7 @@ değiştirilebilir bir nesneyse, her çağrı **aynı nesneyi** kullanır:
 `ekle_hatali` iki kez çağrıldığında 'liste' parametresinin iki seferde de aynı heap nesnesini gösterdiğine, `ekle_dogru`da ise her çağrıda yeni bir liste oluştuğuna bak.
 :::
 
-:::callout{tone="danger" title="Varsayılan değer olarak [] ya da {} verme"}
+:::callout{tone="danger" title="Varsayılan değer olarak boş liste ya da sözlük verme"}
 `def f(x, liste=[])` yazdığında bütün çağrılar tek bir listeyi paylaşır ve veri çağrılar arasında sızar. Bu
 hata özellikle web sunucularında farklı kullanıcıların verisinin karışmasına yol açabilir. Doğru kalıp:
 `def f(x, liste=None):` ve gövdenin başında `if liste is None: liste = []`. Aynı kural `dict`, `set` ve kendi
