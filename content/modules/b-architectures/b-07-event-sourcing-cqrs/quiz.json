@@ -1,0 +1,110 @@
+{
+  "id": "b-07-event-sourcing-cqrs-quiz",
+  "title": { "tr": "Event Sourcing ve CQRS Quiz", "en": "Event Sourcing and CQRS Quiz" },
+  "passScore": 70,
+  "questions": [
+    {
+      "id": "q1",
+      "type": "single",
+      "prompt": {
+        "tr": "İki komut aynı cüzdan akışını sürüm 7'de okudu. Birincisi olayını 'beklenen sürüm 7' ile ekledi. İkincisi de aynı koşulla eklemeye çalışınca ne olur?",
+        "en": "Two commands read the same wallet stream at version 7. The first appended its event with 'expected version 7'. What happens when the second tries to append with the same condition?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "İkinci olay da eklenir; olay depoları her eklemeyi kabul eder", "en": "The second event is appended too; event stores accept every append" } },
+        { "id": "b", "text": { "tr": "Ekleme reddedilir; işleyici akışı yeniden okuyup kararını güncel durumla yeniden verir", "en": "The append is rejected; the handler re-reads the stream and decides again against the current state" } },
+        { "id": "c", "text": { "tr": "Depo birinci olayı silip ikinciyi yazar (son yazan kazanır)", "en": "The store deletes the first event and writes the second (last writer wins)" } },
+        { "id": "d", "text": { "tr": "Akış kilitlenir ve bir yönetici müdahale edene kadar yazılamaz", "en": "The stream is locked and cannot be written until an operator intervenes" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Beklenen sürüm kontrolü kilitsiz iyimser eşzamanlılıktır: akış artık sürüm 8'de olduğu için ikinci ekleme reddedilir. İşleyici güncel olayları okuyup decide'ı yeniden çalıştırır; bakiye yetmiyorsa komut bu kez iş kuralıyla reddedilir. Olaylar asla silinmez (c) ve kalıcı kilit yoktur (d).",
+        "en": "The expected-version check is lock-free optimistic concurrency: since the stream is now at version 8, the second append is rejected. The handler reads the current events and runs decide again; if the balance is insufficient, the command is now rejected by the business rule. Events are never deleted (c) and there is no persistent lock (d)."
+      },
+      "difficulty": "medium",
+      "concepts": ["optimistic-concurrency", "event-store"]
+    },
+    {
+      "id": "q2",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Asenkron bir projeksiyonu idempotent yapmak için hangileri doğru uygulamalardır? (Birden fazla seçin)",
+        "en": "Which are correct practices for making an asynchronous projection idempotent? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "İşlenen son global konumu (checkpoint) okuma modeliyle aynı transaction'da saklamak", "en": "Store the last processed global position (checkpoint) in the same transaction as the read model" } },
+        { "id": "b", "text": { "tr": "Checkpoint'ten küçük ya da eşit konumdaki olayları atlamak", "en": "Skip events whose position is less than or equal to the checkpoint" } },
+        { "id": "c", "text": { "tr": "Checkpoint'i okuma modeli güncellemesinden önce, ayrı bir transaction'da yazmak", "en": "Write the checkpoint before the read-model update, in a separate transaction" } },
+        { "id": "d", "text": { "tr": "Olayların teslimatının tam olarak bir kez olduğunu varsaymak", "en": "Assume events are delivered exactly once" } }
+      ],
+      "correct": ["a", "b"],
+      "explanation": {
+        "tr": "Abonelikler en az bir kez teslim eder; aynı olay tekrar gelebilir. Checkpoint okuma modeliyle atomik saklanırsa ve eski konumlar atlanırsa tekrar zararsızdır. Checkpoint'i ayrı ve önce yazmak (c), çökme anında olayın hiç uygulanmamasına yol açar; tam bir kez teslim varsaymak (d) çift işlemeye kapı açar.",
+        "en": "Subscriptions deliver at least once; the same event may arrive again. If the checkpoint is stored atomically with the read model and old positions are skipped, redelivery is harmless. Writing the checkpoint separately and first (c) can lose the event on a crash; assuming exactly-once delivery (d) opens the door to double processing."
+      },
+      "difficulty": "medium",
+      "concepts": ["projection", "read-model"]
+    },
+    {
+      "id": "q3",
+      "type": "truefalse",
+      "prompt": {
+        "tr": "Snapshot, event sourcing'li bir sistemde doğruluk kaynağıdır; snapshot alındıktan sonra eski olaylar güvenle silinebilir.",
+        "en": "In an event-sourced system the snapshot is the source of truth; once a snapshot is taken, older events can safely be deleted."
+      },
+      "options": [
+        { "id": "t", "text": { "tr": "Doğru", "en": "True" } },
+        { "id": "f", "text": { "tr": "Yanlış", "en": "False" } }
+      ],
+      "correct": ["f"],
+      "explanation": {
+        "tr": "Snapshot yalnızca yüklemeyi hızlandıran bir önbellektir. evolve mantığı değişirse snapshot'lar geçersiz olur ve olaylardan yeniden üretilir; yeni projeksiyonlar da eski olaylara replay ile ihtiyaç duyar. Olayları silmek event sourcing'in bütün değerini (denetim izi, replay) yok eder.",
+        "en": "A snapshot is only a cache that speeds up loading. If the evolve logic changes, snapshots become invalid and are rebuilt from events; new projections also need the old events for replay. Deleting events destroys the whole value of event sourcing (audit trail, replay)."
+      },
+      "difficulty": "easy",
+      "concepts": ["snapshot", "replay"]
+    },
+    {
+      "id": "q4",
+      "type": "single",
+      "prompt": {
+        "tr": "Yıllardır üretimde olan MoneyWithdrawn olayına `currency` alanı eklenmesi gerekiyor. En uygun yaklaşım hangisidir?",
+        "en": "A `currency` field must be added to the MoneyWithdrawn event, which has been in production for years. What is the most suitable approach?"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Depodaki bütün eski olayları bir migration ile yeniden yazmak", "en": "Rewrite every old event in the store with a migration" } },
+        { "id": "b", "text": { "tr": "Okuma sırasında eski olayları yeni şekle çeviren bir upcaster yazmak (currency yoksa varsayılan değer)", "en": "Write an upcaster that converts old events to the new shape when read (default currency if missing)" } },
+        { "id": "c", "text": { "tr": "Eski olayları silip yalnızca yeni şekilli olaylarla devam etmek", "en": "Delete old events and continue with new-shaped events only" } },
+        { "id": "d", "text": { "tr": "Alanı eklemekten vazgeçmek; olay şemaları asla değişemez", "en": "Give up on the field; event schemas can never change" } }
+      ],
+      "correct": ["b"],
+      "explanation": {
+        "tr": "Olaylar değişmez kabul edilir; bu yüzden şema evrimi okuma tarafında yapılır. Upcaster eski sürümü yükleme anında yeni şekle çevirir. Anlam değişikliği ya da alan silme gibi uyumsuz değişikliklerde yeni bir olay tipi tanıtılır. Geçmişi yeniden yazmak (a) ya da silmek (c) denetim izini bozar; şemayı dondurmak (d) gereksizdir.",
+        "en": "Events are treated as immutable, so schema evolution happens on the read path. An upcaster turns the old version into the new shape at load time. For incompatible changes such as a change in meaning or a removed field, a new event type is introduced. Rewriting history (a) or deleting it (c) breaks the audit trail; freezing the schema (d) is unnecessary."
+      },
+      "difficulty": "medium",
+      "concepts": ["event-upcasting"]
+    },
+    {
+      "id": "q5",
+      "type": "multiple",
+      "prompt": {
+        "tr": "Hangi durumlarda event sourcing genellikle iyi bir seçim DEĞİLDİR? (Birden fazla seçin)",
+        "en": "In which situations is event sourcing usually NOT a good choice? (Select all that apply)"
+      },
+      "options": [
+        { "id": "a", "text": { "tr": "Geçmişin hiç sorulmadığı basit bir profil ayarları CRUD ekranı", "en": "A simple profile-settings CRUD screen where history is never asked about" } },
+        { "id": "b", "text": { "tr": "Her bakiyenin nasıl oluştuğunu kanıtlamak zorunda olan bir muhasebe defteri", "en": "An accounting ledger that must prove how every balance came about" } },
+        { "id": "c", "text": { "tr": "Her ekranın yazmadan hemen sonra güncel olması şart olan ve gecikmeye tahammülü olmayan bir ürün", "en": "A product where every screen must be current immediately after a write and cannot tolerate lag" } },
+        { "id": "d", "text": { "tr": "Bütün servislerin, tek bir karar olarak, sistem genelinde event sourcing'e geçirilmesi", "en": "Moving every service to event sourcing system-wide as a single decision" } }
+      ],
+      "correct": ["a", "c", "d"],
+      "explanation": {
+        "tr": "Denetim izinin zorunlu olduğu defter (b) event sourcing'in klasik adayıdır. Basit CRUD (a) yalnızca yük taşır; anında tutarlılık şartı (c) asenkron projeksiyonlarla çatışır; kalıp ise sistem genelinde değil, ihtiyaç duyan sınırlı bağlamda uygulanmalıdır (d).",
+        "en": "A ledger that requires an audit trail (b) is a classic candidate for event sourcing. Simple CRUD (a) only adds overhead; a requirement for immediate consistency (c) clashes with asynchronous projections; and the pattern belongs inside the bounded context that needs it, not system-wide (d)."
+      },
+      "difficulty": "medium",
+      "concepts": ["event-sourcing", "cqrs", "eventual-consistency"]
+    }
+  ]
+}
