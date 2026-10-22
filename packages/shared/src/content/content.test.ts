@@ -1,3 +1,5 @@
+import { readdirSync, statSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { parseLessonMarkdown, parseDirectiveAttributes, lessonPlainText } from './parser';
 import {
@@ -293,8 +295,14 @@ describe('Alıştırma şeması', () => {
 });
 
 describe('Müfredat', () => {
-  it('15 modül ve benzersiz ders id’leri', () => {
-    expect(CURRICULUM).toHaveLength(15);
+  it('her içerik modülü müfredatta ve ders id’leri benzersiz', () => {
+    // Modül sayısı sabit yazılmaz: content/modules altındaki klasörlerden türetilir
+    const modulesDir = resolve(__dirname, '../../../../content/modules');
+    const moduleDirs = readdirSync(modulesDir).filter((d) =>
+      statSync(resolve(modulesDir, d)).isDirectory(),
+    );
+    expect(CURRICULUM).toHaveLength(moduleDirs.length);
+    expect(CURRICULUM.map((m) => m.id).sort()).toEqual([...moduleDirs].sort());
     const ids = allLessons().map((x) => x.lesson.id);
     expect(new Set(ids).size).toBe(ids.length);
     expect(TOTAL_LESSON_COUNT).toBe(ids.length);
@@ -306,7 +314,18 @@ describe('Müfredat', () => {
     expect(nextLessonOf('g-08-nn-playground')?.id).toBe('h-01-linux-notes');
     expect(nextLessonOf('j-11-odunlesimler-mulakat-ve-ozet')?.id).toBe('k-01-python-nasil-calisir');
     expect(nextLessonOf('k-19-testler-ve-mini-proje')?.id).toBe('l-01-big-o-complexity');
-    expect(nextLessonOf('n-07-threat-modeling')?.id).toBe('o-01-tcp-udp');
-    expect(nextLessonOf('o-08-container-internals')).toBeUndefined();
+  });
+  it('modüller order sırasıyla zincirlenir; son dersin sonrası yok', () => {
+    const orders = CURRICULUM.map((m) => m.order);
+    expect(orders).toEqual([...orders].sort((a, b) => a - b));
+    // Her ardışık modül çifti: önceki modülün son dersinden sonrakinin ilk dersine
+    for (let i = 0; i < CURRICULUM.length - 1; i++) {
+      const prev = CURRICULUM[i];
+      const next = CURRICULUM[i + 1];
+      const lastOfPrev = prev.lessons[prev.lessons.length - 1];
+      expect(nextLessonOf(lastOfPrev.id)?.id, `${prev.id} → ${next.id}`).toBe(next.lessons[0].id);
+    }
+    const lastModule = CURRICULUM[CURRICULUM.length - 1];
+    expect(nextLessonOf(lastModule.lessons[lastModule.lessons.length - 1].id)).toBeUndefined();
   });
 });
