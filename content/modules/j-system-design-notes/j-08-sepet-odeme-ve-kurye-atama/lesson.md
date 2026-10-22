@@ -387,7 +387,7 @@ GEODIST partner_locations partner_123 partner_456 km
 ```
 :::
 
-Notlarda `GEORADIUS` komutu kullanılmış; Redis'in yeni sürümlerinde bunun yerine `GEOSEARCH` önerilir.
+Eski kaynaklarda `GEORADIUS` komutu görülür; Redis'in yeni sürümlerinde bunun yerine `GEOSEARCH` önerilir.
 
 ### Ret ve hata yönetimi
 

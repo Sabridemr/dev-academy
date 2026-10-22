@@ -79,7 +79,7 @@ Asenkron sistemlerde veri tüm servislere aynı anda ulaşmaz; kısa bir süre s
 
 ## 18. Mülakat soruları ve örnek cevaplar
 
-Notlardaki 10 sık sorulan mülakat sorusu ve her biri için cevap çerçevesi:
+Bu vaka için 10 sık sorulan mülakat sorusu ve her biri için cevap çerçevesi:
 
 **1. Gerçek zamanlı konum takibi nasıl çalışır?** Kurye uygulaması 5–10 saniyede bir konumu API Gateway üzerinden ingestion servisine gönderir. Konum doğrulanır, Redis'e GeoHash ile yazılır ve Kafka'ya olay olarak yayınlanır. Tracking Service bu olayı dinler ve WebSocket ile o siparişi takip eden kullanıcıya iletir. Geçmiş veri asenkron olarak veritabanına yazılır.
 
@@ -117,7 +117,7 @@ Notlardaki 10 sık sorulan mülakat sorusu ve her biri için cevap çerçevesi:
 
 ## 19. Senin projen için yol haritası
 
-Bu notlardaki fikirleri toptan gıda e-ticaret sitene aşamalı olarak uygulamak için önerilen sıra:
+Bu modüldeki fikirleri toptan gıda e-ticaret sitene aşamalı olarak uygulamak için önerilen sıra:
 
 ### Aşama 1: Temel (şimdi)
 

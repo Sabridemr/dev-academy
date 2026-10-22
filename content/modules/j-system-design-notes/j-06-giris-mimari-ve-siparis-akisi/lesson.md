@@ -18,7 +18,7 @@ concepts: [functional-requirements, non-functional-requirements, api-gateway, cd
 
 ## 1. Bu rehber hakkında
 
-Bu rehber, gönderdiğin 14 sayfalık "Food Delivery App System Design" (Zomato / Swiggy benzeri yemek siparişi uygulaması) notlarının Türkçe ve ayrıntılı anlatımıdır. Notlardaki 2–15. sayfaların hepsi, aynı sırayla işlendi:
+Bu ders ve onu izleyen beş ders, Zomato / Swiggy benzeri bir yemek siparişi uygulamasının sistem tasarımını uçtan uca işler. Konular şu sırayla ele alınır:
 
 1. Yüksek seviye mimari
 2. Kullanıcı yolculuğu ve sipariş akışı
@@ -35,9 +35,9 @@ Bu rehber, gönderdiğin 14 sayfalık "Food Delivery App System Design" (Zomato 
 13. Takip sistemini ölçekleme
 14. En iyi uygulamalar, ödünleşimler ve mülakat soruları
 
-Her bölümün sonunda **"Senin projen için"** kutusu var. Bu kutular, anlatılan fikrin toptan gıda e-ticaret sitene (çam fıstığı, incir, baharat, zeytin, zeytinyağı) nasıl uyarlanacağını gösterir. Notlarda fiyatlar Hint rupisi (₹) ile verilmiş; örnekleri anlaşılır olsun diye Türk lirasına (TL) çevirdim.
+Her bölümün sonunda **"Senin projen için"** kutusu var. Bu kutular, anlatılan fikrin toptan gıda e-ticaret sitene (çam fıstığı, incir, baharat, zeytin, zeytinyağı) nasıl uyarlanacağını gösterir. Fiyat örnekleri Türk lirası (TL) ile verilir.
 
-Notlarda 1. sayfa (giriş ve gereksinimler) yoktu. Bu yüzden ilk bölümde, sistem tasarımı mülakatlarında her zaman ilk yapılan adım olan gereksinim belirlemeyi kısaca ekledim.
+İlk bölümde, sistem tasarımı mülakatlarında her zaman ilk yapılan adım olan gereksinim belirlemeyi kısaca ele alıyoruz.
 
 ## 2. Sistem tasarımına giriş
 
@@ -191,7 +191,7 @@ Toptan satış sitesi için başlangıçta mikroservis gereksizdir. Tek bir Node
 
 ### Sipariş akışı sıralı diyagramı (sequence diagram)
 
-Notlardaki diyagram, yedi aktör arasındaki mesajları gösteriyor: Müşteri, API Gateway, Order Service, Payment Service, Restaurant Service, Delivery Service, Notification Service.
+Aşağıdaki diyagram yedi aktör arasındaki mesajları gösteriyor: Müşteri, API Gateway, Order Service, Payment Service, Restaurant Service, Delivery Service, Notification Service.
 
 | Adım | Ne olur? |
 |---|---|

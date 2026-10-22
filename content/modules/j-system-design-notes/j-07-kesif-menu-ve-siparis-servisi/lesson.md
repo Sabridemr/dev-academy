@@ -138,7 +138,7 @@ Birkaç yüz ürünlük bir katalogda Elasticsearch'e gerek yok. PostgreSQL'in t
 :::diagram{src="sekil-03.png" alt="Restoran kayıt akışı: kayıt, belge doğrulama, admin onayı ve yayına alma|Restaurant onboarding flow: registration, document verification, admin approval and going live"}
 :::
 
-Notlardaki GST (Hindistan vergi kaydı) ve FSSAI (Hindistan gıda güvenliği ruhsatı), Türkiye'de vergi levhası ve işletme kayıt/gıda belgelerine karşılık gelir.
+Hindistan'daki GST (vergi kaydı) ve FSSAI (gıda güvenliği ruhsatı), Türkiye'de vergi levhası ve işletme kayıt/gıda belgelerine karşılık gelir.
 
 ### Veri modeli (ER diyagramı)
 
