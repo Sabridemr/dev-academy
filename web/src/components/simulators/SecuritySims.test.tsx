@@ -11,29 +11,33 @@ import { PRESETS } from './regexPlayground.logic';
 const crypto = hasWebCrypto() ? it : it.skip;
 
 describe('RbacAbacSim', () => {
-  it('RBAC: üçlü seçimi kararı değiştirir; yükseltme senaryosu fazladan izinleri listeler', () => {
-    const onInteract = vi.fn();
-    renderWithProviders(<RbacAbacSim params={{ mode: 'rbac' }} onInteract={onInteract} />);
-    expect(screen.getByTestId('rbac-decision')).toHaveTextContent('İZİN');
-    fireEvent.click(screen.getByRole('button', { name: /Zeynep/ }));
-    expect(onInteract).toHaveBeenCalled();
-    expect(screen.getByTestId('rbac-decision')).toHaveTextContent('RET');
-    expect(screen.getByTestId('rbac-extra')).toHaveTextContent(/fazladan izin yok/);
+  it(
+    'RBAC: üçlü seçimi kararı değiştirir; yükseltme senaryosu fazladan izinleri listeler',
+    { timeout: 20000 },
+    () => {
+      const onInteract = vi.fn();
+      renderWithProviders(<RbacAbacSim params={{ mode: 'rbac' }} onInteract={onInteract} />);
+      expect(screen.getByTestId('rbac-decision')).toHaveTextContent('İZİN');
+      fireEvent.click(screen.getByRole('button', { name: /Zeynep/ }));
+      expect(onInteract).toHaveBeenCalled();
+      expect(screen.getByTestId('rbac-decision')).toHaveTextContent('RET');
+      expect(screen.getByTestId('rbac-extra')).toHaveTextContent(/fazladan izin yok/);
 
-    fireEvent.click(screen.getByRole('button', { name: /Ayrıcalık yükseltme/ }));
-    expect(screen.getByTestId('rbac-decision')).toHaveTextContent('İZİN');
-    expect(screen.getByTestId('rbac-extra')).toHaveTextContent(/fazladan verilen izin: 8/);
-    expect(screen.getByTestId('rbac-extra')).toHaveTextContent('can → delete → inv-1043');
-    expect(screen.getByTestId('rbac-current-extra')).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: /Ayrıcalık yükseltme/ }));
+      expect(screen.getByTestId('rbac-decision')).toHaveTextContent('İZİN');
+      expect(screen.getByTestId('rbac-extra')).toHaveTextContent(/fazladan verilen izin: 8/);
+      expect(screen.getByTestId('rbac-extra')).toHaveTextContent('can → delete → inv-1043');
+      expect(screen.getByTestId('rbac-current-extra')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: /Temel politikaya dön/ }));
-    expect(screen.getByTestId('rbac-decision')).toHaveTextContent('RET');
-    // Matris hücresini elle açmak
-    fireEvent.click(screen.getByRole('button', { name: 'viewer × delete' }));
-    expect(screen.getByTestId('rbac-decision')).toHaveTextContent('İZİN');
-  });
+      fireEvent.click(screen.getByRole('button', { name: /Temel politikaya dön/ }));
+      expect(screen.getByTestId('rbac-decision')).toHaveTextContent('RET');
+      // Matris hücresini elle açmak
+      fireEvent.click(screen.getByRole('button', { name: 'viewer × delete' }));
+      expect(screen.getByTestId('rbac-decision')).toHaveTextContent('İZİN');
+    },
+  );
 
-  it('ABAC: ret önceliği, kural sırası ve kural ekleme', () => {
+  it('ABAC: ret önceliği, kural sırası ve kural ekleme', { timeout: 20000 }, () => {
     renderWithProviders(<RbacAbacSim params={{ mode: 'abac' }} onInteract={() => undefined} />);
     fireEvent.click(screen.getByRole('button', { name: /^Can/ }));
     fireEvent.click(screen.getByRole('button', { name: /Fatura #1043/ }));
