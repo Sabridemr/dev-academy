@@ -49,3 +49,14 @@ describe('Header çıkış', () => {
     ).toHaveLength(0);
   });
 });
+
+describe('Header gezinme', () => {
+  it('oturum açmamış kullanıcıya da Sözlük bağlantısını gösterir', () => {
+    useAuthStore.setState({ hydrated: true, accessToken: null, user: null });
+    renderWithProviders(<Header />, 'tr');
+    const links = screen.getAllByRole('link', { name: 'Sözlük' });
+    expect(links.length).toBeGreaterThan(0);
+    for (const l of links) expect(l).toHaveAttribute('href', '/glossary');
+  });
+});
+

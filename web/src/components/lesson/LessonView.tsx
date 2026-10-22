@@ -29,6 +29,7 @@ import { useBookmarks, useLesson, useModule, useNotes, useUpdateProgress } from 
 import { cn, formatPercent } from '@/lib/utils';
 import { Dialog } from '../ui/Dialog';
 import { useOptionalToast } from '../ui/Toast';
+import { LessonConcepts } from '../glossary/LessonConcepts';
 import { BlockRenderer } from './BlockRenderer';
 import { LessonFinish } from './LessonFinish';
 import { markdownHeadingText, slugify } from './Markdown';
@@ -375,6 +376,7 @@ export function LessonView({ initial }: { initial: LessonDetail }) {
                 </span>
               ))}
             </div>
+            <LessonConcepts concepts={lesson.concepts} />
           </header>
 
           <div className="space-y-8">

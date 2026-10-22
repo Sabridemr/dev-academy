@@ -28,6 +28,7 @@ export const tr = {
     searchHint: 'Ara…',
     streakTitle: 'Günlük seri',
     paths: 'Öğrenme yolları',
+    glossary: 'Sözlük',
   },
   footer: {
     tagline:
@@ -769,6 +770,25 @@ export const tr = {
     title: 'Çevrimdışısın',
     text: 'İnternet bağlantın yok gibi görünüyor. Daha önce açtığın sayfalar önbellekten açılabilir.',
     retry: 'Tekrar dene',
+  },
+  glossary: {
+    title: 'Kavram sözlüğü',
+    subtitle:
+      'Derslerde geçen {count} kavramın kısa tanımı, İngilizce karşılığı ve geçtiği dersler.',
+    searchPlaceholder: 'Kavram, kısaltma ya da tanımda ara…',
+    searchLabel: 'Sözlükte ara',
+    lettersLabel: 'Harfe göre süz',
+    allLetters: 'Tümü',
+    resultCount: '{count} kavram',
+    empty: 'Aramana uyan kavram yok.',
+    lessonCount: '{count} derste',
+    back: 'Sözlüğe dön',
+    aliases: 'Diğer adlar',
+    lessonsTitle: 'Geçtiği dersler',
+    noLessons: 'Bu kavram henüz yayındaki bir derste geçmiyor.',
+    questionCount: '{count} quiz sorusu bu kavramı ölçüyor',
+    relatedTitle: 'İlgili kavramlar',
+    lessonConcepts: 'Bu dersteki kavramlar',
   },
   common: {
     loading: 'Yükleniyor…',
