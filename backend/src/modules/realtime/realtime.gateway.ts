@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Optional } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import {
@@ -15,6 +15,7 @@ import type { WsServerEvent } from '@devacademy/shared';
 import type { Env } from '../../config/env';
 import { AuthStateService } from '../../common/auth/auth-state.service';
 import type { AccessTokenPayload } from '../../common/auth/jwt-auth.guard';
+import { MetricsService } from '../../common/metrics/metrics.service';
 
 const RELAY_WINDOW_MS = 1000;
 const RELAY_MAX = 20;
@@ -46,9 +47,11 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     private readonly jwt: JwtService,
     private readonly config: ConfigService<Env, true>,
     private readonly authState: AuthStateService,
+    @Optional() private readonly metrics?: MetricsService,
   ) {}
 
   async handleConnection(client: Socket): Promise<void> {
+    this.metrics?.wsConnected();
     const token =
       (client.handshake.auth?.token as string | undefined) ??
       bearerFromHeader(client.handshake.headers.authorization);
@@ -82,6 +85,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
   }
 
   handleDisconnect(client: Socket): void {
+    this.metrics?.wsDisconnected();
     const data = client.data as SocketData;
     if (data.expiryTimer) clearTimeout(data.expiryTimer);
     this.relayCounters.delete(client.id);

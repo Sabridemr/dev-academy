@@ -47,11 +47,27 @@ export const EnvSchema = z.object({
   RATE_LIMIT_MAX: z.coerce.number().int().positive().default(120),
 
   CONTENT_DIR: z.string().default('../content'),
+
+  /** Prometheus /metrics uç noktası ve sayaçlar; 'false' ile tamamen kapatılır (uç nokta 404 döner) */
+  METRICS_ENABLED: z
+    .string()
+    .default('true')
+    .transform((v) => !['false', '0', 'no', 'off'].includes(v.trim().toLowerCase())),
+  /** Verilmezse Sentry hiç yüklenmez. Boş dize (compose'da `${SENTRY_DSN:-}`) verilmemiş sayılır. */
+  SENTRY_DSN: z.preprocess((v) => (v === '' ? undefined : v), z.string().url().optional()),
+  SENTRY_TRACES_SAMPLE_RATE: z.coerce.number().min(0).max(1).default(0.1),
   // SEED_ADMIN_EMAIL / SEED_ADMIN_PASSWORD yalnızca prisma/seed.ts okur (üretimde şifre zorunlu);
   // uygulama kullanmadığı için zayıf bir varsayılanla burada tutulmaz.
 });
 
 export type Env = z.infer<typeof EnvSchema>;
+
+/** Sentry, ConfigModule'den önce (instrument.ts) başlatıldığı için yalnızca kendi alanlarını doğrular */
+export const SentryEnvSchema = EnvSchema.pick({
+  NODE_ENV: true,
+  SENTRY_DSN: true,
+  SENTRY_TRACES_SAMPLE_RATE: true,
+});
 
 export function validateEnv(raw: Record<string, unknown>): Env {
   const parsed = EnvSchema.safeParse(raw);

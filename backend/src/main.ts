@@ -1,3 +1,5 @@
+// Sentry (SENTRY_DSN varsa) diğer modüllerden önce başlatılmalı
+import './instrument';
 import 'reflect-metadata';
 import type { INestApplicationContext } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
@@ -53,7 +55,7 @@ export async function createApp(): Promise<NestExpressApplication> {
   app.useLogger(app.get(Logger));
   const config = app.get(ConfigService<Env, true>);
 
-  app.setGlobalPrefix(config.get('API_PREFIX'), { exclude: ['health', 'health/ready'] });
+  app.setGlobalPrefix(config.get('API_PREFIX'), { exclude: ['health', 'health/ready', 'metrics'] });
   app.set('trust proxy', 1);
   app.use(
     helmet({ contentSecurityPolicy: false, crossOriginResourcePolicy: { policy: 'cross-origin' } }),
