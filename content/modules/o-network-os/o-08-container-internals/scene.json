@@ -1,0 +1,181 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "o-08-container-internals-process-wrap",
+  "title": { "tr": "Bir süreç konteynere dönüşüyor", "en": "A process becomes a container" },
+  "summary": {
+    "tr": "Sıradan bir sürecin runc tarafından PID, mount, network ve UTS namespace'lerine sarılması, overlay kök dosya sistemini görmesi, 256 MB bellek limitli bir cgroup'a eklenmesi ve sızıntı limite çarpınca OOM killer tarafından öldürülmesi.",
+    "en": "An ordinary process being wrapped by runc in PID, mount, network and UTS namespaces, seeing an overlay root file system, joining a cgroup with a 256 MB memory limit and being killed by the OOM killer when a leak hits the limit."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda containerd ve runc, ortada bir kutu içinde uygulama süreci, kutunun üstünde namespace düğümü, altında overlay kök dosya sistemi, sağda cgroup ve en sağda ana makinenin çekirdeği. runc süreci başlatır; ana makinede PID 4123 olan süreç kendi PID namespace'inde PID 1 görünür. Mount, network ve UTS namespace'leri eklenir, overlay kök dosya sistemi bağlanır. Süreç memory.max değeri 256 MB olan cgroup'a yazılır. Süreç belleği büyüttükçe cgroup sayacı artar, limite ulaşınca çekirdek geri kazanmayı dener, başaramaz ve OOM killer süreci öldürür; konteyner 137 koduyla çıkar.",
+      "en": "containerd and runc on the left, the application process inside a box in the middle, a namespace node above the box and the overlay root file system below it, a cgroup on the right and the host kernel at the far right. runc starts the process; the process that is PID 4123 on the host appears as PID 1 in its own PID namespace. Mount, network and UTS namespaces are added and the overlay root file system is mounted. The process is written into a cgroup whose memory.max is 256 MB. As the process grows its memory the cgroup counter rises; at the limit the kernel tries to reclaim, fails, and the OOM killer kills the process; the container exits with code 137."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "containerd", "kind": "service", "label": "containerd", "sublabel": { "tr": "imaj + OCI paketi", "en": "image + OCI bundle" }, "x": 110, "y": 160, "w": 150, "h": 70 },
+    { "id": "runc", "kind": "worker", "label": "runc", "sublabel": { "tr": "clone + exec", "en": "clone + exec" }, "x": 110, "y": 400, "w": 150, "h": 70 },
+    { "id": "box", "kind": "group", "label": { "tr": "\"Konteyner\" = sınırları çizilmiş süreç", "en": "\"Container\" = a process with drawn boundaries" }, "x": 450, "y": 300, "w": 330, "h": 440 },
+    { "id": "ns", "kind": "generic", "label": "Namespaces", "sublabel": "pid · mnt · net · uts", "x": 450, "y": 150, "w": 220, "h": 66, "parent": "box" },
+    { "id": "proc", "kind": "container", "label": { "tr": "Uygulama süreci", "en": "Application process" }, "sublabel": { "tr": "ana makinede PID 4123", "en": "PID 4123 on the host" }, "x": 450, "y": 300, "w": 200, "h": 80, "parent": "box" },
+    { "id": "rootfs", "kind": "storage", "label": "overlay rootfs", "sublabel": "lower (ro) + upper (rw)", "x": 450, "y": 450, "w": 220, "h": 66, "parent": "box" },
+    { "id": "cgroup", "kind": "generic", "label": "cgroup", "sublabel": "memory.max = 256M", "x": 760, "y": 300, "w": 170, "h": 76 },
+    { "id": "kernel", "kind": "server", "label": { "tr": "Ana makine çekirdeği", "en": "Host kernel" }, "sublabel": { "tr": "tüm konteynerler paylaşır", "en": "shared by all containers" }, "x": 900, "y": 500, "w": 150, "h": 76 }
+  ],
+  "edges": [
+    { "id": "ctrd-runc", "from": "containerd", "to": "runc", "kind": "control", "label": "OCI bundle" },
+    { "id": "runc-proc", "from": "runc", "to": "proc", "kind": "control", "label": "clone()" },
+    { "id": "runc-ns", "from": "runc", "to": "ns", "kind": "control", "style": "dashed", "curvature": -0.2, "label": "CLONE_NEW*" },
+    { "id": "rootfs-proc", "from": "rootfs", "to": "proc", "kind": "data", "label": "/" },
+    { "id": "runc-cg", "from": "runc", "to": "cgroup", "kind": "control", "style": "dashed", "curvature": 0.45, "label": "cgroup.procs ← 4123" },
+    { "id": "proc-cg", "from": "proc", "to": "cgroup", "kind": "data", "label": { "tr": "bellek kullanımı", "en": "memory usage" } },
+    { "id": "kernel-proc", "from": "kernel", "to": "proc", "kind": "event", "style": "dotted", "curvature": 0.3, "label": "SIGKILL" }
+  ],
+  "steps": [
+    {
+      "id": "bundle",
+      "title": { "tr": "containerd paketi hazırlar", "en": "containerd prepares the bundle" },
+      "narration": {
+        "tr": "docker run isteği containerd'ye ulaşır. containerd imajı indirir, katmanları açar ve OCI standardında bir paket (yapılandırma + kök dosya sistemi) hazırlayıp düşük seviyeli çalışma zamanı runc'a verir.",
+        "en": "The docker run request reaches containerd. containerd pulls the image, unpacks the layers, prepares an OCI bundle (configuration + root file system) and hands it to the low-level runtime runc."
+      },
+      "durationMs": 3000,
+      "inherit": false,
+      "highlight": { "nodes": ["containerd", "runc"], "edges": ["ctrd-runc"] },
+      "nodeStates": {
+        "containerd": { "status": "active" },
+        "ns": { "status": "muted" },
+        "proc": { "status": "muted" },
+        "rootfs": { "status": "muted" },
+        "cgroup": { "status": "muted" },
+        "kernel": { "status": "idle" }
+      },
+      "edgeStates": { "runc-cg": { "visible": false }, "kernel-proc": { "visible": false } },
+      "packets": [{ "edge": "ctrd-runc", "shape": "square", "label": "config.json", "durationMs": 1300 }]
+    },
+    {
+      "id": "clone",
+      "title": { "tr": "Sıradan bir süreç doğar", "en": "An ordinary process is born" },
+      "narration": {
+        "tr": "runc clone() sistem çağrısıyla yeni bir süreç oluşturur. Ana makineden bakınca bu, PID 4123 numaralı sıradan bir süreçtir; ps aux çıktısında diğer süreçlerin arasında görünür.",
+        "en": "runc creates a new process with the clone() system call. Seen from the host, this is an ordinary process with PID 4123; it shows up in ps aux among all the others."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["runc", "proc"], "edges": ["runc-proc"] },
+      "nodeStates": { "containerd": { "status": "idle" }, "runc": { "status": "active" }, "proc": { "status": "active", "badge": "PID 4123" } },
+      "packets": [{ "edge": "runc-proc", "shape": "diamond", "label": "clone", "durationMs": 1300 }],
+      "annotations": [
+        { "id": "ps-note", "x": 450, "y": 560, "text": { "tr": "Çekirdekte \"konteyner\" nesnesi yok: yalnızca bir süreç", "en": "No \"container\" object in the kernel: just a process" }, "tone": "info", "target": "proc" }
+      ]
+    },
+    {
+      "id": "pid-ns",
+      "title": { "tr": "PID namespace: içeride PID 1", "en": "PID namespace: PID 1 inside" },
+      "narration": {
+        "tr": "clone() çağrısına CLONE_NEWPID bayrağı verildiği için süreç yeni bir PID namespace'inin ilk üyesidir. Kendini PID 1 olarak görür ve ana makinedeki diğer süreçleri göremez. Dışarıdan bakınca numarası hâlâ 4123'tür.",
+        "en": "Because clone() was given the CLONE_NEWPID flag, the process is the first member of a new PID namespace. It sees itself as PID 1 and cannot see the host's other processes. From outside its number is still 4123."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["ns", "proc"], "edges": ["runc-ns"] },
+      "nodeStates": {
+        "ns": { "status": "active", "badge": "pid" },
+        "proc": { "status": "active", "badge": "PID 1 / 4123", "sublabel": { "tr": "içeride PID 1", "en": "PID 1 inside" } }
+      },
+      "packets": [{ "edge": "runc-ns", "shape": "diamond", "label": "NEWPID", "durationMs": 1300 }]
+    },
+    {
+      "id": "more-ns",
+      "title": { "tr": "Mount, network, UTS", "en": "Mount, network, UTS" },
+      "narration": {
+        "tr": "Aynı anda mount, network ve UTS namespace'leri de açılır. Süreç kendi bağlama noktalarına, kendi eth0 arayüzüne ve 80 numaralı portuna, kendi host adına sahip olur. Bunların hiçbiri kopya değildir; çekirdek yalnızca farklı bir görünüm sunar.",
+        "en": "Mount, network and UTS namespaces are created at the same time. The process gets its own mount points, its own eth0 interface and port 80, and its own hostname. None of this is a copy; the kernel only presents a different view."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["ns"], "edges": ["runc-ns"] },
+      "nodeStates": { "ns": { "status": "success", "badge": "pid mnt net uts" } },
+      "packets": [
+        { "edge": "runc-ns", "shape": "diamond", "label": "NEWNS", "durationMs": 900 },
+        { "edge": "runc-ns", "shape": "diamond", "label": "NEWNET", "startAt": 900, "durationMs": 900 },
+        { "edge": "runc-ns", "shape": "diamond", "label": "NEWUTS", "startAt": 1800, "durationMs": 900 }
+      ]
+    },
+    {
+      "id": "overlay",
+      "title": { "tr": "Overlay kök dosya sistemi", "en": "Overlay root file system" },
+      "narration": {
+        "tr": "runc, imajın salt okunur katmanlarını (lowerdir) ve konteynere özel yazılabilir katmanı (upperdir) overlayfs ile birleştirip yeni mount namespace'inde / olarak bağlar. Süreç artık ana makinenin dosyalarını değil, imajın dosyalarını görür.",
+        "en": "runc merges the image's read-only layers (lowerdir) and the container's own writable layer (upperdir) with overlayfs and mounts the result as / in the new mount namespace. The process now sees the image's files, not the host's."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["rootfs", "proc"], "edges": ["rootfs-proc"] },
+      "nodeStates": { "ns": { "status": "idle" }, "rootfs": { "status": "success", "badge": "merged" } },
+      "packets": [{ "edge": "rootfs-proc", "shape": "square", "label": "/", "durationMs": 1300 }],
+      "annotations": [
+        { "id": "cow-note", "x": 450, "y": 545, "text": { "tr": "İlk değişiklikte copy-up: dosya üst katmana kopyalanır", "en": "First write triggers copy-up into the upper layer" }, "tone": "info", "target": "rootfs" }
+      ]
+    },
+    {
+      "id": "cgroup-join",
+      "title": { "tr": "cgroup'a ekleme", "en": "Joining the cgroup" },
+      "narration": {
+        "tr": "runc konteyner için bir cgroup oluşturur, memory.max dosyasına 256M yazar ve süreç numarasını cgroup.procs dosyasına ekler. Namespace'ler sürecin ne gördüğünü, cgroup ise ne kadar kullanabileceğini belirler.",
+        "en": "runc creates a cgroup for the container, writes 256M to memory.max and adds the process ID to cgroup.procs. Namespaces decide what the process sees; the cgroup decides how much it may use."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["runc", "cgroup"], "edges": ["runc-cg"] },
+      "nodeStates": { "rootfs": { "status": "idle" }, "cgroup": { "status": "active", "badge": "40M / 256M" } },
+      "edgeStates": { "runc-cg": { "visible": true, "status": "active" } },
+      "packets": [{ "edge": "runc-cg", "shape": "square", "label": "4123", "durationMs": 1400 }]
+    },
+    {
+      "id": "exec",
+      "title": { "tr": "exec: uygulama çalışır", "en": "exec: the application runs" },
+      "narration": {
+        "tr": "Hazırlık bitince runc sizin komutunuzu exec eder ve çekilir. Uygulama artık normal biçimde çalışır, istekleri yanıtlar. Bellek kullanımı cgroup sayacında (memory.current) izlenir.",
+        "en": "When setup is done runc execs your command and steps aside. The application now runs normally and serves requests. Its memory use is tracked by the cgroup counter (memory.current)."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["proc", "cgroup"], "edges": ["proc-cg"] },
+      "nodeStates": { "runc": { "status": "idle" }, "proc": { "status": "success" }, "cgroup": { "status": "active", "badge": "120M / 256M" } },
+      "edgeStates": { "runc-cg": { "visible": false } },
+      "packets": [{ "edge": "proc-cg", "label": "+80M", "durationMs": 1200 }]
+    },
+    {
+      "id": "leak",
+      "title": { "tr": "Sızıntı limite yaklaşır", "en": "A leak approaches the limit" },
+      "narration": {
+        "tr": "Uygulamada bir bellek sızıntısı vardır: her istek biraz daha bellek ayırır ve geri vermez. cgroup sayacı 250 MB'a çıkar. Çekirdek önce bu grubun page cache sayfalarını geri kazanmayı dener, ama sızan anonim bellek geri kazanılamaz.",
+        "en": "The application has a memory leak: every request allocates a little more and never frees it. The cgroup counter climbs to 250 MB. The kernel first tries to reclaim this group's page cache pages, but leaked anonymous memory cannot be reclaimed."
+      },
+      "durationMs": 3400,
+      "highlight": { "nodes": ["proc", "cgroup"], "edges": ["proc-cg"] },
+      "nodeStates": { "proc": { "status": "warning" }, "cgroup": { "status": "warning", "badge": "250M / 256M" } },
+      "packets": [{ "edge": "proc-cg", "label": "+10M", "durationMs": 700, "repeat": 3, "repeatGapMs": 250 }],
+      "annotations": [
+        { "id": "reclaim-note", "x": 760, "y": 410, "text": { "tr": "Geri kazanma başarısız", "en": "Reclaim fails" }, "tone": "warning", "target": "cgroup" }
+      ]
+    },
+    {
+      "id": "oom",
+      "title": { "tr": "OOM killer: çıkış kodu 137", "en": "OOM killer: exit code 137" },
+      "narration": {
+        "tr": "Kullanım 256 MB'ı aşınca çekirdek bu cgroup içinde OOM killer'ı çalıştırır ve sürece SIGKILL gönderir. PID 1 öldüğü için konteyner biter; Docker 137 (128 + 9) çıkış kodunu ve OOMKilled: true bilgisini gösterir. Ana makinedeki diğer süreçler etkilenmez: limit tam olarak bunun için vardı.",
+        "en": "Once usage exceeds 256 MB the kernel runs the OOM killer inside this cgroup and sends SIGKILL to the process. Because PID 1 died the container ends; Docker reports exit code 137 (128 + 9) and OOMKilled: true. Other processes on the host are unaffected: that is exactly what the limit was for."
+      },
+      "durationMs": 3600,
+      "highlight": { "nodes": ["kernel", "proc", "cgroup"], "edges": ["kernel-proc"] },
+      "nodeStates": {
+        "kernel": { "status": "active", "badge": "oom_kill" },
+        "cgroup": { "status": "error", "badge": "256M / 256M" },
+        "proc": { "status": "down", "badge": "exit 137" }
+      },
+      "edgeStates": { "kernel-proc": { "visible": true, "status": "error" } },
+      "packets": [{ "edge": "kernel-proc", "shape": "diamond", "label": "SIGKILL", "color": "danger", "durationMs": 1400 }],
+      "annotations": [
+        { "id": "oom-note", "x": 720, "y": 160, "text": { "tr": "memory.events: oom_kill 1", "en": "memory.events: oom_kill 1" }, "tone": "danger", "target": "cgroup" }
+      ]
+    }
+  ]
+}
