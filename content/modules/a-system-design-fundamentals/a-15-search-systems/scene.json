@@ -1,0 +1,203 @@
+{
+  "$schema": "../../../../packages/shared/schema/animation-scene.schema.json",
+  "schemaVersion": 1,
+  "id": "a-15-inverted-index-bm25",
+  "title": {
+    "tr": "Ters indeks: yazma yolu ve BM25 ile sorgu",
+    "en": "Inverted index: write path and a BM25 query"
+  },
+  "summary": {
+    "tr": "Üç belge analyzer'dan geçip ters indekse yazılır; bir sorgu aynı analyzer'dan geçer, posting listeleri okunur, eşleşen belgeler BM25 ile skorlanıp facet sayımlarıyla döner; güncellenen belge refresh sonrası aranabilir olur.",
+    "en": "Three documents pass through an analyzer into an inverted index; a query passes through the same analyzer, posting lists are read, matching documents are scored with BM25 and returned with facet counts; an updated document becomes searchable after a refresh."
+  },
+  "a11y": {
+    "description": {
+      "tr": "Solda üç belge ve altta kullanıcı, ortada analyzer ve altında arama servisi, sağda ters indeks. Belgeler sırayla analyzer'a gider, küçük harfe çevrilir, stopword'ler atılır ve kelimeler köküne indirilir; terimler ters indekse posting listesi olarak yazılır. Kullanıcı 'redis önbellek' arar; arama servisi sorguyu aynı analyzer'dan geçirir, indeksten iki terimin belge listelerini okur, belge 1'i iki terimle eşleştiği için en üste koyar, belge 3'ü kısa olduğu için belge 2'nin önüne alır ve sonuçları facet sayılarıyla döndürür. Son adımda belge 2 güncellenir ve yaklaşık bir saniyelik refresh sonrası aranabilir olur.",
+      "en": "Three documents and the user on the left, the analyzer in the middle with the search service below it, the inverted index on the right. Documents go to the analyzer in turn, are lowercased, stopwords removed and words stemmed; terms are written to the inverted index as posting lists. The user searches 'redis cache'; the search service passes the query through the same analyzer, reads both terms' document lists from the index, ranks document 1 first because it matches both terms, puts document 3 ahead of document 2 because it is shorter and returns the results with facet counts. In the last step document 2 is updated and becomes searchable after a refresh of about one second."
+    }
+  },
+  "canvas": { "width": 1000, "height": 600 },
+  "nodes": [
+    { "id": "d1", "kind": "storage", "label": { "tr": "Belge 1", "en": "Doc 1" }, "sublabel": { "tr": "Redis önbellek stratejileri", "en": "Redis cache strategies" }, "x": 120, "y": 90, "w": 190, "h": 64 },
+    { "id": "d2", "kind": "storage", "label": { "tr": "Belge 2", "en": "Doc 2" }, "sublabel": { "tr": "PostgreSQL indeks, sorgu planı…", "en": "PostgreSQL index, query plan…" }, "x": 120, "y": 205, "w": 190, "h": 64 },
+    { "id": "d3", "kind": "storage", "label": { "tr": "Belge 3", "en": "Doc 3" }, "sublabel": { "tr": "Redis kuyruk ile arka plan işleri", "en": "Background jobs with a Redis queue" }, "x": 120, "y": 320, "w": 190, "h": 64 },
+    { "id": "user", "kind": "user", "label": { "tr": "Kullanıcı", "en": "User" }, "x": 120, "y": 500 },
+    { "id": "an", "kind": "service", "label": "Analyzer", "sublabel": { "tr": "küçük harf · stopword · kök", "en": "lowercase · stopwords · stem" }, "x": 450, "y": 205, "w": 180, "h": 76 },
+    { "id": "search", "kind": "service", "label": { "tr": "Arama servisi", "en": "Search service" }, "sublabel": "BM25", "x": 450, "y": 480, "w": 170, "h": 76 },
+    { "id": "idx", "kind": "db", "label": { "tr": "Ters indeks", "en": "Inverted index" }, "sublabel": { "tr": "terim → belgeler", "en": "term → documents" }, "x": 820, "y": 300, "w": 200, "h": 90 }
+  ],
+  "edges": [
+    { "id": "d1-an", "from": "d1", "to": "an", "kind": "data" },
+    { "id": "d2-an", "from": "d2", "to": "an", "kind": "data" },
+    { "id": "d3-an", "from": "d3", "to": "an", "kind": "data" },
+    { "id": "an-idx", "from": "an", "to": "idx", "kind": "data", "label": { "tr": "terimler", "en": "terms" } },
+    { "id": "user-search", "from": "user", "to": "search", "kind": "request", "label": { "tr": "\"redis önbellek\"", "en": "\"redis cache\"" } },
+    { "id": "search-an", "from": "search", "to": "an", "kind": "request", "style": "dashed", "label": { "tr": "aynı analyzer", "en": "same analyzer" } },
+    { "id": "search-idx", "from": "search", "to": "idx", "kind": "request", "label": { "tr": "posting listeleri", "en": "posting lists" } },
+    { "id": "search-user", "from": "search", "to": "user", "kind": "response", "curvature": 0.35 }
+  ],
+  "steps": [
+    {
+      "id": "doc1-in",
+      "title": { "tr": "Belge 1 analyzer'a girer", "en": "Doc 1 enters the analyzer" },
+      "narration": {
+        "tr": "Yazma yolu başlıyor. Belge 1'in metni analyzer'a gelir: önce kelimelere bölünür (tokenizasyon), sonra küçük harfe çevrilir ve stopword'ler atılır. Arama işinin büyük kısmı burada, sorgudan önce yapılır.",
+        "en": "The write path begins. Doc 1's text reaches the analyzer: it is split into words (tokenization), then lowercased and stopwords are removed. Most of the search work happens here, before any query."
+      },
+      "durationMs": 2600,
+      "inherit": false,
+      "highlight": { "nodes": ["d1", "an"], "edges": ["d1-an"] },
+      "nodeStates": { "d1": { "status": "active" }, "an": { "status": "busy" }, "search": { "status": "muted" }, "user": { "status": "muted" } },
+      "edgeStates": { "search-an": { "visible": false }, "search-idx": { "visible": false }, "search-user": { "visible": false }, "user-search": { "visible": false } },
+      "packets": [{ "edge": "d1-an", "label": { "tr": "metin", "en": "text" }, "shape": "envelope", "durationMs": 1000 }],
+      "annotations": [
+        { "id": "tok-note", "x": 450, "y": 110, "text": { "tr": "[Redis, önbellek, stratejileri]", "en": "[Redis, cache, strategies]" }, "tone": "info", "target": "an" }
+      ]
+    },
+    {
+      "id": "doc1-index",
+      "title": { "tr": "Kök bulma ve indekse yazma", "en": "Stemming and writing to the index" },
+      "narration": {
+        "tr": "Stemming 'stratejileri' kelimesini 'strateji' köküne indirir. Üç terim ters indekse yazılır: her terimin yanında onu içeren belgelerin listesi (posting listesi) tutulur. Şimdilik her listede yalnızca belge 1 var.",
+        "en": "Stemming reduces 'strategies' to the root 'strategy'. Three terms are written to the inverted index: next to each term sits the list of documents containing it (a posting list). For now each list holds only doc 1."
+      },
+      "durationMs": 2600,
+      "highlight": { "nodes": ["an", "idx"], "edges": ["an-idx"] },
+      "nodeStates": { "d1": { "status": "success" }, "idx": { "status": "active", "badge": "docs: 1", "sublabel": { "tr": "redis→[1] önbellek→[1]", "en": "redis→[1] cache→[1]" } } },
+      "packets": [{ "edge": "an-idx", "label": { "tr": "redis · önbellek · strateji", "en": "redis · cache · strategy" }, "shape": "square", "durationMs": 1100 }],
+      "annotations": [
+        { "id": "stem-note", "x": 450, "y": 110, "text": { "tr": "stratejileri → strateji", "en": "strategies → strategy" }, "tone": "info", "target": "an" }
+      ]
+    },
+    {
+      "id": "doc23-index",
+      "title": { "tr": "Belge 2 ve 3: listeler büyür", "en": "Docs 2 and 3: lists grow" },
+      "narration": {
+        "tr": "Belge 2 ve 3 de aynı yoldan geçer. 'redis' terimi artık belge 1 ve 3'ü, 'önbellek' terimi belge 1 ve 2'yi gösterir. 'ile' ve 've' gibi stopword'ler hiç indekslenmez; neredeyse her belgede geçtikleri için ayırt edici değillerdir.",
+        "en": "Docs 2 and 3 take the same path. The term 'redis' now points to docs 1 and 3, 'cache' to docs 1 and 2. Stopwords such as 'with' and 'and' are never indexed; they appear in almost every document and do not discriminate."
+      },
+      "durationMs": 3200,
+      "highlight": { "nodes": ["d2", "d3", "an", "idx"], "edges": ["d2-an", "d3-an", "an-idx"] },
+      "nodeStates": {
+        "d2": { "status": "success" },
+        "d3": { "status": "success" },
+        "idx": { "status": "success", "badge": "docs: 3", "sublabel": { "tr": "redis→[1,3] önbellek→[1,2]", "en": "redis→[1,3] cache→[1,2]" } }
+      },
+      "packets": [
+        { "edge": "d2-an", "label": "2", "shape": "envelope", "durationMs": 800 },
+        { "edge": "d3-an", "label": "3", "shape": "envelope", "startAt": 300, "durationMs": 800 },
+        { "edge": "an-idx", "label": "+4", "shape": "square", "startAt": 1100, "durationMs": 800 },
+        { "edge": "an-idx", "label": "+4", "shape": "square", "startAt": 1900, "durationMs": 800 }
+      ]
+    },
+    {
+      "id": "query",
+      "title": { "tr": "Sorgu gelir", "en": "A query arrives" },
+      "narration": {
+        "tr": "Kullanıcı 'redis önbellek' arar. Okuma yolu başlıyor: arama servisi belgelerin hiçbirini okumayacak; yalnızca indeksteki listelere bakacak. Bu, LIKE '%…%' taramasından farkın özüdür.",
+        "en": "The user searches for 'redis cache'. The read path begins: the search service will read none of the documents, only the lists in the index. That is the essence of the difference from a LIKE '%…%' scan."
+      },
+      "durationMs": 2400,
+      "highlight": { "nodes": ["user", "search"], "edges": ["user-search"] },
+      "nodeStates": { "user": { "status": "active" }, "search": { "status": "active" }, "an": { "status": "idle" }, "d1": { "status": "idle" }, "d2": { "status": "idle" }, "d3": { "status": "idle" } },
+      "edgeStates": { "user-search": { "visible": true }, "search-an": { "visible": true }, "search-idx": { "visible": true }, "search-user": { "visible": true } },
+      "packets": [{ "edge": "user-search", "label": "q", "shape": "envelope", "durationMs": 1000 }]
+    },
+    {
+      "id": "query-analyze",
+      "title": { "tr": "Sorgu da aynı analyzer'dan", "en": "The query goes through the same analyzer" },
+      "narration": {
+        "tr": "Sorgu, belgelerle aynı analyzer'dan geçer ve [redis, önbellek] terimlerine dönüşür. Belgeler kök hâlinde indekslenip sorgu ham bırakılsaydı 'stratejileri' araması 'strateji' terimini asla bulamazdı.",
+        "en": "The query passes through the same analyzer as the documents and becomes the terms [redis, cache]. Had documents been indexed as stems and the query left raw, a search for 'strategies' would never find the term 'strategy'."
+      },
+      "durationMs": 2600,
+      "highlight": { "nodes": ["search", "an"], "edges": ["search-an"] },
+      "nodeStates": { "an": { "status": "busy" } },
+      "packets": [
+        { "edge": "search-an", "label": "q", "shape": "envelope", "durationMs": 800 },
+        { "edge": "search-an", "direction": "backward", "label": { "tr": "[redis, önbellek]", "en": "[redis, cache]" }, "shape": "square", "startAt": 900, "durationMs": 900 }
+      ],
+      "annotations": [
+        { "id": "same-note", "x": 640, "y": 400, "text": { "tr": "Altın kural: aynı analyzer", "en": "Golden rule: same analyzer" }, "tone": "warning", "target": "an" }
+      ]
+    },
+    {
+      "id": "lookup",
+      "title": { "tr": "Posting listeleri okunur", "en": "Posting lists are read" },
+      "narration": {
+        "tr": "Arama servisi indeksten iki listeyi okur: redis → [1, 3], önbellek → [1, 2]. Birleşimleri aday kümesidir: belge 1, 2 ve 3. Milyonlarca belgede de iş yalnızca bu listelerin boyu kadardır.",
+        "en": "The search service reads two lists from the index: redis → [1, 3], cache → [1, 2]. Their union is the candidate set: docs 1, 2 and 3. With millions of documents the work is still only as long as these lists."
+      },
+      "durationMs": 2600,
+      "highlight": { "nodes": ["search", "idx"], "edges": ["search-idx"] },
+      "nodeStates": { "an": { "status": "idle" }, "idx": { "status": "active" } },
+      "packets": [
+        { "edge": "search-idx", "label": { "tr": "2 terim", "en": "2 terms" }, "shape": "envelope", "durationMs": 800 },
+        { "edge": "search-idx", "direction": "backward", "label": "[1,3] [1,2]", "shape": "square", "startAt": 900, "durationMs": 900 }
+      ]
+    },
+    {
+      "id": "score",
+      "title": { "tr": "BM25 ile skorlama", "en": "Scoring with BM25" },
+      "narration": {
+        "tr": "Belge 1 iki terimi birden içerdiği için iki katkı alır ve en üste çıkar. Belge 2 ve 3 tek terimle eşleşir ve iki terimin IDF'i eşittir; farkı uzunluk normalizasyonu yapar: daha kısa olan belge 3'teki eşleşme daha değerli sayılır.",
+        "en": "Doc 1 contains both terms, gets two contributions and rises to the top. Docs 2 and 3 match one term each and both terms have equal IDF; length normalisation decides: the match in the shorter doc 3 counts for more."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["search", "d1", "d2", "d3"], "edges": [] },
+      "nodeStates": {
+        "search": { "status": "busy", "badge": "BM25" },
+        "idx": { "status": "idle" },
+        "d1": { "status": "success", "badge": "#1" },
+        "d3": { "status": "active", "badge": "#2" },
+        "d2": { "status": "warning", "badge": "#3" }
+      },
+      "annotations": [
+        { "id": "bm25-note", "x": 640, "y": 560, "text": { "tr": "TF doygunluğu (k1) + uzunluk normalizasyonu (b)", "en": "TF saturation (k1) + length normalisation (b)" }, "tone": "info", "target": "search" }
+      ]
+    },
+    {
+      "id": "results",
+      "title": { "tr": "Sonuçlar ve facet'ler", "en": "Results and facets" },
+      "narration": {
+        "tr": "Arama servisi sıralı listeyi ve eşleşen küme üzerinden sayılmış facet'leri döner: etiket 'cache' 2 belge, 'queue' 1 belge. Kullanıcı arayüzündeki filtre sayıları bu sayımlardan gelir.",
+        "en": "The search service returns the ranked list and facets counted over the matching set: tag 'cache' 2 docs, 'queue' 1 doc. The filter counts in the UI come from these aggregations."
+      },
+      "durationMs": 2600,
+      "highlight": { "nodes": ["search", "user"], "edges": ["search-user"] },
+      "nodeStates": { "search": { "status": "success", "badge": "" }, "user": { "status": "success", "badge": "3" } },
+      "packets": [{ "edge": "search-user", "label": "1 · 3 · 2", "shape": "envelope", "durationMs": 1000 }],
+      "annotations": [
+        { "id": "facet-note", "x": 120, "y": 420, "text": { "tr": "facet: cache (2) · queue (1)", "en": "facet: cache (2) · queue (1)" }, "tone": "success", "target": "user" }
+      ]
+    },
+    {
+      "id": "refresh",
+      "title": { "tr": "Güncelleme ve refresh", "en": "Update and refresh" },
+      "narration": {
+        "tr": "Belge 2'ye 'Redis' kelimesi eklenir. Analyzer yeni terimleri yeni bir segmente yazar ama segment refresh'e kadar (Elasticsearch'te varsayılan yaklaşık 1 saniye) aranabilir değildir. Arama neredeyse gerçek zamanlıdır, anında değil.",
+        "en": "The word 'Redis' is added to doc 2. The analyzer writes the new terms into a new segment, but the segment is not searchable until a refresh (about 1 second by default in Elasticsearch). Search is near real time, not instant."
+      },
+      "durationMs": 3000,
+      "highlight": { "nodes": ["d2", "an", "idx"], "edges": ["d2-an", "an-idx"] },
+      "nodeStates": {
+        "d2": { "status": "active", "badge": "v2" },
+        "d1": { "status": "idle", "badge": "" },
+        "d3": { "status": "idle", "badge": "" },
+        "user": { "status": "idle", "badge": "" },
+        "search": { "status": "idle" },
+        "idx": { "status": "warning", "badge": "refresh", "sublabel": { "tr": "redis→[1,2,3]", "en": "redis→[1,2,3]" } }
+      },
+      "packets": [
+        { "edge": "d2-an", "label": "v2", "shape": "envelope", "durationMs": 800 },
+        { "edge": "an-idx", "label": { "tr": "yeni segment", "en": "new segment" }, "shape": "square", "startAt": 900, "durationMs": 900 }
+      ],
+      "annotations": [
+        { "id": "nrt-note", "x": 820, "y": 410, "text": { "tr": "≈1 sn sonra aranabilir", "en": "searchable after ≈1 s" }, "tone": "warning", "target": "idx" }
+      ]
+    }
+  ],
+  "loop": false,
+  "defaultSpeed": 1,
+  "tags": ["search", "inverted-index", "bm25", "analyzer", "facets"]
+}
