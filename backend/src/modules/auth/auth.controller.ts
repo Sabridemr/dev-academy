@@ -73,11 +73,16 @@ export class AuthController {
     private readonly config: ConfigService<Env, true>,
   ) {}
 
-  private cookieOptions(): CookieOptions {
+  /**
+   * `Secure` bayrağı isteğin protokolüne göre verilir (trust proxy açık; X-Forwarded-Proto dikkate alınır).
+   * NODE_ENV'e bağlanmaz: tarayıcı Secure çerezi düz http'de saklamaz; LAN IP üzerinden http ile sunulan
+   * production yığında çerez düşer, login 200 dönse de ilk refresh 401 alıp oturumu kapatırdı.
+   */
+  private cookieOptions(req: Request): CookieOptions {
     const sameSite = this.config.get('REFRESH_COOKIE_SAMESITE');
     return {
       httpOnly: true,
-      secure: this.config.get('NODE_ENV') === 'production' || sameSite === 'none',
+      secure: req.secure || sameSite === 'none',
       sameSite,
       path: `/${this.config.get('API_PREFIX')}/auth`,
     };
@@ -87,7 +92,7 @@ export class AuthController {
   private deliverTokens(req: Request, res: Response, tokens: AuthTokens): AuthTokens {
     if (!cookieMode(req)) return tokens;
     res.cookie(REFRESH_COOKIE, tokens.refreshToken, {
-      ...this.cookieOptions(),
+      ...this.cookieOptions(req),
       maxAge: this.config.get('JWT_REFRESH_TTL') * 1000,
     });
     return { ...tokens, refreshToken: '' };
@@ -170,7 +175,7 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ): Promise<void> {
     await this.auth.logout(this.refreshTokenFrom(req, dto.refreshToken), user.id, dto.everywhere);
-    if (cookieMode(req)) res.clearCookie(REFRESH_COOKIE, this.cookieOptions());
+    if (cookieMode(req)) res.clearCookie(REFRESH_COOKIE, this.cookieOptions(req));
   }
 
   @Post('change-password')
