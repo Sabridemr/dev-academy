@@ -5,6 +5,7 @@ import { endpoints, type MeProfile } from '@/lib/endpoints';
 import { queryClient } from '@/lib/queryClient';
 import { getJson, kv, KV_KEYS, setJson, tokenStorage } from '@/lib/storage';
 import { cancelDailyReminder } from '@/notifications/push';
+import { cancelTermNotifications } from '@/notifications/termNotifications';
 import { clearQueues } from '@/offline/queue';
 
 /**
@@ -30,6 +31,7 @@ function clearLocalSession(): void {
   clearQueues();
   queryClient.clear();
   void cancelDailyReminder();
+  void cancelTermNotifications().catch(() => undefined);
 }
 
 interface SessionState {

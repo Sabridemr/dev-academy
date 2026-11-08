@@ -4,6 +4,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { I18nProvider } from '@/i18n';
 import { startAuthSession } from '@/lib/api';
+import { TermNotificationScheduler } from './glossary/TermNotificationScheduler';
 import { RealtimeBridge } from './realtime';
 import { ToastProvider } from './ui/Toast';
 
@@ -28,6 +29,7 @@ export function Providers({ locale, children }: { locale: string; children: Reac
           <AuthSync />
           <ThemeSync />
           <ServiceWorkerRegistration />
+          <TermNotificationScheduler />
           <RealtimeBridge />
           {children}
         </ToastProvider>

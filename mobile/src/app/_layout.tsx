@@ -84,6 +84,7 @@ function RootNavigator() {
         <Stack.Screen name="lesson/[id]" options={{ title: '' }} />
         <Stack.Screen name="module/[id]" options={{ title: '' }} />
         <Stack.Screen name="search" options={{ title: t('nav.search'), presentation: 'modal' }} />
+        <Stack.Screen name="game/match" options={{ title: t('game.matchTitle') }} />
         <Stack.Screen name="glossary/index" options={{ title: t('glossary.title') }} />
         <Stack.Screen name="glossary/[id]" options={{ title: '' }} />
         <Stack.Screen name="+not-found" options={{ title: t('common.notFound') }} />

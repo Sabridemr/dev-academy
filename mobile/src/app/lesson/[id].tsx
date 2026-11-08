@@ -185,6 +185,15 @@ export default function LessonScreen() {
             testID="lesson-complete"
           />
         ) : null}
+        {l.concepts.length > 0 ? (
+          <Button
+            variant="secondary"
+            icon="game-controller-outline"
+            title={t('lesson.playGame')}
+            onPress={() => router.push({ pathname: '/game/match', params: { lessonId: l.id } })}
+            testID="lesson-play-match"
+          />
+        ) : null}
         <Row style={{ justifyContent: 'space-between' }}>
           {l.prev ? (
             <Button

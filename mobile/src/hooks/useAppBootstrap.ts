@@ -10,6 +10,7 @@ import {
   scheduleDailyReminder,
   storedReminderHour,
 } from '@/notifications/push';
+import { useTermNotifications } from '@/notifications/useTermNotifications';
 import { useSession } from '@/stores/session';
 
 /**
@@ -24,6 +25,7 @@ export function useAppBootstrap(): void {
   const status = useSession((s) => s.status);
   const reminderHour = useSession((s) => s.user?.reminderHour);
   const refreshedOnce = useRef(false);
+  useTermNotifications();
 
   useEffect(() => {
     const stop = startNetworkMonitoring();

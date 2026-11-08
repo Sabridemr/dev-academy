@@ -26,7 +26,11 @@ export function useNotificationNavigation(): void {
   }, [lastResponse, status]);
 }
 
-async function openFromNotification(data: { lessonId?: string }): Promise<void> {
+async function openFromNotification(data: { lessonId?: string; conceptId?: string }): Promise<void> {
+  if (data.conceptId) {
+    router.push({ pathname: '/glossary/[id]', params: { id: data.conceptId } });
+    return;
+  }
   if (data.lessonId) {
     router.push({ pathname: '/lesson/[id]', params: { id: data.lessonId } });
     return;

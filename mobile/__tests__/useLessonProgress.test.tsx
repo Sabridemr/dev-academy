@@ -18,7 +18,7 @@ const lesson = (percent: number) =>
   }) as unknown as LessonDetail;
 
 const wrapper = ({ children }: { children: ReactNode }) => (
-  <QueryClientProvider client={new QueryClient()}>{children}</QueryClientProvider>
+  <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { gcTime: Infinity } } })}>{children}</QueryClientProvider>
 );
 
 beforeEach(() => {

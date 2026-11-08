@@ -96,3 +96,20 @@ self.addEventListener('fetch', (event) => {
   }
   if (isStaticAsset(url)) event.respondWith(cacheFirst(request));
 });
+
+/* "Günün terimi" bildirimine dokunulunca ilgili sözlük sayfasını aç (açık sekme varsa ona odaklan) */
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const url = (event.notification.data && event.notification.data.url) || '/glossary';
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
+      for (const client of list) {
+        if ('focus' in client) {
+          if ('navigate' in client) void client.navigate(url);
+          return client.focus();
+        }
+      }
+      return self.clients.openWindow(url);
+    }),
+  );
+});

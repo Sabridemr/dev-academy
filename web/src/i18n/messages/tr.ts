@@ -806,6 +806,37 @@ export const tr = {
     text: 'İnternet bağlantın yok gibi görünüyor. Daha önce açtığın sayfalar önbellekten açılabilir.',
     retry: 'Tekrar dene',
   },
+  termNotif: {
+    title: 'Günün terimleri',
+    description: 'Günde iki kez, seçtiğin saatlerde bir yazılım teriminin kısa anlamı bildirim olarak gelir.',
+    toggle: 'Günde 2 terim bildirimi',
+    first: 'Birinci bildirim',
+    second: 'İkinci bildirim',
+    test: 'Şimdi dene',
+    blocked: 'Tarayıcı bildirimleri engelli. Adres çubuğundaki site ayarlarından izin ver.',
+    unsupported:
+      'Bu tarayıcı bildirimleri desteklemiyor. iPhone’da önce siteyi “Ana Ekrana Ekle” ile kurman gerekir (iOS 16.4+).',
+    limit:
+      'Bildirimler uygulama/sekme açıkken saatinde gösterilir; kapalıyken kaçan son 4 saatlik bildirim açınca gelir. Kapalıyken de gelmesi için mobil uygulamayı kullan.',
+  },
+  game: {
+    matchTitle: 'Kelime eşleştirme',
+    play: 'Kelime eşleştirme oyunu',
+    intro: 'Terime tıkla, sonra anlamına tıkla. Doğru: +10 (seri bonusuyla daha fazla), yanlış: -3.',
+    terms: 'Terimler',
+    meanings: 'Anlamlar',
+    score: 'Puan',
+    streak: 'Seri',
+    mistakes: 'Hata',
+    best: 'En iyi: {score}',
+    newBest: 'Yeni rekor!',
+    finished: 'Tamamlandı!',
+    result: '{score} / {max} puan',
+    again: 'Tekrar oyna',
+    backToLesson: 'Derse dön',
+    notEnough: 'Oyun için yeterli kavram bulunamadı.',
+    stars: '{count} yıldız',
+  },
   glossary: {
     title: 'Kavram sözlüğü',
     subtitle:

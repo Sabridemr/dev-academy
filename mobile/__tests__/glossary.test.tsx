@@ -30,7 +30,7 @@ const CONCEPTS: ConceptSummary[] = [
 ];
 
 function renderWithClient(ui: ReactElement) {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity } } });
   return render(<QueryClientProvider client={client}>{ui}</QueryClientProvider>);
 }
 

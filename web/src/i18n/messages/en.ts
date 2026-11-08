@@ -813,6 +813,37 @@ export const en: Messages = {
     text: 'It looks like you have no internet connection. Pages you’ve opened before may still load from the cache.',
     retry: 'Try again',
   },
+  termNotif: {
+    title: 'Terms of the day',
+    description: 'Twice a day, at the times you choose, a short definition of a software term arrives as a notification.',
+    toggle: '2 term notifications a day',
+    first: 'First notification',
+    second: 'Second notification',
+    test: 'Try it now',
+    blocked: 'Browser notifications are blocked. Allow them in the site settings next to the address bar.',
+    unsupported:
+      'This browser does not support notifications. On iPhone, first install the site with “Add to Home Screen” (iOS 16.4+).',
+    limit:
+      'Notifications appear on time while the app/tab is open; if you were away, the last 4 hours’ notification shows when you return. Use the mobile app to get them while closed.',
+  },
+  game: {
+    matchTitle: 'Word matching',
+    play: 'Word matching game',
+    intro: 'Click a term, then click its meaning. Correct: +10 (more with a streak bonus), wrong: -3.',
+    terms: 'Terms',
+    meanings: 'Meanings',
+    score: 'Score',
+    streak: 'Streak',
+    mistakes: 'Mistakes',
+    best: 'Best: {score}',
+    newBest: 'New record!',
+    finished: 'Completed!',
+    result: '{score} / {max} points',
+    again: 'Play again',
+    backToLesson: 'Back to lesson',
+    notEnough: 'Not enough concepts to play.',
+    stars: '{count} stars',
+  },
   glossary: {
     title: 'Concept glossary',
     subtitle:

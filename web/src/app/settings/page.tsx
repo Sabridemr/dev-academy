@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { isValidTimeZone, t as tLocalized, type Locale } from '@devacademy/shared';
 import { RequireAuth } from '@/components/auth/RequireAuth';
+import { TermNotificationSettings } from '@/components/glossary/TermNotificationSettings';
 import { Dialog } from '@/components/ui/Dialog';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useOptionalToast } from '@/components/ui/Toast';
@@ -237,6 +238,8 @@ function SettingsView() {
           </button>
         </div>
       </section>
+
+      <TermNotificationSettings />
 
       <SecuritySection />
       <DangerSection email={me.email} />

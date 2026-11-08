@@ -7,6 +7,7 @@ import {
   BookmarkCheck,
   CheckCircle2,
   ChevronLeft,
+  Gamepad2,
   ChevronRight,
   Circle,
   CircleDot,
@@ -405,6 +406,12 @@ export function LessonView({ initial }: { initial: LessonDetail }) {
             pending={progress.isPending}
             onComplete={markComplete}
           />
+
+          <div className="mt-6">
+            <Link href={`/game/match?lesson=${lesson.id}`} className="btn-soft" data-testid="lesson-play-match">
+              <Gamepad2 size={16} /> {t('game.play')}
+            </Link>
+          </div>
 
           <footer className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-6">
             {lesson.prev ? (

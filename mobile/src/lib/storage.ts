@@ -48,6 +48,10 @@ export const KV_KEYS = {
   attemptQueue: 'queue.attempts',
   lastSyncAt: 'sync.lastAt',
   pushToken: 'push.token',
+  termNotifEnabled: 'termNotif.enabled',
+  termNotifHour1: 'termNotif.hour1',
+  termNotifHour2: 'termNotif.hour2',
+  matchBest: (lessonId: string) => `game.match.best.${lessonId}`,
   etag: (resource: string) => `etag.${resource}`,
 } as const;
 

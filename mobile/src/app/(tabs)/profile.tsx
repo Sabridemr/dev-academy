@@ -26,6 +26,7 @@ import {
   Text,
 } from '@/components/ui';
 import { ReminderPicker } from '@/components/content/ReminderPicker';
+import { TermNotificationSettings } from '@/components/content/TermNotificationSettings';
 import { errorText } from '@/utils/errors';
 
 /** Profil: öğrenme yolu, hatırlatma, dil, tema, çevrimdışı indirmeler, çıkış */
@@ -134,6 +135,8 @@ export default function ProfileScreen() {
           </Text>
         ) : null}
       </Card>
+
+      <TermNotificationSettings />
 
       <Card>
         <SegmentedControl<Locale>

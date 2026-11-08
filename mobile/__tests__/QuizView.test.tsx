@@ -44,7 +44,7 @@ it('kuyruktaki deneme geçerse onPassed çağrılır', () => {
   jest.useFakeTimers();
   enqueueAttempt('quiz-1', 'l1', { answers: [{ questionId: 'q1', selected: ['a'] }] });
   const onPassed = jest.fn();
-  const qc = new QueryClient();
+  const qc = new QueryClient({ defaultOptions: { queries: { gcTime: Infinity } } });
   render(
     <QueryClientProvider client={qc}>
       <QuizView quiz={quiz} lessonId="l1" onPassed={onPassed} />
@@ -63,7 +63,7 @@ it('kuyruktaki deneme geçerse onPassed çağrılır', () => {
 it('kuyruktaki deneme kalıcı hatayla düşürülürse kullanıcıya gösterilir', () => {
   jest.useFakeTimers();
   enqueueAttempt('quiz-1', 'l1', { answers: [{ questionId: 'q1', selected: ['a'] }] });
-  const qc = new QueryClient();
+  const qc = new QueryClient({ defaultOptions: { queries: { gcTime: Infinity } } });
   const view = render(
     <QueryClientProvider client={qc}>
       <QuizView quiz={quiz} lessonId="l1" />
